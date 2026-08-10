@@ -1107,6 +1107,71 @@ fn korean_while_sentence_uses_an_explicit_end() {
 }
 
 #[test]
+fn english_while_keyword_accepts_a_korean_condition_ending() {
+    // The English `while` keyword must not let a trailing Korean `동안`
+    // become the loop's inline body.
+    let source = concat!(
+        "점수는 0\n",
+        "while 점수가 3보다 작을 동안\n",
+        "점수 말해줘\n",
+        "점수에 1 더해\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "점수 = 0\n",
+        "while (점수 < 3):\n",
+        "    print(점수)\n",
+        "    점수 = 점수 + 1\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+    assert_eq!(
+        ok("while playing 동안 성공 말해줘\n"),
+        "while (playing): print(\"성공\")\n"
+    );
+}
+
+#[test]
+fn korean_negation_connectors_lower_to_not_equals() {
+    let source = concat!(
+        "만약 점수가 5와 같지 않으면\n",
+        "달라요 말해줘\n",
+        "끝\n",
+        "if 점수가 5와 같지 않으면\n",
+        "달라요 말해줘\n",
+        "끝\n",
+        "만약 점수가 5와 같지않으면 말해 \"단어\"\n",
+    );
+    let expected = concat!(
+        "if (not (점수 == 5)):\n",
+        "    print(\"달라요\")\n",
+        "# end\n",
+        "if (not (점수 == 5)):\n",
+        "    print(\"달라요\")\n",
+        "# end\n",
+        "if (not (점수 == 5)): print(\"단어\")\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn korean_negation_works_inside_a_while_ending() {
+    let source = concat!(
+        "점수는 0\n",
+        "점수가 5와 같지 않을 동안\n",
+        "점수에 1 더해\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "점수 = 0\n",
+        "while (not (점수 == 5)):\n",
+        "    점수 = 점수 + 1\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
 fn attached_korean_while_endings_are_easy_to_say() {
     assert_eq!(
         ok("준비하는동안 성공 말해줘\n"),

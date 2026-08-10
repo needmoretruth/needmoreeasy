@@ -1555,48 +1555,75 @@ fn match_while(
             return Ok(Some(NmeStmt::While { condition, inline }));
         }
     }
-    let (spelling, consumed, suffix_form) =
+    let (spelling, condition_start, condition_end, trailing_while) =
         if matches!(tokens.first().map(|token| &token.tok), Some(Tok::While))
             || action_phrase_at(tokens, 0, WHILE_WORDS_EN, mode).is_some()
         {
-            let consumed = if matches!(tokens.first().map(|token| &token.tok), Some(Tok::While)) {
-                1
+            let consumed =
+                if matches!(tokens.first().map(|token| &token.tok), Some(Tok::While)) {
+                    1
+                } else {
+                    action_phrase_at(tokens, 0, WHILE_WORDS_EN, mode).expect("checked above")
+                };
+            // `while 준비 동안 성공 말해줘` and `while 점수가 3보다 작을 동안`
+            // mix the English keyword with a Korean while ending. Split the
+            // ending exactly like the Korean spellings so it cannot be
+            // lowered as the loop's inline body.
+            if let Some((condition_tokens, body_rel)) = korean_while_connector(&tokens[consumed..])
+            {
+                if let Ok(condition) = parse_natural_condition(
+                    source,
+                    &condition_tokens,
+                    None,
+                    known_names,
+                    Spelling::Korean,
+                ) {
+                    let inline = parse_suite_body(
+                        source,
+                        &tokens[consumed + body_rel..],
+                        block,
+                        SuiteKind::Condition,
+                        span_of(tokens),
+                        known_names,
+                    )?;
+                    return Ok(Some(NmeStmt::While { condition, inline }));
+                }
+            }
+            // A Korean while ending may also close a comparison condition
+            // after the English keyword: `while 점수가 3보다 작을 동안`.
+            let trailing = tokens
+                .last()
+                .is_some_and(|token| token_matches_exact(token, WHILE_WORDS_KO));
+            if trailing && tokens.len() > consumed + 1 {
+                (Spelling::English, consumed, tokens.len() - 1, true)
             } else {
-                action_phrase_at(tokens, 0, WHILE_WORDS_EN, mode).expect("checked above")
-            };
-            (Spelling::English, consumed, false)
+                (Spelling::English, consumed, tokens.len(), false)
+            }
         } else if action_phrase_at(tokens, 0, WHILE_WORDS_KO, mode).is_some() {
-            (
-                Spelling::Korean,
-                action_phrase_at(tokens, 0, WHILE_WORDS_KO, mode).expect("checked above"),
-                false,
-            )
+            let consumed = action_phrase_at(tokens, 0, WHILE_WORDS_KO, mode).expect("checked above");
+            (Spelling::Korean, consumed, tokens.len(), false)
         } else if tokens.len() > 1
             && tokens
                 .last()
                 .is_some_and(|token| token_matches_exact(token, WHILE_WORDS_KO))
         {
-            (Spelling::Korean, tokens.len() - 1, true)
+            (Spelling::Korean, 0, tokens.len() - 1, true)
         } else {
             return Ok(None);
         };
 
-    let condition_slice = if suffix_form {
-        &tokens[..consumed]
-    } else {
-        &tokens[consumed..]
-    };
+    let condition_slice = &tokens[condition_start..condition_end];
     if condition_slice.is_empty() {
         return Err(condition_missing(spelling, tokens[0].span));
     }
 
-    if !suffix_form {
-        if let Some(colon_at) = find_condition_colon(source, tokens, consumed) {
-            if colon_at == consumed {
+    if !trailing_while {
+        if let Some(colon_at) = find_condition_colon(source, tokens, condition_start) {
+            if colon_at == condition_start {
                 return Err(condition_missing(spelling, tokens[colon_at].span));
             }
             let condition_span =
-                Span::new(tokens[consumed].span.start, tokens[colon_at - 1].span.end);
+                Span::new(tokens[condition_start].span.start, tokens[colon_at - 1].span.end);
             if !is_valid_python_expression(&source[condition_span.start..condition_span.end]) {
                 return Err(condition_invalid(spelling, condition_span));
             }
@@ -1615,20 +1642,20 @@ fn match_while(
         }
     }
 
-    let (condition_tokens, body_start, connector) = if suffix_form {
-        if let Some((connector_at, connector)) = find_condition_connector(condition_slice) {
+    let (condition_tokens, body_start, connector) = if trailing_while {
+        if let Some((relative_at, connector)) = find_condition_connector(condition_slice) {
             let (condition, _, connector) =
-                condition_tokens_before(tokens, 0, connector_at, connector);
+                condition_tokens_before(tokens, condition_start, relative_at, connector);
             (condition, tokens.len(), Some(connector))
         } else {
             (condition_slice.to_vec(), tokens.len(), None)
         }
     } else if let Some((relative_at, connector)) = find_condition_connector(condition_slice) {
         let (condition, body_start, connector) =
-            condition_tokens_before(tokens, consumed, relative_at, connector);
+            condition_tokens_before(tokens, condition_start, relative_at, connector);
         (condition, body_start, Some(connector))
     } else {
-        (tokens[consumed..].to_vec(), tokens.len(), None)
+        (tokens[condition_start..].to_vec(), tokens.len(), None)
     };
     if condition_tokens.is_empty() {
         return Err(condition_missing(spelling, tokens[0].span));
