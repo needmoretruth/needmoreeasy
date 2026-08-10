@@ -1,0 +1,24 @@
+# A real tiny compiler written in NME.
+# Its input language has two sentences:
+#   say text
+#   N times say text
+
+tiny_source = [
+    "say Hello",
+    "3 times say I built a compiler in NME",
+]
+
+python_lines = []
+for line in tiny_source:
+    words = line.split()
+    if words[0] == "say":
+        text = " ".join(words[1:])
+        python_lines.append(f"print({text!r})")
+    else:
+        count = int(words[0])
+        text = " ".join(words[3:])
+        python_lines.append(f"for _ in range({count}): print({text!r})")
+
+generated = "\n".join(python_lines)
+show Generated Python code
+show generated

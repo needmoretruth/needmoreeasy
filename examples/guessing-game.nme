@@ -1,0 +1,12 @@
+# Make a guessing game without quotes, commas, equals signs, or colons.
+set answer to random number from 1 to 10
+ask number guess Pick a number from 1 to 10
+
+if guess equals answer
+    show Correct!
+
+if guess is less than answer
+    show Go higher
+
+if guess is greater than answer
+    show Go lower

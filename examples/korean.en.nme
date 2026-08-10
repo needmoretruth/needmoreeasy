@@ -1,0 +1,8 @@
+# NME keywords and variable names can all be written in English.
+use random
+
+friend = "Ada"
+pick = random_pick(["cat"])
+
+if friend:
+    2 times: say f"Give {friend} a {pick}!"
