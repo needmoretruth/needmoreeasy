@@ -85,7 +85,7 @@ warns that its `bin` directory is not on `PATH`. It does not reinstall NME.
 Windows PowerShell uses the PATH step in the
 [installation guide](docs/install.md#windows-10-or-11).
 
-Expected version: `nme 0.0.1-beta.14`.
+Expected version: `nme 0.0.1-beta.15`.
 
 Windows, macOS, and Linux instructions are in the
 [installation guide](docs/install.md). The [five-minute guide](docs/getting-started.md)

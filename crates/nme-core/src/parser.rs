@@ -1997,6 +1997,7 @@ enum ConditionConnector {
     Exists,
     Missing,
     Equals,
+    NotEquals,
     Greater,
     Less,
 }
@@ -2010,6 +2011,20 @@ fn find_exact_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionC
                 .map(|connector| (index, connector))
         })
         .collect::<Vec<_>>();
+    if exact.is_empty() {
+        // Spoken Korean splits the negation into two tokens: `같지 않으면`,
+        // `같지 않다면`, or `같지 않을` at the end of a condition.
+        for (index, pair) in tokens.windows(2).enumerate() {
+            if token_word(&pair[0]) == Some("같지")
+                && matches!(
+                    token_word(&pair[1]),
+                    Some("않으면" | "않다면" | "않을")
+                )
+            {
+                return Some((index, ConditionConnector::NotEquals));
+            }
+        }
+    }
     exact
         .iter()
         .copied()
@@ -2058,6 +2073,9 @@ fn split_attached_condition_token(token: &Token) -> Option<(Token, ConditionConn
         "없다면",
         "같으면",
         "같다면",
+        "같지않으면",
+        "같지않다면",
+        "같지않을",
         "크면",
         "크다면",
         "작으면",
@@ -2078,6 +2096,9 @@ fn split_attached_condition_token(token: &Token) -> Option<(Token, ConditionConn
         "있으면",
         "없으면",
         "같으면",
+        "같지않으면",
+        "같지않다면",
+        "같지않을",
         "크면",
         "작으면",
         "하면",
@@ -2204,6 +2225,18 @@ fn condition_tokens_before(
     let mut condition = tokens[start..at].to_vec();
     let mut body_start = at + 1;
     let mut connector = connector;
+    // A split Korean negation spans two tokens (`같지 않으면`), so the body
+    // starts after the second one rather than after the connector word.
+    if connector == ConditionConnector::NotEquals
+        && tokens
+            .get(at)
+            .is_some_and(|token| token_word(token) == Some("같지"))
+        && tokens
+            .get(at + 1)
+            .is_some_and(|next| matches!(token_word(next), Some("않으면" | "않다면" | "않을")))
+    {
+        body_start = at + 2;
+    }
     if let Some(token) = tokens.get(at) {
         if let Some((base, attached_connector)) = split_attached_condition_token(token) {
             // `name이면` is a truthy condition when it is the whole subject,
@@ -2382,9 +2415,10 @@ fn parse_natural_condition_atom(
                 operator,
                 &["보다", "더", "작을", "클"],
                 spelling,
+                false,
             );
         }
-        Some(ConditionConnector::Equals) => {
+        Some(ConditionConnector::Equals | ConditionConnector::NotEquals) => {
             return parse_korean_comparison(
                 source,
                 &cleaned,
@@ -2392,6 +2426,7 @@ fn parse_natural_condition_atom(
                 CompareOp::Equal,
                 &["과", "와", "랑", "이랑", "하고", "to"],
                 spelling,
+                matches!(connector, Some(ConditionConnector::NotEquals)),
             );
         }
         _ => {}
@@ -2453,6 +2488,7 @@ fn parse_korean_comparison(
     operator: CompareOp,
     trailing_markers: &[&str],
     spelling: Spelling,
+    negated: bool,
 ) -> Result<Condition, Diagnostic> {
     if tokens.len() < 2 {
         return Err(condition_invalid(spelling, span_of_refs(tokens)));
@@ -2478,7 +2514,7 @@ fn parse_korean_comparison(
         left,
         operator,
         right,
-        negated: false,
+        negated,
     })
 }
 
@@ -2677,6 +2713,10 @@ fn condition_connector_exact(token: &Token, is_last: bool) -> Option<ConditionCo
         (
             ConditionConnector::Equals,
             &["같으면", "같다면", "라면", "면"][..],
+        ),
+        (
+            ConditionConnector::NotEquals,
+            &["같지않으면", "같지않다면", "같지않을"][..],
         ),
         (ConditionConnector::Greater, &["크면", "크다면", "클"][..]),
         (ConditionConnector::Less, &["작으면", "작다면", "작을"][..]),

@@ -16,7 +16,7 @@ show "1. Spin"
 show "2. Rules"
 show "3. Statistics"
 show "4. Leave"
-ask menu, "Choose 1-4: "
+ask number menu, "Choose 1-4: "
 
 if menu equals 1
 if credits is less than 1
@@ -24,8 +24,8 @@ show "You have no credits left."
 set playing to false
 end
 if credits is greater than 0
-ask chosen, "Choose a number from 0 to 36: "
-ask bet, "How many credits will you bet? "
+ask number chosen, "Choose a number from 0 to 36: "
+ask number bet, "How many credits will you bet? "
 if bet is less than 1
 show "The bet must be at least 1."
 end

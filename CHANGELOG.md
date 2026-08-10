@@ -4,6 +4,17 @@ English | [한국어](CHANGELOG.ko.md)
 
 All notable changes to NME are recorded here.
 
+## 0.0.1-beta.15 — 2026-08-11
+
+- Accept the Korean `!=` sentence comparison `같지 않으면`, `같지 않다면`,
+  `같지 않을` (also written `같지않으면` and friends), matching the existing
+  English `is not equal to`.
+- Fix `while` + Korean sentence condition + `동안` endings (for example
+  `while 점수가 3보다 작을 동안`): the ending is now consumed as a block
+  marker instead of being lowered as the loop's inline body.
+- Fix the English roulette companion to use `ask number` for numeric menus,
+  bets, and wheel picks.
+
 ## 0.0.1-beta.14 — 2026-08-11
 
 - Track Python import bindings so the random adapter also protects names

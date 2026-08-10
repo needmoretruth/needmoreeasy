@@ -4,7 +4,7 @@ English | [한국어](install.ko.md)
 
 [Home](../README.md) | [Getting started](getting-started.md) | [Tutorial](tutorial.md) | [Language reference](language.md)
 
-NME `0.0.1-beta.14` currently installs from the beta branch. You need Git,
+NME `0.0.1-beta.15` currently installs from the beta branch. You need Git,
 stable Rust with Cargo, and Python 3.8 or newer. Use the official
 [Rust installer](https://www.rust-lang.org/tools/install),
 [Python downloads](https://www.python.org/downloads/), and
@@ -110,7 +110,7 @@ nme check examples/three-levels
 nme run examples/hello-sentence
 ```
 
-Expected NME version: `0.0.1-beta.14`. Expected random adapter: `0.0.1`.
+Expected NME version: `0.0.1-beta.15`. Expected random adapter: `0.0.1`.
 
 ## Advanced: choose a different Python command
 
