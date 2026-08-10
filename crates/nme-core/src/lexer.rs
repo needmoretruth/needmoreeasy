@@ -73,8 +73,9 @@ pub fn logical_lines(source: &str) -> Result<Vec<LogicalLine>, Diagnostic> {
         let (tok, range) = match result {
             Ok(token) => token,
             Err(err) => {
-                if let LexicalErrorType::UnrecognizedToken { tok: punctuation @ ('?' | '!') } =
-                    err.error
+                if let LexicalErrorType::UnrecognizedToken {
+                    tok: punctuation @ ('?' | '!'),
+                } = err.error
                 {
                     let reported = usize::from(err.location);
                     let width = punctuation.len_utf8();
@@ -85,7 +86,7 @@ pub fn logical_lines(source: &str) -> Result<Vec<LogicalLine>, Diagnostic> {
                     };
                     current.push(Token {
                         tok: Tok::Name {
-                            name: punctuation.to_string().into(),
+                            name: punctuation.to_string(),
                         },
                         span: Span::new(start, start + width),
                     });

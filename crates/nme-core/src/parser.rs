@@ -12,9 +12,9 @@ use rustpython_parser::{parse as parse_python, Mode, Tok};
 use crate::diagnostics::{Diagnostic, Span};
 use crate::lexer::{LogicalLine, Token};
 use crate::syntax::{
-    Code, InlineStmt, InputKind, ModuleVersion, NmeLine, NmeStmt, Spelling, TextPart,
-    TextTemplate, Value, RANDOM_MODULE, RANDOM_MODULE_KO, RANDOM_MODULE_VERSION, SAY_KEYWORD,
-    SAY_KEYWORD_KO, TIMES_KEYWORD, TIMES_KEYWORD_KO,
+    Code, InlineStmt, InputKind, ModuleVersion, NmeLine, NmeStmt, Spelling, TextPart, TextTemplate,
+    Value, RANDOM_MODULE, RANDOM_MODULE_KO, RANDOM_MODULE_VERSION, SAY_KEYWORD, SAY_KEYWORD_KO,
+    TIMES_KEYWORD, TIMES_KEYWORD_KO,
 };
 
 const SAY_WORDS_EN: &[&str] = &["say", "show", "display", "tell", "print"];
@@ -37,24 +37,11 @@ const ASK_WORDS_KO: &[&str] = &[
     "입력받아",
 ];
 const REPEAT_WORDS_EN: &[&str] = &["repeat", "again", "do"];
-const REPEAT_WORDS_KO: &[&str] = &[
-    "반복",
-    "반복해",
-    "반복해줘",
-    "반복하세요",
-    "반복해서",
-];
+const REPEAT_WORDS_KO: &[&str] = &["반복", "반복해", "반복해줘", "반복하세요", "반복해서"];
 const WHEN_WORDS_EN: &[&str] = &["when", "if"];
 const WHEN_WORDS_KO: &[&str] = &["만약", "만약에", "만일", "혹시"];
 const USE_WORDS_EN: &[&str] = &["use", "load", "get", "import"];
-const USE_WORDS_KO: &[&str] = &[
-    "사용",
-    "사용해",
-    "사용해줘",
-    "불러와",
-    "가져와",
-    "받아",
-];
+const USE_WORDS_KO: &[&str] = &["사용", "사용해", "사용해줘", "불러와", "가져와", "받아"];
 const LATEST_WORDS: &[&str] = &["latest", "newest", "최신", "최신판", "최신버전"];
 const NUMBER_WORDS: &[&str] = &["number", "numeric", "숫자", "숫자로", "수로"];
 const QUOTE_PARTICLES: &[&str] = &["라고", "이라고", "하고"];
@@ -170,7 +157,9 @@ fn classify(
             "`?` and `!` can be used in sentence-style NME, but this line was ambiguous",
             span_of(tokens),
         )
-        .with_hint("add `show` / `말해줘` or `ask` / `물어봐` so the sentence has one clear meaning"));
+        .with_hint(
+            "add `show` / `말해줘` or `ask` / `물어봐` so the sentence has one clear meaning",
+        ));
     }
 
     // Invalid Python led by another Python keyword belongs to Python. This
@@ -201,17 +190,20 @@ fn match_say(
             let text = &source[span.start..span.end];
             if looks_like_broken_expression(body) && !is_valid_python_expression(text) {
                 return Err(match spelling {
-                    Spelling::English => Diagnostic::new(
-                        "I couldn't understand what you want to `say`",
-                        span,
-                    )
-                    .with_hint("finish the value, or use plain words such as `show Hello world`"),
+                    Spelling::English => {
+                        Diagnostic::new("I couldn't understand what you want to `say`", span)
+                            .with_hint(
+                                "finish the value, or use plain words such as `show Hello world`",
+                            )
+                    }
                     Spelling::Korean => Diagnostic::new("`말해` 뒤의 값을 이해하지 못했어요", span)
-                        .with_hint("값을 완성하거나 `안녕하세요 말해줘`처럼 평범한 문장으로 쓰세요"),
+                        .with_hint(
+                            "값을 완성하거나 `안녕하세요 말해줘`처럼 평범한 문장으로 쓰세요",
+                        ),
                 });
             }
         }
-        let value = parse_value(source, body, known_names, prefer_text).map_err(|_| {
+        let value = parse_value(source, body, known_names, prefer_text).map_err(|()| {
             Diagnostic::new(
                 if spelling == Spelling::Korean {
                     "무엇을 말할지 이해하지 못했어요"
@@ -239,7 +231,7 @@ fn match_say(
     if end == 0 {
         return Err(say_missing(spelling, tokens[tokens.len() - 1].span));
     }
-    let value = parse_value(source, &tokens[..end], known_names, true).map_err(|_| {
+    let value = parse_value(source, &tokens[..end], known_names, true).map_err(|()| {
         Diagnostic::new(
             if spelling == Spelling::Korean {
                 "말할 문장을 이해하지 못했어요"
@@ -259,8 +251,9 @@ fn match_say(
 
 fn say_missing(spelling: Spelling, span: Span) -> Diagnostic {
     match spelling {
-        Spelling::English => Diagnostic::new("there is nothing to show", span)
-            .with_hint("write `show Hello world`"),
+        Spelling::English => {
+            Diagnostic::new("there is nothing to show", span).with_hint("write `show Hello world`")
+        }
         Spelling::Korean => Diagnostic::new("말할 내용이 비어 있어요", span)
             .with_hint("`안녕하세요 말해줘`처럼 내용을 함께 적어 주세요"),
     }
@@ -338,11 +331,10 @@ fn match_ask(
                     tokens[prompt_start].span,
                 )
                 .with_hint("add a question after the comma"),
-                Spelling::Korean => Diagnostic::new(
-                    "쉼표 뒤의 질문이 비어 있어요",
-                    tokens[prompt_start].span,
-                )
-                .with_hint("쉼표 뒤에 질문을 적어 주세요"),
+                Spelling::Korean => {
+                    Diagnostic::new("쉼표 뒤의 질문이 비어 있어요", tokens[prompt_start].span)
+                        .with_hint("쉼표 뒤에 질문을 적어 주세요")
+                }
             });
         }
         let span = span_of(expression_tokens);
@@ -414,9 +406,8 @@ fn match_when(
         return Ok(None);
     };
     let starter_exact = matches!(tokens[0].tok, Tok::If)
-        || token_word(&tokens[0]).is_some_and(|word| {
-            WHEN_WORDS_EN.contains(&word) || WHEN_WORDS_KO.contains(&word)
-        });
+        || token_word(&tokens[0])
+            .is_some_and(|word| WHEN_WORDS_EN.contains(&word) || WHEN_WORDS_KO.contains(&word));
     if tokens.len() == 1 {
         return Err(condition_missing(spelling, tokens[0].span));
     }
@@ -460,13 +451,8 @@ fn match_when(
     if condition_tokens.is_empty() {
         return Err(condition_missing(spelling, tokens[0].span));
     }
-    let condition = parse_natural_condition(
-        source,
-        condition_tokens,
-        connector,
-        known_names,
-        spelling,
-    )?;
+    let condition =
+        parse_natural_condition(source, condition_tokens, connector, known_names, spelling)?;
     let inline = parse_suite_body(
         source,
         body,
@@ -511,16 +497,12 @@ fn find_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionConnect
             continue;
         };
         let connector = match word {
-            "경우" | "때" | "일때" => {
-                ConditionConnector::Then
-            }
+            "경우" | "때" | "일때" => ConditionConnector::Then,
             "exists" if index + 1 == tokens.len() => ConditionConnector::Exists,
             "missing" if index + 1 == tokens.len() => ConditionConnector::Missing,
             "있으면" | "있다면" => ConditionConnector::Exists,
             "없으면" | "없다면" => ConditionConnector::Missing,
-            "같으면" | "같다면" | "이면" | "라면" => {
-                ConditionConnector::Equals
-            }
+            "같으면" | "같다면" | "이면" | "라면" => ConditionConnector::Equals,
             "크면" | "크다면" => ConditionConnector::Greater,
             "작으면" | "작다면" => ConditionConnector::Less,
             _ => continue,
@@ -539,9 +521,7 @@ fn parse_natural_condition(
 ) -> Result<Code, Diagnostic> {
     let cleaned: Vec<&Token> = tokens
         .iter()
-        .filter(|token| {
-            !token_matches_any(token, &["정말", "혹시", "please", "really", "the"])
-        })
+        .filter(|token| !token_matches_any(token, &["정말", "혹시", "please", "really", "the"]))
         .collect();
     if cleaned.is_empty() {
         return Err(condition_missing(spelling, span_of(tokens)));
@@ -583,11 +563,10 @@ fn parse_natural_condition(
                 return Err(condition_invalid(spelling, span_of(tokens)));
             }
             if right.len() == 1 {
-                let right = name_word(right[0])
-                    .map(|_| natural_subject(right[0], known_names))
-                    .unwrap_or_else(|| {
-                        source[right[0].span.start..right[0].span.end].to_string()
-                    });
+                let right = name_word(right[0]).map_or_else(
+                    || source[right[0].span.start..right[0].span.end].to_string(),
+                    |_| natural_subject(right[0], known_names),
+                );
                 return Ok(Code::Generated(format!("{left} == {right}")));
             }
             let right_tokens: Vec<Token> = right.iter().map(|token| (*token).clone()).collect();
@@ -610,10 +589,7 @@ fn parse_natural_condition(
         }
     }
 
-    let condition_span = Span::new(
-        cleaned[0].span.start,
-        cleaned[cleaned.len() - 1].span.end,
-    );
+    let condition_span = Span::new(cleaned[0].span.start, cleaned[cleaned.len() - 1].span.end);
     let condition_text = &source[condition_span.start..condition_span.end];
     if is_valid_python_expression(condition_text) {
         return Ok(Code::Source(condition_span));
@@ -649,7 +625,10 @@ fn comparison_sides(
     if right_start == right_end {
         return None;
     }
-    let span = Span::new(tokens[right_start].span.start, tokens[right_end - 1].span.end);
+    let span = Span::new(
+        tokens[right_start].span.start,
+        tokens[right_end - 1].span.end,
+    );
     let text = &source[span.start..span.end];
     is_valid_python_expression(text).then(|| (left, text.to_string()))
 }
@@ -670,14 +649,16 @@ fn parse_english_condition(
         )));
     }
 
-    let (operator_at, operator) = tokens.iter().enumerate().find_map(|(index, token)| {
-        match token_word(token) {
-            Some("greater" | "above") => Some((index, ">")),
-            Some("less" | "below") => Some((index, "<")),
-            Some("equals" | "equal") => Some((index, "==")),
-            _ => None,
-        }
-    })?;
+    let (operator_at, operator) =
+        tokens
+            .iter()
+            .enumerate()
+            .find_map(|(index, token)| match token_word(token) {
+                Some("greater" | "above") => Some((index, ">")),
+                Some("less" | "below") => Some((index, "<")),
+                Some("equals" | "equal") => Some((index, "==")),
+                _ => None,
+            })?;
     if operator_at == 0 {
         return None;
     }
@@ -695,10 +676,7 @@ fn parse_english_condition(
         name_word(tokens[right_start])
             .and_then(|word| resolve_known_particle(word, known_names))
             .map_or_else(
-                || {
-                    source[tokens[right_start].span.start..tokens[right_start].span.end]
-                        .to_string()
-                },
+                || source[tokens[right_start].span.start..tokens[right_start].span.end].to_string(),
                 ToString::to_string,
             )
     } else {
@@ -832,8 +810,10 @@ fn parse_count(source: &str, tokens: &[Token], spelling: Spelling) -> Result<Cod
     let span = span_of(tokens);
     if !is_valid_python_expression(&source[span.start..span.end]) {
         return Err(match spelling {
-            Spelling::English => Diagnostic::new("I couldn't understand how many times to repeat", span)
-                .with_hint("write a number, like `repeat 3 times`"),
+            Spelling::English => {
+                Diagnostic::new("I couldn't understand how many times to repeat", span)
+                    .with_hint("write a number, like `repeat 3 times`")
+            }
             Spelling::Korean => Diagnostic::new("몇 번 반복할지 이해하지 못했어요", span)
                 .with_hint("`3번 반복해`처럼 횟수를 적어 주세요"),
         });
@@ -843,8 +823,9 @@ fn parse_count(source: &str, tokens: &[Token], spelling: Spelling) -> Result<Cod
 
 fn repeat_count_missing(spelling: Spelling, span: Span) -> Diagnostic {
     match spelling {
-        Spelling::English => Diagnostic::new("the repeat count is missing", span)
-            .with_hint("write `repeat 3 times`"),
+        Spelling::English => {
+            Diagnostic::new("the repeat count is missing", span).with_hint("write `repeat 3 times`")
+        }
         Spelling::Korean => Diagnostic::new("반복 횟수가 비어 있어요", span)
             .with_hint("`3번 반복해`처럼 숫자를 함께 적어 주세요"),
     }
@@ -875,9 +856,8 @@ fn match_use_random(source: &str, tokens: &[Token]) -> Result<Option<NmeStmt>, D
     let has_random = tokens.iter().any(is_random_word);
     if !has_random {
         let has_exact_use = tokens.iter().any(|token| {
-            token_word(token).is_some_and(|word| {
-                USE_WORDS_EN.contains(&word) || USE_WORDS_KO.contains(&word)
-            })
+            token_word(token)
+                .is_some_and(|word| USE_WORDS_EN.contains(&word) || USE_WORDS_KO.contains(&word))
         });
         if !has_exact_use {
             return Ok(None);
@@ -891,10 +871,14 @@ fn match_use_random(source: &str, tokens: &[Token]) -> Result<Option<NmeStmt>, D
             Spelling::English
         };
         return Err(match spelling {
-            Spelling::English => Diagnostic::new("NME only bundles `use random` for now", span_of(tokens))
-                .with_hint("use `random use latest`, or use an ordinary Python import"),
-            Spelling::Korean => Diagnostic::new("이 쉬운 모듈은 아직 들어 있지 않아요", span_of(tokens))
-                .with_hint("`랜덤 사용 최신`을 쓰거나 평범한 Python import를 사용하세요"),
+            Spelling::English => {
+                Diagnostic::new("NME only bundles `use random` for now", span_of(tokens))
+                    .with_hint("use `random use latest`, or use an ordinary Python import")
+            }
+            Spelling::Korean => {
+                Diagnostic::new("이 쉬운 모듈은 아직 들어 있지 않아요", span_of(tokens))
+                    .with_hint("`랜덤 사용 최신`을 쓰거나 평범한 Python import를 사용하세요")
+            }
         });
     }
 
@@ -908,8 +892,13 @@ fn match_use_random(source: &str, tokens: &[Token]) -> Result<Option<NmeStmt>, D
         .position(|token| token_matches_any(token, &["version", "버전"]))
     {
         let value = tokens.get(version_at + 1).ok_or_else(|| {
-            Diagnostic::new("모듈 버전이 비어 있어요 / module version is missing", tokens[version_at].span)
-                .with_hint(format!("use `latest` / `최신`, or version {RANDOM_MODULE_VERSION}"))
+            Diagnostic::new(
+                "모듈 버전이 비어 있어요 / module version is missing",
+                tokens[version_at].span,
+            )
+            .with_hint(format!(
+                "use `latest` / `최신`, or version {RANDOM_MODULE_VERSION}"
+            ))
         })?;
         let raw = &source[value.span.start..value.span.end];
         let version = raw.trim_matches(['\'', '"']).to_string();
@@ -951,7 +940,7 @@ fn match_set(
                 return Err(Diagnostic::new("저장할 값이 비어 있어요", tokens[0].span)
                     .with_hint("`인사는 안녕하세요`처럼 값을 뒤에 적어 주세요"));
             }
-            let value = parse_value(source, &tokens[1..], known_names, true).map_err(|_| {
+            let value = parse_value(source, &tokens[1..], known_names, true).map_err(|()| {
                 Diagnostic::new("저장할 값을 이해하지 못했어요", span_of(&tokens[1..]))
                     .with_hint("숫자, 이름, 또는 평범한 문장을 적어 주세요")
             })?;
@@ -964,8 +953,10 @@ fn match_set(
 
     if token_matches_any(&tokens[0], &["set", "save", "remember"]) {
         let Some(target_token) = tokens.get(1) else {
-            return Err(Diagnostic::new("the name to save is missing", tokens[0].span)
-                .with_hint("write `set greeting to Hello`"));
+            return Err(
+                Diagnostic::new("the name to save is missing", tokens[0].span)
+                    .with_hint("write `set greeting to Hello`"),
+            );
         };
         let Some(target) = name_word(target_token) else {
             return Err(Diagnostic::new("use a simple name here", target_token.span)
@@ -979,13 +970,19 @@ fn match_set(
             value_start += 1;
         }
         if value_start >= tokens.len() {
-            return Err(Diagnostic::new("the value to save is missing", target_token.span)
-                .with_hint("write `set greeting to Hello`"));
+            return Err(
+                Diagnostic::new("the value to save is missing", target_token.span)
+                    .with_hint("write `set greeting to Hello`"),
+            );
         }
-        let value = parse_value(source, &tokens[value_start..], known_names, true).map_err(|_| {
-            Diagnostic::new("I couldn't understand the value to save", span_of(&tokens[value_start..]))
+        let value =
+            parse_value(source, &tokens[value_start..], known_names, true).map_err(|()| {
+                Diagnostic::new(
+                    "I couldn't understand the value to save",
+                    span_of(&tokens[value_start..]),
+                )
                 .with_hint("write a number, name, or plain sentence")
-        })?;
+            })?;
         return Ok(Some(NmeStmt::Set {
             target: target.to_string(),
             value,
@@ -1014,10 +1011,9 @@ fn parse_value(
 
     let span = span_of(tokens);
     let text = &source[span.start..span.end];
-    let single_known_name = tokens.len() == 1
-        && name_word(&tokens[0]).is_some_and(|name| known_names.contains(name));
-    let clearly_code = tokens.len() == 1
-        && !matches!(tokens[0].tok, Tok::Name { .. })
+    let single_known_name =
+        tokens.len() == 1 && name_word(&tokens[0]).is_some_and(|name| known_names.contains(name));
+    let clearly_code = tokens.len() == 1 && !matches!(tokens[0].tok, Tok::Name { .. })
         || tokens.iter().any(|token| {
             matches!(
                 token.tok,
@@ -1039,9 +1035,7 @@ fn parse_value(
                     | Tok::GreaterEqual
             )
         });
-    if is_valid_python_expression(text)
-        && (!prefer_text || single_known_name || clearly_code)
-    {
+    if is_valid_python_expression(text) && (!prefer_text || single_known_name || clearly_code) {
         return Ok(Value::Python(Code::Source(span)));
     }
     Ok(Value::Text(make_text_template(source, tokens, known_names)))
@@ -1051,7 +1045,14 @@ fn parse_random_integer(source: &str, tokens: &[Token]) -> Option<Value> {
     let random_at = tokens.iter().position(|token| {
         token_matches_any(
             token,
-            &["랜덤", "랜덤정수", "무작위", "무작위숫자", "random", "randomnumber"],
+            &[
+                "랜덤",
+                "랜덤정수",
+                "무작위",
+                "무작위숫자",
+                "random",
+                "randomnumber",
+            ],
         )
     })?;
 
@@ -1162,16 +1163,14 @@ fn make_text_template(
         push_literal(&mut parts, &source[cursor..end]);
     }
     if parts.is_empty() {
-        parts.push(TextPart::Literal(source[tokens[0].span.start..end].to_string()));
+        parts.push(TextPart::Literal(
+            source[tokens[0].span.start..end].to_string(),
+        ));
     }
     TextTemplate { parts }
 }
 
-fn interpolate_existing(
-    value: Value,
-    _source: &str,
-    _known_names: &HashSet<String>,
-) -> Value {
+fn interpolate_existing(value: Value, _source: &str, _known_names: &HashSet<String>) -> Value {
     value
 }
 
@@ -1250,11 +1249,10 @@ fn parse_suite_body(
 
 fn indentation_diagnostic(kind: SuiteKind, span: Span) -> Diagnostic {
     match kind {
-        SuiteKind::Repeat(Spelling::English) => Diagnostic::new(
-            "the lines that should repeat must be indented",
-            span,
-        )
-        .with_hint("or keep it on one line: `repeat 3 times and show Hello`"),
+        SuiteKind::Repeat(Spelling::English) => {
+            Diagnostic::new("the lines that should repeat must be indented", span)
+                .with_hint("or keep it on one line: `repeat 3 times and show Hello`")
+        }
         SuiteKind::Repeat(Spelling::Korean) => {
             Diagnostic::new("반복할 다음 줄은 들여써야 해요", span)
                 .with_hint("한 줄로 `3번 반복해서 안녕 말해줘`라고 써도 돼요")
@@ -1317,7 +1315,7 @@ pub(crate) fn discover_python_bindings(lines: &[LogicalLine]) -> HashSet<String>
                     Tok::Lpar => inside_parameters = true,
                     Tok::Rpar => inside_parameters = false,
                     Tok::Name { name } if inside_parameters => {
-                        names.insert(name.to_string());
+                        names.insert(name.clone());
                     }
                     _ => {}
                 }
@@ -1328,8 +1326,14 @@ pub(crate) fn discover_python_bindings(lines: &[LogicalLine]) -> HashSet<String>
 }
 
 fn remember_python_binding(tokens: &[Token], names: &mut HashSet<String>) {
-    if let [Token { tok: Tok::Name { name }, .. }, Token { tok: Tok::Equal, .. }, ..] = tokens {
-        names.insert(name.to_string());
+    if let [Token {
+        tok: Tok::Name { name },
+        ..
+    }, Token {
+        tok: Tok::Equal, ..
+    }, ..] = tokens
+    {
+        names.insert(name.clone());
     }
 
     // A simple Python loop target is available to sentence syntax in its
@@ -1341,7 +1345,7 @@ fn remember_python_binding(tokens: &[Token], names: &mut HashSet<String>) {
                 break;
             }
             if let Tok::Name { name } = &token.tok {
-                names.insert(name.to_string());
+                names.insert(name.clone());
             }
         }
     }
@@ -1386,10 +1390,7 @@ fn strip_assignment_particle(word: &str) -> Option<&str> {
     None
 }
 
-fn resolve_known_particle<'a>(
-    word: &'a str,
-    known_names: &'a HashSet<String>,
-) -> Option<&'a str> {
+fn resolve_known_particle<'a>(word: &'a str, known_names: &'a HashSet<String>) -> Option<&'a str> {
     if known_names.contains(word) {
         return Some(word);
     }
@@ -1462,7 +1463,10 @@ fn find_times_colon(tokens: &[Token]) -> Option<(usize, Spelling)> {
                 if (name == TIMES_KEYWORD || name == TIMES_KEYWORD_KO)
                     && depth == 0
                     && index > 0
-                    && matches!(tokens.get(index + 1).map(|next| &next.tok), Some(Tok::Colon)) =>
+                    && matches!(
+                        tokens.get(index + 1).map(|next| &next.tok),
+                        Some(Tok::Colon)
+                    ) =>
             {
                 return Some((
                     index,

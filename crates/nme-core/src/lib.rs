@@ -37,13 +37,13 @@
 //! See `docs/architecture.md` in the repository for the full design
 //! rationale and the rules every contributor must follow.
 
-pub mod diagnostics;
 pub mod convert;
+pub mod diagnostics;
 pub mod lexer;
 pub mod lower;
 pub mod parser;
 pub mod syntax;
 pub mod transpile;
 
-pub use transpile::transpile;
 pub use convert::{convert_python, Conversion, Language, SyntaxLevel};
+pub use transpile::transpile;

@@ -83,9 +83,7 @@ fn convert_line(
         .or_else(|| convert_range_loop(source, &line.tokens, level, language))
         .or_else(|| convert_condition(source, &line.tokens, level, language))
         .or_else(|| convert_random_import(&line.tokens, level, language))
-        .or_else(|| {
-            convert_assignment(source, &line.tokens, level, language, known_names)
-        })?;
+        .or_else(|| convert_assignment(source, &line.tokens, level, language, known_names))?;
     Some(Edit {
         span: line.span,
         replacement,
@@ -149,27 +147,40 @@ fn convert_input(
 
     Some(match (level, language, kind) {
         (SyntaxLevel::Beginner, Language::English, InputFlavor::Text) => {
-            format!("ask {target}{}", prompt_with_beginner_comma.unwrap_or_default())
+            format!(
+                "ask {target}{}",
+                prompt_with_beginner_comma.unwrap_or_default()
+            )
         }
         (SyntaxLevel::Beginner, Language::Korean, InputFlavor::Text) => {
-            format!("물어봐 {target}{}", prompt_with_beginner_comma.unwrap_or_default())
+            format!(
+                "물어봐 {target}{}",
+                prompt_with_beginner_comma.unwrap_or_default()
+            )
         }
-        // Numeric input is a sentence feature; beginner conversion keeps this
-        // advanced Python line rather than changing its semantics.
-        (SyntaxLevel::Beginner, _, InputFlavor::Number) => return None,
         (SyntaxLevel::Sentence, Language::English, InputFlavor::Text) => {
             format!("ask {target}{}", prompt_with_space.unwrap_or_default())
         }
         (SyntaxLevel::Sentence, Language::English, InputFlavor::Number) => {
-            format!("ask number {target}{}", prompt_with_space.unwrap_or_default())
+            format!(
+                "ask number {target}{}",
+                prompt_with_space.unwrap_or_default()
+            )
         }
         (SyntaxLevel::Sentence, Language::Korean, InputFlavor::Text) => {
             format!("{target}을 물어봐{}", prompt_with_space.unwrap_or_default())
         }
         (SyntaxLevel::Sentence, Language::Korean, InputFlavor::Number) => {
-            format!("{target}을 숫자로 물어봐{}", prompt_with_space.unwrap_or_default())
+            format!(
+                "{target}을 숫자로 물어봐{}",
+                prompt_with_space.unwrap_or_default()
+            )
         }
-        (SyntaxLevel::Advanced, _, _) => return None,
+        // Numeric input is a sentence feature; beginner conversion keeps this
+        // advanced Python line rather than changing its semantics.
+        (SyntaxLevel::Beginner, _, InputFlavor::Number) | (SyntaxLevel::Advanced, _, _) => {
+            return None;
+        }
     })
 }
 
@@ -180,8 +191,12 @@ enum InputFlavor {
 }
 
 fn input_assignment(tokens: &[Token]) -> Option<(&str, InputFlavor, &[Token])> {
-    let [Token { tok: Tok::Name { name: target }, .. }, Token { tok: Tok::Equal, .. }, rest @ ..] =
-        tokens
+    let [Token {
+        tok: Tok::Name { name: target },
+        ..
+    }, Token {
+        tok: Tok::Equal, ..
+    }, rest @ ..] = tokens
     else {
         return None;
     };
@@ -194,11 +209,7 @@ fn input_assignment(tokens: &[Token]) -> Option<(&str, InputFlavor, &[Token])> {
         && matches!(rest[rest.len() - 1].tok, Tok::Rpar)
         && is_call(&rest[2..rest.len() - 1], "input")
     {
-        return Some((
-            target,
-            InputFlavor::Number,
-            &rest[2..rest.len() - 1],
-        ));
+        return Some((target, InputFlavor::Number, &rest[2..rest.len() - 1]));
     }
     None
 }
@@ -294,8 +305,12 @@ fn convert_assignment(
     if level != SyntaxLevel::Sentence {
         return None;
     }
-    let [Token { tok: Tok::Name { name: target }, .. }, Token { tok: Tok::Equal, .. }, value @ ..] =
-        tokens
+    let [Token {
+        tok: Tok::Name { name: target },
+        ..
+    }, Token {
+        tok: Tok::Equal, ..
+    }, value @ ..] = tokens
     else {
         return None;
     };
@@ -419,7 +434,7 @@ mod tests {
         let source = "answer = 7\nguess = int(input(\"Guess\"))\nprint(guess)\n";
         assert_eq!(
             converted(source, SyntaxLevel::Sentence, Language::English).source,
-        "set answer to 7\nask number guess \"Guess\"\nshow guess\n"
+            "set answer to 7\nask number guess \"Guess\"\nshow guess\n"
         );
     }
 
@@ -459,12 +474,8 @@ mod tests {
 
     #[test]
     fn rejects_invalid_python_before_conversion() {
-        let errors = convert_python(
-            "if broken\n",
-            SyntaxLevel::Sentence,
-            Language::English,
-        )
-        .unwrap_err();
+        let errors =
+            convert_python("if broken\n", SyntaxLevel::Sentence, Language::English).unwrap_err();
         assert_eq!(errors.len(), 1);
         assert!(errors[0].message.contains("not valid"));
         assert!(errors[0].hint.is_some());
