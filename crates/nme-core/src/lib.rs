@@ -35,7 +35,7 @@
 //! in the `nme-cli` crate, keeping this crate trivially testable.
 //!
 //! See `docs/architecture.md` in the repository for the full design
-//! rationale and the rules every contributor (human or AI) must follow.
+//! rationale and the rules every contributor must follow.
 
 pub mod diagnostics;
 pub mod lexer;
