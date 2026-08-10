@@ -66,9 +66,10 @@ rewrite.
 ### 1. Python always wins
 
 A valid Python statement or compound header is copied byte for byte, even when
-its names resemble NME words. Validity is decided with the real
-`rustpython_parser::parse`, including the synthetic `pass` body needed to test
-headers. Every new matcher must stay behind this check.
+its names resemble NME words. The bundled parser decides known Python grammar
+with `rustpython_parser::parse`, including the synthetic `pass` body needed to
+test headers; conservative newer-grammar shapes are preserved by the fallback
+described below. Every new matcher must stay behind these checks.
 
 The one intentional-looking case is colon-free `if condition`: it is invalid
 Python and can therefore be claimed by sentence NME. Normal `if condition:` is
@@ -94,7 +95,9 @@ span. Sentence forms instead build the same small AST variants (`Say`, `Ask`,
 words after its count (`3번 안녕하세요`), and a small value change may use
 `score add 1` or `점수에 1 더해`; both lower through the same AST path. Known
 variable names may be interpolated into sentence output; unknown words remain
-literal text. Both languages lower through the same code path.
+literal text. Subject-first conditions such as `color equals red then show yes`
+use the same `When` node as `if`/`만약` forms. Both languages lower through the
+same code path.
 
 Do not add a parallel Korean runtime, duplicate AST variants per language, or
 different behavior for equivalent English and Korean forms.
@@ -113,6 +116,11 @@ word remains Python because of the Python-wins rule.
 Unlimited typo correction would silently change programs. When more than one
 meaning is plausible, emit an exact caret diagnostic and an actionable hint.
 Never guess across expressions, identifiers, numbers, or arbitrary prose.
+
+When the bundled Rust parser does not yet know a newer CPython construct (for
+example, a Python 3.14 t-string), conservative future-Python token shapes are
+left byte-identical. The CLI then asks the selected CPython to validate them;
+the core never claims that its own parser covers every future Python grammar.
 
 ### 5. Lowering preserves lines
 

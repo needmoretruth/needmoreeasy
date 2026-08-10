@@ -105,6 +105,7 @@ fn future_python_call_shapes_are_left_for_the_selected_cpython() {
     // know that grammar yet, so the invocation shape is the compatibility
     // boundary that prevents NME from hijacking this as `say` syntax.
     unchanged("say = print\nsay(t\"hello\")\n");
+    unchanged("say = print; say(t\"hello\")\n");
 }
 
 #[test]

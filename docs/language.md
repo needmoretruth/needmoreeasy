@@ -201,6 +201,18 @@ if score is greater than 10 then show You won
 만약에 점수가 10보다 크면 성공 말해줘
 ```
 
+You may also start with the subject when that reads more naturally:
+
+```text
+score is greater than 5 then show high
+name exists then show Welcome name
+색이 빨강과 같으면 맞아요 말해줘
+```
+
+The subject-first form is limited to a clear comparison, existence check, or
+unmistakable action body. Ordinary speech such as `Hello then world` remains
+prose.
+
 Supported sentence comparisons:
 
 | English | Korean | Meaning |
@@ -238,12 +250,13 @@ module line is unnecessary.
 
 ### Typo and connector recovery
 
-NME action words and condition connectors accept their documented variants and recover one insertion,
+NME action words, logical connectors, and condition connectors accept their documented variants and recover one insertion,
 deletion, substitution, or adjacent transposition after Python rejects the
 line. A common two-keystroke pattern—one extra/missing character combined
 with an adjacent swap—is also accepted when it has one clear action. Examples
 include `물어바` → `물어봐`, `말헤` → `말해`, `repaet` → `repeat`, and
-`shwoe` → `show`, and `thne` → `then` in `if score is greater than 5 thne ...`.
+`shwoe` → `show`, `thne` → `then` in `if score is greater than 5 thne ...`,
+and `그리거` → `그리고`.
 
 Recovery applies only to these action/connector tokens, never to Python
 expressions, strings, or comments. If a repair is not unique or the sentence

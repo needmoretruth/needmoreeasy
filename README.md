@@ -59,7 +59,8 @@ extra-character-plus-swap typo such as `shwoe` → `show`. A clearly spoken
 multi-word line such as `Hello everyone!` is output even without an action;
 one bare word remains ordinary Python because Python always wins. When the
 meaning is not clear enough to recover safely, NME points at the uncertain text
-and suggests a concrete repair.
+and suggests a concrete repair. Conditions can start with the subject too:
+`score is greater than 5 then show high` or `색이 빨강과 같으면 맞아요 말해줘`.
 
 ## Install the beta
 
@@ -79,7 +80,7 @@ warns that its `bin` directory is not on `PATH`. It does not reinstall NME.
 Windows PowerShell uses the PATH step in the
 [installation guide](docs/install.md#windows-10-or-11).
 
-Expected version: `nme 0.0.1-beta.7`.
+Expected version: `nme 0.0.1-beta.8`.
 
 Windows, macOS, and Linux instructions are in the
 [installation guide](docs/install.md). The [five-minute guide](docs/getting-started.md)

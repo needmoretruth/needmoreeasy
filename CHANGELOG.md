@@ -4,6 +4,16 @@ English | [한국어](CHANGELOG.ko.md)
 
 All notable changes to NME are recorded here.
 
+## 0.0.1-beta.8 — 2026-08-11
+
+- Accept subject-first conversational conditions such as `color equals red
+  then show yes` and their natural Korean equivalents, including flat `end`
+  blocks.
+- Recover common logical connector typos (`그리거`, `an`) and spoken Korean
+  condition endings such as `같먄` without hijacking ordinary output sentences.
+- Preserve future Python shapes that the bundled parser does not know yet,
+  including CPython 3.14 t-strings, and add a Windows/macOS/Linux CI matrix.
+
 ## 0.0.1-beta.7 — 2026-08-11
 
 - Make ordinary multiword sentences and contractions such as `Hello world!`

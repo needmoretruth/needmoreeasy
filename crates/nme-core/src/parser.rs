@@ -435,6 +435,7 @@ fn is_header_shape(tokens: &[Token]) -> bool {
         || tokens
             .last()
             .is_some_and(|token| token_matches_exact(token, WHILE_WORDS_KO) && tokens.len() > 1)
+        || subject_condition_shape(tokens)
 }
 
 fn has_future_end(lines: &[LogicalLine], index: usize) -> bool {
@@ -559,7 +560,30 @@ fn classify(
     if looks_like_python_invocation(tokens) {
         return Ok(None);
     }
+    // rustpython-parser can lag behind the CPython selected by the CLI (for
+    // example, Python 3.14 t-strings). An adjacent name+string prefix is a
+    // strong signal for a newer string-prefix grammar rather than
+    // conversational NME. Preserve it byte-for-byte; `nme check` and
+    // `nme build` will ask the real CPython whether they are valid.
+    if looks_like_future_python(tokens) {
+        return Ok(None);
+    }
 
+    // A natural condition may start with its subject (`색이 빨강과 같으면
+    // ...`) instead of an explicit `if`/`만약`. Check this before value-change
+    // recovery so a misspelled action such as `말해` is not mistaken for
+    // `더해`.
+    if let Some(stmt) = match_subject_when(source, tokens, block, known_names, MatchMode::Exact)? {
+        return Ok(Some(stmt));
+    }
+    // Let a structured subject-first condition with a one-edit connector
+    // typo win over an exact output word at the end (`이름이 있으먄
+    // 안녕 말해줘`). Ordinary prose is guarded by the connector-shape checks
+    // inside `match_subject_when`.
+    if let Some(stmt) = match_subject_when(source, tokens, block, known_names, MatchMode::Recover)?
+    {
+        return Ok(Some(stmt));
+    }
     if let Some(stmt) = match_update(source, tokens, known_names, MatchMode::Exact)? {
         return Ok(Some(stmt));
     }
@@ -636,7 +660,18 @@ fn classify(
     exact_match!(match_set(source, tokens, known_names, MatchMode::Exact));
     exact_match!(match_use_random(source, tokens, MatchMode::Exact));
 
+    // A bare contraction such as `Don't stop!` can put `Don` one edit away
+    // from the repeat alias `do`, and `It's easy` can put `It` near `if`.
+    // When no complete NME shape is present, ordinary word-like input should
+    // win over those weak typo candidates.
+    if looks_like_plain_prose(tokens) && !has_recoverable_sentence_shape(tokens) {
+        let value = parse_value(source, tokens, known_names, true)
+            .map_err(|()| missing_action_diagnostic(tokens))?;
+        return Ok(Some(NmeStmt::Say { value }));
+    }
+
     let recovered = [
+        match_subject_when(source, tokens, block, known_names, MatchMode::Recover),
         match_update(source, tokens, known_names, MatchMode::Recover),
         match_when(source, tokens, block, known_names, MatchMode::Recover),
         match_times(source, tokens, block, known_names, MatchMode::Recover),
@@ -1102,6 +1137,16 @@ fn match_update(
 }
 
 fn update_action_at(tokens: &[Token], start: usize, mode: MatchMode) -> Option<(UpdateOp, usize)> {
+    // A typo such as `말헤` is equally close to the output action `말해` and
+    // the update action `더해`. Prefer the explicit output vocabulary rather
+    // than silently turning a spoken sentence into arithmetic. Exact update
+    // words (`더해`, `add`, ...) remain unaffected.
+    if mode == MatchMode::Recover
+        && (action_phrase_at(tokens, start, SAY_WORDS_EN, MatchMode::Recover).is_some()
+            || action_phrase_at(tokens, start, SAY_WORDS_KO, MatchMode::Recover).is_some())
+    {
+        return None;
+    }
     action_phrase_at(tokens, start, UPDATE_ADD_WORDS_EN, mode)
         .or_else(|| action_phrase_at(tokens, start, UPDATE_ADD_WORDS_KO, mode))
         .map(|consumed| (UpdateOp::Add, consumed))
@@ -1395,6 +1440,127 @@ fn match_branch(
 
 // -------------------------------------------------------------- condition
 
+/// Match a conversational condition whose subject comes first, for example
+/// `name exists then show hello` or `색이 빨강과 같으면 말해 yes`.
+///
+/// The explicit `if`/`만약` forms remain the clearest spelling, but accepting
+/// the subject-first form is important for learners who are writing a spoken
+/// sentence rather than translating Python word-for-word.  A bare `then`
+/// sentence is only claimed when its body has an unmistakable action; this
+/// keeps ordinary prose such as `Hello then world` as prose.
+fn match_subject_when(
+    source: &str,
+    tokens: &[Token],
+    block: &BlockCtx<'_>,
+    known_names: &HashSet<String>,
+    mode: MatchMode,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    // Explicit starters and other high-confidence sentence actions own the
+    // line. Without this guard, a normal `if ... then ...` or `3 times ...`
+    // line could be re-read as a subject-first condition because it contains
+    // a comparison word somewhere in its body.
+    if when_action_at(tokens, 0, MatchMode::Recover).is_some()
+        || repeat_action_at(tokens, 0, MatchMode::Recover).is_some()
+        || ask_action_at(tokens, 0, MatchMode::Recover).is_some()
+        || output_action_at(tokens, 0, MatchMode::Recover).is_some()
+        || set_action_at(tokens, 0, MatchMode::Recover).is_some()
+        || action_phrase_at(tokens, 0, USE_WORDS_EN, MatchMode::Recover).is_some()
+        || action_phrase_at(tokens, 0, USE_WORDS_KO, MatchMode::Recover).is_some()
+        || action_phrase_at(tokens, 0, WHILE_WORDS_EN, MatchMode::Recover).is_some()
+        || action_phrase_at(tokens, 0, WHILE_WORDS_KO, MatchMode::Recover).is_some()
+        || matches!(tokens.first().map(|token| &token.tok), Some(Tok::While))
+        || tokens
+            .last()
+            .is_some_and(|token| token_matches_exact(token, WHILE_WORDS_KO))
+    {
+        return Ok(None);
+    }
+    let Some((relative_at, connector)) = find_condition_connector(tokens) else {
+        return Ok(None);
+    };
+    if mode == MatchMode::Exact && find_exact_condition_connector(tokens).is_none() {
+        return Ok(None);
+    }
+    let attached_subject = relative_at == 0
+        && split_attached_condition_token(&tokens[0])
+            .is_some_and(|(_, attached)| attached == connector);
+    if relative_at == 0 && !attached_subject {
+        return Ok(None);
+    }
+    if mode == MatchMode::Recover
+        && find_exact_condition_connector(tokens).is_none()
+        && (output_action_at(tokens, relative_at, MatchMode::Recover).is_some()
+            || !recovered_condition_connector_is_plausible(&tokens[relative_at]))
+    {
+        return Ok(None);
+    }
+    let (condition_tokens, body_start, connector) =
+        condition_tokens_before(tokens, 0, relative_at, connector);
+    if condition_tokens.is_empty() {
+        return Ok(None);
+    }
+    if matches!(connector, ConditionConnector::Then)
+        && !subject_condition_body_is_action(&tokens[body_start..], mode)
+    {
+        return Ok(None);
+    }
+    let condition = parse_natural_condition(
+        source,
+        &condition_tokens,
+        Some(connector),
+        known_names,
+        Spelling::Korean,
+    )?;
+    let inline = parse_suite_body(
+        source,
+        &tokens[body_start..],
+        block,
+        SuiteKind::Condition,
+        span_of(tokens),
+        known_names,
+    )?;
+    Ok(Some(NmeStmt::When { condition, inline }))
+}
+
+fn recovered_condition_connector_is_plausible(token: &Token) -> bool {
+    let Some(word) = token_word(token) else {
+        return false;
+    };
+    word.is_ascii()
+        || word
+            .chars()
+            .last()
+            .is_some_and(|character| matches!(character, '면' | '먄'))
+}
+
+fn subject_condition_shape(tokens: &[Token]) -> bool {
+    let Some((relative_at, connector)) = find_condition_connector(tokens) else {
+        return false;
+    };
+    let attached_subject = relative_at == 0
+        && split_attached_condition_token(&tokens[0])
+            .is_some_and(|(_, attached)| attached == connector);
+    if relative_at == 0 && !attached_subject {
+        return false;
+    }
+    let (_, body_start, _) = condition_tokens_before(tokens, 0, relative_at, connector);
+    !matches!(connector, ConditionConnector::Then)
+        || subject_condition_body_is_action(&tokens[body_start..], MatchMode::Exact)
+}
+
+fn subject_condition_body_is_action(tokens: &[Token], mode: MatchMode) -> bool {
+    if tokens.is_empty() {
+        return false;
+    }
+    output_action_at(tokens, 0, mode).is_some()
+        || output_action_ending(tokens, mode).is_some()
+        || ask_action_at(tokens, 0, mode).is_some()
+        || set_action_at(tokens, 0, mode).is_some()
+        || update_action_at(tokens, 0, mode).is_some()
+        || action_phrase_at(tokens, 0, BREAK_WORDS_EN, mode).is_some()
+        || action_phrase_at(tokens, 0, BREAK_WORDS_KO, mode).is_some()
+}
+
 fn match_when(
     source: &str,
     tokens: &[Token],
@@ -1496,7 +1662,7 @@ enum ConditionConnector {
     Less,
 }
 
-fn find_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionConnector)> {
+fn find_exact_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionConnector)> {
     let exact = tokens
         .iter()
         .enumerate()
@@ -1505,12 +1671,15 @@ fn find_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionConnect
                 .map(|connector| (index, connector))
         })
         .collect::<Vec<_>>();
-    if let Some(connector) = exact
+    exact
         .iter()
         .copied()
         .find(|(_, connector)| *connector == ConditionConnector::Then)
         .or_else(|| exact.first().copied())
-    {
+}
+
+fn find_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionConnector)> {
+    if let Some(connector) = find_exact_condition_connector(tokens) {
         return Some(connector);
     }
 
@@ -1630,13 +1799,35 @@ fn logical_operator_at(tokens: &[Token], operator: LogicalOp) -> Option<usize> {
         LogicalOp::Or => &["or", "또는"][..],
     };
     let mut depth = 0usize;
-    tokens.iter().enumerate().find_map(|(index, token)| {
+    let exact = tokens.iter().enumerate().find_map(|(index, token)| {
         match token.tok {
             Tok::Lpar | Tok::Lsqb | Tok::Lbrace => depth += 1,
             Tok::Rpar | Tok::Rsqb | Tok::Rbrace => depth = depth.saturating_sub(1),
             _ => {}
         }
         (depth == 0 && token_matches_exact(token, expected)).then_some(index)
+    });
+    if exact.is_some() {
+        return exact;
+    }
+
+    // A single misspelled logical connector is easy to recover without
+    // guessing across arbitrary expressions. Keep the same precedence and
+    // bracket-depth rules as the exact path.
+    depth = 0;
+    tokens.iter().enumerate().find_map(|(index, token)| {
+        match token.tok {
+            Tok::Lpar | Tok::Lsqb | Tok::Lbrace => depth += 1,
+            Tok::Rpar | Tok::Rsqb | Tok::Rbrace => depth = depth.saturating_sub(1),
+            _ => {}
+        }
+        let recovered = depth == 0
+            && token_word(token).is_some_and(|actual| {
+                expected.iter().any(|candidate| {
+                    actual.chars().count() >= 2 && one_typo_away(actual, candidate)
+                })
+            });
+        recovered.then_some(index)
     })
 }
 
@@ -2053,6 +2244,16 @@ fn condition_connector_recovered(token: &Token, is_last: bool) -> Option<Conditi
         }) {
             recovered.push(ConditionConnector::Missing);
         }
+    }
+    // Korean learners often shorten `같으면`/`작으면`/`크면` to the spoken
+    // `...먄` ending. It is a bounded connector-only repair, not a general
+    // fuzzy match, and still goes through the unique-candidate check below.
+    match word {
+        "같먄" | "같으먄" => recovered.push(ConditionConnector::Equals),
+        "크먄" | "크으먄" => recovered.push(ConditionConnector::Greater),
+        "작먄" | "작으먄" => recovered.push(ConditionConnector::Less),
+        "라먄" => recovered.push(ConditionConnector::Equals),
+        _ => {}
     }
     recovered.sort_by_key(|kind| *kind as u8);
     recovered.dedup();
@@ -2912,6 +3113,14 @@ fn parse_suite_body(
     if has_top_level_semicolon(body) {
         return Err(one_statement_diagnostic(kind, body_span));
     }
+    // Korean `멈춰` is a valid Python identifier, so the Python-wins check in
+    // `classify` intentionally leaves a bare top-level name alone. Inside an
+    // already recognized NME suite, however, the documented Korean break
+    // spelling is unambiguous and must lower to `break` rather than leaking
+    // the identifier into generated Python.
+    if is_korean_break_alias(body) {
+        return Ok(Some(InlineStmt::Nme(Box::new(NmeStmt::Break))));
+    }
     if let Some(inner) = classify(source, body, &BlockCtx::Inline, known_names)? {
         return Ok(Some(InlineStmt::Nme(Box::new(inner))));
     }
@@ -3318,11 +3527,21 @@ fn action_phrase_at(
         if !all_words {
             continue;
         }
-        let matches = expected
+        let exact_matches = expected
+            .iter()
+            .filter(|candidate| actual.eq_ignore_ascii_case(candidate))
+            .count();
+        if exact_matches == 1 {
+            return Some(consumed);
+        }
+        if exact_matches > 1 {
+            continue;
+        }
+        let recovered_matches = expected
             .iter()
             .filter(|candidate| word_matches(&actual, candidate, mode))
             .count();
-        if matches == 1 {
+        if recovered_matches == 1 {
             return Some(consumed);
         }
     }
@@ -3381,7 +3600,7 @@ fn action_typo_away(actual: &str, expected: &str) -> bool {
     if actual_chars.len().abs_diff(expected_chars.len()) > 2 {
         return false;
     }
-    for index in 0..actual_chars.len() {
+    for index in 1..actual_chars.len() {
         let mut shortened = actual_chars.clone();
         shortened.remove(index);
         if adjacent_transposition_away(&shortened, &expected_chars) {
@@ -3514,10 +3733,30 @@ fn looks_like_python_invocation(tokens: &[Token]) -> bool {
         && matches!(tokens[1].tok, Tok::Lpar | Tok::Dot | Tok::Lsqb)
 }
 
+fn looks_like_future_python(tokens: &[Token]) -> bool {
+    tokens.windows(2).any(|pair| {
+        matches!(pair[0].tok, Tok::Name { .. })
+            && matches!(pair[1].tok, Tok::String { .. })
+            && pair[0].span.end == pair[1].span.start
+    })
+}
+
 fn looks_like_plain_prose(tokens: &[Token]) -> bool {
     tokens.iter().all(|token| {
         token_word(token).is_some() || is_command_ending(token) || matches!(token.tok, Tok::Comma)
     })
+}
+
+fn has_recoverable_sentence_shape(tokens: &[Token]) -> bool {
+    has_recoverable_repeat_shape(tokens)
+        || output_action_at(tokens, 0, MatchMode::Recover).is_some()
+        || output_action_ending(tokens, MatchMode::Recover).is_some()
+        || find_ask_shape(tokens, MatchMode::Recover).is_some()
+        || (set_action_at(tokens, 0, MatchMode::Recover).is_some() && tokens.len() > 1)
+        || (action_phrase_at(tokens, 0, USE_WORDS_EN, MatchMode::Recover).is_some()
+            && tokens.len() > 1)
+        || (action_phrase_at(tokens, 0, USE_WORDS_KO, MatchMode::Recover).is_some()
+            && tokens.len() > 1)
 }
 
 fn ambiguous_action_diagnostic(tokens: &[Token]) -> Diagnostic {

@@ -30,9 +30,9 @@ NME와 CPython 문법 검사를 모두 실행합니다. 이번 베타에는 NME 
 터미널에서 `nme 실행`, `nme 검사`, `nme 빌드`를 실행합니다.
 
 Cursor Agent에는 [AI 코딩 도우미](ai-assistants.ko.md)의 전달 문장을 붙여
-넣으세요. Cursor는 `@Link`로 웹 링크를 바로 문맥에 넣을 수 있으며 공식
-[문맥 안내](https://cursor.com/docs/context/@-symbols/overview)에 설명되어
-있습니다.
+넣으세요. Cursor는 `@Link`로 웹 링크를 바로 문맥에 넣을 수 있습니다. 최신
+링크·파일 문맥 사용법은 Cursor 공식 [문서](https://cursor.com/docs)를
+확인하세요.
 
 Cursor 프로젝트 규칙은 공식 [Cursor Rules 안내](https://cursor.com/docs/rules)에
 따라 보통 `.cursor/rules`에 둡니다. NME는 도구별 메타데이터를 프로젝트에

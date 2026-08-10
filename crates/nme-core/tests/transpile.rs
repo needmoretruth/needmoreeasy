@@ -110,6 +110,15 @@ fn ordinary_multiword_sentences_need_no_output_action() {
 }
 
 #[test]
+fn ordinary_contractions_and_logical_words_need_no_output_action() {
+    let source = "Don't stop!\nIt's easy.\nI'm happy and you're ready!\n";
+    assert_eq!(
+        ok(source),
+        "print(\"Don't stop!\")\nprint(\"It's easy.\")\nprint(\"I'm happy and you're ready!\")\n"
+    );
+}
+
+#[test]
 fn sentence_syntax_needs_no_quotes_commas_braces_or_colons() {
     let source = concat!(
         "이름을 물어봐 이름이 뭐예요?\n",
@@ -273,6 +282,59 @@ fn english_sentence_conditions_support_comparisons_and_inline_then() {
         "    print(\"exact\")\n",
         "if (score): print(\"present\")\n",
         "if (score == 7): print(\"일곱\")\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn subject_first_korean_conditions_are_not_mistaken_for_updates() {
+    let source = concat!(
+        "색은 빨강\n",
+        "색이 빨강과 같으면 말해 맞아요\n",
+        "이름은 Ada\n",
+        "이름이 있으면 안녕하세요 이름 말해줘\n",
+    );
+    let expected = concat!(
+        "색 = \"빨강\"\n",
+        "if (색 == \"빨강\"): print(\"맞아요\")\n",
+        "이름 = \"Ada\"\n",
+        "if (이름): print(\"안녕하세요 \" + str(이름))\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn condition_and_logical_connector_typos_are_recovered() {
+    let source = concat!(
+        "ready = True\n",
+        "score = 3\n",
+        "if ready 그리거 score > 2 then show go\n",
+        "색은 빨강\n",
+        "색이 빨강과 같먄 맞아요 말해줘\n",
+    );
+    let expected = concat!(
+        "ready = True\n",
+        "score = 3\n",
+        "if ((ready and score > 2)): print(\"go\")\n",
+        "색 = \"빨강\"\n",
+        "if (색 == \"빨강\"): print(\"맞아요\")\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn subject_first_korean_conditions_can_use_flat_end_blocks() {
+    let source = concat!(
+        "색은 빨강\n",
+        "색이 빨강과 같으면\n",
+        "맞아요 말해줘\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "색 = \"빨강\"\n",
+        "if (색 == \"빨강\"):\n",
+        "    print(\"맞아요\")\n",
+        "# end\n",
     );
     assert_eq!(ok(source), expected);
 }
@@ -879,6 +941,25 @@ fn korean_while_sentence_uses_an_explicit_end() {
         "while (점수 < 3):\n",
         "    print(점수)\n",
         "    점수 = 점수 + 1\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn korean_break_alias_is_lowered_inside_an_inline_condition() {
+    let source = concat!(
+        "점수는 0\n",
+        "동안 점수가 3보다 작으면\n",
+        "점수에 1 더해\n",
+        "점수가 2보다 크면 멈춰\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "점수 = 0\n",
+        "while (점수 < 3):\n",
+        "    점수 = 점수 + 1\n",
+        "    if (점수 > 2): break\n",
         "# end\n",
     );
     assert_eq!(ok(source), expected);

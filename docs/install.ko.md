@@ -2,7 +2,7 @@
 
 [English](install.md) | 한국어
 
-현재 NME `0.0.1-beta.7`는 beta 브랜치의 소스에서 설치합니다. Git, Cargo가
+현재 NME `0.0.1-beta.8`는 beta 브랜치의 소스에서 설치합니다. Git, Cargo가
 포함된 안정 Rust, Python 3.8 이상이 필요합니다. 공식
 [Rust 설치](https://www.rust-lang.org/tools/install),
 [Python 다운로드](https://www.python.org/downloads/),
@@ -108,7 +108,7 @@ nme 검사 examples/three-levels
 nme 실행 examples/hello-sentence
 ```
 
-NME는 `0.0.1-beta.7`, 랜덤 어댑터는 `0.0.1`이 표시되어야 합니다.
+NME는 `0.0.1-beta.8`, 랜덤 어댑터는 `0.0.1`이 표시되어야 합니다.
 
 ## 고급: 다른 Python 명령 고르기
 

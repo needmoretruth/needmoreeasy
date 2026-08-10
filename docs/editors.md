@@ -33,8 +33,8 @@ terminal.
 
 For Cursor Agent, paste the handoff prompt from
 [AI coding assistants](ai-assistants.md). Cursor can attach a web link directly
-with `@Link`; its current [context guide](https://cursor.com/docs/context/@-symbols/overview)
-documents link and file context.
+with `@Link`; see Cursor's current [documentation](https://cursor.com/docs) for
+the latest link and file-context instructions.
 
 Cursor project rules normally live in `.cursor/rules`, according to the
 official [Cursor Rules guide](https://cursor.com/docs/rules). NME does

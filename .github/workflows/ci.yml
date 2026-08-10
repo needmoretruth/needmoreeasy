@@ -1,0 +1,52 @@
+name: NME CI
+
+on:
+  push:
+    branches: [main, beta]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Check out NME
+        uses: actions/checkout@v4
+
+      - name: Install stable Rust with required tools
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Install CPython
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Format
+        run: cargo fmt --all -- --check
+
+      - name: Check
+        run: cargo check --workspace
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Test
+        run: cargo test --workspace
+
+      - name: Install the CLI and smoke test it
+        shell: bash
+        run: |
+          cargo install --path crates/nme-cli --locked
+          nme --version
+          nme check examples/three-levels
+          nme run examples/hello-sentence

@@ -50,6 +50,8 @@ Hello name show
 
 if score is greater than 10 then show You won
 만약에 점수가 10보다 크면 성공 말해줘
+score is greater than 5 then show high
+색이 빨강과 같으면 맞아요 말해줘
 
 set answer to random number from 1 to 10
 ask number guess Pick a number
@@ -58,8 +60,8 @@ ask number guess Pick a number
 For the gentlest possible output, a clear multi-word sentence can omit the
 action word (`Hello everyone!`). A single bare word is valid Python and stays
 Python, so use `show`/`말해줘` when that one word should be printed. Common
-action typos such as `repaet` and `shwoe` are repaired only when the intended
-action is unique.
+action, logical, and condition typos such as `repaet`, `shwoe`, `그리거`, and
+`같먄` are repaired only when the intended meaning is unique.
 
 Known input or assignment names are interpolated in sentence output. Natural
 prompts get a trailing space automatically. For the gentlest start, close a
@@ -157,9 +159,9 @@ always valid advanced NME.
 
 ## Product-specific ways to provide the link
 
-- Cursor: paste the URL with `@Link`. Cursor's official
-  [context documentation](https://cursor.com/docs/context/@-symbols/overview)
-  describes link context.
+- Cursor: paste the URL with `@Link`. Cursor's current
+  [documentation](https://cursor.com/docs) describes the available link and
+  context features.
 - Claude Code: paste the handoff prompt at session start. Claude Code also
   supports persistent `CLAUDE.md` memory, documented by
   [Anthropic](https://docs.anthropic.com/en/docs/claude-code/memory), but it is

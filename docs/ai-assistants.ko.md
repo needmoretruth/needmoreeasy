@@ -47,6 +47,8 @@ Hello name show
 
 만약에 점수가 10보다 크면 성공 말해줘
 if score is greater than 10 then show You won
+점수가 5보다 크면 높아요 말해줘
+색이 빨강과 같으면 맞아요 말해줘
 
 정답은 1부터 10까지 랜덤정수
 추측을 숫자로 물어봐 숫자를 맞혀 보세요
@@ -55,7 +57,8 @@ if score is greater than 10 then show You won
 가장 쉬운 출력은 `오늘도 반가워요!`처럼 분명한 여러 단어 문장을 동작 단어
 없이 쓰는 것입니다. 한 단어만 있는 줄은 Python 이름일 수 있어 `말해줘`나
 `보여줘`를 붙여야 출력됩니다. `repaet`, `shwoe` 같은 오타는 뜻이 하나로
-정해질 때만 자동으로 고칩니다.
+정해질 때만 자동으로 고칩니다. `그리거`, `같먄` 같은 논리·조건 연결어 오타도
+같은 제한으로 복구합니다.
 
 문장 출력에서 앞서 입력받거나 저장한 이름은 실제 값으로 바뀝니다. 따옴표 없는
 질문에는 끝 공백이 자동으로 붙습니다. 처음에는 들여쓰기 대신 `끝`/`end`로
@@ -148,9 +151,8 @@ Python으로 돌아가세요.
 
 ## 제품별 링크 전달 방법
 
-- Cursor: URL을 `@Link`로 붙입니다. 공식
-  [문맥 문서](https://cursor.com/docs/context/@-symbols/overview)가 링크 문맥을
-  설명합니다.
+- Cursor: URL을 `@Link`로 붙입니다. 최신 링크·문맥 기능은 Cursor 공식
+  [문서](https://cursor.com/docs)에서 확인하세요.
 - Claude Code: 세션을 시작할 때 전달 문장을 붙입니다. Anthropic 공식
   [메모리 문서](https://docs.anthropic.com/en/docs/claude-code/memory)의
   `CLAUDE.md`도 선택적으로 쓸 수 있지만 NME에는 필요하지 않습니다.
