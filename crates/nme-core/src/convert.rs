@@ -130,11 +130,15 @@ pub fn convert_python(
 ) -> Result<Conversion, Vec<Diagnostic>> {
     if let Err(error) = parse_python(source, Mode::Module, "<python>") {
         let start = usize::from(error.offset).min(source.len().saturating_sub(1));
-        return Err(vec![Diagnostic::new(
+        return Err(vec![Diagnostic::bilingual(
             format!("the Python source is not valid: {}", error.error),
+            format!("올바른 Python 코드가 아니에요: {}", error.error),
             Span::new(start, (start + 1).min(source.len())),
         )
-        .with_hint("fix this Python error before converting it to NME")]);
+        .with_bilingual_hint(
+            "fix this Python error before converting it to NME",
+            "NME로 변환하기 전에 Python 문법을 먼저 고쳐 주세요",
+        )]);
     }
 
     if level == SyntaxLevel::Advanced {

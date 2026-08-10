@@ -237,14 +237,18 @@ fn lexical_diagnostic(source: &str, err: &rustpython_parser::lexer::LexicalError
     // The lexer points at the offending character; underline it (or the
     // final byte when the error is at end of input).
     let start = offset.min(source.len().saturating_sub(1));
-    Diagnostic::new(
+    Diagnostic::bilingual(
         format!(
             "this is not something Python or NME can read: {}",
             err.error
         ),
+        format!("Python이나 NME가 읽을 수 없는 내용이에요: {}", err.error),
         Span::new(start, start + 1),
     )
-    .with_hint("check for an unterminated string or a stray character")
+    .with_bilingual_hint(
+        "check for an unterminated string or a stray character",
+        "닫히지 않은 문자열이나 잘못 들어간 문자가 있는지 확인하세요",
+    )
 }
 
 #[cfg(test)]

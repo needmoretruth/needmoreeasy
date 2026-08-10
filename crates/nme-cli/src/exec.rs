@@ -11,7 +11,7 @@
 
 use std::io::{self, Write as _};
 use std::path::{Path, PathBuf};
-use std::process::{Command, ExitStatus, Stdio};
+use std::process::{Command, ExitStatus, Output, Stdio};
 
 const CHECK_BOOTSTRAP: &str = r#"import os, sys
 path = os.path.abspath(sys.argv[1])
@@ -61,17 +61,14 @@ _nme_main()
 /// Feeding the UTF-8 source on standard input avoids command-line length and
 /// quoting limits. CPython receives the original NME path as the compile
 /// filename, so its syntax diagnostics point to the user's file.
-pub fn check_python(
-    python_source: &str,
-    source_path: &Path,
-    python: &str,
-) -> io::Result<ExitStatus> {
+pub fn check_python(python_source: &str, source_path: &Path, python: &str) -> io::Result<Output> {
     let source_path = absolute_path(source_path)?;
     let mut child = Command::new(python)
         .arg("-c")
         .arg(CHECK_BOOTSTRAP)
         .arg(source_path)
         .stdin(Stdio::piped())
+        .stderr(Stdio::piped())
         .spawn()?;
     let mut child_stdin = child
         .stdin
@@ -82,7 +79,7 @@ pub fn check_python(
         return Err(error);
     }
     drop(child_stdin);
-    child.wait()
+    child.wait_with_output()
 }
 
 /// Runs `python_source` with the given Python command (e.g. `python3`).

@@ -14,118 +14,252 @@
 
 mod exec;
 
+use std::io::Write as _;
 use std::path::Path;
 use std::process::ExitCode;
 
-const HELP: &str = r"nme — NeedMoreEasy: programming, easier than Python.
+const HELP_ENGLISH: &str = r"nme — NeedMoreEasy: start simpler, then grow into Python.
 
-USAGE:
-    nme <file.nme> [--python <command>]       Shortcut for `nme run`
-    nme run <file.nme> [--python <command>]   Run an NME program with Python
-    nme build <file.nme> [-o <output.py>]     Transpile to Python and print it
-    nme compile <file.nme> [-o <executable>]  Build a native executable (Nuitka)
-        --python <command>                     Select Python for the native build
-    nme check <file.nme> [--python <command>] Check with NME and CPython
-    nme convert <file.py> [options]           Convert Python to an NME level
-        --level advanced|beginner|sentence    Choose the syntax level
-        --language en|ko                      Choose generated words (default: en)
-        -o <output.nme>                       Write instead of printing
-    nme modules                               Show bundled modules and versions
-    nme --help                                Show this help
-    nme --version                             Show the version
+START HERE:
+    nme run hello                 Run hello.nme (`nme hello` also works)
+    nme check hello               Check hello.nme without running it
+    nme build hello -o hello.py   Turn hello.nme into readable Python
 
-Every valid Python program is already a valid NME program. NME offers advanced
-Python, compact beginner syntax, and conversational sentence syntax.
-English and Korean may be mixed. See README.md or README.ko.md to begin.
-Python defaults to `py` on Windows and `python3` on macOS and Linux.
+MORE COMMANDS:
+    nme compile hello -o hello    Build an executable with Nuitka
+    nme convert app.py [options]  Convert safe Python patterns to NME
+        --level advanced|beginner|sentence
+        --language en|ko
+        -o <output.nme>
+    nme modules                   Show bundled modules and versions
+    nme help                      Show this help
+    nme --version                 Show the version
+
+ADVANCED OPTIONS:
+    --python <command>            Override the automatically selected Python
+
+You may mix conversational sentences, beginner syntax, and ordinary Python in
+one file. English and Korean NME spellings may be mixed too. File names may be
+written with or without .nme. Exact existing paths always win.
+";
+
+const HELP_KOREAN: &str = r"nme — NeedMoreEasy: 더 쉽게 시작해서 Python으로 성장하세요.
+
+처음 시작:
+    nme 실행 hello                 hello.nme 실행 (`nme hello`도 가능)
+    nme 검사 hello                 실행하지 않고 hello.nme 검사
+    nme 빌드 hello -o hello.py   hello.nme를 읽기 쉬운 Python으로 변환
+
+더 많은 명령:
+    nme 컴파일 hello -o hello    Nuitka로 실행 파일 만들기
+    nme 변환 app.py [옵션]       안전한 Python 형태를 NME로 변환
+        --level advanced|beginner|sentence
+        --language en|ko
+        -o <출력.nme>
+    nme 모듈                       내장 모듈과 버전 보기
+    nme 도움                       이 도움말 보기
+    nme 버전                       버전 보기
+
+고급 옵션:
+    --python <명령>                자동으로 선택된 Python 명령 바꾸기
+
+한 파일에 문장형, 초급 문법, 일반 Python을 섞어 쓸 수 있습니다.
+영어와 한국어 NME도 섞어 쓸 수 있습니다. 파일 이름의 .nme는 생략해도 됩니다.
+이미 있는 경로를 입력하면 그 경로를 우선합니다.
 ";
 
 const DEFAULT_PYTHON: &str = if cfg!(windows) { "py" } else { "python3" };
 
+#[derive(Clone, Copy, Eq, PartialEq)]
+enum MessageLanguage {
+    English,
+    KoreanAndEnglish,
+}
+
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     match args.first().map(String::as_str) {
-        Some("run" | "실행") => command_run(&args[1..]),
-        Some("build" | "빌드") => command_build(&args[1..]),
-        Some("compile" | "컴파일") => command_compile(&args[1..]),
-        Some("check" | "검사") => command_check(&args[1..]),
-        Some("convert" | "변환") => command_convert(&args[1..]),
-        Some("modules" | "module" | "모듈") if args.len() == 1 => command_modules(),
-        Some("--version" | "-V") => {
+        Some("run") => command_run(&args[1..], MessageLanguage::English),
+        Some("실행") => command_run(&args[1..], MessageLanguage::KoreanAndEnglish),
+        Some("build") => command_build(&args[1..], MessageLanguage::English),
+        Some("빌드") => command_build(&args[1..], MessageLanguage::KoreanAndEnglish),
+        Some("compile") => command_compile(&args[1..], MessageLanguage::English),
+        Some("컴파일") => command_compile(&args[1..], MessageLanguage::KoreanAndEnglish),
+        Some("check") => command_check(&args[1..], MessageLanguage::English),
+        Some("검사") => command_check(&args[1..], MessageLanguage::KoreanAndEnglish),
+        Some("convert") => command_convert(&args[1..], MessageLanguage::English),
+        Some("변환") => command_convert(&args[1..], MessageLanguage::KoreanAndEnglish),
+        Some("modules" | "module") => command_modules(&args[1..], MessageLanguage::English),
+        Some("모듈") => command_modules(&args[1..], MessageLanguage::KoreanAndEnglish),
+        Some("--version" | "-V" | "version" | "버전") if args.len() == 1 => {
             println!("nme {}", env!("CARGO_PKG_VERSION"));
             ExitCode::SUCCESS
         }
-        Some("--help" | "-h") => {
-            print!("{HELP}");
+        Some("--help" | "-h" | "help") if args.len() == 1 => {
+            print!("{HELP_ENGLISH}");
             ExitCode::SUCCESS
         }
-        Some(path) if is_nme_path(path) => command_run(&args),
+        Some("도움" | "도움말") if args.len() == 1 => {
+            print_bilingual_help();
+            ExitCode::SUCCESS
+        }
+        Some(path) if is_direct_program(path) => command_run(&args, MessageLanguage::English),
+        Some(command) => {
+            let language = if contains_korean(command) {
+                MessageLanguage::KoreanAndEnglish
+            } else {
+                MessageLanguage::English
+            };
+            fail(
+                language,
+                &format!(
+                    "I don't know the command `{command}`. Run `nme help` to see the commands."
+                ),
+                &format!("`{command}` 명령을 알 수 없습니다. `nme 도움`으로 명령을 확인하세요."),
+            )
+        }
         _ => {
-            eprint!("{HELP}");
+            eprint!("{HELP_ENGLISH}");
             ExitCode::FAILURE
         }
     }
 }
 
-fn command_modules() -> ExitCode {
-    println!(
-        "random / 랜덤  {}  bundled, latest / 내장, 최신",
-        nme_core::syntax::RANDOM_MODULE_VERSION
-    );
+fn print_bilingual_help() {
+    print!("{HELP_KOREAN}\nENGLISH / 영어\n\n{HELP_ENGLISH}");
+}
+
+fn command_modules(args: &[String], language: MessageLanguage) -> ExitCode {
+    if let Some(extra) = args.first() {
+        return fail(
+            language,
+            &format!("`modules` does not take `{extra}`. Try `nme modules`."),
+            &format!("`모듈` 명령에는 `{extra}`을(를) 적지 않습니다. `nme 모듈`을 사용하세요."),
+        );
+    }
+    match language {
+        MessageLanguage::English => println!(
+            "random  {}  bundled, latest",
+            nme_core::syntax::RANDOM_MODULE_VERSION
+        ),
+        MessageLanguage::KoreanAndEnglish => println!(
+            "랜덤  {}  내장, 최신\nrandom  {}  bundled, latest",
+            nme_core::syntax::RANDOM_MODULE_VERSION,
+            nme_core::syntax::RANDOM_MODULE_VERSION
+        ),
+    }
     ExitCode::SUCCESS
 }
 
-fn command_convert(args: &[String]) -> ExitCode {
+fn command_convert(args: &[String], language: MessageLanguage) -> ExitCode {
     let mut file = None;
     let mut output = None;
     let mut level = nme_core::SyntaxLevel::Sentence;
-    let mut language = nme_core::Language::English;
+    let mut output_language = nme_core::Language::English;
     let mut rest = args.iter();
     while let Some(arg) = rest.next() {
         match arg.as_str() {
             "--level" => {
                 let Some(value) = rest.next() else {
-                    return fail("--level needs advanced, beginner, or sentence");
+                    return fail(
+                        language,
+                        "--level needs advanced, beginner, or sentence",
+                        "--level 뒤에 advanced, beginner, sentence 중 하나를 적어 주세요",
+                    );
                 };
                 level = match value.as_str() {
                     "advanced" | "고급" => nme_core::SyntaxLevel::Advanced,
                     "beginner" | "초급" => nme_core::SyntaxLevel::Beginner,
                     "sentence" | "문장" | "문장형" => nme_core::SyntaxLevel::Sentence,
-                    _ => return fail("--level needs advanced, beginner, or sentence"),
+                    _ => {
+                        return fail(
+                            language,
+                            "--level needs advanced, beginner, or sentence",
+                            "--level 뒤에 advanced, beginner, sentence 중 하나를 적어 주세요",
+                        );
+                    }
                 };
             }
             "--language" | "--lang" => {
                 let Some(value) = rest.next() else {
-                    return fail("--language needs en or ko");
+                    return fail(
+                        language,
+                        "--language needs en or ko",
+                        "--language 뒤에 en(영어) 또는 ko(한국어)를 적어 주세요",
+                    );
                 };
-                language = match value.as_str() {
+                output_language = match value.as_str() {
                     "en" | "english" | "영어" => nme_core::Language::English,
                     "ko" | "korean" | "한국어" => nme_core::Language::Korean,
-                    _ => return fail("--language needs en or ko"),
+                    _ => {
+                        return fail(
+                            language,
+                            "--language needs en or ko",
+                            "--language 뒤에 en(영어) 또는 ko(한국어)를 적어 주세요",
+                        );
+                    }
                 };
             }
             "-o" | "--output" => match rest.next() {
                 Some(path) => output = Some(path.clone()),
-                None => return fail("-o needs a path, e.g. -o program.nme"),
+                None => {
+                    return fail(
+                        language,
+                        "-o needs a path, e.g. -o program.nme",
+                        "-o 뒤에 저장할 경로가 필요합니다. 예: -o program.nme",
+                    );
+                }
             },
-            flag if flag.starts_with('-') => return fail(&format!("unknown option: {flag}")),
+            flag if flag.starts_with('-') => {
+                return fail(
+                    language,
+                    &format!("unknown option: {flag}"),
+                    &format!("알 수 없는 옵션입니다: {flag}"),
+                );
+            }
             path if file.is_none() => file = Some(path.to_string()),
-            path => return fail(&format!("unexpected extra file: {path}")),
+            path => {
+                return fail(
+                    language,
+                    &format!("unexpected extra file: {path}"),
+                    &format!("파일은 하나만 적어 주세요. 추가로 적힌 파일: {path}"),
+                );
+            }
         }
     }
     let Some(file) = file else {
-        return fail("which Python file should I convert? e.g. nme convert app.py");
+        return fail(
+            language,
+            "which Python file should I convert? e.g. nme convert app.py",
+            "변환할 Python 파일을 적어 주세요. 예: nme 변환 app.py",
+        );
     };
-    let source = match std::fs::read_to_string(&file) {
+    convert_file(&file, output, level, output_language, language)
+}
+
+fn convert_file(
+    file: &str,
+    output: Option<String>,
+    level: nme_core::SyntaxLevel,
+    output_language: nme_core::Language,
+    message_language: MessageLanguage,
+) -> ExitCode {
+    let source = match std::fs::read_to_string(file) {
         Ok(source) => source,
-        Err(error) => return fail(&format!("couldn't read {file}: {error}")),
+        Err(error) => {
+            return fail(
+                message_language,
+                &format!("couldn't read {file}: {error}"),
+                &format!("{file} 파일을 읽을 수 없습니다: {error}"),
+            );
+        }
     };
-    let conversion = match nme_core::convert_python(&source, level, language) {
+    let conversion = match nme_core::convert_python(&source, level, output_language) {
         Ok(conversion) => conversion,
         Err(problems) => {
             eprint!(
                 "{}",
-                nme_core::diagnostics::render_all(&problems, &source, &file)
+                render_diagnostics(&problems, &source, file, message_language)
             );
             return ExitCode::FAILURE;
         }
@@ -133,7 +267,11 @@ fn command_convert(args: &[String]) -> ExitCode {
     if let Some(path) = output {
         match std::fs::write(&path, conversion.source) {
             Ok(()) => ExitCode::SUCCESS,
-            Err(error) => fail(&format!("couldn't write {path}: {error}")),
+            Err(error) => fail(
+                message_language,
+                &format!("couldn't write {path}: {error}"),
+                &format!("{path} 파일을 저장할 수 없습니다: {error}"),
+            ),
         }
     } else {
         print!("{}", conversion.source);
@@ -141,34 +279,12 @@ fn command_convert(args: &[String]) -> ExitCode {
     }
 }
 
-fn command_compile(args: &[String]) -> ExitCode {
-    let mut python = DEFAULT_PYTHON.to_string();
-    let mut file = None;
-    let mut output = None;
-    let mut rest = args.iter();
-    while let Some(arg) = rest.next() {
-        match arg.as_str() {
-            "--python" => match rest.next() {
-                Some(command) => python.clone_from(command),
-                None => {
-                    return fail(&format!(
-                        "--python needs a command, e.g. --python {DEFAULT_PYTHON}"
-                    ));
-                }
-            },
-            "-o" | "--output" => match rest.next() {
-                Some(path) => output = Some(std::path::PathBuf::from(path)),
-                None => return fail("-o needs an executable path, e.g. -o hello"),
-            },
-            flag if flag.starts_with('-') => return fail(&format!("unknown option: {flag}")),
-            path if file.is_none() => file = Some(path.to_string()),
-            path => return fail(&format!("unexpected extra file: {path}")),
-        }
-    }
-    let Some(file) = file else {
-        return fail("which file should I compile? e.g. nme compile hello.nme");
+fn command_compile(args: &[String], language: MessageLanguage) -> ExitCode {
+    let (file, output, python) = match compile_arguments(args, language) {
+        Ok(arguments) => arguments,
+        Err(code) => return code,
     };
-    let source_path = Path::new(&file);
+    let source_path = resolve_nme_path(Path::new(&file));
     let stem = source_path
         .file_stem()
         .and_then(|name| name.to_str())
@@ -185,12 +301,19 @@ fn command_compile(args: &[String]) -> ExitCode {
         output.set_extension("exe");
     }
     if output.exists() {
-        return fail(&format!(
-            "refusing to overwrite existing output: {}",
-            output.display()
-        ));
+        return fail(
+            language,
+            &format!(
+                "refusing to overwrite existing output: {}",
+                output.display()
+            ),
+            &format!(
+                "이미 있는 결과 파일을 덮어쓰지 않습니다: {}",
+                output.display()
+            ),
+        );
     }
-    let (_, python_source) = match transpile_file(&file) {
+    let (_, python_source) = match transpile_file(&file, language) {
         Ok(ok) => ok,
         Err(code) => return code,
     };
@@ -199,25 +322,107 @@ fn command_compile(args: &[String]) -> ExitCode {
             if output.exists() {
                 ExitCode::SUCCESS
             } else {
-                fail(&format!(
-                    "native compiler succeeded but did not create {}",
-                    output.display()
-                ))
+                fail(
+                    language,
+                    &format!(
+                        "native compiler succeeded but did not create {}",
+                        output.display()
+                    ),
+                    &format!(
+                        "네이티브 컴파일러는 성공으로 종료했지만 {} 파일을 만들지 않았습니다",
+                        output.display()
+                    ),
+                )
             }
         }
-        Ok(status) => fail(&format!(
-            "native compilation failed with {status}\n\
-             hint: install Nuitka with `{python} -m pip install nuitka` and make sure a C compiler is available"
-        )),
-        Err(error) => fail(&format!(
-            "couldn't start native compilation: {error}\n\
-             hint: install Python and Nuitka, or choose Python with --python <command>"
-        )),
+        Ok(status) => fail(
+            language,
+            &format!(
+                "native compilation failed with {status}\n\
+                 hint: install Nuitka with `{python} -m pip install nuitka` and make sure a C compiler is available"
+            ),
+            &format!(
+                "네이티브 컴파일이 실패했습니다: {status}\n\
+                 도움말: `{python} -m pip install nuitka`로 Nuitka를 설치하고 C 컴파일러가 있는지 확인하세요"
+            ),
+        ),
+        Err(error) => fail(
+            language,
+            &format!(
+                "couldn't start native compilation: {error}\n\
+                 hint: install Python and Nuitka, then run this command again\n\
+                 advanced: use --python <command> only if Python has another command name"
+            ),
+            &format!(
+                "네이티브 컴파일을 시작할 수 없습니다: {error}\n\
+                 도움말: Python과 Nuitka를 설치한 뒤 이 명령을 다시 실행하세요\n\
+                 고급: Python 명령 이름이 다를 때만 --python <명령>을 사용하세요"
+            ),
+        ),
     }
 }
 
+fn compile_arguments(
+    args: &[String],
+    language: MessageLanguage,
+) -> Result<(String, Option<std::path::PathBuf>, String), ExitCode> {
+    let mut python = DEFAULT_PYTHON.to_string();
+    let mut file = None;
+    let mut output = None;
+    let mut rest = args.iter();
+    while let Some(arg) = rest.next() {
+        match arg.as_str() {
+            "--python" => match rest.next() {
+                Some(command) => python.clone_from(command),
+                None => {
+                    return Err(fail(
+                        language,
+                        &format!("--python needs a command, e.g. --python {DEFAULT_PYTHON}"),
+                        &format!(
+                            "--python 뒤에 Python 명령이 필요합니다. 예: --python {DEFAULT_PYTHON}"
+                        ),
+                    ));
+                }
+            },
+            "-o" | "--output" => match rest.next() {
+                Some(path) => output = Some(std::path::PathBuf::from(path)),
+                None => {
+                    return Err(fail(
+                        language,
+                        "-o needs an executable path, e.g. -o hello",
+                        "-o 뒤에 만들 실행 파일 경로가 필요합니다. 예: -o hello",
+                    ));
+                }
+            },
+            flag if flag.starts_with('-') => {
+                return Err(fail(
+                    language,
+                    &format!("unknown option: {flag}"),
+                    &format!("알 수 없는 옵션입니다: {flag}"),
+                ));
+            }
+            path if file.is_none() => file = Some(path.to_string()),
+            path => {
+                return Err(fail(
+                    language,
+                    &format!("unexpected extra file: {path}"),
+                    &format!("파일은 하나만 적어 주세요. 추가로 적힌 파일: {path}"),
+                ));
+            }
+        }
+    }
+    let Some(file) = file else {
+        return Err(fail(
+            language,
+            "which file should I compile? e.g. nme compile hello",
+            "컴파일할 파일을 적어 주세요. 예: nme 컴파일 hello",
+        ));
+    };
+    Ok((file, output, python))
+}
+
 /// `nme run`: transpile, then execute with the real Python runtime.
-fn command_run(args: &[String]) -> ExitCode {
+fn command_run(args: &[String], language: MessageLanguage) -> ExitCode {
     let mut python = DEFAULT_PYTHON.to_string();
     let mut file = None;
     let mut rest = args.iter();
@@ -226,61 +431,157 @@ fn command_run(args: &[String]) -> ExitCode {
             "--python" => match rest.next() {
                 Some(command) => python.clone_from(command),
                 None => {
-                    return fail(&format!(
-                        "--python needs a command, e.g. --python {DEFAULT_PYTHON}"
-                    ));
+                    return fail(
+                        language,
+                        &format!("--python needs a command, e.g. --python {DEFAULT_PYTHON}"),
+                        &format!(
+                            "--python 뒤에 Python 명령이 필요합니다. 예: --python {DEFAULT_PYTHON}"
+                        ),
+                    );
                 }
             },
-            flag if flag.starts_with('-') => return fail(&format!("unknown option: {flag}")),
+            flag if flag.starts_with('-') => {
+                return fail(
+                    language,
+                    &format!("unknown option: {flag}"),
+                    &format!("알 수 없는 옵션입니다: {flag}"),
+                );
+            }
             path if file.is_none() => file = Some(path.to_string()),
-            path => return fail(&format!("unexpected extra file: {path}")),
+            path => {
+                return fail(
+                    language,
+                    &format!("unexpected extra file: {path}"),
+                    &format!("파일은 하나만 적어 주세요. 추가로 적힌 파일: {path}"),
+                );
+            }
         }
     }
     let Some(file) = file else {
-        return fail("which file should I run? e.g. nme run hello.nme");
+        return fail(
+            language,
+            "which file should I run? e.g. nme run hello",
+            "실행할 파일을 적어 주세요. 예: nme 실행 hello",
+        );
     };
 
-    let (path, python_source) = match transpile_file(&file) {
+    let (path, python_source) = match transpile_file(&file, language) {
         Ok(ok) => ok,
         Err(code) => return code,
     };
     match exec::run_python(&python_source, &path, &python) {
         Ok(status) => exit_code(status),
-        Err(err) => fail(&format!(
-            "couldn't start Python ({python}): {err}\n\
-             hint: make sure Python is installed, or pass --python <command>"
-        )),
+        Err(err) => fail(
+            language,
+            &format!(
+                "couldn't start Python ({python}): {err}\n\
+                 hint: install Python 3, then run this command again\n\
+                 advanced: use --python <command> only if Python has another command name"
+            ),
+            &format!(
+                "Python({python})을 시작할 수 없습니다: {err}\n\
+                 도움말: Python 3를 설치한 뒤 이 명령을 다시 실행하세요\n\
+                 고급: Python 명령 이름이 다를 때만 --python <명령>을 사용하세요"
+            ),
+        ),
     }
 }
 
 /// `nme build`: transpile and print (or write) the Python program.
-fn command_build(args: &[String]) -> ExitCode {
+fn command_build(args: &[String], language: MessageLanguage) -> ExitCode {
+    let mut python = DEFAULT_PYTHON.to_string();
     let mut output = None;
     let mut file = None;
     let mut rest = args.iter();
     while let Some(arg) = rest.next() {
         match arg.as_str() {
+            "--python" => match rest.next() {
+                Some(command) => python.clone_from(command),
+                None => {
+                    return fail(
+                        language,
+                        &format!("--python needs a command, e.g. --python {DEFAULT_PYTHON}"),
+                        &format!(
+                            "--python 뒤에 Python 명령이 필요합니다. 예: --python {DEFAULT_PYTHON}"
+                        ),
+                    );
+                }
+            },
             "-o" | "--output" => match rest.next() {
                 Some(path) => output = Some(path.clone()),
-                None => return fail("-o needs a path, e.g. -o hello.py"),
+                None => {
+                    return fail(
+                        language,
+                        "-o needs a path, e.g. -o hello.py",
+                        "-o 뒤에 저장할 경로가 필요합니다. 예: -o hello.py",
+                    );
+                }
             },
-            flag if flag.starts_with('-') => return fail(&format!("unknown option: {flag}")),
+            flag if flag.starts_with('-') => {
+                return fail(
+                    language,
+                    &format!("unknown option: {flag}"),
+                    &format!("알 수 없는 옵션입니다: {flag}"),
+                );
+            }
             path if file.is_none() => file = Some(path.to_string()),
-            path => return fail(&format!("unexpected extra file: {path}")),
+            path => {
+                return fail(
+                    language,
+                    &format!("unexpected extra file: {path}"),
+                    &format!("파일은 하나만 적어 주세요. 추가로 적힌 파일: {path}"),
+                );
+            }
         }
     }
     let Some(file) = file else {
-        return fail("which file should I build? e.g. nme build hello.nme");
+        return fail(
+            language,
+            "which file should I build? e.g. nme build hello",
+            "Python으로 변환할 파일을 적어 주세요. 예: nme 빌드 hello",
+        );
     };
 
-    let (_, python_source) = match transpile_file(&file) {
+    let (path, python_source) = match transpile_file(&file, language) {
         Ok(ok) => ok,
         Err(code) => return code,
     };
+    match exec::check_python(&python_source, &path, &python) {
+        Ok(output) if output.status.success() => write_stderr(&output.stderr),
+        Ok(output) => {
+            return fail_with_details(
+                language,
+                "the generated Python did not pass CPython's syntax check\n\
+                 hint: fix the Python syntax or indentation shown below, then build again",
+                "만들어진 Python이 CPython 문법 검사를 통과하지 못했습니다\n\
+                 도움말: 아래에 표시된 Python 문법이나 들여쓰기를 고친 뒤 다시 빌드하세요",
+                &output.stderr,
+            );
+        }
+        Err(error) => {
+            return fail(
+                language,
+                &format!(
+                    "couldn't start Python ({python}) to check the build: {error}\n\
+                     hint: install Python 3, then run this command again\n\
+                     advanced: use --python <command> only if Python has another command name"
+                ),
+                &format!(
+                    "빌드를 검사하기 위한 Python({python})을 시작할 수 없습니다: {error}\n\
+                     도움말: Python 3를 설치한 뒤 이 명령을 다시 실행하세요\n\
+                     고급: Python 명령 이름이 다를 때만 --python <명령>을 사용하세요"
+                ),
+            );
+        }
+    }
     if let Some(path) = output {
         match std::fs::write(&path, &python_source) {
             Ok(()) => ExitCode::SUCCESS,
-            Err(err) => fail(&format!("couldn't write {path}: {err}")),
+            Err(err) => fail(
+                language,
+                &format!("couldn't write {path}: {err}"),
+                &format!("{path} 파일을 저장할 수 없습니다: {err}"),
+            ),
         }
     } else {
         print!("{python_source}");
@@ -289,7 +590,7 @@ fn command_build(args: &[String]) -> ExitCode {
 }
 
 /// `nme check`: transpile, then ask CPython to compile without executing.
-fn command_check(args: &[String]) -> ExitCode {
+fn command_check(args: &[String], language: MessageLanguage) -> ExitCode {
     let mut python = DEFAULT_PYTHON.to_string();
     let mut file = None;
     let mut rest = args.iter();
@@ -298,29 +599,69 @@ fn command_check(args: &[String]) -> ExitCode {
             "--python" => match rest.next() {
                 Some(command) => python.clone_from(command),
                 None => {
-                    return fail(&format!(
-                        "--python needs a command, e.g. --python {DEFAULT_PYTHON}"
-                    ));
+                    return fail(
+                        language,
+                        &format!("--python needs a command, e.g. --python {DEFAULT_PYTHON}"),
+                        &format!(
+                            "--python 뒤에 Python 명령이 필요합니다. 예: --python {DEFAULT_PYTHON}"
+                        ),
+                    );
                 }
             },
-            flag if flag.starts_with('-') => return fail(&format!("unknown option: {flag}")),
+            flag if flag.starts_with('-') => {
+                return fail(
+                    language,
+                    &format!("unknown option: {flag}"),
+                    &format!("알 수 없는 옵션입니다: {flag}"),
+                );
+            }
             path if file.is_none() => file = Some(path.to_string()),
-            path => return fail(&format!("unexpected extra file: {path}")),
+            path => {
+                return fail(
+                    language,
+                    &format!("unexpected extra file: {path}"),
+                    &format!("파일은 하나만 적어 주세요. 추가로 적힌 파일: {path}"),
+                );
+            }
         }
     }
     let Some(file) = file else {
-        return fail("which file should I check? e.g. nme check hello.nme");
+        return fail(
+            language,
+            "which file should I check? e.g. nme check hello",
+            "검사할 파일을 적어 주세요. 예: nme 검사 hello",
+        );
     };
-    let (path, python_source) = match transpile_file(&file) {
+    let (path, python_source) = match transpile_file(&file, language) {
         Ok(ok) => ok,
         Err(code) => return code,
     };
     match exec::check_python(&python_source, &path, &python) {
-        Ok(status) => exit_code(status),
-        Err(error) => fail(&format!(
-            "couldn't start Python ({python}): {error}\n\
-             hint: make sure Python is installed, or pass --python <command>"
-        )),
+        Ok(output) if output.status.success() => {
+            write_stderr(&output.stderr);
+            ExitCode::SUCCESS
+        }
+        Ok(output) => fail_with_details(
+            language,
+            "CPython found a syntax or indentation problem in the generated program\n\
+             hint: fix the problem shown below, then check again",
+            "CPython이 만들어진 프로그램에서 문법 또는 들여쓰기 문제를 찾았습니다\n\
+             도움말: 아래에 표시된 문제를 고친 뒤 다시 검사하세요",
+            &output.stderr,
+        ),
+        Err(error) => fail(
+            language,
+            &format!(
+                "couldn't start Python ({python}): {error}\n\
+                 hint: install Python 3, then run this command again\n\
+                 advanced: use --python <command> only if Python has another command name"
+            ),
+            &format!(
+                "Python({python})을 시작할 수 없습니다: {error}\n\
+                 도움말: Python 3를 설치한 뒤 이 명령을 다시 실행하세요\n\
+                 고급: Python 명령 이름이 다를 때만 --python <명령>을 사용하세요"
+            ),
+        ),
     }
 }
 
@@ -331,32 +672,104 @@ fn is_nme_path(path: &str) -> bool {
         .is_some_and(|extension| extension.eq_ignore_ascii_case("nme"))
 }
 
+fn is_direct_program(path: &str) -> bool {
+    let path = Path::new(path);
+    path.exists()
+        || is_nme_path(path.to_string_lossy().as_ref())
+        || (path.extension().is_none() && path.with_extension("nme").exists())
+}
+
+fn resolve_nme_path(path: &Path) -> std::path::PathBuf {
+    if path.exists() || path.extension().is_some() {
+        path.to_path_buf()
+    } else {
+        path.with_extension("nme")
+    }
+}
+
+fn contains_korean(text: &str) -> bool {
+    text.chars().any(|character| {
+        matches!(
+            character,
+            '\u{1100}'..='\u{11ff}' | '\u{3130}'..='\u{318f}' | '\u{ac00}'..='\u{d7af}'
+        )
+    })
+}
+
 fn exit_code(status: std::process::ExitStatus) -> ExitCode {
     ExitCode::from(u8::try_from(status.code().unwrap_or(1)).unwrap_or(1))
 }
 
 /// Reads and transpiles one `.nme` file, reporting all problems nicely.
-fn transpile_file(file: &str) -> Result<(std::path::PathBuf, String), ExitCode> {
-    let path = Path::new(file);
-    let source = match std::fs::read_to_string(path) {
+fn transpile_file(
+    file: &str,
+    language: MessageLanguage,
+) -> Result<(std::path::PathBuf, String), ExitCode> {
+    let path = resolve_nme_path(Path::new(file));
+    let shown_path = path.to_string_lossy();
+    let source = match std::fs::read_to_string(&path) {
         Ok(source) => source,
         Err(err) => {
-            return Err(fail(&format!("couldn't read {file}: {err}")));
+            return Err(fail(
+                language,
+                &format!("couldn't read {shown_path}: {err}"),
+                &format!("{shown_path} 파일을 읽을 수 없습니다: {err}"),
+            ));
         }
     };
     match nme_core::transpile(&source) {
-        Ok(python) => Ok((path.to_path_buf(), python)),
+        Ok(python) => Ok((path, python)),
         Err(problems) => {
             eprint!(
                 "{}",
-                nme_core::diagnostics::render_all(&problems, &source, file)
+                render_diagnostics(&problems, &source, &shown_path, language)
             );
             Err(ExitCode::FAILURE)
         }
     }
 }
 
-fn fail(message: &str) -> ExitCode {
-    eprintln!("error: {message}");
+fn render_diagnostics(
+    problems: &[nme_core::diagnostics::Diagnostic],
+    source: &str,
+    path: &str,
+    language: MessageLanguage,
+) -> String {
+    match language {
+        MessageLanguage::English => nme_core::diagnostics::render_all(problems, source, path),
+        MessageLanguage::KoreanAndEnglish => {
+            nme_core::diagnostics::render_all_bilingual(problems, source, path)
+        }
+    }
+}
+
+fn fail(language: MessageLanguage, english: &str, korean: &str) -> ExitCode {
+    if language == MessageLanguage::KoreanAndEnglish {
+        eprintln!("오류: {korean}");
+    }
+    eprintln!("error: {english}");
     ExitCode::FAILURE
+}
+
+fn fail_with_details(
+    language: MessageLanguage,
+    english: &str,
+    korean: &str,
+    details: &[u8],
+) -> ExitCode {
+    let code = fail(language, english, korean);
+    write_stderr(details);
+    code
+}
+
+fn write_stderr(details: &[u8]) {
+    if details.is_empty() {
+        return;
+    }
+    let stderr = std::io::stderr();
+    let mut stderr = stderr.lock();
+    let _ = stderr.write_all(details);
+    if !details.ends_with(b"\n") {
+        let _ = stderr.write_all(b"\n");
+    }
 }

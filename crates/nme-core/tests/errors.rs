@@ -1,7 +1,7 @@
 //! Broken input must produce friendly, beginner-oriented diagnostics —
 //! never silently broken Python output.
 
-use nme_core::diagnostics::render_all;
+use nme_core::diagnostics::{render_all, render_all_bilingual};
 use nme_core::transpile;
 
 /// Transpiles and expects exactly one diagnostic; returns message + hint.
@@ -21,6 +21,11 @@ fn err(source: &str) -> String {
             }
         }
     }
+}
+
+fn bilingual_err(source: &str) -> String {
+    let problems = transpile(source).expect_err("expected an error");
+    render_all_bilingual(&problems, source, "test.nme")
 }
 
 #[test]
@@ -124,14 +129,17 @@ fn when_requires_a_condition_colon_and_body() {
 
 #[test]
 fn korean_forms_return_korean_guidance() {
-    let say = err("말해 1 +\n");
+    let say = bilingual_err("말해 1 +\n");
     assert!(say.contains("이해하지 못했어요"), "{say}");
+    assert!(say.contains("couldn't understand"), "{say}");
 
-    let repeat = err("3번:\n말해 \"들여쓰기 없음\"\n");
+    let repeat = bilingual_err("3번:\n말해 \"들여쓰기 없음\"\n");
     assert!(repeat.contains("들여써야"), "{repeat}");
+    assert!(repeat.contains("must be indented"), "{repeat}");
 
-    let when = err("만약 준비됨\n");
+    let when = bilingual_err("만약 준비됨\n");
     assert!(when.contains("필요해요"), "{when}");
+    assert!(when.contains("needs `:`"), "{when}");
 }
 
 #[test]

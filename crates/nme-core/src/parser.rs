@@ -274,12 +274,14 @@ fn classify(
     }
 
     if tokens.iter().any(is_sentence_punctuation) {
-        return Err(Diagnostic::new(
+        return Err(Diagnostic::bilingual(
             "`?` and `!` can be used in sentence-style NME, but this line was ambiguous",
+            "문장형 NME에서 `?`와 `!`를 쓸 수 있지만, 이 줄의 뜻은 모호해요",
             span_of(tokens),
         )
-        .with_hint(
-            "add `show` / `말해줘` or `ask` / `물어봐` so the sentence has one clear meaning",
+        .with_bilingual_hint(
+            "add `show` or `ask` so the sentence has one clear meaning",
+            "문장의 뜻이 하나가 되도록 `말해줘` 또는 `물어봐`를 붙이세요",
         ));
     }
 
@@ -320,34 +322,27 @@ fn match_say(
             let span = span_of(body);
             let text = &source[span.start..span.end];
             if looks_like_broken_expression(body) && !is_valid_python_expression(text) {
-                return Err(match spelling {
-                    Spelling::English => {
-                        Diagnostic::new("I couldn't understand what you want to `say`", span)
-                            .with_hint(
-                                "finish the value, or use plain words such as `show Hello world`",
-                            )
-                    }
-                    Spelling::Korean => Diagnostic::new("`말해` 뒤의 값을 이해하지 못했어요", span)
-                        .with_hint(
-                            "값을 완성하거나 `안녕하세요 말해줘`처럼 평범한 문장으로 쓰세요",
-                        ),
-                });
+                return Err(Diagnostic::bilingual(
+                    "I couldn't understand what you want to `say`",
+                    "`말해` 뒤의 값을 이해하지 못했어요",
+                    span,
+                )
+                .with_bilingual_hint(
+                    "finish the value, or use plain words such as `show Hello world`",
+                    "값을 완성하거나 `안녕하세요 말해줘`처럼 평범한 문장으로 쓰세요",
+                ));
             }
         }
         let value = parse_value(source, body, known_names, prefer_text).map_err(|()| {
-            Diagnostic::new(
-                if spelling == Spelling::Korean {
-                    "무엇을 말할지 이해하지 못했어요"
-                } else {
-                    "I couldn't understand what to show"
-                },
+            Diagnostic::bilingual(
+                "I couldn't understand what to show",
+                "무엇을 말할지 이해하지 못했어요",
                 span_of(body),
             )
-            .with_hint(if spelling == Spelling::Korean {
-                "`안녕하세요 말해줘`처럼 평범한 문장으로 적어도 돼요"
-            } else {
-                "write a value, or a sentence such as `show Hello world`"
-            })
+            .with_bilingual_hint(
+                "write a value, or a sentence such as `show Hello world`",
+                "`안녕하세요 말해줘`처럼 평범한 문장으로 적어도 돼요",
+            )
         })?;
         return Ok(Some(NmeStmt::Say { value }));
     }
@@ -364,31 +359,25 @@ fn match_say(
         return Err(say_missing(spelling, tokens[action_start].span));
     }
     let value = parse_value(source, &value_tokens, known_names, true).map_err(|()| {
-        Diagnostic::new(
-            if spelling == Spelling::Korean {
-                "말할 문장을 이해하지 못했어요"
-            } else {
-                "I couldn't understand the sentence to show"
-            },
+        Diagnostic::bilingual(
+            "I couldn't understand the sentence to show",
+            "말할 문장을 이해하지 못했어요",
             span_of(&value_tokens),
         )
-        .with_hint(if spelling == Spelling::Korean {
-            "`안녕하세요 말해줘`처럼 쓰세요"
-        } else {
-            "write it like `Hello world show`"
-        })
+        .with_bilingual_hint(
+            "write it like `Hello world show`",
+            "`안녕하세요 말해줘`처럼 쓰세요",
+        )
     })?;
     Ok(Some(NmeStmt::Say { value }))
 }
 
-fn say_missing(spelling: Spelling, span: Span) -> Diagnostic {
-    match spelling {
-        Spelling::English => {
-            Diagnostic::new("there is nothing to show", span).with_hint("write `show Hello world`")
-        }
-        Spelling::Korean => Diagnostic::new("말할 내용이 비어 있어요", span)
-            .with_hint("`안녕하세요 말해줘`처럼 내용을 함께 적어 주세요"),
-    }
+fn say_missing(_spelling: Spelling, span: Span) -> Diagnostic {
+    Diagnostic::bilingual("there is nothing to show", "말할 내용이 비어 있어요", span)
+        .with_bilingual_hint(
+            "write `show Hello world`",
+            "`안녕하세요 말해줘`처럼 내용을 함께 적어 주세요",
+        )
 }
 
 fn output_action_at(tokens: &[Token], start: usize, mode: MatchMode) -> Option<(Spelling, usize)> {
@@ -434,27 +423,27 @@ fn match_ask(
     } else if matches!(tokens[shape.prompt_start].tok, Tok::Comma) {
         let expression_tokens = &tokens[shape.prompt_start + 1..prompt_end];
         if expression_tokens.is_empty() {
-            return Err(match shape.spelling {
-                Spelling::English => Diagnostic::new(
-                    "the question after the comma is missing",
-                    tokens[shape.prompt_start].span,
-                )
-                .with_hint("add a question after the comma"),
-                Spelling::Korean => Diagnostic::new(
-                    "쉼표 뒤의 질문이 비어 있어요",
-                    tokens[shape.prompt_start].span,
-                )
-                .with_hint("쉼표 뒤에 질문을 적어 주세요"),
-            });
+            return Err(Diagnostic::bilingual(
+                "the question after the comma is missing",
+                "쉼표 뒤의 질문이 비어 있어요",
+                tokens[shape.prompt_start].span,
+            )
+            .with_bilingual_hint(
+                "add a question after the comma",
+                "쉼표 뒤에 질문을 적어 주세요",
+            ));
         }
         let span = span_of(expression_tokens);
         if !is_valid_python_expression(&source[span.start..span.end]) {
-            return Err(match shape.spelling {
-                Spelling::English => Diagnostic::new("I couldn't understand the question", span)
-                    .with_hint("remove the comma to write a plain sentence without quotes"),
-                Spelling::Korean => Diagnostic::new("질문 내용을 이해하지 못했어요", span)
-                    .with_hint("쉼표를 빼면 따옴표 없는 평범한 문장으로 쓸 수 있어요"),
-            });
+            return Err(Diagnostic::bilingual(
+                "I couldn't understand the question",
+                "질문 내용을 이해하지 못했어요",
+                span,
+            )
+            .with_bilingual_hint(
+                "remove the comma to write a plain sentence without quotes",
+                "쉼표를 빼면 따옴표 없는 평범한 문장으로 쓸 수 있어요",
+            ));
         }
         Some(Value::Python(Code::Source(span)))
     } else {
@@ -575,13 +564,16 @@ fn is_ask_modifier(token: &Token) -> bool {
     )
 }
 
-fn ask_target_diagnostic(spelling: Spelling, span: Span) -> Diagnostic {
-    match spelling {
-        Spelling::English => Diagnostic::new("write the name that should hold the answer", span)
-            .with_hint("for example: `ask name What is your name`"),
-        Spelling::Korean => Diagnostic::new("대답을 담을 이름이 필요해요", span)
-            .with_hint("`이름을 물어봐 이름이 뭐예요`처럼 쓰세요"),
-    }
+fn ask_target_diagnostic(_spelling: Spelling, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        "write the name that should hold the answer",
+        "대답을 담을 이름이 필요해요",
+        span,
+    )
+    .with_bilingual_hint(
+        "for example: `ask name What is your name`",
+        "`이름을 물어봐 이름이 뭐예요`처럼 쓰세요",
+    )
 }
 
 // -------------------------------------------------------------- condition
@@ -621,7 +613,7 @@ fn match_when(
             source,
             &tokens[colon_at + 1..],
             block,
-            SuiteKind::Condition(spelling),
+            SuiteKind::Condition,
             Span::new(tokens[0].span.start, tokens[colon_at].span.end),
             known_names,
         )?;
@@ -654,7 +646,7 @@ fn match_when(
         source,
         body,
         block,
-        SuiteKind::Condition(spelling),
+        SuiteKind::Condition,
         span_of(tokens),
         known_names,
     )?;
@@ -1065,22 +1057,24 @@ fn condition_connector_recovered(token: &Token, is_last: bool) -> Option<Conditi
     }
 }
 
-fn condition_missing(spelling: Spelling, span: Span) -> Diagnostic {
-    match spelling {
-        Spelling::English => Diagnostic::new("the condition is missing", span)
-            .with_hint("write `if ready` or `if score > 10` and indent the next line"),
-        Spelling::Korean => Diagnostic::new("조건이 비어 있어요", span)
-            .with_hint("`만약에 준비됐으면`처럼 적고 다음 줄을 들여쓰세요"),
-    }
+fn condition_missing(_spelling: Spelling, span: Span) -> Diagnostic {
+    Diagnostic::bilingual("the condition is missing", "조건이 비어 있어요", span)
+        .with_bilingual_hint(
+            "write `if ready` or `if score > 10` and indent the next line",
+            "`만약에 준비됐으면`처럼 적고 다음 줄을 들여쓰세요",
+        )
 }
 
-fn condition_invalid(spelling: Spelling, span: Span) -> Diagnostic {
-    match spelling {
-        Spelling::English => Diagnostic::new("I couldn't understand this condition", span)
-            .with_hint("try `if ready`, `if score > 10`, or `if name exists`"),
-        Spelling::Korean => Diagnostic::new("이 조건을 확실하게 이해하지 못했어요", span)
-            .with_hint("`만약에 이름이 있으면` 또는 `만약 점수 > 10`처럼 적어 보세요"),
-    }
+fn condition_invalid(_spelling: Spelling, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        "I couldn't understand this condition",
+        "이 조건을 확실하게 이해하지 못했어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "try `if ready`, `if score > 10`, or `if name exists`",
+        "`만약에 이름이 있으면` 또는 `만약 점수 > 10`처럼 적어 보세요",
+    )
 }
 
 // --------------------------------------------------------------- repeat
@@ -1097,7 +1091,7 @@ fn match_times(
             source,
             &tokens[colon_at + 1..],
             block,
-            SuiteKind::Repeat(Spelling::Korean),
+            SuiteKind::Repeat,
             Span::new(tokens[0].span.start, tokens[colon_at].span.end),
             known_names,
         )?;
@@ -1110,7 +1104,7 @@ fn match_times(
             source,
             &tokens[colon_at + 1..],
             block,
-            SuiteKind::Repeat(spelling),
+            SuiteKind::Repeat,
             Span::new(tokens[0].span.start, tokens[colon_at].span.end),
             known_names,
         )?;
@@ -1132,7 +1126,7 @@ fn match_times(
                 source,
                 &tokens[body_start..],
                 block,
-                SuiteKind::Repeat(spelling),
+                SuiteKind::Repeat,
                 span_of(&tokens[..body_start]),
                 known_names,
             )?;
@@ -1159,7 +1153,7 @@ fn match_times(
             source,
             &tokens[body_start..],
             block,
-            SuiteKind::Repeat(spelling),
+            SuiteKind::Repeat,
             span_of(&tokens[..body_start]),
             known_names,
         )?;
@@ -1198,26 +1192,29 @@ fn parse_count(source: &str, tokens: &[Token], spelling: Spelling) -> Result<Cod
     }
     let span = span_of(tokens);
     if !is_valid_python_expression(&source[span.start..span.end]) {
-        return Err(match spelling {
-            Spelling::English => {
-                Diagnostic::new("I couldn't understand how many times to repeat", span)
-                    .with_hint("write a number, like `repeat 3 times`")
-            }
-            Spelling::Korean => Diagnostic::new("몇 번 반복할지 이해하지 못했어요", span)
-                .with_hint("`3번 반복해`처럼 횟수를 적어 주세요"),
-        });
+        return Err(Diagnostic::bilingual(
+            "I couldn't understand how many times to repeat",
+            "몇 번 반복할지 이해하지 못했어요",
+            span,
+        )
+        .with_bilingual_hint(
+            "write a number, like `repeat 3 times`",
+            "`3번 반복해`처럼 횟수를 적어 주세요",
+        ));
     }
     Ok(Code::Source(span))
 }
 
-fn repeat_count_missing(spelling: Spelling, span: Span) -> Diagnostic {
-    match spelling {
-        Spelling::English => {
-            Diagnostic::new("the repeat count is missing", span).with_hint("write `repeat 3 times`")
-        }
-        Spelling::Korean => Diagnostic::new("반복 횟수가 비어 있어요", span)
-            .with_hint("`3번 반복해`처럼 숫자를 함께 적어 주세요"),
-    }
+fn repeat_count_missing(_spelling: Spelling, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        "the repeat count is missing",
+        "반복 횟수가 비어 있어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "write `repeat 3 times`",
+        "`3번 반복해`처럼 숫자를 함께 적어 주세요",
+    )
 }
 
 fn find_count_marker(tokens: &[Token], mode: MatchMode) -> Option<(usize, Spelling)> {
@@ -1249,16 +1246,15 @@ fn match_use_random(
         .filter_map(|(index, token)| random_word_matches(token, mode).then_some(index))
         .collect::<Vec<_>>();
     if random_positions.len() != 1 {
-        return Err(match spelling {
-            Spelling::English => {
-                Diagnostic::new("NME only bundles `use random` for now", span_of(tokens))
-                    .with_hint("write one module line such as `use random latest`")
-            }
-            Spelling::Korean => {
-                Diagnostic::new("이 쉬운 모듈은 아직 들어 있지 않아요", span_of(tokens))
-                    .with_hint("`랜덤 사용 최신`처럼 모듈 하나를 적어 주세요")
-            }
-        });
+        return Err(Diagnostic::bilingual(
+            "NME only bundles `use random` for now",
+            "NME에는 아직 쉬운 `랜덤` 모듈만 들어 있어요",
+            span_of(tokens),
+        )
+        .with_bilingual_hint(
+            "write one module line such as `use random latest`",
+            "`랜덤 사용 최신`처럼 모듈 하나를 적어 주세요",
+        ));
     }
     let random_at = random_positions[0];
 
@@ -1275,11 +1271,15 @@ fn match_use_random(
         })
         .collect::<Vec<_>>();
     if !latest_positions.is_empty() && !version_positions.is_empty() {
-        return Err(Diagnostic::new(
-            "choose either latest / 최신 or one exact module version",
+        return Err(Diagnostic::bilingual(
+            "choose either latest or one exact module version",
+            "최신 버전과 특정 버전 중 하나만 골라 주세요",
             span_of(tokens),
         )
-        .with_hint("write `use random latest` or `use random version 0.0.1`"));
+        .with_bilingual_hint(
+            "write `use random latest` or `use random version 0.0.1`",
+            "`랜덤 사용 최신` 또는 `랜덤 사용 버전 0.0.1`처럼 쓰세요",
+        ));
     }
     if latest_positions.len() > 1 || version_positions.len() > 1 {
         return Err(module_shape_diagnostic(spelling, span_of(tokens)));
@@ -1307,22 +1307,26 @@ fn match_use_random(
             used[value_end] = true;
         }
         let value_tokens = tokens.get(version_at + 1..value_end).ok_or_else(|| {
-            Diagnostic::new(
-                "모듈 버전이 비어 있어요 / module version is missing",
+            Diagnostic::bilingual(
+                "the module version is missing",
+                "모듈 버전이 비어 있어요",
                 tokens[version_at].span,
             )
-            .with_hint(format!(
-                "use `latest` / `최신`, or version {RANDOM_MODULE_VERSION}"
-            ))
+            .with_bilingual_hint(
+                format!("use `latest`, or version {RANDOM_MODULE_VERSION}"),
+                format!("`최신` 또는 버전 {RANDOM_MODULE_VERSION}을 사용하세요"),
+            )
         })?;
         if value_tokens.is_empty() {
-            return Err(Diagnostic::new(
-                "모듈 버전이 비어 있어요 / module version is missing",
+            return Err(Diagnostic::bilingual(
+                "the module version is missing",
+                "모듈 버전이 비어 있어요",
                 tokens[version_at].span,
             )
-            .with_hint(format!(
-                "use `latest` / `최신`, or version {RANDOM_MODULE_VERSION}"
-            )));
+            .with_bilingual_hint(
+                format!("use `latest`, or version {RANDOM_MODULE_VERSION}"),
+                format!("`최신` 또는 버전 {RANDOM_MODULE_VERSION}을 사용하세요"),
+            ));
         }
         for slot in &mut used[version_at + 1..value_end] {
             *slot = true;
@@ -1331,13 +1335,17 @@ fn match_use_random(
         let raw = &source[value_span.start..value_span.end];
         let version = raw.trim_matches(['\'', '"']).to_string();
         if version != RANDOM_MODULE_VERSION {
-            return Err(Diagnostic::new(
+            return Err(Diagnostic::bilingual(
                 format!("random version {version} is not bundled"),
+                format!("랜덤 버전 {version}은 내장되어 있지 않아요"),
                 value_span,
             )
-            .with_hint(format!(
-                "use `latest` / `최신`; this compiler bundles {RANDOM_MODULE_VERSION}"
-            )));
+            .with_bilingual_hint(
+                format!("use `latest`; this compiler bundles {RANDOM_MODULE_VERSION}"),
+                format!(
+                    "`최신`을 사용하세요. 이 컴파일러에는 {RANDOM_MODULE_VERSION}이 들어 있어요"
+                ),
+            ));
         }
         ModuleVersion::Exact(version)
     } else {
@@ -1377,13 +1385,16 @@ fn find_use_action(tokens: &[Token], mode: MatchMode) -> Option<(usize, usize, S
     None
 }
 
-fn module_shape_diagnostic(spelling: Spelling, span: Span) -> Diagnostic {
-    match spelling {
-        Spelling::English => Diagnostic::new("I couldn't understand this module line", span)
-            .with_hint("write `use random latest` or `use random version 0.0.1`"),
-        Spelling::Korean => Diagnostic::new("이 모듈 문장을 확실하게 이해하지 못했어요", span)
-            .with_hint("`랜덤 사용 최신` 또는 `랜덤 사용 버전 0.0.1`처럼 쓰세요"),
-    }
+fn module_shape_diagnostic(_spelling: Spelling, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        "I couldn't understand this module line",
+        "이 모듈 문장을 확실하게 이해하지 못했어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "write `use random latest` or `use random version 0.0.1`",
+        "`랜덤 사용 최신` 또는 `랜덤 사용 버전 0.0.1`처럼 쓰세요",
+    )
 }
 
 // ------------------------------------------------------------ assignment
@@ -1397,12 +1408,26 @@ fn match_set(
     if let Some(first) = name_word(&tokens[0]) {
         if let Some(target) = strip_assignment_particle(first) {
             if tokens.len() == 1 {
-                return Err(Diagnostic::new("저장할 값이 비어 있어요", tokens[0].span)
-                    .with_hint("`인사는 안녕하세요`처럼 값을 뒤에 적어 주세요"));
+                return Err(Diagnostic::bilingual(
+                    "the value to save is missing",
+                    "저장할 값이 비어 있어요",
+                    tokens[0].span,
+                )
+                .with_bilingual_hint(
+                    "write a value after the name",
+                    "`인사는 안녕하세요`처럼 값을 뒤에 적어 주세요",
+                ));
             }
             let value = parse_value(source, &tokens[1..], known_names, true).map_err(|()| {
-                Diagnostic::new("저장할 값을 이해하지 못했어요", span_of(&tokens[1..]))
-                    .with_hint("숫자, 이름, 또는 평범한 문장을 적어 주세요")
+                Diagnostic::bilingual(
+                    "I couldn't understand the value to save",
+                    "저장할 값을 이해하지 못했어요",
+                    span_of(&tokens[1..]),
+                )
+                .with_bilingual_hint(
+                    "write a number, name, or plain sentence",
+                    "숫자, 이름, 또는 평범한 문장을 적어 주세요",
+                )
             })?;
             return Ok(Some(NmeStmt::Set {
                 target: target.to_string(),
@@ -1417,8 +1442,15 @@ fn match_set(
     {
         let target = name_word(&tokens[0]).expect("checked name token");
         let value = parse_value(source, &tokens[2..], known_names, true).map_err(|()| {
-            Diagnostic::new("저장할 값을 이해하지 못했어요", span_of(&tokens[2..]))
-                .with_hint("`인사 는 안녕하세요`처럼 값을 뒤에 적어 주세요")
+            Diagnostic::bilingual(
+                "I couldn't understand the value to save",
+                "저장할 값을 이해하지 못했어요",
+                span_of(&tokens[2..]),
+            )
+            .with_bilingual_hint(
+                "write a value after the name",
+                "`인사 는 안녕하세요`처럼 값을 뒤에 적어 주세요",
+            )
         })?;
         return Ok(Some(NmeStmt::Set {
             target: target.to_string(),
@@ -1428,14 +1460,26 @@ fn match_set(
 
     if let Some(consumed) = action_phrase_at(tokens, 0, SET_WORDS_EN, mode) {
         let Some(target_token) = tokens.get(consumed) else {
-            return Err(
-                Diagnostic::new("the name to save is missing", tokens[0].span)
-                    .with_hint("write `set greeting to Hello`"),
-            );
+            return Err(Diagnostic::bilingual(
+                "the name to save is missing",
+                "값을 저장할 이름이 비어 있어요",
+                tokens[0].span,
+            )
+            .with_bilingual_hint(
+                "write `set greeting to Hello`",
+                "`인사는 안녕하세요`처럼 쓰세요",
+            ));
         };
         let Some(target) = name_word(target_token) else {
-            return Err(Diagnostic::new("use a simple name here", target_token.span)
-                .with_hint("write `set greeting to Hello`"));
+            return Err(Diagnostic::bilingual(
+                "use a simple name here",
+                "여기에는 간단한 이름을 써 주세요",
+                target_token.span,
+            )
+            .with_bilingual_hint(
+                "write `set greeting to Hello`",
+                "`인사는 안녕하세요`처럼 쓰세요",
+            ));
         };
         let mut value_start = consumed + 1;
         if tokens
@@ -1445,18 +1489,27 @@ fn match_set(
             value_start += 1;
         }
         if value_start >= tokens.len() {
-            return Err(
-                Diagnostic::new("the value to save is missing", target_token.span)
-                    .with_hint("write `set greeting to Hello`"),
-            );
+            return Err(Diagnostic::bilingual(
+                "the value to save is missing",
+                "저장할 값이 비어 있어요",
+                target_token.span,
+            )
+            .with_bilingual_hint(
+                "write `set greeting to Hello`",
+                "`인사는 안녕하세요`처럼 쓰세요",
+            ));
         }
         let value =
             parse_value(source, &tokens[value_start..], known_names, true).map_err(|()| {
-                Diagnostic::new(
+                Diagnostic::bilingual(
                     "I couldn't understand the value to save",
+                    "저장할 값을 이해하지 못했어요",
                     span_of(&tokens[value_start..]),
                 )
-                .with_hint("write a number, name, or plain sentence")
+                .with_bilingual_hint(
+                    "write a number, name, or plain sentence",
+                    "숫자, 이름, 또는 평범한 문장을 적어 주세요",
+                )
             })?;
         return Ok(Some(NmeStmt::Set {
             target: target.to_string(),
@@ -1691,8 +1744,8 @@ fn split_template_variable<'a>(
 
 #[derive(Clone, Copy)]
 enum SuiteKind {
-    Repeat(Spelling),
-    Condition(Spelling),
+    Repeat,
+    Condition,
 }
 
 fn parse_suite_body(
@@ -1731,57 +1784,61 @@ fn parse_suite_body(
 
 fn indentation_diagnostic(kind: SuiteKind, span: Span) -> Diagnostic {
     match kind {
-        SuiteKind::Repeat(Spelling::English) => {
-            Diagnostic::new("the lines that should repeat must be indented", span)
-                .with_hint("or keep it on one line: `repeat 3 times and show Hello`")
-        }
-        SuiteKind::Repeat(Spelling::Korean) => {
-            Diagnostic::new("반복할 다음 줄은 들여써야 해요", span)
-                .with_hint("한 줄로 `3번 반복해서 안녕 말해줘`라고 써도 돼요")
-        }
-        SuiteKind::Condition(Spelling::English) => {
-            Diagnostic::new("this condition needs `:` or an indented next line", span)
-                .with_hint("or put one statement after `then`")
-        }
-        SuiteKind::Condition(Spelling::Korean) => {
-            Diagnostic::new("조건 다음에는 실행할 줄이나 `:`이 필요해요", span)
-                .with_hint("한 문장은 `있으면` 뒤에 바로 적어도 돼요")
-        }
+        SuiteKind::Repeat => Diagnostic::bilingual(
+            "the lines that should repeat must be indented",
+            "반복할 다음 줄은 들여써야 해요",
+            span,
+        )
+        .with_bilingual_hint(
+            "or keep it on one line: `repeat 3 times and show Hello`",
+            "한 줄로 `3번 반복해서 안녕 말해줘`라고 써도 돼요",
+        ),
+        SuiteKind::Condition => Diagnostic::bilingual(
+            "this condition needs `:` or an indented next line",
+            "조건 다음에는 실행할 줄이나 `:`이 필요해요",
+            span,
+        )
+        .with_bilingual_hint(
+            "or put one statement after `then`",
+            "한 문장은 `있으면` 뒤에 바로 적어도 돼요",
+        ),
     }
 }
 
-fn inline_block_diagnostic(kind: SuiteKind, span: Span) -> Diagnostic {
-    let spelling = suite_spelling(kind);
-    match spelling {
-        Spelling::English => Diagnostic::new("a block can't start here without a statement", span)
-            .with_hint("put one statement here, or use an indented block on the next line"),
-        Spelling::Korean => Diagnostic::new("이 한 줄 블록에 실행할 문장이 없어요", span)
-            .with_hint("실행할 문장을 이어 쓰거나 다음 줄에 들여쓰세요"),
-    }
+fn inline_block_diagnostic(_kind: SuiteKind, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        "a block can't start here without a statement",
+        "이 한 줄 블록에 실행할 문장이 없어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "put one statement here, or use an indented block on the next line",
+        "실행할 문장을 이어 쓰거나 다음 줄에 들여쓰세요",
+    )
 }
 
-fn one_statement_diagnostic(kind: SuiteKind, span: Span) -> Diagnostic {
-    match suite_spelling(kind) {
-        Spelling::English => Diagnostic::new("only one statement fits on this line", span)
-            .with_hint("put multiple statements on separate indented lines"),
-        Spelling::Korean => Diagnostic::new("한 줄에는 문장 하나만 넣을 수 있어요", span)
-            .with_hint("여러 문장은 다음 줄부터 하나씩 들여쓰세요"),
-    }
+fn one_statement_diagnostic(_kind: SuiteKind, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        "only one statement fits on this line",
+        "한 줄에는 문장 하나만 넣을 수 있어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "put multiple statements on separate indented lines",
+        "여러 문장은 다음 줄부터 하나씩 들여쓰세요",
+    )
 }
 
-fn body_diagnostic(kind: SuiteKind, span: Span) -> Diagnostic {
-    match suite_spelling(kind) {
-        Spelling::English => Diagnostic::new("I couldn't understand the statement here", span)
-            .with_hint("write one Python, beginner, or sentence-style statement"),
-        Spelling::Korean => Diagnostic::new("여기 있는 문장을 이해하지 못했어요", span)
-            .with_hint("Python, 초급, 문장형 문법 중 한 문장을 적어 주세요"),
-    }
-}
-
-fn suite_spelling(kind: SuiteKind) -> Spelling {
-    match kind {
-        SuiteKind::Repeat(spelling) | SuiteKind::Condition(spelling) => spelling,
-    }
+fn body_diagnostic(_kind: SuiteKind, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        "I couldn't understand the statement here",
+        "여기 있는 문장을 이해하지 못했어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "write one Python, beginner, or sentence-style statement",
+        "Python, 초급, 문장형 문법 중 한 문장을 적어 주세요",
+    )
 }
 
 // --------------------------------------------------------------- helpers
@@ -2248,43 +2305,27 @@ fn looks_like_plain_prose(tokens: &[Token]) -> bool {
 }
 
 fn ambiguous_action_diagnostic(tokens: &[Token]) -> Diagnostic {
-    let korean = tokens
-        .iter()
-        .filter_map(token_word)
-        .flat_map(str::chars)
-        .any(is_hangul);
-    if korean {
-        Diagnostic::new("이 문장은 두 가지 동작으로 읽힐 수 있어요", span_of(tokens))
-            .with_hint("동작 단어를 정확히 적어 뜻을 하나로 정해 주세요")
-    } else {
-        Diagnostic::new(
-            "this sentence could mean more than one action",
-            span_of(tokens),
-        )
-        .with_hint("spell the action word exactly so there is one clear meaning")
-    }
+    Diagnostic::bilingual(
+        "this sentence could mean more than one action",
+        "이 문장은 두 가지 동작으로 읽힐 수 있어요",
+        span_of(tokens),
+    )
+    .with_bilingual_hint(
+        "spell the action word exactly so there is one clear meaning",
+        "동작 단어를 정확히 적어 뜻을 하나로 정해 주세요",
+    )
 }
 
 fn missing_action_diagnostic(tokens: &[Token]) -> Diagnostic {
-    let korean = tokens
-        .iter()
-        .filter_map(token_word)
-        .flat_map(str::chars)
-        .any(is_hangul);
-    if korean {
-        Diagnostic::new("이 줄에서 무엇을 할지 찾지 못했어요", span_of(tokens))
-            .with_hint("끝에 `말해줘`를 붙이거나 `물어봐`, `반복해` 같은 동작을 적어 주세요")
-    } else {
-        Diagnostic::new(
-            "I couldn't find one clear action on this line",
-            span_of(tokens),
-        )
-        .with_hint("add an action such as `show`, `ask`, or `repeat`")
-    }
-}
-
-fn is_hangul(character: char) -> bool {
-    matches!(character, '\u{1100}'..='\u{11ff}' | '\u{3130}'..='\u{318f}' | '\u{ac00}'..='\u{d7af}')
+    Diagnostic::bilingual(
+        "I couldn't find one clear action on this line",
+        "이 줄에서 무엇을 할지 찾지 못했어요",
+        span_of(tokens),
+    )
+    .with_bilingual_hint(
+        "add an action such as `show`, `ask`, or `repeat`",
+        "끝에 `말해줘`를 붙이거나 `물어봐`, `반복해` 같은 동작을 적어 주세요",
+    )
 }
 
 fn span_of_refs(tokens: &[&Token]) -> Span {

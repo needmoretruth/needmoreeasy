@@ -25,12 +25,14 @@ pub fn transpile(source: &str) -> Result<String, Vec<Diagnostic>> {
                 != count_line_breaks(&edit.replacement)
         })
         .map(|edit| {
-            Diagnostic::new(
+            Diagnostic::bilingual(
                 "sentence-style NME must stay on one physical line",
+                "문장형 NME 한 문장은 실제 한 줄 안에 써야 해요",
                 Span::new(edit.span.start, edit.span.end),
             )
-            .with_hint(
+            .with_bilingual_hint(
                 "keep this easy statement on one line; multiline Python expressions remain supported",
+                "이 쉬운 문장은 한 줄에 쓰세요. 여러 줄 Python 표현식은 그대로 지원해요",
             )
         })
         .collect::<Vec<_>>();
