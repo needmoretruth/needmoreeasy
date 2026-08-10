@@ -64,10 +64,11 @@ Python이 아닌 NME 동작 단어에 한 글자 오타가 있으면 고쳐서 �
 주어부터 말해도 됩니다. `색이 빨강과 같으면 맞아요 말해줘`처럼 쓰고, 여러 줄
 블록은 `끝`으로 닫습니다.
 
-## 베타 설치
+## 베타 설치(정식 1.0 이전)
 
-현재 NME는 소스에서 빌드해 설치합니다. 안정 Rust, Python 3.8 이상, Git을
-설치한 다음 실행하세요.
+현재 공개 버전은 정식 1.0이 아닌 베타입니다. NME는 소스에서 빌드합니다.
+먼저 [운영체제별 설치 안내](docs/install.ko.md)를 읽거나 다음 명령을
+실행하세요.
 
 ```sh
 git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
@@ -105,6 +106,7 @@ nme 모듈
 한국어 문장형만으로 만든 더 큰 예제를 보고 싶다면
 [`roulette.nme`](examples/roulette.nme)를 실행해 보세요. 질문, 조건, 반복,
 랜덤 숫자, 값 변경을 하나의 초보자용 프로그램에서 함께 연습할 수 있습니다.
+같은 내용을 영어로 쓴 [`roulette.en.nme`](examples/roulette.en.nme)도 있습니다.
 
 `.nme`는 생략할 수 있습니다. `program.nme`는 `nme 실행 program`만으로
 실행됩니다. NME가 운영체제에 맞는 Python 명령을 자동으로 고르므로 보통

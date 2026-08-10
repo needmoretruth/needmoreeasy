@@ -2,6 +2,8 @@
 
 English | [한국어](getting-started.ko.md)
 
+[Home](../README.md) | [Install](install.md) | [Tutorial](tutorial.md) | [Language reference](language.md)
+
 If Python still feels hard, this guide starts with something simpler and
 changes one small idea at a time until you are writing Python. The five-minute
 part starts after installation. If `nme --version` does not work yet, follow the

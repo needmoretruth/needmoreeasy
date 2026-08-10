@@ -66,10 +66,11 @@ meaning is not clear enough to recover safely, NME points at the uncertain text
 and suggests a concrete repair. Conditions can start with the subject too:
 `score is greater than 5 then show high` or `색이 빨강과 같으면 맞아요 말해줘`.
 
-## Install the beta
+## Install the beta (pre-release)
 
-NME currently builds from source. Install stable Rust, Python 3.8+, and Git,
-then run:
+This is the public beta, not a stable 1.0 release. It builds from source.
+Install stable Rust, Python 3.8+, and Git, then follow the
+[platform installation guide](docs/install.md) or run:
 
 ```sh
 git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
@@ -108,6 +109,7 @@ For a larger Korean sentence-only project, try the
 [`roulette.nme`](examples/roulette.nme) simulator. It combines questions,
 conditions, loops, random numbers, and value updates in one beginner-friendly
 program.
+The matching English companion is [`roulette.en.nme`](examples/roulette.en.nme).
 
 The `.nme` ending is optional. `nme run program` and even `nme program` both
 run `program.nme`. NME chooses the normal Python command for your operating

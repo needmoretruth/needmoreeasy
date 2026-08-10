@@ -1,0 +1,86 @@
+# English companion to roulette.nme: a small sentence-first roulette game.
+# It uses the same beginner path: ask, conditions, loops, random numbers, and
+# ordinary arithmetic can all stay in one NME project.
+use random
+
+set credits to 100
+set spins to 0
+set wins to 0
+set losses to 0
+set playing to true
+
+while playing
+show "Welcome to NME roulette!"
+show credits
+show "1. Spin"
+show "2. Rules"
+show "3. Statistics"
+show "4. Leave"
+ask menu, "Choose 1-4: "
+
+if menu equals 1
+if credits is less than 1
+show "You have no credits left."
+set playing to false
+end
+if credits is greater than 0
+ask chosen, "Choose a number from 0 to 36: "
+ask bet, "How many credits will you bet? "
+if bet is less than 1
+show "The bet must be at least 1."
+end
+if bet is greater than credits
+show "The bet cannot be larger than your credits."
+end
+if bet is greater than 0
+if bet is less than credits + 1
+set roll to random number from 0 to 36
+set credits to credits - bet
+set spins to spins + 1
+show "The wheel stopped on:"
+show roll
+if roll equals chosen
+set winnings to bet * 36
+set credits to credits + winnings
+set wins to wins + 1
+show "You won 35 to 1!"
+end
+if roll is not equal to chosen
+set losses to losses + 1
+show "The house wins this spin."
+end
+end
+end
+end
+end
+
+if menu equals 2
+show "Pick one number from 0 to 36."
+show "A matching number pays 35 to 1. Zero is green."
+end
+
+if menu equals 3
+show "Spins:"
+show spins
+show "Wins:"
+show wins
+show "Losses:"
+show losses
+show "Credits:"
+show credits
+end
+
+if menu equals 4
+show "Thanks for playing!"
+set playing to false
+end
+
+if menu is less than 1
+show "Please choose a number from 1 to 4."
+end
+if menu is greater than 4
+show "Please choose a number from 1 to 4."
+end
+end
+
+show "Goodbye!"

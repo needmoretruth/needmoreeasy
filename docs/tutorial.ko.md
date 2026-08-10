@@ -2,6 +2,8 @@
 
 [English](tutorial.md) | 한국어
 
+[README](../README.ko.md) | [설치](install.ko.md) | [5분 시작](getting-started.ko.md) | [문법 안내](language.ko.md)
+
 한 문장으로 시작해서 컴파일러로 끝나는 과정입니다. 다음 단계로 가기 전에 모든
 예제를 실행하세요. 단어 하나를 바꾸고 결과를 보는 것도 학습입니다.
 
@@ -147,6 +149,10 @@ nme 검사 examples/time-loop-sentence.ko
 nme 검사 examples/time-loop-beginner.ko
 nme 검사 examples/time-loop-python
 ```
+
+Python으로 넘어가기 전에 더 큰 예제를 보고 싶다면
+[`roulette.nme`](../examples/roulette.nme)를 실행해 보세요. 영어판은
+[`roulette.en.nme`](../examples/roulette.en.nme)입니다.
 
 준비가 되면 하나를 실행해 질문에 답해 보세요. 한 번에 전체를 다시 쓰지 말고,
 한 블록이나 한 줄만 다음 단계 문법으로 바꾸면서 나머지 프로그램은 그대로

@@ -2,6 +2,8 @@
 
 English | [한국어](install.ko.md)
 
+[Home](../README.md) | [Getting started](getting-started.md) | [Tutorial](tutorial.md) | [Language reference](language.md)
+
 NME `0.0.1-beta.14` currently installs from the beta branch. You need Git,
 stable Rust with Cargo, and Python 3.8 or newer. Use the official
 [Rust installer](https://www.rust-lang.org/tools/install),
