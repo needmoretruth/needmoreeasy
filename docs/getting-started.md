@@ -28,6 +28,11 @@ nme run hello
 Expected output: `Hello world!` You just wrote a complete program. There are
 no quotes or parentheses.
 
+Shortcuts work from the start: `nme r hello` runs, and if `hello.nme` is the
+only program in the folder, plain `nme r` finds it for you. `nme c hello`
+checks a program without running it, and `nme b hello` turns it into readable
+Python.
+
 ## 2. Have a conversation
 
 Replace the file with (then run `nme run hello` again):

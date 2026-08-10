@@ -838,8 +838,16 @@ fn transpile_file(
         Err(err) => {
             return Err(fail(
                 language,
-                &format!("couldn't read {shown_path}: {err}"),
-                &format!("{shown_path} 파일을 읽을 수 없습니다: {err}"),
+                &format!(
+                    "couldn't read {shown_path}: {err}\n\
+                     hint: create {shown_path} in this folder, or run `nme r` to run the\n\
+                     single .nme program here"
+                ),
+                &format!(
+                    "{shown_path} 파일을 읽을 수 없습니다: {err}\n\
+                     도움말: 이 폴더에 {shown_path} 파일을 만들거나, `nme r`을 실행하면\n\
+                     이 폴더에 있는 .nme 프로그램을 실행합니다"
+                ),
             ));
         }
     };

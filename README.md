@@ -116,6 +116,13 @@ The `.nme` ending is optional. `nme run program` and even `nme program` both
 run `program.nme`. NME chooses the normal Python command for your operating
 system; `--python` is only an advanced override for unusual setups.
 
+Shorter commands keep the same meaning: `nme r program` runs, `nme c program`
+checks, and `nme b program` builds. With no file name at all, `nme r` runs the
+single `.nme` program in the current folder; when several programs are there,
+NME lists them and asks which one to run. `nme c` and `nme b` behave the same
+way for checking and building. `nme m`, `nme v`, and `nme h` are short forms of
+`nme modules`, `nme --version`, and `nme help`.
+
 `run` is a development shortcut: NME compiles the file to Python and invokes
 CPython. `build` emits the compiled Python source. For a standalone native
 artifact, install Nuitka and use:
