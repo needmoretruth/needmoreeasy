@@ -158,10 +158,10 @@ fn classify(
     if let Some(stmt) = match_say(source, tokens, known_names)? {
         return Ok(Some(stmt));
     }
-    if let Some(stmt) = match_use_random(source, tokens)? {
+    if let Some(stmt) = match_set(source, tokens, known_names)? {
         return Ok(Some(stmt));
     }
-    if let Some(stmt) = match_set(source, tokens, known_names)? {
+    if let Some(stmt) = match_use_random(source, tokens)? {
         return Ok(Some(stmt));
     }
 

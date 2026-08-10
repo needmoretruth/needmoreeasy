@@ -224,6 +224,25 @@ fn a_korean_number_guessing_game_can_use_only_sentence_syntax() {
 }
 
 #[test]
+fn an_english_number_game_can_use_only_sentence_syntax() {
+    let source = concat!(
+        "set answer to random number from 1 to 10\n",
+        "ask number guess Pick a number\n",
+        "if guess equals answer then show Correct!\n",
+        "set color to pick from red or green or blue\n",
+        "show color\n",
+    );
+    let expected = concat!(
+        "answer = __import__(\"random\").randint(1, 10)\n",
+        "guess = int(input(\"Pick a number\" + \" \"))\n",
+        "if (guess == answer): print(\"Correct!\")\n",
+        "color = __import__(\"random\").choice((\"red\", \"green\", \"blue\",))\n",
+        "print(color)\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
 fn english_sentence_conditions_support_comparisons_and_inline_then() {
     let source = concat!(
         "score = 7\n",
