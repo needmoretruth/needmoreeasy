@@ -13,9 +13,7 @@ use crate::diagnostics::Span;
 
 pub const SAY_KEYWORD: &str = "say";
 pub const SAY_KEYWORD_KO: &str = "말해";
-pub(crate) const SAY_WORDS_EN: &[&str] = &[
-    "say", "show", "showme", "display", "tell", "tellme", "print",
-];
+pub(crate) const SAY_WORDS_EN: &[&str] = &["say", "show", "display", "tell", "print"];
 pub const ASK_KEYWORD: &str = "ask";
 pub const ASK_KEYWORD_KO: &str = "물어봐";
 pub const TIMES_KEYWORD: &str = "times";

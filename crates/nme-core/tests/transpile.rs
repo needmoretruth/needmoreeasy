@@ -95,6 +95,18 @@ fn ask_reads_text_into_an_english_or_korean_name() {
         ok("물어봐 이름, \"이름이 뭐예요? \"\n"),
         "이름 = input(\"이름이 뭐예요? \")\n"
     );
+    assert_eq!(
+        ok("물어봐 이름, 이름이 뭐예요?\n"),
+        "이름 = input(\"이름이 뭐예요?\" + \" \")\n"
+    );
+}
+
+#[test]
+fn ordinary_multiword_sentences_need_no_output_action() {
+    assert_eq!(
+        ok("Hello everyone!\n오늘도 반가워요!\n"),
+        "print(\"Hello everyone!\")\nprint(\"오늘도 반가워요!\")\n"
+    );
 }
 
 #[test]
@@ -171,11 +183,13 @@ fn common_one_edit_typos_are_recovered_only_after_python_rejects_the_line() {
         "물어바 이름 이름이 뭐예요\n",
         "안녕하세요 이름 말헤\n",
         "2번 반목해서 다시 말해줘\n",
+        "repaet 2 times and show typo fixed\n",
     );
     let expected = concat!(
         "이름 = input(\"이름이 뭐예요\" + \" \")\n",
         "print(\"안녕하세요 \" + str(이름))\n",
         "for _ in range(2): print(\"다시\")\n",
+        "for _ in range(2): print(\"typo fixed\")\n",
     );
     assert_eq!(ok(source), expected);
 }

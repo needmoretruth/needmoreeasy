@@ -103,8 +103,12 @@ different behavior for equivalent English and Korean forms.
 
 The sentence parser accepts documented connecting words, common Korean
 particles, and a single insertion, deletion, substitution, or adjacent
-transposition in action words. Recovery only runs after Python rejects the
-line and only when the surrounding token pattern identifies one construct.
+transposition in action words and condition connectors. It also accepts the
+bounded common pattern of one extra/missing character plus an adjacent swap
+when the action candidate is unique. Recovery only runs after Python rejects
+the line and only when the surrounding token pattern identifies one
+construct. Clearly multi-word prose can be output directly; a single bare
+word remains Python because of the Python-wins rule.
 
 Unlimited typo correction would silently change programs. When more than one
 meaning is plausible, emit an exact caret diagnostic and an actionable hint.

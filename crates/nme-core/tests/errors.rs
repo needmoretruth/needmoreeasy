@@ -156,10 +156,11 @@ fn unavailable_random_version_reports_the_bundled_version() {
 }
 
 #[test]
-fn sentence_punctuation_without_an_action_is_ambiguous() {
-    let message = err("Hello there!\n");
-    assert!(message.contains("ambiguous"), "{message}");
-    assert!(message.contains("show"), "{message}");
+fn sentence_punctuation_can_be_plain_output_without_an_action() {
+    assert_eq!(
+        transpile("Hello there!\n").unwrap(),
+        "print(\"Hello there!\")\n"
+    );
 }
 
 #[test]
@@ -172,17 +173,23 @@ fn action_typos_must_have_one_unambiguous_meaning() {
 }
 
 #[test]
-fn unknown_prose_and_broken_sentence_actions_never_pass_silently() {
-    let prose = err("hello world\n");
-    assert!(prose.contains("clear action"), "{prose}");
-
-    let typo = err("shwoe Hello\n");
-    assert!(typo.contains("clear action"), "{typo}");
+fn plain_prose_and_common_action_typos_are_easy_output() {
+    assert_eq!(
+        transpile("hello world\n").unwrap(),
+        "print(\"hello world\")\n"
+    );
+    assert_eq!(transpile("shwoe Hello\n").unwrap(), "print(\"Hello\")\n");
 }
 
 #[test]
 fn condition_templates_reject_unexplained_middle_words() {
     let message = err("ready = True\nif ready banana exists then show no\n");
+    assert!(message.contains("condition"), "{message}");
+}
+
+#[test]
+fn incomplete_english_comparisons_do_not_become_identity_python() {
+    let message = err("if score is greater then show high\n");
     assert!(message.contains("condition"), "{message}");
 }
 
@@ -207,6 +214,10 @@ fn a_one_edit_condition_connector_is_recovered() {
     assert_eq!(
         transpile("name = \"Ada\"\n만약에 name이 있으먄 안녕 말해줘\n").unwrap(),
         "name = \"Ada\"\nif (name): print(\"안녕\")\n"
+    );
+    assert_eq!(
+        transpile("score = 7\nif score is greater than 5 thne show high\n").unwrap(),
+        "score = 7\nif (score > 5): print(\"high\")\n"
     );
 }
 

@@ -38,6 +38,8 @@ show Hello 이름!
 ```text
 Hello world show
 안녕하세요 말해줘
+Hello everyone!
+오늘도 반가워요!
 
 name ask
 이름을 물어봐
@@ -52,6 +54,12 @@ if score is greater than 10 then show You won
 set answer to random number from 1 to 10
 ask number guess Pick a number
 ```
+
+For the gentlest possible output, a clear multi-word sentence can omit the
+action word (`Hello everyone!`). A single bare word is valid Python and stays
+Python, so use `show`/`말해줘` when that one word should be printed. Common
+action typos such as `repaet` and `shwoe` are repaired only when the intended
+action is unique.
 
 Known input or assignment names are interpolated in sentence output. Natural
 prompts get a trailing space automatically. For the gentlest start, close a

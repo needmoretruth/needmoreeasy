@@ -56,6 +56,18 @@ show Hello name!
 The result uses the value of `name` / `이름`; other words stay literal.
 Korean particles following a known name remain in the output.
 
+If a line is clearly ordinary multi-word speech, NME can print it without an
+action word:
+
+```text
+Hello everyone!
+오늘도 반가워요!
+```
+
+A single bare word is still valid Python, so Python wins and it remains an
+ordinary name expression. Add `show` or `말해줘` when a one-word line should
+print.
+
 The shortest conversation does not need a prompt or punctuation:
 
 ```text
@@ -72,14 +84,17 @@ expression as code.
 
 ```text
 ask name What is your name?
+ask name, What is your name?
 이름을 물어봐 이름이 뭐예요?
 
 ask number age How old are you?
 나이를 숫자로 물어봐 몇 살인가요?
 ```
 
-Natural prompts receive a separating space automatically. Text input compiles
-to `input(...)`; number input compiles to `int(input(...))`.
+Natural prompts receive a separating space automatically. A comma is optional
+for a plain-language prompt; quoted or expression prompts may use the precise
+beginner comma form. Text input compiles to `input(...)`; number input compiles
+to `int(input(...))`.
 
 Accepted actions include `ask`, `prompt`, `물어봐`, `물어봐줘`, `질문해`, and
 `입력받아`. Korean target particles `을` and `를` are removed from the variable
@@ -223,14 +238,17 @@ module line is unnecessary.
 
 ### Typo and connector recovery
 
-NME action words accept their documented variants and recover one insertion,
+NME action words and condition connectors accept their documented variants and recover one insertion,
 deletion, substitution, or adjacent transposition after Python rejects the
-line. Examples include `물어바` → `물어봐`, `말헤` → `말해`, and `repaet` →
-`repeat`.
+line. A common two-keystroke pattern—one extra/missing character combined
+with an adjacent swap—is also accepted when it has one clear action. Examples
+include `물어바` → `물어봐`, `말헤` → `말해`, `repaet` → `repeat`, and
+`shwoe` → `show`, and `thne` → `then` in `if score is greater than 5 thne ...`.
 
-Recovery applies only to action tokens, never to Python expressions, strings,
-or comments. If a repair is not unique or the sentence has no clear action,
-NME reports the exact span and a concrete hint instead of silently guessing.
+Recovery applies only to these action/connector tokens, never to Python
+expressions, strings, or comments. If a repair is not unique or the sentence
+has no clear action, NME reports the exact span and a concrete hint instead of
+silently guessing.
 This bounded rule is intentional: no compiler can safely infer every possible
 typo or every human sentence.
 

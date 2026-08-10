@@ -16,7 +16,6 @@ use rustpython_parser::lexer::{lex, LexicalErrorType};
 use rustpython_parser::{Mode, Tok};
 
 use crate::diagnostics::{Diagnostic, Span};
-use crate::syntax::SAY_WORDS_EN;
 
 /// One Python token together with its byte span in the source.
 #[derive(Debug, Clone)]
@@ -71,12 +70,12 @@ pub fn logical_lines(source: &str) -> Result<Vec<LogicalLine>, Diagnostic> {
             Ok(lines) => return Ok(lines),
             Err(LexAttemptError::Diagnostic(problem)) => return Err(problem),
             Err(LexAttemptError::SentenceApostrophe(offset)) => {
-                // The lexer established both the exact sentence action and
-                // the failing quote location. Replacing that one ASCII byte
+                // The lexer established a sentence-like word stream and the
+                // failing quote location. Replacing that one ASCII byte
                 // with whitespace lets rustpython-parser finish tokenizing;
                 // all spans still address the untouched original source, so
                 // lowering preserves the apostrophe as ordinary sentence
-                // text (`show I'm ready`).
+                // text (`I'm ready` or `show I'm ready`).
                 lexer_source.replace_range(offset..offset + 1, " ");
             }
         }
@@ -162,15 +161,8 @@ fn sentence_apostrophe(
                 if message == "EOL while scanning string literal"
         );
     if !is_unterminated_single_quote
-        || current.len() < 2
-        || !matches!(
-            current.first().map(|token| &token.tok),
-            Some(Tok::Name { name })
-                if SAY_WORDS_EN
-                    .iter()
-                    .any(|candidate| name.eq_ignore_ascii_case(candidate))
-        )
-        || !current[1..]
+        || current.is_empty()
+        || !current
             .iter()
             .all(|token| matches!(token.tok, Tok::Name { .. }))
     {
@@ -335,6 +327,14 @@ mod tests {
         let ls = lines(src);
         assert_eq!(ls.len(), 1);
         assert_eq!(ls[0].text(src), "show I'm sure it's ready!");
+    }
+
+    #[test]
+    fn apostrophes_inside_bare_sentence_prose_are_text() {
+        let src = "I'm happy today!\n";
+        let ls = lines(src);
+        assert_eq!(ls.len(), 1);
+        assert_eq!(ls[0].text(src), src.trim_end());
     }
 
     #[test]

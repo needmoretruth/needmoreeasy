@@ -4,6 +4,14 @@ English | [한국어](CHANGELOG.ko.md)
 
 All notable changes to NME are recorded here.
 
+## 0.0.1-beta.7 — 2026-08-11
+
+- Make ordinary multiword sentences and contractions such as `Hello world!`
+  and `I'm ready` print naturally without an output keyword.
+- Recover common transposed action and condition typos, including `shwoe` and
+  `thne`, while keeping ambiguous Python-shaped input untouched.
+- Accept an unquoted comma prompt such as `ask name, What is your name?`.
+
 ## 0.0.1-beta.6 — 2026-08-11
 
 - Add an easier sentence bridge for value changes (`add 1 to score`,

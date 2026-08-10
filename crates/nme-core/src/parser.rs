@@ -667,18 +667,6 @@ fn classify(
         return Err(ambiguous_action_diagnostic(tokens));
     }
 
-    if tokens.iter().any(is_sentence_punctuation) {
-        return Err(Diagnostic::bilingual(
-            "`?` and `!` can be used in sentence-style NME, but this line was ambiguous",
-            "문장형 NME에서 `?`와 `!`를 쓸 수 있지만, 이 줄의 뜻은 모호해요",
-            span_of(tokens),
-        )
-        .with_bilingual_hint(
-            "add `show` or `ask` so the sentence has one clear meaning",
-            "문장의 뜻이 하나가 되도록 `말해줘` 또는 `물어봐`를 붙이세요",
-        ));
-    }
-
     // Invalid Python led by another Python keyword belongs to Python. This
     // preserves its own context-sensitive diagnostics (`elif`, `except`, ...)
     // while still allowing the deliberately supported mixed `if 조건` form.
@@ -686,7 +674,9 @@ fn classify(
         return Ok(None);
     }
     if looks_like_plain_prose(tokens) {
-        return Err(missing_action_diagnostic(tokens));
+        let value = parse_value(source, tokens, known_names, true)
+            .map_err(|()| missing_action_diagnostic(tokens))?;
+        return Ok(Some(NmeStmt::Say { value }));
     }
     Ok(None)
 }
@@ -842,7 +832,18 @@ fn match_ask(
             ));
         }
         let span = span_of(expression_tokens);
-        if !is_valid_python_expression(&source[span.start..span.end]) {
+        if is_valid_python_expression(&source[span.start..span.end]) {
+            Some(Value::Python(Code::Source(span)))
+        } else if expression_tokens
+            .iter()
+            .all(|token| token_word(token).is_some() || is_command_ending(token))
+        {
+            Some(Value::Text(make_text_template(
+                source,
+                expression_tokens,
+                known_names,
+            )))
+        } else {
             return Err(Diagnostic::bilingual(
                 "I couldn't understand the question",
                 "질문 내용을 이해하지 못했어요",
@@ -853,7 +854,6 @@ fn match_ask(
                 "쉼표를 빼면 따옴표 없는 평범한 문장으로 쓸 수 있어요",
             ));
         }
-        Some(Value::Python(Code::Source(span)))
     } else {
         // A comma means precise beginner syntax. Without one, the remainder is
         // deliberately sentence text and therefore needs no quotes.
@@ -1661,6 +1661,11 @@ fn parse_natural_condition_atom(
         return Ok(condition);
     }
 
+    if looks_like_incomplete_english_condition(&cleaned) {
+        let condition_span = Span::new(cleaned[0].span.start, cleaned[cleaned.len() - 1].span.end);
+        return Err(condition_invalid(spelling, condition_span));
+    }
+
     match connector {
         Some(ConditionConnector::Missing) => {
             let (value, explicit_not) = parse_truth_subject(&cleaned, known_names, spelling)?;
@@ -1852,6 +1857,49 @@ fn parse_english_condition(
     })
 }
 
+/// A colon-free condition can make an incomplete comparison look like valid
+/// Python (`score is greater` is a valid identity expression). Once the user
+/// has clearly started one of NME's comparison words, keep the missing value
+/// as a friendly NME diagnostic instead of silently emitting that expression.
+fn looks_like_incomplete_english_condition(tokens: &[&Token]) -> bool {
+    if tokens.len() < 2 {
+        return false;
+    }
+    let mut cursor = 1;
+    if tokens.get(cursor).and_then(|token| token_word(token)) == Some("is") {
+        cursor += 1;
+    }
+    if tokens
+        .get(cursor)
+        .is_some_and(|token| token_matches_exact(token, &["really"]))
+    {
+        cursor += 1;
+    }
+    if tokens
+        .get(cursor)
+        .is_some_and(|token| matches!(token.tok, Tok::Not) || token_word(token) == Some("not"))
+    {
+        cursor += 1;
+    }
+    let Some(predicate) = tokens.get(cursor).and_then(|token| token_word(token)) else {
+        return false;
+    };
+    if !condition_word_matches(
+        predicate,
+        &["greater", "above", "less", "below", "equals", "equal"],
+    ) {
+        return false;
+    }
+    cursor += 1;
+    while tokens
+        .get(cursor)
+        .is_some_and(|token| token_matches_exact(token, &["to", "than"]))
+    {
+        cursor += 1;
+    }
+    cursor >= tokens.len()
+}
+
 fn condition_left(token: &Token, known_names: &HashSet<String>) -> ConditionValue {
     if let Some(literal) = literal_token(token) {
         return ConditionValue::Literal(literal);
@@ -1983,6 +2031,11 @@ fn condition_connector_recovered(token: &Token, is_last: bool) -> Option<Conditi
                 .any(|candidate| {
                     !word.eq_ignore_ascii_case(candidate)
                         && word != "the"
+                        // `than` is a normal part of `greater than`/`less
+                        // than`, not a misspelled `then` connector.  Keeping
+                        // it out avoids making an otherwise clear condition
+                        // ambiguous when the real connector is also mistyped.
+                        && word != "than"
                         && word.chars().count() >= 2
                         && one_typo_away(word, candidate)
                 })
@@ -2102,6 +2155,7 @@ fn match_times(
         if marker_at > 0
             && marker_at + 1 < tokens.len()
             && repeat_action_at(tokens, 0, mode).is_none()
+            && repeat_action_at(tokens, 0, MatchMode::Recover).is_none()
             && repeat_action_at(tokens, marker_at + 1, mode).is_none()
             && repeat_action_at(tokens, marker_at + 1, MatchMode::Recover).is_none()
         {
@@ -3239,6 +3293,18 @@ fn action_phrase_at(
 ) -> Option<usize> {
     let available = tokens.len().saturating_sub(start).min(3);
     for consumed in (1..=available).rev() {
+        // Concatenating separate English words is useful for attached Korean
+        // endings, but in recovery it turns ordinary prose such as `I am`
+        // into the one-edit condition starter `if`. Keep typo recovery local
+        // to one ASCII token; exact multi-word legacy aliases still work.
+        if mode == MatchMode::Recover
+            && consumed > 1
+            && tokens[start..start + consumed]
+                .iter()
+                .all(|token| token_word(token).is_some_and(str::is_ascii))
+        {
+            continue;
+        }
         let mut actual = String::new();
         let mut all_words = true;
         for token in &tokens[start..start + consumed] {
@@ -3252,10 +3318,11 @@ fn action_phrase_at(
         if !all_words {
             continue;
         }
-        if expected
+        let matches = expected
             .iter()
-            .any(|candidate| word_matches(&actual, candidate, mode))
-        {
+            .filter(|candidate| word_matches(&actual, candidate, mode))
+            .count();
+        if matches == 1 {
             return Some(consumed);
         }
     }
@@ -3289,7 +3356,7 @@ fn word_matches(actual: &str, expected: &str, mode: MatchMode) -> bool {
     if mode == MatchMode::Exact || actual.chars().count() < 2 {
         return false;
     }
-    one_typo_away(
+    action_typo_away(
         &actual
             .chars()
             .flat_map(char::to_lowercase)
@@ -3299,6 +3366,52 @@ fn word_matches(actual: &str, expected: &str, mode: MatchMode) -> bool {
             .flat_map(char::to_lowercase)
             .collect::<String>(),
     )
+}
+
+/// Action words tolerate one edit, plus the common two-keystroke typo where a
+/// single extra/missing character is combined with a swap or replacement.
+/// The match remains candidate-unique in `action_phrase_at`, so broad prose
+/// is never silently assigned an arbitrary action.
+fn action_typo_away(actual: &str, expected: &str) -> bool {
+    if one_typo_away(actual, expected) {
+        return true;
+    }
+    let actual_chars = actual.chars().collect::<Vec<_>>();
+    let expected_chars = expected.chars().collect::<Vec<_>>();
+    if actual_chars.len().abs_diff(expected_chars.len()) > 2 {
+        return false;
+    }
+    for index in 0..actual_chars.len() {
+        let mut shortened = actual_chars.clone();
+        shortened.remove(index);
+        if adjacent_transposition_away(&shortened, &expected_chars) {
+            return true;
+        }
+    }
+    for index in 0..expected_chars.len() {
+        let mut shortened = expected_chars.clone();
+        shortened.remove(index);
+        if adjacent_transposition_away(&actual_chars, &shortened) {
+            return true;
+        }
+    }
+    false
+}
+
+fn adjacent_transposition_away(left: &[char], right: &[char]) -> bool {
+    if left.len() != right.len() {
+        return false;
+    }
+    let differences = left
+        .iter()
+        .zip(right)
+        .enumerate()
+        .filter_map(|(index, (a, b))| (a != b).then_some(index))
+        .collect::<Vec<_>>();
+    differences.len() == 2
+        && differences[1] == differences[0] + 1
+        && left[differences[0]] == right[differences[1]]
+        && left[differences[1]] == right[differences[0]]
 }
 
 fn condition_word_matches(actual: &str, expected: &[&str]) -> bool {
@@ -3547,10 +3660,6 @@ fn name_word(token: &Token) -> Option<&str> {
 
 fn token_is_exact_name(token: &Token, expected: &str) -> bool {
     matches!(&token.tok, Tok::Name { name } if name == expected)
-}
-
-fn is_sentence_punctuation(token: &Token) -> bool {
-    matches!(name_word(token), Some("?" | "!"))
 }
 
 fn has_top_level_semicolon(tokens: &[Token]) -> bool {

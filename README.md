@@ -12,6 +12,7 @@ want more control, and turn one line at a time into ordinary Python. All three
 levels can live together, in English, Korean, or a mixture of both.
 
 ```text
+Hello everyone!
 name ask
 Hello name show
 3 times Welcome to NME
@@ -53,9 +54,12 @@ Sentence syntax understands common connecting words such as `만약에`,
 `while`/`동안`, `break`/`멈춰`, `elif`/`아니면 만약에` (or
 `아니면만약에`), and `else`/`아니면`
 inside an explicit `end`/`끝` block. It also recovers a one-character typo in
-an NME action word after Python has rejected the line. When the meaning is not
-clear enough to recover safely, NME points at the uncertain text and suggests
-a concrete repair.
+an NME action word after Python has rejected the line, including a common
+extra-character-plus-swap typo such as `shwoe` → `show`. A clearly spoken
+multi-word line such as `Hello everyone!` is output even without an action;
+one bare word remains ordinary Python because Python always wins. When the
+meaning is not clear enough to recover safely, NME points at the uncertain text
+and suggests a concrete repair.
 
 ## Install the beta
 
@@ -75,7 +79,7 @@ warns that its `bin` directory is not on `PATH`. It does not reinstall NME.
 Windows PowerShell uses the PATH step in the
 [installation guide](docs/install.md#windows-10-or-11).
 
-Expected version: `nme 0.0.1-beta.6`.
+Expected version: `nme 0.0.1-beta.7`.
 
 Windows, macOS, and Linux instructions are in the
 [installation guide](docs/install.md). The [five-minute guide](docs/getting-started.md)
