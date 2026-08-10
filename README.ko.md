@@ -61,8 +61,16 @@ Python이 아닌 NME 동작 단어에 한 글자 오타가 있으면 고쳐서 �
 분명한 여러 단어 문장은 동작 단어 없이도 출력합니다. 한 단어만 있는 줄은 Python이
 항상 우선하므로 일반 Python으로 남습니다. 뜻을 하나로 확정하기 어렵다면 억지로
 추측하지 않고 정확한 위치와 고치는 예시를 보여 줍니다. 조건은 `만약`을 빼고
-주어부터 말해도 됩니다. `색이 빨강과 같으면 맞아요 말해줘`처럼 쓰고, 여러 줄
-블록은 `끝`으로 닫습니다.
+주어부터 말해도 됩니다:
+
+```text
+set score to 6
+score is greater than 5 then show high
+색은 "빨강"
+색이 빨강과 같으면 맞아요 말해줘
+```
+
+여러 줄 블록은 `끝`으로 닫습니다.
 
 ## 베타 설치(정식 1.0 이전)
 
@@ -83,7 +91,7 @@ Cargo가 설치한 `bin` 폴더가 `PATH`에 없다고 경고하면 macOS/Linux�
 명령이 아닙니다. Windows PowerShell은
 [설치 안내](docs/install.ko.md#windows-10-또는-11)의 PATH 단계를 사용하세요.
 
-표시될 버전은 `nme 0.0.1-beta.14`입니다.
+표시될 버전은 `nme 0.0.1-beta.15`입니다.
 
 Windows, macOS, Linux별 과정은 [설치 안내](docs/install.ko.md)에 있습니다.
 프로그래밍을 전혀 모른다면 [5분 시작 안내](docs/getting-started.ko.md)부터
@@ -95,6 +103,7 @@ Windows, macOS, Linux별 과정은 [설치 안내](docs/install.ko.md)에 있습
 nme 실행 examples/hello-sentence
 nme 검사 examples/guessing-game.ko
 nme 빌드 examples/three-levels -o three-levels.py
+nme 실행 examples/guessing-game.ko
 nme 모듈
 ```
 
@@ -108,9 +117,18 @@ nme 모듈
 랜덤 숫자, 값 변경을 하나의 초보자용 프로그램에서 함께 연습할 수 있습니다.
 같은 내용을 영어로 쓴 [`roulette.en.nme`](examples/roulette.en.nme)도 있습니다.
 
-`.nme`는 생략할 수 있습니다. `program.nme`는 `nme 실행 program`만으로
-실행됩니다. NME가 운영체제에 맞는 Python 명령을 자동으로 고르므로 보통
-`--python`을 쓸 필요가 없습니다.
+`.nme`는 생략할 수 있습니다. `program.nme`는 `nme 실행 program`과 `nme
+program` 모두 실행됩니다. NME가 운영체제에 맞는 Python 명령을 자동으로 고르므로
+보통 `--python`을 쓸 필요가 없습니다.
+
+짧은 명령도 같은 뜻입니다. `nme r program`은 실행, `nme c program`은 검사,
+`nme b program`은 빌드입니다. 파일 이름 없이 `nme r`만 실행하면 현재 폴더에
+`.nme` 프로그램이 하나일 때 그 프로그램을 바로 실행하고, 여러 개일 때는
+목록을 보여 주고 어느 것을 실행할지 물어봅니다. `nme c`와 `nme b`도 검사와
+빌드에서 같은 방식으로 동작합니다. `nme m`, `nme v`, `nme h`는 각각
+`nme 모듈`, `nme --version`, `nme 도움`의 짧은 형태입니다. `nme comp
+program`은 Nuitka로 컴파일, `nme conv app.py`는 Python을 NME로 변환하는
+짧은 형태입니다.
 
 `실행`은 개발할 때 쓰는 지름길입니다. NME를 Python으로 컴파일한 뒤 CPython을
 시작합니다. `빌드`는 컴파일된 Python 파일을 만듭니다. 독립 실행 파일이
@@ -121,17 +139,19 @@ python3 -m pip install nuitka
 nme 컴파일 examples/hello-sentence.nme -o hello
 ```
 
+(설치 안내에는 선택적인 `[app]` 구성요소가 포함되어 있습니다.)
+
 네이티브 파일은 실행할 운영체제에서 각각 빌드해야 합니다. 시작 속도, 파일
 크기, 실행 속도는 프로그램에 따라 달라지므로 직접 측정해야 합니다. Python과
 완전히 호환되는 모든 프로그램이 무조건 더 빠르고 작아진다는 거짓 보장은 하지
 않습니다.
 
-## 버전이 있는 랜덤 도구
+## 버전이 붙은 랜덤 도구
 
 ```text
 랜덤 사용 최신
-random_number(1, 6) 말해줘
-랜덤선택(["빨강", "파랑"]) 말해줘
+말해 random_number(1, 6)
+말해 랜덤선택(["빨강", "파랑"])
 ```
 
 `random` / `랜덤` 어댑터 `0.0.1`이 NME 안에 들어 있습니다. 따라서 `최신`은
@@ -165,12 +185,12 @@ nme 변환 app.py --level 문장형 --language 한국어 -o app.nme
 
 - [문법 레퍼런스](docs/language.ko.md) — 세 단계, 정확한 뜻, 오타 복구,
   혼용, 모듈, 제한
-- [학습 과정](docs/tutorial.ko.md) — Hello World, 대화, 숫자 맞히기,
-  Python 혼용, NME로 작은 컴파일러 만들기
+- [학습 과정](docs/tutorial.ko.md) — 여섯 프로젝트: Hello World, 대화,
+  숫자 맞히기, Python 혼용, 타임루프 게임, NME로 작은 컴파일러 만들기
 - [VS Code, Cursor, Zed](docs/editors.ko.md) — 준비된 작업과 파일 설정
 - [AI 코딩 도우미](docs/ai-assistants.ko.md) — Claude Code, Codex,
   Cursor Agent, OpenCode에 링크 하나만 전달하는 방법
-- [컴파일러 구조](docs/architecture.md) — 기여자용 설계 규칙
+- [컴파일러 구조](docs/architecture.md) — 기여자용 설계 규칙 (영어 문서)
 - [버전 정책](docs/versioning.ko.md), [변경 기록](CHANGELOG.ko.md)
 
 ## 컴파일 방식

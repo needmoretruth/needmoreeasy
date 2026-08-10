@@ -1,6 +1,7 @@
 # Every valid Python program is already a valid NME program.
 # This file is 100% ordinary Python and stays byte-identical
 # after transpilation.
+# Run: nme r pure_python.nme
 
 import math
 

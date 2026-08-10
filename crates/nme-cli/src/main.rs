@@ -15,7 +15,7 @@
 mod exec;
 
 use std::io::Write as _;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 const HELP_ENGLISH: &str = r"nme — NeedMoreEasy: start simpler, then grow into Python.
@@ -24,6 +24,20 @@ START HERE:
     nme run hello                 Run hello.nme (`nme hello` also works)
     nme check hello               Check hello.nme without running it
     nme build hello -o hello.py   Turn hello.nme into readable Python
+
+SHORTCUTS:
+    nme r hello                   run
+    nme c hello                   check
+    nme b hello                   build
+    nme m                         modules (same as `nme modules`)
+    nme v                         version (same as `nme --version`)
+    nme h                         help
+    nme comp hello                compile (Nuitka native build)
+    nme conv app.py               convert (Python to NME)
+
+With no file name, `nme r` runs the single .nme program in the current
+folder; with several, it asks which one to run. `nme c` and `nme b` do the
+same for checking and building.
 
 MORE COMMANDS:
     nme compile hello -o hello    Build an executable with Nuitka
@@ -39,8 +53,10 @@ ADVANCED OPTIONS:
     --python <command>            Override the automatically selected Python
 
 You may mix conversational sentences, beginner syntax, and ordinary Python in
-one file. English and Korean NME spellings may be mixed too. File names may be
-written with or without .nme. Exact existing paths always win.
+one file. English and Korean NME spellings may be mixed too. File names work
+with or without .nme: type `nme run hello`, not `nme run hello.nme`. If the
+exact file you type exists, it is used as-is, so Python files such as
+`program.py` run too. `nme check` prints nothing when the program is fine.
 ";
 
 const HELP_KOREAN: &str = r"nme — NeedMoreEasy: 더 쉽게 시작해서 Python으로 성장하세요.
@@ -49,6 +65,20 @@ const HELP_KOREAN: &str = r"nme — NeedMoreEasy: 더 쉽게 시작해서 Python
     nme 실행 hello                 hello.nme 실행 (`nme hello`도 가능)
     nme 검사 hello                 실행하지 않고 hello.nme 검사
     nme 빌드 hello -o hello.py   hello.nme를 읽기 쉬운 Python으로 변환
+
+짧은 명령:
+    nme r hello                   실행
+    nme c hello                   검사
+    nme b hello                   빌드
+    nme m                         모듈 보기 (`nme modules`와 같음)
+    nme v                         버전 보기 (`nme --version`과 같음)
+    nme h                         도움말
+    nme comp hello                컴파일 (Nuitka 실행 파일)
+    nme conv app.py               변환 (Python을 NME로)
+
+파일 이름 없이 `nme r`을 실행하면 현재 폴더의 .nme 프로그램이 하나일 때
+그것을 실행하고, 여러 개일 때는 어느 것을 실행할지 물어봅니다.
+`nme c`와 `nme b`도 검사·빌드에서 같은 방식으로 동작합니다.
 
 더 많은 명령:
     nme 컴파일 hello -o hello    Nuitka로 실행 파일 만들기
@@ -64,8 +94,10 @@ const HELP_KOREAN: &str = r"nme — NeedMoreEasy: 더 쉽게 시작해서 Python
     --python <명령>                자동으로 선택된 Python 명령 바꾸기
 
 한 파일에 문장형, 초급 문법, 일반 Python을 섞어 쓸 수 있습니다.
-영어와 한국어 NME도 섞어 쓸 수 있습니다. 파일 이름의 .nme는 생략해도 됩니다.
-이미 있는 경로를 입력하면 그 경로를 우선합니다.
+영어와 한국어 NME도 섞어 쓸 수 있습니다. 파일 이름의 .nme는 생략해도
+됩니다(`nme 실행 hello`처럼 쓰면 됩니다). 적은 경로 그대로 파일이 있으면
+그 파일을 사용하므로 `program.py` 같은 Python 파일도 실행할 수 있습니다.
+`nme 검사`는 프로그램이 정상이면 아무것도 출력하지 않습니다.
 ";
 
 const DEFAULT_PYTHON: &str = if cfg!(windows) { "py" } else { "python3" };
@@ -79,35 +111,35 @@ enum MessageLanguage {
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     match args.first().map(String::as_str) {
-        Some("run") => command_run(&args[1..], MessageLanguage::English),
+        Some("run" | "r") => command_run(&args[1..], MessageLanguage::English),
         Some("실행") => command_run(&args[1..], MessageLanguage::KoreanAndEnglish),
-        Some("build") => command_build(&args[1..], MessageLanguage::English),
+        Some("build" | "b") => command_build(&args[1..], MessageLanguage::English),
         Some("빌드") => command_build(&args[1..], MessageLanguage::KoreanAndEnglish),
-        Some("compile") => command_compile(&args[1..], MessageLanguage::English),
+        Some("compile" | "comp") => command_compile(&args[1..], MessageLanguage::English),
         Some("컴파일") => command_compile(&args[1..], MessageLanguage::KoreanAndEnglish),
-        Some("check") => command_check(&args[1..], MessageLanguage::English),
+        Some("check" | "c") => command_check(&args[1..], MessageLanguage::English),
         Some("검사") => command_check(&args[1..], MessageLanguage::KoreanAndEnglish),
-        Some("convert") => command_convert(&args[1..], MessageLanguage::English),
+        Some("convert" | "conv") => command_convert(&args[1..], MessageLanguage::English),
         Some("변환") => command_convert(&args[1..], MessageLanguage::KoreanAndEnglish),
-        Some("modules" | "module") => command_modules(&args[1..], MessageLanguage::English),
+        Some("modules" | "module" | "m") => command_modules(&args[1..], MessageLanguage::English),
         Some("모듈") => command_modules(&args[1..], MessageLanguage::KoreanAndEnglish),
         Some("버전") if args.len() == 1 => {
             println!(
-                "NME 버전: {}\nnme version: nme {}",
+                "NME 버전: {}\nnme version: {}",
                 env!("CARGO_PKG_VERSION"),
                 env!("CARGO_PKG_VERSION")
             );
             ExitCode::SUCCESS
         }
-        Some("--version" | "-V" | "version") if args.len() == 1 => {
+        Some("--version" | "-V" | "version" | "v") if args.len() == 1 => {
             println!("nme {}", env!("CARGO_PKG_VERSION"));
             ExitCode::SUCCESS
         }
-        Some("--help" | "-h" | "help") if args.len() == 1 => {
+        Some("--help" | "-h" | "help" | "h") => {
             print!("{HELP_ENGLISH}");
             ExitCode::SUCCESS
         }
-        Some("도움" | "도움말") if args.len() == 1 => {
+        Some("도움" | "도움말") => {
             print_bilingual_help();
             ExitCode::SUCCESS
         }
@@ -121,9 +153,13 @@ fn main() -> ExitCode {
             fail(
                 language,
                 &format!(
-                    "I don't know the command `{command}`. Run `nme help` to see the commands."
+                    "I don't know the command `{command}`. Run `nme help` to see the commands.\n\
+                     Tip: `nme r` runs the single .nme program in the current folder."
                 ),
-                &format!("`{command}` 명령을 알 수 없습니다. `nme 도움`으로 명령을 확인하세요."),
+                &format!(
+                    "`{command}` 명령을 알 수 없습니다. `nme 도움`으로 명령을 확인하세요.\n\
+                     팁: 현재 폴더에 .nme 파일이 하나뿐이면 `nme r`만으로 실행할 수 있어요."
+                ),
             )
         }
         _ => {
@@ -419,12 +455,12 @@ fn compile_arguments(
             }
         }
     }
-    let Some(file) = file else {
-        return Err(fail(
-            language,
-            "which file should I compile? e.g. nme compile hello",
-            "컴파일할 파일을 적어 주세요. 예: nme 컴파일 hello",
-        ));
+    let file = match file {
+        Some(file) => file,
+        None => match discover_current_program(language, "compile", "컴파일") {
+            Ok(found) => found,
+            Err(code) => return Err(code),
+        },
     };
     Ok((file, output, python))
 }
@@ -465,12 +501,12 @@ fn command_run(args: &[String], language: MessageLanguage) -> ExitCode {
             }
         }
     }
-    let Some(file) = file else {
-        return fail(
-            language,
-            "which file should I run? e.g. nme run hello",
-            "실행할 파일을 적어 주세요. 예: nme 실행 hello",
-        );
+    let file = match file {
+        Some(file) => file,
+        None => match discover_current_program(language, "run", "실행") {
+            Ok(found) => found,
+            Err(code) => return code,
+        },
     };
 
     let (path, python_source) = match transpile_file(&file, language) {
@@ -542,12 +578,12 @@ fn command_build(args: &[String], language: MessageLanguage) -> ExitCode {
             }
         }
     }
-    let Some(file) = file else {
-        return fail(
-            language,
-            "which file should I build? e.g. nme build hello",
-            "Python으로 변환할 파일을 적어 주세요. 예: nme 빌드 hello",
-        );
+    let file = match file {
+        Some(file) => file,
+        None => match discover_current_program(language, "build", "빌드") {
+            Ok(found) => found,
+            Err(code) => return code,
+        },
     };
 
     let (path, python_source) = match transpile_file(&file, language) {
@@ -633,12 +669,12 @@ fn command_check(args: &[String], language: MessageLanguage) -> ExitCode {
             }
         }
     }
-    let Some(file) = file else {
-        return fail(
-            language,
-            "which file should I check? e.g. nme check hello",
-            "검사할 파일을 적어 주세요. 예: nme 검사 hello",
-        );
+    let file = match file {
+        Some(file) => file,
+        None => match discover_current_program(language, "check", "검사") {
+            Ok(found) => found,
+            Err(code) => return code,
+        },
     };
     let (path, python_source) = match transpile_file(&file, language) {
         Ok(ok) => ok,
@@ -681,17 +717,170 @@ fn is_nme_path(path: &str) -> bool {
 }
 
 fn is_direct_program(path: &str) -> bool {
-    let path = Path::new(path);
-    path.exists()
-        || is_nme_path(path.to_string_lossy().as_ref())
-        || (path.extension().is_none() && path.with_extension("nme").exists())
+    candidate_paths(Path::new(path))
+        .iter()
+        .any(|candidate| candidate.exists())
+}
+
+/// Possible real files for a typed name. The exact path wins, then the name
+/// with `.nme` appended (`hello.ko` → `hello.ko.nme`), then the name with its
+/// extension replaced (`hello` → `hello.nme`, `app.py` → `app.nme`).
+fn candidate_paths(path: &Path) -> [std::path::PathBuf; 3] {
+    let appended = PathBuf::from(format!("{}.nme", path.display()));
+    let replaced = path.with_extension("nme");
+    [path.to_path_buf(), appended, replaced]
 }
 
 fn resolve_nme_path(path: &Path) -> std::path::PathBuf {
-    if path.exists() || path.extension().is_some() {
-        path.to_path_buf()
-    } else {
-        path.with_extension("nme")
+    candidate_paths(path)
+        .iter()
+        .find(|candidate| candidate.exists())
+        .cloned()
+        .unwrap_or_else(|| path.to_path_buf())
+}
+
+/// Finds a nearby `.nme` program that the typed name almost matches, so a
+/// beginner who misspells a file name gets a "did you mean" hint instead of a
+/// bare read error.
+fn suggest_program(typed: &Path) -> Option<String> {
+    let folder = typed
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .unwrap_or(Path::new("."));
+    let wanted = typed.file_name()?.to_string_lossy().to_lowercase();
+    let mut names: Vec<String> = std::fs::read_dir(folder)
+        .ok()?
+        .filter_map(|entry| entry.ok())
+        .filter(|entry| entry.file_type().map(|kind| kind.is_file()).unwrap_or(false))
+        .filter_map(|entry| {
+            let name = entry.file_name().to_string_lossy().into_owned();
+            (is_nme_path(&name) && !name.starts_with('.')).then_some(name)
+        })
+        .collect();
+    if names.is_empty() {
+        return None;
+    }
+    names.sort();
+    let mut matches: Vec<&String> = names
+        .iter()
+        .filter(|name| {
+            let lower = name.to_lowercase();
+            let stem = Path::new(name.as_str())
+                .file_stem()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .to_lowercase();
+            lower == wanted || stem == wanted || lower.contains(&wanted)
+        })
+        .collect();
+    matches.sort_by_key(|name| {
+        let lower = name.to_lowercase();
+        let stem = Path::new(name.as_str())
+            .file_stem()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .to_lowercase();
+        if lower == wanted {
+            0
+        } else if stem == wanted {
+            1
+        } else {
+            2
+        }
+    });
+    matches.first().map(|name| (*name).clone())
+}
+
+/// Picks a program when no file name was given. With no `.nme` file in the
+/// current folder it explains what to do; with exactly one it returns it;
+/// with several it lists them and asks which one to use.
+fn discover_current_program(
+    language: MessageLanguage,
+    action_en: &str,
+    action_ko: &str,
+) -> Result<String, ExitCode> {
+    let mut found: Vec<String> = match std::fs::read_dir(".") {
+        Ok(entries) => entries
+            .filter_map(|entry| entry.ok())
+            .filter(|entry| entry.file_type().map(|kind| kind.is_file()).unwrap_or(false))
+            .filter_map(|entry| {
+                let name = entry.file_name().to_string_lossy().into_owned();
+                (is_nme_path(&name) && !name.starts_with('.')).then_some(name)
+            })
+            .collect(),
+        Err(err) => {
+            return Err(fail(
+                language,
+                &format!("couldn't read the current folder: {err}"),
+                &format!("현재 폴더를 읽을 수 없습니다: {err}"),
+            ));
+        }
+    };
+    found.sort();
+    match found.as_slice() {
+        [] => Err(fail(
+            language,
+            &format!(
+                "no .nme program here. Create one (e.g. hello.nme), or name the file:\n\
+                 nme {action_en} hello"
+            ),
+            &format!(
+                "여기에 .nme 프로그램이 없어요. 파일을 만들거나(예: hello.nme) 이름을 적어 주세요:\n\
+                 nme {action_ko} hello"
+            ),
+        )),
+        [only] => Ok(only.clone()),
+        many => {
+            if language == MessageLanguage::KoreanAndEnglish {
+                println!("현재 폴더의 .nme 프로그램:");
+            } else {
+                println!(".nme programs in this folder:");
+            }
+            for (index, name) in many.iter().enumerate() {
+                println!("  {}. {name}", index + 1);
+            }
+            if language == MessageLanguage::KoreanAndEnglish {
+                print!("어느 것을 선택할까요? (1-{}) ", many.len());
+            } else {
+                print!("Which one? (1-{}) ", many.len());
+            }
+            std::io::stdout().flush().ok();
+            let mut answer = String::new();
+            if std::io::stdin().read_line(&mut answer).is_err() {
+                return Err(fail(
+                    language,
+                    "couldn't read your answer",
+                    "대답을 읽을 수 없습니다",
+                ));
+            }
+            let answer = answer.trim();
+            if answer.is_empty() {
+                return Err(fail(
+                    language,
+                    "no answer given — type a number or a program name, then press Enter",
+                    "대답이 입력되지 않았어요 — 숫자나 프로그램 이름을 적고 Enter를 누르세요",
+                ));
+            }
+            if let Ok(number) = answer.parse::<usize>() {
+                if let Some(name) = many.get(number.checked_sub(1).unwrap_or(usize::MAX)) {
+                    return Ok(name.clone());
+                }
+            }
+            if let Some(name) = many.iter().find(|name| name.eq_ignore_ascii_case(answer)) {
+                return Ok(name.clone());
+            }
+            Err(fail(
+                language,
+                &format!(
+                    "`{answer}` is not one of the programs above.\n\
+                     Tip: `nme {action_en} <file>` picks a program by name."
+                ),
+                &format!(
+                    "`{answer}`은(는) 위 목록에 없어요.\n\
+                     팁: `nme {action_ko} <파일>`처럼 이름을 적으면 됩니다."
+                ),
+            ))
+        }
     }
 }
 
@@ -718,10 +907,49 @@ fn transpile_file(
     let source = match std::fs::read_to_string(&path) {
         Ok(source) => source,
         Err(err) => {
+            if path.is_dir() {
+                return Err(fail(
+                    language,
+                    &format!(
+                        "`{}` is a folder, not a program.\n\
+                         hint: run `nme r` inside a folder that contains a .nme program, or type the program name",
+                        path.display()
+                    ),
+                    &format!(
+                        "`{}`은(는) 폴더이지 프로그램이 아니에요.\n\
+                         도움말: .nme 프로그램이 있는 폴더에서 `nme r`을 실행하거나, 프로그램 이름을 적어 주세요",
+                        path.display()
+                    ),
+                ));
+            }
+            let suggestion = suggest_program(&path);
+            let create_name = PathBuf::from(format!("{}.nme", shown_path));
+            let english_hint = match &suggestion {
+                Some(name) => format!(
+                    "hint: did you mean `{name}`? Try `nme run {stem}`",
+                    stem = name.trim_end_matches(".nme")
+                ),
+                None => format!(
+                    "hint: create a program named `{}` in this folder, or run `nme r`\n\
+                     to run the single .nme program here",
+                    create_name.display()
+                ),
+            };
+            let korean_hint = match &suggestion {
+                Some(name) => format!(
+                    "도움말: `{name}`을(를) 찾으셨나요? `nme 실행 {stem}`으로 실행할 수 있어요",
+                    stem = name.trim_end_matches(".nme")
+                ),
+                None => format!(
+                    "도움말: 이 폴더에 `{}` 프로그램을 만들거나, `nme r`을 실행하면\n\
+                     이 폴더에 있는 .nme 프로그램을 실행합니다",
+                    create_name.display()
+                ),
+            };
             return Err(fail(
                 language,
-                &format!("couldn't read {shown_path}: {err}"),
-                &format!("{shown_path} 파일을 읽을 수 없습니다: {err}"),
+                &format!("couldn't read {shown_path}: {err}\n{english_hint}"),
+                &format!("{shown_path} 파일을 읽을 수 없습니다: {err}\n{korean_hint}"),
             ));
         }
     };

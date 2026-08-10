@@ -1,0 +1,12 @@
+# 고급 Python, 초급 NME, 문장형 NME가 한 파일에 함께 있을 수 있어요.
+# Run: nme r three-levels.ko.nme
+people = ["에이다", "그레이스"]               # 고급 Python
+
+2번:                                          # 초급 한국어
+    say "beginner English"                    # 초급 영어도 가능
+
+반복 2번                                      # 문장형 한국어
+    Korean sentence works too show            # 문장형 영어도 가능
+
+for person in people:                         # 고급 Python
+    안녕하세요 person! 말해줘                # 문장형 한국어

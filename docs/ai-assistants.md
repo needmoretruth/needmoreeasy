@@ -2,13 +2,15 @@
 
 English | [한국어](ai-assistants.ko.md)
 
+[Home](../README.md) | [Getting started](getting-started.md) | [Tutorial](tutorial.md) | [Language reference](language.md)
+
 Give an AI coding assistant this one prompt:
 
 ```text
 Read and follow this NME language handoff before writing code:
 https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
 
-Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.14`), then write the requested program as a .nme file, prefer sentence syntax for a
+Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.15`), then write the requested program as a .nme file, prefer sentence syntax for a
 beginner, mix beginner or advanced Python only where it makes the result
 clearer, and verify it with nme check.
 ```
@@ -51,7 +53,7 @@ What is your name?
 What's your city?
 Hello name!
 
-3 times Again
+3 times See you again
 3번 다시 만나요
 
 if score is greater than 10 then show You won
@@ -105,11 +107,14 @@ when <Python condition>:
 while <condition> ... end
 동안 <조건> ... 끝
 break / 멈춰
-else if <condition> / 아니면 만약 <조건>
+else if <condition> / 아니면 만약에 <조건>
 else / 아니면
 use random
 랜덤 사용 최신
 ```
+
+`count times:` repeats `count` times — the variable must hold a number.
+`횟수번:` does the same with `횟수`.
 
 ### Use any Python as advanced NME
 

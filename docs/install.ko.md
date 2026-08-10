@@ -4,7 +4,7 @@
 
 [README](../README.ko.md) | [5분 시작](getting-started.ko.md) | [학습 과정](tutorial.ko.md) | [문법 안내](language.ko.md)
 
-현재 NME `0.0.1-beta.14`는 beta 브랜치의 소스에서 설치합니다. Git, Cargo가
+현재 NME `0.0.1-beta.15`는 beta 브랜치의 소스에서 설치합니다. Git, Cargo가
 포함된 안정 Rust, Python 3.8 이상이 필요합니다. 공식
 [Rust 설치](https://www.rust-lang.org/tools/install),
 [Python 다운로드](https://www.python.org/downloads/),
@@ -15,8 +15,8 @@
 1. Git for Windows를 설치합니다.
 2. python.org에서 Python을 설치하고 Python 실행기 `py`를 유지합니다.
 3. 공식 Rust 설치 페이지에서 `rustup-init.exe`를 받아 실행합니다. 안정 MSVC
-   도구 체인을 고릅니다. 요청이 나오면 Visual Studio C++ Build Tools도
-   설치합니다.
+   도구 체인을 고릅니다.    요청이 나오면 Visual Studio C++ Build Tools(무료 Microsoft 구성 요소로,
+   Cargo가 빌드에 필요)도 설치합니다.
 4. PowerShell을 닫았다 다시 열고 실행합니다.
 
 ```powershell
@@ -33,7 +33,8 @@ PowerShell에서도 `nme`를 찾지 못하면 `%USERPROFILE%\.cargo\bin`을 사�
 `& "$HOME\.cargo\bin\nme.exe" --version`으로 설치된 파일을 직접 확인할 수
 있습니다.
 
-예제를 실행합니다. NME가 Windows의 `py` 실행기를 자동으로 고릅니다.
+예제를 실행합니다(리포지토리를 복제한 `needmoreeasy` 폴더에서). NME가
+Windows의 `py` 실행기를 자동으로 고릅니다.
 
 ```powershell
 nme 실행 examples\hello-sentence
@@ -48,7 +49,8 @@ xcode-select --install
 ```
 
 python.org에서 현재 Python을 설치하고 공식 rustup 페이지의 명령으로 Rust를
-설치합니다. 새 터미널을 열고 실행하세요.
+설치합니다. 새 터미널을 열고 (리포지토리를 복제한 `needmoreeasy` 폴더에서)
+실행하세요.
 
 ```sh
 git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
@@ -83,7 +85,8 @@ sudo dnf install python3 git curl gcc
 sudo pacman -S python git curl base-devel
 ```
 
-rustup으로 안정 Rust를 설치하고 새 셸에서 실행합니다.
+rustup으로 안정 Rust를 설치하고 새 셸에서 (리포지토리를 복제한
+`needmoreeasy` 폴더에서) 실행합니다.
 
 ```sh
 git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
@@ -110,7 +113,7 @@ nme 검사 examples/three-levels
 nme 실행 examples/hello-sentence
 ```
 
-NME는 `0.0.1-beta.14`, 랜덤 어댑터는 `0.0.1`이 표시되어야 합니다.
+NME는 `0.0.1-beta.15`, 랜덤 어댑터는 `0.0.1`이 표시되어야 합니다.
 
 ## 고급: 다른 Python 명령 고르기
 

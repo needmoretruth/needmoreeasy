@@ -1,25 +1,25 @@
 # A real tiny compiler written in NME.
 # Its input language has two sentences:
-#   말하기 text
-#   N번 말하기 text
-# Run: nme r tiny-compiler.nme
+#   say text
+#   N times say text
+# Run: nme r tiny-compiler.en.nme
 
 tiny_source = [
-    "말하기 안녕하세요",
-    "3번 말하기 NME로 컴파일러를 만들었어요",
+    "say Hello",
+    "3 times say I built a compiler in NME",
 ]
 
 python_lines = []
 for line in tiny_source:
     words = line.split()
-    if words[0] == "말하기":
+    if words[0] == "say":
         text = " ".join(words[1:])
         python_lines.append(f"print({text!r})")
     else:
-        count = int(words[0][:-1])
-        text = " ".join(words[2:])
+        count = int(words[0])
+        text = " ".join(words[3:])
         python_lines.append(f"for _ in range({count}): print({text!r})")
 
 generated = "\n".join(python_lines)
-보여줘 생성된 Python 코드
-보여줘 generated
+show Generated Python code
+show generated

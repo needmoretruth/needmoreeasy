@@ -1,4 +1,4 @@
-# Learn NME by making five programs
+# Learn NME by making six programs
 
 English | [한국어](tutorial.ko.md)
 
@@ -9,7 +9,8 @@ before moving on; changing a word and observing the result is part of learning.
 
 ## Project 1: Hello World
 
-Create `hello.nme`:
+Create `hello.nme` (in the same folder where you ran `nme --version`; any text
+editor works — on Windows, Notepad saves UTF-8 by default):
 
 ```text
 show Hello world!
@@ -26,8 +27,11 @@ equally valid:
 안녕하세요! 말해줘
 ```
 
-Try changing the message. Run `examples/hello-sentence.nme` when you want to
-see a repeat too.
+Try changing the message. Run
+[`examples/hello-sentence.nme`](../examples/hello-sentence.nme) when you want
+to see a repeat too, or
+[`examples/hello-sentence.ko.nme`](../examples/hello-sentence.ko.nme) for the
+Korean twin.
 
 ## Project 2: A greeting program
 
@@ -70,7 +74,9 @@ if guess is greater than answer
 ```
 
 The complete Korean program is
-[`examples/guessing-game.ko.nme`](../examples/guessing-game.ko.nme):
+[`examples/guessing-game.ko.nme`](../examples/guessing-game.ko.nme); its
+English twin is
+[`examples/guessing-game.nme`](../examples/guessing-game.nme):
 
 ```sh
 nme run examples/guessing-game.ko
@@ -78,7 +84,7 @@ nme run examples/guessing-game.ko
 
 What was compiled:
 
-- `1부터 10까지 랜덤정수` becomes `random.randint(1, 10)`;
+- `1부터 10까지 랜덤정수` becomes `__import__("random").randint(1, 10)`;
 - `숫자로 물어봐` becomes `int(input(...))`;
 - `같으면`, `작으면`, and `크면` become `==`, `<`, and `>`;
 - indentation groups the statements controlled by each condition.
@@ -96,8 +102,10 @@ ask number guess Pick another number
 end
 ```
 
+`!=` means 'not equal to'; its sentence spelling is `is not equal to`.
+
 Use `break`, `and`/`or`, `elif`, and `else` in the same style. Their Korean
-spellings are `멈춰`, `그리고`/`또는`, `아니면 만약`, and `아니면`.
+spellings are `멈춰`, `그리고`/`또는`, `아니면 만약에`, and `아니면`.
 
 ## Project 4: Use all three levels
 
@@ -119,7 +127,13 @@ for person in people:
 
 The list and `for person` loop are advanced Python. `2 times:` and `say` are
 beginner NME. `repeat` and `show` are sentence NME. This is one language, not
-three files or modes. Run `examples/three-levels.nme`.
+three files or modes. Run
+[`examples/three-levels.nme`](../examples/three-levels.nme). The finished
+flat-control-flow pair is
+[`examples/control-flow-sentence.nme`](../examples/control-flow-sentence.nme)
+and
+[`examples/control-flow-korean.nme`](../examples/control-flow-korean.nme) — run
+both and compare the identical output.
 
 Try adding a flat NME block beside the Python loop:
 
@@ -141,7 +155,8 @@ and finally read the ordinary Python version:
 - [`time-loop-sentence.ko.nme`](../examples/time-loop-sentence.ko.nme) — easiest
   sentences, `끝`, and natural Korean conditions;
 - [`time-loop-beginner.ko.nme`](../examples/time-loop-beginner.ko.nme) — compact
-  `저장`, `물어봐`, `만약`, and `N번:` forms;
+  `저장`, `물어봐`, `만약`, and `N번:` forms. `저장` is the beginner save action
+  (e.g. `저장 점수를 3`);
 - [`time-loop-python.nme`](../examples/time-loop-python.nme) — lists,
   dictionaries, f-strings, `while`, `break`, and ordinary Python.
 
@@ -207,9 +222,10 @@ small rule at a time while retaining the full Python ecosystem.
 
 To turn it into a file compiler:
 
-1. Replace `tiny_source` with
+1. Add `from pathlib import Path` at the top, then replace `tiny_source` with
+   `input_name = "tiny.txt"` and
    `Path(input_name).read_text(encoding="utf-8").splitlines()`.
-2. Write `generated` with
+2. Define `output_name = "tiny.py"` and write `generated` with
    `Path(output_name).write_text(generated, encoding="utf-8")`.
 3. Add a friendly error for any line that matches neither tiny sentence.
 4. Add tests that compile a source file and run the generated Python.

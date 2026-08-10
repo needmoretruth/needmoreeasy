@@ -217,7 +217,9 @@ one condition. A block
 may still use ordinary four-space indentation; the explicit `end` form is the
 beginner-friendly bridge when indentation is the part that feels hardest.
 Spoken Korean can put the loop ending after its subject too, as in
-`준비하는동안`, `준비 하는 동안`, or `준비 동안`.
+`준비하는동안`, `준비 하는 동안`, or `준비 동안`. The English `while` keyword
+may head a Korean sentence condition with the same ending, as in
+`while 점수가 3보다 작을 동안`.
 
 ### Conditions
 
@@ -255,6 +257,7 @@ Korean can shorten the comparison ending without changing the meaning:
 particles may be separated too (`이름 이 철수 면`), and a bare subject can use
 `준비면` for a truthy condition. A bounded spoken typo such as `있으먄`,
 `철수먄`, or `만악에` is recovered when there is only one clear condition.
+This form only works as a one-line condition.
 
 Supported sentence comparisons:
 
@@ -263,6 +266,7 @@ Supported sentence comparisons:
 | `if name exists` | `만약에 이름이 있으면` | truthy value |
 | `if name missing` | `만약에 이름이 없으면` | falsey value |
 | `if score equals 10` | `만약에 점수가 10과 같으면` | `==` |
+| `if score is not equal to 10` | `만약에 점수가 10과 같지 않으면` | `!=` |
 | `if score is greater than 10` | `만약에 점수가 10보다 크면` | `>` |
 | `if score is less than 10` | `만약에 점수가 10보다 작으면` | `<` |
 
@@ -397,19 +401,16 @@ NME.
 
 ## Versioned bundled modules
 
-The easy random adapter has version `0.0.1`.
+The easy random adapter has version `0.0.1`. Only one `use` line is allowed
+per program, so pick one spelling:
 
 ```text
 use random
-use random latest
-use latest random
-use random version "0.0.1"
-
-랜덤 사용
-랜덤 사용 최신
-최신 랜덤 사용
-랜덤 사용 버전 "0.0.1"
 ```
+
+`use random latest`, `use latest random`, and `use random version "0.0.1"` are
+equivalents, and so are the Korean spellings `랜덤 사용`, `랜덤 사용 최신`,
+`최신 랜덤 사용`, and `랜덤 사용 버전 "0.0.1"`.
 
 `latest` / `최신` selects the newest adapter bundled with the installed NME
 compiler. It is local and deterministic, not an uncontrolled network update.

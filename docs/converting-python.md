@@ -2,6 +2,8 @@
 
 English | [한국어](converting-python.ko.md)
 
+[Home](../README.md) | [Getting started](getting-started.md) | [Tutorial](tutorial.md) | [Language reference](language.md)
+
 The converter validates the complete input as Python, then rewrites only lines
 whose meaning has a safe equivalent at the requested NME level.
 

@@ -1,6 +1,14 @@
 # This example intentionally uses no indentation for the easy block syntax.
+# Run: nme r control-flow-sentence.nme
 score = 0
-while score < 3
+while score is less than 5
+show score
+if score is less than 2
+add 1 to score
+otherwise if score equals 2
 show score
 add 1 to score
+otherwise
+break here
+end
 end

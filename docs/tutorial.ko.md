@@ -1,4 +1,4 @@
-# 프로그램 다섯 개로 NME 배우기
+# 프로그램 여섯 개로 NME 배우기
 
 [English](tutorial.md) | 한국어
 
@@ -9,7 +9,8 @@
 
 ## 프로젝트 1: Hello World
 
-`hello.nme`를 만듭니다.
+`hello.nme`를 만듭니다(`nme --version`을 실행한 같은 폴더에서; 아무 텍스트
+편집기나 괜찮습니다 — Windows에서는 메모장이 기본으로 UTF-8로 저장합니다).
 
 ```text
 안녕하세요! 말해줘
@@ -25,8 +26,10 @@ nme 실행 hello
 show Hello world!
 ```
 
-문장을 바꿔 보세요. 반복까지 보고 싶으면 `examples/hello-sentence.nme`를
-실행합니다.
+문장을 바꿔 보세요. 반복까지 보고 싶으면
+[`examples/hello-sentence.ko.nme`](../examples/hello-sentence.ko.nme)를
+실행합니다. 영어판 쌍둥이는
+[`examples/hello-sentence.nme`](../examples/hello-sentence.nme)예요.
 
 ## 프로젝트 2: 인사 프로그램
 
@@ -69,7 +72,9 @@ Nice to meet you name!
 ```
 
 완성된 프로그램은
-[`examples/guessing-game.ko.nme`](../examples/guessing-game.ko.nme)에 있습니다.
+[`examples/guessing-game.ko.nme`](../examples/guessing-game.ko.nme)에 있고,
+영어판 쌍둥이는
+[`examples/guessing-game.nme`](../examples/guessing-game.nme)입니다.
 
 ```sh
 nme 실행 examples/guessing-game.ko
@@ -77,7 +82,7 @@ nme 실행 examples/guessing-game.ko
 
 컴파일되는 내용입니다.
 
-- `1부터 10까지 랜덤정수` → `random.randint(1, 10)`
+- `1부터 10까지 랜덤정수` → `__import__("random").randint(1, 10)`
 - `숫자로 물어봐` → `int(input(...))`
 - `같으면`, `작으면`, `크면` → `==`, `<`, `>`
 - 들여쓰기 → 각 조건이 제어하는 문장 묶음
@@ -88,13 +93,15 @@ nme 실행 examples/guessing-game.ko
 들여쓰기가 어렵다면 같은 제어 흐름을 평평하게 쓰고 `끝`으로 닫을 수 있습니다.
 
 ```text
-동안 추측 < 정답
+동안 추측 != 정답
 다시 시도해 말해줘
-숫자로 추측을 물어봐 다른 숫자를 입력하세요
+추측을 숫자로 물어봐 다른 숫자를 입력하세요
 끝
 ```
 
-`멈춰`, `그리고`/`또는`, `아니면 만약`, `아니면`으로 각각 `break`, `and`/`or`,
+`!=`는 '같지 않다'를 뜻하며, 문장형 표기는 `is not equal to`입니다.
+
+`멈춰`, `그리고`/`또는`, `아니면 만약에`, `아니면`으로 각각 `break`, `and`/`or`,
 `elif`, `else`도 연습해 보세요.
 
 ## 프로젝트 4: 세 단계 모두 쓰기
@@ -117,7 +124,11 @@ for 사람 in 사람들:
 
 목록과 `for 사람` 반복은 고급 Python, `2번:`과 `말해`는 초급 NME,
 `repeat`와 `show`는 문장형 NME입니다. 서로 다른 모드나 파일이 아니라 한
-언어입니다. `examples/three-levels.nme`를 실행하세요.
+언어입니다. [`examples/three-levels.nme`](../examples/three-levels.nme)를
+실행하세요. 완성된 들여쓰기 없는 제어 흐름 쌍은
+[`examples/control-flow-sentence.nme`](../examples/control-flow-sentence.nme)와
+[`examples/control-flow-korean.nme`](../examples/control-flow-korean.nme)입니다
+— 둘 다 실행하고 같은 출력을 비교해 보세요.
 
 Python 반복 옆에 들여쓰기 없는 NME 블록도 추가해 보세요.
 
@@ -138,7 +149,8 @@ Python 반복 옆에 들여쓰기 없는 NME 블록도 추가해 보세요.
 - [`time-loop-sentence.ko.nme`](../examples/time-loop-sentence.ko.nme) — 쉬운
   문장, `끝`, 자연스러운 한국어 조건;
 - [`time-loop-beginner.ko.nme`](../examples/time-loop-beginner.ko.nme) —
-  `저장`, `물어봐`, `만약`, `N번:` 초급형;
+  `저장`, `물어봐`, `만약`, `N번:` 초급형. `저장`은 변수에 값을 넣는 초급
+  문법이에요 (예: `저장 점수를 3`);
 - [`time-loop-python.nme`](../examples/time-loop-python.nme) — 목록, 딕셔너리,
   f-string, `while`, `break`, 일반 Python.
 
@@ -202,9 +214,11 @@ nme 빌드 examples/tiny-compiler -o tiny-compiler.py
 
 파일 컴파일러로 키우는 순서입니다.
 
-1. `tiny_source`를
-   `Path(입력).read_text(encoding="utf-8").splitlines()`로 바꿉니다.
-2. `Path(출력).write_text(generated, encoding="utf-8")`로 결과를 씁니다.
+1. 위쪽에 `from pathlib import Path`를 추가하고, `tiny_source`를
+   `input_name = "tiny.txt"`와
+   `Path(input_name).read_text(encoding="utf-8").splitlines()`로 바꿉니다.
+2. `output_name = "tiny.py"`를 정의하고
+   `Path(output_name).write_text(generated, encoding="utf-8")`로 결과를 씁니다.
 3. 두 문장 어디에도 맞지 않는 줄에 쉬운 오류를 추가합니다.
 4. 소스 파일을 컴파일하고 생성된 Python을 실행하는 테스트를 만듭니다.
 

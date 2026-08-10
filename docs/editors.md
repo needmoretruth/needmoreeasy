@@ -2,6 +2,8 @@
 
 English | [한국어](editors.ko.md)
 
+[Home](../README.md) | [Getting started](getting-started.md) | [Tutorial](tutorial.md) | [Language reference](language.md)
+
 The repository includes ready-to-use run, check, and build tasks for all three
 editors. Install NME first, then open the repository folder rather than a
 single file.

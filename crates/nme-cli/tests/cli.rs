@@ -2,7 +2,7 @@
 //! execution through the system's Python interpreter.
 
 use std::io::Write as _;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
 
 fn nme(args: &[&str]) -> Output {
@@ -74,13 +74,13 @@ fn build_prints_transpiled_python() {
 fn version_reports_the_current_beta() {
     let output = nme(&["--version"]);
     assert!(output.status.success(), "{}", stderr(&output));
-    assert_eq!(stdout(&output), "nme 0.0.1-beta.14\n");
+    assert_eq!(stdout(&output), "nme 0.0.1-beta.15\n");
 
     let korean = nme(&["버전"]);
     assert!(korean.status.success(), "{}", stderr(&korean));
     assert_eq!(
         stdout(&korean),
-        "NME 버전: 0.0.1-beta.14\nnme version: nme 0.0.1-beta.14\n"
+        "NME 버전: 0.0.1-beta.15\nnme version: 0.0.1-beta.15\n"
     );
 }
 
@@ -106,6 +106,8 @@ fn help_is_english_only_for_english_commands_and_bilingual_for_korean_help() {
     let english_help = stdout(&english);
     assert!(english_help.contains("START HERE:"), "{english_help}");
     assert!(english_help.contains("nme run hello"), "{english_help}");
+    assert!(english_help.contains("SHORTCUTS:"), "{english_help}");
+    assert!(english_help.contains("nme r hello"), "{english_help}");
     assert!(!english_help.contains("처음 시작"), "{english_help}");
     assert!(!english_help.contains("nme 실행"), "{english_help}");
     let beginner_section = english_help
@@ -126,7 +128,147 @@ fn help_is_english_only_for_english_commands_and_bilingual_for_korean_help() {
     );
     assert!(bilingual_help.contains("nme run hello"), "{bilingual_help}");
     assert!(bilingual_help.contains("파일 이름의 .nme는 생략"));
-    assert!(bilingual_help.contains("File names may be\nwritten with or without .nme"));
+    assert!(bilingual_help.contains("File names work\nwith or without .nme"));
+}
+
+fn temporary_dir(name: &str) -> std::path::PathBuf {
+    let dir = std::env::temp_dir().join(format!(
+        "nme-cli-test-{name}-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("clock")
+            .as_nanos()
+    ));
+    std::fs::create_dir_all(&dir).expect("temp dir must be created");
+    dir
+}
+
+fn write_nme(dir: &std::path::Path, name: &str, source: &str) {
+    std::fs::write(dir.join(name), source).expect("example must be written");
+}
+
+#[test]
+fn command_shortcuts_run_check_build_and_modules() {
+    let output = nme(&["r", &example("hello-sentence.nme")]);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert!(stdout(&output).contains("Hello, world!"), "{}", stdout(&output));
+
+    let checked = nme(&["c", &example("three-levels.nme")]);
+    assert!(checked.status.success(), "{}", stderr(&checked));
+
+    let built = nme(&["b", &example("hello.nme"), "-o", "/tmp/nme-build-alias-test.py"]);
+    assert!(built.status.success(), "{}", stderr(&built));
+
+    let modules = nme(&["m"]);
+    assert!(modules.status.success(), "{}", stderr(&modules));
+    assert!(stdout(&modules).contains("random"), "{}", stdout(&modules));
+
+    let version = nme(&["v"]);
+    assert!(version.status.success(), "{}", stderr(&version));
+    assert!(stdout(&version).contains("nme 0.0.1-beta.15"), "{}", stdout(&version));
+
+    let help = nme(&["h"]);
+    assert!(help.status.success(), "{}", stderr(&help));
+    assert!(stdout(&help).contains("SHORTCUTS:"), "{}", stdout(&help));
+}
+
+fn run_in(dir: &std::path::Path, args: &[&str], input: Option<&str>) -> Output {
+    let mut command = Command::new(env!("CARGO_BIN_EXE_nme"));
+    command.args(args).current_dir(dir);
+    if let Some(text) = input {
+        let mut child = command
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .expect("nme must run");
+        child
+            .stdin
+            .take()
+            .expect("stdin must be piped")
+            .write_all(text.as_bytes())
+            .expect("test input must be writable");
+        child.wait_with_output().expect("nme must finish")
+    } else {
+        command.output().expect("nme must run")
+    }
+}
+
+#[test]
+fn bare_run_discovers_the_only_program_in_the_folder() {
+    let dir = temporary_dir("solo");
+    write_nme(&dir, "solo.nme", "show Hello from the only program!\n");
+    let output = run_in(&dir, &["r"], None);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert!(
+        stdout(&output).contains("Hello from the only program!"),
+        "{}",
+        stdout(&output)
+    );
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+#[test]
+fn bare_run_asks_which_program_when_several_exist() {
+    let dir = temporary_dir("several");
+    write_nme(&dir, "a.nme", "show Program A\n");
+    write_nme(&dir, "b.nme", "show Program B\n");
+    let output = run_in(&dir, &["r"], Some("2\n"));
+    assert!(output.status.success(), "{}", stderr(&output));
+    let shown = stdout(&output);
+    assert!(shown.contains("1. a.nme"), "{shown}");
+    assert!(shown.contains("2. b.nme"), "{shown}");
+    assert!(shown.contains("Program B"), "{shown}");
+
+    let by_name = run_in(&dir, &["r"], Some("b.nme\n"));
+    assert!(by_name.status.success(), "{}", stderr(&by_name));
+    assert!(stdout(&by_name).contains("Program B"), "{}", stdout(&by_name));
+
+    let invalid = run_in(&dir, &["r"], Some("9\n"));
+    assert!(!invalid.status.success());
+    assert!(stderr(&invalid).contains("not one of the programs"), "{}", stderr(&invalid));
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+#[test]
+fn bare_check_and_build_discover_like_run() {
+    let dir = temporary_dir("bare-check");
+    write_nme(&dir, "one.nme", "show Hello\n");
+    let checked = run_in(&dir, &["c"], None);
+    assert!(checked.status.success(), "{}", stderr(&checked));
+    let built = run_in(
+        &dir,
+        &["b", "-o", "one.py"],
+        None,
+    );
+    assert!(built.status.success(), "{}", stderr(&built));
+    assert!(dir.join("one.py").exists(), "build output must be written");
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+#[test]
+fn bare_run_without_programs_explains_what_to_do() {
+    let dir = temporary_dir("bare-empty");
+    let output = run_in(&dir, &["r"], None);
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(error.contains("no .nme program here"), "{error}");
+    assert!(error.contains("nme run hello"), "{error}");
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+#[test]
+fn korean_bare_run_asks_in_korean_first() {
+    let dir = temporary_dir("bare-ko");
+    write_nme(&dir, "가.nme", "안녕하세요! 말해줘\n");
+    write_nme(&dir, "나.nme", "반가워요! 말해줘\n");
+    let output = run_in(&dir, &["실행"], Some("1\n"));
+    assert!(output.status.success(), "{}", stderr(&output));
+    let shown = stdout(&output);
+    assert!(shown.contains("현재 폴더의 .nme 프로그램"), "{shown}");
+    assert!(shown.contains("안녕하세요!"), "{shown}");
+    std::fs::remove_dir_all(&dir).ok();
 }
 
 #[test]
@@ -158,11 +300,15 @@ fn korean_missing_file_errors_are_substantively_bilingual() {
     assert!(!output.status.success());
     let error = stderr(&output);
     assert!(
-        error.contains("nme-file-that-does-not-exist.nme 파일을 읽을 수 없습니다"),
+        error.contains("nme-file-that-does-not-exist 파일을 읽을 수 없습니다"),
         "{error}"
     );
     assert!(
-        error.contains("couldn't read nme-file-that-does-not-exist.nme"),
+        error.contains("couldn't read nme-file-that-does-not-exist"),
+        "{error}"
+    );
+    assert!(
+        error.contains("nme-file-that-does-not-exist.nme"),
         "{error}"
     );
 }
@@ -754,4 +900,103 @@ fn runtime_errors_keep_the_original_line_numbers() {
     assert!(!error.contains("nme-run-"), "{error}");
 
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn a_ko_suffixed_name_resolves_to_the_korean_twin_file() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-ko-twin-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let stem = dir.join("game");
+    std::fs::write(
+        stem.with_extension("nme"),
+        "show english game\n",
+    ).unwrap();
+    std::fs::write(
+        Path::new(&format!("{}.ko", stem.display())).with_extension("nme"),
+        "show korean game\n",
+    )
+    .unwrap();
+    let korean_stem = format!("{}.ko", stem.display());
+
+    let output = nme(&["build", &korean_stem]);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert_eq!(stdout(&output), "print(\"korean game\")\n");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn a_directory_argument_explains_that_it_is_a_folder() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-folder-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let output = nme(&["run", &dir.to_string_lossy()]);
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(error.contains("is a folder, not a program"), "{error}");
+
+    let korean = nme(&["실행", &dir.to_string_lossy()]);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(korean_error.contains("폴더이지 프로그램이 아니에요"), "{korean_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn a_misspelled_or_miscased_name_suggests_the_nearby_program() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-suggest-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let stem = dir.join("guessing-game");
+    std::fs::write(stem.with_extension("nme"), "show guessing\n").unwrap();
+
+    let miscased = nme(&["run", &dir.join("GUESSING-GAME").to_string_lossy()]);
+    assert!(!miscased.status.success());
+    let miscased_error = stderr(&miscased);
+    assert!(
+        miscased_error.contains("did you mean `guessing-game.nme`"),
+        "{miscased_error}"
+    );
+
+    let truncated = nme(&["run", &dir.join("guessing-gam").to_string_lossy()]);
+    assert!(!truncated.status.success());
+    let truncated_error = stderr(&truncated);
+    assert!(
+        truncated_error.contains("did you mean `guessing-game.nme`"),
+        "{truncated_error}"
+    );
+    assert!(
+        truncated_error.contains("Try `nme run guessing-game`"),
+        "{truncated_error}"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn an_empty_pick_answer_gets_a_friendly_message() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-empty-pick-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    write_nme(&dir, "one.nme", "show one\n");
+    write_nme(&dir, "two.nme", "show two\n");
+
+    let output = run_in(&dir, &["r"], Some(""));
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(
+        error.contains("no answer given — type a number or a program name"),
+        "{error}"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn help_and_help_shortcut_ignore_extra_arguments() {
+    let output = nme(&["h", "extra"]);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert!(stdout(&output).contains("START HERE:"), "{}", stdout(&output));
+
+    let korean = nme(&["도움", "extra"]);
+    assert!(korean.status.success(), "{}", stderr(&korean));
+    assert!(stdout(&korean).contains("처음 시작:"), "{}", stdout(&korean));
 }

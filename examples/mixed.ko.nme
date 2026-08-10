@@ -1,0 +1,12 @@
+# Python과 NME가 한 파일에 함께 살아요.
+# Run: nme r mixed.ko.nme
+
+def 응원(이름):
+    말해 f"{이름}, 힘내세요!"          # Python 함수 안의 NME
+
+for 이름 in ["은지", "지훈"]:
+    응원(이름)
+
+2번:
+    말해 "NME 블록"                    # NME 블록
+    print("python 블록")               # 안에 Python도 함께

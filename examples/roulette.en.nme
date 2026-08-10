@@ -1,86 +1,463 @@
-# English companion to roulette.nme: a small sentence-first roulette game.
-# It uses the same beginner path: ask, conditions, loops, random numbers, and
-# ordinary arithmetic can all stay in one NME project.
+# English twin of roulette.nme: the full Luna Casino roulette simulator
+# in English sentence syntax. Same structure and messages as the Korean
+# original: name ask, capital choice, five bet types with validation
+# loops, jackpot, streaks, settlement, and restart.
+# Sentence spellings with minimal Python expressions: show ask set while if
+# end plus the random adapter and str()/int() conversions for formatting.
+# Run: nme r roulette.en.nme
 use random
 
-set credits to 100
-set spins to 0
-set wins to 0
-set losses to 0
-set playing to true
+set name to Guest
+set playing to 1
+set inGame to 1
+set credits to 500
+set startCredits to 500
+set topCredits to 500
+set topJackpot to 0
+set totalSpins to 0
+set winCount to 0
+set lossCount to 0
+set winStreak to 0
+set lossStreak to 0
+set betType to 0
+set betMode to 0
+set targetType to 0
+set betAmount to 0
+set betNumber to 0
+set betColor to red
+set betParity to odd
+set betZone to small
+set betColumn to first
+set multiplier to 2
+set won to 0
+set jackpot to 0
+set winnings to 0
+set ballNumber to 0
+set ballColor to green
+set ballParity to zero
+set ballZone to zero
+set ballColumn to zero
+set parityTest to 0
+set multiplierCount to 1
+set balanceCheck to 0
+set columnTest to 0
 
 while playing
-show "Welcome to NME roulette!"
-show credits
-show "1. Spin"
-show "2. Rules"
-show "3. Statistics"
-show "4. Leave"
-ask menu, "Choose 1-4: "
-
-if menu equals 1
+set inGame to 1
+set totalSpins to 0
+set winCount to 0
+set lossCount to 0
+set winStreak to 0
+set lossStreak to 0
+set topJackpot to 0
+repeat 3 times and show Welcome to Luna Casino!
+show In the dark night, this is the hottest place under the moonlight
+ask name What is your name?
+show Hello, name! Today the wheel of fortune awaits you
+show Choose your starting capital 1 is humble 100 2 is generous 500 3 is reckless 1000
+ask number startChoice Which one do you start with?
+if startChoice equals 1
+set credits to 100
+end
+if startChoice equals 3
+set credits to 1000
+end
+if startChoice equals 2
+set credits to 500
+end
+if startChoice is greater than 1
+if startChoice is less than 3
+set credits to 500
+end
+end
+if startChoice is greater than 3 then set credits to 500
+if startChoice is less than 1 then set credits to 500
+set startCredits to credits
+set topCredits to credits
+while inGame
+show "Your balance is " + str(credits) + " credits"
+show "Today's record is " + str(totalSpins) + " spins"
+show "You have won " + str(winCount) + " rounds and lost " + str(lossCount) + " rounds"
+show 1. Spin the roulette
+show 2. Listen to the betting methods
+show 3. View my record
+show 4. Leave the casino
+ask number menuChoice What would you like to do?
+if menuChoice equals 1
 if credits is less than 1
-show "You have no credits left."
-set playing to false
+show Your balance is gone... the casino offers you a free drink
+set inGame to 0
 end
 if credits is greater than 0
-ask chosen, "Choose a number from 0 to 36: "
-ask bet, "How many credits will you bet? "
-if bet is less than 1
-show "The bet must be at least 1."
-end
-if bet is greater than credits
-show "The bet cannot be larger than your credits."
-end
-if bet is greater than 0
-if bet is less than credits + 1
-set roll to random number from 0 to 36
-set credits to credits - bet
-set spins to spins + 1
-show "The wheel stopped on:"
-show roll
-if roll equals chosen
-set winnings to bet * 36
-set credits to credits + winnings
-set wins to wins + 1
-show "You won 35 to 1!"
-end
-if roll is not equal to chosen
-set losses to losses + 1
-show "The house wins this spin."
+show Choose your bet type
+show 1. Number bet: 0 to 36, pays 35x
+show 2. Color bet: red or black, pays 1x
+show 3. Odd or even bet, pays 1x
+show 4. Size bet: small 1 to 18, big 19 to 36, pays 1x
+show 5. Column bet: first 1 to 12, second 13 to 24, third 25 to 36, pays 2x
+set betTypeDone to 0
+while betTypeDone is less than 1
+ask number betType, "What will you bet on: "
+if betType is less than 5
+if betType is greater than 1
+set betTypeDone to 1
+set betMode to betType
 end
 end
+if betType equals 5
+set betTypeDone to 1
+set betMode to 5
+end
+if betType equals 1
+set betTypeDone to 1
+set betMode to 1
+end
+if betTypeDone is less than 1
+show Please enter a number from 1 to 5 again
 end
 end
-end
-
-if menu equals 2
-show "Pick one number from 0 to 36."
-show "A matching number pays 35 to 1. Zero is green."
-end
-
-if menu equals 3
-show "Spins:"
-show spins
-show "Wins:"
-show wins
-show "Losses:"
-show losses
-show "Credits:"
-show credits
-end
-
-if menu equals 4
-show "Thanks for playing!"
-set playing to false
-end
-
-if menu is less than 1
-show "Please choose a number from 1 to 4."
-end
-if menu is greater than 4
-show "Please choose a number from 1 to 4."
+if betMode equals 1
+set betNumberDone to 0
+while betNumberDone is less than 1
+ask number betNumber, "Choose one number from 0 to 36: "
+if betNumber is less than 36
+if betNumber is greater than 0
+set betNumberDone to 1
 end
 end
-
-show "Goodbye!"
+if betNumber equals 36
+set betNumberDone to 1
+end
+if betNumber equals 0
+set betNumberDone to 1
+end
+if betNumberDone is less than 1
+show Only numbers from 0 to 36 can be bet
+end
+end
+set multiplier to 36
+set targetType to 1
+end
+if betMode equals 2
+set betColorDone to 0
+while betColorDone is less than 1
+ask number betColorChoice, "Red is 1, black is 2 "
+if betColorChoice equals 1
+set betColorDone to 1
+set betColor to red
+end
+if betColorChoice equals 2
+set betColorDone to 1
+set betColor to black
+end
+if betColorDone is less than 1
+show 1 is red, 2 is black. Please enter it again
+end
+end
+set multiplier to 2
+set targetType to 2
+end
+if betMode equals 3
+set betParityDone to 0
+while betParityDone is less than 1
+ask number betParityChoice, "Odd is 1, even is 2 "
+if betParityChoice equals 1
+set betParityDone to 1
+set betParity to odd
+end
+if betParityChoice equals 2
+set betParityDone to 1
+set betParity to even
+end
+if betParityDone is less than 1
+show 1 is odd, 2 is even. Please enter it again
+end
+end
+set multiplier to 2
+set targetType to 3
+end
+if betMode equals 4
+set betZoneDone to 0
+while betZoneDone is less than 1
+ask number betZoneChoice, "Small numbers 1 to 18 are 1, big numbers 19 to 36 are 2 "
+if betZoneChoice equals 1
+set betZoneDone to 1
+set betZone to small
+end
+if betZoneChoice equals 2
+set betZoneDone to 1
+set betZone to big
+end
+if betZoneDone is less than 1
+show 1 is small, 2 is big. Please enter it again
+end
+end
+set multiplier to 2
+set targetType to 4
+end
+if betMode equals 5
+set betColumnDone to 0
+while betColumnDone is less than 1
+ask number betColumnChoice, "First column is 1, second is 2, third is 3 "
+if betColumnChoice equals 1
+set betColumnDone to 1
+set betColumn to first
+end
+if betColumnChoice equals 2
+set betColumnDone to 1
+set betColumn to second
+end
+if betColumnChoice equals 3
+set betColumnDone to 1
+set betColumn to third
+end
+if betColumnDone is less than 1
+show 1 is the first column, 2 the second, 3 the third
+end
+end
+set multiplier to 3
+set targetType to 5
+end
+set betAmountDone to 0
+while betAmountDone is less than 1
+ask number betAmount, "How much will you bet: "
+set balanceCheck to credits
+subtract betAmount from balanceCheck
+if balanceCheck is less than 0
+show The bet is more than your balance. Please enter it again
+end
+if balanceCheck equals 0
+set betAmountDone to 1
+end
+if balanceCheck is greater than 0
+if betAmount is greater than 0
+set betAmountDone to 1
+end
+end
+if betAmountDone is less than 1
+show The bet must be at least 1 credit
+end
+end
+show The dealer spins the roulette with power!
+repeat 3 times and show The ball is sliding under the casino lights
+repeat 2 times and show "Ta-da-da-da"
+set ballNumber to random number from 0 to 36
+show The ball is stopping and the wheel of fate slowly slows down
+set ballColor to green
+if ballNumber equals 1 then set ballColor to red
+if ballNumber equals 2 then set ballColor to black
+if ballNumber equals 3 then set ballColor to red
+if ballNumber equals 4 then set ballColor to black
+if ballNumber equals 5 then set ballColor to red
+if ballNumber equals 6 then set ballColor to black
+if ballNumber equals 7 then set ballColor to red
+if ballNumber equals 8 then set ballColor to black
+if ballNumber equals 9 then set ballColor to red
+if ballNumber equals 10 then set ballColor to black
+if ballNumber equals 11 then set ballColor to black
+if ballNumber equals 12 then set ballColor to red
+if ballNumber equals 13 then set ballColor to black
+if ballNumber equals 14 then set ballColor to red
+if ballNumber equals 15 then set ballColor to black
+if ballNumber equals 16 then set ballColor to red
+if ballNumber equals 17 then set ballColor to black
+if ballNumber equals 18 then set ballColor to red
+if ballNumber equals 19 then set ballColor to red
+if ballNumber equals 20 then set ballColor to black
+if ballNumber equals 21 then set ballColor to red
+if ballNumber equals 22 then set ballColor to black
+if ballNumber equals 23 then set ballColor to red
+if ballNumber equals 24 then set ballColor to black
+if ballNumber equals 25 then set ballColor to red
+if ballNumber equals 26 then set ballColor to black
+if ballNumber equals 27 then set ballColor to red
+if ballNumber equals 28 then set ballColor to black
+if ballNumber equals 29 then set ballColor to black
+if ballNumber equals 30 then set ballColor to red
+if ballNumber equals 31 then set ballColor to black
+if ballNumber equals 32 then set ballColor to red
+if ballNumber equals 33 then set ballColor to black
+if ballNumber equals 34 then set ballColor to red
+if ballNumber equals 35 then set ballColor to black
+if ballNumber equals 36 then set ballColor to red
+set ballParity to zero
+set parityTest to ballNumber
+if parityTest is greater than 0
+while parityTest is greater than 1
+subtract 2 from parityTest
+end
+if parityTest equals 1
+set ballParity to odd
+end
+if parityTest equals 0
+set ballParity to even
+end
+end
+set ballZone to big
+if ballNumber is less than 19
+if ballNumber is greater than 1
+set ballZone to small
+end
+end
+if ballNumber is less than 1
+set ballZone to zero
+end
+set ballColumn to zero
+set columnTest to ballNumber
+if columnTest is greater than 1
+if columnTest is less than 13
+set ballColumn to first
+end
+end
+if columnTest equals 1
+set ballColumn to first
+end
+if columnTest is greater than 13
+if columnTest is less than 25
+set ballColumn to second
+end
+end
+if columnTest equals 13
+set ballColumn to second
+end
+if columnTest is greater than 25
+if columnTest is less than 37
+set ballColumn to third
+end
+end
+if columnTest equals 25
+set ballColumn to third
+end
+show The ball has stopped!
+show "The winning number is " + str(ballNumber) + "!"
+show "The color of the ball is " + ballColor
+show "Your bet was " + str(betAmount) + " credits"
+if ballZone equals zero
+show Zero! The house smiles. All bets go to the casino
+end
+set won to 0
+set jackpot to 0
+if targetType equals 1
+if ballNumber equals betNumber
+set won to 1
+set jackpot to 1
+end
+end
+if targetType equals 2
+if ballColor equals betColor
+set won to 1
+end
+end
+if targetType equals 3
+if ballParity equals betParity
+set won to 1
+end
+end
+if targetType equals 4
+if ballZone equals betZone
+set won to 1
+end
+end
+if targetType equals 5
+if ballColumn equals betColumn
+set won to 1
+end
+end
+set winnings to betAmount
+set multiplierCount to 1
+while multiplierCount is less than multiplier
+add betAmount to winnings
+add 1 to multiplierCount
+end
+subtract betAmount from credits
+add 1 to totalSpins
+if won equals 1
+add winnings to credits
+add 1 to winCount
+add 1 to winStreak
+set lossStreak to 0
+show "You won! The winnings are " + str(winnings) + " credits"
+end
+if won equals 0
+add 1 to lossCount
+add 1 to lossStreak
+set winStreak to 0
+show Too bad, this round goes to the house
+end
+if jackpot equals 1
+show Jackpot! Jackpot! Jackpot!
+repeat 2 times and show The vault of fate opens at Luna Casino
+show The miracle of 35x odds! The top jackpot record is renewed
+set topJackpot to winnings
+end
+if winStreak equals 2
+show The streak continues! The dealer is getting nervous
+end
+if winStreak equals 3
+show "3 win streak! Today " + name + " is invincible"
+end
+if lossStreak equals 3
+show 3 losses in a row... Do not fall for the house tricks. Bet coolly
+end
+if lossStreak equals 4
+show 4 losses in a row... Take a break if you like. The casino will be here tomorrow
+end
+if credits is greater than topCredits
+set topCredits to credits
+end
+show "Your balance is " + str(credits) + " credits"
+end
+end
+if menuChoice equals 2
+show Let me explain the betting methods
+show 1. Number bet: choose one number from 0 to 36
+show If you hit it, a huge reward of 35x awaits you
+show 2. Color bet: guess whether the ball lands on red or black
+show 3. Odd or even bet: guess whether the winning number is odd or even
+show Zero is neither odd nor even, so the house takes it
+show 4. Size bet: small numbers 1 to 18 or big numbers 19 to 36
+show 5. Column bet: guess which of the three columns comes out
+show Odds: number 35x, color odd-even and size 1x, column 2x
+show If zero comes out, all bets go to the casino
+end
+if menuChoice equals 3
+show "Today's record for " + name
+show "Total bets: " + str(totalSpins)
+show "Rounds won: " + str(winCount)
+show "Rounds lost: " + str(lossCount)
+show "Top jackpot: " + str(topJackpot) + " credits"
+show "Top balance: " + str(topCredits) + " credits"
+end
+if menuChoice equals 4
+show On the way out of the casino... the dealer says goodbye
+set inGame to 0
+end
+if menuChoice is less than 1
+show Invalid choice. Please enter a number from 1 to 4
+end
+if menuChoice is greater than 4
+show Invalid choice. Please enter a number from 1 to 4
+end
+end
+show The casino closes its doors for today
+show name + ", here is your settlement for today"
+if credits is greater than startCredits
+show "Big win! You beat the casino today and finish with " + str(credits) + " credits"
+end
+if credits is less than startCredits
+show The house wins today, but we hope you had a good time
+end
+if credits equals startCredits
+show Break-even game. Even bigger luck awaits you next time
+end
+show "The top jackpot record is " + str(topJackpot) + " credits"
+ask number retry Do you want to try again 1 is restart 2 is quit
+if retry equals 2
+set playing to 0
+end
+if retry equals 1
+set playing to 1
+end
+end
+repeat 3 times and show Goodbye, name!
+show Luna Casino always awaits your return

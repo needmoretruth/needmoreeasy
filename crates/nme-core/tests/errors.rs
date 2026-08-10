@@ -276,3 +276,19 @@ fn incomplete_value_changes_get_a_friendly_diagnostic() {
     assert!(message.contains("value change"), "{message}");
     assert!(message.contains("score add 1"), "{message}");
 }
+
+#[test]
+fn a_stray_end_after_nme_code_is_reported() {
+    let message = err("say \"hi\"\nend\n");
+    assert!(message.contains("no open NME block"), "{message}");
+    assert!(message.contains("hint"), "{message}");
+
+    let korean = bilingual_err("안녕 말해줘\n끝\n");
+    assert!(korean.contains("이 `끝`을 닫을 열린 NME 블록이 없어요"), "{korean}");
+}
+
+#[test]
+fn an_extra_end_after_a_closed_block_is_reported() {
+    let message = err("if true\n    say \"hi\"\nend\nend\n");
+    assert!(message.contains("no open NME block"), "{message}");
+}

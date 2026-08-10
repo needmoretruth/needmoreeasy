@@ -10,7 +10,9 @@ Python도 어렵다면 더 쉬운 문장부터 시작해 한 단계씩 Python으
 
 ## 1. Hello World
 
-UTF-8 파일 `hello.nme`를 만듭니다.
+UTF-8 파일 `hello.nme`를 만듭니다(`nme --version`을 실행한 같은 폴더에서;
+아무 텍스트 편집기나 괜찮습니다 — Windows에서는 메모장이 기본으로 UTF-8로
+저장합니다).
 
 ```text
 안녕하세요! 말해줘
@@ -25,9 +27,14 @@ nme 실행 hello
 `안녕하세요!`가 출력됩니다. 완전한 프로그램을 만들었지만 따옴표와 괄호가
 하나도 없습니다.
 
+첫 단계부터 짧은 명령을 쓸 수 있습니다. `nme r hello`는 실행이고, 이 폴더에
+`.nme` 프로그램이 `hello.nme` 하나뿐이면 `nme r`만 입력해도 찾아서 실행합니다.
+`nme c hello`는 실행하지 않고 검사만 하며, `nme b hello`는 읽기 쉬운 Python으로
+변환해 보여 줍니다. `-o hello.py`를 붙이면 파일로 저장해요.
+
 ## 2. 프로그램과 대화하기
 
-파일 내용을 바꿉니다.
+파일 내용을 바꿉니다(그리고 `nme 실행 hello`를 다시 실행하세요).
 
 ```text
 이름이 뭐예요?
@@ -47,14 +54,16 @@ Hello name!
 
 ## 3. 콜론 없이 반복하기
 
-문장 하나를 반복합니다.
+문장 하나를 반복합니다. 두 줄 모두 한 파일에 넣고 파일 내용을 아래로
+바꿔 주세요:
 
 ```text
 3번 반복해서 NME에 오신 것을 환영합니다 말해줘
 3번 안녕하세요
 ```
 
-여러 문장은 다음 줄을 스페이스 네 칸으로 들여씁니다.
+여러 문장이라면 파일 내용을 아래로 바꿔 주세요(다음 줄은 스페이스 네 칸으로
+들여씁니다):
 
 ```text
 3번 반복해
@@ -62,7 +71,8 @@ Hello name!
     show second sentence
 ```
 
-들여쓰기가 아직 어렵다면 명시적인 `끝`으로 닫으세요.
+들여쓰기가 아직 어렵다면 명시적인 `끝`으로 닫는 버전으로 파일 내용을
+바꿔 주세요:
 
 ```text
 점수는 0
@@ -72,7 +82,10 @@ Hello name!
 끝
 ```
 
-초급형 반복도 같은 방법으로 쓸 수 있습니다.
+`점수는 0`은 숫자를 저장하고, `<`는 '보다 작다'를 뜻하며, `점수에 1 더해`는
+값을 늘립니다 — 앞의 문장형 예시와 같은 뜻입니다.
+
+초급형 반복도 같은 방법으로 쓸 수 있습니다. 파일 내용을 아래로 바꿔 주세요:
 
 ```text
 3번:
@@ -85,6 +98,8 @@ Hello name!
 `break`, `and`/`or`, `elif`, `else`를 배울 수 있습니다.
 
 ## 4. 숫자 게임 만들기
+
+파일 내용을 아래로 바꿔 주세요:
 
 ```text
 정답은 1부터 10까지 랜덤정수
@@ -100,10 +115,17 @@ Hello name!
     더 작은 수예요 말해줘
 ```
 
-저장소의 완성된 예제를 실행합니다.
+게임이 질문을 하고 답을 입력받을 때까지 기다려요. 저장소의 완성된 예제를
+실행합니다.
 
 ```sh
 nme 실행 examples/guessing-game.ko
+```
+
+영어판은 [`examples/guessing-game.nme`](../examples/guessing-game.nme)입니다.
+
+```sh
+nme 실행 examples/guessing-game
 ```
 
 랜덤 숫자, 숫자 입력, 비교, 출력이 평범한 Python으로 컴파일됩니다. 목록,
@@ -111,7 +133,8 @@ nme 실행 examples/guessing-game.ko
 
 ## 5. 정확한 문법과 고급 문법으로 자라기
 
-문장형은 가장 쉬운 시작입니다. 초급 문법은 짧고 정확합니다.
+문장형은 가장 쉬운 시작입니다. 초급 문법은 짧고 정확합니다. 파일 내용을 아래로
+바꿔 주세요:
 
 ```text
 물어봐 이름, "이름이 뭐예요? "
@@ -119,14 +142,23 @@ nme 실행 examples/guessing-game.ko
     말해 f"안녕하세요, {이름}!"
 ```
 
-고급 문법은 Python과 같습니다.
+여기에 새로운 문법이 세 가지 나옵니다.
+
+- `물어봐 이름, "…"`는 질문을 물어보고 답을 `이름`으로 기억합니다.
+- `만약 이름:`은 조건이 참일 때 들여쓴 아래 줄들을 실행하라는 뜻입니다.
+- `f"안녕하세요, {이름}!"`은 Python f-문자열이라 `{이름}` 자리에 값이
+  들어갑니다.
+
+각 문법의 정확한 규칙은 [문법 안내](language.ko.md)에 있습니다.
+
+고급 문법은 Python과 같습니다. 파일 내용을 아래로 바꿔 주세요:
 
 ```python
 for 숫자 in range(1, 4):
     print(숫자**2)
 ```
 
-세 단계를 필요에 따라 섞으세요.
+세 단계를 필요에 따라 섞으세요. 파일 내용을 아래로 바꿔 주세요:
 
 ```text
 숫자들 = [1, 2, 3]
@@ -145,6 +177,8 @@ nme 빌드 hello -o hello.py
 python3 hello.py
 ```
 
+(Windows에서는 `py hello.py`.)
+
 선택적으로 독립 실행 파일을 만듭니다.
 
 ```sh
@@ -152,19 +186,30 @@ python3 -m pip install nuitka
 nme 컴파일 hello.nme -o hello
 ```
 
+(Windows에서는 `py -m pip install nuitka`를 쓰세요. [설치 안내](install.ko.md)는
+선택적인 `[app]` 구성요소를 추가합니다.)
+
 NME는 macOS/Linux에서 `python3`, Windows에서 `py`를 자동으로 고릅니다.
 특수한 환경에서만 고급 옵션 `--python`을 사용합니다.
 
 ## 7. Python을 NME로 쉽게 바꾸기
 
+먼저 `old_program.py`를 `print("hi")`와 `for i in range(3): print(i)` 같은
+줄 몇 개로 만듭니다(또는 6번에서 만든 `hello.py`를 사용해도 됩니다). 그런
+다음 실행하세요.
+
 ```sh
-nme 변환 old_program.py --level 문장형 --language 한국어 -o easier.nme
 nme 변환 old_program.py --level 초급 --language 영어 -o easier.en.nme
+nme 변환 old_program.py --level 초급 --language 한국어 -o easier.nme
 ```
+
+따옴표는 그대로 남아 있어요. 초급 문법에서는 보통 따옴표 없이 써요
+(`말해 hi`). 결과를 확인한 뒤 더 문장처럼 쓰고 싶으면 직접 따옴표를
+없애도 됩니다.
 
 ## 다음에 볼 문서
 
-- [학습 과정](tutorial.ko.md): Hello World부터 컴파일러까지 다섯 프로젝트
+- [학습 과정](tutorial.ko.md): Hello World부터 컴파일러까지 여섯 프로젝트
 - [문법 레퍼런스](language.ko.md): 세 단계의 정확한 규칙
 - [편집기](editors.ko.md): VS Code, Cursor, Zed
 - [AI 코딩 도우미](ai-assistants.ko.md): 도우미에게 문서 링크 하나만 주기
