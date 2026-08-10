@@ -104,6 +104,11 @@ For a larger learning project, compare the same time-loop mystery in
 [`time-loop-beginner.ko.nme`](examples/time-loop-beginner.ko.nme), and
 [`time-loop-python.nme`](examples/time-loop-python.nme).
 
+For a larger Korean sentence-only project, try the
+[`roulette.nme`](examples/roulette.nme) simulator. It combines questions,
+conditions, loops, random numbers, and value updates in one beginner-friendly
+program.
+
 The `.nme` ending is optional. `nme run program` and even `nme program` both
 run `program.nme`. NME chooses the normal Python command for your operating
 system; `--python` is only an advanced override for unusual setups.

@@ -102,6 +102,10 @@ nme 모듈
 [`time-loop-beginner.ko.nme`](examples/time-loop-beginner.ko.nme), 고급 Python
 [`time-loop-python.nme`](examples/time-loop-python.nme)으로 비교해 보세요.
 
+한국어 문장형만으로 만든 더 큰 예제를 보고 싶다면
+[`roulette.nme`](examples/roulette.nme)를 실행해 보세요. 질문, 조건, 반복,
+랜덤 숫자, 값 변경을 하나의 초보자용 프로그램에서 함께 연습할 수 있습니다.
+
 `.nme`는 생략할 수 있습니다. `program.nme`는 `nme 실행 program`만으로
 실행됩니다. NME가 운영체제에 맞는 Python 명령을 자동으로 고르므로 보통
 `--python`을 쓸 필요가 없습니다.
