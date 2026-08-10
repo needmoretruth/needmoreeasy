@@ -11,12 +11,23 @@ All notable changes to NME are recorded here.
   English `is not equal to`.
 - Fix `while` + Korean sentence condition + `동안` endings (for example
   `while 점수가 3보다 작을 동안`): the ending is now consumed as a block
-  marker instead of being lowered as the loop's inline body.
+  marker instead of being lowered as the loop's inline body, and every
+  logical operand may carry its own ending (`while 점수가 10과 같지 않을
+  동안 그리고 점수가 3보다 클 동안`).
 - Fix Korean logical conditions: comparison endings may now combine with
   `그리고`/`또는` (`점수가 0보다 크면 그리고 점수가 3보다 작으면`), and
   malformed conditions report a diagnostic instead of crashing the parser.
 - Fix the English roulette companion to use `ask number` for numeric menus,
   bets, and wheel picks.
+- Add command shortcuts (`nme r`/`c`/`b`/`m`/`v`/`h`, `nme comp`/`nme conv`)
+  and bare-file discovery: `nme r` runs the single `.nme` program in the
+  current folder, lists and asks for a numbered pick when several exist, and
+  explains what to do when none do.
+- Add an English and Korean twin for every beginner example.
+- Fix beginner-path documentation in both languages, close English/Korean
+  parity gaps, and link the new examples from the tutorials.
+- Teach the new shortcuts and show friendlier file hints in the CLI and both
+  language guides.
 
 ## 0.0.1-beta.14 — 2026-08-11
 

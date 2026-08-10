@@ -2,6 +2,8 @@
 
 [English](converting-python.md) | 한국어
 
+[README](../README.ko.md) | [5분 시작](getting-started.ko.md) | [학습 과정](tutorial.ko.md) | [문법 안내](language.ko.md)
+
 변환기는 입력 전체가 올바른 Python인지 먼저 확인한 뒤, 요청한 NME 단계에서
 뜻을 안전하게 보존할 수 있는 줄만 바꿉니다.
 

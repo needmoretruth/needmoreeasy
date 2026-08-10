@@ -2,6 +2,8 @@
 
 [English](editors.md) | 한국어
 
+[README](../README.ko.md) | [5분 시작](getting-started.ko.md) | [학습 과정](tutorial.ko.md) | [문법 안내](language.ko.md)
+
 저장소에는 세 편집기에서 쓸 실행, 검사, 빌드 작업이 들어 있습니다. NME를 먼저
 설치하고 파일 하나가 아니라 저장소 폴더를 여세요.
 
