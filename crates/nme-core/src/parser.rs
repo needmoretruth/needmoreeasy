@@ -1621,7 +1621,7 @@ fn condition_connector_exact(token: &Token, is_last: bool) -> Option<ConditionCo
     let candidates = [
         (
             ConditionConnector::Then,
-            &["then", "그러면", "그럼", "경우", "때", "일때"][..],
+            &["then", "그러면", "그럼", "하면", "경우", "때", "일때"][..],
         ),
         (ConditionConnector::Exists, &["있으면", "있다면"][..]),
         (ConditionConnector::Missing, &["없으면", "없다면"][..]),
@@ -1653,7 +1653,7 @@ fn condition_connector_recovered(token: &Token, is_last: bool) -> Option<Conditi
     let candidates = [
         (
             ConditionConnector::Then,
-            &["then", "그러면", "그럼", "경우", "때", "일때"][..],
+            &["then", "그러면", "그럼", "하면", "경우", "때", "일때"][..],
         ),
         (ConditionConnector::Exists, &["있으면", "있다면"][..]),
         (ConditionConnector::Missing, &["없으면", "없다면"][..]),

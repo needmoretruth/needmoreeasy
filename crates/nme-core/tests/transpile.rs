@@ -705,3 +705,11 @@ fn attached_korean_repeat_can_use_end_without_indentation() {
         "for _ in range(3):\n    print(\"hi\")\n# end\n"
     );
 }
+
+#[test]
+fn korean_hamyeon_connector_can_open_a_flat_block() {
+    assert_eq!(
+        ok("준비는 참\n만약 준비 하면\n성공 말해줘\n끝\n"),
+        "준비 = True\nif (준비):\n    print(\"성공\")\n# end\n"
+    );
+}
