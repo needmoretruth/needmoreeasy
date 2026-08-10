@@ -272,6 +272,7 @@ pub fn parse_program(
                             found.last().map(|line| &line.stmt),
                             Some(NmeStmt::While { .. } | NmeStmt::Times { .. })
                         );
+                        bindings.push_explicit_scope(parse_line.indent + 1);
                         blocks.push(if is_loop {
                             ExplicitBlock::Loop
                         } else {
@@ -2562,6 +2563,13 @@ impl BindingEnv {
             .iter()
             .flat_map(|scope| scope.names.iter().cloned())
             .collect()
+    }
+
+    fn push_explicit_scope(&mut self, body_indent: usize) {
+        self.scopes.push(BindingScope {
+            body_indent,
+            names: HashSet::new(),
+        });
     }
 
     fn remember_nme(&mut self, stmt: &NmeStmt) {

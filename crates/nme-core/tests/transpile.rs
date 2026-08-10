@@ -713,3 +713,24 @@ fn korean_hamyeon_connector_can_open_a_flat_block() {
         "준비 = True\nif (준비):\n    print(\"성공\")\n# end\n"
     );
 }
+
+#[test]
+fn explicit_block_names_do_not_leak_after_end() {
+    let source = concat!(
+        "ready = True\n",
+        "if ready\n",
+        "set secret to hidden\n",
+        "show value secret\n",
+        "end\n",
+        "show secret\n",
+    );
+    let expected = concat!(
+        "ready = True\n",
+        "if (ready):\n",
+        "    secret = \"hidden\"\n",
+        "    print(\"value \" + str(secret))\n",
+        "# end\n",
+        "print(\"secret\")\n",
+    );
+    assert_eq!(ok(source), expected);
+}
