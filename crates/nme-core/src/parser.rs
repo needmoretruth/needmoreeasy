@@ -874,6 +874,14 @@ fn match_use_random(source: &str, tokens: &[Token]) -> Result<Option<NmeStmt>, D
 
     let has_random = tokens.iter().any(is_random_word);
     if !has_random {
+        let has_exact_use = tokens.iter().any(|token| {
+            token_word(token).is_some_and(|word| {
+                USE_WORDS_EN.contains(&word) || USE_WORDS_KO.contains(&word)
+            })
+        });
+        if !has_exact_use {
+            return Ok(None);
+        }
         let spelling = if tokens
             .iter()
             .any(|token| token_matches_any(token, USE_WORDS_KO))

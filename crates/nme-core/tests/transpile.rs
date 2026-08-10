@@ -191,6 +191,14 @@ fn sentence_assignments_and_random_numbers_are_symbol_free() {
 }
 
 #[test]
+fn sentence_set_is_not_mistaken_for_a_typo_of_get() {
+    assert_eq!(
+        ok("set name to \"Ada\"\nshow name\n"),
+        "name = \"Ada\"\nprint(name)\n"
+    );
+}
+
+#[test]
 fn a_korean_number_guessing_game_can_use_only_sentence_syntax() {
     let source = concat!(
         "정답은 1부터 10까지 랜덤정수\n",
