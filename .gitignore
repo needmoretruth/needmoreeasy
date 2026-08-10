@@ -18,6 +18,30 @@ __pycache__/
 *.swo
 *~
 
+# Local contributor and AI-assistant instructions (never NME project data)
+**/AGENT.md
+**/AGENTS.md
+**/agent.md
+**/agents.md
+**/CODEX.md
+**/codex.md
+**/CLAUDE.md
+**/claude.md
+**/GEMINI.md
+**/gemini.md
+**/AI.md
+**/ai.md
+**/.agents/
+**/.codex/
+**/.claude/
+**/.cursor/
+**/.continue/
+**/.windsurf/
+**/.ai/
+**/.aider*
+**/.cursorrules
+**/copilot-instructions.md
+
 # Operating-system metadata
 .DS_Store
 Thumbs.db
