@@ -742,3 +742,14 @@ fn explicit_blocks_do_not_double_indent_a_body_already_indented() {
         "if (ready):\n    print(\"yes\")\n# end\n"
     );
 }
+
+#[test]
+fn nested_flat_blocks_keep_python_nesting_and_line_count() {
+    let source = "while outer\nif inner\nshow value\nend\nend\n";
+    let output = ok(source);
+    assert_eq!(
+        output,
+        "while (outer):\n    if (inner):\n        print(\"value\")\n    # end\n# end\n"
+    );
+    assert_eq!(output.lines().count(), source.lines().count());
+}
