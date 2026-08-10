@@ -91,7 +91,15 @@ fn main() -> ExitCode {
         Some("변환") => command_convert(&args[1..], MessageLanguage::KoreanAndEnglish),
         Some("modules" | "module") => command_modules(&args[1..], MessageLanguage::English),
         Some("모듈") => command_modules(&args[1..], MessageLanguage::KoreanAndEnglish),
-        Some("--version" | "-V" | "version" | "버전") if args.len() == 1 => {
+        Some("버전") if args.len() == 1 => {
+            println!(
+                "NME 버전: {}\nnme version: nme {}",
+                env!("CARGO_PKG_VERSION"),
+                env!("CARGO_PKG_VERSION")
+            );
+            ExitCode::SUCCESS
+        }
+        Some("--version" | "-V" | "version") if args.len() == 1 => {
             println!("nme {}", env!("CARGO_PKG_VERSION"));
             ExitCode::SUCCESS
         }

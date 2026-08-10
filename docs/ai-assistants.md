@@ -31,6 +31,8 @@ Korean and English are equal aliases, not separate modes. Mixing is valid:
 이름을 물어봐 이름이 뭐예요?
 show Hello 이름!
 3 times 반복해서 Welcome 말해줘
+What is your name?
+Hello name!
 ```
 
 ### Generate sentence syntax first
@@ -44,6 +46,10 @@ Hello everyone!
 name ask
 이름을 물어봐
 Hello name show
+
+What is your name?
+What's your city?
+Hello name!
 
 3 times Again
 3번 다시 만나요
@@ -64,7 +70,10 @@ action, logical, and condition typos such as `repaet`, `shwoe`, `그리거`, and
 `같먄` are repaired only when the intended meaning is unique.
 
 Known input or assignment names are interpolated in sentence output. Natural
-prompts get a trailing space automatically. For the gentlest start, close a
+questions such as `What is your name` infer the target; Korean forms such as
+`내 이름은 뭐예요?` do too. The final `?` is optional, and natural prompts get
+a trailing space automatically.
+For the gentlest start, close a
 flat block with `end`/`끝` instead of relying on indentation:
 
 ```text
@@ -159,20 +168,19 @@ always valid advanced NME.
 
 ## Product-specific ways to provide the link
 
-- Cursor: paste the URL with `@Link`. Cursor's current
-  [documentation](https://cursor.com/docs) describes the available link and
-  context features.
+- Cursor: paste the URL with `@Link`. Cursor's official
+  [@Link guide](https://docs.cursor.com/context/%40-symbols/%40-link) describes
+  the link context flow.
 - Claude Code: paste the handoff prompt at session start. Claude Code also
-  supports persistent `CLAUDE.md` memory, documented by
-  [Anthropic](https://docs.anthropic.com/en/docs/claude-code/memory), but it is
+  supports persistent `CLAUDE.md` memory, documented in the official
+  [Claude Code memory guide](https://code.claude.com/docs/en/memory), but it is
   not required for NME.
 - Codex: paste the handoff prompt as the task. Codex also supports layered
-  `AGENTS.md` instructions according to the
-  [official OpenAI documentation](https://learn.chatgpt.com/docs/agent-configuration/agents-md),
+  `AGENTS.md` instructions, as described by [OpenAI](https://openai.com/index/introducing-codex/),
   but NME projects do not need to track one.
 - OpenCode: paste the handoff prompt. Its official
-  [rules documentation](https://opencode.ai/docs/rules/) also supports remote
-  instruction URLs when a user wants persistent configuration.
+  [rules documentation](https://dev.opencode.ai/docs/rules/) also supports
+  remote instruction URLs when a user wants persistent configuration.
 
 Keep tool-specific assistant metadata outside the NME program repository
 unless the repository owner explicitly asks to track it.

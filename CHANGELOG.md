@@ -4,6 +4,29 @@ English | [한국어](CHANGELOG.ko.md)
 
 All notable changes to NME are recorded here.
 
+## 0.0.1-beta.10 — 2026-08-11
+
+- Recover common Korean condition-starter typos (`만악에`), spaced Korean
+  particles/endings (`이름 이 철수 면`), and the spoken `그러면` connector
+  without turning the right-hand value into text.
+- Recover clear module typos such as `use random lates` and `랜덤 사요 최신`.
+- Natural questions accept bare or separated targets (`나이 몇 살이에요`,
+  `이름 은 뭐예요`) while preserving noun names that end in `이`.
+- Korean `nme 버전` now prints Korean and English version information.
+
+## 0.0.1-beta.9 — 2026-08-11
+
+- Let a first program ask naturally with `What is your name?`, `What's your
+  city?`, `이름이 뭐예요?`, or `나이는 몇 살이에요?` without `ask`, commas, or
+  quotes; the final question mark is optional and `내 이름은 뭐예요?` is also
+  understood.
+- Accept target-first saves such as `name save Mina` and `이름 저장 민수`, and
+  virtual-indent an ordinary Python `if`/`for` suite inside a flat NME block.
+- Accept short Korean equality endings such as `이름이 철수면`, `이라면`, and
+  `준비가 거짓이면`, plus bounded spoken typos such as `있으먄` and `철수먄`.
+- Rewrite the first-run examples and tutorials around the sentence-to-Python
+  learning bridge.
+
 ## 0.0.1-beta.8 — 2026-08-11
 
 - Accept subject-first conversational conditions such as `color equals red

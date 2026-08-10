@@ -75,6 +75,20 @@ name ask
 Hello name show
 ```
 
+For the gentlest possible first input, ask as a normal question:
+
+```text
+What is your name?
+What's your city?
+Hello name!
+```
+
+The matching target (`name` or `city`) is inferred from the question. Korean
+questions such as `이름이 뭐예요`, `내 이름은 뭐예요?`, and
+`나이는 몇 살이에요?` work the same way; the final `?` is optional. Use
+`ask number` when the answer must be converted to a number; complex or
+ambiguous questions should use the explicit `ask` form.
+
 Accepted output actions include `show`, `display`, `tell`, `say`, `보여줘`,
 `말해줘`, `말해주세요`, `출력해`, and `출력해줘`. The precise beginner
 spellings `say expression` and `말해 표현식` continue to treat a valid Python
@@ -107,11 +121,14 @@ name.
 정답은 7
 set greeting to Hello
 set answer to 7
+greeting save Hello
+이름 저장 민수
 score add 1
 subtract 1 from score
 ```
 
-These become normal assignments. Numbers and clear expressions remain code;
+These become normal assignments. Target-first speech such as `name save Mina`
+or `이름 저장 민수` is also supported. Numbers and clear expressions remain code;
 plain words become text. A saved name is available for later sentence
 interpolation and conditions.
 
@@ -213,6 +230,12 @@ The subject-first form is limited to a clear comparison, existence check, or
 unmistakable action body. Ordinary speech such as `Hello then world` remains
 prose.
 
+Korean can shorten the comparison ending without changing the meaning:
+`이름이 철수면`, `이름이 철수라면`, and `준비가 거짓이면` are accepted. Spoken
+particles may be separated too (`이름 이 철수 면`), and a bare subject can use
+`준비면` for a truthy condition. A bounded spoken typo such as `있으먄`,
+`철수먄`, or `만악에` is recovered when there is only one clear condition.
+
 Supported sentence comparisons:
 
 | English | Korean | Meaning |
@@ -256,7 +279,7 @@ line. A common two-keystroke pattern—one extra/missing character combined
 with an adjacent swap—is also accepted when it has one clear action. Examples
 include `물어바` → `물어봐`, `말헤` → `말해`, `repaet` → `repeat`, and
 `shwoe` → `show`, `thne` → `then` in `if score is greater than 5 thne ...`,
-and `그리거` → `그리고`.
+and `그리거` → `그리고`, and `만악에` → `만약에`.
 
 Recovery applies only to these action/connector tokens, never to Python
 expressions, strings, or comments. If a repair is not unique or the sentence
@@ -370,7 +393,8 @@ use random version "0.0.1"
 
 `latest` / `최신` selects the newest adapter bundled with the installed NME
 compiler. It is local and deterministic, not an uncontrolled network update.
-An unavailable exact version produces an error showing the installed version.
+Clear one-edit misspellings such as `use random lates` are recovered. An
+unavailable exact version produces an error showing the installed version.
 
 Every spelling exposes both vocabularies:
 

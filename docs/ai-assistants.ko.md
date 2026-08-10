@@ -28,6 +28,8 @@ NME에는 줄마다 섞을 수 있는 세 단계가 있습니다.
 이름을 물어봐 이름이 뭐예요?
 show Hello 이름!
 3 times 반복해서 Welcome 말해줘
+이름이 뭐예요?
+안녕하세요 이름!
 ```
 
 ### 먼저 문장형으로 작성
@@ -41,6 +43,10 @@ Hello everyone!
 이름을 물어봐
 name ask
 Hello name show
+
+이름이 뭐예요?
+What is your name?
+안녕하세요 이름!
 
 3번 다시 만나요
 3 times Again
@@ -60,8 +66,9 @@ if score is greater than 10 then show You won
 정해질 때만 자동으로 고칩니다. `그리거`, `같먄` 같은 논리·조건 연결어 오타도
 같은 제한으로 복구합니다.
 
-문장 출력에서 앞서 입력받거나 저장한 이름은 실제 값으로 바뀝니다. 따옴표 없는
-질문에는 끝 공백이 자동으로 붙습니다. 처음에는 들여쓰기 대신 `끝`/`end`로
+문장 출력에서 앞서 입력받거나 저장한 이름은 실제 값으로 바뀝니다. `내 이름은
+뭐예요?`처럼 평범한 질문을 쓰면 이름에 답이 자동으로 저장됩니다. 마지막 `?`는
+생략할 수 있고, 따옴표 없는 질문에는 끝 공백이 자동으로 붙습니다. 처음에는 들여쓰기 대신 `끝`/`end`로
 블록을 닫으세요.
 
 ```text
@@ -151,16 +158,17 @@ Python으로 돌아가세요.
 
 ## 제품별 링크 전달 방법
 
-- Cursor: URL을 `@Link`로 붙입니다. 최신 링크·문맥 기능은 Cursor 공식
-  [문서](https://cursor.com/docs)에서 확인하세요.
+- Cursor: URL을 `@Link`로 붙입니다. Cursor 공식
+  [`@Link` 안내](https://docs.cursor.com/context/%40-symbols/%40-link)를
+  참고하세요.
 - Claude Code: 세션을 시작할 때 전달 문장을 붙입니다. Anthropic 공식
-  [메모리 문서](https://docs.anthropic.com/en/docs/claude-code/memory)의
-  `CLAUDE.md`도 선택적으로 쓸 수 있지만 NME에는 필요하지 않습니다.
+  [메모리 문서](https://code.claude.com/docs/en/memory)의 `CLAUDE.md`도 선택적으로
+  쓸 수 있지만 NME에는 필요하지 않습니다.
 - Codex: 전달 문장을 작업으로 붙입니다. Codex는 OpenAI 공식
-  [AGENTS.md 문서](https://learn.chatgpt.com/docs/agent-configuration/agents-md)에
-  나온 계층형 지침도 지원하지만 NME 프로젝트에서 추적할 필요는 없습니다.
+  [안내](https://openai.com/index/introducing-codex/)에 나온 `AGENTS.md` 지침도
+  지원하지만 NME 프로젝트에서 추적할 필요는 없습니다.
 - OpenCode: 전달 문장을 붙입니다. 공식
-  [규칙 문서](https://opencode.ai/docs/rules/)는 사용자가 지속 설정을 원할 때
+  [규칙 문서](https://dev.opencode.ai/docs/rules/)는 사용자가 지속 설정을 원할 때
   원격 지침 URL도 지원합니다.
 
 저장소 소유자가 명시적으로 추적하라고 하지 않았다면 도구별 AI 메타데이터는

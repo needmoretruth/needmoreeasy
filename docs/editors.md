@@ -33,11 +33,11 @@ terminal.
 
 For Cursor Agent, paste the handoff prompt from
 [AI coding assistants](ai-assistants.md). Cursor can attach a web link directly
-with `@Link`; see Cursor's current [documentation](https://cursor.com/docs) for
-the latest link and file-context instructions.
+with `@Link`; see the official [@Link guide](https://docs.cursor.com/context/%40-symbols/%40-link)
+for the current link and file-context flow.
 
 Cursor project rules normally live in `.cursor/rules`, according to the
-official [Cursor Rules guide](https://cursor.com/docs/rules). NME does
+official [Cursor Rules guide](https://docs.cursor.com/context/rules). NME does
 not require or track a rule file: the shared handoff URL is enough and avoids
 placing tool-specific metadata in an NME project.
 

@@ -30,16 +30,17 @@ see a repeat too.
 ## Project 2: A greeting program
 
 ```text
-ask name What is your name?
-show Nice to meet you name!
+What is your name?
+Nice to meet you name!
 ```
 
-The first line creates the name `name`. The second line recognizes that known
-name and inserts its value. The Korean version needs no formatting syntax:
+The first line creates the name `name` from an ordinary question. The second
+line recognizes that known name and inserts its value. The Korean version needs
+no formatting syntax:
 
 ```text
-이름을 물어봐 이름이 뭐예요?
-이름 만나서 반가워요! 말해줘
+이름이 뭐예요?
+이름 만나서 반가워요!
 ```
 
 Challenge: ask for a favorite color and show it in another sentence.
