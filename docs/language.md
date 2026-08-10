@@ -423,6 +423,9 @@ Every spelling exposes both vocabularies:
 | `shuffle(values)` | `섞기(values)` | `random.shuffle(values)` |
 | `random_version` | `랜덤버전` | adapter version string |
 
+The adapter reserves these helper names. If one already exists, NME stops and
+asks you to rename it instead of silently overwriting your value.
+
 Run `nme modules` or `nme 모듈` to list versions. Random is not suitable for
 passwords or other security decisions.
 

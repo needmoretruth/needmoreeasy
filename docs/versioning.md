@@ -7,9 +7,9 @@ prereleases while the language is still being designed.
 
 ## Current release line
 
-The current release is `0.0.1-beta.12`; the public line began at
+The current release is `0.0.1-beta.13`; the public line began at
 `0.0.1-beta.1`. Later public beta releases increase the last number:
-`0.0.1-beta.3`, `0.0.1-beta.4`, `0.0.1-beta.5`, `0.0.1-beta.6`, `0.0.1-beta.7`, `0.0.1-beta.8`, `0.0.1-beta.9`, `0.0.1-beta.10`, `0.0.1-beta.11`, `0.0.1-beta.12`, and so on. A Git commit or a branch push is not
+`0.0.1-beta.3`, `0.0.1-beta.4`, `0.0.1-beta.5`, `0.0.1-beta.6`, `0.0.1-beta.7`, `0.0.1-beta.8`, `0.0.1-beta.9`, `0.0.1-beta.10`, `0.0.1-beta.11`, `0.0.1-beta.12`, `0.0.1-beta.13`, and so on. A Git commit or a branch push is not
 automatically a release, so development commits can share the version of the
 beta they are preparing.
 
