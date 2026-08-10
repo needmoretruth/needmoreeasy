@@ -49,7 +49,8 @@ show Hello 이름!
 Python이 항상 우선하며 한 글자도 바뀌지 않습니다.
 
 문장형은 `만약에`, `있으면`, `반복해서`, `그리고`, `또는`, `then` 같은 연결어를
-이해합니다. `동안`/`while`, `멈춰`/`break`, `아니면 만약`/`elif`,
+이해합니다. `동안`/`while`, `멈춰`/`break`, `아니면 만약에` 또는
+`아니면만약에`/`elif`,
 `아니면`/`else`도 `끝` 블록에서 사용할 수 있습니다.
 Python이 아닌 NME 동작 단어에 한 글자 오타가 있으면 고쳐서 이해합니다. 뜻을
 하나로 확정하기 어렵다면 억지로 추측하지 않고 정확한 위치와 고치는 예시를
@@ -73,7 +74,7 @@ Cargo가 설치한 `bin` 폴더가 `PATH`에 없다고 경고하면 macOS/Linux�
 명령이 아닙니다. Windows PowerShell은
 [설치 안내](docs/install.ko.md#windows-10-또는-11)의 PATH 단계를 사용하세요.
 
-표시될 버전은 `nme 0.0.1-beta.4`입니다.
+표시될 버전은 `nme 0.0.1-beta.5`입니다.
 
 Windows, macOS, Linux별 과정은 [설치 안내](docs/install.ko.md)에 있습니다.
 프로그래밍을 전혀 모른다면 [5분 시작 안내](docs/getting-started.ko.md)부터

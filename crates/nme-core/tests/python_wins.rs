@@ -109,6 +109,8 @@ fn future_python_call_shapes_are_left_for_the_selected_cpython() {
 #[test]
 fn control_words_in_valid_python_keep_python_priority() {
     unchanged("end = 1\nprint(end)\n");
+    unchanged("end\n");
+    unchanged("끝\n");
     unchanged("obj.end = 1\n");
     unchanged("breakpoint()\n");
     unchanged("while True:\n    break\n");

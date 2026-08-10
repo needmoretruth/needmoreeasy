@@ -4,6 +4,17 @@ English | [한국어](CHANGELOG.ko.md)
 
 All notable changes to NME are recorded here.
 
+## 0.0.1-beta.5 — 2026-08-11
+
+- Make the three learning levels easier to mix inside one flat block, with
+  regression coverage for Korean beginner spellings and ordinary Python.
+- Accept attached Korean condition endings such as `이름있으면` and the natural
+  `아니면만약에` branch spelling, plus small polite sentence fillers.
+- Keep top-level Python identifiers such as `end` and `끝` untouched and avoid
+  accidentally opening a colon-based Python block merely because a later NME
+  block has an `end`.
+- Refresh the bilingual language reference and local continuation handoff.
+
 ## 0.0.1-beta.4 — 2026-08-11
 
 - Add an indentation-free control-flow bridge: `while`, `break`, `and`/`or`,

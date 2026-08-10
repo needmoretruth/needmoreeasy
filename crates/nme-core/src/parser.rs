@@ -27,6 +27,9 @@ const SAY_WORDS_KO: &[&str] = &[
     "출력해",
     "출력해줘",
     "출력해주세요",
+    "해줘",
+    "해주세요",
+    "읽어줘",
 ];
 const ASK_WORDS_EN: &[&str] = &["ask", "prompt", "question"];
 const ASK_WORDS_KO: &[&str] = &[
@@ -62,7 +65,14 @@ const WHILE_WORDS_KO: &[&str] = &["동안", "하는동안", "할동안"];
 const BREAK_WORDS_EN: &[&str] = &["break", "breakhere"];
 const BREAK_WORDS_KO: &[&str] = &["멈춰", "멈춰라", "중단", "반복멈춰", "여기서멈춰"];
 const ELSE_WORDS_EN: &[&str] = &["else", "otherwise"];
-const ELSE_WORDS_KO: &[&str] = &["아니면", "그렇지않으면", "아니면만약", "그렇지않으면만약"];
+const ELSE_WORDS_KO: &[&str] = &[
+    "아니면",
+    "그렇지않으면",
+    "아니면만약",
+    "아니면만약에",
+    "그렇지않으면만약",
+    "그렇지않으면만약에",
+];
 const END_WORDS_EN: &[&str] = &["end"];
 const END_WORDS_KO: &[&str] = &["끝"];
 const USE_WORDS_EN: &[&str] = &["use", "load", "get", "import"];
@@ -120,7 +130,7 @@ const KOREAN_PARTICLES: &[&str] = &[
 ];
 
 const SET_WORDS_EN: &[&str] = &["set", "save", "remember"];
-const SENTENCE_FILLERS: &[&str] = &["please", "좀", "혹시"];
+const SENTENCE_FILLERS: &[&str] = &["please", "좀", "혹시", "제발"];
 const COMMAND_ENDINGS: &[&str] = &["?", "!"];
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -200,10 +210,10 @@ pub fn parse_program(
         };
 
         // `end` and a bare `break` are valid Python-shaped words in a few
-        // contexts, so explicit blocks claim them before Python-wins.  A
-        // Korean `끝` is never valid Python and is handled the same way at
-        // top level to provide a useful unmatched-end diagnostic.
-        let direct_stmt = if is_end.is_some() && (depth > 0 || is_end == Some(Spelling::Korean)) {
+        // contexts, so an already-open explicit block claims them before
+        // Python-wins. Outside a block, valid Python identifiers such as
+        // `end`/`끝` remain untouched by the compatibility rule.
+        let direct_stmt = if is_end.is_some() && depth > 0 {
             Some(Ok(Some(NmeStmt::End)))
         } else if is_break
             && (depth > 0
@@ -214,6 +224,15 @@ pub fn parse_program(
                     && !is_valid_python_statement(token_text(source, &line.tokens))))
         {
             Some(Ok(Some(NmeStmt::Break)))
+        } else if branch_shape.is_some()
+            && depth == 0
+            && !line
+                .tokens
+                .iter()
+                .any(|token| matches!(token.tok, Tok::Equal | Tok::Colon))
+            && !is_valid_python_statement(token_text(source, &line.tokens))
+        {
+            Some(Err(branch_without_condition_diagnostic(line.span)))
         } else if branch_shape.is_some()
             && (depth > 0 || is_korean_branch_alias(&line.tokens))
             && !line
@@ -277,7 +296,7 @@ pub fn parse_program(
                     | NmeStmt::While { inline: None, .. },
                 ) = found.last().map(|line| &line.stmt)
                 {
-                    if force_suite || has_future_end(lines, index) {
+                    if force_suite {
                         let is_loop = matches!(
                             found.last().map(|line| &line.stmt),
                             Some(NmeStmt::While { .. } | NmeStmt::Times { .. })
@@ -361,7 +380,15 @@ fn branch_shape(tokens: &[Token]) -> Option<BranchShape> {
     }
     if matches!(tokens[0].tok, Tok::Elif)
         || token_matches_exact(&tokens[0], &["elif"])
-        || token_matches_exact(&tokens[0], &["아니면만약", "그렇지않으면만약"])
+        || token_matches_exact(
+            &tokens[0],
+            &[
+                "아니면만약",
+                "아니면만약에",
+                "그렇지않으면만약",
+                "그렇지않으면만약에",
+            ],
+        )
         || (token_matches_exact(&tokens[0], &["아니면", "그렇지않으면"])
             && when_action_at(tokens, 1, MatchMode::Exact).is_some())
         || (action_phrase_at(tokens, 0, ELSE_WORDS_EN, MatchMode::Exact)
@@ -663,19 +690,21 @@ fn match_say(
     known_names: &HashSet<String>,
     mode: MatchMode,
 ) -> Result<Option<NmeStmt>, Diagnostic> {
-    if let Some((spelling, consumed)) = output_action_at(tokens, 0, mode) {
-        let mut body_start = consumed;
+    let action_start = leading_sentence_fillers(tokens);
+    if let Some((spelling, consumed)) = output_action_at(tokens, action_start, mode) {
+        let mut body_start = action_start + consumed;
         if tokens.get(body_start).is_some_and(is_command_ending) && body_start + 1 < tokens.len() {
             body_start += 1;
         }
         if body_start >= tokens.len() {
-            return Err(say_missing(spelling, tokens[0].span));
+            return Err(say_missing(spelling, tokens[action_start].span));
         }
         let body = &tokens[body_start..];
-        let prefer_text = consumed != 1
+        let prefer_text = action_start != 0
+            || consumed != 1
             || mode == MatchMode::Recover
-            || (!token_is_exact_name(&tokens[0], SAY_KEYWORD)
-                && !token_is_exact_name(&tokens[0], SAY_KEYWORD_KO));
+            || (!token_is_exact_name(&tokens[action_start], SAY_KEYWORD)
+                && !token_is_exact_name(&tokens[action_start], SAY_KEYWORD_KO));
         if !prefer_text {
             let span = span_of(body);
             let text = &source[span.start..span.end];
@@ -745,6 +774,17 @@ fn output_action_at(tokens: &[Token], start: usize, mode: MatchMode) -> Option<(
             action_phrase_at(tokens, start, SAY_WORDS_KO, mode)
                 .map(|consumed| (Spelling::Korean, consumed))
         })
+}
+
+fn leading_sentence_fillers(tokens: &[Token]) -> usize {
+    let mut index = 0;
+    while tokens
+        .get(index)
+        .is_some_and(|token| token_matches_exact(token, SENTENCE_FILLERS))
+    {
+        index += 1;
+    }
+    index
 }
 
 // ---------------------------------------------------------------- input
@@ -839,8 +879,9 @@ struct AskShape {
 }
 
 fn find_ask_shape(tokens: &[Token], mode: MatchMode) -> Option<AskShape> {
-    if let Some((spelling, consumed)) = ask_action_at(tokens, 0, mode) {
-        let mut target_at = consumed;
+    let action_start = leading_sentence_fillers(tokens);
+    if let Some((spelling, consumed)) = ask_action_at(tokens, action_start, mode) {
+        let mut target_at = action_start + consumed;
         let kind = if tokens
             .get(target_at)
             .is_some_and(|token| token_matches_exact(token, NUMBER_WORDS))
@@ -851,7 +892,7 @@ fn find_ask_shape(tokens: &[Token], mode: MatchMode) -> Option<AskShape> {
             InputKind::Text
         };
         return Some(AskShape {
-            action_start: 0,
+            action_start,
             target_at,
             prompt_start: target_at + 1,
             spelling,
@@ -1031,30 +1072,29 @@ fn match_while(
         }
     }
 
-    let (condition_tokens, connector, body) = if suffix_form {
+    let (condition_tokens, body_start, connector) = if suffix_form {
         if let Some((connector_at, connector)) = find_condition_connector(condition_slice) {
-            (
-                &condition_slice[..connector_at],
-                Some(connector),
-                &tokens[tokens.len()..],
-            )
+            let (condition, _, connector) =
+                condition_tokens_before(tokens, 0, connector_at, connector);
+            (condition, tokens.len(), Some(connector))
         } else {
-            (condition_slice, None, &tokens[tokens.len()..])
+            (condition_slice.to_vec(), tokens.len(), None)
         }
     } else if let Some((relative_at, connector)) = find_condition_connector(condition_slice) {
-        let at = relative_at + consumed;
-        (&tokens[consumed..at], Some(connector), &tokens[at + 1..])
+        let (condition, body_start, connector) =
+            condition_tokens_before(tokens, consumed, relative_at, connector);
+        (condition, body_start, Some(connector))
     } else {
-        (&tokens[consumed..], None, &tokens[tokens.len()..])
+        (tokens[consumed..].to_vec(), tokens.len(), None)
     };
     if condition_tokens.is_empty() {
         return Err(condition_missing(spelling, tokens[0].span));
     }
     let condition =
-        parse_natural_condition(source, condition_tokens, connector, known_names, spelling)?;
+        parse_natural_condition(source, &condition_tokens, connector, known_names, spelling)?;
     let inline = parse_suite_body(
         source,
-        body,
+        &tokens[body_start..],
         block,
         SuiteKind::Condition,
         span_of(tokens),
@@ -1146,22 +1186,19 @@ fn match_branch(
         }));
     }
     let remainder = &tokens[condition_start..];
-    let (condition_tokens, connector, body) = match find_condition_connector(remainder) {
+    let (condition_tokens, body_start, connector) = match find_condition_connector(remainder) {
         Some((relative_at, connector)) => {
-            let at = relative_at + condition_start;
-            (
-                &tokens[condition_start..at],
-                Some(connector),
-                &tokens[at + 1..],
-            )
+            let (condition, body_start, connector) =
+                condition_tokens_before(tokens, condition_start, relative_at, connector);
+            (condition, body_start, Some(connector))
         }
-        None => (remainder, None, &tokens[tokens.len()..]),
+        None => (remainder.to_vec(), tokens.len(), None),
     };
     let condition =
-        parse_natural_condition(source, condition_tokens, connector, known_names, spelling)?;
+        parse_natural_condition(source, &condition_tokens, connector, known_names, spelling)?;
     let inline = parse_suite_body(
         source,
-        body,
+        &tokens[body_start..],
         block,
         SuiteKind::Condition,
         span_of(tokens),
@@ -1224,21 +1261,22 @@ fn match_when(
         // evidence to recover it as a typo, so let another construct decide.
         return Ok(None);
     }
-    let (condition_tokens, connector, body) = match natural {
+    let (condition_tokens, body_start, connector) = match natural {
         Some((relative_at, connector)) => {
-            let at = relative_at + consumed;
-            (&tokens[consumed..at], Some(connector), &tokens[at + 1..])
+            let (condition, body_start, connector) =
+                condition_tokens_before(tokens, consumed, relative_at, connector);
+            (condition, body_start, Some(connector))
         }
-        None => (&tokens[consumed..], None, &tokens[tokens.len()..]),
+        None => (tokens[consumed..].to_vec(), tokens.len(), None),
     };
     if condition_tokens.is_empty() {
         return Err(condition_missing(spelling, tokens[0].span));
     }
     let condition =
-        parse_natural_condition(source, condition_tokens, connector, known_names, spelling)?;
+        parse_natural_condition(source, &condition_tokens, connector, known_names, spelling)?;
     let inline = parse_suite_body(
         source,
-        body,
+        &tokens[body_start..],
         block,
         SuiteKind::Condition,
         span_of(tokens),
@@ -1302,6 +1340,59 @@ fn find_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionConnect
         })
         .collect::<Vec<_>>();
     (recovered.len() == 1).then(|| recovered[0])
+}
+
+/// Returns a condition token with a Korean connector suffix removed. Korean
+/// writers commonly attach endings (`name이면`, `준비있으면`) to the preceding
+/// name, while the Python tokenizer quite correctly keeps the whole word as
+/// one identifier. The parser can split that one token without touching the
+/// source bytes used for diagnostics or lowering.
+fn split_attached_condition_token(token: &Token) -> Option<(Token, ConditionConnector)> {
+    let word = name_word(token)?;
+    let (suffix, connector) = [
+        ("그렇다면", ConditionConnector::Then),
+        ("있으면", ConditionConnector::Exists),
+        ("없으면", ConditionConnector::Missing),
+        ("같으면", ConditionConnector::Equals),
+        ("크면", ConditionConnector::Greater),
+        ("작으면", ConditionConnector::Less),
+        ("하면", ConditionConnector::Then),
+        ("이면", ConditionConnector::Then),
+        ("이라면", ConditionConnector::Then),
+    ]
+    .into_iter()
+    .find(|(suffix, _)| word.ends_with(suffix) && word.len() > suffix.len())?;
+    let base_end = token.span.end.saturating_sub(suffix.len());
+    let base = word.strip_suffix(suffix)?;
+    Some((
+        Token {
+            tok: Tok::Name {
+                name: base.to_string(),
+            },
+            span: Span::new(token.span.start, base_end),
+        },
+        connector,
+    ))
+}
+
+fn condition_tokens_before(
+    tokens: &[Token],
+    start: usize,
+    relative_connector_at: usize,
+    connector: ConditionConnector,
+) -> (Vec<Token>, usize, ConditionConnector) {
+    let at = start + relative_connector_at;
+    let mut condition = tokens[start..at].to_vec();
+    let mut body_start = at + 1;
+    if let Some(token) = tokens.get(at) {
+        if let Some((base, attached_connector)) = split_attached_condition_token(token) {
+            if attached_connector == connector {
+                condition.push(base);
+                body_start = at + 1;
+            }
+        }
+    }
+    (condition, body_start, connector)
 }
 
 fn parse_natural_condition(
@@ -1629,6 +1720,9 @@ fn trim_condition_markers(tokens: &mut Vec<Token>, markers: &[&str]) {
 
 fn condition_connector_exact(token: &Token, is_last: bool) -> Option<ConditionConnector> {
     let word = token_word(token)?;
+    if let Some((_, connector)) = split_attached_condition_token(token) {
+        return Some(connector);
+    }
     let candidates = [
         (
             ConditionConnector::Then,

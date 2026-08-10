@@ -142,8 +142,9 @@ break
 end
 ```
 
-`동안`, `만약`, `아니면`, `멈춰`, and `끝` are Korean spellings of the same
-ideas. `and`/`그리고` and `or`/`또는` may be mixed in one condition. A block
+`동안`, `만약`, `아니면`, `아니면만약에`, `멈춰`, and `끝` are Korean
+spellings of the same ideas. `and`/`그리고` and `or`/`또는` may be mixed in
+one condition. A block
 may still use ordinary four-space indentation; the explicit `end` form is the
 beginner-friendly bridge when indentation is the part that feels hardest.
 
@@ -240,7 +241,8 @@ while <condition>
 break
 멈춰
 else if <condition>
-아니면 만약 <조건>
+아니면 만약에 <조건>
+아니면만약에 <조건>
 else
 아니면
 end
@@ -270,7 +272,7 @@ Exact lowering:
 | `when condition:` / `만약 조건:` | `if (condition):` |
 | `while condition` / `동안 조건` ... `end` / `끝` | `while (condition):` |
 | `break` / `멈춰` | `break` |
-| `else if condition` / `아니면 만약 조건` | `elif (condition):` |
+| `else if condition` / `아니면 만약에 조건` / `아니면만약에 조건` | `elif (condition):` |
 | `else` / `아니면` | `else:` |
 
 Expressions are opaque Python spans. NME validates and copies them; it never

@@ -220,8 +220,8 @@ fn sentence_lowering_never_changes_physical_line_numbers() {
 fn explicit_blocks_report_structural_mistakes() {
     let missing = err("while ready\nshow waiting\n");
     assert!(missing.contains("missing its closing `end`"), "{missing}");
-    let unmatched = err("끝\n");
-    assert!(unmatched.contains("no open NME block"), "{unmatched}");
+    let unmatched = err("else\n");
+    assert!(unmatched.contains("open condition block"), "{unmatched}");
     let outside = err("break\n");
     assert!(outside.contains("inside a loop"), "{outside}");
 }

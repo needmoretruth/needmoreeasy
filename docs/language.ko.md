@@ -140,10 +140,10 @@ Python으로 갈 준비가 되기 전에는 들여쓰기가 가장 어렵게 느
 끝
 ```
 
-`동안`, `만약`, `아니면`, `멈춰`, `끝`은 영어 `while`, `if`, `else`,
-`break`, `end`와 같은 뜻입니다. `그리고`와 `또는`은 각각 `and`와 `or`로
-섞어 쓸 수 있습니다. 익숙해지면 같은 블록을 네 칸 들여쓰기로 쓰거나 Python
-문법으로 한 줄씩 바꿔도 됩니다.
+`동안`, `만약`, `아니면`, `아니면만약에`, `멈춰`, `끝`은 영어 `while`,
+`if`, `else`, `elif`, `break`, `end`와 같은 뜻입니다. `그리고`와 `또는`은
+각각 `and`와 `or`로 섞어 쓸 수 있습니다. 익숙해지면 같은 블록을 네 칸
+들여쓰기로 쓰거나 Python 문법으로 한 줄씩 바꿔도 됩니다.
 
 ### 조건 사용하기
 
@@ -232,7 +232,8 @@ when <condition>:
 while <condition>
 멈춰
 break
-아니면 만약 <조건>
+아니면 만약에 <조건>
+아니면만약에 <조건>
 else if <condition>
 아니면
 else
@@ -263,7 +264,7 @@ use random
 | `만약 조건:` / `when condition:` | `if (condition):` |
 | `동안 조건` ... `끝` / `while condition` ... `end` | `while (condition):` |
 | `멈춰` / `break` | `break` |
-| `아니면 만약 조건` / `else if condition` | `elif (condition):` |
+| `아니면 만약에 조건` / `아니면만약에 조건` / `else if condition` | `elif (condition):` |
 | `아니면` / `else` | `else:` |
 
 표현식은 NME가 다시 만들지 않는 Python 원본 범위입니다. 올바른지만 확인하고
