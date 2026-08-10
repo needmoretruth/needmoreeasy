@@ -44,8 +44,16 @@ fn stderr(output: &Output) -> String {
     String::from_utf8_lossy(&output.stderr).into_owned()
 }
 
+fn python_command() -> &'static str {
+    if cfg!(windows) {
+        "py"
+    } else {
+        "python3"
+    }
+}
+
 fn python_available() -> bool {
-    Command::new("python3")
+    Command::new(python_command())
         .arg("--version")
         .output()
         .is_ok_and(|out| out.status.success())
@@ -208,6 +216,62 @@ fn compile_refuses_to_overwrite_an_existing_artifact() {
 fn check_accepts_good_nme() {
     let output = nme(&["check", &example("hello.nme")]);
     assert!(output.status.success(), "{}", stderr(&output));
+    assert!(
+        stdout(&output).is_empty(),
+        "check must not execute the program"
+    );
+}
+
+#[test]
+fn check_uses_cpython_to_reject_invalid_advanced_syntax() {
+    if !python_available() {
+        eprintln!("Python not available; skipping CPython check test");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("nme-cli-python-check-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("broken-advanced.nme");
+    std::fs::write(&file, "if True:\nprint('not indented')\n").unwrap();
+
+    let output = nme(&[
+        "check",
+        &file.to_string_lossy(),
+        "--python",
+        python_command(),
+    ]);
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(error.contains("IndentationError"), "{error}");
+    assert!(
+        error.contains(&file.to_string_lossy().to_string()),
+        "{error}"
+    );
+    assert!(!error.contains("<string>"), "{error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn run_build_and_check_reject_extra_files_and_unknown_options() {
+    let first = example("hello.nme");
+    let second = example("pure_python.nme");
+    for command in ["run", "build", "check"] {
+        let extra = nme(&[command, &first, &second]);
+        assert!(!extra.status.success(), "{command} accepted two files");
+        assert!(
+            stderr(&extra).contains("unexpected extra file"),
+            "{}",
+            stderr(&extra)
+        );
+
+        let unknown = nme(&[command, &first, "--not-an-nme-option"]);
+        assert!(!unknown.status.success(), "{command} ignored an option");
+        assert!(
+            stderr(&unknown).contains("unknown option"),
+            "{}",
+            stderr(&unknown)
+        );
+    }
 }
 
 #[test]
@@ -261,7 +325,7 @@ fn missing_file_is_a_clean_error() {
 #[test]
 fn run_executes_pure_nme_with_python() {
     if !python_available() {
-        eprintln!("python3 not available; skipping execution test");
+        eprintln!("Python not available; skipping execution test");
         return;
     }
     let output = nme(&["run", &example("hello.nme")]);
@@ -275,7 +339,7 @@ fn run_executes_pure_nme_with_python() {
 #[test]
 fn run_reads_input_with_ask() {
     if !python_available() {
-        eprintln!("python3 not available; skipping execution test");
+        eprintln!("Python not available; skipping execution test");
         return;
     }
     let output = nme_with_input(&["run", &example("ask.nme")], "Mina\n");
@@ -286,7 +350,7 @@ fn run_reads_input_with_ask() {
 #[test]
 fn run_executes_sentence_syntax_without_code_punctuation() {
     if !python_available() {
-        eprintln!("python3 not available; skipping execution test");
+        eprintln!("Python not available; skipping execution test");
         return;
     }
     let output = nme(&["run", &example("hello-sentence.nme")]);
@@ -298,9 +362,65 @@ fn run_executes_sentence_syntax_without_code_punctuation() {
 }
 
 #[test]
+fn a_bare_nme_path_is_a_run_shortcut() {
+    if !python_available() {
+        eprintln!("Python not available; skipping shortcut execution test");
+        return;
+    }
+    let output = nme(&[&example("hello-sentence.nme")]);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert_eq!(
+        stdout(&output),
+        "Hello, world!\nNME is easy\nNME is easy\nNME is easy\n"
+    );
+}
+
+#[test]
+fn run_preserves_the_original_path_imports_resources_and_argv() {
+    if !python_available() {
+        eprintln!("Python not available; skipping path execution test");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("nme cli path with spaces {}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let helper = dir.join("helper.py");
+    let resource = dir.join("message.txt");
+    let file = dir.join("context.nme");
+    std::fs::write(&helper, "VALUE = 'sibling import works'\n").unwrap();
+    std::fs::write(&resource, "resource works").unwrap();
+    std::fs::write(
+        &file,
+        concat!(
+            "from pathlib import Path\n",
+            "import sys\n",
+            "from helper import VALUE\n",
+            "MAIN_VALUE = 'main module works'\n",
+            "print(VALUE)\n",
+            "import __main__\n",
+            "print(__main__.MAIN_VALUE)\n",
+            "print(Path(__file__).name)\n",
+            "print(Path(__file__).with_name('message.txt').read_text(encoding='utf-8'))\n",
+            "print(Path(sys.path[0]).resolve() == Path(__file__).parent.resolve())\n",
+            "print(Path(sys.argv[0]).resolve() == Path(__file__).resolve())\n",
+            "print(len(sys.argv))\n",
+        ),
+    )
+    .unwrap();
+
+    let output = nme(&["run", &file.to_string_lossy()]);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert_eq!(
+        stdout(&output),
+        "sibling import works\nmain module works\ncontext.nme\nresource works\nTrue\nTrue\n1\n"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn run_executes_all_three_levels_and_both_languages_together() {
     if !python_available() {
-        eprintln!("python3 not available; skipping execution test");
+        eprintln!("Python not available; skipping execution test");
         return;
     }
     let output = nme(&["run", &example("three-levels.nme")]);
@@ -314,7 +434,7 @@ fn run_executes_all_three_levels_and_both_languages_together() {
 #[test]
 fn run_executes_the_compiler_written_in_nme() {
     if !python_available() {
-        eprintln!("python3 not available; skipping execution test");
+        eprintln!("Python not available; skipping execution test");
         return;
     }
     let output = nme(&["run", &example("tiny-compiler.nme")]);
@@ -328,7 +448,7 @@ fn run_executes_the_compiler_written_in_nme() {
 #[test]
 fn run_executes_mixed_python_and_nme() {
     if !python_available() {
-        eprintln!("python3 not available; skipping execution test");
+        eprintln!("Python not available; skipping execution test");
         return;
     }
     let output = nme(&["run", &example("mixed.nme")]);
@@ -342,7 +462,7 @@ fn run_executes_mixed_python_and_nme() {
 #[test]
 fn run_executes_korean_nme_with_bundled_random() {
     if !python_available() {
-        eprintln!("python3 not available; skipping execution test");
+        eprintln!("Python not available; skipping execution test");
         return;
     }
     let output = nme(&["run", &example("korean.nme")]);
@@ -356,7 +476,7 @@ fn run_executes_korean_nme_with_bundled_random() {
 #[test]
 fn run_executes_pure_python_unchanged() {
     if !python_available() {
-        eprintln!("python3 not available; skipping execution test");
+        eprintln!("Python not available; skipping execution test");
         return;
     }
     let output = nme(&["run", &example("pure_python.nme")]);
@@ -371,7 +491,7 @@ fn run_executes_pure_python_unchanged() {
 #[test]
 fn runtime_errors_keep_the_original_line_numbers() {
     if !python_available() {
-        eprintln!("python3 not available; skipping execution test");
+        eprintln!("Python not available; skipping execution test");
         return;
     }
     let dir = std::env::temp_dir().join(format!("nme-cli-test-err-{}", std::process::id()));
@@ -386,6 +506,12 @@ fn runtime_errors_keep_the_original_line_numbers() {
     let error = stderr(&output);
     assert!(error.contains("ZeroDivisionError"), "{error}");
     assert!(error.contains("line 3"), "{error}");
+    assert!(
+        error.contains(&file.to_string_lossy().to_string()),
+        "{error}"
+    );
+    assert!(!error.contains("<string>"), "{error}");
+    assert!(!error.contains("nme-run-"), "{error}");
 
     let _ = std::fs::remove_dir_all(&dir);
 }
