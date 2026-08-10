@@ -1,0 +1,159 @@
+# Learn NME by making five programs
+
+English | [한국어](tutorial.ko.md)
+
+This path starts with one sentence and ends with a compiler. Run every example
+before moving on; changing a word and observing the result is part of learning.
+
+## Project 1: Hello World
+
+Create `hello.nme`:
+
+```text
+show Hello world!
+```
+
+```sh
+nme run hello.nme
+```
+
+`show` is an action. Everything after it is the sentence to display. Korean is
+equally valid:
+
+```text
+안녕하세요! 말해줘
+```
+
+Try changing the message. Run `examples/hello-sentence.nme` when you want to
+see a repeat too.
+
+## Project 2: A greeting program
+
+```text
+ask name What is your name?
+show Nice to meet you name!
+```
+
+The first line creates the name `name`. The second line recognizes that known
+name and inserts its value. The Korean version needs no formatting syntax:
+
+```text
+이름을 물어봐 이름이 뭐예요?
+이름 만나서 반가워요! 말해줘
+```
+
+Challenge: ask for a favorite color and show it in another sentence.
+
+## Project 3: Number guessing
+
+Start with a random answer and numeric input:
+
+```text
+set answer to random number from 1 to 10
+ask number guess Pick a number from 1 to 10
+```
+
+Then compare them:
+
+```text
+if guess equals answer
+    show Correct!
+
+if guess is less than answer
+    show Go higher
+
+if guess is greater than answer
+    show Go lower
+```
+
+The complete Korean program is
+[`examples/guessing-game.ko.nme`](../examples/guessing-game.ko.nme):
+
+```sh
+nme run examples/guessing-game.ko.nme
+```
+
+What was compiled:
+
+- `1부터 10까지 랜덤정수` becomes `random.randint(1, 10)`;
+- `숫자로 물어봐` becomes `int(input(...))`;
+- `같으면`, `작으면`, and `크면` become `==`, `<`, and `>`;
+- indentation groups the statements controlled by each condition.
+
+Challenge: change the range to 1–100, then add a second guess by repeating the
+input and conditions.
+
+## Project 4: Use all three levels
+
+Sentence syntax is not a cage. Use compact beginner syntax or Python whenever
+it says the idea more clearly:
+
+```text
+people = ["Ada", "Grace"]
+
+2 times:
+    say "beginner syntax"
+
+repeat 2 times
+    한국어 문장형 말해줘
+
+for person in people:
+    show Hello person!
+```
+
+The list and `for person` loop are advanced Python. `2 times:` and `say` are
+beginner NME. `repeat` and `show` are sentence NME. This is one language, not
+three files or modes. Run `examples/three-levels.nme`.
+
+Challenge: write a Python function and use sentence `show` inside it.
+
+## Project 5: Build a compiler in NME
+
+A compiler reads one language and writes another. It does not need to execute
+the source directly. The example
+[`examples/tiny-compiler.nme`](../examples/tiny-compiler.nme) compiles this
+tiny two-sentence language:
+
+```text
+말하기 안녕하세요
+3번 말하기 NME로 컴파일러를 만들었어요
+```
+
+The compiler produces Python equivalent to:
+
+```python
+print('안녕하세요')
+for _ in range(3): print('NME로 컴파일러를 만들었어요')
+```
+
+Run the compiler, then inspect the compiler's own generated Python:
+
+```sh
+nme run examples/tiny-compiler.nme
+nme build examples/tiny-compiler.nme -o tiny-compiler.py
+```
+
+The example deliberately mixes advanced Python for list processing with
+sentence NME for its output. That is how a beginner can grow a compiler one
+small rule at a time while retaining the full Python ecosystem.
+
+To turn it into a file compiler:
+
+1. Replace `tiny_source` with
+   `Path(input_name).read_text(encoding="utf-8").splitlines()`.
+2. Write `generated` with
+   `Path(output_name).write_text(generated, encoding="utf-8")`.
+3. Add a friendly error for any line that matches neither tiny sentence.
+4. Add tests that compile a source file and run the generated Python.
+
+This mirrors NME's real architecture at a smaller scale: tokenize or classify
+input, create a precise intermediate meaning, lower it to target code, and
+test the result. NME's production compiler is written in Rust for reliability
+and distribution, but compilers made *with* NME may use all of NME and Python.
+
+## Your next steps
+
+- Read the [language reference](language.md) only when you need an exact rule.
+- Use `nme check` after every small change.
+- Convert an existing Python exercise with [nme convert](converting-python.md).
+- Build a native artifact only after the program works with `nme run`.

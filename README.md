@@ -2,202 +2,137 @@
 
 English | [한국어](README.ko.md)
 
-**Programming that starts easier and grows into Python.** NME is a small
-bilingual language layer for beginners. Every valid Python program is already
-a valid NME program, while a compact English/Korean vocabulary makes the first
-steps shorter and more readable.
-
-Current version: **`0.0.1-beta.1`**
+NME lets you start with ordinary sentences and grow into Python without
+changing languages. Every valid Python program is valid NME, while common
+first-program tasks can be written with far less punctuation.
 
 ```text
-use random
-
-name = "Mina"
-pet = random_pick(["cat"])
-
-when name:
-    2 times: say f"{name} gets a {pet}!"
+ask name What is your name?
+show Hello name!
+repeat 3 times and show Welcome to NME
 ```
 
-The same program can use Korean vocabulary and identifiers:
+The same program may freely mix Korean, English, and Python:
 
 ```text
-랜덤 사용
-
-이름 = "민아"
-동물 = 랜덤선택(["고양이"])
-
-만약 이름:
-    2번: 말해 f"{이름}에게 {동물} 추천!"
+이름을 물어봐 이름이 뭐예요?
+show Hello 이름!
+3번 반복해서 Welcome to NME 말해줘
 ```
 
-NME transpiles either form to ordinary Python and runs it with CPython. You can
-mix NME and Python on any line, use Python packages and tutorials, and move to
-plain Python gradually instead of starting over.
+No language-mode declaration is needed.
 
-> NME is an early beta. Version `1.0.0` is owner-controlled and cannot be
-> released without the repository owner's explicit instruction. See the
-> [version policy](docs/versioning.md).
+## Three levels in one language
 
-## Why NME?
+| Level | Purpose | Example |
+| --- | --- | --- |
+| Sentence | First-day coding with almost no code punctuation | `3번 반복해서 안녕 말해줘` |
+| Beginner | Compact, precise, practical NME | `3 times: say "Hello"` |
+| Advanced | Python syntax, unchanged and 100% compatible | `for i in range(3): print(i)` |
 
-- **English or Korean:** use either vocabulary, even in the same file.
-- **Five useful ideas:** show a value, ask for text, repeat, test a condition,
-  and use random helpers.
-- **All of Python remains:** assignments, lists, functions, classes, imports,
-  packages, and Korean identifiers work normally.
-- **Safe compatibility:** a line that is valid Python always stays Python,
-  byte-for-byte.
-- **Friendly errors:** NME mistakes include the exact location and a concrete
-  hint; Korean forms receive Korean guidance.
-- **Useful tracebacks:** transpilation preserves physical line counts.
+The levels are not separate modes. Use any of them on any line. Valid Python
+always wins and is kept byte-for-byte identical.
 
-## Install from source
+Sentence syntax understands common connecting words such as `만약에`,
+`있으면`, `반복해서`, and `then`. It also recovers a one-character typo in
+an NME action word after Python has rejected the line. When the meaning is not
+clear enough to recover safely, NME points at the uncertain text and suggests
+a concrete repair.
 
-Requirements:
+## Install the beta
 
-- a recent stable Rust toolchain with Cargo;
-- Python 3.8 or later; and
-- Git, when cloning the repository.
+NME currently builds from source. Install stable Rust, Python 3.8+, and Git,
+then run:
 
 ```sh
-git clone https://github.com/needmoretruth/needmoreeasy.git
+git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
 cd needmoreeasy
 cargo install --path crates/nme-cli --locked
 nme --version
 ```
 
-Expected version:
+Expected version: `nme 0.0.1-beta.2`.
+
+Windows, macOS, and Linux instructions are in the
+[installation guide](docs/install.md). The [five-minute guide](docs/getting-started.md)
+starts from zero programming knowledge.
+
+## Use it
+
+```sh
+nme run examples/hello-sentence.nme
+nme check examples/guessing-game.ko.nme
+nme build examples/three-levels.nme -o three-levels.py
+nme modules
+```
+
+`run` is a development shortcut: NME compiles the file to Python and invokes
+CPython. `build` emits the compiled Python source. For a standalone native
+artifact, install Nuitka and use:
+
+```sh
+python3 -m pip install nuitka
+nme compile examples/hello-sentence.nme -o hello
+```
+
+Native builds must be made on each target operating system. They can change
+startup time, distribution size, and performance, so measure the actual
+program; NME does not make a false blanket claim that every Python-compatible
+program becomes faster or smaller.
+
+## Versioned random tools
 
 ```text
-nme 0.0.1-beta.1
+랜덤 사용 최신
+show random_number(1, 6)
+랜덤선택(["red", "blue"]) 말해줘
 ```
 
-You can also run NME directly from the repository:
+`random` / `랜덤` adapter version `0.0.1` is bundled, so `latest` / `최신`
+resolves locally without a network download. Loading it exposes both Korean
+and English helper names, allowing them to mix on the same line. Run
+`nme modules` to see installed module versions.
 
-```sh
-cargo run --quiet -p nme-cli -- run examples/hello.nme
-cargo run --quiet -p nme-cli -- run examples/ask.nme
-cargo run --quiet -p nme-cli -- run examples/korean.nme
-```
-
-## Quick start
-
-Create `hello.nme`:
+Sentence syntax can use random without any punctuation or prior module line:
 
 ```text
-ask name, "What is your name? "
-
-say f"Hello, {name}!"
-
-3 times:
-    say "NME is working."
+set die to random number from 1 to 6
+show die
+set color to pick from red or green or blue
 ```
 
-Run it:
+## Convert Python into easier NME
+
+Choose a level and output language:
 
 ```sh
-nme run hello.nme
+nme convert app.py --level advanced --language en
+nme convert app.py --level beginner --language ko -o app.nme
+nme convert app.py --level sentence --language ko -o app.nme
 ```
 
-Check it without executing Python:
+The converter rewrites constructs with a semantics-preserving NME equivalent.
+Python constructs without one remain advanced syntax, which is valid NME.
+See [Python conversion](docs/converting-python.md).
 
-```sh
-nme check hello.nme
-```
+## Learn and use tools
 
-See the generated Python:
+- [Language reference](docs/language.md) — all three levels, exact meanings,
+  typo recovery, mixing, modules, and limitations
+- [Learning path](docs/tutorial.md) — Hello World, conversation, number
+  guessing, mixed Python, and writing a tiny compiler in NME
+- [VS Code, Cursor, and Zed](docs/editors.md) — ready tasks and file setup
+- [AI coding assistants](docs/ai-assistants.md) — one link that Claude Code,
+  Codex, Cursor Agent, or OpenCode can read before writing NME
+- [Compiler architecture](docs/architecture.md) — contributor design rules
+- [Version policy](docs/versioning.md) and [changelog](CHANGELOG.md)
 
-```sh
-nme build hello.nme
-nme build hello.nme -o hello.py
-```
+## Compiler model
 
-## Language at a glance
+NME is a compiler, not a second Python interpreter. The Rust core performs a
+pure source-to-source compilation into ordinary Python. Python tokenization
+and parsing come from `rustpython-parser`; execution comes from CPython or the
+optional Nuitka native backend. Compilation preserves physical line counts so
+traceback line numbers continue to match the `.nme` file.
 
-| English NME | Korean NME | Python meaning |
-| --- | --- | --- |
-| `say value` | `말해 값` | `print(value)` |
-| `ask name` | `물어봐 이름` | `name = input()` |
-| `ask name, prompt` | `물어봐 이름, 질문` | `name = input(prompt)` |
-| `count times:` | `횟수번:` | `for _ in range(count):` |
-| `when condition:` | `만약 조건:` | `if (condition):` |
-| `use random` | `랜덤 사용` | import bundled Python random tools |
-
-`times`/`번` and `when`/`만약` accept either an indented body or one
-statement after the colon. Expressions are ordinary Python expressions and
-are copied exactly as written.
-
-After `use random`:
-
-- `random_number(start, end)` returns an inclusive random integer;
-- `random_pick(values)` chooses one item; and
-- `shuffle(values)` changes a list's order in place.
-
-`랜덤 사용` provides the equivalent names `랜덤정수`, `랜덤선택`, and
-`섞기`, plus the module name `랜덤`. These tools use Python's included
-`random` module, so no package needs to be installed.
-
-The golden rule is **Python wins**. For example, `say("hello")`,
-`말해("안녕")`, `ask = input`, and `times = 5` are valid Python and remain
-unchanged. NME recognizes its easier forms only when Python rejects that line.
-
-Read the [complete language reference](docs/language.md) for exact grammar,
-semantics, generated Python, errors, and limits.
-
-## Command line
-
-| Command | Purpose |
-| --- | --- |
-| `nme run program.nme` | Transpile and run with CPython |
-| `nme run program.nme --python python` | Choose another Python command |
-| `nme build program.nme` | Print generated Python |
-| `nme build program.nme -o program.py` | Write generated Python to a file |
-| `nme check program.nme` | Check NME without running it |
-| `nme --help` | Show command help |
-| `nme --version` | Show the installed NME version |
-
-## Documentation
-
-English is the default documentation language. Korean mirrors are maintained
-for every user-facing guide.
-
-| Topic | English | 한국어 |
-| --- | --- | --- |
-| First program and CLI tutorial | [Getting started](docs/getting-started.md) | [시작하기](docs/getting-started.ko.md) |
-| Exact syntax and behavior | [Language reference](docs/language.md) | [언어 레퍼런스](docs/language.ko.md) |
-| Versions and release rules | [Versioning](docs/versioning.md) | [버전 정책](docs/versioning.ko.md) |
-| Release changes | [Changelog](CHANGELOG.md) | [변경 기록](CHANGELOG.ko.md) |
-| Compiler design | [Architecture](docs/architecture.md) | — |
-
-## How it works
-
-```text
-.nme source
-    → Python-aware tokenization
-    → NME recognition (valid Python wins)
-    → line-preserving Python source
-    → CPython
-```
-
-The compiler core is a pure source-to-source function. File access and Python
-execution stay in the CLI. See [the architecture](docs/architecture.md) before
-changing compiler behavior.
-
-## Contributing
-
-Keep changes focused and verify Rust behavior with:
-
-```sh
-cargo fmt --all
-cargo check --workspace
-cargo clippy --workspace --all-targets -- -D warnings
-cargo test --workspace
-```
-
-Questions and bug reports are welcome in
-[GitHub Issues](https://github.com/needmoretruth/needmoreeasy/issues).
-
-## License
-
-NeedMoreEasy is licensed only under the [Apache License 2.0](LICENSE).
+Licensed under Apache-2.0.

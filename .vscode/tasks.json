@@ -1,0 +1,26 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "NME: run current file",
+      "type": "process",
+      "command": "nme",
+      "args": ["run", "${file}"],
+      "problemMatcher": []
+    },
+    {
+      "label": "NME: check current file",
+      "type": "process",
+      "command": "nme",
+      "args": ["check", "${file}"],
+      "problemMatcher": []
+    },
+    {
+      "label": "NME: build current file",
+      "type": "process",
+      "command": "nme",
+      "args": ["build", "${file}"],
+      "problemMatcher": []
+    }
+  ]
+}

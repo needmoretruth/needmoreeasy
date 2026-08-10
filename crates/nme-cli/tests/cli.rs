@@ -66,7 +66,7 @@ fn build_prints_transpiled_python() {
 fn version_reports_the_current_beta() {
     let output = nme(&["--version"]);
     assert!(output.status.success(), "{}", stderr(&output));
-    assert_eq!(stdout(&output), "nme 0.0.1-beta.1\n");
+    assert_eq!(stdout(&output), "nme 0.0.1-beta.2\n");
 }
 
 #[test]
@@ -133,7 +133,10 @@ fn convert_can_write_beginner_nme_to_a_file() {
         &output_file.to_string_lossy(),
     ]);
     assert!(output.status.success(), "{}", stderr(&output));
-    assert_eq!(std::fs::read_to_string(&output_file).unwrap(), "say \"Hello\"\n");
+    assert_eq!(
+        std::fs::read_to_string(&output_file).unwrap(),
+        "say \"Hello\"\n"
+    );
 
     let _ = std::fs::remove_dir_all(&dir);
 }

@@ -1,65 +1,16 @@
-# Getting started with NME
+# NME in five minutes
 
 English | [한국어](getting-started.ko.md)
 
-This guide assumes no NME experience. You will install the first beta, write a
-small interactive program, use conditions and repetition, try bundled random
-tools, and see how ordinary Python fits in.
+If `nme --version` does not work yet, follow the
+[Windows, macOS, or Linux installation guide](install.md) first.
 
-## 1. Prepare the tools
+## 1. Hello World
 
-You need:
-
-- a recent stable Rust toolchain with Cargo;
-- Python 3.8 or later; and
-- Git, when cloning the repository.
-
-Check them:
-
-```sh
-rustc --version
-cargo --version
-python3 --version
-```
-
-NME uses `python3` by default. If your command is `python`, use
-`nme run program.nme --python python`.
-
-## 2. Install NME
-
-```sh
-git clone https://github.com/needmoretruth/needmoreeasy.git
-cd needmoreeasy
-cargo install --path crates/nme-cli --locked
-```
-
-Confirm the first beta:
-
-```sh
-nme --version
-```
+Create a UTF-8 file named `hello.nme`:
 
 ```text
-nme 0.0.1-beta.1
-```
-
-If the shell cannot find `nme`, Cargo commonly installed it in
-`$HOME/.cargo/bin`. You can also run from the checkout without installing:
-
-```sh
-cargo run --quiet -p nme-cli -- run examples/hello.nme
-```
-
-## 3. Make your first program
-
-Create a UTF-8 text file named `hello.nme`:
-
-```text
-ask name, "What is your name? "
-say f"Hello, {name}!"
-
-3 times:
-    say "Welcome to NME."
+show Hello world!
 ```
 
 Run it:
@@ -68,166 +19,124 @@ Run it:
 nme run hello.nme
 ```
 
-The program asks for a name, greets that person, and prints the final sentence
-three times.
+You just wrote a complete program. There are no quotes or parentheses.
 
-You may write the same ideas in Korean without selecting a language mode:
+## 2. Have a conversation
 
-```text
-물어봐 이름, "이름이 뭐예요? "
-말해 f"안녕하세요, {이름}!"
-
-3번:
-    말해 "NME에 오신 것을 환영합니다."
-```
-
-English and Korean words are equal aliases. Mixing them is allowed too.
-
-## 4. Learn the five ideas
-
-### Show a value
+Replace the file with:
 
 ```text
-say "Hello"
-say 1 + 2
-말해 "안녕"
-말해 f"답은 {1 + 2}"
+ask name What is your name?
+show Hello name!
 ```
 
-`say` and `말해` become Python `print(...)`.
+NME remembers that `name` holds the answer, so it inserts that value into the
+second sentence automatically.
 
-### Ask for text
+The same ideas work in Korean and can be mixed immediately:
 
 ```text
-ask city, "Where do you live? "
-물어봐 도시, "어디에 사나요? "
+이름을 물어봐 이름이 뭐예요?
+show Hello 이름!
 ```
 
-The answer is stored in the name before the comma. Answers are text, just like
-Python `input`. Convert explicitly when you need a number:
+## 3. Repeat without a colon
+
+For one repeated sentence:
 
 ```text
-ask answer, "How old are you? "
-age = int(answer)
+repeat 3 times and show Welcome to NME
 ```
 
-### Repeat
+For several sentences, indent them with four spaces:
 
 ```text
-3 times:
-    say "Again"
-
-3번: 말해 "다시"
+repeat 3 times
+    show First sentence
+    둘째 문장 말해줘
 ```
 
-Use indentation for several statements or put one statement after `:`.
-`3번:` and `3 번:` both work.
-
-### Test a condition
+## 4. Make a number game
 
 ```text
-score = 12
+set answer to random number from 1 to 10
+ask number guess Pick a number from 1 to 10
 
-when score >= 10:
-    say "You won!"
+if guess equals answer
+    show Correct!
 
-만약 score < 10: 말해 "Try again"
+if guess is less than answer
+    show Go higher
+
+if guess is greater than answer
+    show Go lower
 ```
 
-`when` and `만약` become Python `if`. Use normal Python `else` when a
-second branch is needed.
+Run the complete Korean version:
 
-### Use random tools
+```sh
+nme run examples/guessing-game.ko.nme
+```
+
+The random number, numeric input, comparisons, and output compile to ordinary
+Python. No list literal, function call, equals sign, or colon was required.
+
+## 5. Grow into precise and advanced syntax
+
+Sentence syntax is the easiest start. Beginner syntax is shorter and precise:
 
 ```text
-use random
-
-die = random_number(1, 6)
-color = random_pick(["red", "green", "blue"])
-say f"You rolled {die} and got {color}."
+ask name, "What is your name? "
+when name:
+    say f"Hello, {name}!"
 ```
 
-The Korean toolkit has matching names:
+Advanced syntax is just Python:
+
+```python
+for number in range(1, 4):
+    print(number**2)
+```
+
+Mix all three whenever useful:
 
 ```text
-랜덤 사용
+numbers = [1, 2, 3]
 
-주사위 = 랜덤정수(1, 6)
-색 = 랜덤선택(["빨강", "초록", "파랑"])
-말해 f"주사위는 {주사위}, 색은 {색}"
+for number in numbers:
+    show number
+
+2 times: 말해 "done"
 ```
 
-Use `shuffle(list)` or `섞기(목록)` to reorder a list in place. These
-helpers come from Python's bundled `random` module; nothing else is installed.
-
-## 5. Use ordinary Python whenever needed
-
-NME is not a separate ecosystem. Assignments, lists, functions, imports, and
-packages are Python:
-
-```text
-import math
-
-def circle_area(radius):
-    return math.pi * radius**2
-
-반지름 = 3
-말해 circle_area(반지름)
-
-for name in ["Ada", "Grace"]:
-    say f"Hello, {name}"
-```
-
-Valid Python always wins and stays unchanged. `say("hello")` is therefore a
-Python function call, while `say "hello"` is NME.
-
-## 6. Check and build
-
-Check NME forms without running the program:
+## 6. Check, build, and compile
 
 ```sh
 nme check hello.nme
-```
-
-Success prints nothing. An NME mistake shows its location and a suggestion.
-Korean forms receive Korean guidance. This command does not replace every
-CPython syntax or runtime check.
-
-Print generated Python:
-
-```sh
-nme build hello.nme
-```
-
-Write it to a file:
-
-```sh
 nme build hello.nme -o hello.py
 python3 hello.py
 ```
 
-The output is ordinary Python. NME preserves blank lines, comments,
-indentation, line endings, and physical line counts.
+For an optional standalone native executable:
 
-## 7. CLI reference
-
-```text
-nme run <file.nme> [--python <command>]
-nme build <file.nme> [-o <output.py>]
-nme check <file.nme>
-nme --help
-nme --version
+```sh
+python3 -m pip install nuitka
+nme compile hello.nme -o hello
 ```
 
-- `run` transpiles and starts CPython with inherited terminal input/output.
-- `build` transpiles without executing and prints or writes Python.
-- `check` validates tokenization and NME forms without creating output.
+Use `python` or `py` instead of `python3` when that is your platform command,
+and pass it to NME with `--python`.
 
-## Next steps
+## 7. Let NME simplify Python
 
-- Run `examples/hello.nme`, `examples/ask.nme`, `examples/korean.nme`, and
-  `examples/mixed.nme`.
-- Keep the [language reference](language.md) nearby for exact rules.
-- Read the [version policy](versioning.md) for beta numbering and the locked
-  `1.0.0` release rule.
-- Read [compiler architecture](architecture.md) before changing NME behavior.
+```sh
+nme convert old_program.py --level sentence --language en -o easier.nme
+nme convert old_program.py --level beginner --language ko -o easier.ko.nme
+```
+
+## Where to continue
+
+- [Learning path](tutorial.md): five projects from Hello World to a compiler
+- [Language reference](language.md): exact rules for all three levels
+- [Editors](editors.md): VS Code, Cursor, and Zed
+- [AI assistants](ai-assistants.md): give an assistant one documentation link
