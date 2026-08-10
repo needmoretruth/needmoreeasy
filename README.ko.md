@@ -2,9 +2,10 @@
 
 [English](README.md) | 한국어
 
-NME는 평범한 문장으로 시작해서 언어를 바꾸지 않고 Python까지 배울 수 있는
-언어입니다. 올바른 Python 코드는 전부 NME 코드이며, 처음 만드는 프로그램은
-코드용 특수문자를 거의 쓰지 않고 만들 수 있습니다.
+**Python도 어렵다면 더 쉬운 문장부터 시작해서, 한 줄씩 Python으로
+성장하세요.** NME는 학습을 위한 다리입니다. 평범한 문장으로 시작하고, 익숙해지면
+초급 문법을 섞고, 같은 파일의 일부를 조금씩 Python으로 바꿉니다. 다른 언어로
+프로젝트를 처음부터 다시 만들 필요가 없습니다.
 
 ```text
 이름을 물어봐 이름이 뭐예요?
@@ -65,11 +66,15 @@ Windows, macOS, Linux별 과정은 [설치 안내](docs/install.ko.md)에 있습
 ## 사용하기
 
 ```sh
-nme 실행 examples/hello-sentence.nme
-nme 검사 examples/guessing-game.ko.nme
-nme 빌드 examples/three-levels.nme -o three-levels.py
+nme 실행 examples/hello-sentence
+nme 검사 examples/guessing-game.ko
+nme 빌드 examples/three-levels -o three-levels.py
 nme 모듈
 ```
+
+`.nme`는 생략할 수 있습니다. `program.nme`는 `nme 실행 program`만으로
+실행됩니다. NME가 운영체제에 맞는 Python 명령을 자동으로 고르므로 보통
+`--python`을 쓸 필요가 없습니다.
 
 `실행`은 개발할 때 쓰는 지름길입니다. NME를 Python으로 컴파일한 뒤 CPython을
 시작합니다. `빌드`는 컴파일된 Python 파일을 만듭니다. 독립 실행 파일이

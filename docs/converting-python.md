@@ -30,13 +30,15 @@ standard output. Without `-o`, it never modifies the input file.
 | `n = int(input(prompt))` | kept as Python | `ask number n prompt` |
 | `for _ in range(n):` | `n times:` | `repeat n times` |
 | `if condition:` | `when condition:` | `if condition` |
-| `import random` | `use random` | `use random latest` |
+| `import random` | kept as Python | kept as Python |
 | simple assignment | kept as Python | `set name to value` |
 
 Korean output uses `말해`, `물어봐`, `번`, `만약`, `랜덤 사용`, and natural
 Korean sentence forms.
 
-The converter retains string quotes and exact prompt contents so automatic
+Ordinary `import random` stays Python because rewriting it could overwrite a
+user's `random`, `random_number`, or Korean helper name. The converter retains
+string quotes and exact prompt contents so automatic
 conversion cannot accidentally turn a literal word into interpolation or add
 the friendly space used by hand-written natural prompts. You may remove the
 quotes after inspection when you want a more conversational phrase. Comments,
@@ -53,6 +55,6 @@ complete, runnable NME result—not a failed partial translation.
 Always inspect and check the result:
 
 ```sh
-nme check app.nme
-nme build app.nme -o app.generated.py
+nme check app
+nme build app -o app.generated.py
 ```

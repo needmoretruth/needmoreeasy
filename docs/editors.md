@@ -21,8 +21,9 @@ stores folder tasks and settings in `.vscode`, as described in its official
 and [settings guide](https://code.visualstudio.com/docs/configure/settings).
 
 Because the editor sees Python while NME adds extra syntax, a Python extension
-may underline valid beginner or sentence lines. `nme check` is authoritative.
-An NME language server is not shipped in this beta.
+may underline valid beginner or sentence lines. Use `nme check` for NME syntax
+and Python tooling for advanced Python details. `nme check` runs both NME and
+CPython syntax validation. An NME language server is not shipped in this beta.
 
 ## Cursor
 
@@ -51,19 +52,18 @@ Zed documents custom file associations in
 [Configuring Languages](https://zed.dev/docs/configuring-languages) and local
 `.zed/tasks.json` files in its [Tasks guide](https://zed.dev/docs/tasks).
 
-As with VS Code, Python diagnostics do not understand sentence syntax; trust
-`nme check` until a dedicated NME extension exists.
+As with VS Code, Python diagnostics do not understand sentence syntax; use
+`nme check` for the combined NME and CPython result.
 
 ## Use the terminal in any editor
 
 These commands work even if an editor does not import the provided tasks:
 
 ```sh
-nme run path/to/program.nme
-nme check path/to/program.nme
-nme build path/to/program.nme -o program.py
-nme compile path/to/program.nme -o program
+nme run path/to/program
+nme check path/to/program
+nme build path/to/program -o program.py
+nme compile path/to/program -o program
 ```
 
-On Windows, add `--python py` to `run` or `compile` if `python3` is not your
-Python command.
+NME chooses `py` on Windows and `python3` elsewhere automatically.

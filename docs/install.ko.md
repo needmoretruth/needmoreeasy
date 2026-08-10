@@ -31,10 +31,10 @@ PowerShell에서도 `nme`를 찾지 못하면 `%USERPROFILE%\.cargo\bin`을 사�
 `& "$HOME\.cargo\bin\nme.exe" --version`으로 설치된 파일을 직접 확인할 수
 있습니다.
 
-Windows Python 실행기로 예제를 실행합니다.
+예제를 실행합니다. NME가 Windows의 `py` 실행기를 자동으로 고릅니다.
 
 ```powershell
-nme 실행 examples\hello-sentence.nme --python py
+nme 실행 examples\hello-sentence
 ```
 
 ## macOS
@@ -54,7 +54,7 @@ cd needmoreeasy
 cargo install --path crates/nme-cli --locked
 export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
-nme 실행 examples/hello-sentence.nme
+nme 실행 examples/hello-sentence
 ```
 
 Cargo가 바이너리 폴더가 `PATH`에 없다고 경고하면 첫 `nme` 명령보다 `export`
@@ -89,7 +89,7 @@ cd needmoreeasy
 cargo install --path crates/nme-cli --locked
 export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
-nme 실행 examples/hello-sentence.nme
+nme 실행 examples/hello-sentence
 ```
 
 `export` 줄을 의도적으로 첫 `nme` 명령보다 앞에 두었습니다. Fedora의 시스템
@@ -104,20 +104,20 @@ nme 실행 examples/hello-sentence.nme
 ```sh
 nme --version
 nme 모듈
-nme 검사 examples/three-levels.nme
-nme 실행 examples/hello-sentence.nme
+nme 검사 examples/three-levels
+nme 실행 examples/hello-sentence
 ```
 
 NME는 `0.0.1-beta.2`, 랜덤 어댑터는 `0.0.1`이 표시되어야 합니다.
 
-## 다른 Python 명령 고르기
+## 고급: 다른 Python 명령 고르기
 
-NME 기본값은 `python3`입니다. 컴퓨터의 명령이 `python` 또는 `py`라면 다음처럼
-씁니다.
+NME가 Windows에서는 `py`, 그 밖의 운영체제에서는 `python3`를 자동으로
+사용합니다. 특수한 환경에서만 고급 옵션을 씁니다.
 
 ```sh
-nme 실행 program.nme --python python
-nme 컴파일 program.nme -o program --python python
+nme 실행 program --python python
+nme 컴파일 program -o program --python python
 ```
 
 Windows에서는 마지막 값을 `py`로 바꾸세요.
@@ -130,7 +130,7 @@ Windows에서는 마지막 값을 `py`로 바꾸세요.
 ```sh
 python3 -m pip install -U "Nuitka[app]"
 python3 -m nuitka --version
-nme 컴파일 examples/hello-sentence.nme -o hello
+nme 컴파일 examples/hello-sentence -o hello
 ```
 
 Nuitka에는 운영체제용 C 컴파일러가 필요합니다. 복잡한 프로그램은 한 파일 모드

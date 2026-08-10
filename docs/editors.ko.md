@@ -20,8 +20,9 @@
 `.vscode` 설정 방식을 설명합니다.
 
 편집기는 NME 파일을 Python으로 보고 NME는 추가 문법을 제공하므로 Python
-확장이 올바른 초급·문장형 줄에 빨간 밑줄을 표시할 수 있습니다. `nme 검사`의
-결과가 기준입니다. 이번 베타에는 NME 언어 서버가 아직 없습니다.
+확장이 올바른 초급·문장형 줄에 빨간 밑줄을 표시할 수 있습니다. NME 문법은
+`nme 검사`, 고급 Python의 상세 진단은 Python 도구를 사용하세요. `nme 검사`는
+NME와 CPython 문법 검사를 모두 실행합니다. 이번 베타에는 NME 언어 서버가 없습니다.
 
 ## Cursor
 
@@ -47,19 +48,18 @@ Zed 공식 [언어 설정](https://zed.dev/docs/configuring-languages)은 파일
 연결을, [Tasks 안내](https://zed.dev/docs/tasks)는 프로젝트의
 `.zed/tasks.json`을 설명합니다.
 
-VS Code와 마찬가지로 Python 진단은 문장형을 모르므로 전용 NME 확장이 생기기
-전까지 `nme 검사`를 기준으로 삼으세요.
+VS Code와 마찬가지로 Python 진단은 문장형을 모르므로 `nme 검사`에서 NME와
+CPython을 함께 확인하세요.
 
 ## 어떤 편집기에서든 터미널 사용하기
 
 편집기가 제공된 작업을 불러오지 못해도 다음 명령은 같습니다.
 
 ```sh
-nme 실행 path/to/program.nme
-nme 검사 path/to/program.nme
-nme 빌드 path/to/program.nme -o program.py
-nme 컴파일 path/to/program.nme -o program
+nme 실행 path/to/program
+nme 검사 path/to/program
+nme 빌드 path/to/program -o program.py
+nme 컴파일 path/to/program -o program
 ```
 
-Windows에서 Python 명령이 `python3`가 아니면 `실행` 또는 `컴파일`에
-`--python py`를 추가하세요.
+NME가 Windows에서는 `py`, 다른 운영체제에서는 `python3`를 자동으로 고릅니다.
