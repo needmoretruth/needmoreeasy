@@ -12,6 +12,9 @@ All notable changes to NME are recorded here.
 - Fix `while` + Korean sentence condition + `동안` endings (for example
   `while 점수가 3보다 작을 동안`): the ending is now consumed as a block
   marker instead of being lowered as the loop's inline body.
+- Fix Korean logical conditions: comparison endings may now combine with
+  `그리고`/`또는` (`점수가 0보다 크면 그리고 점수가 3보다 작으면`), and
+  malformed conditions report a diagnostic instead of crashing the parser.
 - Fix the English roulette companion to use `ask number` for numeric menus,
   bets, and wheel picks.
 
