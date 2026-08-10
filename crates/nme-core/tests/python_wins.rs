@@ -1,0 +1,76 @@
+//! The golden rule of NME: **valid Python always wins** over look-alike
+//! NME syntax. These tests prove that code a Python programmer could
+//! plausibly write is never hijacked by NME.
+
+use nme_core::transpile;
+
+fn unchanged(source: &str) {
+    assert_eq!(
+        transpile(source).as_deref(),
+        Ok(source),
+        "valid Python must come out byte-identical"
+    );
+}
+
+#[test]
+fn say_as_a_function_call() {
+    unchanged("say(\"hi\")\n");
+    unchanged("say(1 + 1)\n");
+}
+
+#[test]
+fn say_as_an_attribute_or_subscript() {
+    unchanged("say.x = 1\n");
+    unchanged("say[0] = 'a'\n");
+    unchanged("print(say.text)\n");
+}
+
+#[test]
+fn say_as_a_variable() {
+    unchanged("say = print\nsay(\"hi\")\n");
+    unchanged("say = 5\nprint(say + 1)\n");
+}
+
+#[test]
+fn bare_say_is_valid_python_and_untouched() {
+    // A bare name expression is valid Python (it will raise NameError at
+    // runtime, which is Python's own, correct behavior).
+    unchanged("say\n");
+}
+
+#[test]
+fn times_as_a_variable() {
+    unchanged("times = 5\nprint(times)\n");
+    unchanged("times = [1, 2]\ntimes.append(3)\n");
+}
+
+#[test]
+fn times_in_python_compound_headers() {
+    // `if times:` only parses as Python when followed by a body; the
+    // parser must try that form too before claiming a line for NME.
+    unchanged("times = 3\nif times:\n    print(times)\n");
+    unchanged("times = 3\nwhile times:\n    times -= 1\n");
+}
+
+#[test]
+fn times_in_match_case() {
+    unchanged("match command:\n    case times:\n        print(times)\n");
+}
+
+#[test]
+fn times_inside_brackets_never_matches() {
+    unchanged("x = data[times:]\n");
+    unchanged("d = {times: 3}\n");
+    unchanged("f(times=3)\n");
+}
+
+#[test]
+fn times_lambda_is_python() {
+    unchanged("f = lambda times: times * 2\n");
+}
+
+#[test]
+fn annotated_names_are_untouched() {
+    unchanged("times: int = 5\n");
+    unchanged("say: str = 'x'\n");
+}

@@ -1,0 +1,18 @@
+[package]
+name = "nme-cli"
+description = "Command line toolchain for the NeedMoreEasy (NME) language: run, build and check .nme files."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "nme"
+path = "src/main.rs"
+
+[dependencies]
+nme-core = { path = "../nme-core" }

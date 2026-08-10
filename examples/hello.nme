@@ -1,0 +1,7 @@
+# Pure NME: the easiest possible hello.
+say "Hello, world!"
+
+3 times:
+    say "NME is easy"
+
+2 times: say "one line is fine too"
