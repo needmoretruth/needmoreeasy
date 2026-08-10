@@ -2,6 +2,8 @@
 
 [English](language.md) | 한국어
 
+[README](../README.ko.md) | [설치](install.ko.md) | [5분 시작](getting-started.ko.md) | [학습 과정](tutorial.ko.md)
+
 NME는 하나의 컴파일러 안에 세 문법 단계가 있습니다. 모드를 바꾸는 선언은
 없습니다. 한 파일과 한 블록 안에서 고급 Python, 초급 NME, 문장형 NME,
 한국어, 영어를 모두 섞을 수 있습니다.

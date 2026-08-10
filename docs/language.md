@@ -2,6 +2,8 @@
 
 English | [한국어](language.ko.md)
 
+[Home](../README.md) | [Install](install.md) | [Getting started](getting-started.md) | [Tutorial](tutorial.md)
+
 NME has three syntax levels in one compiler. There is no mode switch: advanced
 Python, beginner NME, sentence NME, Korean, and English may appear together in
 one file or one block.

@@ -2,6 +2,8 @@
 
 [English](getting-started.md) | 한국어
 
+[README](../README.ko.md) | [설치](install.ko.md) | [학습 과정](tutorial.ko.md) | [문법 안내](language.ko.md)
+
 Python도 어렵다면 더 쉬운 문장부터 시작해 한 단계씩 Python으로 넘어갑니다.
 5분 과정은 설치가 끝난 뒤부터입니다. 아직 `nme --version`이 동작하지 않으면 먼저
 [Windows, macOS, Linux 설치 안내](install.ko.md)를 따라 하세요.

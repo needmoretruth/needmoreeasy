@@ -2,6 +2,8 @@
 
 English | [한국어](tutorial.ko.md)
 
+[Home](../README.md) | [Install](install.md) | [Getting started](getting-started.md) | [Language reference](language.md)
+
 This path starts with one sentence and ends with a compiler. Run every example
 before moving on; changing a word and observing the result is part of learning.
 
@@ -150,6 +152,10 @@ nme check examples/time-loop-sentence.ko
 nme check examples/time-loop-beginner.ko
 nme check examples/time-loop-python
 ```
+
+For a larger standalone example before the Python version feels comfortable,
+try [`roulette.nme`](../examples/roulette.nme). Its English companion is
+[`roulette.en.nme`](../examples/roulette.en.nme).
 
 Run one when you are ready to answer its prompts. The point is not to rewrite
 the whole project at once: replace one block or line with the next level and
