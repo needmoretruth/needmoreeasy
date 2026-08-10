@@ -1,6 +1,7 @@
 # Time Loop Mystery — the advanced Python version.
 # 고급 단계: 같은 게임을 일반 Python으로 옮긴 최종 형태입니다.
 # 순수 Python: 리스트, 딕셔너리, f-string, while, break를 사용합니다.
+# Run: nme r time-loop-python.nme
 import random
 
 이름들 = ["권도현", "이하늘", "김지안", "박서준", "정우진"]

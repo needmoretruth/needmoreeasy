@@ -1,3 +1,4 @@
 # Sentence syntax: write what you mean.
+# Run: nme r hello-sentence.nme
 show Hello, world!
 repeat 3 times and show NME is easy

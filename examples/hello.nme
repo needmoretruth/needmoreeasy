@@ -1,4 +1,5 @@
 # Pure NME: the easiest possible hello.
+# Run: nme r hello.nme
 say "Hello, world!"
 
 3 times:

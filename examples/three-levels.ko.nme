@@ -1,4 +1,5 @@
 # 고급 Python, 초급 NME, 문장형 NME가 한 파일에 함께 있을 수 있어요.
+# Run: nme r three-levels.ko.nme
 people = ["에이다", "그레이스"]               # 고급 Python
 
 2번:                                          # 초급 한국어

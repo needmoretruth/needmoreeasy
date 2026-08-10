@@ -1,4 +1,5 @@
 # Make a guessing game without quotes, commas, equals signs, or colons.
+# Run: nme r guessing-game.nme
 set answer to random number from 1 to 10
 ask number guess Pick a number from 1 to 10
 

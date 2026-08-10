@@ -1,4 +1,5 @@
 # Python and NME live happily in one file.
+# Run: nme r mixed.nme
 
 def cheer(name):
     say f"Go, {name}!"          # NME inside a Python function

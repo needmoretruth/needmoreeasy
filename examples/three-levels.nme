@@ -1,4 +1,5 @@
 # Advanced Python, beginner NME, and sentence NME can share one file.
+# Run: nme r three-levels.nme
 people = ["Ada", "Grace"]                 # advanced Python
 
 2 times:                                  # beginner English

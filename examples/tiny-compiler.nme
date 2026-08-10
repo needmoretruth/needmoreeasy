@@ -2,6 +2,7 @@
 # Its input language has two sentences:
 #   말하기 text
 #   N번 말하기 text
+# Run: nme r tiny-compiler.nme
 
 tiny_source = [
     "말하기 안녕하세요",

@@ -1,4 +1,5 @@
 # NME keywords and variable names can all be written in English.
+# Run: nme r korean.en.nme
 use random
 
 friend = "Ada"

@@ -2,6 +2,7 @@
 # Its input language has two sentences:
 #   say text
 #   N times say text
+# Run: nme r tiny-compiler.en.nme
 
 tiny_source = [
     "say Hello",
