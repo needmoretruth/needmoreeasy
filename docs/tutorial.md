@@ -130,7 +130,32 @@ end
 
 Challenge: write a Python function and use sentence `show` inside it.
 
-## Project 5: Build a compiler in NME
+## Project 5: Move one game toward Python
+
+The time-loop mystery is the same project written at three levels. Start with
+the conversational Korean version, then compare the compact beginner version,
+and finally read the ordinary Python version:
+
+- [`time-loop-sentence.ko.nme`](../examples/time-loop-sentence.ko.nme) — easiest
+  sentences, `끝`, and natural Korean conditions;
+- [`time-loop-beginner.ko.nme`](../examples/time-loop-beginner.ko.nme) — compact
+  `저장`, `물어봐`, `만약`, and `N번:` forms;
+- [`time-loop-python.nme`](../examples/time-loop-python.nme) — lists,
+  dictionaries, f-strings, `while`, `break`, and ordinary Python.
+
+All three compile with the same command:
+
+```sh
+nme check examples/time-loop-sentence.ko
+nme check examples/time-loop-beginner.ko
+nme check examples/time-loop-python
+```
+
+Run one when you are ready to answer its prompts. The point is not to rewrite
+the whole project at once: replace one block or line with the next level and
+keep the rest of the program unchanged.
+
+## Project 6: Build a compiler in NME
 
 This is an optional advanced capstone, not a new syntax level. Before opening
 it, make sure the earlier projects feel comfortable. If indexing, slices, or

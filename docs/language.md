@@ -40,6 +40,7 @@ show Hello world!
 Hello world show
 보여줘 안녕하세요!
 안녕하세요 말해줘
+Please show me hello
 ```
 
 These print literal text. A name created earlier by an input or sentence
@@ -85,9 +86,10 @@ Hello name!
 
 The matching target (`name` or `city`) is inferred from the question. Korean
 questions such as `이름이 뭐예요`, `내 이름은 뭐예요?`, and
-`나이는 몇 살이에요?` work the same way; the final `?` is optional. Use
-`ask number` when the answer must be converted to a number; complex or
-ambiguous questions should use the explicit `ask` form.
+`나이는 몇 살이에요?` work the same way; `몇 살이에요?` is also inferred as
+`나이`. English `How old are you?` / `How old am I` infer `age`. The final `?`
+is optional. Use `ask number` when the answer must be converted to a number;
+complex or ambiguous questions should use the explicit `ask` form.
 
 Accepted output actions include `show`, `display`, `tell`, `say`, `보여줘`,
 `말해줘`, `말해주세요`, `출력해`, and `출력해줘`. The precise beginner
@@ -166,6 +168,20 @@ repeat 3 times
 `repeat`, `반복`, `반복해`, and `반복해서` may be mixed with `times` or
 `번`. The count is any valid Python expression.
 
+The compact colon form can also use an explicit closing word, so indentation is
+optional while you are learning:
+
+```text
+3 times:
+show First sentence
+둘째 문장 말해줘
+end
+```
+
+The same flat form works with Korean `3번:` and `끝`. A normal Python `for` or
+`if` line with a colon remains Python and keeps Python's usual indentation
+rules.
+
 ### A block without indentation
 
 Indentation is useful when you are ready for Python, but it is not required
@@ -198,6 +214,8 @@ spellings of the same ideas. `and`/`그리고` and `or`/`또는` may be mixed in
 one condition. A block
 may still use ordinary four-space indentation; the explicit `end` form is the
 beginner-friendly bridge when indentation is the part that feels hardest.
+Spoken Korean can put the loop ending after its subject too, as in
+`준비하는동안`, `준비 하는 동안`, or `준비 동안`.
 
 ### Conditions
 

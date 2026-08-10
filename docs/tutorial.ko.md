@@ -128,7 +128,31 @@ Python 반복 옆에 들여쓰기 없는 NME 블록도 추가해 보세요.
 
 도전: Python 함수를 만들고 그 안에서 문장형 `show`를 사용하세요.
 
-## 프로젝트 5: NME로 컴파일러 만들기
+## 프로젝트 5: 한 게임을 Python으로 옮기기
+
+타임루프 추리 게임을 같은 내용으로 세 단계로 작성했습니다. 가장 쉬운 한국어
+문장형부터 시작해 초급형을 비교하고, 마지막에 일반 Python 버전을 읽으세요.
+
+- [`time-loop-sentence.ko.nme`](../examples/time-loop-sentence.ko.nme) — 쉬운
+  문장, `끝`, 자연스러운 한국어 조건;
+- [`time-loop-beginner.ko.nme`](../examples/time-loop-beginner.ko.nme) —
+  `저장`, `물어봐`, `만약`, `N번:` 초급형;
+- [`time-loop-python.nme`](../examples/time-loop-python.nme) — 목록, 딕셔너리,
+  f-string, `while`, `break`, 일반 Python.
+
+세 파일 모두 같은 방식으로 검사합니다.
+
+```sh
+nme 검사 examples/time-loop-sentence.ko
+nme 검사 examples/time-loop-beginner.ko
+nme 검사 examples/time-loop-python
+```
+
+준비가 되면 하나를 실행해 질문에 답해 보세요. 한 번에 전체를 다시 쓰지 말고,
+한 블록이나 한 줄만 다음 단계 문법으로 바꾸면서 나머지 프로그램은 그대로
+두는 것이 목표입니다.
+
+## 프로젝트 6: NME로 컴파일러 만들기
 
 이 단계는 선택적인 고급 도전 과제입니다. 새로운 문법 단계가 아니므로 앞의
 프로젝트가 편해질 때까지 미뤄도 됩니다. 인덱싱, 슬라이스, Python 메서드 호출이

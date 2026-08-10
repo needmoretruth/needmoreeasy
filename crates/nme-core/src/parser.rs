@@ -229,12 +229,25 @@ pub fn parse_program(
         let unindented_next_line = lines
             .get(index + 1)
             .is_some_and(|next| next.indent <= line.indent);
+        let has_colon = line
+            .tokens
+            .iter()
+            .any(|token| matches!(token.tok, Tok::Colon));
+        // A colon normally means advanced Python, so keep its indentation
+        // rules.  The compact NME repeat header (`3 times:` / `3번:`) is not
+        // valid Python, though, and may use the same explicit `end`/`끝`
+        // terminator as sentence blocks without forcing the learner to indent.
+        let nme_colon_header =
+            has_colon && !is_valid_python_header(token_text(source, &line.tokens));
+        let flat_body_follows = has_next_line && unindented_next_line;
         let force_suite = is_header_shape(&line.tokens)
-            && line
-                .tokens
-                .iter()
-                .all(|token| !matches!(token.tok, Tok::Colon))
-            && (has_future_end(lines, index) || (has_next_line && unindented_next_line));
+            && ((!has_colon && (has_future_end(lines, index) || flat_body_follows))
+                // A colon-bearing beginner header only needs virtual
+                // indentation when its body is actually flat and an
+                // explicit terminator exists. If the next line is
+                // physically indented, keep the ordinary suite semantics
+                // and do not claim a later `end` for this header.
+                || (nme_colon_header && has_future_end(lines, index) && flat_body_follows));
         let next_indent = force_suite.then_some(parse_line.indent + 1).or(next_indent);
 
         bindings.enter_line(parse_line.indent);
@@ -793,6 +806,11 @@ fn match_say(
         if tokens.get(body_start).is_some_and(is_command_ending) && body_start + 1 < tokens.len() {
             body_start += 1;
         }
+        if body_start + 1 < tokens.len()
+            && tokens.get(body_start).is_some_and(is_show_request_pronoun)
+        {
+            body_start += 1;
+        }
         if body_start >= tokens.len() {
             return Err(say_missing(spelling, tokens[action_start].span));
         }
@@ -838,7 +856,12 @@ fn match_say(
         return Err(say_missing(spelling, tokens[action_start].span));
     }
     debug_assert!(action_end <= tokens.len());
-    let value_start = leading_sentence_fillers(&tokens[..action_start]);
+    let mut value_start = leading_sentence_fillers(&tokens[..action_start]);
+    if value_start + 1 < action_start
+        && tokens.get(value_start).is_some_and(is_show_request_pronoun)
+    {
+        value_start += 1;
+    }
     let value_tokens = trim_suffix_say_value(&tokens[value_start..action_start]);
     if value_tokens.is_empty() {
         return Err(say_missing(spelling, tokens[action_start].span));
@@ -863,6 +886,10 @@ fn say_missing(_spelling: Spelling, span: Span) -> Diagnostic {
             "write `show Hello world`",
             "`안녕하세요 말해줘`처럼 내용을 함께 적어 주세요",
         )
+}
+
+fn is_show_request_pronoun(token: &Token) -> bool {
+    token_matches_exact(token, &["me", "나", "나를", "나에게"])
 }
 
 fn output_action_at(tokens: &[Token], start: usize, mode: MatchMode) -> Option<(Spelling, usize)> {
@@ -1003,7 +1030,9 @@ fn match_natural_question(
         return None;
     }
 
-    let target = if let Some(first) = tokens.first().and_then(name_word) {
+    let target = if let Some(target) = natural_age_question_target(tokens, question_end) {
+        Some(target)
+    } else if let Some(first) = tokens.first().and_then(name_word) {
         // `내 이름은 뭐예요?` is the same beginner question as
         // `이름이 뭐예요?`; the possessive is natural speech, not part of
         // the variable name.
@@ -1095,6 +1124,38 @@ fn match_natural_question(
         prompt: Some(prompt),
         kind: InputKind::Text,
     })
+}
+
+fn natural_age_question_target(tokens: &[Token], question_end: usize) -> Option<&'static str> {
+    let word = |index: usize| tokens.get(index).and_then(token_word);
+    let korean_age = [
+        "살이에요",
+        "살이예요",
+        "살이야",
+        "살인가요",
+        "살입니까",
+        "살이죠",
+    ];
+    if word(0) == Some("몇") && word(1).is_some_and(|value| korean_age.contains(&value)) {
+        return Some("나이");
+    }
+    if word(0) == Some("나")
+        && word(1) == Some("몇")
+        && word(2).is_some_and(|value| korean_age.contains(&value))
+    {
+        return Some("나이");
+    }
+    if word(0).is_some_and(|value| value.eq_ignore_ascii_case("how"))
+        && word(1).is_some_and(|value| value.eq_ignore_ascii_case("old"))
+        && ((word(2).is_some_and(|value| value.eq_ignore_ascii_case("are"))
+            && word(3).is_some_and(|value| value.eq_ignore_ascii_case("you")))
+            || (word(2).is_some_and(|value| value.eq_ignore_ascii_case("am"))
+                && word(3).is_some_and(|value| value.eq_ignore_ascii_case("i"))))
+        && question_end >= 4
+    {
+        return Some("age");
+    }
+    None
 }
 
 fn strip_natural_question_particle(word: &str) -> Option<&str> {
@@ -1448,6 +1509,47 @@ fn match_while(
     known_names: &HashSet<String>,
     mode: MatchMode,
 ) -> Result<Option<NmeStmt>, Diagnostic> {
+    // Spoken Korean often puts the loop ending on the subject: `준비하는
+    // 동안` may be tokenized as the single name `준비하는동안`. Split only
+    // these documented endings; Python-valid names still win before this
+    // matcher is reached.
+    if let Some(subject) = tokens.first().and_then(split_attached_while_token) {
+        let condition = parse_natural_condition(
+            source,
+            std::slice::from_ref(&subject),
+            None,
+            known_names,
+            Spelling::Korean,
+        )?;
+        let inline = parse_suite_body(
+            source,
+            &tokens[1..],
+            block,
+            SuiteKind::Condition,
+            span_of(tokens),
+            known_names,
+        )?;
+        return Ok(Some(NmeStmt::While { condition, inline }));
+    }
+    if let Some((condition_tokens, body_start)) = korean_while_connector(tokens) {
+        if let Ok(condition) = parse_natural_condition(
+            source,
+            &condition_tokens,
+            None,
+            known_names,
+            Spelling::Korean,
+        ) {
+            let inline = parse_suite_body(
+                source,
+                &tokens[body_start..],
+                block,
+                SuiteKind::Condition,
+                span_of(tokens),
+                known_names,
+            )?;
+            return Ok(Some(NmeStmt::While { condition, inline }));
+        }
+    }
     let (spelling, consumed, suffix_form) =
         if matches!(tokens.first().map(|token| &token.tok), Some(Tok::While))
             || action_phrase_at(tokens, 0, WHILE_WORDS_EN, mode).is_some()
@@ -2005,6 +2107,59 @@ fn split_attached_condition_token(token: &Token) -> Option<(Token, ConditionConn
         },
         connector,
     ))
+}
+
+fn split_attached_while_token(token: &Token) -> Option<Token> {
+    let word = name_word(token)?;
+    let suffix = ["하는동안", "할동안", "동안"]
+        .into_iter()
+        .find(|suffix| word.ends_with(suffix) && word.len() > suffix.len())?;
+    let base = word.strip_suffix(suffix)?;
+    let base_end = token.span.end.saturating_sub(suffix.len());
+    Some(Token {
+        tok: Tok::Name {
+            name: base.to_string(),
+        },
+        span: Span::new(token.span.start, base_end),
+    })
+}
+
+fn korean_while_connector(tokens: &[Token]) -> Option<(Vec<Token>, usize)> {
+    for (index, token) in tokens.iter().enumerate().skip(1) {
+        if !token_matches_exact(token, &["동안"]) {
+            continue;
+        }
+        let mut condition = tokens[..index].to_vec();
+        if condition
+            .last()
+            .is_some_and(|last| token_matches_exact(last, &["하는", "할"]))
+        {
+            condition.pop();
+        } else if let Some(last) = condition.last_mut() {
+            if let Some(base) = split_while_participle(last) {
+                *last = base;
+            }
+        }
+        if !condition.is_empty() {
+            return Some((condition, index + 1));
+        }
+    }
+    None
+}
+
+fn split_while_participle(token: &Token) -> Option<Token> {
+    let word = name_word(token)?;
+    let suffix = ["하는", "할"]
+        .into_iter()
+        .find(|suffix| word.ends_with(suffix) && word.len() > suffix.len())?;
+    let base = word.strip_suffix(suffix)?;
+    let base_end = token.span.end.saturating_sub(suffix.len());
+    Some(Token {
+        tok: Tok::Name {
+            name: base.to_string(),
+        },
+        span: Span::new(token.span.start, base_end),
+    })
 }
 
 fn condition_tokens_before(
@@ -2659,7 +2814,10 @@ fn match_times(
         return Ok(Some(NmeStmt::Times { count, inline }));
     }
     if let Some((times_at, spelling)) = find_times_colon(tokens, mode) {
-        let count = parse_count(source, &tokens[..times_at], spelling)?;
+        let count_start = repeat_action_at(tokens, 0, mode)
+            .map(|(_, consumed)| consumed)
+            .unwrap_or(0);
+        let count = parse_count(source, &tokens[count_start..times_at], spelling)?;
         let colon_at = times_at + 1;
         let inline = parse_suite_body(
             source,

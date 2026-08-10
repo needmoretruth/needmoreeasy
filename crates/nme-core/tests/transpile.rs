@@ -543,6 +543,12 @@ fn the_shortest_conversation_uses_no_prompt_punctuation_or_formatting() {
 }
 
 #[test]
+fn spoken_show_requests_do_not_print_the_request_pronoun() {
+    assert_eq!(ok("please show me hello\n"), "print(\"hello\")\n");
+    assert_eq!(ok("보여줘 나 안녕\n"), "print(\"안녕\")\n");
+}
+
+#[test]
 fn natural_questions_infer_a_target_without_ask_syntax() {
     let source = concat!(
         "이름이 뭐예요?\n",
@@ -551,9 +557,13 @@ fn natural_questions_infer_a_target_without_ask_syntax() {
         "이름 뭐예요\n",
         "이름이 뭐예요\n",
         "나이 몇 살이에요\n",
+        "몇 살이에요?\n",
+        "나 몇 살이야\n",
         "나이는 몇 살이에요?\n",
         "안녕하세요 이름!\n",
         "What is your age?\n",
+        "How old are you?\n",
+        "How old am I\n",
         "What is your name\n",
         "What is my name\n",
         "What's your city?\n",
@@ -567,9 +577,13 @@ fn natural_questions_infer_a_target_without_ask_syntax() {
         "이름 = input(\"이름 뭐예요\" + \" \")\n",
         "이름 = input(\"이름이 뭐예요\" + \" \")\n",
         "나이 = input(\"나이 몇 살이에요\" + \" \")\n",
+        "나이 = input(\"몇 살이에요?\" + \" \")\n",
+        "나이 = input(\"나 몇 살이야\" + \" \")\n",
         "나이 = input(\"나이는 몇 살이에요?\" + \" \")\n",
         "print(\"안녕하세요 \" + str(이름) + \"!\")\n",
         "age = input(\"What is your age?\" + \" \")\n",
+        "age = input(\"How old are you?\" + \" \")\n",
+        "age = input(\"How old am I\" + \" \")\n",
         "name = input(\"What is your name\" + \" \")\n",
         "name = input(\"What is my name\" + \" \")\n",
         "city = input(\"What's your city?\" + \" \")\n",
@@ -725,6 +739,30 @@ fn korean_times_supports_attached_and_spaced_spellings() {
     assert_eq!(
         ok("2 번: say \"mixed\"\n"),
         "for _ in range(2): print(\"mixed\")\n"
+    );
+}
+
+#[test]
+fn repeat_colon_headers_can_use_end_without_indentation() {
+    assert_eq!(
+        ok("3번:\n말해 hi\n끝\n"),
+        "for _ in range(3):\n    print(\"hi\")\n# end\n"
+    );
+    assert_eq!(
+        ok("repeat 3 times:\nshow hi\nend\n"),
+        "for _ in range(3):\n    print(\"hi\")\n# end\n"
+    );
+    assert_eq!(
+        ok("3 times:\nsay \"nme\"\nprint(\"python\")\n끝\n"),
+        "for _ in range(3):\n    print(\"nme\")\n    print(\"python\")\n# end\n"
+    );
+}
+
+#[test]
+fn repeat_prefix_colon_header_accepts_a_beginner_count() {
+    assert_eq!(
+        ok("repeat 3 times: say \"hi\"\n"),
+        "for _ in range(3): print(\"hi\")\n"
     );
 }
 
@@ -1066,6 +1104,22 @@ fn korean_while_sentence_uses_an_explicit_end() {
         "# end\n",
     );
     assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn attached_korean_while_endings_are_easy_to_say() {
+    assert_eq!(
+        ok("준비하는동안 성공 말해줘\n"),
+        "while (준비): print(\"성공\")\n"
+    );
+    assert_eq!(
+        ok("준비 하는 동안 성공 말해줘\n"),
+        "while (준비): print(\"성공\")\n"
+    );
+    assert_eq!(
+        ok("준비 동안 성공 말해줘\n"),
+        "while (준비): print(\"성공\")\n"
+    );
 }
 
 #[test]
