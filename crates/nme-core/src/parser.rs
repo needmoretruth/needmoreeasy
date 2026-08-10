@@ -1306,7 +1306,7 @@ fn suite_spelling(kind: SuiteKind) -> Spelling {
 
 // --------------------------------------------------------------- helpers
 
-fn discover_python_bindings(lines: &[LogicalLine]) -> HashSet<String> {
+pub(crate) fn discover_python_bindings(lines: &[LogicalLine]) -> HashSet<String> {
     let mut names = HashSet::new();
     for line in lines {
         remember_python_binding(&line.tokens, &mut names);

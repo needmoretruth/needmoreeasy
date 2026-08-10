@@ -38,6 +38,7 @@
 //! rationale and the rules every contributor must follow.
 
 pub mod diagnostics;
+pub mod convert;
 pub mod lexer;
 pub mod lower;
 pub mod parser;
@@ -45,3 +46,4 @@ pub mod syntax;
 pub mod transpile;
 
 pub use transpile::transpile;
+pub use convert::{convert_python, Conversion, Language, SyntaxLevel};
