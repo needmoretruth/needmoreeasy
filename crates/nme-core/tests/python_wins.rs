@@ -93,6 +93,7 @@ fn korean_spellings_are_still_ordinary_python_names() {
     unchanged("아니면 = True\nprint(아니면)\n");
     unchanged("아니면.foo\n");
     unchanged("아니면 + 1\n");
+    unchanged("멈춰\n");
     unchanged("보여줘 = print\n보여줘('안녕')\n");
     unchanged("반복해 = 3\n설정해 = {'정답': 7}\nprint(반복해, 설정해)\n");
 }

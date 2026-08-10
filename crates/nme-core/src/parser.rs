@@ -205,7 +205,14 @@ pub fn parse_program(
         // top level to provide a useful unmatched-end diagnostic.
         let direct_stmt = if is_end.is_some() && (depth > 0 || is_end == Some(Spelling::Korean)) {
             Some(Ok(Some(NmeStmt::End)))
-        } else if is_break && (depth > 0 || is_korean_break_alias(&line.tokens)) {
+        } else if is_break
+            && (depth > 0
+                || (line.indent == 0
+                    && action_phrase_at(&line.tokens, 0, BREAK_WORDS_EN, MatchMode::Exact)
+                        .is_some())
+                || (is_korean_break_alias(&line.tokens)
+                    && !is_valid_python_statement(token_text(source, &line.tokens))))
+        {
             Some(Ok(Some(NmeStmt::Break)))
         } else if branch_shape.is_some()
             && (depth > 0 || is_korean_branch_alias(&line.tokens))

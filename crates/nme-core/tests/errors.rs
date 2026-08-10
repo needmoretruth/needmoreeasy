@@ -222,6 +222,6 @@ fn explicit_blocks_report_structural_mistakes() {
     assert!(missing.contains("missing its closing `end`"), "{missing}");
     let unmatched = err("끝\n");
     assert!(unmatched.contains("no open NME block"), "{unmatched}");
-    let outside = err("멈춰\n");
+    let outside = err("break\n");
     assert!(outside.contains("inside a loop"), "{outside}");
 }
