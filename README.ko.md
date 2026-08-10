@@ -2,50 +2,62 @@
 
 [English](README.md) | 한국어
 
-**Python보다 더 쉬운 프로그래밍.** NeedMoreEasy는 Python도 어렵게 느껴지는
-사람을 위한 아주 얇은 언어 계층입니다. 올바른 Python 프로그램은 모두 이미
-올바른 NME 프로그램이며, NME는 초보자를 위한 두 가지 표현만 더합니다.
+**더 쉽게 시작하고 자연스럽게 Python으로 이어지는 프로그래밍.** NME는 초보자를
+위한 작고 이중언어를 지원하는 언어 계층입니다. 올바른 Python 프로그램은 모두
+이미 올바른 NME 프로그램이며, 작게 엄선한 영어·한국어 문법으로 첫 코드를 더
+짧고 읽기 쉽게 만들 수 있습니다.
+
+현재 버전: **`0.0.1-beta.1`**
 
 ```text
-5 times:
-    say "안녕!"
+랜덤 사용
+
+이름 = "민아"
+동물 = 랜덤선택(["고양이"])
+
+만약 이름:
+    2번: 말해 f"{이름}에게 {동물} 추천!"
 ```
 
-NME는 이 소스를 평범한 Python으로 바꾸고 CPython으로 실행합니다.
+같은 프로그램을 영어 문법으로 쓸 수도 있습니다.
 
-```python
-for _ in range(5):
-    print("안녕!")
+```text
+use random
+
+name = "Mina"
+pet = random_pick(["cat"])
+
+when name:
+    2 times: say f"{name} gets a {pet}!"
 ```
 
-하나의 `.nme` 파일에서 Python과 NME를 자유롭게 섞어 쓸 수 있습니다. 별도의
-런타임이나 표준 라이브러리를 새로 배울 필요가 없습니다.
+NME는 두 형식을 모두 평범한 Python으로 바꾸고 CPython으로 실행합니다. 한
+파일에서 NME와 Python을 자유롭게 섞고, Python 패키지와 학습 자료도 그대로
+쓰며, 처음부터 다시 시작하지 않고 조금씩 Python으로 넘어갈 수 있습니다.
 
-> **프로젝트 상태:** NME는 초기 v0.1 기반을 만드는 단계입니다. 현재 언어는
-> 의도적으로 작은 `say`, `times:` 두 문법만 제공합니다. 아직 배포 패키지보다
-> 소스에서 빌드하여 사용하는 단계입니다.
+> NME는 초기 베타입니다. 저장소 소유자의 명시적 지시 없이는 `1.0.0`을
+> 출시할 수 없습니다. 자세한 내용은 [버전 정책](docs/versioning.ko.md)을
+> 참고하세요.
 
 ## 왜 NME인가요?
 
-- **더 작게 시작합니다:** 긴 Python 표현을 배우기 전에 `say`와 `times:`부터
-  사용할 수 있습니다.
-- **Python을 그대로 씁니다:** import, 함수, 클래스, 패키지, 튜토리얼이 모두
-  계속 동작합니다.
-- **안전하게 호환됩니다:** 올바른 Python이 항상 우선하며 NME로 잘못 해석되지
-  않습니다.
-- **오류가 친절합니다:** NME 오류에는 정확한 위치와 고치는 방법이 함께
-  표시됩니다.
-- **트레이스백이 유용합니다:** 변환 전후의 줄 번호가 유지됩니다.
-
-## 준비 사항
-
-- NME 빌드에 필요한 최신 안정 Rust 도구 체인과 Cargo
-- `nme run` 실행에 필요한 Python 3.8 이상
-
-`nme build`와 `nme check`는 Python을 실행하지 않습니다. `run`은 기본적으로
-`python3`를 사용하며 `--python`으로 다른 명령을 지정할 수 있습니다.
+- **영어 또는 한국어:** 한 파일에서도 원하는 문법을 골라 쓸 수 있습니다.
+- **유용한 다섯 가지 개념:** 값 보여 주기, 글로 대답받기, 반복, 조건,
+  랜덤 도구를 먼저 배웁니다.
+- **Python을 모두 유지:** 대입, 목록, 함수, 클래스, import, 패키지와 한국어
+  변수 이름이 평소처럼 동작합니다.
+- **안전한 호환성:** 올바른 Python 줄은 항상 바이트 단위까지 그대로 남습니다.
+- **친절한 오류:** NME 오류는 정확한 위치와 고치는 방법을 보여 주며, 한국어
+  문법 오류에는 한국어 안내가 나옵니다.
+- **정확한 줄 번호:** 변환 전후 실제 줄 수를 보존합니다.
 
 ## 소스에서 설치하기
+
+필요한 도구:
+
+- 최신 안정 Rust 도구 체인과 Cargo
+- Python 3.8 이상
+- 저장소를 복제할 때 사용할 Git
 
 ```sh
 git clone https://github.com/needmoretruth/needmoreeasy.git
@@ -54,12 +66,18 @@ cargo install --path crates/nme-cli --locked
 nme --version
 ```
 
-Cargo는 보통 `$HOME/.cargo/bin`인 Cargo 바이너리 디렉터리에 `nme` 실행 파일을
-설치합니다. 셸에서 `nme`를 찾지 못하면 이 디렉터리를 `PATH`에 추가하거나
-프로젝트를 직접 실행하세요.
+예상 버전:
+
+```text
+nme 0.0.1-beta.1
+```
+
+설치하지 않고 저장소에서 바로 실행할 수도 있습니다.
 
 ```sh
 cargo run --quiet -p nme-cli -- run examples/hello.nme
+cargo run --quiet -p nme-cli -- run examples/ask.nme
+cargo run --quiet -p nme-cli -- run examples/korean.nme
 ```
 
 ## 빠르게 시작하기
@@ -67,102 +85,108 @@ cargo run --quiet -p nme-cli -- run examples/hello.nme
 `hello.nme` 파일을 만듭니다.
 
 ```text
-name = "NME"
+물어봐 이름, "이름이 뭐예요? "
 
-say f"{name}에서 보낸 인사!"
+말해 f"안녕하세요, {이름}!"
 
-3 times:
-    say "정말 쉽습니다."
+3번:
+    말해 "NME가 잘 동작합니다."
 ```
 
-다음 명령으로 실행합니다.
+실행합니다.
 
 ```sh
 nme run hello.nme
 ```
 
-```text
-NME에서 보낸 인사!
-정말 쉽습니다.
-정말 쉽습니다.
-정말 쉽습니다.
+Python을 실행하지 않고 검사합니다.
+
+```sh
+nme check hello.nme
+```
+
+생성되는 Python을 확인합니다.
+
+```sh
+nme build hello.nme
+nme build hello.nme -o hello.py
 ```
 
 ## 문법 한눈에 보기
 
-| NME 소스 | Python에서의 의미 |
-| --- | --- |
-| `say <표현식>` | `print(<표현식>)` |
-| `<표현식> times:`와 들여쓴 본문 | `for _ in range(<표현식>):` |
-| `<표현식> times: <문장>` | 한 문장을 같은 줄에서 실행하는 반복문 |
-| 올바른 모든 Python | Python 그대로 바이트 단위까지 유지 |
+| 한국어 NME | 영어 NME | Python에서의 의미 |
+| --- | --- | --- |
+| `말해 값` | `say value` | `print(value)` |
+| `물어봐 이름` | `ask name` | `name = input()` |
+| `물어봐 이름, 질문` | `ask name, prompt` | `name = input(prompt)` |
+| `횟수번:` | `count times:` | `for _ in range(count):` |
+| `만약 조건:` | `when condition:` | `if (condition):` |
+| `랜덤 사용` | `use random` | Python 기본 랜덤 도구 가져오기 |
 
-가장 중요한 규칙은 **Python 우선**입니다. 예를 들어 `say("안녕")`은 평범한
-Python 함수 호출로, `times = 5`는 대입문으로, `if times:`는 Python `if` 문으로
-남습니다. NME는 Python이 같은 줄을 받아들이지 못할 때만 더 쉬운 NME 문법으로
+`번`/`times`와 `만약`/`when` 뒤에는 들여쓴 여러 문장 또는 콜론 뒤의
+한 문장을 쓸 수 있습니다. 표현식은 평범한 Python 표현식이며 적은 그대로
+복사됩니다.
+
+`랜덤 사용` 다음에는 아래 이름을 바로 쓸 수 있습니다.
+
+- `랜덤정수(시작, 끝)`: 양 끝을 포함한 임의의 정수
+- `랜덤선택(값들)`: 값 하나 고르기
+- `섞기(목록)`: 목록의 순서를 그 자리에서 섞기
+
+영어 `use random`은 같은 도구를 `random_number`, `random_pick`,
+`shuffle`이라는 이름으로 제공합니다. 모두 Python에 포함된 `random` 모듈을
+사용하므로 별도 패키지를 설치하지 않습니다.
+
+가장 중요한 규칙은 **Python 우선**입니다. 예를 들어 `말해("안녕")`,
+`say("hello")`, `물어봐 = input`, `times = 5`는 올바른 Python이므로
+바뀌지 않습니다. NME는 Python이 그 줄을 거부할 때만 더 쉬운 문법으로
 인식합니다.
 
-정확한 문법, 의미, 호환 규칙, 현재 제약은
-[언어 레퍼런스](docs/language.ko.md)에서 확인할 수 있습니다.
+정확한 문법, 동작, 생성되는 Python, 오류와 제한은
+[전체 언어 레퍼런스](docs/language.ko.md)를 참고하세요.
 
-## 명령줄 사용법
+## 명령줄
 
 | 명령 | 용도 |
 | --- | --- |
 | `nme run program.nme` | CPython으로 변환하고 실행 |
-| `nme run program.nme --python python` | 다른 Python 명령으로 실행 |
-| `nme build program.nme` | 생성된 Python을 표준 출력에 표시 |
+| `nme run program.nme --python python` | 다른 Python 명령 선택 |
+| `nme build program.nme` | 생성된 Python 출력 |
 | `nme build program.nme -o program.py` | 생성된 Python을 파일에 저장 |
-| `nme check program.nme` | 실행하지 않고 토큰화와 NME 변환을 검사 |
-| `nme --help` | 명령 도움말 표시 |
-
-저장소의 예제도 바로 실행할 수 있습니다.
-
-```sh
-nme run examples/hello.nme
-nme run examples/mixed.nme
-nme run examples/pure_python.nme
-```
+| `nme check program.nme` | 실행하지 않고 NME 검사 |
+| `nme --help` | 명령 도움말 |
+| `nme --version` | 설치된 NME 버전 |
 
 ## 문서
 
-| 주제 | English | 한국어 |
-| --- | --- | --- |
-| 첫 프로그램과 CLI 튜토리얼 | [Getting started](docs/getting-started.md) | [시작하기](docs/getting-started.ko.md) |
-| 전체 NME 문법 | [Language reference](docs/language.md) | [언어 레퍼런스](docs/language.ko.md) |
-| 컴파일러 설계와 불변 조건 | [Architecture](docs/architecture.md) | — |
+영어가 기본 문서 언어이며, 모든 사용자 가이드는 한국어 문서도 함께
+관리합니다.
 
-아키텍처 문서는 기여자를 위한 컴파일러 불변 조건의 단일 기준이므로 영어로
-유지합니다.
+| 주제 | 한국어 | English |
+| --- | --- | --- |
+| 첫 프로그램과 CLI 튜토리얼 | [시작하기](docs/getting-started.ko.md) | [Getting started](docs/getting-started.md) |
+| 정확한 문법과 동작 | [언어 레퍼런스](docs/language.ko.md) | [Language reference](docs/language.md) |
+| 버전과 출시 규칙 | [버전 정책](docs/versioning.ko.md) | [Versioning](docs/versioning.md) |
+| 출시 변경 사항 | [변경 기록](CHANGELOG.ko.md) | [Changelog](CHANGELOG.md) |
+| 컴파일러 설계 | — | [Architecture](docs/architecture.md) |
 
 ## 동작 방식
 
 ```text
 .nme 소스
     → Python을 이해하는 토큰화
-    → NME 문장 인식(올바른 Python 우선)
-    → 줄 번호를 보존한 Python 소스
+    → NME 인식(올바른 Python 우선)
+    → 줄 수를 보존한 Python 소스
     → CPython
 ```
 
 컴파일러 코어는 IO가 없는 순수한 소스 변환 함수입니다. 파일 접근과 Python
-실행은 CLI가 담당합니다. 설계 근거는
-[docs/architecture.md](docs/architecture.md)를 참고하세요.
-
-## 저장소 구조
-
-```text
-crates/nme-core/   순수 NME → Python 컴파일러
-crates/nme-cli/    nme 명령, 파일 IO, Python 실행
-docs/              사용자 문서와 컴파일러 아키텍처
-examples/          실행 가능한 NME 및 Python/NME 혼합 프로그램
-```
+실행은 CLI가 담당합니다. 컴파일러 동작을 변경하기 전에는
+[아키텍처](docs/architecture.md)를 읽어 주세요.
 
 ## 기여하기
 
-코드를 변경하기 전에 [AGENTS.md](AGENTS.md)와
-[docs/architecture.md](docs/architecture.md)를 읽어 주세요. 모든 변경은
-프로젝트를 작게 유지하고 아래 검증을 통과해야 합니다.
+변경 범위를 작게 유지하고 Rust 동작을 아래 명령으로 검증합니다.
 
 ```sh
 cargo fmt --all

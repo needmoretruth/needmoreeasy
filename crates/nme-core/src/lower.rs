@@ -9,7 +9,20 @@
 //! exactly as many lines as the input and Python tracebacks point at the
 //! line numbers the user actually sees in their `.nme` file.
 
-use crate::syntax::{InlineStmt, NmeLine, NmeStmt};
+use crate::syntax::{InlineStmt, NmeLine, NmeStmt, Spelling};
+
+const ENGLISH_RANDOM_TOOLS: &str = concat!(
+    "import random; ",
+    "random_number = random.randint; ",
+    "random_pick = random.choice; ",
+    "shuffle = random.shuffle",
+);
+const KOREAN_RANDOM_TOOLS: &str = concat!(
+    "import random as 랜덤; ",
+    "랜덤정수 = 랜덤.randint; ",
+    "랜덤선택 = 랜덤.choice; ",
+    "섞기 = 랜덤.shuffle",
+);
 
 /// A single source replacement: overwrite `span` with `replacement`.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -37,16 +50,36 @@ pub fn lower_lines(lines: &[NmeLine], source: &str) -> Vec<Edit> {
 pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
     match stmt {
         NmeStmt::Say { expr } => format!("print({})", slice(source, *expr)),
+        NmeStmt::Ask { target, prompt } => match prompt {
+            Some(prompt) => format!(
+                "{} = input({})",
+                slice(source, *target),
+                slice(source, *prompt)
+            ),
+            None => format!("{} = input()", slice(source, *target)),
+        },
         NmeStmt::Times { count, inline } => {
             let header = format!("for _ in range({}):", slice(source, *count));
-            match inline {
-                None => header,
-                Some(InlineStmt::Nme(inner)) => {
-                    format!("{header} {}", lower_stmt(inner, source))
-                }
-                Some(InlineStmt::Python(span)) => format!("{header} {}", slice(source, *span)),
-            }
+            lower_suite(header, inline.as_ref(), source)
         }
+        NmeStmt::When { condition, inline } => {
+            let header = format!("if ({}):", slice(source, *condition));
+            lower_suite(header, inline.as_ref(), source)
+        }
+        NmeStmt::UseRandom {
+            spelling: Spelling::English,
+        } => ENGLISH_RANDOM_TOOLS.to_string(),
+        NmeStmt::UseRandom {
+            spelling: Spelling::Korean,
+        } => KOREAN_RANDOM_TOOLS.to_string(),
+    }
+}
+
+fn lower_suite(header: String, inline: Option<&InlineStmt>, source: &str) -> String {
+    match inline {
+        None => header,
+        Some(InlineStmt::Nme(inner)) => format!("{header} {}", lower_stmt(inner, source)),
+        Some(InlineStmt::Python(span)) => format!("{header} {}", slice(source, *span)),
     }
 }
 

@@ -79,6 +79,25 @@ fn say_an_expression() {
 }
 
 #[test]
+fn korean_say_uses_the_same_semantics() {
+    assert_eq!(ok("말해 \"안녕하세요\"\n"), "print(\"안녕하세요\")\n");
+    assert_eq!(ok("말해 1 + 1\n"), "print(1 + 1)\n");
+}
+
+#[test]
+fn ask_reads_text_into_an_english_or_korean_name() {
+    assert_eq!(ok("ask name\n"), "name = input()\n");
+    assert_eq!(
+        ok("ask name, \"Your name? \"\n"),
+        "name = input(\"Your name? \")\n"
+    );
+    assert_eq!(
+        ok("물어봐 이름, \"이름이 뭐예요? \"\n"),
+        "이름 = input(\"이름이 뭐예요? \")\n"
+    );
+}
+
+#[test]
 fn times_block() {
     let source = "5 times:\n    say \"Hello\"\n";
     let expected = "for _ in range(5):\n    print(\"Hello\")\n";
@@ -119,6 +138,76 @@ fn times_nested_blocks() {
 fn times_nested_inline() {
     let source = "2 times: 3 times: say \"x\"\n";
     let expected = "for _ in range(2): for _ in range(3): print(\"x\")\n";
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn korean_times_supports_attached_and_spaced_spellings() {
+    assert_eq!(
+        ok("3번:\n    말해 \"안녕\"\n"),
+        "for _ in range(3):\n    print(\"안녕\")\n"
+    );
+    assert_eq!(
+        ok("2 번: say \"mixed\"\n"),
+        "for _ in range(2): print(\"mixed\")\n"
+    );
+}
+
+#[test]
+fn when_supports_blocks_inline_bodies_and_both_languages() {
+    let source = "ready = True\nwhen ready:\n    say \"go\"\n만약 ready: 말해 \"시작\"\n";
+    let expected = "ready = True\nif (ready):\n    print(\"go\")\nif (ready): print(\"시작\")\n";
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn when_keeps_complex_python_expressions_safe() {
+    assert_eq!(
+        ok("when lambda value: value: say \"callable\"\n"),
+        "if (lambda value: value): print(\"callable\")\n"
+    );
+}
+
+#[test]
+fn random_tools_are_ready_after_one_easy_line() {
+    assert_eq!(
+        ok("use random\nsay random_number(1, 6)\n"),
+        concat!(
+            "import random; random_number = random.randint; ",
+            "random_pick = random.choice; shuffle = random.shuffle\n",
+            "print(random_number(1, 6))\n",
+        )
+    );
+    assert_eq!(
+        ok("랜덤 사용\n말해 랜덤선택([\"봄\", \"여름\"])\n"),
+        concat!(
+            "import random as 랜덤; 랜덤정수 = 랜덤.randint; ",
+            "랜덤선택 = 랜덤.choice; 섞기 = 랜덤.shuffle\n",
+            "print(랜덤선택([\"봄\", \"여름\"]))\n",
+        )
+    );
+}
+
+#[test]
+fn a_program_can_use_korean_vocabulary_and_identifiers() {
+    let source = r#"랜덤 사용
+후보 = ["고양이", "강아지"]
+이름 = "친구"
+
+2번:
+    선택 = 랜덤선택(후보)
+    만약 이름:
+        말해 f"{이름}에게 {선택} 추천"
+"#;
+    let expected = r#"import random as 랜덤; 랜덤정수 = 랜덤.randint; 랜덤선택 = 랜덤.choice; 섞기 = 랜덤.shuffle
+후보 = ["고양이", "강아지"]
+이름 = "친구"
+
+for _ in range(2):
+    선택 = 랜덤선택(후보)
+    if (이름):
+        print(f"{이름}에게 {선택} 추천")
+"#;
     assert_eq!(ok(source), expected);
 }
 
@@ -191,6 +280,15 @@ fn trailing_comments_survive_nme_lines() {
     assert_eq!(
         ok("5 times:  # repeat!\n    say \"hi\"\n"),
         "for _ in range(5):  # repeat!\n    print(\"hi\")\n"
+    );
+    assert_eq!(
+        ok("랜덤 사용  # tools\n물어봐 이름, \"이름? \"  # input\n만약 이름: 말해 이름  # condition\n"),
+        concat!(
+            "import random as 랜덤; 랜덤정수 = 랜덤.randint; ",
+            "랜덤선택 = 랜덤.choice; 섞기 = 랜덤.shuffle  # tools\n",
+            "이름 = input(\"이름? \")  # input\n",
+            "if (이름): print(이름)  # condition\n",
+        )
     );
 }
 

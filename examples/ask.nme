@@ -1,0 +1,3 @@
+# `ask` stores one line of input in a name.
+ask name, "What is your name? "
+say f"Hello, {name}!"

@@ -2,7 +2,7 @@
 
 This document explains how the NME compiler is built and *why*. It is the
 first thing to read before changing anything. The audience is future
-contributors — human or AI.
+contributors.
 
 ## What NME is (and is not)
 
@@ -63,11 +63,11 @@ appear as statement starts.
 
 ### 3. NME expressions are opaque Python
 
-NME never parses, rewrites or re-prints expressions. The parser checks that
-the text between `say` and end-of-line (or before `times:`) is a valid
-Python expression via `Mode::Expression`, records its **byte span**, and
-lowering copies the original text verbatim. Every Python feature — present
-and future — works inside NME statements for free.
+NME never parses, rewrites or re-prints expressions. The parser checks output
+values, input prompts, repetition counts, and conditions with
+`Mode::Expression`, records their **byte spans**, and lowering copies the
+original text verbatim. Every Python expression feature — present and future —
+works inside NME statements for free.
 
 ### 4. Line-preserving lowering
 
@@ -85,10 +85,19 @@ collects **all** problems in one pass instead of stopping at the first.
 Anything that is neither valid Python nor valid NME produces a diagnostic —
 never silently broken Python output.
 
-### 6. Tiny syntax on purpose
+### 6. A small bilingual starter set
 
-v0.1 has exactly two constructs (`say`, `times`). Resist adding more until
-the existing ones are rock solid. Consistency beats feature count.
+The first beta has five concepts: output, text input, repetition, conditions,
+and an explicit `random` toolkit. English and Korean spellings share the same
+AST variants and Python semantics. This is enough for a beginner to make an
+interactive program without creating a second standard library or duplicating
+Python's general-purpose syntax. Consistency still beats feature count: add a
+new concept only when the existing set cannot express a common beginner task
+clearly.
+
+The bundled `random` toolkit is a one-line import expansion backed entirely by
+Python's standard-library `random` module. It is not a runtime or dependency,
+and it remains explicit so pure Python files stay byte-identical.
 
 ### 7. No `unsafe`, minimal dependencies
 
@@ -111,8 +120,8 @@ hand on purpose; if subcommands grow, adopting `clap` is a reasonable
 4. Add lowering in `lower.rs` (`lower_stmt`).
 5. Add beginner-friendly diagnostics (message + hint) for the ways a
    beginner can get the construct wrong.
-6. Add tests: the construct itself, mixed with Python, look-alike valid
-   Python that must stay untouched, and every error case.
+6. Add tests: both language spellings when applicable, mixed Python/NME,
+   look-alike valid Python that must stay untouched, and every error case.
 7. Update both language references (`docs/language.md` and
    `docs/language.ko.md`), both READMEs, and an example.
 

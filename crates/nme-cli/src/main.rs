@@ -15,7 +15,7 @@ mod exec;
 use std::path::Path;
 use std::process::ExitCode;
 
-const HELP: &str = r#"nme — NeedMoreEasy: programming, easier than Python.
+const HELP: &str = r"nme — NeedMoreEasy: programming, easier than Python.
 
 USAGE:
     nme run <file.nme> [--python <command>]   Run an NME program with Python
@@ -24,9 +24,10 @@ USAGE:
     nme --help                                Show this help
     nme --version                             Show the version
 
-Every valid Python program is already a valid NME program. NME simply adds
-easier statements like `say "Hello"` and `5 times: ...` on top.
-"#;
+Every valid Python program is already a valid NME program. NME adds a small
+English/Korean starter vocabulary for output, input, repetition, conditions,
+and Python's bundled random tools. See README.md or README.ko.md to begin.
+";
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
