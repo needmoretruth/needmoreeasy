@@ -4,6 +4,11 @@ English | [한국어](CHANGELOG.ko.md)
 
 All notable changes to NME are recorded here.
 
+## 0.0.1-beta.12 — 2026-08-11
+
+- Fix the indentation of the Korean beginner time-loop example so every
+  published example passes `nme check`.
+
 ## 0.0.1-beta.11 — 2026-08-11
 
 - Let compact `3 times:` / `3번:` beginner repeat blocks close with `end` / `끝`
