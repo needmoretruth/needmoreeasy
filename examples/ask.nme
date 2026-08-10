@@ -1,3 +1,3 @@
-# `ask` stores one line of input in a name.
-ask name, "What is your name? "
-say f"Hello, {name}!"
+# No quotes, comma, f-string, braces, or formatting knowledge needed.
+ask name What is your name?
+show Hello name!

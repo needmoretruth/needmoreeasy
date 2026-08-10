@@ -80,6 +80,8 @@ fn new_english_spellings_are_still_ordinary_python_names() {
     unchanged("ask = input\nask('name?')\n");
     unchanged("when = True\nprint(when)\n");
     unchanged("use = lambda value: value\nuse(random)\n");
+    unchanged("show = print\nshow('hello')\n");
+    unchanged("repeat = 3\nset = {'answer': 7}\nprint(repeat, set)\n");
 }
 
 #[test]
@@ -88,4 +90,6 @@ fn korean_spellings_are_still_ordinary_python_names() {
     unchanged("물어봐 = input\n물어봐('이름?')\n");
     unchanged("번 = 3\n만약 = True\nprint(번, 만약)\n");
     unchanged("랜덤 = object()\n사용 = 랜덤\n");
+    unchanged("보여줘 = print\n보여줘('안녕')\n");
+    unchanged("반복해 = 3\n설정해 = {'정답': 7}\nprint(반복해, 설정해)\n");
 }

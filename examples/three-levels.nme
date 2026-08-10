@@ -1,0 +1,11 @@
+# Advanced Python, beginner NME, and sentence NME can share one file.
+people = ["Ada", "Grace"]                 # advanced Python
+
+2 times:                                  # beginner English
+    말해 "beginner Korean"                # beginner Korean
+
+repeat 2 times                            # sentence English
+    한국어 문장형도 함께 작동해요 말해줘   # sentence Korean
+
+for person in people:                     # advanced Python
+    show Hello person!                    # sentence English

@@ -98,6 +98,156 @@ fn ask_reads_text_into_an_english_or_korean_name() {
 }
 
 #[test]
+fn sentence_syntax_needs_no_quotes_commas_braces_or_colons() {
+    let source = concat!(
+        "이름을 물어봐 이름이 뭐예요?\n",
+        "안녕하세요 이름! 말해줘\n",
+        "3번 반복해서 NME에 오신 것을 환영합니다 말해줘\n",
+    );
+    let expected = concat!(
+        "이름 = input(\"이름이 뭐예요?\" + \" \")\n",
+        "print(\"안녕하세요 \" + str(이름) + \"!\")\n",
+        "for _ in range(3): print(\"NME에 오신 것을 환영합니다\")\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn sentence_blocks_are_colon_free_and_accept_connecting_words() {
+    let source = concat!(
+        "이름을 물어봐 이름이 뭐예요\n",
+        "만약에 이름이 있으면\n",
+        "    안녕하세요 이름 말해줘\n",
+        "repeat 2 times\n",
+        "    show Welcome 이름\n",
+    );
+    let expected = concat!(
+        "이름 = input(\"이름이 뭐예요\" + \" \")\n",
+        "if (이름):\n",
+        "    print(\"안녕하세요 \" + str(이름))\n",
+        "for _ in range(2):\n",
+        "    print(\"Welcome \" + str(이름))\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn korean_condition_can_end_with_a_subject_particle() {
+    let source = "이름 = \"NME\"\n만약에 이름이\n    이름 말해줘\n";
+    let expected = "이름 = \"NME\"\nif (이름):\n    print(이름)\n";
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn python_beginner_sentence_korean_and_english_mix_line_by_line() {
+    let source = concat!(
+        "조건 = True\n",
+        "if 조건\n",
+        "    성공이라고 말해\n",
+        "2 times 반복해\n",
+        "    말해 \"mixed\"\n",
+    );
+    let expected = concat!(
+        "조건 = True\n",
+        "if (조건):\n",
+        "    print(\"성공이라고\")\n",
+        "for _ in range(2):\n",
+        "    print(\"mixed\")\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn sentence_output_uses_a_variable_bound_by_an_advanced_python_loop() {
+    let source = "for person in [\"Ada\", \"Grace\"]:\n    show Hello person!\n";
+    let expected =
+        "for person in [\"Ada\", \"Grace\"]:\n    print(\"Hello \" + str(person) + \"!\")\n";
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn common_one_edit_typos_are_recovered_only_after_python_rejects_the_line() {
+    let source = concat!(
+        "물어바 이름 이름이 뭐예요\n",
+        "안녕하세요 이름 말헤\n",
+        "2번 반목해서 다시 말해줘\n",
+    );
+    let expected = concat!(
+        "이름 = input(\"이름이 뭐예요\" + \" \")\n",
+        "print(\"안녕하세요 \" + str(이름))\n",
+        "for _ in range(2): print(\"다시\")\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn sentence_assignments_and_random_numbers_are_symbol_free() {
+    let source = "주사위는 1부터 6까지 랜덤정수\n주사위 말해줘\n";
+    let expected = concat!(
+        "주사위 = __import__(\"random\").randint(1, 6)\n",
+        "print(주사위)\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn a_korean_number_guessing_game_can_use_only_sentence_syntax() {
+    let source = concat!(
+        "정답은 1부터 10까지 랜덤정수\n",
+        "추측을 숫자로 물어봐 1부터 10까지 숫자를 맞혀 보세요\n",
+        "만약에 추측이 정답과 같으면\n",
+        "    정답입니다! 말해줘\n",
+        "만약에 추측이 정답보다 작으면\n",
+        "    더 큰 수예요 말해줘\n",
+        "만약에 추측이 정답보다 크면\n",
+        "    더 작은 수예요 말해줘\n",
+    );
+    let expected = concat!(
+        "정답 = __import__(\"random\").randint(1, 10)\n",
+        "추측 = int(input(\"1부터 10까지 숫자를 맞혀 보세요\" + \" \"))\n",
+        "if (추측 == 정답):\n",
+        "    print(\"정답입니다!\")\n",
+        "if (추측 < 정답):\n",
+        "    print(\"더 큰 수예요\")\n",
+        "if (추측 > 정답):\n",
+        "    print(\"더 작은 수예요\")\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn english_sentence_conditions_support_comparisons_and_inline_then() {
+    let source = concat!(
+        "score = 7\n",
+        "if score is greater than 5 then show high\n",
+        "if score equals 7\n",
+        "    show exact\n",
+        "if score exists then show present\n",
+        "만약에 score가 7과 같으면 일곱 말해줘\n",
+    );
+    let expected = concat!(
+        "score = 7\n",
+        "if (score > 5): print(\"high\")\n",
+        "if (score == 7):\n",
+        "    print(\"exact\")\n",
+        "if (score): print(\"present\")\n",
+        "if (score == 7): print(\"일곱\")\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn natural_random_choice_accepts_words_instead_of_a_list_literal() {
+    assert_eq!(
+        ok("색은 빨강 또는 초록 또는 파랑 중에서 랜덤선택\n색 말해줘\n"),
+        concat!(
+            "색 = __import__(\"random\").choice((\"빨강\", \"초록\", \"파랑\",))\n",
+            "print(색)\n",
+        )
+    );
+}
+
+#[test]
 fn times_block() {
     let source = "5 times:\n    say \"Hello\"\n";
     let expected = "for _ in range(5):\n    print(\"Hello\")\n";
@@ -170,22 +320,25 @@ fn when_keeps_complex_python_expressions_safe() {
 
 #[test]
 fn random_tools_are_ready_after_one_easy_line() {
+    let tools = concat!(
+        "import random as 랜덤; random = 랜덤; ",
+        "random_number = 랜덤.randint; random_pick = 랜덤.choice; ",
+        "shuffle = 랜덤.shuffle; 랜덤정수 = 랜덤.randint; ",
+        "랜덤선택 = 랜덤.choice; 섞기 = 랜덤.shuffle; ",
+        "random_version = 랜덤버전 = \"0.0.1\"\n",
+    );
     assert_eq!(
         ok("use random\nsay random_number(1, 6)\n"),
-        concat!(
-            "import random; random_number = random.randint; ",
-            "random_pick = random.choice; shuffle = random.shuffle\n",
-            "print(random_number(1, 6))\n",
-        )
+        format!("{tools}print(random_number(1, 6))\n")
     );
     assert_eq!(
         ok("랜덤 사용\n말해 랜덤선택([\"봄\", \"여름\"])\n"),
-        concat!(
-            "import random as 랜덤; 랜덤정수 = 랜덤.randint; ",
-            "랜덤선택 = 랜덤.choice; 섞기 = 랜덤.shuffle\n",
-            "print(랜덤선택([\"봄\", \"여름\"]))\n",
-        )
+        format!("{tools}print(랜덤선택([\"봄\", \"여름\"]))\n")
     );
+    assert_eq!(ok("랜덤 사용 최신\n"), tools);
+    assert_eq!(ok("use latest random\n"), tools);
+    assert_eq!(ok("use random version \"0.0.1\"\n"), tools);
+    assert_eq!(ok("랜덤 사용 버전 \"0.0.1\"\n"), tools);
 }
 
 #[test]
@@ -199,7 +352,7 @@ fn a_program_can_use_korean_vocabulary_and_identifiers() {
     만약 이름:
         말해 f"{이름}에게 {선택} 추천"
 "#;
-    let expected = r#"import random as 랜덤; 랜덤정수 = 랜덤.randint; 랜덤선택 = 랜덤.choice; 섞기 = 랜덤.shuffle
+    let expected = r#"import random as 랜덤; random = 랜덤; random_number = 랜덤.randint; random_pick = 랜덤.choice; shuffle = 랜덤.shuffle; 랜덤정수 = 랜덤.randint; 랜덤선택 = 랜덤.choice; 섞기 = 랜덤.shuffle; random_version = 랜덤버전 = "0.0.1"
 후보 = ["고양이", "강아지"]
 이름 = "친구"
 
@@ -284,8 +437,10 @@ fn trailing_comments_survive_nme_lines() {
     assert_eq!(
         ok("랜덤 사용  # tools\n물어봐 이름, \"이름? \"  # input\n만약 이름: 말해 이름  # condition\n"),
         concat!(
-            "import random as 랜덤; 랜덤정수 = 랜덤.randint; ",
-            "랜덤선택 = 랜덤.choice; 섞기 = 랜덤.shuffle  # tools\n",
+            "import random as 랜덤; random = 랜덤; random_number = 랜덤.randint; ",
+            "random_pick = 랜덤.choice; shuffle = 랜덤.shuffle; ",
+            "랜덤정수 = 랜덤.randint; 랜덤선택 = 랜덤.choice; 섞기 = 랜덤.shuffle; ",
+            "random_version = 랜덤버전 = \"0.0.1\"  # tools\n",
             "이름 = input(\"이름? \")  # input\n",
             "if (이름): print(이름)  # condition\n",
         )

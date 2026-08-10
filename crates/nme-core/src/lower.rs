@@ -9,19 +9,21 @@
 //! exactly as many lines as the input and Python tracebacks point at the
 //! line numbers the user actually sees in their `.nme` file.
 
-use crate::syntax::{InlineStmt, NmeLine, NmeStmt, Spelling};
+use crate::syntax::{
+    Code, InlineStmt, InputKind, NmeLine, NmeStmt, TextPart, TextTemplate, Value,
+    RANDOM_MODULE_VERSION,
+};
 
-const ENGLISH_RANDOM_TOOLS: &str = concat!(
-    "import random; ",
-    "random_number = random.randint; ",
-    "random_pick = random.choice; ",
-    "shuffle = random.shuffle",
-);
-const KOREAN_RANDOM_TOOLS: &str = concat!(
+const BILINGUAL_RANDOM_TOOLS_PREFIX: &str = concat!(
     "import random as 랜덤; ",
+    "random = 랜덤; ",
+    "random_number = 랜덤.randint; ",
+    "random_pick = 랜덤.choice; ",
+    "shuffle = 랜덤.shuffle; ",
     "랜덤정수 = 랜덤.randint; ",
     "랜덤선택 = 랜덤.choice; ",
-    "섞기 = 랜덤.shuffle",
+    "섞기 = 랜덤.shuffle; ",
+    "random_version = 랜덤버전 = ",
 );
 
 /// A single source replacement: overwrite `span` with `replacement`.
@@ -49,30 +51,99 @@ pub fn lower_lines(lines: &[NmeLine], source: &str) -> Vec<Edit> {
 /// automatically).
 pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
     match stmt {
-        NmeStmt::Say { expr } => format!("print({})", slice(source, *expr)),
-        NmeStmt::Ask { target, prompt } => match prompt {
-            Some(prompt) => format!(
-                "{} = input({})",
-                slice(source, *target),
-                slice(source, *prompt)
-            ),
-            None => format!("{} = input()", slice(source, *target)),
-        },
+        NmeStmt::Say { value } => format!("print({})", lower_value(value, source)),
+        NmeStmt::Ask {
+            target,
+            prompt,
+            kind,
+        } => {
+            let input = match prompt {
+                Some(Value::Text(prompt)) => {
+                    format!("input({} + \" \")", lower_template(prompt))
+                }
+                Some(prompt) => format!("input({})", lower_value(prompt, source)),
+                None => "input()".to_string(),
+            };
+            match kind {
+                InputKind::Text => format!("{target} = {input}"),
+                InputKind::Number => format!("{target} = int({input})"),
+            }
+        }
+        NmeStmt::Set { target, value } => {
+            format!("{target} = {}", lower_value(value, source))
+        }
         NmeStmt::Times { count, inline } => {
-            let header = format!("for _ in range({}):", slice(source, *count));
+            let header = format!("for _ in range({}):", lower_code(count, source));
             lower_suite(header, inline.as_ref(), source)
         }
         NmeStmt::When { condition, inline } => {
-            let header = format!("if ({}):", slice(source, *condition));
+            let header = format!("if ({}):", lower_code(condition, source));
             lower_suite(header, inline.as_ref(), source)
         }
-        NmeStmt::UseRandom {
-            spelling: Spelling::English,
-        } => ENGLISH_RANDOM_TOOLS.to_string(),
-        NmeStmt::UseRandom {
-            spelling: Spelling::Korean,
-        } => KOREAN_RANDOM_TOOLS.to_string(),
+        NmeStmt::UseRandom { .. } => {
+            format!("{BILINGUAL_RANDOM_TOOLS_PREFIX}\"{RANDOM_MODULE_VERSION}\"")
+        }
     }
+}
+
+fn lower_code(code: &Code, source: &str) -> String {
+    match code {
+        Code::Source(span) => slice(source, *span).to_string(),
+        Code::Generated(code) => code.clone(),
+    }
+}
+
+fn lower_value(value: &Value, source: &str) -> String {
+    match value {
+        Value::Python(code) => lower_code(code, source),
+        Value::Text(template) => lower_template(template),
+        Value::RandomInteger { low, high } => format!(
+            "__import__(\"random\").randint({}, {})",
+            lower_code(low, source),
+            lower_code(high, source)
+        ),
+        Value::RandomChoice { choices } => {
+            let values = choices
+                .iter()
+                .map(|choice| python_string(choice))
+                .collect::<Vec<_>>()
+                .join(", ");
+            format!("__import__(\"random\").choice(({values},))")
+        }
+    }
+}
+
+fn lower_template(template: &TextTemplate) -> String {
+    let pieces: Vec<String> = template
+        .parts
+        .iter()
+        .map(|part| match part {
+            TextPart::Literal(text) => python_string(text),
+            TextPart::Variable(name) => format!("str({name})"),
+        })
+        .collect();
+    if pieces.is_empty() {
+        "\"\"".to_string()
+    } else {
+        pieces.join(" + ")
+    }
+}
+
+fn python_string(text: &str) -> String {
+    let mut quoted = String::with_capacity(text.len() + 2);
+    quoted.push('"');
+    for character in text.chars() {
+        match character {
+            '\\' => quoted.push_str("\\\\"),
+            '"' => quoted.push_str("\\\""),
+            '\n' => quoted.push_str("\\n"),
+            '\r' => quoted.push_str("\\r"),
+            '\t' => quoted.push_str("\\t"),
+            other => quoted.push(other),
+        }
+    }
+    quoted.push('"');
+    quoted
 }
 
 fn lower_suite(header: String, inline: Option<&InlineStmt>, source: &str) -> String {
@@ -127,9 +198,9 @@ mod tests {
     fn lowers_say_and_times() {
         let source = "5 times: say \"hi\"";
         let stmt = NmeStmt::Times {
-            count: Span::new(0, 1),
+            count: Code::Source(Span::new(0, 1)),
             inline: Some(InlineStmt::Nme(Box::new(NmeStmt::Say {
-                expr: Span::new(13, 17),
+                value: Value::Python(Code::Source(Span::new(13, 17))),
             }))),
         };
         assert_eq!(
