@@ -1219,6 +1219,24 @@ fn korean_logical_conditions_never_panic() {
         "# end\n",
     );
     assert_eq!(ok(source), expected);
+    // A `동안` ending on every logical operand is the same single loop.
+    let source = concat!(
+        "점수는 0\n",
+        "점수가 5와 같지 않을 동안 그리고 점수가 0보다 클 동안\n",
+        "점수에 1 더해\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "점수 = 0\n",
+        "while ((not (점수 == 5) and 점수 > 0)):\n",
+        "    점수 = 점수 + 1\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+    assert_eq!(
+        ok("while 점수가 5와 같지 않을 동안 그리고 점수가 0보다 클 동안 성공 말해줘\n"),
+        "while ((not (점수 == 5) and 점수 > 0)): print(\"성공\")\n"
+    );
 }
 
 #[test]

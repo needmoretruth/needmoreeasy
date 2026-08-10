@@ -2210,11 +2210,19 @@ fn split_attached_while_token(token: &Token) -> Option<Token> {
 }
 
 fn korean_while_connector(tokens: &[Token]) -> Option<(Vec<Token>, usize)> {
-    for (index, token) in tokens.iter().enumerate().skip(1) {
+    // Prefer the last `동안` so a logical condition may carry an ending on
+    // every operand: `점수가 5와 같지 않을 동안 그리고 점수가 0보다 클 동안`.
+    // Earlier `동안` markers are loop endings too and only describe how the
+    // operands are spoken, so they are dropped from the condition tokens.
+    for (index, token) in tokens.iter().enumerate().skip(1).rev() {
         if !token_matches_exact(token, &["동안"]) {
             continue;
         }
-        let mut condition = tokens[..index].to_vec();
+        let mut condition = tokens[..index]
+            .iter()
+            .filter(|token| !token_matches_exact(token, &["동안"]))
+            .cloned()
+            .collect::<Vec<_>>();
         if condition
             .last()
             .is_some_and(|last| token_matches_exact(last, &["하는", "할"]))
