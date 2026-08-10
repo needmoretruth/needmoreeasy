@@ -160,6 +160,10 @@ fn random_module_does_not_overwrite_existing_names() {
     let message = err("random_number = 42\nuse random\n");
     assert!(message.contains("overwrite existing name"), "{message}");
     assert!(message.contains("random_number"), "{message}");
+
+    let imported = err("import random_number\nuse random\n");
+    assert!(imported.contains("overwrite existing name"), "{imported}");
+    assert!(imported.contains("random_number"), "{imported}");
 }
 
 #[test]

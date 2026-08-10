@@ -3950,6 +3950,60 @@ fn remember_python_binding(tokens: &[Token], names: &mut HashSet<String>) {
             }
         }
     }
+
+    remember_import_bindings(tokens, names);
+}
+
+fn remember_import_bindings(tokens: &[Token], names: &mut HashSet<String>) {
+    let import_at = if matches!(tokens.first().map(|token| &token.tok), Some(Tok::Import)) {
+        Some(0)
+    } else if matches!(tokens.first().map(|token| &token.tok), Some(Tok::From)) {
+        tokens
+            .iter()
+            .position(|token| matches!(token.tok, Tok::Import))
+    } else {
+        None
+    };
+    let Some(import_at) = import_at else {
+        return;
+    };
+
+    let mut index = import_at + 1;
+    while index < tokens.len() {
+        if matches!(tokens[index].tok, Tok::Comma | Tok::Lpar | Tok::Rpar) {
+            index += 1;
+            continue;
+        }
+        let Some(name) = name_word(&tokens[index]) else {
+            index += 1;
+            continue;
+        };
+        let default_name = name.to_string();
+        index += 1;
+        while index + 1 < tokens.len()
+            && matches!(tokens[index].tok, Tok::Dot)
+            && name_word(&tokens[index + 1]).is_some()
+        {
+            index += 2;
+        }
+        let binding = if tokens
+            .get(index)
+            .is_some_and(|token| token_matches_exact(token, &["as"]))
+        {
+            index += 1;
+            let alias = tokens.get(index).and_then(name_word).map(str::to_string);
+            index += usize::from(alias.is_some());
+            alias
+        } else {
+            Some(default_name)
+        };
+        if let Some(binding) = binding {
+            names.insert(binding);
+        }
+        while index < tokens.len() && !matches!(tokens[index].tok, Tok::Comma) {
+            index += 1;
+        }
+    }
 }
 
 fn remember_bindings(stmt: &NmeStmt, names: &mut HashSet<String>) {

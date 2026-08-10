@@ -4,6 +4,11 @@ English | [한국어](CHANGELOG.ko.md)
 
 All notable changes to NME are recorded here.
 
+## 0.0.1-beta.14 — 2026-08-11
+
+- Track Python import bindings so the random adapter also protects names
+  imported before `use random`.
+
 ## 0.0.1-beta.13 — 2026-08-11
 
 - Refuse to load the bundled random adapter when its generated helper names
