@@ -171,7 +171,7 @@ pub fn parse_program(
         } else {
             depth
         };
-        virtual_indents[index] = line_depth;
+        virtual_indents[index] = line_depth.saturating_sub(line.indent);
         let mut parse_line = line.clone();
         parse_line.indent = line.indent + line_depth;
 
@@ -249,11 +249,12 @@ pub fn parse_program(
                         continue;
                     }
                 }
-                let virtual_indent = if matches!(stmt, NmeStmt::End) || branch_shape.is_some() {
+                let target_indent = if matches!(stmt, NmeStmt::End) || branch_shape.is_some() {
                     line_depth
                 } else {
                     depth
                 };
+                let virtual_indent = target_indent.saturating_sub(line.indent);
                 bindings.remember_nme(&stmt);
                 found.push(NmeLine {
                     line_index: index,

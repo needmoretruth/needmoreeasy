@@ -734,3 +734,11 @@ fn explicit_block_names_do_not_leak_after_end() {
     );
     assert_eq!(ok(source), expected);
 }
+
+#[test]
+fn explicit_blocks_do_not_double_indent_a_body_already_indented() {
+    assert_eq!(
+        ok("if ready\n    show yes\nend\n"),
+        "if (ready):\n    print(\"yes\")\n# end\n"
+    );
+}
