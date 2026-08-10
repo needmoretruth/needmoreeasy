@@ -105,7 +105,7 @@ when <Python condition>:
 while <condition> ... end
 동안 <조건> ... 끝
 break / 멈춰
-else if <condition> / 아니면 만약 <조건>
+else if <condition> / 아니면 만약에 <조건>
 else / 아니면
 use random
 랜덤 사용 최신

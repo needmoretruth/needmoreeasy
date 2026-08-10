@@ -11,7 +11,9 @@ part starts after installation. If `nme --version` does not work yet, follow the
 
 ## 1. Hello World
 
-Create a UTF-8 file named `hello.nme`:
+Create a UTF-8 file named `hello.nme` (in the same folder where you ran
+`nme --version`; any text editor works — on Windows, Notepad saves UTF-8 by
+default):
 
 ```text
 show Hello world!
@@ -28,7 +30,7 @@ no quotes or parentheses.
 
 ## 2. Have a conversation
 
-Replace the file with:
+Replace the file with (then run `nme run hello` again):
 
 ```text
 What is your name?
@@ -73,6 +75,9 @@ add 1 to score
 end
 ```
 
+`score = 0` stores a number, `<` means 'less than', and `add 1 to score`
+increases it — the same ideas as the sentence forms above.
+
 The compact beginner repeat form can use the same trick:
 
 ```text
@@ -105,6 +110,12 @@ Run the complete Korean version:
 
 ```sh
 nme run examples/guessing-game.ko
+```
+
+The English version is `examples/guessing-game.nme`:
+
+```sh
+nme run examples/guessing-game
 ```
 
 The random number, numeric input, comparisons, and output compile to ordinary
@@ -146,6 +157,8 @@ nme build hello -o hello.py
 python3 hello.py
 ```
 
+(On Windows: `py hello.py`.)
+
 For an optional standalone native executable:
 
 ```sh
@@ -153,10 +166,16 @@ python3 -m pip install nuitka
 nme compile hello.nme -o hello
 ```
 
+(The install guide adds the optional `[app]` extras.)
+
 NME automatically chooses `python3` on macOS/Linux and `py` on Windows. The
 advanced `--python` option is only for unusual local setups.
 
 ## 7. Let NME simplify Python
+
+First create `old_program.py` with a couple of lines such as `print("hi")` and
+`for i in range(3): print(i)` — or reuse the `hello.py` from section 6. Then
+run:
 
 ```sh
 nme convert old_program.py --level sentence --language en -o easier.nme
@@ -165,7 +184,7 @@ nme convert old_program.py --level beginner --language ko -o easier.ko.nme
 
 ## Where to continue
 
-- [Learning path](tutorial.md): five projects from Hello World to a compiler
+- [Learning path](tutorial.md): six projects from Hello World to a compiler
 - [Language reference](language.md): exact rules for all three levels
 - [Editors](editors.md): VS Code, Cursor, and Zed
 - [AI assistants](ai-assistants.md): give an assistant one documentation link

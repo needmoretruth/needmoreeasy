@@ -97,6 +97,7 @@ starts from zero programming knowledge.
 nme run examples/hello-sentence
 nme check examples/guessing-game.ko
 nme build examples/three-levels -o three-levels.py
+nme run examples/guessing-game
 nme modules
 ```
 
@@ -123,6 +124,8 @@ artifact, install Nuitka and use:
 python3 -m pip install nuitka
 nme compile examples/hello-sentence.nme -o hello
 ```
+
+(The install guide adds the optional `[app]` extras.)
 
 Native builds must be made on each target operating system. They can change
 startup time, distribution size, and performance, so measure the actual
@@ -168,8 +171,8 @@ See [Python conversion](docs/converting-python.md).
 
 - [Language reference](docs/language.md) — all three levels, exact meanings,
   typo recovery, mixing, modules, and limitations
-- [Learning path](docs/tutorial.md) — Hello World, conversation, number
-  guessing, mixed Python, and writing a tiny compiler in NME
+- [Learning path](docs/tutorial.md) — six projects: Hello World, conversation,
+  number guessing, mixed Python, the time-loop game, and a tiny compiler
 - [VS Code, Cursor, and Zed](docs/editors.md) — ready tasks and file setup
 - [AI coding assistants](docs/ai-assistants.md) — one link that Claude Code,
   Codex, Cursor Agent, or OpenCode can read before writing NME

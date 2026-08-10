@@ -61,7 +61,8 @@ Python이 아닌 NME 동작 단어에 한 글자 오타가 있으면 고쳐서 �
 분명한 여러 단어 문장은 동작 단어 없이도 출력합니다. 한 단어만 있는 줄은 Python이
 항상 우선하므로 일반 Python으로 남습니다. 뜻을 하나로 확정하기 어렵다면 억지로
 추측하지 않고 정확한 위치와 고치는 예시를 보여 줍니다. 조건은 `만약`을 빼고
-주어부터 말해도 됩니다. `색이 빨강과 같으면 맞아요 말해줘`처럼 쓰고, 여러 줄
+주어부터 말해도 됩니다. 영어 `score is greater than 5 then show high`나
+한국어 `색이 빨강과 같으면 맞아요 말해줘`처럼 쓸 수 있으며, 여러 줄
 블록은 `끝`으로 닫습니다.
 
 ## 베타 설치(정식 1.0 이전)
@@ -95,6 +96,7 @@ Windows, macOS, Linux별 과정은 [설치 안내](docs/install.ko.md)에 있습
 nme 실행 examples/hello-sentence
 nme 검사 examples/guessing-game.ko
 nme 빌드 examples/three-levels -o three-levels.py
+nme 실행 examples/guessing-game
 nme 모듈
 ```
 
@@ -108,9 +110,9 @@ nme 모듈
 랜덤 숫자, 값 변경을 하나의 초보자용 프로그램에서 함께 연습할 수 있습니다.
 같은 내용을 영어로 쓴 [`roulette.en.nme`](examples/roulette.en.nme)도 있습니다.
 
-`.nme`는 생략할 수 있습니다. `program.nme`는 `nme 실행 program`만으로
-실행됩니다. NME가 운영체제에 맞는 Python 명령을 자동으로 고르므로 보통
-`--python`을 쓸 필요가 없습니다.
+`.nme`는 생략할 수 있습니다. `program.nme`는 `nme 실행 program`과 `nme
+program` 모두 실행됩니다. NME가 운영체제에 맞는 Python 명령을 자동으로 고르므로
+보통 `--python`을 쓸 필요가 없습니다.
 
 `실행`은 개발할 때 쓰는 지름길입니다. NME를 Python으로 컴파일한 뒤 CPython을
 시작합니다. `빌드`는 컴파일된 Python 파일을 만듭니다. 독립 실행 파일이
@@ -120,6 +122,8 @@ nme 모듈
 python3 -m pip install nuitka
 nme 컴파일 examples/hello-sentence.nme -o hello
 ```
+
+(설치 안내는 선택적인 `[app]` 구성요소를 추가합니다.)
 
 네이티브 파일은 실행할 운영체제에서 각각 빌드해야 합니다. 시작 속도, 파일
 크기, 실행 속도는 프로그램에 따라 달라지므로 직접 측정해야 합니다. Python과
@@ -165,8 +169,8 @@ nme 변환 app.py --level 문장형 --language 한국어 -o app.nme
 
 - [문법 레퍼런스](docs/language.ko.md) — 세 단계, 정확한 뜻, 오타 복구,
   혼용, 모듈, 제한
-- [학습 과정](docs/tutorial.ko.md) — Hello World, 대화, 숫자 맞히기,
-  Python 혼용, NME로 작은 컴파일러 만들기
+- [학습 과정](docs/tutorial.ko.md) — 여섯 프로젝트: Hello World, 대화,
+  숫자 맞히기, Python 혼용, 타임루프 게임, NME로 작은 컴파일러 만들기
 - [VS Code, Cursor, Zed](docs/editors.ko.md) — 준비된 작업과 파일 설정
 - [AI 코딩 도우미](docs/ai-assistants.ko.md) — Claude Code, Codex,
   Cursor Agent, OpenCode에 링크 하나만 전달하는 방법

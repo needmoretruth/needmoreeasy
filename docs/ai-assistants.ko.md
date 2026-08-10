@@ -100,7 +100,7 @@ when <Python condition>:
 동안 <조건> ... 끝
 while <condition> ... end
 멈춰 / break
-아니면 만약 <조건> / else if <condition>
+아니면 만약에 <조건> / else if <condition>
 아니면 / else
 랜덤 사용 최신
 use random

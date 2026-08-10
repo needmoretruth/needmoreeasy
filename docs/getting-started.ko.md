@@ -10,7 +10,9 @@ Python도 어렵다면 더 쉬운 문장부터 시작해 한 단계씩 Python으
 
 ## 1. Hello World
 
-UTF-8 파일 `hello.nme`를 만듭니다.
+UTF-8 파일 `hello.nme`를 만듭니다(`nme --version`을 실행한 같은 폴더에서;
+아무 텍스트 편집기나 괜찮습니다 — Windows에서는 메모장이 기본으로 UTF-8로
+저장합니다).
 
 ```text
 안녕하세요! 말해줘
@@ -27,7 +29,7 @@ nme 실행 hello
 
 ## 2. 프로그램과 대화하기
 
-파일 내용을 바꿉니다.
+파일 내용을 바꿉니다(그리고 `nme 실행 hello`를 다시 실행하세요).
 
 ```text
 이름이 뭐예요?
@@ -72,6 +74,9 @@ Hello name!
 끝
 ```
 
+`점수는 0`은 숫자를 저장하고, `<`는 '보다 작다'를 뜻하며, `점수에 1 더해`는
+값을 늘립니다 — 앞의 문장형 예시와 같은 뜻입니다.
+
 초급형 반복도 같은 방법으로 쓸 수 있습니다.
 
 ```text
@@ -104,6 +109,12 @@ Hello name!
 
 ```sh
 nme 실행 examples/guessing-game.ko
+```
+
+영어판은 `examples/guessing-game.nme`입니다.
+
+```sh
+nme 실행 examples/guessing-game
 ```
 
 랜덤 숫자, 숫자 입력, 비교, 출력이 평범한 Python으로 컴파일됩니다. 목록,
@@ -145,6 +156,8 @@ nme 빌드 hello -o hello.py
 python3 hello.py
 ```
 
+(Windows에서는 `py hello.py`.)
+
 선택적으로 독립 실행 파일을 만듭니다.
 
 ```sh
@@ -152,10 +165,16 @@ python3 -m pip install nuitka
 nme 컴파일 hello.nme -o hello
 ```
 
+(설치 안내는 선택적인 `[app]` 구성요소를 추가합니다.)
+
 NME는 macOS/Linux에서 `python3`, Windows에서 `py`를 자동으로 고릅니다.
 특수한 환경에서만 고급 옵션 `--python`을 사용합니다.
 
 ## 7. Python을 NME로 쉽게 바꾸기
+
+먼저 `old_program.py`를 `print("hi")`와 `for i in range(3): print(i)` 같은
+줄 몇 개로 만듭니다(또는 6번에서 만든 `hello.py`를 사용해도 됩니다). 그런
+다음 실행하세요.
 
 ```sh
 nme 변환 old_program.py --level 문장형 --language 한국어 -o easier.nme
@@ -164,7 +183,7 @@ nme 변환 old_program.py --level 초급 --language 영어 -o easier.en.nme
 
 ## 다음에 볼 문서
 
-- [학습 과정](tutorial.ko.md): Hello World부터 컴파일러까지 다섯 프로젝트
+- [학습 과정](tutorial.ko.md): Hello World부터 컴파일러까지 여섯 프로젝트
 - [문법 레퍼런스](language.ko.md): 세 단계의 정확한 규칙
 - [편집기](editors.ko.md): VS Code, Cursor, Zed
 - [AI 코딩 도우미](ai-assistants.ko.md): 도우미에게 문서 링크 하나만 주기

@@ -1,4 +1,4 @@
-# 프로그램 다섯 개로 NME 배우기
+# 프로그램 여섯 개로 NME 배우기
 
 [English](tutorial.md) | 한국어
 
@@ -9,7 +9,8 @@
 
 ## 프로젝트 1: Hello World
 
-`hello.nme`를 만듭니다.
+`hello.nme`를 만듭니다(`nme --version`을 실행한 같은 폴더에서; 아무 텍스트
+편집기나 괜찮습니다 — Windows에서는 메모장이 기본으로 UTF-8로 저장합니다).
 
 ```text
 안녕하세요! 말해줘
@@ -26,7 +27,7 @@ show Hello world!
 ```
 
 문장을 바꿔 보세요. 반복까지 보고 싶으면 `examples/hello-sentence.nme`를
-실행합니다.
+실행합니다. 영어판 쌍둥이는 `examples/hello-sentence.ko.nme`예요.
 
 ## 프로젝트 2: 인사 프로그램
 
@@ -69,7 +70,9 @@ Nice to meet you name!
 ```
 
 완성된 프로그램은
-[`examples/guessing-game.ko.nme`](../examples/guessing-game.ko.nme)에 있습니다.
+[`examples/guessing-game.ko.nme`](../examples/guessing-game.ko.nme)에 있고,
+영어판 쌍둥이는
+[`examples/guessing-game.nme`](../examples/guessing-game.nme)입니다.
 
 ```sh
 nme 실행 examples/guessing-game.ko
@@ -94,7 +97,9 @@ nme 실행 examples/guessing-game.ko
 끝
 ```
 
-`멈춰`, `그리고`/`또는`, `아니면 만약`, `아니면`으로 각각 `break`, `and`/`or`,
+`!=`는 '같지 않다'를 뜻하며, 문장형 표기는 `is not equal to`입니다.
+
+`멈춰`, `그리고`/`또는`, `아니면 만약에`, `아니면`으로 각각 `break`, `and`/`or`,
 `elif`, `else`도 연습해 보세요.
 
 ## 프로젝트 4: 세 단계 모두 쓰기
@@ -117,7 +122,10 @@ for 사람 in 사람들:
 
 목록과 `for 사람` 반복은 고급 Python, `2번:`과 `말해`는 초급 NME,
 `repeat`와 `show`는 문장형 NME입니다. 서로 다른 모드나 파일이 아니라 한
-언어입니다. `examples/three-levels.nme`를 실행하세요.
+언어입니다. `examples/three-levels.nme`를 실행하세요. 완성된 들여쓰기 없는
+제어 흐름 쌍은 `examples/control-flow-sentence.nme`와
+`examples/control-flow-korean.nme`입니다 — 둘 다 실행하고 같은 출력을
+비교해 보세요.
 
 Python 반복 옆에 들여쓰기 없는 NME 블록도 추가해 보세요.
 
@@ -202,9 +210,11 @@ nme 빌드 examples/tiny-compiler -o tiny-compiler.py
 
 파일 컴파일러로 키우는 순서입니다.
 
-1. `tiny_source`를
-   `Path(입력).read_text(encoding="utf-8").splitlines()`로 바꿉니다.
-2. `Path(출력).write_text(generated, encoding="utf-8")`로 결과를 씁니다.
+1. 위쪽에 `from pathlib import Path`를 추가하고, `tiny_source`를
+   `input_name = "tiny.txt"`와
+   `Path(input_name).read_text(encoding="utf-8").splitlines()`로 바꿉니다.
+2. `output_name = "tiny.py"`를 정의하고
+   `Path(output_name).write_text(generated, encoding="utf-8")`로 결과를 씁니다.
 3. 두 문장 어디에도 맞지 않는 줄에 쉬운 오류를 추가합니다.
 4. 소스 파일을 컴파일하고 생성된 Python을 실행하는 테스트를 만듭니다.
 

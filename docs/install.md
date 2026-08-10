@@ -16,7 +16,7 @@ stable Rust with Cargo, and Python 3.8 or newer. Use the official
 2. Install Python from python.org. Keep the Python launcher (`py`) enabled.
 3. Download and run `rustup-init.exe` from the official Rust install page.
    Accept the stable MSVC toolchain. If asked, install Visual Studio C++ Build
-   Tools.
+   Tools (free Microsoft components Cargo needs to build).
 4. Close and reopen PowerShell, then run:
 
 ```powershell
@@ -32,7 +32,8 @@ PowerShell session. If a new PowerShell still cannot find `nme`, add
 `%USERPROFILE%\.cargo\bin` to your user `PATH`. You do not need to reinstall;
 `& "$HOME\.cargo\bin\nme.exe" --version` verifies the installed binary directly.
 
-Run the example. NME chooses the Windows `py` launcher automatically:
+Run the example (from the `needmoreeasy` folder where you cloned the
+repository). NME chooses the Windows `py` launcher automatically:
 
 ```powershell
 nme run examples\hello-sentence
@@ -47,7 +48,8 @@ xcode-select --install
 ```
 
 Install a current Python from python.org, then install Rust with the command
-shown on the official rustup page. Open a new Terminal and run:
+shown on the official rustup page. Open a new Terminal and run (from the
+`needmoreeasy` folder where you cloned the repository):
 
 ```sh
 git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
@@ -83,7 +85,8 @@ sudo dnf install python3 git curl gcc
 sudo pacman -S python git curl base-devel
 ```
 
-Install stable Rust with rustup, open a new shell, then run:
+Install stable Rust with rustup, open a new shell, then run (from the
+`needmoreeasy` folder where you cloned the repository):
 
 ```sh
 git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
