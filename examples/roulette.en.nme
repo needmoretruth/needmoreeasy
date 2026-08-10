@@ -2,7 +2,8 @@
 # in English sentence syntax. Same structure and messages as the Korean
 # original: name ask, capital choice, five bet types with validation
 # loops, jackpot, streaks, settlement, and restart.
-# Sentence spellings only: show ask set while if end plus the random adapter.
+# Sentence spellings with minimal Python expressions: show ask set while if
+# end plus the random adapter and str()/int() conversions for formatting.
 # Run: nme r roulette.en.nme
 use random
 
