@@ -292,3 +292,12 @@ fn an_extra_end_after_a_closed_block_is_reported() {
     let message = err("if true\n    say \"hi\"\nend\nend\n");
     assert!(message.contains("no open NME block"), "{message}");
 }
+
+#[test]
+fn a_flat_block_still_requires_its_own_end() {
+    let message = err("점수가 5와 같으면\n만약 true라면\n    say \"a\"\n끝\n");
+    assert!(
+        message.contains("missing its closing `end`"),
+        "{message}"
+    );
+}

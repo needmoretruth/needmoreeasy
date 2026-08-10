@@ -15,6 +15,53 @@ fn ok(source: &str) -> String {
         .unwrap_or_else(|problems| panic!("expected successful transpile, got: {problems:?}"))
 }
 
+// --------------------------------------------------------- explicit end blocks
+
+#[test]
+fn an_indented_sentence_block_closes_before_the_next_flat_block() {
+    let python = ok("만약 True라면\n    say \"a\"\n점수가 5와 같으면\n점수 말해줘\n끝\n");
+    assert_eq!(
+        python,
+        "if (True):\n    print(\"a\")\nif (점수 == 5):\n    print(\"점수\")\n# end\n"
+    );
+}
+
+#[test]
+fn an_indented_body_line_keeps_flat_continuations_in_the_same_flat_block() {
+    let python = ok("if score is equal to 5\n    say \"x\"\nshow keep going\nend\n");
+    assert_eq!(
+        python,
+        "if (score == 5):\n    print(\"x\")\n    print(\"keep going\")\n# end\n"
+    );
+}
+
+#[test]
+fn a_flat_block_after_an_indented_block_closes_with_one_end() {
+    let python = ok("if ready\n    say \"a\"\nif score is equal to 5\nshow keep going\nend\n");
+    assert_eq!(
+        python,
+        "if (ready):\n    print(\"a\")\nif (score == 5):\n    print(\"keep going\")\n# end\n"
+    );
+}
+
+#[test]
+fn an_indented_suite_loop_followed_by_a_flat_block() {
+    let python = ok("while score is less than 3\n    score add 1\nif score is equal to 5\nshow done\nend\n");
+    assert_eq!(
+        python,
+        "while (score < 3):\n    score = score + 1\nif (score == 5):\n    print(\"done\")\n# end\n"
+    );
+}
+
+#[test]
+fn a_flat_header_after_an_indented_body_stays_nested_with_enough_ends() {
+    let python = ok("while score is less than 3\n    score add 1\n만약 score == 2\nshow two\n끝\n끝\n");
+    assert_eq!(
+        python,
+        "while (score < 3):\n    score = score + 1\n    if (score == 2):\n        print(\"two\")\n    # end\n# end\n"
+    );
+}
+
 // ---------------------------------------------------------------- pure Python
 
 #[test]

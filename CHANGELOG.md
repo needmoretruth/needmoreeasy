@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+- Fix explicit `end`/`끝` block parsing when an indented sentence block is
+  followed by a flat block: an indented body that cannot be closed by the
+  remaining `end` lines now closes at the dedent, so `만약 ...` with an
+  indented body followed by a flat `if ... end` block no longer reports a
+  missing `end`. Every previously valid program keeps its exact output;
+  nested headers with enough closing `end`s still stay nested, and a flat
+  block still requires its own `end`.
 - Give every compiler diagnostic a stable error code printed next to the
   message, e.g. `error[E0102]:`. `nme ko <CODE>` reads the long Korean
   explanation with an English translation, `nme en <CODE>` the English one,

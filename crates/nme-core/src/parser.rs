@@ -186,14 +186,49 @@ pub fn parse_program(
     let mut python_header_indents = Vec::<usize>::new();
 
     for (index, line) in lines.iter().enumerate() {
-        let depth = blocks.len();
-        if depth == 0 {
-            python_header_indents.clear();
-        }
         let is_end = exact_end(line.tokens.as_slice());
         let is_break = exact_break(line.tokens.as_slice());
         let branch_shape = branch_shape(line.tokens.as_slice());
 
+        // An indented-suite sentence block (whose first body line was
+        // physically indented) may end at the physical dedent, like ordinary
+        // Python, but only when the remaining `end`/`끝` lines cannot close
+        // the nested reading anyway. That keeps every previously valid
+        // program unchanged: a nested header with enough closing `end`s stays
+        // nested, while an ambiguous indented block followed by a flat block
+        // with too few `end`s becomes a sibling instead of a missing-end
+        // error. A flat statement at the block's own level keeps the suite
+        // flat from there on (only `end` closes it), so mixed indented+flat
+        // bodies keep working. Explicit closers (`end`, `break`, branches)
+        // are handled by their own paths below.
+        if !(is_end.is_some() || is_break || branch_shape.is_some()) {
+            let line_is_header = is_header_shape(&line.tokens);
+            let remaining_ends = count_remaining_ends(lines, index);
+            loop {
+                let open = blocks.len();
+                let Some(close_on_dedent) = blocks
+                    .last()
+                    .and_then(|block| block.close_on_dedent())
+                else {
+                    break;
+                };
+                if line.indent == close_on_dedent && line_is_header && open >= remaining_ends {
+                    blocks.pop();
+                } else if line.indent == close_on_dedent {
+                    if let Some(top) = blocks.last_mut() {
+                        top.clear_close_on_dedent();
+                    }
+                    break;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        let depth = blocks.len();
+        if depth == 0 {
+            python_header_indents.clear();
+        }
         let closes_flat_python_suite = is_end.is_some() || is_break || branch_shape.is_some();
         while python_header_indents.last().is_some_and(|header_indent| {
             line.indent < *header_indent
@@ -324,7 +359,7 @@ pub fn parse_program(
                     && line.indent == 0
                     && !blocks
                         .iter()
-                        .any(|block| matches!(block, ExplicitBlock::Loop))
+                        .any(|block| matches!(block, ExplicitBlock::Loop { .. }))
                 {
                     problems.push(break_outside_loop_diagnostic(line.span));
                     continue;
@@ -360,10 +395,14 @@ pub fn parse_program(
                             Some(NmeStmt::While { .. } | NmeStmt::Times { .. })
                         );
                         bindings.push_explicit_scope(parse_line.indent + 1);
+                        let close_on_dedent = (!flat_body_follows).then_some(line.indent);
                         blocks.push(if is_loop {
-                            ExplicitBlock::Loop
+                            ExplicitBlock::Loop { close_on_dedent }
                         } else {
-                            ExplicitBlock::Conditional { else_seen: false }
+                            ExplicitBlock::Conditional {
+                                else_seen: false,
+                                close_on_dedent,
+                            }
                         });
                     }
                 }
@@ -396,8 +435,37 @@ pub fn parse_program(
 
 #[derive(Debug, Clone, Copy)]
 enum ExplicitBlock {
-    Loop,
-    Conditional { else_seen: bool },
+    Loop {
+        /// When the block's body started physically indented, the suite
+        /// follows ordinary Python dedent rules: a later line at or above
+        /// the header level closes it. Flat bodies only close on `end`.
+        close_on_dedent: Option<usize>,
+    },
+    Conditional {
+        else_seen: bool,
+        close_on_dedent: Option<usize>,
+    },
+}
+
+impl ExplicitBlock {
+    fn close_on_dedent(self) -> Option<usize> {
+        match self {
+            ExplicitBlock::Loop { close_on_dedent } | ExplicitBlock::Conditional { close_on_dedent, .. } => {
+                close_on_dedent
+            }
+        }
+    }
+
+    /// A flat statement at the block's own level means the suite is flat from
+    /// there on, so only an explicit `end` can close it again.
+    fn clear_close_on_dedent(&mut self) {
+        match self {
+            ExplicitBlock::Loop { close_on_dedent }
+            | ExplicitBlock::Conditional { close_on_dedent, .. } => {
+                *close_on_dedent = None;
+            }
+        }
+    }
 }
 
 enum BlockCtx<'a> {
@@ -502,6 +570,16 @@ fn has_future_end(lines: &[LogicalLine], index: usize) -> bool {
         .any(|line| exact_end(&line.tokens).is_some())
 }
 
+/// Number of whole-statement `end`/`끝` lines after `index`. Used to decide
+/// whether a dedented header can only be a sibling block (when the remaining
+/// `end`s are not enough to close the nested reading anyway).
+fn count_remaining_ends(lines: &[LogicalLine], index: usize) -> usize {
+    lines[index + 1..]
+        .iter()
+        .filter(|line| exact_end(&line.tokens).is_some())
+        .count()
+}
+
 fn validate_branch(
     branch: &BranchShape,
     blocks: &mut [ExplicitBlock],
@@ -512,7 +590,7 @@ fn validate_branch(
         problems.push(branch_without_condition_diagnostic(span));
         return false;
     };
-    let ExplicitBlock::Conditional { else_seen } = top else {
+    let ExplicitBlock::Conditional { else_seen, .. } = top else {
         problems.push(branch_without_condition_diagnostic(span));
         return false;
     };
@@ -588,7 +666,7 @@ fn duplicate_else_diagnostic(span: Span) -> Diagnostic {
 
 fn missing_end_diagnostic(block: &ExplicitBlock, offset: usize) -> Diagnostic {
     let (english, korean) = match block {
-        ExplicitBlock::Loop => (
+        ExplicitBlock::Loop { .. } => (
             "this loop is missing its closing `end`",
             "이 반복문에는 닫는 `끝`이 필요해요",
         ),
