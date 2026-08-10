@@ -27,8 +27,11 @@ equally valid:
 안녕하세요! 말해줘
 ```
 
-Try changing the message. Run `examples/hello-sentence.nme` when you want to
-see a repeat too, or `examples/hello-sentence.ko.nme` for the Korean twin.
+Try changing the message. Run
+[`examples/hello-sentence.nme`](../examples/hello-sentence.nme) when you want
+to see a repeat too, or
+[`examples/hello-sentence.ko.nme`](../examples/hello-sentence.ko.nme) for the
+Korean twin.
 
 ## Project 2: A greeting program
 
@@ -81,7 +84,7 @@ nme run examples/guessing-game.ko
 
 What was compiled:
 
-- `1부터 10까지 랜덤정수` becomes `random.randint(1, 10)`;
+- `1부터 10까지 랜덤정수` becomes `__import__("random").randint(1, 10)`;
 - `숫자로 물어봐` becomes `int(input(...))`;
 - `같으면`, `작으면`, and `크면` become `==`, `<`, and `>`;
 - indentation groups the statements controlled by each condition.
@@ -124,9 +127,13 @@ for person in people:
 
 The list and `for person` loop are advanced Python. `2 times:` and `say` are
 beginner NME. `repeat` and `show` are sentence NME. This is one language, not
-three files or modes. Run `examples/three-levels.nme`. The finished
-flat-control-flow pair is `examples/control-flow-sentence.nme` and
-`examples/control-flow-korean.nme` — run both and compare the identical output.
+three files or modes. Run
+[`examples/three-levels.nme`](../examples/three-levels.nme). The finished
+flat-control-flow pair is
+[`examples/control-flow-sentence.nme`](../examples/control-flow-sentence.nme)
+and
+[`examples/control-flow-korean.nme`](../examples/control-flow-korean.nme) — run
+both and compare the identical output.
 
 Try adding a flat NME block beside the Python loop:
 
@@ -148,7 +155,8 @@ and finally read the ordinary Python version:
 - [`time-loop-sentence.ko.nme`](../examples/time-loop-sentence.ko.nme) — easiest
   sentences, `끝`, and natural Korean conditions;
 - [`time-loop-beginner.ko.nme`](../examples/time-loop-beginner.ko.nme) — compact
-  `저장`, `물어봐`, `만약`, and `N번:` forms;
+  `저장`, `물어봐`, `만약`, and `N번:` forms. `저장` is the beginner save action
+  (e.g. `저장 점수를 3`);
 - [`time-loop-python.nme`](../examples/time-loop-python.nme) — lists,
   dictionaries, f-strings, `while`, `break`, and ordinary Python.
 

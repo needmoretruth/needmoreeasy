@@ -61,9 +61,16 @@ Python이 아닌 NME 동작 단어에 한 글자 오타가 있으면 고쳐서 �
 분명한 여러 단어 문장은 동작 단어 없이도 출력합니다. 한 단어만 있는 줄은 Python이
 항상 우선하므로 일반 Python으로 남습니다. 뜻을 하나로 확정하기 어렵다면 억지로
 추측하지 않고 정확한 위치와 고치는 예시를 보여 줍니다. 조건은 `만약`을 빼고
-주어부터 말해도 됩니다. 영어 `score is greater than 5 then show high`나
-한국어 `색이 빨강과 같으면 맞아요 말해줘`처럼 쓸 수 있으며, 여러 줄
-블록은 `끝`으로 닫습니다.
+주어부터 말해도 됩니다:
+
+```text
+set score to 6
+score is greater than 5 then show high
+색은 "빨강"
+색이 빨강과 같으면 맞아요 말해줘
+```
+
+여러 줄 블록은 `끝`으로 닫습니다.
 
 ## 베타 설치(정식 1.0 이전)
 
@@ -96,7 +103,7 @@ Windows, macOS, Linux별 과정은 [설치 안내](docs/install.ko.md)에 있습
 nme 실행 examples/hello-sentence
 nme 검사 examples/guessing-game.ko
 nme 빌드 examples/three-levels -o three-levels.py
-nme 실행 examples/guessing-game
+nme 실행 examples/guessing-game.ko
 nme 모듈
 ```
 
@@ -119,7 +126,9 @@ program` 모두 실행됩니다. NME가 운영체제에 맞는 Python 명령을 
 `.nme` 프로그램이 하나일 때 그 프로그램을 바로 실행하고, 여러 개일 때는
 목록을 보여 주고 어느 것을 실행할지 물어봅니다. `nme c`와 `nme b`도 검사와
 빌드에서 같은 방식으로 동작합니다. `nme m`, `nme v`, `nme h`는 각각
-`nme 모듈`, `nme --version`, `nme 도움`의 짧은 형태입니다.
+`nme 모듈`, `nme --version`, `nme 도움`의 짧은 형태입니다. `nme comp
+program`은 Nuitka로 컴파일, `nme conv app.py`는 Python을 NME로 변환하는
+짧은 형태입니다.
 
 `실행`은 개발할 때 쓰는 지름길입니다. NME를 Python으로 컴파일한 뒤 CPython을
 시작합니다. `빌드`는 컴파일된 Python 파일을 만듭니다. 독립 실행 파일이
@@ -130,19 +139,19 @@ python3 -m pip install nuitka
 nme 컴파일 examples/hello-sentence.nme -o hello
 ```
 
-(설치 안내는 선택적인 `[app]` 구성요소를 추가합니다.)
+(설치 안내에는 선택적인 `[app]` 구성요소가 포함되어 있습니다.)
 
 네이티브 파일은 실행할 운영체제에서 각각 빌드해야 합니다. 시작 속도, 파일
 크기, 실행 속도는 프로그램에 따라 달라지므로 직접 측정해야 합니다. Python과
 완전히 호환되는 모든 프로그램이 무조건 더 빠르고 작아진다는 거짓 보장은 하지
 않습니다.
 
-## 버전이 있는 랜덤 도구
+## 버전이 붙은 랜덤 도구
 
 ```text
 랜덤 사용 최신
-random_number(1, 6) 말해줘
-랜덤선택(["빨강", "파랑"]) 말해줘
+말해 random_number(1, 6)
+말해 랜덤선택(["빨강", "파랑"])
 ```
 
 `random` / `랜덤` 어댑터 `0.0.1`이 NME 안에 들어 있습니다. 따라서 `최신`은
@@ -181,7 +190,7 @@ nme 변환 app.py --level 문장형 --language 한국어 -o app.nme
 - [VS Code, Cursor, Zed](docs/editors.ko.md) — 준비된 작업과 파일 설정
 - [AI 코딩 도우미](docs/ai-assistants.ko.md) — Claude Code, Codex,
   Cursor Agent, OpenCode에 링크 하나만 전달하는 방법
-- [컴파일러 구조](docs/architecture.md) — 기여자용 설계 규칙
+- [컴파일러 구조](docs/architecture.md) — 기여자용 설계 규칙 (영어 문서)
 - [버전 정책](docs/versioning.ko.md), [변경 기록](CHANGELOG.ko.md)
 
 ## 컴파일 방식

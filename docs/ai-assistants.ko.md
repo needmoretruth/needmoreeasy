@@ -2,6 +2,8 @@
 
 [English](ai-assistants.md) | 한국어
 
+[README](../README.ko.md) | [5분 시작](getting-started.ko.md) | [학습 과정](tutorial.ko.md) | [문법 안내](language.ko.md)
+
 AI 코딩 도우미에게 다음 문장 하나를 전달하세요.
 
 ```text
@@ -49,7 +51,7 @@ What is your name?
 안녕하세요 이름!
 
 3번 다시 만나요
-3 times Again
+3 times See you again
 
 만약에 점수가 10보다 크면 성공 말해줘
 if score is greater than 10 then show You won
@@ -105,6 +107,9 @@ while <condition> ... end
 랜덤 사용 최신
 use random
 ```
+
+`횟수번:`은 `횟수`라는 변수에 적힌 숫자만큼 반복해요 (변수에 숫자가 있어야
+해요). `count times:`는 변수 `count`로 같은 뜻이에요.
 
 ### 모든 Python을 고급 NME로 사용
 

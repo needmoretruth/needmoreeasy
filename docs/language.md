@@ -257,6 +257,7 @@ Korean can shorten the comparison ending without changing the meaning:
 particles may be separated too (`이름 이 철수 면`), and a bare subject can use
 `준비면` for a truthy condition. A bounded spoken typo such as `있으먄`,
 `철수먄`, or `만악에` is recovered when there is only one clear condition.
+This form only works as a one-line condition.
 
 Supported sentence comparisons:
 
@@ -400,19 +401,16 @@ NME.
 
 ## Versioned bundled modules
 
-The easy random adapter has version `0.0.1`.
+The easy random adapter has version `0.0.1`. Only one `use` line is allowed
+per program, so pick one spelling:
 
 ```text
 use random
-use random latest
-use latest random
-use random version "0.0.1"
-
-랜덤 사용
-랜덤 사용 최신
-최신 랜덤 사용
-랜덤 사용 버전 "0.0.1"
 ```
+
+`use random latest`, `use latest random`, and `use random version "0.0.1"` are
+equivalents, and so are the Korean spellings `랜덤 사용`, `랜덤 사용 최신`,
+`최신 랜덤 사용`, and `랜덤 사용 버전 "0.0.1"`.
 
 `latest` / `최신` selects the newest adapter bundled with the installed NME
 compiler. It is local and deterministic, not an uncontrolled network update.

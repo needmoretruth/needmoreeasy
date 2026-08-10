@@ -30,8 +30,8 @@ no quotes or parentheses.
 
 Shortcuts work from the start: `nme r hello` runs, and if `hello.nme` is the
 only program in the folder, plain `nme r` finds it for you. `nme c hello`
-checks a program without running it, and `nme b hello` turns it into readable
-Python.
+checks a program without running it, and `nme b hello` shows the readable
+Python it turns into — add `-o hello.py` to save it as a file.
 
 ## 2. Have a conversation
 
@@ -55,14 +55,16 @@ The same ideas work in Korean and can be mixed immediately:
 
 ## 3. Repeat without a colon
 
-For one repeated sentence:
+For one repeated sentence, replace the file with (put both lines in one
+file — English and Korean mix freely):
 
 ```text
 3 times Welcome to NME
 3번 안녕하세요
 ```
 
-For several sentences, indent them with four spaces:
+For several sentences, replace the file with (indent the extra lines with
+four spaces):
 
 ```text
 repeat 3 times
@@ -70,7 +72,8 @@ repeat 3 times
     둘째 문장 말해줘
 ```
 
-If indentation is still uncomfortable, use an explicit closing word instead:
+If indentation is still uncomfortable, replace the file with this version
+that uses an explicit closing word instead:
 
 ```text
 score = 0
@@ -83,7 +86,8 @@ end
 `score = 0` stores a number, `<` means 'less than', and `add 1 to score`
 increases it — the same ideas as the sentence forms above.
 
-The compact beginner repeat form can use the same trick:
+The compact beginner repeat form can use the same trick — replace the file
+with:
 
 ```text
 3 times:
@@ -96,6 +100,8 @@ The same style supports `break`, `and`/`or`, `elif`, and `else`; Korean
 spellings are `멈춰`, `그리고`/`또는`, `아니면 만약에`, and `아니면`.
 
 ## 4. Make a number game
+
+Replace the file with:
 
 ```text
 set answer to random number from 1 to 10
@@ -111,13 +117,14 @@ if guess is greater than answer
     show Go lower
 ```
 
-Run the complete Korean version:
+The game asks a question and waits for your typed answer. Run the complete
+Korean version:
 
 ```sh
 nme run examples/guessing-game.ko
 ```
 
-The English version is `examples/guessing-game.nme`:
+The English version is [`examples/guessing-game.nme`](../examples/guessing-game.nme):
 
 ```sh
 nme run examples/guessing-game
@@ -128,7 +135,8 @@ Python. No list literal, function call, equals sign, or colon was required.
 
 ## 5. Grow into precise and advanced syntax
 
-Sentence syntax is the easiest start. Beginner syntax is shorter and precise:
+Sentence syntax is the easiest start. Beginner syntax is shorter and precise.
+Replace the file with:
 
 ```text
 ask name, "What is your name? "
@@ -136,14 +144,23 @@ when name:
     say f"Hello, {name}!"
 ```
 
-Advanced syntax is just Python:
+Three new pieces of syntax appear here:
+
+- `ask name, "…"` asks a question and remembers the answer as `name`.
+- `when name:` means "when a condition is true, run the indented lines below".
+- `f"Hello, {name}!"` is a Python f-string: text where `{name}` is replaced
+  by the value of `name`.
+
+The [language reference](language.md) explains each form exactly.
+
+Advanced syntax is just Python. Replace the file with:
 
 ```python
 for number in range(1, 4):
     print(number**2)
 ```
 
-Mix all three whenever useful:
+Mix all three whenever useful — replace the file with:
 
 ```text
 numbers = [1, 2, 3]
@@ -171,7 +188,8 @@ python3 -m pip install nuitka
 nme compile hello.nme -o hello
 ```
 
-(The install guide adds the optional `[app]` extras.)
+(On Windows: `py -m pip install nuitka`. The [install guide](install.md)
+adds the optional `[app]` extras.)
 
 NME automatically chooses `python3` on macOS/Linux and `py` on Windows. The
 advanced `--python` option is only for unusual local setups.
@@ -183,9 +201,13 @@ First create `old_program.py` with a couple of lines such as `print("hi")` and
 run:
 
 ```sh
-nme convert old_program.py --level sentence --language en -o easier.nme
 nme convert old_program.py --level beginner --language ko -o easier.ko.nme
+nme convert old_program.py --level beginner --language en -o easier.nme
 ```
+
+The converter keeps string quotes (`say "hi"`). In beginner syntax they are
+usually unnecessary (`say hi`), so you can remove them after inspection if you
+want a more conversational phrase.
 
 ## Where to continue
 

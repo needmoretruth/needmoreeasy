@@ -64,7 +64,13 @@ multi-word line such as `Hello everyone!` is output even without an action;
 one bare word remains ordinary Python because Python always wins. When the
 meaning is not clear enough to recover safely, NME points at the uncertain text
 and suggests a concrete repair. Conditions can start with the subject too:
-`score is greater than 5 then show high` or `색이 빨강과 같으면 맞아요 말해줘`.
+
+```text
+set score to 6
+score is greater than 5 then show high
+색은 "빨강"
+색이 빨강과 같으면 맞아요 말해줘
+```
 
 ## Install the beta (pre-release)
 
@@ -121,7 +127,8 @@ checks, and `nme b program` builds. With no file name at all, `nme r` runs the
 single `.nme` program in the current folder; when several programs are there,
 NME lists them and asks which one to run. `nme c` and `nme b` behave the same
 way for checking and building. `nme m`, `nme v`, and `nme h` are short forms of
-`nme modules`, `nme --version`, and `nme help`.
+`nme modules`, `nme --version`, and `nme help`. `nme comp program` compiles
+with Nuitka, and `nme conv app.py` converts Python into NME.
 
 `run` is a development shortcut: NME compiles the file to Python and invokes
 CPython. `build` emits the compiled Python source. For a standalone native
@@ -144,7 +151,7 @@ program becomes faster or smaller.
 ```text
 랜덤 사용 최신
 show random_number(1, 6)
-랜덤선택(["red", "blue"]) 말해줘
+show 랜덤선택(["red", "blue"])
 ```
 
 `random` / `랜덤` adapter version `0.0.1` is bundled, so `latest` / `최신`

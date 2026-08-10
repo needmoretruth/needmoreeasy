@@ -2,6 +2,8 @@
 
 English | [한국어](ai-assistants.ko.md)
 
+[Home](../README.md) | [Getting started](getting-started.md) | [Tutorial](tutorial.md) | [Language reference](language.md)
+
 Give an AI coding assistant this one prompt:
 
 ```text
@@ -51,7 +53,7 @@ What is your name?
 What's your city?
 Hello name!
 
-3 times Again
+3 times See you again
 3번 다시 만나요
 
 if score is greater than 10 then show You won
@@ -110,6 +112,9 @@ else / 아니면
 use random
 랜덤 사용 최신
 ```
+
+`count times:` repeats `count` times — the variable must hold a number.
+`횟수번:` does the same with `횟수`.
 
 ### Use any Python as advanced NME
 
