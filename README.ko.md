@@ -47,8 +47,14 @@ Python이 아닌 NME 동작 단어에 한 글자 오타가 있으면 고쳐서 �
 git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
 cd needmoreeasy
 cargo install --path crates/nme-cli --locked
+export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 ```
+
+Cargo가 설치한 `bin` 폴더가 `PATH`에 없다고 경고하면 macOS/Linux의 현재
+터미널에서는 `export` 줄을 반드시 먼저 실행해야 합니다. NME를 다시 설치하는
+명령이 아닙니다. Windows PowerShell은
+[설치 안내](docs/install.ko.md#windows-10-또는-11)의 PATH 단계를 사용하세요.
 
 표시될 버전은 `nme 0.0.1-beta.2`입니다.
 

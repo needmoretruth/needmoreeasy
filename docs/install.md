@@ -21,11 +21,14 @@ stable Rust with Cargo, and Python 3.8 or newer. Use the official
 git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
 cd needmoreeasy
 cargo install --path crates/nme-cli --locked
+$env:Path = "$HOME\.cargo\bin;$env:Path"
 nme --version
 ```
 
-If `nme` is not found, reopen the terminal and confirm that
-`%USERPROFILE%\.cargo\bin` is on `PATH`.
+The `$env:Path` line makes the just-installed command available in the current
+PowerShell session. If a new PowerShell still cannot find `nme`, add
+`%USERPROFILE%\.cargo\bin` to your user `PATH`. You do not need to reinstall;
+`& "$HOME\.cargo\bin\nme.exe" --version` verifies the installed binary directly.
 
 Run with the Windows Python launcher:
 
@@ -48,12 +51,15 @@ shown on the official rustup page. Open a new Terminal and run:
 git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
 cd needmoreeasy
 cargo install --path crates/nme-cli --locked
+export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 nme run examples/hello-sentence.nme
 ```
 
-If the shell cannot find `nme`, load Cargo's environment once and reopen the
-terminal:
+The `export` line must run before the first `nme` command when Cargo warns that
+its binary directory is not on `PATH`. To keep it for future terminals, add
+the same line to `~/.zshrc` (the default macOS shell) or your shell's profile.
+If Rust was installed with rustup, this equivalent command may already exist:
 
 ```sh
 source "$HOME/.cargo/env"
@@ -81,9 +87,17 @@ Install stable Rust with rustup, open a new shell, then run:
 git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
 cd needmoreeasy
 cargo install --path crates/nme-cli --locked
+export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 nme run examples/hello-sentence.nme
 ```
+
+The `export` line is deliberately before `nme --version`. Fedora's system
+`cargo`, and some other package-manager installations, can install the binary
+successfully to `~/.cargo/bin` without adding that directory to the shell's
+`PATH`. If needed, verify the install directly with
+`"${CARGO_HOME:-$HOME/.cargo}/bin/nme" --version`, then add the export line to
+`~/.bashrc`, `~/.zshrc`, or the profile used by your shell.
 
 ## Verify the complete toolchain
 
