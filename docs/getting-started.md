@@ -29,19 +29,19 @@ no quotes or parentheses.
 Replace the file with:
 
 ```text
-name ask
-Hello name show
+What is your name?
+Hello name!
 ```
 
 NME remembers that `name` holds the answer, so it inserts that value into the
-second sentence automatically. Add a prompt later with `ask name What is your
-name?` when you want one.
+second sentence automatically. More complex questions can use `ask name`, but
+the ordinary question is enough for a first program.
 
 The same ideas work in Korean and can be mixed immediately:
 
 ```text
-이름을 물어봐
-안녕하세요 이름 말해줘
+이름이 뭐예요?
+안녕하세요 이름!
 ```
 
 ## 3. Repeat without a colon

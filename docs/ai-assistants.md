@@ -31,6 +31,8 @@ Korean and English are equal aliases, not separate modes. Mixing is valid:
 이름을 물어봐 이름이 뭐예요?
 show Hello 이름!
 3 times 반복해서 Welcome 말해줘
+What is your name?
+Hello name!
 ```
 
 ### Generate sentence syntax first
@@ -44,6 +46,10 @@ Hello everyone!
 name ask
 이름을 물어봐
 Hello name show
+
+What is your name?
+What's your city?
+Hello name!
 
 3 times Again
 3번 다시 만나요
@@ -64,7 +70,10 @@ action, logical, and condition typos such as `repaet`, `shwoe`, `그리거`, and
 `같먄` are repaired only when the intended meaning is unique.
 
 Known input or assignment names are interpolated in sentence output. Natural
-prompts get a trailing space automatically. For the gentlest start, close a
+questions such as `What is your name` infer the target; Korean forms such as
+`내 이름은 뭐예요?` do too. The final `?` is optional, and natural prompts get
+a trailing space automatically.
+For the gentlest start, close a
 flat block with `end`/`끝` instead of relying on indentation:
 
 ```text

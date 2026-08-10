@@ -12,9 +12,8 @@ want more control, and turn one line at a time into ordinary Python. All three
 levels can live together, in English, Korean, or a mixture of both.
 
 ```text
-Hello everyone!
-name ask
-Hello name show
+What is your name?
+Hello name!
 3 times Welcome to NME
 ```
 
@@ -37,6 +36,11 @@ show Hello 이름!
 ```
 
 No language-mode declaration is needed.
+
+Questions can also be written as ordinary English or Korean. `이름이 뭐예요?`
+and `What is your name` create the matching input variable automatically;
+the final `?` is optional. Use `ask`/`물어봐` when a question is more complex or
+needs a numeric input.
 
 ## Three levels in one language
 
@@ -80,7 +84,7 @@ warns that its `bin` directory is not on `PATH`. It does not reinstall NME.
 Windows PowerShell uses the PATH step in the
 [installation guide](docs/install.md#windows-10-or-11).
 
-Expected version: `nme 0.0.1-beta.8`.
+Expected version: `nme 0.0.1-beta.9`.
 
 Windows, macOS, and Linux instructions are in the
 [installation guide](docs/install.md). The [five-minute guide](docs/getting-started.md)

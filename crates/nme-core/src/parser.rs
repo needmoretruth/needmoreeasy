@@ -170,22 +170,52 @@ pub fn parse_program(
     let mut bindings = BindingEnv::new();
     let mut virtual_indents = vec![0; lines.len()];
     let mut blocks = Vec::<ExplicitBlock>::new();
+    // Python compound headers normally get their body indentation from the
+    // source.  Inside an indentation-free NME block, however, a learner may
+    // write a normal Python header (`if x:`) and then continue with the body
+    // at the same logical level.  Keep those headers separately so ordinary
+    // Python receives the same virtual indentation that NME statements do.
+    // The source indent is retained as the unambiguous signal for a real
+    // Python dedent; explicit NME `break`/`end`/branch lines also close a
+    // flat Python suite when they are at the header's level.
+    let mut python_header_indents = Vec::<usize>::new();
 
     for (index, line) in lines.iter().enumerate() {
         let depth = blocks.len();
+        if depth == 0 {
+            python_header_indents.clear();
+        }
         let is_end = exact_end(line.tokens.as_slice());
         let is_break = exact_break(line.tokens.as_slice());
         let branch_shape = branch_shape(line.tokens.as_slice());
+
+        let closes_flat_python_suite = is_end.is_some() || is_break || branch_shape.is_some();
+        while python_header_indents.last().is_some_and(|header_indent| {
+            line.indent < *header_indent
+                || (closes_flat_python_suite && line.indent <= *header_indent)
+        }) {
+            python_header_indents.pop();
+        }
+        // Keep Python's compatibility rule strict at the top level: an
+        // indented Python body is still the user's responsibility unless an
+        // explicit NME block is already open. This prevents a malformed
+        // ordinary `if` from being repaired silently by NME.
+        let python_depth = if depth > 0 {
+            python_header_indents.len()
+        } else {
+            0
+        };
 
         // A logical line inside an explicit block receives a virtual level.
         // Physical indentation is still retained, so nested Python remains
         // possible and ordinary Python lines can be mixed freely.
         let branch_depth = branch_shape.is_some().then(|| depth.saturating_sub(1));
-        let line_depth = if is_end.is_some() || branch_depth.is_some() {
+        let base_line_depth = if is_end.is_some() || branch_depth.is_some() {
             branch_depth.unwrap_or_else(|| depth.saturating_sub(1))
         } else {
             depth
         };
+        let line_depth = base_line_depth + python_depth;
         virtual_indents[index] = line_depth.saturating_sub(line.indent);
         let mut parse_line = line.clone();
         parse_line.indent = line.indent + line_depth;
@@ -282,12 +312,13 @@ pub fn parse_program(
                         continue;
                     }
                 }
-                let target_indent = if matches!(stmt, NmeStmt::End) || branch_shape.is_some() {
-                    line_depth
+                let base_target_indent = if matches!(stmt, NmeStmt::End) || branch_shape.is_some() {
+                    base_line_depth
                 } else {
                     depth
                 };
-                let virtual_indent = target_indent.saturating_sub(line.indent);
+                let virtual_indent =
+                    (base_target_indent + python_depth).saturating_sub(line.indent);
                 bindings.remember_nme(&stmt);
                 found.push(NmeLine {
                     line_index: index,
@@ -315,7 +346,12 @@ pub fn parse_program(
                     }
                 }
             }
-            Ok(None) => bindings.remember_python(&line.tokens, parse_line.indent),
+            Ok(None) => {
+                bindings.remember_python(&line.tokens, parse_line.indent);
+                if depth > 0 && is_valid_python_header(token_text(source, &line.tokens)) {
+                    python_header_indents.push(line.indent);
+                }
+            }
             Err(problem) => problems.push(problem),
         }
     }
@@ -657,6 +693,14 @@ fn classify(
     }
     exact_match!(match_ask(source, tokens, known_names, MatchMode::Exact));
     exact_match!(match_say(source, tokens, known_names, MatchMode::Exact));
+
+    // Check this before Korean assignment particles such as `은`/`는` can
+    // make `이름은 뭐예요?` look like a sentence assignment. Explicit output
+    // and ask actions above still win when the learner writes them.
+    if let Some(stmt) = match_natural_question(source, tokens, known_names) {
+        return Ok(Some(stmt));
+    }
+
     exact_match!(match_set(source, tokens, known_names, MatchMode::Exact));
     exact_match!(match_use_random(source, tokens, MatchMode::Exact));
 
@@ -913,6 +957,111 @@ fn match_ask(
         prompt,
         kind: shape.kind,
     }))
+}
+
+/// Match the smallest conversational input forms:
+/// `이름이 뭐예요` and `What is your name`.
+///
+/// The Korean/English question predicate is deliberate proof of intent. A
+/// normal sentence such as `안녕하세요!` therefore remains output, while a
+/// beginner can start asking without learning `ask`, a comma, quotes, or even
+/// a question mark. More complex questions still use the explicit
+/// `물어봐`/`ask` form.
+fn match_natural_question(
+    source: &str,
+    tokens: &[Token],
+    _known_names: &HashSet<String>,
+) -> Option<NmeStmt> {
+    let has_question_mark = tokens
+        .last()
+        .is_some_and(|token| token_matches_exact(token, &["?"]));
+    let question_end = if has_question_mark {
+        tokens.len().checked_sub(1)?
+    } else {
+        tokens.len()
+    };
+    if question_end < 2 {
+        return None;
+    }
+
+    let target = if let Some(first) = tokens.first().and_then(name_word) {
+        // `내 이름은 뭐예요?` is the same beginner question as
+        // `이름이 뭐예요?`; the possessive is natural speech, not part of
+        // the variable name.
+        let target_at = if matches!(first, "내" | "제" | "우리") {
+            1
+        } else {
+            0
+        };
+        let predicate_at = target_at + 1;
+        let target_word = tokens.get(target_at).and_then(name_word)?;
+        let korean_target = strip_any_suffix(target_word, &["은", "는", "이", "가", "을", "를"]);
+        let predicate = tokens.get(predicate_at).and_then(token_word)?;
+        let is_korean_question = [
+            "뭐예요",
+            "뭐에요",
+            "뭐야",
+            "뭐죠",
+            "무엇인가요",
+            "무엇이에요",
+            "무엇입니까",
+            "뭔가요",
+        ]
+        .contains(&predicate)
+            || (predicate == "몇" && tokens.get(predicate_at + 1).and_then(token_word).is_some());
+        korean_target.filter(|_| is_korean_question)
+    } else {
+        None
+    }
+    .or_else(|| {
+        let first = tokens.first().and_then(token_word)?;
+        let (subject_at, matches_shape) = if first.eq_ignore_ascii_case("what") {
+            if tokens
+                .get(1)
+                .and_then(token_word)
+                .is_some_and(|word| word.eq_ignore_ascii_case("is"))
+            {
+                (2, question_end >= 4)
+            } else if tokens
+                .get(1)
+                .and_then(token_word)
+                .is_some_and(|word| word.eq_ignore_ascii_case("s"))
+            {
+                // The sentence lexer separates the apostrophe in `What's`
+                // so it can safely preserve ordinary contractions.
+                (2, question_end >= 4)
+            } else {
+                (0, false)
+            }
+        } else if first.eq_ignore_ascii_case("what's") || first.eq_ignore_ascii_case("whats") {
+            (1, question_end >= 3)
+        } else {
+            (0, false)
+        };
+        if !matches_shape
+            || !tokens
+                .get(subject_at)
+                .and_then(token_word)
+                .is_some_and(|word| {
+                    word.eq_ignore_ascii_case("your") || word.eq_ignore_ascii_case("the")
+                })
+        {
+            return None;
+        }
+        name_word(tokens.get(question_end - 1)?)
+    })?;
+
+    let prompt_tokens = if has_question_mark {
+        &tokens[..=question_end]
+    } else {
+        &tokens[..question_end]
+    };
+    let prompt = Value::Text(make_text_template(source, prompt_tokens, &HashSet::new()));
+    Some(NmeStmt::Ask {
+        target: target.to_string(),
+        prompt: Some(prompt),
+        kind: InputKind::Text,
+    })
 }
 
 struct AskShape {
@@ -1704,6 +1853,64 @@ fn find_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionConnect
 /// source bytes used for diagnostics or lowering.
 fn split_attached_condition_token(token: &Token) -> Option<(Token, ConditionConnector)> {
     let word = name_word(token)?;
+    // Leave a one-edit misspelling of a complete connector for the bounded
+    // recovery path below. Otherwise the generic `면` suffix would turn
+    // `잇으면` into the literal value `잇으` before recovery gets a chance.
+    let full_connectors = [
+        "그러면",
+        "그럼",
+        "하면",
+        "이면",
+        "이라면",
+        "있으면",
+        "있다면",
+        "없으면",
+        "없다면",
+        "같으면",
+        "같다면",
+        "크면",
+        "크다면",
+        "작으면",
+        "작다면",
+    ];
+    if full_connectors.iter().any(|candidate| {
+        word != *candidate && word.chars().count() >= 2 && one_typo_away(word, candidate)
+    }) {
+        return None;
+    }
+    // Do not reinterpret a connector token itself as a value plus the short
+    // `면` ending. For example, `같으면` must remain the equality connector;
+    // otherwise its generic suffix would produce the bogus right-hand value
+    // `같으`.
+    if [
+        "그렇다면",
+        "있으면",
+        "없으면",
+        "같으면",
+        "크면",
+        "작으면",
+        "하면",
+        "이면",
+        "이라면",
+        "라면",
+        "면",
+        "같먄",
+        "있먄",
+        "없먄",
+        "크먄",
+        "작먄",
+        "라먄",
+        "있으먄",
+        "없으먄",
+        "같으먄",
+        "크으먄",
+        "작으먄",
+        "먄",
+    ]
+    .contains(&word)
+    {
+        return None;
+    }
     let (suffix, connector) = [
         ("그렇다면", ConditionConnector::Then),
         ("있으면", ConditionConnector::Exists),
@@ -1711,9 +1918,21 @@ fn split_attached_condition_token(token: &Token) -> Option<(Token, ConditionConn
         ("같으면", ConditionConnector::Equals),
         ("크면", ConditionConnector::Greater),
         ("작으면", ConditionConnector::Less),
-        ("하면", ConditionConnector::Then),
-        ("이면", ConditionConnector::Then),
+        ("있으먄", ConditionConnector::Exists),
+        ("없으먄", ConditionConnector::Missing),
+        ("같으먄", ConditionConnector::Equals),
+        ("크으먄", ConditionConnector::Greater),
+        ("작으먄", ConditionConnector::Less),
+        // Korean speakers often attach the short comparison ending to the
+        // right-hand value: `이름이 철수면` / `준비가 거짓이면` /
+        // `이름이 철수라면`. Treat those forms as equality, while keeping
+        // the bare words `면` and `라면` ordinary text.
         ("이라면", ConditionConnector::Then),
+        ("라면", ConditionConnector::Equals),
+        ("이면", ConditionConnector::Then),
+        ("하면", ConditionConnector::Then),
+        ("먄", ConditionConnector::Then),
+        ("면", ConditionConnector::Equals),
     ]
     .into_iter()
     .find(|(suffix, _)| word.ends_with(suffix) && word.len() > suffix.len())?;
@@ -1739,9 +1958,22 @@ fn condition_tokens_before(
     let at = start + relative_connector_at;
     let mut condition = tokens[start..at].to_vec();
     let mut body_start = at + 1;
+    let mut connector = connector;
     if let Some(token) = tokens.get(at) {
         if let Some((base, attached_connector)) = split_attached_condition_token(token) {
-            if attached_connector == connector {
+            // `name이면` is a truthy condition when it is the whole subject,
+            // but `ready가 거짓이면` is naturally an equality comparison.
+            // The preceding condition tokens provide the disambiguating
+            // context without making the lexer guess from raw source text.
+            let context_equality = attached_connector == ConditionConnector::Then
+                && !condition.is_empty()
+                && name_word(token).is_some_and(|word| {
+                    word.ends_with("이면") || word.ends_with("이라면") || word.ends_with("먄")
+                });
+            if context_equality {
+                connector = ConditionConnector::Equals;
+            }
+            if attached_connector == connector || context_equality {
                 condition.push(base);
                 body_start = at + 1;
             }
@@ -2015,11 +2247,14 @@ fn parse_english_condition(
             negated: missing ^ negated,
         });
     }
-    let operator = if condition_word_matches(predicate, &["greater", "above"]) {
+    let operator = if condition_word_matches(
+        predicate,
+        &["greater", "above", "great", "larger", "bigger", "higher"],
+    ) {
         CompareOp::Greater
-    } else if condition_word_matches(predicate, &["less", "below"]) {
+    } else if condition_word_matches(predicate, &["less", "below", "small", "smaller", "lower"]) {
         CompareOp::Less
-    } else if condition_word_matches(predicate, &["equals", "equal"]) {
+    } else if condition_word_matches(predicate, &["equals", "equal", "same"]) {
         CompareOp::Equal
     } else {
         return None;
@@ -2027,7 +2262,7 @@ fn parse_english_condition(
     cursor += 1;
     while tokens
         .get(cursor)
-        .is_some_and(|token| token_matches_exact(token, &["to", "than"]))
+        .is_some_and(|token| token_matches_exact(token, &["to", "than", "as"]))
     {
         cursor += 1;
     }
@@ -2077,14 +2312,17 @@ fn looks_like_incomplete_english_condition(tokens: &[&Token]) -> bool {
     };
     if !condition_word_matches(
         predicate,
-        &["greater", "above", "less", "below", "equals", "equal"],
+        &[
+            "greater", "above", "great", "larger", "bigger", "higher", "less", "below", "small",
+            "smaller", "lower", "equals", "equal", "same",
+        ],
     ) {
         return false;
     }
     cursor += 1;
     while tokens
         .get(cursor)
-        .is_some_and(|token| token_matches_exact(token, &["to", "than"]))
+        .is_some_and(|token| token_matches_exact(token, &["to", "than", "as"]))
     {
         cursor += 1;
     }
@@ -2190,6 +2428,16 @@ fn condition_connector_exact(token: &Token, is_last: bool) -> Option<ConditionCo
 
 fn condition_connector_recovered(token: &Token, is_last: bool) -> Option<ConditionConnector> {
     let word = token_word(token)?;
+    // Some Korean consonant substitutions are equally close to two
+    // connectors under plain edit distance (`잇으면` is close to both
+    // `있으면` and `없으면`). These common spoken spellings have a clear
+    // intended meaning, so resolve them before collecting ambiguous fuzzy
+    // candidates.
+    match word {
+        "잇으면" | "잇다면" => return Some(ConditionConnector::Exists),
+        "업으면" | "업다면" => return Some(ConditionConnector::Missing),
+        _ => {}
+    }
     let candidates = [
         (
             ConditionConnector::Then,
@@ -2249,6 +2497,10 @@ fn condition_connector_recovered(token: &Token, is_last: bool) -> Option<Conditi
     // `...먄` ending. It is a bounded connector-only repair, not a general
     // fuzzy match, and still goes through the unique-candidate check below.
     match word {
+        "있으먄" => recovered.push(ConditionConnector::Exists),
+        "없으먄" => recovered.push(ConditionConnector::Missing),
+        "있먄" => recovered.push(ConditionConnector::Exists),
+        "없먄" => recovered.push(ConditionConnector::Missing),
         "같먄" | "같으먄" => recovered.push(ConditionConnector::Equals),
         "크먄" | "크으먄" => recovered.push(ConditionConnector::Greater),
         "작먄" | "작으먄" => recovered.push(ConditionConnector::Less),
@@ -2718,6 +2970,57 @@ fn match_set(
     known_names: &HashSet<String>,
     mode: MatchMode,
 ) -> Result<Option<NmeStmt>, Diagnostic> {
+    // A spoken target-first form is often the first bridge from plain
+    // sentences to assignments: `이름 저장 민수` / `name save Mina`.  Keep it
+    // deliberately strict (the save word must be the second token) so normal
+    // prose is not silently turned into a variable assignment.
+    if tokens.len() >= 2
+        && name_word(&tokens[0]).is_some()
+        && set_action_at(tokens, 1, mode).is_some()
+    {
+        let target_token = &tokens[0];
+        let target = strip_saved_target(name_word(target_token).expect("checked name token"));
+        let Some((_, consumed)) = set_action_at(tokens, 1, mode) else {
+            unreachable!("set action was checked above");
+        };
+        let mut value_start = 1 + consumed;
+        if tokens.get(value_start).is_some_and(|token| {
+            token_matches_exact(
+                token,
+                &["to", "as", "is", "로", "으로", "을", "를", "은", "는", "에"],
+            )
+        }) {
+            value_start += 1;
+        }
+        if value_start >= tokens.len() {
+            return Err(Diagnostic::bilingual(
+                "the value to save is missing",
+                "저장할 값이 비어 있어요",
+                target_token.span,
+            )
+            .with_bilingual_hint(
+                "write `name save Mina` or `이름 저장 민수`",
+                "`이름 저장 민수` 또는 `name save Mina`처럼 값을 뒤에 적어 주세요",
+            ));
+        }
+        let value =
+            parse_value(source, &tokens[value_start..], known_names, true).map_err(|()| {
+                Diagnostic::bilingual(
+                    "I couldn't understand the value to save",
+                    "저장할 값을 이해하지 못했어요",
+                    span_of(&tokens[value_start..]),
+                )
+                .with_bilingual_hint(
+                    "write a number, name, or plain sentence",
+                    "숫자, 이름, 또는 평범한 문장을 적어 주세요",
+                )
+            })?;
+        return Ok(Some(NmeStmt::Set {
+            target: target.to_string(),
+            value,
+        }));
+    }
+
     if let Some(first) = name_word(&tokens[0]) {
         if let Some(target) = strip_assignment_particle(first) {
             if tokens.len() == 1 {
