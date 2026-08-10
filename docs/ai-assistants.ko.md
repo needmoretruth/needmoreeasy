@@ -8,7 +8,7 @@ AI 코딩 도우미에게 다음 문장 하나를 전달하세요.
 NME 코드를 작성하기 전에 이 문서를 읽고 따르세요.
 https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.ko.md
 
-그다음 요청한 프로그램을 .nme 파일로 작성하세요. 초보자에게는 문장형을 우선하고,
+먼저 `nme --version`으로 지원되는 베타를 확인하세요. 그다음 요청한 프로그램을 .nme 파일로 작성하세요. 초보자에게는 문장형을 우선하고,
 더 분명할 때만 초급 문법이나 고급 Python을 섞으며, nme 검사로 확인하세요.
 ```
 
@@ -50,8 +50,19 @@ if score is greater than 10 then show You won
 ```
 
 문장 출력에서 앞서 입력받거나 저장한 이름은 실제 값으로 바뀝니다. 따옴표 없는
-질문에는 끝 공백이 자동으로 붙습니다. 여러 줄 본문은 스페이스 네 칸으로
-들여쓰며 문장형 머리에는 콜론이 필요 없습니다.
+질문에는 끝 공백이 자동으로 붙습니다. 처음에는 들여쓰기 대신 `끝`/`end`로
+블록을 닫으세요.
+
+```text
+동안 점수 < 3
+점수 말해줘
+점수는 점수 + 1
+끝
+```
+
+같은 블록에서 `멈춰`/`break`, `그리고`/`and`, `또는`/`or`, `아니면 만약`/`elif`,
+`아니면`/`else`를 사용할 수 있습니다. 네 칸 들여쓰기와 일반 Python도 계속
+유효합니다.
 
 ### 정확해야 하면 초급 문법 사용
 
@@ -64,6 +75,11 @@ ask name, <Python prompt>
 count times:
 만약 <Python 조건>:
 when <Python condition>:
+동안 <조건> ... 끝
+while <condition> ... end
+멈춰 / break
+아니면 만약 <조건> / else if <condition>
+아니면 / else
 랜덤 사용 최신
 use random
 ```
@@ -104,6 +120,10 @@ nme 버전
 nme 검사 program
 nme 빌드 program -o program.py
 ```
+
+`검사`와 `빌드`는 생성된 Python을 선택한 CPython으로 컴파일해 확인하지만
+실행하지는 않습니다. `nme 도움`처럼 한국어 명령을 쓰면 한국어 안내 뒤에 같은
+내용의 영어 안내도 나옵니다. `nme help`와 영어 명령은 영어만 출력합니다.
 
 실행해도 안전하고 사용자가 원하면 `nme 실행 program`을 사용합니다.
 네이티브 결과물을 원하고 Nuitka가 설치됐을 때만 `nme 컴파일`을 사용합니다.

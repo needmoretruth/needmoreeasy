@@ -7,10 +7,24 @@ a time.** NME is a learning bridge: begin with ordinary sentences, mix in
 beginner syntax when you are ready, then replace pieces with Python inside the
 same file. You never have to restart the project in another language.
 
+Start with the easiest sentence form, add the compact beginner form when you
+want more control, and turn one line at a time into ordinary Python. All three
+levels can live together, in English, Korean, or a mixture of both.
+
 ```text
 ask name What is your name?
 show Hello name!
 repeat 3 times and show Welcome to NME
+```
+
+Blocks can be flat while you are learning. Close them with `end`/`끝`:
+
+```text
+score = 0
+while score < 3
+show score
+score = score + 1
+end
 ```
 
 The same program may freely mix Korean, English, and Python:
@@ -35,7 +49,9 @@ The levels are not separate modes. Use any of them on any line. Valid Python
 always wins and is kept byte-for-byte identical.
 
 Sentence syntax understands common connecting words such as `만약에`,
-`있으면`, `반복해서`, and `then`. It also recovers a one-character typo in
+`있으면`, `반복해서`, `그리고`, `또는`, and `then`. It also supports
+`while`/`동안`, `break`/`멈춰`, `elif`/`아니면 만약`, and `else`/`아니면`
+inside an explicit `end`/`끝` block. It also recovers a one-character typo in
 an NME action word after Python has rejected the line. When the meaning is not
 clear enough to recover safely, NME points at the uncertain text and suggests
 a concrete repair.
@@ -58,7 +74,7 @@ warns that its `bin` directory is not on `PATH`. It does not reinstall NME.
 Windows PowerShell uses the PATH step in the
 [installation guide](docs/install.md#windows-10-or-11).
 
-Expected version: `nme 0.0.1-beta.3`.
+Expected version: `nme 0.0.1-beta.4`.
 
 Windows, macOS, and Linux instructions are in the
 [installation guide](docs/install.md). The [five-minute guide](docs/getting-started.md)

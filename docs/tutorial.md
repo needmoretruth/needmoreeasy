@@ -83,6 +83,19 @@ What was compiled:
 Challenge: change the range to 1–100, then add a second guess by repeating the
 input and conditions.
 
+If indentation is getting in the way, write the same control flow as one flat
+block and close it with `end`:
+
+```text
+while guess != answer
+show Try again
+ask number guess Pick another number
+end
+```
+
+Use `break`, `and`/`or`, `elif`, and `else` in the same style. Their Korean
+spellings are `멈춰`, `그리고`/`또는`, `아니면 만약`, and `아니면`.
+
 ## Project 4: Use all three levels
 
 Sentence syntax is not a cage. Use compact beginner syntax or Python whenever
@@ -104,6 +117,15 @@ for person in people:
 The list and `for person` loop are advanced Python. `2 times:` and `say` are
 beginner NME. `repeat` and `show` are sentence NME. This is one language, not
 three files or modes. Run `examples/three-levels.nme`.
+
+Try adding a flat NME block beside the Python loop:
+
+```text
+while person != "Grace"
+show Hello person
+break
+end
+```
 
 Challenge: write a Python function and use sentence `show` inside it.
 

@@ -115,6 +115,38 @@ repeat 3 times
 `repeat`, `반복`, `반복해`, and `반복해서` may be mixed with `times` or
 `번`. The count is any valid Python expression.
 
+### A block without indentation
+
+Indentation is useful when you are ready for Python, but it is not required
+for the first programs. Put `end` (or `끝`) on its own line to close an easy
+block. This form also introduces the control flow needed to grow into Python:
+
+```text
+score = 0
+while score < 3
+show score
+score = score + 1
+end
+
+if ready and score > 2
+show Go
+else if score == 0
+show Try again
+else
+show Not yet
+end
+
+while ready or waiting
+show Still working
+break
+end
+```
+
+`동안`, `만약`, `아니면`, `멈춰`, and `끝` are Korean spellings of the same
+ideas. `and`/`그리고` and `or`/`또는` may be mixed in one condition. A block
+may still use ordinary four-space indentation; the explicit `end` form is the
+beginner-friendly bridge when indentation is the part that feels hardest.
+
 ### Conditions
 
 Colon-free blocks:
@@ -148,6 +180,14 @@ Supported sentence comparisons:
 `if 조건` are all valid. Use the beginner form when a condition needs the full
 precision of an arbitrary Python expression.
 
+Logical conditions use normal Python precedence (`and` before `or`):
+
+```text
+if ready and score > 2 then show Go
+만약 준비 그리고 점수가 2보다 크면 성공 말해줘
+if ready or waiting then show Please wait
+```
+
 ### Random without code punctuation
 
 ```text
@@ -177,7 +217,8 @@ typo or every human sentence.
 ## Beginner level
 
 Beginner syntax is compact and exact. It accepts every Python expression and
-is useful when sentence interpretation would be ambiguous.
+is useful when sentence interpretation would be ambiguous. Every documented
+beginner action has a Korean spelling, and both languages may be mixed.
 
 ```text
 say <Python expression>
@@ -193,6 +234,17 @@ ask <name>, <Python prompt expression>
 
 when <condition>:
 만약 <조건>:
+
+while <condition>
+동안 <조건>
+break
+멈춰
+else if <condition>
+아니면 만약 <조건>
+else
+아니면
+end
+끝
 
 use random
 랜덤 사용
@@ -216,6 +268,10 @@ Exact lowering:
 | `ask name, prompt` | `name = input(prompt)` |
 | `count times:` / `횟수번:` | `for _ in range(count):` |
 | `when condition:` / `만약 조건:` | `if (condition):` |
+| `while condition` / `동안 조건` ... `end` / `끝` | `while (condition):` |
+| `break` / `멈춰` | `break` |
+| `else if condition` / `아니면 만약 조건` | `elif (condition):` |
+| `else` / `아니면` | `else:` |
 
 Expressions are opaque Python spans. NME validates and copies them; it never
 reformats or reimplements Python expressions.
@@ -280,8 +336,10 @@ nme convert app.py --level sentence --language ko -o app.nme
 ```
 
 It rewrites single-value `print`, `input` assignments, `int(input(...))`,
-`for _ in range(...)`, `if`, simple assignments, and `import random` when a
-semantics-preserving equivalent exists. Other lines remain advanced Python.
+`for _ in range(...)`, `if`, and simple assignments when a
+semantics-preserving equivalent exists. Ordinary `import random` remains
+advanced Python so an existing variable named `random` can never be silently
+overwritten. Other lines remain advanced Python.
 See [the conversion guide](converting-python.md).
 
 ## Source preservation and diagnostics
@@ -300,12 +358,12 @@ See [the conversion guide](converting-python.md).
   function parameters, simple Python loop targets, NME input, and sentence
   assignments. Use beginner expressions for unusual dynamic names or
   ambiguous literal words.
-- Sentence comparison vocabulary is intentionally small; arbitrary logic uses
-  `when expression:` / `만약 표현식:` or advanced Python.
+- Sentence comparison vocabulary is intentionally small; arbitrary expressions
+  and `and`/`or` logic can use the explicit block form or advanced Python.
 - Only the bundled random adapter has easy module syntax in this beta.
-- `check` validates NME tokenization and forms; CPython still owns full Python
-  syntax and runtime errors.
-- `run` requires CPython. `build` and `check` only need NME. Optional
-  `compile` requires Python, Nuitka, and a platform C compiler.
+- `check` and `build` ask the selected CPython to compile the lowered output;
+  they do not run it. Runtime errors still belong to Python.
+- `run`, `build`, and `check` require CPython. Optional `compile` requires
+  Python, Nuitka, and a platform C compiler.
 - Native compilation does not guarantee that every program is faster or
   smaller; benchmark the artifact that matters.

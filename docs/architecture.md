@@ -10,7 +10,9 @@ NME is one language with three syntax levels that may be mixed line by line:
 1. **Advanced** — ordinary Python. Every valid Python program is valid NME.
 2. **Beginner** — compact NME forms such as `say`, `ask`, and `3 times:`.
 3. **Sentence** — conversational English or Korean without required quotes,
-   commas, braces, or block colons for the supported beginner tasks.
+   commas, braces, or block colons for the supported beginner tasks. Explicit
+   `end`/`끝` blocks provide `while`, `break`, `elif`, `else`, and `and`/`or`
+   without making a first learner manage indentation.
 
 English and Korean are two spellings of the same AST and may also be mixed.
 NME transpiles all claimed syntax to ordinary Python; CPython remains the
@@ -24,6 +26,7 @@ source text (.nme)
   │
   ▼  lexer.rs     rustpython-parser tokens → logical lines
   ▼  parser.rs    Python-wins check + token patterns → NmeStmt list
+                    + virtual indentation for explicit end blocks
   ▼  lower.rs     NmeStmt → same-line Python edits
   ▼  transpile.rs apply edits → Python source
 ```
@@ -86,7 +89,8 @@ may consume them. An unrelated invalid line still produces a diagnostic.
 
 Beginner expressions are validated as opaque Python expressions and copied by
 span. Sentence forms instead build the same small AST variants (`Say`, `Ask`,
-`Set`, `Times`, `When`, `UseRandom`) from explicit token templates. Known
+`Set`, `Times`, `When`, `While`, `ElseIf`, `Else`, `Break`, `End`,
+`UseRandom`) from explicit token templates. Known
 variable names may be interpolated into sentence output; unknown words remain
 literal text. Both languages lower through the same code path.
 
@@ -109,7 +113,11 @@ Never guess across expressions, identifiers, numbers, or arbitrary prose.
 Every claimed logical line becomes exactly one Python line. Edits exclude
 indentation, line endings, and trailing comments. This keeps CPython traceback
 line numbers aligned with the `.nme` source. Multi-line runtime helpers are not
-allowed in lowering; use one-line expressions or explicit imports.
+allowed in lowering; use one-line expressions or explicit imports. For an
+explicit `end`/`끝` block, the parser records a virtual indentation level and
+the transpiler inserts only that leading prefix on affected lines. A plain
+Python line inside the block receives the same prefix, so the source can stay
+flat while generated Python remains syntactically nested.
 
 ### 6. Errors are part of the language
 

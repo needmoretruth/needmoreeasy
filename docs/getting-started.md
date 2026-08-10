@@ -59,6 +59,19 @@ repeat 3 times
     둘째 문장 말해줘
 ```
 
+If indentation is still uncomfortable, use an explicit closing word instead:
+
+```text
+score = 0
+while score < 3
+show score
+score = score + 1
+end
+```
+
+The same style supports `break`, `and`/`or`, `elif`, and `else`; Korean
+spellings are `멈춰`, `그리고`/`또는`, `아니면 만약`, and `아니면`.
+
 ## 4. Make a number game
 
 ```text

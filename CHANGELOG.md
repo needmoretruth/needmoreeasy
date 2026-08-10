@@ -4,6 +4,16 @@ English | [한국어](CHANGELOG.ko.md)
 
 All notable changes to NME are recorded here.
 
+## 0.0.1-beta.4 — 2026-08-11
+
+- Add an indentation-free control-flow bridge: `while`, `break`, `and`/`or`,
+  `elif`/`else`, and `end`/`끝` can be mixed with sentence, beginner, and
+  ordinary Python lines.
+- Add Korean spellings for the new control-flow forms, virtual indentation for
+  flat blocks, structural diagnostics, and regression examples.
+- Expand the English/Korean learning path and AI handoff around growing from
+  the easiest sentences into Python.
+
 ## 0.0.1-beta.3 — 2026-08-11
 
 - Center NME on growing from ordinary sentences, through compact beginner

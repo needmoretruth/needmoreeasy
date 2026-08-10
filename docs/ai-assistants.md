@@ -8,7 +8,7 @@ Give an AI coding assistant this one prompt:
 Read and follow this NME language handoff before writing code:
 https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
 
-Then write the requested program as a .nme file, prefer sentence syntax for a
+Then confirm that `nme --version` is the supported beta, then write the requested program as a .nme file, prefer sentence syntax for a
 beginner, mix beginner or advanced Python only where it makes the result
 clearer, and verify it with nme check.
 ```
@@ -53,8 +53,19 @@ ask number guess Pick a number
 ```
 
 Known input or assignment names are interpolated in sentence output. Natural
-prompts get a trailing space automatically. Indent multi-line bodies with four
-spaces; sentence headers do not need a colon.
+prompts get a trailing space automatically. For the gentlest start, close a
+flat block with `end`/`끝` instead of relying on indentation:
+
+```text
+while score < 3
+show score
+score = score + 1
+end
+```
+
+The same block supports `break`/`멈춰`, `and`/`그리고`, `or`/`또는`,
+`elif`/`아니면 만약`, and `else`/`아니면`. Indented bodies and ordinary Python
+remain valid when a learner is ready to use them.
 
 ### Use beginner syntax when precision matters
 
@@ -67,6 +78,11 @@ count times:
 횟수번:
 when <Python condition>:
 만약 <Python 조건>:
+while <condition> ... end
+동안 <조건> ... 끝
+break / 멈춰
+else if <condition> / 아니면 만약 <조건>
+else / 아니면
 use random
 랜덤 사용 최신
 ```
@@ -110,6 +126,11 @@ nme --version
 nme check program
 nme build program -o program.py
 ```
+
+`check` and `build` ask the selected CPython to compile the generated source;
+they do not execute it. `nme help` and English commands print English only.
+Korean commands such as `nme 도움`, `nme 검사`, and `nme 실행` print Korean
+guidance followed by the equivalent English guidance.
 
 Use `nme run program` when execution is safe and desired. Use
 `nme compile program -o program` only when the user wants a native artifact
