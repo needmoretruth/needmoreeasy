@@ -1,0 +1,6 @@
+# This example intentionally uses no indentation for the easy block syntax.
+score = 0
+while score < 3
+show score
+add 1 to score
+end

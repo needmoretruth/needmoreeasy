@@ -4,6 +4,55 @@ English | [한국어](CHANGELOG.ko.md)
 
 All notable changes to NME are recorded here.
 
+## 0.0.1-beta.8 — 2026-08-11
+
+- Accept subject-first conversational conditions such as `color equals red
+  then show yes` and their natural Korean equivalents, including flat `end`
+  blocks.
+- Recover common logical connector typos (`그리거`, `an`) and spoken Korean
+  condition endings such as `같먄` without hijacking ordinary output sentences.
+- Preserve future Python shapes that the bundled parser does not know yet,
+  including CPython 3.14 t-strings, and add a Windows/macOS/Linux CI matrix.
+
+## 0.0.1-beta.7 — 2026-08-11
+
+- Make ordinary multiword sentences and contractions such as `Hello world!`
+  and `I'm ready` print naturally without an output keyword.
+- Recover common transposed action and condition typos, including `shwoe` and
+  `thne`, while keeping ambiguous Python-shaped input untouched.
+- Accept an unquoted comma prompt such as `ask name, What is your name?`.
+
+## 0.0.1-beta.6 — 2026-08-11
+
+- Add an easier sentence bridge for value changes (`add 1 to score`,
+  `점수에 1 더해`) and repeat plain words without a colon or output marker.
+- Accept spaced and attached Korean condition endings, polite sentence fillers,
+  and explicit Korean beginner save words such as `저장` and `설정`.
+- Refresh the first-run examples and tutorials so learners can move from
+  sentences through beginner control flow into ordinary Python without a
+  forced indentation jump.
+
+## 0.0.1-beta.5 — 2026-08-11
+
+- Make the three learning levels easier to mix inside one flat block, with
+  regression coverage for Korean beginner spellings and ordinary Python.
+- Accept attached Korean condition endings such as `이름있으면` and the natural
+  `아니면만약에` branch spelling, plus small polite sentence fillers.
+- Keep top-level Python identifiers such as `end` and `끝` untouched and avoid
+  accidentally opening a colon-based Python block merely because a later NME
+  block has an `end`.
+- Refresh the bilingual language reference and local continuation handoff.
+
+## 0.0.1-beta.4 — 2026-08-11
+
+- Add an indentation-free control-flow bridge: `while`, `break`, `and`/`or`,
+  `elif`/`else`, and `end`/`끝` can be mixed with sentence, beginner, and
+  ordinary Python lines.
+- Add Korean spellings for the new control-flow forms, virtual indentation for
+  flat blocks, structural diagnostics, and regression examples.
+- Expand the English/Korean learning path and AI handoff around growing from
+  the easiest sentences into Python.
+
 ## 0.0.1-beta.3 — 2026-08-11
 
 - Center NME on growing from ordinary sentences, through compact beginner

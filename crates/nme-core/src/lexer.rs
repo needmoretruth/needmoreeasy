@@ -16,7 +16,6 @@ use rustpython_parser::lexer::{lex, LexicalErrorType};
 use rustpython_parser::{Mode, Tok};
 
 use crate::diagnostics::{Diagnostic, Span};
-use crate::syntax::SAY_WORDS_EN;
 
 /// One Python token together with its byte span in the source.
 #[derive(Debug, Clone)]
@@ -26,7 +25,7 @@ pub struct Token {
 }
 
 /// A logical line of source: one statement's worth of tokens.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LogicalLine {
     /// 1-based number of the physical line the statement starts on.
     pub number: usize,
@@ -71,12 +70,12 @@ pub fn logical_lines(source: &str) -> Result<Vec<LogicalLine>, Diagnostic> {
             Ok(lines) => return Ok(lines),
             Err(LexAttemptError::Diagnostic(problem)) => return Err(problem),
             Err(LexAttemptError::SentenceApostrophe(offset)) => {
-                // The lexer established both the exact sentence action and
-                // the failing quote location. Replacing that one ASCII byte
+                // The lexer established a sentence-like word stream and the
+                // failing quote location. Replacing that one ASCII byte
                 // with whitespace lets rustpython-parser finish tokenizing;
                 // all spans still address the untouched original source, so
                 // lowering preserves the apostrophe as ordinary sentence
-                // text (`show I'm ready`).
+                // text (`I'm ready` or `show I'm ready`).
                 lexer_source.replace_range(offset..offset + 1, " ");
             }
         }
@@ -129,6 +128,23 @@ fn logical_lines_once(
             }
         };
         let span = Span::new(usize::from(range.start()), usize::from(range.end()));
+        if matches!(tok, Tok::String { .. })
+            && sentence_contraction_string(lexer_source, &current, span)
+        {
+            // RustPython quite reasonably treats the two apostrophes in
+            // `I'm happy and you're ready` as one quoted string. In a
+            // sentence-like word stream, however, they are contractions.
+            // Keep the original span and mark it as text so the parser can
+            // lower the untouched source sentence without changing Python
+            // strings such as `show 'hello'`.
+            current.push(Token {
+                tok: Tok::Name {
+                    name: lexer_source[span.start..span.end].to_string(),
+                },
+                span,
+            });
+            continue;
+        }
         match tok {
             // Framing tokens carry no meaning for us.
             Tok::StartModule | Tok::EndOfFile => {}
@@ -162,17 +178,8 @@ fn sentence_apostrophe(
                 if message == "EOL while scanning string literal"
         );
     if !is_unterminated_single_quote
-        || current.len() < 2
-        || !matches!(
-            current.first().map(|token| &token.tok),
-            Some(Tok::Name { name })
-                if SAY_WORDS_EN
-                    .iter()
-                    .any(|candidate| name.eq_ignore_ascii_case(candidate))
-        )
-        || !current[1..]
-            .iter()
-            .all(|token| matches!(token.tok, Tok::Name { .. }))
+        || current.is_empty()
+        || !current.iter().all(is_sentence_word_token)
     {
         return None;
     }
@@ -192,6 +199,28 @@ fn sentence_apostrophe(
                     .next()
                     .is_some_and(char::is_alphabetic)
         })
+}
+
+fn is_sentence_word_token(token: &Token) -> bool {
+    matches!(
+        token.tok,
+        Tok::Name { .. } | Tok::And | Tok::Or | Tok::Not | Tok::Is | Tok::In | Tok::As | Tok::From
+    )
+}
+
+fn sentence_contraction_string(source: &str, current: &[Token], span: Span) -> bool {
+    if current.is_empty() || !current.iter().all(is_sentence_word_token) {
+        return false;
+    }
+    let Some(raw) = source.get(span.start..span.end) else {
+        return false;
+    };
+    if !raw.starts_with('\'') || !raw.ends_with('\'') {
+        return false;
+    }
+    let before = source[..span.start].chars().next_back();
+    let after = source[span.end..].chars().next();
+    before.is_some_and(char::is_alphanumeric) && after.is_some_and(char::is_alphabetic)
 }
 
 fn finish_line(
@@ -335,6 +364,25 @@ mod tests {
         let ls = lines(src);
         assert_eq!(ls.len(), 1);
         assert_eq!(ls[0].text(src), "show I'm sure it's ready!");
+    }
+
+    #[test]
+    fn apostrophes_inside_bare_sentence_prose_are_text() {
+        let src = "I'm happy today!\n";
+        let ls = lines(src);
+        assert_eq!(ls.len(), 1);
+        assert_eq!(ls[0].text(src), src.trim_end());
+    }
+
+    #[test]
+    fn paired_contractions_do_not_become_python_strings() {
+        let src = "I'm happy and you're ready!\n";
+        let ls = lines(src);
+        assert_eq!(ls.len(), 1);
+        assert!(!ls[0]
+            .tokens
+            .iter()
+            .any(|token| matches!(token.tok, Tok::String { .. })));
     }
 
     #[test]

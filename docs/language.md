@@ -56,6 +56,25 @@ show Hello name!
 The result uses the value of `name` / `이름`; other words stay literal.
 Korean particles following a known name remain in the output.
 
+If a line is clearly ordinary multi-word speech, NME can print it without an
+action word:
+
+```text
+Hello everyone!
+오늘도 반가워요!
+```
+
+A single bare word is still valid Python, so Python wins and it remains an
+ordinary name expression. Add `show` or `말해줘` when a one-word line should
+print.
+
+The shortest conversation does not need a prompt or punctuation:
+
+```text
+name ask
+Hello name show
+```
+
 Accepted output actions include `show`, `display`, `tell`, `say`, `보여줘`,
 `말해줘`, `말해주세요`, `출력해`, and `출력해줘`. The precise beginner
 spellings `say expression` and `말해 표현식` continue to treat a valid Python
@@ -65,14 +84,17 @@ expression as code.
 
 ```text
 ask name What is your name?
+ask name, What is your name?
 이름을 물어봐 이름이 뭐예요?
 
 ask number age How old are you?
 나이를 숫자로 물어봐 몇 살인가요?
 ```
 
-Natural prompts receive a separating space automatically. Text input compiles
-to `input(...)`; number input compiles to `int(input(...))`.
+Natural prompts receive a separating space automatically. A comma is optional
+for a plain-language prompt; quoted or expression prompts may use the precise
+beginner comma form. Text input compiles to `input(...)`; number input compiles
+to `int(input(...))`.
 
 Accepted actions include `ask`, `prompt`, `물어봐`, `물어봐줘`, `질문해`, and
 `입력받아`. Korean target particles `을` and `를` are removed from the variable
@@ -85,11 +107,17 @@ name.
 정답은 7
 set greeting to Hello
 set answer to 7
+score add 1
+subtract 1 from score
 ```
 
 These become normal assignments. Numbers and clear expressions remain code;
 plain words become text. A saved name is available for later sentence
 interpolation and conditions.
+
+Small value changes can also be written without `+`, `-`, or `=`. Use
+`score add 1`, `add 1 to score`, or `score increase by 1`; subtraction uses
+`subtract 1 from score`.
 
 ### Repeat
 
@@ -99,7 +127,13 @@ One sentence on one line:
 repeat 3 times and show Again
 3번 반복해서 다시 말해줘
 3 times 반복해서 mixed 말해줘
+3 times Welcome to NME
+3번 안녕하세요
 ```
+
+When the count comes first, the plain words after it are repeated output. This
+is the easiest form; add `show`/`말해줘` when you want the meaning to be
+visibly explicit.
 
 Several lines use indentation but no colon:
 
@@ -114,6 +148,39 @@ repeat 3 times
 
 `repeat`, `반복`, `반복해`, and `반복해서` may be mixed with `times` or
 `번`. The count is any valid Python expression.
+
+### A block without indentation
+
+Indentation is useful when you are ready for Python, but it is not required
+for the first programs. Put `end` (or `끝`) on its own line to close an easy
+block. This form also introduces the control flow needed to grow into Python:
+
+```text
+score = 0
+while score < 3
+show score
+score = score + 1
+end
+
+if ready and score > 2
+show Go
+else if score == 0
+show Try again
+else
+show Not yet
+end
+
+while ready or waiting
+show Still working
+break
+end
+```
+
+`동안`, `만약`, `아니면`, `아니면만약에`, `멈춰`, and `끝` are Korean
+spellings of the same ideas. `and`/`그리고` and `or`/`또는` may be mixed in
+one condition. A block
+may still use ordinary four-space indentation; the explicit `end` form is the
+beginner-friendly bridge when indentation is the part that feels hardest.
 
 ### Conditions
 
@@ -134,6 +201,18 @@ if score is greater than 10 then show You won
 만약에 점수가 10보다 크면 성공 말해줘
 ```
 
+You may also start with the subject when that reads more naturally:
+
+```text
+score is greater than 5 then show high
+name exists then show Welcome name
+색이 빨강과 같으면 맞아요 말해줘
+```
+
+The subject-first form is limited to a clear comparison, existence check, or
+unmistakable action body. Ordinary speech such as `Hello then world` remains
+prose.
+
 Supported sentence comparisons:
 
 | English | Korean | Meaning |
@@ -147,6 +226,14 @@ Supported sentence comparisons:
 `when condition`, `만약 condition`, `만약에 condition`, and the mixed
 `if 조건` are all valid. Use the beginner form when a condition needs the full
 precision of an arbitrary Python expression.
+
+Logical conditions use normal Python precedence (`and` before `or`):
+
+```text
+if ready and score > 2 then show Go
+만약 준비 그리고 점수가 2보다 크면 성공 말해줘
+if ready or waiting then show Please wait
+```
 
 ### Random without code punctuation
 
@@ -163,21 +250,26 @@ module line is unnecessary.
 
 ### Typo and connector recovery
 
-NME action words accept their documented variants and recover one insertion,
+NME action words, logical connectors, and condition connectors accept their documented variants and recover one insertion,
 deletion, substitution, or adjacent transposition after Python rejects the
-line. Examples include `물어바` → `물어봐`, `말헤` → `말해`, and `repaet` →
-`repeat`.
+line. A common two-keystroke pattern—one extra/missing character combined
+with an adjacent swap—is also accepted when it has one clear action. Examples
+include `물어바` → `물어봐`, `말헤` → `말해`, `repaet` → `repeat`, and
+`shwoe` → `show`, `thne` → `then` in `if score is greater than 5 thne ...`,
+and `그리거` → `그리고`.
 
-Recovery applies only to action tokens, never to Python expressions, strings,
-or comments. If a repair is not unique or the sentence has no clear action,
-NME reports the exact span and a concrete hint instead of silently guessing.
+Recovery applies only to these action/connector tokens, never to Python
+expressions, strings, or comments. If a repair is not unique or the sentence
+has no clear action, NME reports the exact span and a concrete hint instead of
+silently guessing.
 This bounded rule is intentional: no compiler can safely infer every possible
 typo or every human sentence.
 
 ## Beginner level
 
 Beginner syntax is compact and exact. It accepts every Python expression and
-is useful when sentence interpretation would be ambiguous.
+is useful when sentence interpretation would be ambiguous. Every documented
+beginner action has a Korean spelling, and both languages may be mixed.
 
 ```text
 say <Python expression>
@@ -188,11 +280,27 @@ ask <name>, <Python prompt expression>
 물어봐 <이름>
 물어봐 <이름>, <Python 질문 표현식>
 
+save <name> to <value>
+저장 <이름> <값>
+설정 <이름> <값>
+
 <count> times:
 <횟수>번:
 
 when <condition>:
 만약 <조건>:
+
+while <condition>
+동안 <조건>
+break
+멈춰
+else if <condition>
+아니면 만약에 <조건>
+아니면만약에 <조건>
+else
+아니면
+end
+끝
 
 use random
 랜덤 사용
@@ -214,8 +322,13 @@ Exact lowering:
 | `say value` / `말해 값` | `print(value)` |
 | `ask name` / `물어봐 이름` | `name = input()` |
 | `ask name, prompt` | `name = input(prompt)` |
+| `save name to value` / `저장 이름 값` | `name = value` |
 | `count times:` / `횟수번:` | `for _ in range(count):` |
 | `when condition:` / `만약 조건:` | `if (condition):` |
+| `while condition` / `동안 조건` ... `end` / `끝` | `while (condition):` |
+| `break` / `멈춰` | `break` |
+| `else if condition` / `아니면 만약에 조건` / `아니면만약에 조건` | `elif (condition):` |
+| `else` / `아니면` | `else:` |
 
 Expressions are opaque Python spans. NME validates and copies them; it never
 reformats or reimplements Python expressions.
@@ -280,8 +393,10 @@ nme convert app.py --level sentence --language ko -o app.nme
 ```
 
 It rewrites single-value `print`, `input` assignments, `int(input(...))`,
-`for _ in range(...)`, `if`, simple assignments, and `import random` when a
-semantics-preserving equivalent exists. Other lines remain advanced Python.
+`for _ in range(...)`, `if`, and simple assignments when a
+semantics-preserving equivalent exists. Ordinary `import random` remains
+advanced Python so an existing variable named `random` can never be silently
+overwritten. Other lines remain advanced Python.
 See [the conversion guide](converting-python.md).
 
 ## Source preservation and diagnostics
@@ -300,12 +415,12 @@ See [the conversion guide](converting-python.md).
   function parameters, simple Python loop targets, NME input, and sentence
   assignments. Use beginner expressions for unusual dynamic names or
   ambiguous literal words.
-- Sentence comparison vocabulary is intentionally small; arbitrary logic uses
-  `when expression:` / `만약 표현식:` or advanced Python.
+- Sentence comparison vocabulary is intentionally small; arbitrary expressions
+  and `and`/`or` logic can use the explicit block form or advanced Python.
 - Only the bundled random adapter has easy module syntax in this beta.
-- `check` validates NME tokenization and forms; CPython still owns full Python
-  syntax and runtime errors.
-- `run` requires CPython. `build` and `check` only need NME. Optional
-  `compile` requires Python, Nuitka, and a platform C compiler.
+- `check` and `build` ask the selected CPython to compile the lowered output;
+  they do not run it. Runtime errors still belong to Python.
+- `run`, `build`, and `check` require CPython. Optional `compile` requires
+  Python, Nuitka, and a platform C compiler.
 - Native compilation does not guarantee that every program is faster or
   smaller; benchmark the artifact that matters.

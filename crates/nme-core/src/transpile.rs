@@ -16,8 +16,23 @@ use crate::{lexer, lower, parser};
 ///   [`crate::diagnostics::render_all`].
 pub fn transpile(source: &str) -> Result<String, Vec<Diagnostic>> {
     let lines = lexer::logical_lines(source).map_err(|problem| vec![problem])?;
-    let nme_lines = parser::parse(source, &lines)?;
-    let edits = lower::lower_lines(&nme_lines, source);
+    let program = parser::parse_program(source, &lines)?;
+    let nme_lines = &program.nme_lines;
+    let mut edits = lower::lower_lines(nme_lines, source);
+    let nme_indexes = nme_lines
+        .iter()
+        .map(|line| line.line_index)
+        .collect::<std::collections::HashSet<_>>();
+    for (index, line) in lines.iter().enumerate() {
+        let level = program.virtual_indents[index];
+        if level == 0 || nme_indexes.contains(&index) {
+            continue;
+        }
+        edits.push(lower::Edit {
+            span: Span::new(line.span.start, line.span.start),
+            replacement: "    ".repeat(level),
+        });
+    }
     let line_break_problems = edits
         .iter()
         .filter(|edit| {

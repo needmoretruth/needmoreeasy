@@ -13,9 +13,7 @@ use crate::diagnostics::Span;
 
 pub const SAY_KEYWORD: &str = "say";
 pub const SAY_KEYWORD_KO: &str = "말해";
-pub(crate) const SAY_WORDS_EN: &[&str] = &[
-    "say", "show", "showme", "display", "tell", "tellme", "print",
-];
+pub(crate) const SAY_WORDS_EN: &[&str] = &["say", "show", "display", "tell", "print"];
 pub const ASK_KEYWORD: &str = "ask";
 pub const ASK_KEYWORD_KO: &str = "물어봐";
 pub const TIMES_KEYWORD: &str = "times";
@@ -94,6 +92,12 @@ pub enum CompareOp {
     Less,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum UpdateOp {
+    Add,
+    Subtract,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Condition {
     Python(Code),
@@ -107,6 +111,17 @@ pub enum Condition {
         right: ConditionValue,
         negated: bool,
     },
+    Logical {
+        left: Box<Condition>,
+        operator: LogicalOp,
+        right: Box<Condition>,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LogicalOp {
+    And,
+    Or,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -138,6 +153,11 @@ pub enum NmeStmt {
         target: String,
         value: Value,
     },
+    Update {
+        target: String,
+        amount: Code,
+        operation: UpdateOp,
+    },
     Times {
         count: Code,
         inline: Option<InlineStmt>,
@@ -146,6 +166,19 @@ pub enum NmeStmt {
         condition: Condition,
         inline: Option<InlineStmt>,
     },
+    While {
+        condition: Condition,
+        inline: Option<InlineStmt>,
+    },
+    ElseIf {
+        condition: Condition,
+        inline: Option<InlineStmt>,
+    },
+    Else {
+        inline: Option<InlineStmt>,
+    },
+    Break,
+    End,
     UseRandom {
         requested: ModuleVersion,
     },
@@ -161,6 +194,10 @@ pub enum InlineStmt {
 /// A fully parsed NME statement plus the source span it replaces.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NmeLine {
+    /// Index in the lexer's logical-line list.
+    pub line_index: usize,
     pub span: Span,
     pub stmt: NmeStmt,
+    /// Indentation inserted by an explicit `end`/`끝` block.
+    pub virtual_indent: usize,
 }

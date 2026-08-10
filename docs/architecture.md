@@ -10,7 +10,9 @@ NME is one language with three syntax levels that may be mixed line by line:
 1. **Advanced** — ordinary Python. Every valid Python program is valid NME.
 2. **Beginner** — compact NME forms such as `say`, `ask`, and `3 times:`.
 3. **Sentence** — conversational English or Korean without required quotes,
-   commas, braces, or block colons for the supported beginner tasks.
+   commas, braces, or block colons for the supported beginner tasks. Explicit
+   `end`/`끝` blocks provide `while`, `break`, `elif`, `else`, and `and`/`or`
+   without making a first learner manage indentation.
 
 English and Korean are two spellings of the same AST and may also be mixed.
 NME transpiles all claimed syntax to ordinary Python; CPython remains the
@@ -24,6 +26,7 @@ source text (.nme)
   │
   ▼  lexer.rs     rustpython-parser tokens → logical lines
   ▼  parser.rs    Python-wins check + token patterns → NmeStmt list
+                    + virtual indentation for explicit end blocks
   ▼  lower.rs     NmeStmt → same-line Python edits
   ▼  transpile.rs apply edits → Python source
 ```
@@ -63,9 +66,10 @@ rewrite.
 ### 1. Python always wins
 
 A valid Python statement or compound header is copied byte for byte, even when
-its names resemble NME words. Validity is decided with the real
-`rustpython_parser::parse`, including the synthetic `pass` body needed to test
-headers. Every new matcher must stay behind this check.
+its names resemble NME words. The bundled parser decides known Python grammar
+with `rustpython_parser::parse`, including the synthetic `pass` body needed to
+test headers; conservative newer-grammar shapes are preserved by the fallback
+described below. Every new matcher must stay behind these checks.
 
 The one intentional-looking case is colon-free `if condition`: it is invalid
 Python and can therefore be claimed by sentence NME. Normal `if condition:` is
@@ -86,9 +90,14 @@ may consume them. An unrelated invalid line still produces a diagnostic.
 
 Beginner expressions are validated as opaque Python expressions and copied by
 span. Sentence forms instead build the same small AST variants (`Say`, `Ask`,
-`Set`, `Times`, `When`, `UseRandom`) from explicit token templates. Known
+`Set`, `Update`, `Times`, `When`, `While`, `ElseIf`, `Else`, `Break`, `End`,
+`UseRandom`) from explicit token templates. A sentence repeat may use plain
+words after its count (`3번 안녕하세요`), and a small value change may use
+`score add 1` or `점수에 1 더해`; both lower through the same AST path. Known
 variable names may be interpolated into sentence output; unknown words remain
-literal text. Both languages lower through the same code path.
+literal text. Subject-first conditions such as `color equals red then show yes`
+use the same `When` node as `if`/`만약` forms. Both languages lower through the
+same code path.
 
 Do not add a parallel Korean runtime, duplicate AST variants per language, or
 different behavior for equivalent English and Korean forms.
@@ -97,19 +106,32 @@ different behavior for equivalent English and Korean forms.
 
 The sentence parser accepts documented connecting words, common Korean
 particles, and a single insertion, deletion, substitution, or adjacent
-transposition in action words. Recovery only runs after Python rejects the
-line and only when the surrounding token pattern identifies one construct.
+transposition in action words and condition connectors. It also accepts the
+bounded common pattern of one extra/missing character plus an adjacent swap
+when the action candidate is unique. Recovery only runs after Python rejects
+the line and only when the surrounding token pattern identifies one
+construct. Clearly multi-word prose can be output directly; a single bare
+word remains Python because of the Python-wins rule.
 
 Unlimited typo correction would silently change programs. When more than one
 meaning is plausible, emit an exact caret diagnostic and an actionable hint.
 Never guess across expressions, identifiers, numbers, or arbitrary prose.
+
+When the bundled Rust parser does not yet know a newer CPython construct (for
+example, a Python 3.14 t-string), conservative future-Python token shapes are
+left byte-identical. The CLI then asks the selected CPython to validate them;
+the core never claims that its own parser covers every future Python grammar.
 
 ### 5. Lowering preserves lines
 
 Every claimed logical line becomes exactly one Python line. Edits exclude
 indentation, line endings, and trailing comments. This keeps CPython traceback
 line numbers aligned with the `.nme` source. Multi-line runtime helpers are not
-allowed in lowering; use one-line expressions or explicit imports.
+allowed in lowering; use one-line expressions or explicit imports. For an
+explicit `end`/`끝` block, the parser records a virtual indentation level and
+the transpiler inserts only that leading prefix on affected lines. A plain
+Python line inside the block receives the same prefix, so the source can stay
+flat while generated Python remains syntactically nested.
 
 ### 6. Errors are part of the language
 

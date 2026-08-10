@@ -95,6 +95,27 @@ fn ask_reads_text_into_an_english_or_korean_name() {
         ok("물어봐 이름, \"이름이 뭐예요? \"\n"),
         "이름 = input(\"이름이 뭐예요? \")\n"
     );
+    assert_eq!(
+        ok("물어봐 이름, 이름이 뭐예요?\n"),
+        "이름 = input(\"이름이 뭐예요?\" + \" \")\n"
+    );
+}
+
+#[test]
+fn ordinary_multiword_sentences_need_no_output_action() {
+    assert_eq!(
+        ok("Hello everyone!\n오늘도 반가워요!\n"),
+        "print(\"Hello everyone!\")\nprint(\"오늘도 반가워요!\")\n"
+    );
+}
+
+#[test]
+fn ordinary_contractions_and_logical_words_need_no_output_action() {
+    let source = "Don't stop!\nIt's easy.\nI'm happy and you're ready!\n";
+    assert_eq!(
+        ok(source),
+        "print(\"Don't stop!\")\nprint(\"It's easy.\")\nprint(\"I'm happy and you're ready!\")\n"
+    );
 }
 
 #[test]
@@ -171,11 +192,13 @@ fn common_one_edit_typos_are_recovered_only_after_python_rejects_the_line() {
         "물어바 이름 이름이 뭐예요\n",
         "안녕하세요 이름 말헤\n",
         "2번 반목해서 다시 말해줘\n",
+        "repaet 2 times and show typo fixed\n",
     );
     let expected = concat!(
         "이름 = input(\"이름이 뭐예요\" + \" \")\n",
         "print(\"안녕하세요 \" + str(이름))\n",
         "for _ in range(2): print(\"다시\")\n",
+        "for _ in range(2): print(\"typo fixed\")\n",
     );
     assert_eq!(ok(source), expected);
 }
@@ -264,6 +287,82 @@ fn english_sentence_conditions_support_comparisons_and_inline_then() {
 }
 
 #[test]
+fn subject_first_korean_conditions_are_not_mistaken_for_updates() {
+    let source = concat!(
+        "색은 빨강\n",
+        "색이 빨강과 같으면 말해 맞아요\n",
+        "이름은 Ada\n",
+        "이름이 있으면 안녕하세요 이름 말해줘\n",
+    );
+    let expected = concat!(
+        "색 = \"빨강\"\n",
+        "if (색 == \"빨강\"): print(\"맞아요\")\n",
+        "이름 = \"Ada\"\n",
+        "if (이름): print(\"안녕하세요 \" + str(이름))\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn condition_and_logical_connector_typos_are_recovered() {
+    let source = concat!(
+        "ready = True\n",
+        "score = 3\n",
+        "if ready 그리거 score > 2 then show go\n",
+        "색은 빨강\n",
+        "색이 빨강과 같먄 맞아요 말해줘\n",
+    );
+    let expected = concat!(
+        "ready = True\n",
+        "score = 3\n",
+        "if ((ready and score > 2)): print(\"go\")\n",
+        "색 = \"빨강\"\n",
+        "if (색 == \"빨강\"): print(\"맞아요\")\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn subject_first_korean_conditions_can_use_flat_end_blocks() {
+    let source = concat!(
+        "색은 빨강\n",
+        "색이 빨강과 같으면\n",
+        "맞아요 말해줘\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "색 = \"빨강\"\n",
+        "if (색 == \"빨강\"):\n",
+        "    print(\"맞아요\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn korean_condition_connector_can_be_spaced_or_attached() {
+    let source = concat!(
+        "이름 = \"Ada\"\n",
+        "만약에 이름 이면\n",
+        "말해 yes\n",
+        "끝\n",
+        "만약에 이름이면\n",
+        "말해 again\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "이름 = \"Ada\"\n",
+        "if (이름):\n",
+        "    print(\"yes\")\n",
+        "# end\n",
+        "if (이름):\n",
+        "    print(\"again\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
 fn exact_output_words_are_never_reinterpreted_as_questions() {
     let source = concat!(
         "show task\n",
@@ -342,9 +441,77 @@ fn sentence_actions_accept_spaced_korean_phrases_and_particles() {
 }
 
 #[test]
+fn sentence_actions_allow_small_polite_fillers() {
+    let source = concat!(
+        "please show hello\n",
+        "제발 안녕하세요 말해줘\n",
+        "제발 물어봐 이름 이름이 뭐예요?\n",
+        "좀 보여줘 다시\n",
+    );
+    let expected = concat!(
+        "print(\"hello\")\n",
+        "print(\"안녕하세요\")\n",
+        "이름 = input(\"이름이 뭐예요?\" + \" \")\n",
+        "print(\"다시\")\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn the_shortest_conversation_uses_no_prompt_punctuation_or_formatting() {
+    let source = "name ask\nHello name show\n";
+    assert_eq!(
+        ok(source),
+        "name = input()\nprint(\"Hello \" + str(name))\n"
+    );
+}
+
+#[test]
 fn a_named_korean_repeat_count_can_keep_the_suffix_attached() {
     let source = "횟수 = 3\n횟수번:\n    안녕 말해줘\n";
     let expected = "횟수 = 3\nfor _ in range(횟수):\n    print(\"안녕\")\n";
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn sentence_repeat_can_omit_the_colon_and_repeat_plain_words() {
+    let source = concat!(
+        "3번 안녕하세요\n",
+        "3 times Welcome to NME\n",
+        "3 times and Welcome again\n",
+        "3번 반복해 다시 만나요\n",
+    );
+    let expected = concat!(
+        "for _ in range(3): print(\"안녕하세요\")\n",
+        "for _ in range(3): print(\"Welcome to NME\")\n",
+        "for _ in range(3): print(\"Welcome again\")\n",
+        "for _ in range(3): print(\"다시 만나요\")\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn sentence_updates_can_change_a_value_without_plus_or_equals() {
+    let source = concat!(
+        "점수는 0\n",
+        "점수에 1 더해\n",
+        "점수에서 1 빼줘\n",
+        "add 2 to score\n",
+        "increase score by 3\n",
+        "subtract 1 from score\n",
+        "score add 1\n",
+        "score add 1!\n",
+    );
+    let expected = concat!(
+        "점수 = 0\n",
+        "점수 = 점수 + 1\n",
+        "점수 = 점수 - 1\n",
+        "score = score + 2\n",
+        "score = score + 3\n",
+        "score = score - 1\n",
+        "score = score + 1\n",
+        "score = score + 1\n",
+    );
     assert_eq!(ok(source), expected);
 }
 
@@ -602,4 +769,277 @@ fn crlf_line_endings_are_preserved() {
 #[test]
 fn missing_trailing_newline_is_fine() {
     assert_eq!(ok("say \"hi\""), "print(\"hi\")");
+}
+
+#[test]
+fn sentence_while_break_and_end_do_not_need_indentation() {
+    let source = concat!(
+        "score = 0\n",
+        "while score < 3\n",
+        "show score\n",
+        "add 1 to score\n",
+        "if score == 3\n",
+        "break\n",
+        "end\n",
+        "end\n",
+    );
+    let expected = concat!(
+        "score = 0\n",
+        "while (score < 3):\n",
+        "    print(score)\n",
+        "    score = score + 1\n",
+        "    if (score == 3):\n",
+        "        break\n",
+        "    # end\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn sentence_logical_conditions_and_branches_are_python_shaped() {
+    let source = concat!(
+        "ready = True\n",
+        "score = 3\n",
+        "만약 ready 그리고 score > 2\n",
+        "말해 yes\n",
+        "아니면 만약 score == 0\n",
+        "말해 zero\n",
+        "아니면\n",
+        "말해 no\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "ready = True\n",
+        "score = 3\n",
+        "if ((ready and score > 2)):\n",
+        "    print(\"yes\")\n",
+        "elif (score == 0):\n",
+        "    print(\"zero\")\n",
+        "else:\n",
+        "    print(\"no\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn all_three_levels_and_both_languages_share_a_flat_control_block() {
+    let source = concat!(
+        "점수 = 0\n",
+        "점수가 3보다 작을 동안\n",
+        "    말해 점수\n",
+        "add 1 to score\n",
+        "만약 점수 그리고 score == 2\n",
+        "show middle\n",
+        "아니면만약 score == 3\n",
+        "말해 done\n",
+        "아니면\n",
+        "말해 other\n",
+        "끝\n",
+        "멈춰\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "점수 = 0\n",
+        "while (점수 < 3):\n",
+        "    print(점수)\n",
+        "    score = score + 1\n",
+        "    if ((점수 and score == 2)):\n",
+        "        print(\"middle\")\n",
+        "    elif (score == 3):\n",
+        "        print(\"done\")\n",
+        "    else:\n",
+        "        print(\"other\")\n",
+        "    # end\n",
+        "    break\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn korean_beginner_spellings_are_compact_and_python_mixable() {
+    let source = concat!(
+        "값 = 1\n",
+        "3번: 말해 값\n",
+        "물어봐 이름\n",
+        "만약 이름:\n",
+        "    말해 f\"안녕 {이름}\"\n",
+        "동안 값 < 3\n",
+        "    값 = 값 + 1\n",
+        "    멈춰\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "값 = 1\n",
+        "for _ in range(3): print(값)\n",
+        "이름 = input()\n",
+        "if (이름):\n",
+        "    print(f\"안녕 {이름}\")\n",
+        "while (값 < 3):\n",
+        "    값 = 값 + 1\n",
+        "    break\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn korean_beginner_save_words_are_explicit_and_mixable() {
+    let source = concat!(
+        "저장 인사 안녕하세요\n",
+        "설정 점수에 3\n",
+        "인사 말해줘\n",
+        "점수 말해줘\n",
+    );
+    let expected = concat!(
+        "인사 = \"안녕하세요\"\n",
+        "점수 = 3\n",
+        "print(인사)\n",
+        "print(점수)\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn attached_korean_condition_endings_work_without_spaces() {
+    let source = concat!(
+        "이름 = \"Ada\"\n",
+        "만약에 이름있으면\n",
+        "말해 hello\n",
+        "아니면만약에 이름없으면\n",
+        "말해 missing\n",
+        "아니면\n",
+        "말해 other\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "이름 = \"Ada\"\n",
+        "if (이름):\n",
+        "    print(\"hello\")\n",
+        "elif (not (이름)):\n",
+        "    print(\"missing\")\n",
+        "else:\n",
+        "    print(\"other\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn korean_while_sentence_uses_an_explicit_end() {
+    let source = concat!(
+        "점수는 0\n",
+        "점수가 3보다 작을 동안\n",
+        "점수 말해줘\n",
+        "점수에 1 더해\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "점수 = 0\n",
+        "while (점수 < 3):\n",
+        "    print(점수)\n",
+        "    점수 = 점수 + 1\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn korean_break_alias_is_lowered_inside_an_inline_condition() {
+    let source = concat!(
+        "점수는 0\n",
+        "동안 점수가 3보다 작으면\n",
+        "점수에 1 더해\n",
+        "점수가 2보다 크면 멈춰\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "점수 = 0\n",
+        "while (점수 < 3):\n",
+        "    점수 = 점수 + 1\n",
+        "    if (점수 > 2): break\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn attached_korean_else_if_is_supported() {
+    let source = concat!(
+        "만약 준비\n",
+        "말해 one\n",
+        "아니면만약 다른준비\n",
+        "말해 two\n",
+        "아니면\n",
+        "말해 three\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "if (준비):\n",
+        "    print(\"one\")\n",
+        "elif (다른준비):\n",
+        "    print(\"two\")\n",
+        "else:\n",
+        "    print(\"three\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn attached_korean_repeat_can_use_end_without_indentation() {
+    assert_eq!(
+        ok("3번\n말해 hi\n끝\n"),
+        "for _ in range(3):\n    print(\"hi\")\n# end\n"
+    );
+}
+
+#[test]
+fn korean_hamyeon_connector_can_open_a_flat_block() {
+    assert_eq!(
+        ok("준비는 참\n만약 준비 하면\n성공 말해줘\n끝\n"),
+        "준비 = True\nif (준비):\n    print(\"성공\")\n# end\n"
+    );
+}
+
+#[test]
+fn explicit_block_names_do_not_leak_after_end() {
+    let source = concat!(
+        "ready = True\n",
+        "if ready\n",
+        "set secret to hidden\n",
+        "show value secret\n",
+        "end\n",
+        "show secret\n",
+    );
+    let expected = concat!(
+        "ready = True\n",
+        "if (ready):\n",
+        "    secret = \"hidden\"\n",
+        "    print(\"value \" + str(secret))\n",
+        "# end\n",
+        "print(\"secret\")\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn explicit_blocks_do_not_double_indent_a_body_already_indented() {
+    assert_eq!(
+        ok("if ready\n    show yes\nend\n"),
+        "if (ready):\n    print(\"yes\")\n# end\n"
+    );
+}
+
+#[test]
+fn nested_flat_blocks_keep_python_nesting_and_line_count() {
+    let source = "while outer\nif inner\nshow value\nend\nend\n";
+    let output = ok(source);
+    assert_eq!(
+        output,
+        "while (outer):\n    if (inner):\n        print(\"value\")\n    # end\n# end\n"
+    );
+    assert_eq!(output.lines().count(), source.lines().count());
 }

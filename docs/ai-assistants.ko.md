@@ -8,7 +8,7 @@ AI 코딩 도우미에게 다음 문장 하나를 전달하세요.
 NME 코드를 작성하기 전에 이 문서를 읽고 따르세요.
 https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.ko.md
 
-그다음 요청한 프로그램을 .nme 파일로 작성하세요. 초보자에게는 문장형을 우선하고,
+먼저 `nme --version`으로 지원되는 베타를 확인하세요. 그다음 요청한 프로그램을 .nme 파일로 작성하세요. 초보자에게는 문장형을 우선하고,
 더 분명할 때만 초급 문법이나 고급 Python을 섞으며, nme 검사로 확인하세요.
 ```
 
@@ -34,24 +34,46 @@ show Hello 이름!
 
 ```text
 안녕하세요 말해줘
-show Hello world!
+Hello world show
+오늘도 반가워요!
+Hello everyone!
 
-이름을 물어봐 이름이 뭐예요?
-ask name What is your name?
+이름을 물어봐
+name ask
+Hello name show
 
-3번 반복해서 다시 말해줘
-repeat 3 times and show Again
+3번 다시 만나요
+3 times Again
 
 만약에 점수가 10보다 크면 성공 말해줘
 if score is greater than 10 then show You won
+점수가 5보다 크면 높아요 말해줘
+색이 빨강과 같으면 맞아요 말해줘
 
 정답은 1부터 10까지 랜덤정수
 추측을 숫자로 물어봐 숫자를 맞혀 보세요
 ```
 
+가장 쉬운 출력은 `오늘도 반가워요!`처럼 분명한 여러 단어 문장을 동작 단어
+없이 쓰는 것입니다. 한 단어만 있는 줄은 Python 이름일 수 있어 `말해줘`나
+`보여줘`를 붙여야 출력됩니다. `repaet`, `shwoe` 같은 오타는 뜻이 하나로
+정해질 때만 자동으로 고칩니다. `그리거`, `같먄` 같은 논리·조건 연결어 오타도
+같은 제한으로 복구합니다.
+
 문장 출력에서 앞서 입력받거나 저장한 이름은 실제 값으로 바뀝니다. 따옴표 없는
-질문에는 끝 공백이 자동으로 붙습니다. 여러 줄 본문은 스페이스 네 칸으로
-들여쓰며 문장형 머리에는 콜론이 필요 없습니다.
+질문에는 끝 공백이 자동으로 붙습니다. 처음에는 들여쓰기 대신 `끝`/`end`로
+블록을 닫으세요.
+
+```text
+동안 점수 < 3
+점수 말해줘
+점수에 1 더해
+끝
+```
+
+같은 블록에서 `멈춰`/`break`, `그리고`/`and`, `또는`/`or`, `아니면 만약에`/`elif`,
+`아니면`/`else`를 사용할 수 있습니다. 네 칸 들여쓰기와 일반 Python도 계속
+유효합니다.
 
 ### 정확해야 하면 초급 문법 사용
 
@@ -64,6 +86,11 @@ ask name, <Python prompt>
 count times:
 만약 <Python 조건>:
 when <Python condition>:
+동안 <조건> ... 끝
+while <condition> ... end
+멈춰 / break
+아니면 만약 <조건> / else if <condition>
+아니면 / else
 랜덤 사용 최신
 use random
 ```
@@ -105,6 +132,10 @@ nme 검사 program
 nme 빌드 program -o program.py
 ```
 
+`검사`와 `빌드`는 생성된 Python을 선택한 CPython으로 컴파일해 확인하지만
+실행하지는 않습니다. `nme 도움`처럼 한국어 명령을 쓰면 한국어 안내 뒤에 같은
+내용의 영어 안내도 나옵니다. `nme help`와 영어 명령은 영어만 출력합니다.
+
 실행해도 안전하고 사용자가 원하면 `nme 실행 program`을 사용합니다.
 네이티브 결과물을 원하고 Nuitka가 설치됐을 때만 `nme 컴파일`을 사용합니다.
 
@@ -120,9 +151,8 @@ Python으로 돌아가세요.
 
 ## 제품별 링크 전달 방법
 
-- Cursor: URL을 `@Link`로 붙입니다. 공식
-  [문맥 문서](https://docs.cursor.com/context/%40-symbols/overview)가 링크 문맥을
-  설명합니다.
+- Cursor: URL을 `@Link`로 붙입니다. 최신 링크·문맥 기능은 Cursor 공식
+  [문서](https://cursor.com/docs)에서 확인하세요.
 - Claude Code: 세션을 시작할 때 전달 문장을 붙입니다. Anthropic 공식
   [메모리 문서](https://docs.anthropic.com/en/docs/claude-code/memory)의
   `CLAUDE.md`도 선택적으로 쓸 수 있지만 NME에는 필요하지 않습니다.

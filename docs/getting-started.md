@@ -29,18 +29,19 @@ no quotes or parentheses.
 Replace the file with:
 
 ```text
-ask name What is your name?
-show Hello name!
+name ask
+Hello name show
 ```
 
 NME remembers that `name` holds the answer, so it inserts that value into the
-second sentence automatically.
+second sentence automatically. Add a prompt later with `ask name What is your
+name?` when you want one.
 
 The same ideas work in Korean and can be mixed immediately:
 
 ```text
-이름을 물어봐 이름이 뭐예요?
-show Hello 이름!
+이름을 물어봐
+안녕하세요 이름 말해줘
 ```
 
 ## 3. Repeat without a colon
@@ -48,7 +49,8 @@ show Hello 이름!
 For one repeated sentence:
 
 ```text
-repeat 3 times and show Welcome to NME
+3 times Welcome to NME
+3번 안녕하세요
 ```
 
 For several sentences, indent them with four spaces:
@@ -58,6 +60,19 @@ repeat 3 times
     show First sentence
     둘째 문장 말해줘
 ```
+
+If indentation is still uncomfortable, use an explicit closing word instead:
+
+```text
+score = 0
+while score < 3
+show score
+add 1 to score
+end
+```
+
+The same style supports `break`, `and`/`or`, `elif`, and `else`; Korean
+spellings are `멈춰`, `그리고`/`또는`, `아니면 만약에`, and `아니면`.
 
 ## 4. Make a number game
 

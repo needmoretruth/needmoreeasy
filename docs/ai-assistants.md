@@ -8,7 +8,7 @@ Give an AI coding assistant this one prompt:
 Read and follow this NME language handoff before writing code:
 https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
 
-Then write the requested program as a .nme file, prefer sentence syntax for a
+Then confirm that `nme --version` is the supported beta, then write the requested program as a .nme file, prefer sentence syntax for a
 beginner, mix beginner or advanced Python only where it makes the result
 clearer, and verify it with nme check.
 ```
@@ -36,25 +36,47 @@ show Hello 이름!
 ### Generate sentence syntax first
 
 ```text
-show Hello world!
+Hello world show
 안녕하세요 말해줘
+Hello everyone!
+오늘도 반가워요!
 
-ask name What is your name?
-이름을 물어봐 이름이 뭐예요?
+name ask
+이름을 물어봐
+Hello name show
 
-repeat 3 times and show Again
-3번 반복해서 다시 말해줘
+3 times Again
+3번 다시 만나요
 
 if score is greater than 10 then show You won
 만약에 점수가 10보다 크면 성공 말해줘
+score is greater than 5 then show high
+색이 빨강과 같으면 맞아요 말해줘
 
 set answer to random number from 1 to 10
 ask number guess Pick a number
 ```
 
+For the gentlest possible output, a clear multi-word sentence can omit the
+action word (`Hello everyone!`). A single bare word is valid Python and stays
+Python, so use `show`/`말해줘` when that one word should be printed. Common
+action, logical, and condition typos such as `repaet`, `shwoe`, `그리거`, and
+`같먄` are repaired only when the intended meaning is unique.
+
 Known input or assignment names are interpolated in sentence output. Natural
-prompts get a trailing space automatically. Indent multi-line bodies with four
-spaces; sentence headers do not need a colon.
+prompts get a trailing space automatically. For the gentlest start, close a
+flat block with `end`/`끝` instead of relying on indentation:
+
+```text
+while score < 3
+show score
+add 1 to score
+end
+```
+
+The same block supports `break`/`멈춰`, `and`/`그리고`, `or`/`또는`,
+`elif`/`아니면 만약에`, and `else`/`아니면`. Indented bodies and ordinary Python
+remain valid when a learner is ready to use them.
 
 ### Use beginner syntax when precision matters
 
@@ -67,6 +89,11 @@ count times:
 횟수번:
 when <Python condition>:
 만약 <Python 조건>:
+while <condition> ... end
+동안 <조건> ... 끝
+break / 멈춰
+else if <condition> / 아니면 만약 <조건>
+else / 아니면
 use random
 랜덤 사용 최신
 ```
@@ -111,6 +138,11 @@ nme check program
 nme build program -o program.py
 ```
 
+`check` and `build` ask the selected CPython to compile the generated source;
+they do not execute it. `nme help` and English commands print English only.
+Korean commands such as `nme 도움`, `nme 검사`, and `nme 실행` print Korean
+guidance followed by the equivalent English guidance.
+
 Use `nme run program` when execution is safe and desired. Use
 `nme compile program -o program` only when the user wants a native artifact
 and Nuitka is installed.
@@ -127,9 +159,9 @@ always valid advanced NME.
 
 ## Product-specific ways to provide the link
 
-- Cursor: paste the URL with `@Link`. Cursor's official
-  [context documentation](https://docs.cursor.com/context/%40-symbols/overview)
-  describes link context.
+- Cursor: paste the URL with `@Link`. Cursor's current
+  [documentation](https://cursor.com/docs) describes the available link and
+  context features.
 - Claude Code: paste the handoff prompt at session start. Claude Code also
   supports persistent `CLAUDE.md` memory, documented by
   [Anthropic](https://docs.anthropic.com/en/docs/claude-code/memory), but it is

@@ -82,6 +82,7 @@ fn new_english_spellings_are_still_ordinary_python_names() {
     unchanged("use = lambda value: value\nuse(random)\n");
     unchanged("show = print\nshow('hello')\n");
     unchanged("repeat = 3\nset = {'answer': 7}\nprint(repeat, set)\n");
+    unchanged("add = 1\nincrease = add + 1\nprint(increase)\n");
 }
 
 #[test]
@@ -90,6 +91,10 @@ fn korean_spellings_are_still_ordinary_python_names() {
     unchanged("물어봐 = input\n물어봐('이름?')\n");
     unchanged("번 = 3\n만약 = True\nprint(번, 만약)\n");
     unchanged("랜덤 = object()\n사용 = 랜덤\n");
+    unchanged("아니면 = True\nprint(아니면)\n");
+    unchanged("아니면.foo\n");
+    unchanged("아니면 + 1\n");
+    unchanged("멈춰\n");
     unchanged("보여줘 = print\n보여줘('안녕')\n");
     unchanged("반복해 = 3\n설정해 = {'정답': 7}\nprint(반복해, 설정해)\n");
 }
@@ -100,4 +105,16 @@ fn future_python_call_shapes_are_left_for_the_selected_cpython() {
     // know that grammar yet, so the invocation shape is the compatibility
     // boundary that prevents NME from hijacking this as `say` syntax.
     unchanged("say = print\nsay(t\"hello\")\n");
+    unchanged("say = print; say(t\"hello\")\n");
+}
+
+#[test]
+fn control_words_in_valid_python_keep_python_priority() {
+    unchanged("end = 1\nprint(end)\n");
+    unchanged("end\n");
+    unchanged("끝\n");
+    unchanged("obj.end = 1\n");
+    unchanged("breakpoint()\n");
+    unchanged("while True:\n    break\n");
+    unchanged("if ready:\n    else_value = 1\n");
 }
