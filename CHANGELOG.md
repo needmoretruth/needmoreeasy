@@ -4,6 +4,11 @@ English | [한국어](CHANGELOG.ko.md)
 
 All notable changes to NME are recorded here.
 
+## 0.0.1-beta.13 — 2026-08-11
+
+- Refuse to load the bundled random adapter when its generated helper names
+  would overwrite an existing value.
+
 ## 0.0.1-beta.12 — 2026-08-11
 
 - Fix the indentation of the Korean beginner time-loop example so every

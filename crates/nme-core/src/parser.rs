@@ -676,9 +676,9 @@ fn classify(
         || action_phrase_at(tokens, 0, USE_WORDS_KO, MatchMode::Exact).is_some()
     {
         if recoverable_module_shape(tokens) {
-            return match_use_random(source, tokens, MatchMode::Recover);
+            return match_use_random(source, tokens, known_names, MatchMode::Recover);
         }
-        return match_use_random(source, tokens, MatchMode::Exact);
+        return match_use_random(source, tokens, known_names, MatchMode::Exact);
     }
     exact_match!(match_when(
         source,
@@ -734,7 +734,12 @@ fn classify(
     }
 
     exact_match!(match_set(source, tokens, known_names, MatchMode::Exact));
-    exact_match!(match_use_random(source, tokens, MatchMode::Exact));
+    exact_match!(match_use_random(
+        source,
+        tokens,
+        known_names,
+        MatchMode::Exact
+    ));
 
     // A bare contraction such as `Don't stop!` can put `Don` one edit away
     // from the repeat alias `do`, and `It's easy` can put `It` near `if`.
@@ -754,7 +759,7 @@ fn classify(
         match_ask(source, tokens, known_names, MatchMode::Recover),
         match_say(source, tokens, known_names, MatchMode::Recover),
         match_set(source, tokens, known_names, MatchMode::Recover),
-        match_use_random(source, tokens, MatchMode::Recover),
+        match_use_random(source, tokens, known_names, MatchMode::Recover),
     ];
     let mut candidates = Vec::new();
     let mut recovery_problems = Vec::new();
@@ -3042,6 +3047,7 @@ fn find_count_marker(tokens: &[Token], mode: MatchMode) -> Option<(usize, Spelli
 fn match_use_random(
     source: &str,
     tokens: &[Token],
+    known_names: &HashSet<String>,
     mode: MatchMode,
 ) -> Result<Option<NmeStmt>, Diagnostic> {
     let Some((action_start, action_end, spelling)) = find_use_action(tokens, mode) else {
@@ -3170,7 +3176,47 @@ fn match_use_random(
         return Err(module_shape_diagnostic(spelling, token.span));
     }
 
+    let collisions = random_binding_names()
+        .iter()
+        .filter(|name| known_names.contains(**name))
+        .copied()
+        .collect::<Vec<_>>();
+    if !collisions.is_empty() {
+        return Err(random_name_collision_diagnostic(
+            span_of(tokens),
+            &collisions,
+        ));
+    }
+
     Ok(Some(NmeStmt::UseRandom { requested }))
+}
+
+fn random_binding_names() -> &'static [&'static str] {
+    &[
+        RANDOM_MODULE,
+        RANDOM_MODULE_KO,
+        "random_number",
+        "random_pick",
+        "shuffle",
+        "랜덤정수",
+        "랜덤선택",
+        "섞기",
+        "random_version",
+        "랜덤버전",
+    ]
+}
+
+fn random_name_collision_diagnostic(span: Span, collisions: &[&str]) -> Diagnostic {
+    let names = collisions.join(", ");
+    Diagnostic::bilingual(
+        format!("the random module would overwrite existing name(s): {names}"),
+        format!("랜덤 모듈이 이미 있는 이름을 덮어쓸 수 있어요: {names}"),
+        span,
+    )
+    .with_bilingual_hint(
+        "rename the existing value, or load random before assigning that name",
+        "기존 값을 다른 이름으로 바꾸거나, 그 이름을 쓰기 전에 랜덤 모듈을 불러오세요",
+    )
 }
 
 fn random_word_matches(token: &Token, mode: MatchMode) -> bool {
@@ -3910,6 +3956,13 @@ fn remember_bindings(stmt: &NmeStmt, names: &mut HashSet<String>) {
     match stmt {
         NmeStmt::Ask { target, .. } | NmeStmt::Set { target, .. } => {
             names.insert(target.clone());
+        }
+        NmeStmt::UseRandom { .. } => {
+            names.extend(
+                random_binding_names()
+                    .iter()
+                    .map(|name| (*name).to_string()),
+            );
         }
         NmeStmt::Times {
             inline: Some(InlineStmt::Nme(inner)),

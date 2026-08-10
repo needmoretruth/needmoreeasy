@@ -156,6 +156,13 @@ fn unavailable_random_version_reports_the_bundled_version() {
 }
 
 #[test]
+fn random_module_does_not_overwrite_existing_names() {
+    let message = err("random_number = 42\nuse random\n");
+    assert!(message.contains("overwrite existing name"), "{message}");
+    assert!(message.contains("random_number"), "{message}");
+}
+
+#[test]
 fn sentence_punctuation_can_be_plain_output_without_an_action() {
     assert_eq!(
         transpile("Hello there!\n").unwrap(),

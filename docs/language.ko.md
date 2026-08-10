@@ -410,6 +410,9 @@ use random version "0.0.1"
 | `섞기(값들)` | `shuffle(values)` | `random.shuffle(values)` |
 | `랜덤버전` | `random_version` | 어댑터 버전 문자열 |
 
+이 모듈은 위의 도우미 이름을 예약합니다. 이미 같은 이름을 쓰고 있으면 값을
+조용히 덮어쓰지 않고 이름을 바꾸라는 오류를 보여 줍니다.
+
 `nme 모듈` 또는 `nme modules`로 버전을 확인합니다. 보안 번호나 비밀번호에는
 랜덤 도구를 사용하지 마세요.
 
