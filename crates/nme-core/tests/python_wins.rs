@@ -93,3 +93,11 @@ fn korean_spellings_are_still_ordinary_python_names() {
     unchanged("보여줘 = print\n보여줘('안녕')\n");
     unchanged("반복해 = 3\n설정해 = {'정답': 7}\nprint(반복해, 설정해)\n");
 }
+
+#[test]
+fn future_python_call_shapes_are_left_for_the_selected_cpython() {
+    // CPython 3.14 accepts template strings. rustpython-parser 0.4 does not
+    // know that grammar yet, so the invocation shape is the compatibility
+    // boundary that prevents NME from hijacking this as `say` syntax.
+    unchanged("say = print\nsay(t\"hello\")\n");
+}

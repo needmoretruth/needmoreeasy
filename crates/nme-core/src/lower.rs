@@ -10,8 +10,8 @@
 //! line numbers the user actually sees in their `.nme` file.
 
 use crate::syntax::{
-    Code, InlineStmt, InputKind, NmeLine, NmeStmt, TextPart, TextTemplate, Value,
-    RANDOM_MODULE_VERSION,
+    Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, Literal, NmeLine, NmeStmt,
+    TextPart, TextTemplate, Value, RANDOM_MODULE_VERSION,
 };
 
 const BILINGUAL_RANDOM_TOOLS_PREFIX: &str = concat!(
@@ -59,7 +59,13 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
         } => {
             let input = match prompt {
                 Some(Value::Text(prompt)) => {
-                    format!("input({} + \" \")", lower_template(prompt))
+                    let ends_with_whitespace = template_ends_with_whitespace(prompt);
+                    let lowered = lower_template(prompt);
+                    if ends_with_whitespace {
+                        format!("input({lowered})")
+                    } else {
+                        format!("input({lowered} + \" \")")
+                    }
                 }
                 Some(prompt) => format!("input({})", lower_value(prompt, source)),
                 None => "input()".to_string(),
@@ -77,7 +83,7 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
             lower_suite(header, inline.as_ref(), source)
         }
         NmeStmt::When { condition, inline } => {
-            let header = format!("if ({}):", lower_code(condition, source));
+            let header = format!("if ({}):", lower_condition(condition, source));
             lower_suite(header, inline.as_ref(), source)
         }
         NmeStmt::UseRandom { .. } => {
@@ -89,7 +95,49 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
 fn lower_code(code: &Code, source: &str) -> String {
     match code {
         Code::Source(span) => slice(source, *span).to_string(),
-        Code::Generated(code) => code.clone(),
+    }
+}
+
+fn lower_condition(condition: &Condition, source: &str) -> String {
+    match condition {
+        Condition::Python(code) => lower_code(code, source),
+        Condition::Truthy { value, negated } => {
+            let value = lower_condition_value(value, source);
+            if *negated {
+                format!("not ({value})")
+            } else {
+                value
+            }
+        }
+        Condition::Compare {
+            left,
+            operator,
+            right,
+            negated,
+        } => {
+            let left = lower_condition_value(left, source);
+            let right = lower_condition_value(right, source);
+            let operator = match operator {
+                CompareOp::Equal => "==",
+                CompareOp::Greater => ">",
+                CompareOp::Less => "<",
+            };
+            let comparison = format!("{left} {operator} {right}");
+            if *negated {
+                format!("not ({comparison})")
+            } else {
+                comparison
+            }
+        }
+    }
+}
+
+fn lower_condition_value(value: &ConditionValue, source: &str) -> String {
+    match value {
+        ConditionValue::Python(code) => lower_code(code, source),
+        ConditionValue::Name(name) => name.clone(),
+        ConditionValue::Text(text) => python_string(text),
+        ConditionValue::Literal(literal) => lower_literal(*literal).to_string(),
     }
 }
 
@@ -97,6 +145,7 @@ fn lower_value(value: &Value, source: &str) -> String {
     match value {
         Value::Python(code) => lower_code(code, source),
         Value::Text(template) => lower_template(template),
+        Value::Literal(literal) => lower_literal(*literal).to_string(),
         Value::RandomInteger { low, high } => format!(
             "__import__(\"random\").randint({}, {})",
             lower_code(low, source),
@@ -110,6 +159,14 @@ fn lower_value(value: &Value, source: &str) -> String {
                 .join(", ");
             format!("__import__(\"random\").choice(({values},))")
         }
+    }
+}
+
+fn lower_literal(literal: Literal) -> &'static str {
+    match literal {
+        Literal::True => "True",
+        Literal::False => "False",
+        Literal::None => "None",
     }
 }
 
@@ -127,6 +184,14 @@ fn lower_template(template: &TextTemplate) -> String {
     } else {
         pieces.join(" + ")
     }
+}
+
+fn template_ends_with_whitespace(template: &TextTemplate) -> bool {
+    matches!(
+        template.parts.last(),
+        Some(TextPart::Literal(text))
+            if text.chars().last().is_some_and(char::is_whitespace)
+    )
 }
 
 fn python_string(text: &str) -> String {

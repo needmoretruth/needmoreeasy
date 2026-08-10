@@ -153,3 +153,57 @@ fn sentence_punctuation_without_an_action_is_ambiguous() {
     assert!(message.contains("ambiguous"), "{message}");
     assert!(message.contains("show"), "{message}");
 }
+
+#[test]
+fn action_typos_must_have_one_unambiguous_meaning() {
+    let say_or_ask = err("asy name Hello\n");
+    assert!(say_or_ask.contains("more than one action"), "{say_or_ask}");
+
+    let ask_or_use = err("usk random latest\n");
+    assert!(ask_or_use.contains("more than one action"), "{ask_or_use}");
+}
+
+#[test]
+fn unknown_prose_and_broken_sentence_actions_never_pass_silently() {
+    let prose = err("hello world\n");
+    assert!(prose.contains("clear action"), "{prose}");
+
+    let typo = err("shwoe Hello\n");
+    assert!(typo.contains("clear action"), "{typo}");
+}
+
+#[test]
+fn condition_templates_reject_unexplained_middle_words() {
+    let message = err("ready = True\nif ready banana exists then show no\n");
+    assert!(message.contains("condition"), "{message}");
+}
+
+#[test]
+fn module_sentences_reject_negation_reordering_and_extra_words() {
+    for source in [
+        "never use random\n",
+        "version 0.0.1 random use\n",
+        "use random latest version 9.9.9\n",
+        "use os and random\n",
+    ] {
+        let message = err(source);
+        assert!(
+            message.contains("module") || message.contains("choose either"),
+            "{source:?}: {message}"
+        );
+    }
+}
+
+#[test]
+fn a_one_edit_condition_connector_is_recovered() {
+    assert_eq!(
+        transpile("name = \"Ada\"\n만약에 name이 있으먄 안녕 말해줘\n").unwrap(),
+        "name = \"Ada\"\nif (name): print(\"안녕\")\n"
+    );
+}
+
+#[test]
+fn sentence_lowering_never_changes_physical_line_numbers() {
+    let message = err("show Hello \\\nworld\n");
+    assert!(message.contains("one physical line"), "{message}");
+}

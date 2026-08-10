@@ -4,7 +4,7 @@
 //! [`lexer`] → [`parser`] → [`lower`]. Each stage has exactly one job and
 //! one reason to change; keep it that way.
 
-use crate::diagnostics::Diagnostic;
+use crate::diagnostics::{Diagnostic, Span};
 use crate::{lexer, lower, parser};
 
 /// Transpiles NME source code into ordinary Python source code.
@@ -18,5 +18,28 @@ pub fn transpile(source: &str) -> Result<String, Vec<Diagnostic>> {
     let lines = lexer::logical_lines(source).map_err(|problem| vec![problem])?;
     let nme_lines = parser::parse(source, &lines)?;
     let edits = lower::lower_lines(&nme_lines, source);
+    let line_break_problems = edits
+        .iter()
+        .filter(|edit| {
+            count_line_breaks(&source[edit.span.start..edit.span.end])
+                != count_line_breaks(&edit.replacement)
+        })
+        .map(|edit| {
+            Diagnostic::new(
+                "sentence-style NME must stay on one physical line",
+                Span::new(edit.span.start, edit.span.end),
+            )
+            .with_hint(
+                "keep this easy statement on one line; multiline Python expressions remain supported",
+            )
+        })
+        .collect::<Vec<_>>();
+    if !line_break_problems.is_empty() {
+        return Err(line_break_problems);
+    }
     Ok(lower::apply_edits(source, &edits))
+}
+
+fn count_line_breaks(text: &str) -> usize {
+    text.bytes().filter(|byte| *byte == b'\n').count()
 }
