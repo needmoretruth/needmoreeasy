@@ -2,5 +2,5 @@
 score = 0
 while score < 3
 show score
-score = score + 1
+add 1 to score
 end

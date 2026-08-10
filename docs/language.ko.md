@@ -55,6 +55,13 @@ show Hello name!
 `이름`과 `name` 자리에는 실제 대답이 들어가고 나머지는 글로 남습니다. 알고
 있는 한국어 이름 뒤의 조사는 출력에 그대로 붙습니다.
 
+가장 짧은 대화는 질문과 특수문자가 없어도 됩니다.
+
+```text
+이름을 물어봐
+안녕하세요 이름 말해줘
+```
+
 출력 동작으로 `보여줘`, `말해줘`, `말해주세요`, `출력해`, `출력해줘`,
 `show`, `display`, `tell`, `say`를 쓸 수 있습니다. 정확한 초급 표기인
 `말해 표현식`과 `say expression`은 올바른 Python 표현식을 코드로 처리합니다.
@@ -80,12 +87,18 @@ ask number age How old are you?
 ```text
 인사는 안녕하세요
 정답은 7
+점수에 1 더해
+점수에서 1 빼줘
 set greeting to Hello
 set answer to 7
 ```
 
 평범한 대입문으로 바뀝니다. 숫자와 분명한 표현식은 코드, 평범한 단어는 글로
 저장합니다. 저장한 이름은 뒤의 문장 출력과 조건에서 사용할 수 있습니다.
+
+작은 값 변경은 `+`, `-`, `=` 없이도 쓸 수 있습니다. `점수에 1 더해`와
+`점수에서 1 빼줘`처럼 적으면 Python의 대입으로 바뀝니다. 영어에서는
+`score add 1`, `subtract 1 from score`도 사용할 수 있습니다.
 
 ### 반복하기
 
@@ -95,7 +108,12 @@ set answer to 7
 3번 반복해서 다시 말해줘
 repeat 3 times and show Again
 3 times 반복해서 mixed 말해줘
+3번 안녕하세요
+3 times Welcome to NME
 ```
+
+횟수 뒤에 평범한 글을 바로 쓰면 그 글을 반복해서 출력합니다. 처음에는 이
+형식을 쓰고, 뜻을 분명히 보이고 싶을 때만 `말해줘`나 `show`를 붙이세요.
 
 여러 문장은 콜론 없이 들여씁니다.
 
@@ -219,6 +237,11 @@ say <Python expression>
 
 물어봐 <이름>
 물어봐 <이름>, <Python 질문 표현식>
+
+저장 <이름> <값>
+설정 <이름> <값>
+저장 <이름>을 <값>
+save <name> to <value>
 ask <name>
 ask <name>, <Python prompt expression>
 
@@ -260,6 +283,7 @@ use random
 | `말해 값` / `say value` | `print(value)` |
 | `물어봐 이름` / `ask name` | `name = input()` |
 | `물어봐 이름, 질문` | `name = input(prompt)` |
+| `저장 이름 값` / `save name to value` | `name = value` |
 | `횟수번:` / `count times:` | `for _ in range(count):` |
 | `만약 조건:` / `when condition:` | `if (condition):` |
 | `동안 조건` ... `끝` / `while condition` ... `end` | `while (condition):` |

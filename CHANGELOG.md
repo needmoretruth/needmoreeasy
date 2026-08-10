@@ -4,6 +4,16 @@ English | [한국어](CHANGELOG.ko.md)
 
 All notable changes to NME are recorded here.
 
+## 0.0.1-beta.6 — 2026-08-11
+
+- Add an easier sentence bridge for value changes (`add 1 to score`,
+  `점수에 1 더해`) and repeat plain words without a colon or output marker.
+- Accept spaced and attached Korean condition endings, polite sentence fillers,
+  and explicit Korean beginner save words such as `저장` and `설정`.
+- Refresh the first-run examples and tutorials so learners can move from
+  sentences through beginner control flow into ordinary Python without a
+  forced indentation jump.
+
 ## 0.0.1-beta.5 — 2026-08-11
 
 - Make the three learning levels easier to mix inside one flat block, with

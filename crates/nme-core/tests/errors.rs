@@ -225,3 +225,10 @@ fn explicit_blocks_report_structural_mistakes() {
     let outside = err("break\n");
     assert!(outside.contains("inside a loop"), "{outside}");
 }
+
+#[test]
+fn incomplete_value_changes_get_a_friendly_diagnostic() {
+    let message = err("score add\n");
+    assert!(message.contains("value change"), "{message}");
+    assert!(message.contains("score add 1"), "{message}");
+}

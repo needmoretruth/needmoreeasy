@@ -11,7 +11,7 @@
 
 use crate::syntax::{
     Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, Literal, LogicalOp, NmeLine,
-    NmeStmt, TextPart, TextTemplate, Value, RANDOM_MODULE_VERSION,
+    NmeStmt, TextPart, TextTemplate, UpdateOp, Value, RANDOM_MODULE_VERSION,
 };
 
 const BILINGUAL_RANDOM_TOOLS_PREFIX: &str = concat!(
@@ -81,6 +81,20 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
         }
         NmeStmt::Set { target, value } => {
             format!("{target} = {}", lower_value(value, source))
+        }
+        NmeStmt::Update {
+            target,
+            amount,
+            operation,
+        } => {
+            let operator = match operation {
+                UpdateOp::Add => "+",
+                UpdateOp::Subtract => "-",
+            };
+            format!(
+                "{target} = {target} {operator} {}",
+                lower_code(amount, source)
+            )
         }
         NmeStmt::Times { count, inline } => {
             let header = format!("for _ in range({}):", lower_code(count, source));

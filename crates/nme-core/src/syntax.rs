@@ -94,6 +94,12 @@ pub enum CompareOp {
     Less,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum UpdateOp {
+    Add,
+    Subtract,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Condition {
     Python(Code),
@@ -148,6 +154,11 @@ pub enum NmeStmt {
     Set {
         target: String,
         value: Value,
+    },
+    Update {
+        target: String,
+        amount: Code,
+        operation: UpdateOp,
     },
     Times {
         count: Code,

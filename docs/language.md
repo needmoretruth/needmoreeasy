@@ -56,6 +56,13 @@ show Hello name!
 The result uses the value of `name` / `이름`; other words stay literal.
 Korean particles following a known name remain in the output.
 
+The shortest conversation does not need a prompt or punctuation:
+
+```text
+name ask
+Hello name show
+```
+
 Accepted output actions include `show`, `display`, `tell`, `say`, `보여줘`,
 `말해줘`, `말해주세요`, `출력해`, and `출력해줘`. The precise beginner
 spellings `say expression` and `말해 표현식` continue to treat a valid Python
@@ -85,11 +92,17 @@ name.
 정답은 7
 set greeting to Hello
 set answer to 7
+score add 1
+subtract 1 from score
 ```
 
 These become normal assignments. Numbers and clear expressions remain code;
 plain words become text. A saved name is available for later sentence
 interpolation and conditions.
+
+Small value changes can also be written without `+`, `-`, or `=`. Use
+`score add 1`, `add 1 to score`, or `score increase by 1`; subtraction uses
+`subtract 1 from score`.
 
 ### Repeat
 
@@ -99,7 +112,13 @@ One sentence on one line:
 repeat 3 times and show Again
 3번 반복해서 다시 말해줘
 3 times 반복해서 mixed 말해줘
+3 times Welcome to NME
+3번 안녕하세요
 ```
+
+When the count comes first, the plain words after it are repeated output. This
+is the easiest form; add `show`/`말해줘` when you want the meaning to be
+visibly explicit.
 
 Several lines use indentation but no colon:
 
@@ -230,6 +249,10 @@ ask <name>, <Python prompt expression>
 물어봐 <이름>
 물어봐 <이름>, <Python 질문 표현식>
 
+save <name> to <value>
+저장 <이름> <값>
+설정 <이름> <값>
+
 <count> times:
 <횟수>번:
 
@@ -268,6 +291,7 @@ Exact lowering:
 | `say value` / `말해 값` | `print(value)` |
 | `ask name` / `물어봐 이름` | `name = input()` |
 | `ask name, prompt` | `name = input(prompt)` |
+| `save name to value` / `저장 이름 값` | `name = value` |
 | `count times:` / `횟수번:` | `for _ in range(count):` |
 | `when condition:` / `만약 조건:` | `if (condition):` |
 | `while condition` / `동안 조건` ... `end` / `끝` | `while (condition):` |

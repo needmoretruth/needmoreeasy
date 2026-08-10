@@ -12,9 +12,9 @@ want more control, and turn one line at a time into ordinary Python. All three
 levels can live together, in English, Korean, or a mixture of both.
 
 ```text
-ask name What is your name?
-show Hello name!
-repeat 3 times and show Welcome to NME
+name ask
+Hello name show
+3 times Welcome to NME
 ```
 
 Blocks can be flat while you are learning. Close them with `end`/`끝`:
@@ -23,7 +23,7 @@ Blocks can be flat while you are learning. Close them with `end`/`끝`:
 score = 0
 while score < 3
 show score
-score = score + 1
+add 1 to score
 end
 ```
 
@@ -75,7 +75,7 @@ warns that its `bin` directory is not on `PATH`. It does not reinstall NME.
 Windows PowerShell uses the PATH step in the
 [installation guide](docs/install.md#windows-10-or-11).
 
-Expected version: `nme 0.0.1-beta.5`.
+Expected version: `nme 0.0.1-beta.6`.
 
 Windows, macOS, and Linux instructions are in the
 [installation guide](docs/install.md). The [five-minute guide](docs/getting-started.md)

@@ -82,6 +82,7 @@ fn new_english_spellings_are_still_ordinary_python_names() {
     unchanged("use = lambda value: value\nuse(random)\n");
     unchanged("show = print\nshow('hello')\n");
     unchanged("repeat = 3\nset = {'answer': 7}\nprint(repeat, set)\n");
+    unchanged("add = 1\nincrease = add + 1\nprint(increase)\n");
 }
 
 #[test]

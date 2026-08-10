@@ -264,6 +264,29 @@ fn english_sentence_conditions_support_comparisons_and_inline_then() {
 }
 
 #[test]
+fn korean_condition_connector_can_be_spaced_or_attached() {
+    let source = concat!(
+        "이름 = \"Ada\"\n",
+        "만약에 이름 이면\n",
+        "말해 yes\n",
+        "끝\n",
+        "만약에 이름이면\n",
+        "말해 again\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "이름 = \"Ada\"\n",
+        "if (이름):\n",
+        "    print(\"yes\")\n",
+        "# end\n",
+        "if (이름):\n",
+        "    print(\"again\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
 fn exact_output_words_are_never_reinterpreted_as_questions() {
     let source = concat!(
         "show task\n",
@@ -345,11 +368,13 @@ fn sentence_actions_accept_spaced_korean_phrases_and_particles() {
 fn sentence_actions_allow_small_polite_fillers() {
     let source = concat!(
         "please show hello\n",
+        "제발 안녕하세요 말해줘\n",
         "제발 물어봐 이름 이름이 뭐예요?\n",
         "좀 보여줘 다시\n",
     );
     let expected = concat!(
         "print(\"hello\")\n",
+        "print(\"안녕하세요\")\n",
         "이름 = input(\"이름이 뭐예요?\" + \" \")\n",
         "print(\"다시\")\n",
     );
@@ -357,9 +382,60 @@ fn sentence_actions_allow_small_polite_fillers() {
 }
 
 #[test]
+fn the_shortest_conversation_uses_no_prompt_punctuation_or_formatting() {
+    let source = "name ask\nHello name show\n";
+    assert_eq!(
+        ok(source),
+        "name = input()\nprint(\"Hello \" + str(name))\n"
+    );
+}
+
+#[test]
 fn a_named_korean_repeat_count_can_keep_the_suffix_attached() {
     let source = "횟수 = 3\n횟수번:\n    안녕 말해줘\n";
     let expected = "횟수 = 3\nfor _ in range(횟수):\n    print(\"안녕\")\n";
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn sentence_repeat_can_omit_the_colon_and_repeat_plain_words() {
+    let source = concat!(
+        "3번 안녕하세요\n",
+        "3 times Welcome to NME\n",
+        "3 times and Welcome again\n",
+        "3번 반복해 다시 만나요\n",
+    );
+    let expected = concat!(
+        "for _ in range(3): print(\"안녕하세요\")\n",
+        "for _ in range(3): print(\"Welcome to NME\")\n",
+        "for _ in range(3): print(\"Welcome again\")\n",
+        "for _ in range(3): print(\"다시 만나요\")\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn sentence_updates_can_change_a_value_without_plus_or_equals() {
+    let source = concat!(
+        "점수는 0\n",
+        "점수에 1 더해\n",
+        "점수에서 1 빼줘\n",
+        "add 2 to score\n",
+        "increase score by 3\n",
+        "subtract 1 from score\n",
+        "score add 1\n",
+        "score add 1!\n",
+    );
+    let expected = concat!(
+        "점수 = 0\n",
+        "점수 = 점수 + 1\n",
+        "점수 = 점수 - 1\n",
+        "score = score + 2\n",
+        "score = score + 3\n",
+        "score = score - 1\n",
+        "score = score + 1\n",
+        "score = score + 1\n",
+    );
     assert_eq!(ok(source), expected);
 }
 
@@ -625,7 +701,7 @@ fn sentence_while_break_and_end_do_not_need_indentation() {
         "score = 0\n",
         "while score < 3\n",
         "show score\n",
-        "score = score + 1\n",
+        "add 1 to score\n",
         "if score == 3\n",
         "break\n",
         "end\n",
@@ -677,7 +753,7 @@ fn all_three_levels_and_both_languages_share_a_flat_control_block() {
         "점수 = 0\n",
         "점수가 3보다 작을 동안\n",
         "    말해 점수\n",
-        "score = score + 1\n",
+        "add 1 to score\n",
         "만약 점수 그리고 score == 2\n",
         "show middle\n",
         "아니면만약 score == 3\n",
@@ -734,6 +810,23 @@ fn korean_beginner_spellings_are_compact_and_python_mixable() {
 }
 
 #[test]
+fn korean_beginner_save_words_are_explicit_and_mixable() {
+    let source = concat!(
+        "저장 인사 안녕하세요\n",
+        "설정 점수에 3\n",
+        "인사 말해줘\n",
+        "점수 말해줘\n",
+    );
+    let expected = concat!(
+        "인사 = \"안녕하세요\"\n",
+        "점수 = 3\n",
+        "print(인사)\n",
+        "print(점수)\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
 fn attached_korean_condition_endings_work_without_spaces() {
     let source = concat!(
         "이름 = \"Ada\"\n",
@@ -764,7 +857,7 @@ fn korean_while_sentence_uses_an_explicit_end() {
         "점수는 0\n",
         "점수가 3보다 작을 동안\n",
         "점수 말해줘\n",
-        "점수는 점수 + 1\n",
+        "점수에 1 더해\n",
         "끝\n",
     );
     let expected = concat!(

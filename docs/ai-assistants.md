@@ -36,14 +36,15 @@ show Hello 이름!
 ### Generate sentence syntax first
 
 ```text
-show Hello world!
+Hello world show
 안녕하세요 말해줘
 
-ask name What is your name?
-이름을 물어봐 이름이 뭐예요?
+name ask
+이름을 물어봐
+Hello name show
 
-repeat 3 times and show Again
-3번 반복해서 다시 말해줘
+3 times Again
+3번 다시 만나요
 
 if score is greater than 10 then show You won
 만약에 점수가 10보다 크면 성공 말해줘
@@ -59,12 +60,12 @@ flat block with `end`/`끝` instead of relying on indentation:
 ```text
 while score < 3
 show score
-score = score + 1
+add 1 to score
 end
 ```
 
 The same block supports `break`/`멈춰`, `and`/`그리고`, `or`/`또는`,
-`elif`/`아니면 만약`, and `else`/`아니면`. Indented bodies and ordinary Python
+`elif`/`아니면 만약에`, and `else`/`아니면`. Indented bodies and ordinary Python
 remain valid when a learner is ready to use them.
 
 ### Use beginner syntax when precision matters
@@ -149,7 +150,7 @@ always valid advanced NME.
 ## Product-specific ways to provide the link
 
 - Cursor: paste the URL with `@Link`. Cursor's official
-  [context documentation](https://docs.cursor.com/context/%40-symbols/overview)
+  [context documentation](https://cursor.com/docs/context/@-symbols/overview)
   describes link context.
 - Claude Code: paste the handoff prompt at session start. Claude Code also
   supports persistent `CLAUDE.md` memory, documented by

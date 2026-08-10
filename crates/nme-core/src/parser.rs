@@ -13,9 +13,9 @@ use crate::diagnostics::{Diagnostic, Span};
 use crate::lexer::{LogicalLine, Token};
 use crate::syntax::{
     Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, Literal, LogicalOp,
-    ModuleVersion, NmeLine, NmeStmt, Spelling, TextPart, TextTemplate, Value, RANDOM_MODULE,
-    RANDOM_MODULE_KO, RANDOM_MODULE_VERSION, SAY_KEYWORD, SAY_KEYWORD_KO, SAY_WORDS_EN,
-    TIMES_KEYWORD, TIMES_KEYWORD_KO,
+    ModuleVersion, NmeLine, NmeStmt, Spelling, TextPart, TextTemplate, UpdateOp, Value,
+    RANDOM_MODULE, RANDOM_MODULE_KO, RANDOM_MODULE_VERSION, SAY_KEYWORD, SAY_KEYWORD_KO,
+    SAY_WORDS_EN, TIMES_KEYWORD, TIMES_KEYWORD_KO,
 };
 
 const SAY_WORDS_KO: &[&str] = &[
@@ -130,6 +130,11 @@ const KOREAN_PARTICLES: &[&str] = &[
 ];
 
 const SET_WORDS_EN: &[&str] = &["set", "save", "remember"];
+const SET_WORDS_KO: &[&str] = &["저장", "저장해", "기억해", "기억해줘", "설정", "설정해"];
+const UPDATE_ADD_WORDS_EN: &[&str] = &["add", "increase", "increment", "plus"];
+const UPDATE_ADD_WORDS_KO: &[&str] = &["더해", "더해줘", "올려", "올려줘", "늘려", "늘려줘"];
+const UPDATE_SUBTRACT_WORDS_EN: &[&str] = &["subtract", "decrease", "decrement", "minus", "remove"];
+const UPDATE_SUBTRACT_WORDS_KO: &[&str] = &["빼", "빼줘", "내려", "내려줘", "줄여", "줄여줘"];
 const SENTENCE_FILLERS: &[&str] = &["please", "좀", "혹시", "제발"];
 const COMMAND_ENDINGS: &[&str] = &["?", "!"];
 
@@ -555,6 +560,9 @@ fn classify(
         return Ok(None);
     }
 
+    if let Some(stmt) = match_update(source, tokens, known_names, MatchMode::Exact)? {
+        return Ok(Some(stmt));
+    }
     if let Some(stmt) = match_break(source, tokens, known_names, MatchMode::Exact)? {
         return Ok(Some(stmt));
     }
@@ -588,7 +596,7 @@ fn classify(
     if output_action_at(tokens, 0, MatchMode::Exact).is_some() {
         return match_say(source, tokens, known_names, MatchMode::Exact);
     }
-    if action_phrase_at(tokens, 0, SET_WORDS_EN, MatchMode::Exact).is_some() {
+    if set_action_at(tokens, 0, MatchMode::Exact).is_some() {
         return match_set(source, tokens, known_names, MatchMode::Exact);
     }
     if action_phrase_at(tokens, 0, USE_WORDS_EN, MatchMode::Exact).is_some()
@@ -629,6 +637,7 @@ fn classify(
     exact_match!(match_use_random(source, tokens, MatchMode::Exact));
 
     let recovered = [
+        match_update(source, tokens, known_names, MatchMode::Recover),
         match_when(source, tokens, block, known_names, MatchMode::Recover),
         match_times(source, tokens, block, known_names, MatchMode::Recover),
         match_ask(source, tokens, known_names, MatchMode::Recover),
@@ -741,7 +750,8 @@ fn match_say(
         return Err(say_missing(spelling, tokens[action_start].span));
     }
     debug_assert!(action_end <= tokens.len());
-    let value_tokens = trim_suffix_say_value(&tokens[..action_start]);
+    let value_start = leading_sentence_fillers(&tokens[..action_start]);
+    let value_tokens = trim_suffix_say_value(&tokens[value_start..action_start]);
     if value_tokens.is_empty() {
         return Err(say_missing(spelling, tokens[action_start].span));
     }
@@ -976,6 +986,182 @@ fn ask_target_diagnostic(_spelling: Spelling, span: Span) -> Diagnostic {
 }
 
 // ----------------------------------------------------------- control flow
+
+fn match_update(
+    source: &str,
+    tokens: &[Token],
+    _known_names: &HashSet<String>,
+    mode: MatchMode,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    if let Some((action_start, operation, _)) = update_action_ending(tokens, mode) {
+        let target_token = tokens
+            .first()
+            .ok_or_else(|| update_diagnostic(span_of(tokens)))?;
+        let target = name_word(target_token)
+            .and_then(update_target_name)
+            .ok_or_else(|| update_diagnostic(target_token.span))?;
+        let mut amount_tokens = tokens[1..action_start].to_vec();
+        while amount_tokens
+            .first()
+            .is_some_and(|token| is_update_connector(token, &["에", "에서", "에게", "한테"]))
+        {
+            amount_tokens.remove(0);
+        }
+        while amount_tokens
+            .last()
+            .is_some_and(|token| is_update_connector(token, &["을", "를", "만큼"]))
+        {
+            amount_tokens.pop();
+        }
+        let amount = parse_update_amount(source, &amount_tokens)
+            .ok_or_else(|| update_diagnostic(span_of(tokens)))?;
+        return Ok(Some(NmeStmt::Update {
+            target,
+            amount,
+            operation,
+        }));
+    }
+
+    for action_start in 1..tokens.len() {
+        let Some((operation, consumed)) = update_action_at(tokens, action_start, mode) else {
+            continue;
+        };
+        let target = name_word(&tokens[0])
+            .and_then(update_target_name)
+            .ok_or_else(|| update_diagnostic(tokens[0].span))?;
+        let mut amount_end = tokens.len();
+        if tokens
+            .get(amount_end.saturating_sub(1))
+            .is_some_and(is_command_ending)
+        {
+            amount_end -= 1;
+        }
+        let mut amount_tokens = tokens[action_start + consumed..amount_end].to_vec();
+        while amount_tokens
+            .first()
+            .is_some_and(|token| is_update_connector(token, &["by", "to", "of"]))
+        {
+            amount_tokens.remove(0);
+        }
+        let amount = parse_update_amount(source, &amount_tokens)
+            .ok_or_else(|| update_diagnostic(span_of(tokens)))?;
+        return Ok(Some(NmeStmt::Update {
+            target,
+            amount,
+            operation,
+        }));
+    }
+
+    // English also reads naturally as `add 1 to score` or
+    // `increase score by 1`. Keep this form deliberately exact so a normal
+    // Python expression cannot be claimed by the sentence matcher.
+    if let Some((operation, consumed)) = update_action_at(tokens, 0, mode) {
+        let mut remainder_end = tokens.len();
+        if tokens
+            .get(remainder_end.saturating_sub(1))
+            .is_some_and(is_command_ending)
+        {
+            remainder_end -= 1;
+        }
+        let remainder = &tokens[consumed..remainder_end];
+        let separator = remainder
+            .iter()
+            .position(|token| is_update_connector(token, &["to", "by", "from"]));
+        let Some(separator) = separator else {
+            return Err(update_diagnostic(span_of(tokens)));
+        };
+        let (left, right) = remainder.split_at(separator);
+        let right = &right[1..];
+        let (target_tokens, amount_tokens) = if (operation == UpdateOp::Add
+            && token_matches_exact(&remainder[separator], &["to"]))
+            || (operation == UpdateOp::Subtract
+                && token_matches_exact(&remainder[separator], &["from"]))
+        {
+            (right, left)
+        } else if !left.is_empty() && !right.is_empty() {
+            (left, right)
+        } else {
+            return Err(update_diagnostic(span_of(tokens)));
+        };
+        if target_tokens.len() != 1 {
+            return Err(update_diagnostic(span_of(tokens)));
+        }
+        let target = name_word(&target_tokens[0])
+            .and_then(update_target_name)
+            .ok_or_else(|| update_diagnostic(span_of(tokens)))?;
+        let amount = parse_update_amount(source, amount_tokens)
+            .ok_or_else(|| update_diagnostic(span_of(tokens)))?;
+        return Ok(Some(NmeStmt::Update {
+            target,
+            amount,
+            operation,
+        }));
+    }
+
+    Ok(None)
+}
+
+fn update_action_at(tokens: &[Token], start: usize, mode: MatchMode) -> Option<(UpdateOp, usize)> {
+    action_phrase_at(tokens, start, UPDATE_ADD_WORDS_EN, mode)
+        .or_else(|| action_phrase_at(tokens, start, UPDATE_ADD_WORDS_KO, mode))
+        .map(|consumed| (UpdateOp::Add, consumed))
+        .or_else(|| {
+            action_phrase_at(tokens, start, UPDATE_SUBTRACT_WORDS_EN, mode)
+                .or_else(|| action_phrase_at(tokens, start, UPDATE_SUBTRACT_WORDS_KO, mode))
+                .map(|consumed| (UpdateOp::Subtract, consumed))
+        })
+}
+
+fn update_action_ending(tokens: &[Token], mode: MatchMode) -> Option<(usize, UpdateOp, usize)> {
+    let mut end = tokens.len();
+    if tokens.last().is_some_and(is_command_ending) {
+        end -= 1;
+    }
+    let start_at = end.saturating_sub(3);
+    for start in start_at..end {
+        if let Some((operation, consumed)) = update_action_at(tokens, start, mode) {
+            if start + consumed == end {
+                return Some((start, operation, end));
+            }
+        }
+    }
+    None
+}
+
+fn update_target_name(word: &str) -> Option<String> {
+    strip_any_suffix(
+        word,
+        &[
+            "에서", "에게", "한테", "에", "으로", "로", "을", "를", "은", "는",
+        ],
+    )
+    .map(str::to_string)
+    .or_else(|| (!word.is_empty()).then(|| word.to_string()))
+}
+
+fn parse_update_amount(source: &str, tokens: &[Token]) -> Option<Code> {
+    if tokens.is_empty() {
+        return None;
+    }
+    let span = span_of(tokens);
+    is_valid_python_expression(&source[span.start..span.end]).then_some(Code::Source(span))
+}
+
+fn is_update_connector(token: &Token, words: &[&str]) -> bool {
+    token_matches_exact(token, words)
+}
+
+fn update_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        "I couldn't understand this value change",
+        "값을 어떻게 바꿀지 이해하지 못했어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "write `score add 1` or `점수에 1 더해`",
+        "`점수에 1 더해` 또는 `score add 1`처럼 적어 주세요",
+    )
+}
 
 fn match_break(
     _source: &str,
@@ -1726,13 +1912,23 @@ fn condition_connector_exact(token: &Token, is_last: bool) -> Option<ConditionCo
     let candidates = [
         (
             ConditionConnector::Then,
-            &["then", "그러면", "그럼", "하면", "경우", "때", "일때"][..],
+            &[
+                "then",
+                "그러면",
+                "그럼",
+                "하면",
+                "이면",
+                "이라면",
+                "경우",
+                "때",
+                "일때",
+            ][..],
         ),
         (ConditionConnector::Exists, &["있으면", "있다면"][..]),
         (ConditionConnector::Missing, &["없으면", "없다면"][..]),
         (
             ConditionConnector::Equals,
-            &["같으면", "같다면", "이면", "라면"][..],
+            &["같으면", "같다면", "라면"][..],
         ),
         (ConditionConnector::Greater, &["크면", "크다면", "클"][..]),
         (ConditionConnector::Less, &["작으면", "작다면", "작을"][..]),
@@ -1758,13 +1954,23 @@ fn condition_connector_recovered(token: &Token, is_last: bool) -> Option<Conditi
     let candidates = [
         (
             ConditionConnector::Then,
-            &["then", "그러면", "그럼", "하면", "경우", "때", "일때"][..],
+            &[
+                "then",
+                "그러면",
+                "그럼",
+                "하면",
+                "이면",
+                "이라면",
+                "경우",
+                "때",
+                "일때",
+            ][..],
         ),
         (ConditionConnector::Exists, &["있으면", "있다면"][..]),
         (ConditionConnector::Missing, &["없으면", "없다면"][..]),
         (
             ConditionConnector::Equals,
-            &["같으면", "같다면", "이면", "라면"][..],
+            &["같으면", "같다면", "라면"][..],
         ),
         (ConditionConnector::Greater, &["크면", "크다면", "클"][..]),
         (ConditionConnector::Less, &["작으면", "작다면", "작을"][..]),
@@ -1833,12 +2039,18 @@ fn match_times(
     known_names: &HashSet<String>,
     mode: MatchMode,
 ) -> Result<Option<NmeStmt>, Diagnostic> {
-    if let Some(count) = attached_korean_times_sentence(source, tokens) {
-        let inline = parse_suite_body(
+    if let Some((count, body_start)) = attached_korean_times_sentence(source, tokens) {
+        let mut body_start = body_start;
+        if let Some((_, consumed)) = repeat_action_at(tokens, body_start, mode) {
+            body_start += consumed;
+            if tokens.get(body_start).is_some_and(is_connector_word) {
+                body_start += 1;
+            }
+        }
+        let inline = parse_sentence_repeat_body(
             source,
-            &tokens[1..],
+            &tokens[body_start..],
             block,
-            SuiteKind::Repeat,
             span_of(tokens),
             known_names,
         )?;
@@ -1887,6 +2099,26 @@ fn match_times(
             )?;
             return Ok(Some(NmeStmt::Times { count, inline }));
         }
+        if marker_at > 0
+            && marker_at + 1 < tokens.len()
+            && repeat_action_at(tokens, 0, mode).is_none()
+            && repeat_action_at(tokens, marker_at + 1, mode).is_none()
+            && repeat_action_at(tokens, marker_at + 1, MatchMode::Recover).is_none()
+        {
+            let count = parse_count(source, &tokens[..marker_at], spelling)?;
+            let mut body_start = marker_at + 1;
+            if tokens.get(body_start).is_some_and(is_connector_word) {
+                body_start += 1;
+            }
+            let inline = parse_sentence_repeat_body(
+                source,
+                &tokens[body_start..],
+                block,
+                span_of(&tokens[..body_start]),
+                known_names,
+            )?;
+            return Ok(Some(NmeStmt::Times { count, inline }));
+        }
     }
 
     // Sentence order: `3번 반복해 ...` / `3 times repeat ...`.
@@ -1900,11 +2132,10 @@ fn match_times(
             if tokens.get(body_start).is_some_and(is_connector_word) {
                 body_start += 1;
             }
-            let inline = parse_suite_body(
+            let inline = parse_sentence_repeat_body(
                 source,
                 &tokens[body_start..],
                 block,
-                SuiteKind::Repeat,
                 span_of(&tokens[..body_start]),
                 known_names,
             )?;
@@ -1927,11 +2158,10 @@ fn match_times(
         if tokens.get(body_start).is_some_and(is_connector_word) {
             body_start += 1;
         }
-        let inline = parse_suite_body(
+        let inline = parse_sentence_repeat_body(
             source,
             &tokens[body_start..],
             block,
-            SuiteKind::Repeat,
             span_of(&tokens[..body_start]),
             known_names,
         )?;
@@ -1939,6 +2169,56 @@ fn match_times(
     }
 
     Ok(None)
+}
+
+/// Parse a body that was introduced by the sentence repeat spelling. A plain
+/// run of words is naturally a thing to say (`3번 안녕하세요`), while a
+/// beginner/Python-shaped body still goes through the normal classifier.
+fn parse_sentence_repeat_body(
+    source: &str,
+    body: &[Token],
+    block: &BlockCtx<'_>,
+    header_span: Span,
+    known_names: &HashSet<String>,
+) -> Result<Option<InlineStmt>, Diagnostic> {
+    let plain_words = !body.is_empty()
+        && body.iter().all(is_text_token)
+        && !body.iter().any(|token| literal_token(token).is_some());
+    let has_action = output_action_at(body, 0, MatchMode::Exact).is_some()
+        || output_action_at(body, 0, MatchMode::Recover).is_some()
+        || output_action_ending(body, MatchMode::Exact).is_some()
+        || output_action_ending(body, MatchMode::Recover).is_some()
+        || ask_action_at(body, 0, MatchMode::Exact).is_some()
+        || ask_action_at(body, 0, MatchMode::Recover).is_some()
+        || find_ask_shape(body, MatchMode::Exact).is_some()
+        || find_ask_shape(body, MatchMode::Recover).is_some();
+    if !body.is_empty() && (!plain_words || has_action) {
+        if let Some(inner) = classify(source, body, &BlockCtx::Inline, known_names)? {
+            return Ok(Some(InlineStmt::Nme(Box::new(inner))));
+        }
+    }
+    if plain_words {
+        let value = parse_value(source, body, known_names, true).map_err(|()| {
+            Diagnostic::bilingual(
+                "I couldn't understand what to repeat",
+                "무엇을 반복할지 이해하지 못했어요",
+                span_of(body),
+            )
+            .with_bilingual_hint(
+                "write a sentence such as `3번 안녕하세요` or add `말해줘`",
+                "`3번 안녕하세요`처럼 쓰거나 끝에 `말해줘`를 붙여 주세요",
+            )
+        })?;
+        return Ok(Some(InlineStmt::Nme(Box::new(NmeStmt::Say { value }))));
+    }
+    parse_suite_body(
+        source,
+        body,
+        block,
+        SuiteKind::Repeat,
+        header_span,
+        known_names,
+    )
 }
 
 fn has_recoverable_repeat_shape(tokens: &[Token]) -> bool {
@@ -2236,7 +2516,7 @@ fn match_set(
         }));
     }
 
-    if let Some(consumed) = action_phrase_at(tokens, 0, SET_WORDS_EN, mode) {
+    if let Some((spelling, consumed)) = set_action_at(tokens, 0, mode) {
         let Some(target_token) = tokens.get(consumed) else {
             return Err(Diagnostic::bilingual(
                 "the name to save is missing",
@@ -2244,26 +2524,33 @@ fn match_set(
                 tokens[0].span,
             )
             .with_bilingual_hint(
-                "write `set greeting to Hello`",
-                "`인사는 안녕하세요`처럼 쓰세요",
+                "write `set greeting to Hello` or `저장 인사 Hello`",
+                "`저장 인사 안녕하세요` 또는 `set greeting to Hello`처럼 쓰세요",
             ));
         };
-        let Some(target) = name_word(target_token) else {
+        let Some(target_word) = name_word(target_token) else {
             return Err(Diagnostic::bilingual(
                 "use a simple name here",
                 "여기에는 간단한 이름을 써 주세요",
                 target_token.span,
             )
             .with_bilingual_hint(
-                "write `set greeting to Hello`",
-                "`인사는 안녕하세요`처럼 쓰세요",
+                "write `set greeting to Hello` or `저장 인사 Hello`",
+                "`저장 인사 안녕하세요` 또는 `set greeting to Hello`처럼 쓰세요",
             ));
         };
+        let target = if spelling == Spelling::Korean {
+            strip_saved_target(target_word)
+        } else {
+            target_word
+        };
         let mut value_start = consumed + 1;
-        if tokens
-            .get(value_start)
-            .is_some_and(|token| token_matches_exact(token, &["to", "as", "is"]))
-        {
+        if tokens.get(value_start).is_some_and(|token| {
+            token_matches_exact(
+                token,
+                &["to", "as", "is", "로", "으로", "을", "를", "은", "는", "에"],
+            )
+        }) {
             value_start += 1;
         }
         if value_start >= tokens.len() {
@@ -2273,8 +2560,8 @@ fn match_set(
                 target_token.span,
             )
             .with_bilingual_hint(
-                "write `set greeting to Hello`",
-                "`인사는 안녕하세요`처럼 쓰세요",
+                "write `set greeting to Hello` or `저장 인사 Hello`",
+                "`저장 인사 안녕하세요` 또는 `set greeting to Hello`처럼 쓰세요",
             ));
         }
         let value =
@@ -2295,6 +2582,26 @@ fn match_set(
         }));
     }
     Ok(None)
+}
+
+fn set_action_at(tokens: &[Token], start: usize, mode: MatchMode) -> Option<(Spelling, usize)> {
+    action_phrase_at(tokens, start, SET_WORDS_EN, mode)
+        .map(|consumed| (Spelling::English, consumed))
+        .or_else(|| {
+            action_phrase_at(tokens, start, SET_WORDS_KO, mode)
+                .map(|consumed| (Spelling::Korean, consumed))
+        })
+}
+
+fn strip_saved_target(word: &str) -> &str {
+    strip_assignment_particle(word).unwrap_or_else(|| {
+        [
+            "에게", "한테", "에서", "으로", "로", "을", "를", "에", "은", "는",
+        ]
+        .iter()
+        .find_map(|particle| word.strip_suffix(particle).filter(|base| !base.is_empty()))
+        .unwrap_or(word)
+    })
 }
 
 // ---------------------------------------------------------- value parsing
@@ -3148,21 +3455,27 @@ fn attached_korean_times_header(source: &str, tokens: &[Token]) -> Option<(Code,
         .then_some((Code::Source(count_span), 1))
 }
 
-fn attached_korean_times_sentence(source: &str, tokens: &[Token]) -> Option<Code> {
-    let [Token {
+fn attached_korean_times_sentence(source: &str, tokens: &[Token]) -> Option<(Code, usize)> {
+    let Token {
         tok: Tok::Name { name },
         span,
-    }] = tokens
+    } = tokens.first()?
     else {
         return None;
     };
+    if tokens
+        .get(1)
+        .is_some_and(|token| matches!(token.tok, Tok::Colon))
+    {
+        return None;
+    }
     let count = name.strip_suffix(TIMES_KEYWORD_KO)?;
     if count.is_empty() {
         return None;
     }
     let count_span = Span::new(span.start, span.end - TIMES_KEYWORD_KO.len());
     is_valid_python_expression(&source[count_span.start..count_span.end])
-        .then_some(Code::Source(count_span))
+        .then_some((Code::Source(count_span), 1))
 }
 
 fn one_typo_away(actual: &str, expected: &str) -> bool {

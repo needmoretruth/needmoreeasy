@@ -34,13 +34,14 @@ show Hello 이름!
 
 ```text
 안녕하세요 말해줘
-show Hello world!
+Hello world show
 
-이름을 물어봐 이름이 뭐예요?
-ask name What is your name?
+이름을 물어봐
+name ask
+Hello name show
 
-3번 반복해서 다시 말해줘
-repeat 3 times and show Again
+3번 다시 만나요
+3 times Again
 
 만약에 점수가 10보다 크면 성공 말해줘
 if score is greater than 10 then show You won
@@ -56,11 +57,11 @@ if score is greater than 10 then show You won
 ```text
 동안 점수 < 3
 점수 말해줘
-점수는 점수 + 1
+점수에 1 더해
 끝
 ```
 
-같은 블록에서 `멈춰`/`break`, `그리고`/`and`, `또는`/`or`, `아니면 만약`/`elif`,
+같은 블록에서 `멈춰`/`break`, `그리고`/`and`, `또는`/`or`, `아니면 만약에`/`elif`,
 `아니면`/`else`를 사용할 수 있습니다. 네 칸 들여쓰기와 일반 Python도 계속
 유효합니다.
 
@@ -141,7 +142,7 @@ Python으로 돌아가세요.
 ## 제품별 링크 전달 방법
 
 - Cursor: URL을 `@Link`로 붙입니다. 공식
-  [문맥 문서](https://docs.cursor.com/context/%40-symbols/overview)가 링크 문맥을
+  [문맥 문서](https://cursor.com/docs/context/@-symbols/overview)가 링크 문맥을
   설명합니다.
 - Claude Code: 세션을 시작할 때 전달 문장을 붙입니다. Anthropic 공식
   [메모리 문서](https://docs.anthropic.com/en/docs/claude-code/memory)의

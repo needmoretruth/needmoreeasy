@@ -1,3 +1,4 @@
-# No quotes, comma, f-string, braces, or formatting knowledge needed.
-ask name What is your name?
-show Hello name!
+# The gentlest conversation: no quotes, comma, f-string, or formatting needed.
+이름을 물어봐
+안녕하세요 이름! 말해줘
+3번 환영합니다 말해줘

@@ -131,6 +131,20 @@ Challenge: write a Python function and use sentence `show` inside it.
 
 ## Project 5: Build a compiler in NME
 
+This is an optional advanced capstone, not a new syntax level. Before opening
+it, make sure the earlier projects feel comfortable. If indexing, slices, or
+Python method calls are still new, leave this project for later and keep
+building small programs with sentence and beginner NME first:
+
+```text
+count = 0
+while count < 2
+add 1 to count
+end
+
+2 times: say "one small rule"
+```
+
 A compiler reads one language and writes another. It does not need to execute
 the source directly. The example
 [`examples/tiny-compiler.nme`](../examples/tiny-compiler.nme) compiles this

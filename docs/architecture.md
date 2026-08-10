@@ -89,8 +89,10 @@ may consume them. An unrelated invalid line still produces a diagnostic.
 
 Beginner expressions are validated as opaque Python expressions and copied by
 span. Sentence forms instead build the same small AST variants (`Say`, `Ask`,
-`Set`, `Times`, `When`, `While`, `ElseIf`, `Else`, `Break`, `End`,
-`UseRandom`) from explicit token templates. Known
+`Set`, `Update`, `Times`, `When`, `While`, `ElseIf`, `Else`, `Break`, `End`,
+`UseRandom`) from explicit token templates. A sentence repeat may use plain
+words after its count (`3번 안녕하세요`), and a small value change may use
+`score add 1` or `점수에 1 더해`; both lower through the same AST path. Known
 variable names may be interpolated into sentence output; unknown words remain
 literal text. Both languages lower through the same code path.
 

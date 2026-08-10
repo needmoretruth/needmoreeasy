@@ -74,7 +74,7 @@ fn build_prints_transpiled_python() {
 fn version_reports_the_current_beta() {
     let output = nme(&["--version"]);
     assert!(output.status.success(), "{}", stderr(&output));
-    assert_eq!(stdout(&output), "nme 0.0.1-beta.5\n");
+    assert_eq!(stdout(&output), "nme 0.0.1-beta.6\n");
 }
 
 #[test]
@@ -574,7 +574,10 @@ fn run_reads_input_with_ask() {
     }
     let output = nme_with_input(&["run", &example("ask.nme")], "Mina\n");
     assert!(output.status.success(), "{}", stderr(&output));
-    assert_eq!(stdout(&output), "What is your name? Hello Mina!\n");
+    assert_eq!(
+        stdout(&output),
+        "안녕하세요 Mina!\n환영합니다\n환영합니다\n환영합니다\n"
+    );
 }
 
 #[test]
