@@ -130,6 +130,10 @@ program` 모두 실행됩니다. NME가 운영체제에 맞는 Python 명령을 
 program`은 Nuitka로 컴파일, `nme conv app.py`는 Python을 NME로 변환하는
 짧은 형태입니다.
 
+프로그램 이름도 겹치지 않는 범위에서 줄여 쓸 수 있습니다: `nme r gue`는
+`guessing-game.nme`를 실행합니다. 여러 프로그램이 일치하면 추측하지 않고
+목록을 보여 준 뒤 이름을 더 입력하라고 안내합니다.
+
 `실행`은 개발할 때 쓰는 지름길입니다. NME를 Python으로 컴파일한 뒤 CPython을
 시작합니다. `빌드`는 컴파일된 Python 파일을 만듭니다. 독립 실행 파일이
 필요하면 Nuitka를 설치하고 네이티브 컴파일을 사용하세요.

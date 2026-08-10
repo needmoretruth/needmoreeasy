@@ -39,6 +39,10 @@ With no file name, `nme r` runs the single .nme program in the current
 folder; with several, it asks which one to run. `nme c` and `nme b` do the
 same for checking and building.
 
+Program names may be shortened while they stay unique: `nme r gue` runs
+`guessing-game.nme`. If several programs match, nme lists them and asks you
+to type more of the name.
+
 MORE COMMANDS:
     nme compile hello -o hello    Build an executable with Nuitka
     nme convert app.py [options]  Convert safe Python patterns to NME
@@ -79,6 +83,10 @@ const HELP_KOREAN: &str = r"nme — NeedMoreEasy: 더 쉽게 시작해서 Python
 파일 이름 없이 `nme r`을 실행하면 현재 폴더의 .nme 프로그램이 하나일 때
 그것을 실행하고, 여러 개일 때는 어느 것을 실행할지 물어봅니다.
 `nme c`와 `nme b`도 검사·빌드에서 같은 방식으로 동작합니다.
+
+프로그램 이름은 겹치지 않는 범위에서 줄여 쓸 수 있습니다: `nme r gue`는
+`guessing-game.nme`를 실행합니다. 여러 프로그램이 일치하면 목록을 보여 주고
+이름을 더 입력하라고 안내합니다.
 
 더 많은 명령:
     nme 컴파일 hello -o hello    Nuitka로 실행 파일 만들기
@@ -143,25 +151,36 @@ fn main() -> ExitCode {
             print_bilingual_help();
             ExitCode::SUCCESS
         }
-        Some(path) if is_direct_program(path) => command_run(&args, MessageLanguage::English),
-        Some(command) => {
-            let language = if contains_korean(command) {
-                MessageLanguage::KoreanAndEnglish
-            } else {
-                MessageLanguage::English
-            };
-            fail(
-                language,
-                &format!(
-                    "I don't know the command `{command}`. Run `nme help` to see the commands.\n\
-                     Tip: `nme r` runs the single .nme program in the current folder."
-                ),
-                &format!(
-                    "`{command}` 명령을 알 수 없습니다. `nme 도움`으로 명령을 확인하세요.\n\
-                     팁: 현재 폴더에 .nme 파일이 하나뿐이면 `nme r`만으로 실행할 수 있어요."
-                ),
-            )
-        }
+        Some(path) => match resolve_program(Path::new(path)) {
+            NameResolution::Found(_) => command_run(&args, MessageLanguage::English),
+            NameResolution::Ambiguous(names) => {
+                let language = if contains_korean(path) {
+                    MessageLanguage::KoreanAndEnglish
+                } else {
+                    MessageLanguage::English
+                };
+                let (english, korean) = ambiguous_program_message(path, &names, "run", "실행");
+                fail(language, &english, &korean)
+            }
+            NameResolution::None => {
+                let language = if contains_korean(path) {
+                    MessageLanguage::KoreanAndEnglish
+                } else {
+                    MessageLanguage::English
+                };
+                fail(
+                    language,
+                    &format!(
+                        "I don't know the command `{path}`. Run `nme help` to see the commands.\n\
+                         Tip: `nme r` runs the single .nme program in the current folder."
+                    ),
+                    &format!(
+                        "`{path}` 명령을 알 수 없습니다. `nme 도움`으로 명령을 확인하세요.\n\
+                         팁: 현재 폴더에 .nme 파일이 하나뿐이면 `nme r`만으로 실행할 수 있어요."
+                    ),
+                )
+            }
+        },
         _ => {
             eprint!("{HELP_ENGLISH}");
             ExitCode::FAILURE
@@ -328,7 +347,14 @@ fn command_compile(args: &[String], language: MessageLanguage) -> ExitCode {
         Ok(arguments) => arguments,
         Err(code) => return code,
     };
-    let source_path = resolve_nme_path(Path::new(&file));
+    let source_path = match resolve_program(Path::new(&file)) {
+        NameResolution::Found(path) => path,
+        NameResolution::Ambiguous(names) => {
+            let (english, korean) = ambiguous_program_message(&file, &names, "compile", "컴파일");
+            return fail(language, &english, &korean);
+        }
+        NameResolution::None => resolve_nme_path(Path::new(&file)),
+    };
     let stem = source_path
         .file_stem()
         .and_then(|name| name.to_str())
@@ -357,7 +383,7 @@ fn command_compile(args: &[String], language: MessageLanguage) -> ExitCode {
             ),
         );
     }
-    let (_, python_source) = match transpile_file(&file, language) {
+    let (_, python_source) = match transpile_file(&file, language, "compile", "컴파일") {
         Ok(ok) => ok,
         Err(code) => return code,
     };
@@ -509,7 +535,7 @@ fn command_run(args: &[String], language: MessageLanguage) -> ExitCode {
         },
     };
 
-    let (path, python_source) = match transpile_file(&file, language) {
+    let (path, python_source) = match transpile_file(&file, language, "run", "실행") {
         Ok(ok) => ok,
         Err(code) => return code,
     };
@@ -586,7 +612,7 @@ fn command_build(args: &[String], language: MessageLanguage) -> ExitCode {
         },
     };
 
-    let (path, python_source) = match transpile_file(&file, language) {
+    let (path, python_source) = match transpile_file(&file, language, "build", "빌드") {
         Ok(ok) => ok,
         Err(code) => return code,
     };
@@ -676,7 +702,7 @@ fn command_check(args: &[String], language: MessageLanguage) -> ExitCode {
             Err(code) => return code,
         },
     };
-    let (path, python_source) = match transpile_file(&file, language) {
+    let (path, python_source) = match transpile_file(&file, language, "check", "검사") {
         Ok(ok) => ok,
         Err(code) => return code,
     };
@@ -716,12 +742,6 @@ fn is_nme_path(path: &str) -> bool {
         .is_some_and(|extension| extension.eq_ignore_ascii_case("nme"))
 }
 
-fn is_direct_program(path: &str) -> bool {
-    candidate_paths(Path::new(path))
-        .iter()
-        .any(|candidate| candidate.exists())
-}
-
 /// Possible real files for a typed name. The exact path wins, then the name
 /// with `.nme` appended (`hello.ko` → `hello.ko.nme`), then the name with its
 /// extension replaced (`hello` → `hello.nme`, `app.py` → `app.nme`).
@@ -739,15 +759,18 @@ fn resolve_nme_path(path: &Path) -> std::path::PathBuf {
         .unwrap_or_else(|| path.to_path_buf())
 }
 
-/// Finds a nearby `.nme` program that the typed name almost matches, so a
-/// beginner who misspells a file name gets a "did you mean" hint instead of a
-/// bare read error.
-fn suggest_program(typed: &Path) -> Option<String> {
-    let folder = typed
-        .parent()
-        .filter(|parent| !parent.as_os_str().is_empty())
-        .unwrap_or(Path::new("."));
-    let wanted = typed.file_name()?.to_string_lossy().to_lowercase();
+/// How a typed program name resolved to a real file. A unique name may be
+/// shortened while it still names exactly one `.nme` program; when several
+/// programs match, they are reported instead of guessing.
+enum NameResolution {
+    Found(std::path::PathBuf),
+    None,
+    Ambiguous(Vec<String>),
+}
+
+/// Sorted `.nme` file names in a folder (hidden files excluded). Returns
+/// `None` when the folder cannot be read.
+fn sibling_nme_names(folder: &Path) -> Option<Vec<String>> {
     let mut names: Vec<String> = std::fs::read_dir(folder)
         .ok()?
         .filter_map(|entry| entry.ok())
@@ -757,29 +780,109 @@ fn suggest_program(typed: &Path) -> Option<String> {
             (is_nme_path(&name) && !name.starts_with('.')).then_some(name)
         })
         .collect();
-    if names.is_empty() {
-        return None;
-    }
     names.sort();
+    Some(names)
+}
+
+fn file_stem_lower(name: &str) -> String {
+    Path::new(name)
+        .file_stem()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .to_lowercase()
+}
+
+/// Resolves a typed program name. Exact candidate paths win first; then a
+/// case-insensitive exact stem match; then a unique case-insensitive prefix
+/// of a sibling `.nme` stem. Several prefix matches are `Ambiguous`.
+fn resolve_program(typed: &Path) -> NameResolution {
+    if let Some(found) = candidate_paths(typed)
+        .iter()
+        .find(|candidate| candidate.exists())
+    {
+        return NameResolution::Found(found.clone());
+    }
+    let Some(wanted) = typed
+        .file_name()
+        .map(|name| name.to_string_lossy().to_lowercase())
+    else {
+        return NameResolution::None;
+    };
+    if wanted.is_empty() {
+        return NameResolution::None;
+    }
+    let folder = typed
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .unwrap_or(Path::new("."));
+    let Some(names) = sibling_nme_names(folder) else {
+        return NameResolution::None;
+    };
+    let exact: Vec<String> = names
+        .iter()
+        .filter(|name| file_stem_lower(name) == wanted)
+        .cloned()
+        .collect();
+    match exact.len() {
+        1 => return NameResolution::Found(folder.join(&exact[0])),
+        _ if exact.len() > 1 => return NameResolution::Ambiguous(exact),
+        _ => {}
+    }
+    let prefixes: Vec<String> = names
+        .iter()
+        .filter(|name| file_stem_lower(name).starts_with(&wanted))
+        .cloned()
+        .collect();
+    match prefixes.len() {
+        1 => NameResolution::Found(folder.join(&prefixes[0])),
+        0 => NameResolution::None,
+        _ => NameResolution::Ambiguous(prefixes),
+    }
+}
+
+fn ambiguous_program_message(
+    wanted: &str,
+    names: &[String],
+    action_en: &str,
+    action_ko: &str,
+) -> (String, String) {
+    let listed = names.join(", ");
+    let stem = names
+        .first()
+        .map(|name| name.trim_end_matches(".nme"))
+        .unwrap_or(wanted);
+    let english = format!(
+        "several programs match `{wanted}`: {listed}\n\
+         hint: type more of the name, e.g. `nme {action_en} {stem}`"
+    );
+    let korean = format!(
+        "`{wanted}`(와)과 일치하는 프로그램이 여러 개예요: {listed}\n\
+         도움말: 이름을 더 길게 적어 주세요. 예: `nme {action_ko} {stem}`"
+    );
+    (english, korean)
+}
+
+/// Finds a nearby `.nme` program that the typed name almost matches, so a
+/// beginner who misspells a file name gets a "did you mean" hint instead of a
+/// bare read error.
+fn suggest_program(typed: &Path) -> Option<String> {
+    let folder = typed
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .unwrap_or(Path::new("."));
+    let wanted = typed.file_name()?.to_string_lossy().to_lowercase();
+    let names = sibling_nme_names(folder)?;
     let mut matches: Vec<&String> = names
         .iter()
         .filter(|name| {
             let lower = name.to_lowercase();
-            let stem = Path::new(name.as_str())
-                .file_stem()
-                .unwrap_or_default()
-                .to_string_lossy()
-                .to_lowercase();
+            let stem = file_stem_lower(name);
             lower == wanted || stem == wanted || lower.contains(&wanted)
         })
         .collect();
     matches.sort_by_key(|name| {
         let lower = name.to_lowercase();
-        let stem = Path::new(name.as_str())
-            .file_stem()
-            .unwrap_or_default()
-            .to_string_lossy()
-            .to_lowercase();
+        let stem = file_stem_lower(name);
         if lower == wanted {
             0
         } else if stem == wanted {
@@ -869,6 +972,39 @@ fn discover_current_program(
             if let Some(name) = many.iter().find(|name| name.eq_ignore_ascii_case(answer)) {
                 return Ok(name.clone());
             }
+            if let Some(name) = many
+                .iter()
+                .find(|name| file_stem_lower(name).eq_ignore_ascii_case(answer))
+            {
+                return Ok(name.clone());
+            }
+            let lower_answer = answer.to_lowercase();
+            let prefixes: Vec<&String> = many
+                .iter()
+                .filter(|name| file_stem_lower(name).starts_with(&lower_answer))
+                .collect();
+            match prefixes.len() {
+                1 => return Ok(prefixes[0].clone()),
+                0 => {}
+                _ => {
+                    let listed = prefixes
+                        .iter()
+                        .map(|name| (*name).clone())
+                        .collect::<Vec<String>>()
+                        .join(", ");
+                    return Err(fail(
+                        language,
+                        &format!(
+                            "`{answer}` matches several programs: {listed}\n\
+                             Tip: pick a number from the list above, or type more of the name"
+                        ),
+                        &format!(
+                            "`{answer}`(와)과 일치하는 프로그램이 여러 개예요: {listed}\n\
+                             팁: 위 목록에서 숫자를 고르거나 이름을 더 길게 입력하세요"
+                        ),
+                    ));
+                }
+            }
             Err(fail(
                 language,
                 &format!(
@@ -901,8 +1037,18 @@ fn exit_code(status: std::process::ExitStatus) -> ExitCode {
 fn transpile_file(
     file: &str,
     language: MessageLanguage,
+    action_en: &str,
+    action_ko: &str,
 ) -> Result<(std::path::PathBuf, String), ExitCode> {
-    let path = resolve_nme_path(Path::new(file));
+    let path = match resolve_program(Path::new(file)) {
+        NameResolution::Found(path) => path,
+        NameResolution::Ambiguous(names) => {
+            let (english, korean) =
+                ambiguous_program_message(file, &names, action_en, action_ko);
+            return Err(fail(language, &english, &korean));
+        }
+        NameResolution::None => resolve_nme_path(Path::new(file)),
+    };
     let shown_path = path.to_string_lossy();
     let source = match std::fs::read_to_string(&path) {
         Ok(source) => source,

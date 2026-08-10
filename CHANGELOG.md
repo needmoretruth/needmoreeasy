@@ -4,6 +4,16 @@ English | [한국어](CHANGELOG.ko.md)
 
 All notable changes to NME are recorded here.
 
+## Unreleased
+
+- Accept shortened unique program names everywhere: `nme r gue` runs
+  `guessing-game.nme`, and the same prefix rule works for `run`/`실행`,
+  `check`/`검사`, `build`/`빌드`, `compile`, `convert`, the bare run shortcut
+  (`nme gue`), and the numbered pick (bare names and prefixes answer the
+  "Which one?" question). Case-insensitive exact stems win, then a unique
+  prefix; when several programs match, NME lists the candidates and asks for
+  more of the name instead of guessing.
+
 ## 0.0.1-beta.15 — 2026-08-11
 
 - Accept the Korean `!=` sentence comparison `같지 않으면`, `같지 않다면`,

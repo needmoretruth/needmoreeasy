@@ -130,6 +130,10 @@ way for checking and building. `nme m`, `nme v`, and `nme h` are short forms of
 `nme modules`, `nme --version`, and `nme help`. `nme comp program` compiles
 with Nuitka, and `nme conv app.py` converts Python into NME.
 
+Program names may also be shortened while they stay unique: `nme r gue` runs
+`guessing-game.nme`. When several programs match, NME lists them and asks you
+to type more of the name instead of guessing.
+
 `run` is a development shortcut: NME compiles the file to Python and invokes
 CPython. `build` emits the compiled Python source. For a standalone native
 artifact, install Nuitka and use:

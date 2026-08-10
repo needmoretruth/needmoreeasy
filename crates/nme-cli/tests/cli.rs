@@ -943,31 +943,166 @@ fn a_directory_argument_explains_that_it_is_a_folder() {
 }
 
 #[test]
-fn a_misspelled_or_miscased_name_suggests_the_nearby_program() {
+fn a_miscased_or_shortened_name_runs_and_a_misspelled_name_suggests() {
+    if !python_available() {
+        eprintln!("Python not available; skipping name resolution test");
+        return;
+    }
     let dir = std::env::temp_dir().join(format!("nme-cli-suggest-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let stem = dir.join("guessing-game");
     std::fs::write(stem.with_extension("nme"), "show guessing\n").unwrap();
 
     let miscased = nme(&["run", &dir.join("GUESSING-GAME").to_string_lossy()]);
-    assert!(!miscased.status.success());
-    let miscased_error = stderr(&miscased);
-    assert!(
-        miscased_error.contains("did you mean `guessing-game.nme`"),
-        "{miscased_error}"
-    );
+    assert!(miscased.status.success(), "{}", stderr(&miscased));
+    assert_eq!(stdout(&miscased), "guessing\n");
 
     let truncated = nme(&["run", &dir.join("guessing-gam").to_string_lossy()]);
-    assert!(!truncated.status.success());
-    let truncated_error = stderr(&truncated);
+    assert!(truncated.status.success(), "{}", stderr(&truncated));
+    assert_eq!(stdout(&truncated), "guessing\n");
+
+    let misspelled = nme(&["run", &dir.join("game").to_string_lossy()]);
+    assert!(!misspelled.status.success());
+    let misspelled_error = stderr(&misspelled);
     assert!(
-        truncated_error.contains("did you mean `guessing-game.nme`"),
-        "{truncated_error}"
+        misspelled_error.contains("did you mean `guessing-game.nme`"),
+        "{misspelled_error}"
     );
     assert!(
-        truncated_error.contains("Try `nme run guessing-game`"),
-        "{truncated_error}"
+        misspelled_error.contains("Try `nme run guessing-game`"),
+        "{misspelled_error}"
     );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn a_unique_name_prefix_runs_the_matching_program() {
+    if !python_available() {
+        eprintln!("Python not available; skipping prefix run test");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("nme-cli-prefix-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    write_nme(&dir, "alpha.nme", "show alpha program\n");
+    write_nme(&dir, "beta.nme", "show beta program\n");
+
+    for (command, expected) in [("run", "alpha program"), ("실행", "alpha program")] {
+        let output = nme(&[command, &dir.join("a").to_string_lossy()]);
+        assert!(output.status.success(), "{command}: {}", stderr(&output));
+        assert_eq!(stdout(&output), format!("{expected}\n"));
+    }
+
+    let built = nme(&["b", &dir.join("bet").to_string_lossy()]);
+    assert!(built.status.success(), "{}", stderr(&built));
+    assert_eq!(stdout(&built), "print(\"beta program\")\n");
+
+    let checked = nme(&["c", &dir.join("b").to_string_lossy()]);
+    assert!(checked.status.success(), "{}", stderr(&checked));
+
+    let korean_checked = nme(&["검사", &dir.join("a").to_string_lossy()]);
+    assert!(korean_checked.status.success(), "{}", stderr(&korean_checked));
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn an_ambiguous_name_prefix_lists_candidates_instead_of_guessing() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-ambiguous-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    write_nme(&dir, "same-a.nme", "show first\n");
+    write_nme(&dir, "same-b.nme", "show second\n");
+
+    let output = nme(&["run", &dir.join("same").to_string_lossy()]);
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(error.contains("several programs match"), "{error}");
+    assert!(error.contains("same-a.nme"), "{error}");
+    assert!(error.contains("same-b.nme"), "{error}");
+    assert!(error.contains("type more of the name"), "{error}");
+
+    let korean = nme(&["실행", &dir.join("same").to_string_lossy()]);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(
+        korean_error.contains("일치하는 프로그램이 여러 개예요"),
+        "{korean_error}"
+    );
+    assert!(
+        korean_error.contains("이름을 더 길게 적어 주세요"),
+        "{korean_error}"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn a_bare_path_prefix_is_a_run_shortcut() {
+    if !python_available() {
+        eprintln!("Python not available; skipping bare prefix test");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("nme-cli-bare-prefix-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    write_nme(&dir, "alpha.nme", "show bare prefix\n");
+    write_nme(&dir, "beta.nme", "show other\n");
+
+    let output = nme(&[&dir.join("al").to_string_lossy()]);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert_eq!(stdout(&output), "bare prefix\n");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn an_ambiguous_bare_prefix_lists_candidates() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-bare-ambig-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    write_nme(&dir, "same-a.nme", "show first\n");
+    write_nme(&dir, "same-b.nme", "show second\n");
+
+    let output = nme(&[&dir.join("same").to_string_lossy()]);
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(error.contains("several programs match"), "{error}");
+    assert!(error.contains("same-a.nme"), "{error}");
+    assert!(error.contains("same-b.nme"), "{error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn the_numbered_pick_accepts_bare_names_and_unique_prefixes() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-pick-prefix-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    write_nme(&dir, "alpha.nme", "show alpha picked\n");
+    write_nme(&dir, "beta.nme", "show beta picked\n");
+
+    let by_bare_name = run_in(&dir, &["r"], Some("alpha"));
+    assert!(by_bare_name.status.success(), "{}", stderr(&by_bare_name));
+    assert!(stdout(&by_bare_name).contains("alpha picked\n"), "{}", stdout(&by_bare_name));
+
+    let by_prefix = run_in(&dir, &["r"], Some("b"));
+    assert!(by_prefix.status.success(), "{}", stderr(&by_prefix));
+    assert!(stdout(&by_prefix).contains("beta picked\n"), "{}", stdout(&by_prefix));
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn an_ambiguous_pick_answer_lists_the_matching_programs() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-pick-ambig-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    write_nme(&dir, "same-a.nme", "show first\n");
+    write_nme(&dir, "same-b.nme", "show second\n");
+
+    let output = run_in(&dir, &["r"], Some("same"));
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(error.contains("matches several programs"), "{error}");
+    assert!(error.contains("same-a.nme"), "{error}");
+    assert!(error.contains("same-b.nme"), "{error}");
+    assert!(error.contains("pick a number"), "{error}");
 
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -999,4 +1134,13 @@ fn help_and_help_shortcut_ignore_extra_arguments() {
     let korean = nme(&["도움", "extra"]);
     assert!(korean.status.success(), "{}", stderr(&korean));
     assert!(stdout(&korean).contains("처음 시작:"), "{}", stdout(&korean));
+
+    let english_help = nme(&["h"]);
+    assert!(stdout(&english_help).contains("stay unique"), "{}", stdout(&english_help));
+    let korean_help = nme(&["도움"]);
+    assert!(
+        stdout(&korean_help).contains("줄여 쓸 수"),
+        "{}",
+        stdout(&korean_help)
+    );
 }
