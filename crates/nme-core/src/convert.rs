@@ -7,7 +7,7 @@
 
 use rustpython_parser::{parse as parse_python, Mode, Tok};
 
-use crate::diagnostics::{Diagnostic, Span};
+use crate::diagnostics::{Diagnostic, DiagnosticCode, Span};
 use crate::lexer::{self, LogicalLine, Token};
 use crate::lower::{apply_edits, Edit};
 
@@ -131,6 +131,7 @@ pub fn convert_python(
     if let Err(error) = parse_python(source, Mode::Module, "<python>") {
         let start = usize::from(error.offset).min(source.len().saturating_sub(1));
         return Err(vec![Diagnostic::bilingual(
+            DiagnosticCode::ConvertInvalidPython,
             format!("the Python source is not valid: {}", error.error),
             format!("올바른 Python 코드가 아니에요: {}", error.error),
             Span::new(start, (start + 1).min(source.len())),

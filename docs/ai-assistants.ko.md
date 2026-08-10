@@ -16,6 +16,83 @@ https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assist
 
 사용자의 프로젝트에 도우미 전용 파일을 만들 필요가 없습니다.
 
+## 목적에 맞는 시작 문장 고르기
+
+맨 위의 문장 하나는 새 프로그램을 작성하는 용도입니다. 다른 목적은 아래에서
+맞는 짧은 시작 문장을 같은 링크와 함께 붙이세요. 각 시작 문장은 그 자체로
+완결되며 항상 AI를 이 문서로 안내합니다.
+
+### NME 코드 작성
+
+원하는 프로그램이 이미 있고 계속 다듬을 .nme 파일이 필요할 때 사용하세요.
+
+```text
+이 NME 문서를 읽고 따르세요. 제가 요청하는 프로그램을 .nme 파일로 작성하고 nme 검사로 확인해 주세요.
+https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.ko.md
+```
+
+```text
+Read and follow this NME handoff, then write the program I ask for as a .nme file and verify it with nme check:
+https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
+```
+
+### NME 배우기
+
+문장형부터 시작해서 NME를 단계별로 배울 때 사용하세요.
+
+```text
+이 NME 문서를 읽고, 문장형부터 시작해서 NME를 단계별로 가르쳐 주세요. 키워드 질문에는 문법 레퍼런스를 사용하세요.
+https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.ko.md
+```
+
+```text
+Read this NME handoff, then teach me NME step by step starting with sentence syntax, and use the language reference for keyword questions:
+https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
+```
+
+### NME 선생님 역할
+
+내 코드를 줄마다 설명받고 작은 다음 단계 하나를 얻고 싶을 때 사용하세요.
+
+```text
+당신은 나의 NME 선생님입니다. 이 문서와 문법 레퍼런스를 읽고, 제 코드를 줄마다 설명하고 작은 다음 단계 하나를 제안해 주세요.
+https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.ko.md
+```
+
+```text
+You are my NME teacher. Read this handoff and the language reference, then explain my code line by line and suggest one small next step:
+https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
+```
+
+### 기존 코드 설명/변환
+
+Python이나 NME 코드를 붙여 넣고 설명이나 뜻이 같은 변환을 받고 싶을 때
+사용하세요.
+
+```text
+이 NME 문서를 읽고, 제가 붙여 넣는 코드를 줄마다 설명하거나, 제가 요청하면 뜻이 같게 더 쉬운 NME로 변환해 주세요.
+https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.ko.md
+```
+
+```text
+Read this NME handoff, then explain the code I paste line by line, or convert it to easier NME with the same meaning when I ask:
+https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
+```
+
+### 프로젝트 디버깅
+
+프로그램이 실패하거나 이상하게 동작할 때 사용하세요.
+
+```text
+이 NME 문서를 읽고, 제 .nme 프로그램의 버그를 찾아 주세요: 원인을 설명하고 가장 작은 수정을 제안하며 nme 검사로 확인하라고 알려 주세요.
+https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.ko.md
+```
+
+```text
+Read this NME handoff, then find the bug in my .nme program: explain the cause, suggest the smallest fix, and ask me to run nme check to verify:
+https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
+```
+
 ## 이 페이지를 읽는 도우미가 따라야 할 규칙
 
 NME에는 줄마다 섞을 수 있는 세 단계가 있습니다.
@@ -166,6 +243,25 @@ nme 빌드 program -o program.py
 [영어 레퍼런스](https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/language.md)를
 읽으세요. 지원하지 않는 NME 키워드를 만들어 내지 말고 항상 올바른 고급 NME인
 Python으로 돌아가세요.
+
+## 일반 대화형 AI와 NME 사용하기
+
+ChatGPT, Claude(채팅), Gemini, Grok은 링크로 웹 페이지를 읽을 수 있으므로
+같은 짧은 문장 + 링크 하나 설계가 그대로 작동하고 프로젝트에 파일이 필요
+없습니다. 이 페이지 맨 위의 문장이나 위의 목적별 시작 문장을 새 채팅에
+붙여 넣고, 같은 채팅에서 계속 질문하면 안내 문서가 대화 맥락에 남습니다.
+
+- ChatGPT: 문장과 링크를 채팅에 붙이고 .nme 파일을 요청하세요.
+- Claude(채팅, claude.ai): 같은 문장과 링크를 붙이세요. Claude는 답하기
+  전에 링크에서 페이지를 읽습니다.
+- Gemini: 문장과 링크를 붙이고 이어진 질문으로 결과를 다듬으세요.
+- Grok: 문장과 링크를 한 메시지에 붙이고 그 대화를 이어 가세요.
+
+이 문서에 없는 표현이 있으면 이 중 아무 AI나
+[문법 레퍼런스](https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/language.ko.md)도
+읽을 수 있습니다. 이런 대화형 AI는 보통 nme CLI를 직접 실행하지 못하므로,
+프로그램을 받은 뒤에는 직접 `nme 검사`(또는 `nme c`)를 실행하고 오류를 다시
+채팅에 붙여 주세요.
 
 ## 제품별 링크 전달 방법
 

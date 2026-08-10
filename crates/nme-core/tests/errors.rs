@@ -81,11 +81,11 @@ fn all_problems_are_reported_at_once() {
 }
 
 #[test]
-fn diagnostics_render_with_location_and_hint() {
+fn diagnostics_render_with_location_code_and_hint() {
     let source = "say \"ok\"\nsay 1 +\n";
     let problems = transpile(source).unwrap_err();
     let rendered = render_all(&problems, source, "hello.nme");
-    assert!(rendered.contains("error:"), "{rendered}");
+    assert!(rendered.contains("error[E0201]:"), "{rendered}");
     // The caret points at the offending expression on line 2.
     assert!(rendered.contains("hello.nme:2:5"), "{rendered}");
     assert!(rendered.contains("say 1 +"), "{rendered}");

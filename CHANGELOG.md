@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+- Give every compiler diagnostic a stable error code printed next to the
+  message, e.g. `error[E0102]:`. `nme ko <CODE>` reads the long Korean
+  explanation with an English translation, `nme en <CODE>` the English one,
+  and `nme ko` (or `nme 에러` / `nme error`) with no code lists every code.
+  Each code documents what went wrong, why, and the recovery steps; the code
+  list and lookup pages are also taught in the help text, both READMEs, and
+  both language references.
 - Accept shortened unique program names everywhere: `nme r gue` runs
   `guessing-game.nme`, and the same prefix rule works for `run`/`실행`,
   `check`/`검사`, `build`/`빌드`, `compile`, `convert`, the bare run shortcut
@@ -13,6 +20,8 @@ All notable changes to NME are recorded here.
   "Which one?" question). Case-insensitive exact stems win, then a unique
   prefix; when several programs match, NME lists the candidates and asks for
   more of the name instead of guessing.
+- Long outputs (help, error-code lists) no longer panic when the reader
+  closes the pipe early, e.g. `nme ko | head`.
 
 ## 0.0.1-beta.15 — 2026-08-11
 

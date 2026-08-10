@@ -14,6 +14,7 @@
 
 mod exec;
 
+use std::fmt::Write as _;
 use std::io::Write as _;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -50,6 +51,8 @@ MORE COMMANDS:
         --language en|ko
         -o <output.nme>
     nme modules                   Show bundled modules and versions
+    nme ko E0001                  Korean explanation of error code E0001
+    nme en E0001                  English explanation of error code E0001
     nme help                      Show this help
     nme --version                 Show the version
 
@@ -61,6 +64,8 @@ one file. English and Korean NME spellings may be mixed too. File names work
 with or without .nme: type `nme run hello`, not `nme run hello.nme`. If the
 exact file you type exists, it is used as-is, so Python files such as
 `program.py` run too. `nme check` prints nothing when the program is fine.
+Every error message carries a stable code such as E0001; `nme ko E0001` reads
+its full Korean explanation and `nme en E0001` the English one.
 ";
 
 const HELP_KOREAN: &str = r"nme — NeedMoreEasy: 더 쉽게 시작해서 Python으로 성장하세요.
@@ -95,6 +100,8 @@ const HELP_KOREAN: &str = r"nme — NeedMoreEasy: 더 쉽게 시작해서 Python
         --language en|ko
         -o <출력.nme>
     nme 모듈                       내장 모듈과 버전 보기
+    nme ko E0001                   오류 코드 E0001의 한국어 설명 보기
+    nme en E0001                   오류 코드 E0001의 영어 설명 보기
     nme 도움                       이 도움말 보기
     nme 버전                       버전 보기
 
@@ -106,6 +113,8 @@ const HELP_KOREAN: &str = r"nme — NeedMoreEasy: 더 쉽게 시작해서 Python
 됩니다(`nme 실행 hello`처럼 쓰면 됩니다). 적은 경로 그대로 파일이 있으면
 그 파일을 사용하므로 `program.py` 같은 Python 파일도 실행할 수 있습니다.
 `nme 검사`는 프로그램이 정상이면 아무것도 출력하지 않습니다.
+모든 오류 메시지에는 E0001 같은 안정적인 코드가 붙어 있습니다.
+`nme ko E0001`은 자세한 한국어 설명을, `nme en E0001`은 영어 설명을 보여 줍니다.
 ";
 
 const DEFAULT_PYTHON: &str = if cfg!(windows) { "py" } else { "python3" };
@@ -131,20 +140,24 @@ fn main() -> ExitCode {
         Some("변환") => command_convert(&args[1..], MessageLanguage::KoreanAndEnglish),
         Some("modules" | "module" | "m") => command_modules(&args[1..], MessageLanguage::English),
         Some("모듈") => command_modules(&args[1..], MessageLanguage::KoreanAndEnglish),
+        Some("ko" | "error" | "에러") => {
+            command_error_lookup(&args[1..], MessageLanguage::KoreanAndEnglish)
+        }
+        Some("en") => command_error_lookup(&args[1..], MessageLanguage::English),
         Some("버전") if args.len() == 1 => {
-            println!(
-                "NME 버전: {}\nnme version: {}",
+            print_out(&format!(
+                "NME 버전: {}\nnme version: {}\n",
                 env!("CARGO_PKG_VERSION"),
                 env!("CARGO_PKG_VERSION")
-            );
+            ));
             ExitCode::SUCCESS
         }
         Some("--version" | "-V" | "version" | "v") if args.len() == 1 => {
-            println!("nme {}", env!("CARGO_PKG_VERSION"));
+            print_out(&format!("nme {}\n", env!("CARGO_PKG_VERSION")));
             ExitCode::SUCCESS
         }
         Some("--help" | "-h" | "help" | "h") => {
-            print!("{HELP_ENGLISH}");
+            print_out(HELP_ENGLISH);
             ExitCode::SUCCESS
         }
         Some("도움" | "도움말") => {
@@ -189,7 +202,7 @@ fn main() -> ExitCode {
 }
 
 fn print_bilingual_help() {
-    print!("{HELP_KOREAN}\nENGLISH / 영어\n\n{HELP_ENGLISH}");
+    print_out(&format!("{HELP_KOREAN}\nENGLISH / 영어\n\n{HELP_ENGLISH}"));
 }
 
 fn command_modules(args: &[String], language: MessageLanguage) -> ExitCode {
@@ -201,15 +214,82 @@ fn command_modules(args: &[String], language: MessageLanguage) -> ExitCode {
         );
     }
     match language {
-        MessageLanguage::English => println!(
-            "random  {}  bundled, latest",
+        MessageLanguage::English => print_out(&format!(
+            "random  {}  bundled, latest\n",
             nme_core::syntax::RANDOM_MODULE_VERSION
-        ),
-        MessageLanguage::KoreanAndEnglish => println!(
-            "랜덤  {}  내장, 최신\nrandom  {}  bundled, latest",
+        )),
+        MessageLanguage::KoreanAndEnglish => print_out(&format!(
+            "랜덤  {}  내장, 최신\nrandom  {}  bundled, latest\n",
             nme_core::syntax::RANDOM_MODULE_VERSION,
             nme_core::syntax::RANDOM_MODULE_VERSION
-        ),
+        )),
+    }
+    ExitCode::SUCCESS
+}
+
+/// `nme ko E0001` prints the long Korean explanation of one error code, with
+/// the English explanation after it; `nme en E0001` prints English only.
+/// With no code, every code is listed so a beginner can browse.
+fn command_error_lookup(args: &[String], language: MessageLanguage) -> ExitCode {
+    let Some(code) = args.first() else {
+        let mut list = String::new();
+        for code in nme_core::diagnostics::DiagnosticCode::ALL {
+            let explanation = code.explanation();
+            match language {
+                MessageLanguage::English => {
+                    let _ = writeln!(list, "{}  {}", explanation.code, explanation.title_en);
+                }
+                MessageLanguage::KoreanAndEnglish => {
+                    let _ = writeln!(
+                        list,
+                        "{}  {} / {}",
+                        explanation.code, explanation.title_ko, explanation.title_en
+                    );
+                }
+            }
+        }
+        print_out(&list);
+        return ExitCode::SUCCESS;
+    };
+    if args.len() > 1 {
+        return fail(
+            language,
+            &format!(
+                "`{code}`: one error code at a time. Try `nme ko {code}` or `nme ko` for the list."
+            ),
+            &format!(
+                "`{code}`: 오류 코드는 한 번에 하나씩 확인할 수 있어요. `nme ko {code}` 또는 목록을 보려면 `nme ko`를 사용하세요."
+            ),
+        );
+    }
+    let Some(code) = nme_core::diagnostics::DiagnosticCode::from_code(code) else {
+        return fail(
+            language,
+            &format!(
+                "there is no error code `{code}`. Run `nme ko` to list every code."
+            ),
+            &format!("`{code}` 오류 코드는 없어요. `nme ko`를 실행하면 모든 코드를 볼 수 있습니다."),
+        );
+    };
+    let explanation = code.explanation();
+    match language {
+        MessageLanguage::English => print_out(&format!(
+            "{} — {}\n\n{}\n\nSee it in your program: the compiler prints this code\nnext to the error, for example `error[{0}]`. You can also run\n`nme ko {0}` anytime to read this page again.\n",
+            explanation.code, explanation.title_en, explanation.detail_en
+        )),
+        MessageLanguage::KoreanAndEnglish => print_out(&format!(
+            "{} — {}\n\n{}\n\n{}\n\n{} — {}\n\n{}\n",
+            explanation.code,
+            explanation.title_ko,
+            explanation.detail_ko,
+            format!(
+                "프로그램에서 이 코드를 보면 오류 옆에 `error[{}]`처럼 표시됩니다. 궁금할 때 `nme ko {}`를 다시 실행하면 이 설명을 볼 수 있습니다.",
+                explanation.code, explanation.code
+            ),
+            explanation.code,
+            explanation.title_en,
+            explanation.detail_en
+        )),
     }
     ExitCode::SUCCESS
 }
@@ -1142,6 +1222,14 @@ fn fail_with_details(
     let code = fail(language, english, korean);
     write_stderr(details);
     code
+}
+
+/// Prints without panicking when the reader closes the pipe early
+/// (for example `nme help | head`). Rust's std ignores SIGPIPE, so a broken
+/// pipe surfaces as a write error; we treat it like a normal exit.
+fn print_out(text: &str) {
+    let mut stdout = std::io::stdout();
+    let _ = stdout.write_all(text.as_bytes());
 }
 
 fn write_stderr(details: &[u8]) {

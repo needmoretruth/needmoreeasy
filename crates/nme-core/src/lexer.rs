@@ -15,7 +15,7 @@
 use rustpython_parser::lexer::{lex, LexicalErrorType};
 use rustpython_parser::{Mode, Tok};
 
-use crate::diagnostics::{Diagnostic, Span};
+use crate::diagnostics::{Diagnostic, DiagnosticCode, Span};
 
 /// One Python token together with its byte span in the source.
 #[derive(Debug, Clone)]
@@ -267,6 +267,7 @@ fn lexical_diagnostic(source: &str, err: &rustpython_parser::lexer::LexicalError
     // final byte when the error is at end of input).
     let start = offset.min(source.len().saturating_sub(1));
     Diagnostic::bilingual(
+        DiagnosticCode::UnrecognizedInput,
         format!(
             "this is not something Python or NME can read: {}",
             err.error

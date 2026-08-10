@@ -134,6 +134,11 @@ Program names may also be shortened while they stay unique: `nme r gue` runs
 `guessing-game.nme`. When several programs match, NME lists them and asks you
 to type more of the name instead of guessing.
 
+Every error message carries a stable code such as `E0102` next to it. When a
+message is hard to understand, `nme ko E0102` reads the long Korean
+explanation (with an English translation) and `nme en E0102` the English one;
+`nme ko` alone lists every code.
+
 `run` is a development shortcut: NME compiles the file to Python and invokes
 CPython. `build` emits the compiled Python source. For a standalone native
 artifact, install Nuitka and use:

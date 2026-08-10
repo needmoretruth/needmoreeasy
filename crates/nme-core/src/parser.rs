@@ -9,7 +9,7 @@ use std::collections::HashSet;
 
 use rustpython_parser::{parse as parse_python, Mode, Tok};
 
-use crate::diagnostics::{Diagnostic, Span};
+use crate::diagnostics::{Diagnostic, DiagnosticCode, Span};
 use crate::lexer::{LogicalLine, Token};
 use crate::syntax::{
     Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, Literal, LogicalOp,
@@ -536,6 +536,7 @@ fn validate_branch(
 
 fn unmatched_end_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::StrayEnd,
         "there is no open NME block for this `end`",
         "이 `끝`을 닫을 열린 NME 블록이 없어요",
         span,
@@ -548,6 +549,7 @@ fn unmatched_end_diagnostic(span: Span) -> Diagnostic {
 
 fn break_outside_loop_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::BreakOutsideLoop,
         "`break` can only be used inside a loop",
         "`멈춰`는 반복문 안에서만 쓸 수 있어요",
         span,
@@ -560,6 +562,7 @@ fn break_outside_loop_diagnostic(span: Span) -> Diagnostic {
 
 fn branch_without_condition_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::BranchWithoutCondition,
         "`else` or `elif` needs an open condition block",
         "`아니면`이나 `elif` 앞에 열린 조건 블록이 필요해요",
         span,
@@ -572,6 +575,7 @@ fn branch_without_condition_diagnostic(span: Span) -> Diagnostic {
 
 fn duplicate_else_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::DuplicateElse,
         "this condition already has an `else` branch",
         "이 조건에는 이미 `아니면` 가지가 있어요",
         span,
@@ -593,7 +597,7 @@ fn missing_end_diagnostic(block: &ExplicitBlock, offset: usize) -> Diagnostic {
             "이 조건문에는 닫는 `끝`이 필요해요",
         ),
     };
-    Diagnostic::bilingual(english, korean, Span::new(offset, offset)).with_bilingual_hint(
+    Diagnostic::bilingual(DiagnosticCode::MissingEnd, english, korean, Span::new(offset, offset)).with_bilingual_hint(
         "add `end`/`끝` on a line by itself",
         "줄 하나에 `end` 또는 `끝`만 적어 주세요",
     )
@@ -839,6 +843,7 @@ fn match_say(
             let text = &source[span.start..span.end];
             if looks_like_broken_expression(body) && !is_valid_python_expression(text) {
                 return Err(Diagnostic::bilingual(
+                    DiagnosticCode::SayValueBroken,
                     "I couldn't understand what you want to `say`",
                     "`말해` 뒤의 값을 이해하지 못했어요",
                     span,
@@ -851,6 +856,7 @@ fn match_say(
         }
         let value = parse_value(source, body, known_names, prefer_text).map_err(|()| {
             Diagnostic::bilingual(
+                DiagnosticCode::SayValueUnparseable,
                 "I couldn't understand what to show",
                 "무엇을 말할지 이해하지 못했어요",
                 span_of(body),
@@ -882,6 +888,7 @@ fn match_say(
     }
     let value = parse_value(source, &value_tokens, known_names, true).map_err(|()| {
         Diagnostic::bilingual(
+            DiagnosticCode::SaySentenceUnparseable,
             "I couldn't understand the sentence to show",
             "말할 문장을 이해하지 못했어요",
             span_of(&value_tokens),
@@ -895,7 +902,11 @@ fn match_say(
 }
 
 fn say_missing(_spelling: Spelling, span: Span) -> Diagnostic {
-    Diagnostic::bilingual("there is nothing to show", "말할 내용이 비어 있어요", span)
+    Diagnostic::bilingual(
+        DiagnosticCode::SayMissing,
+        "there is nothing to show",
+        "말할 내용이 비어 있어요",
+        span)
         .with_bilingual_hint(
             "write `show Hello world`",
             "`안녕하세요 말해줘`처럼 내용을 함께 적어 주세요",
@@ -961,6 +972,7 @@ fn match_ask(
         let expression_tokens = &tokens[shape.prompt_start + 1..prompt_end];
         if expression_tokens.is_empty() {
             return Err(Diagnostic::bilingual(
+                DiagnosticCode::AskQuestionMissing,
                 "the question after the comma is missing",
                 "쉼표 뒤의 질문이 비어 있어요",
                 tokens[shape.prompt_start].span,
@@ -984,6 +996,7 @@ fn match_ask(
             )))
         } else {
             return Err(Diagnostic::bilingual(
+                DiagnosticCode::AskQuestionUnparseable,
                 "I couldn't understand the question",
                 "질문 내용을 이해하지 못했어요",
                 span,
@@ -1290,6 +1303,7 @@ fn is_ask_modifier(token: &Token) -> bool {
 
 fn ask_target_diagnostic(_spelling: Spelling, span: Span) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::AskTargetInvalid,
         "write the name that should hold the answer",
         "대답을 담을 이름이 필요해요",
         span,
@@ -1478,6 +1492,7 @@ fn is_update_connector(token: &Token, words: &[&str]) -> bool {
 
 fn update_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::UpdateUnparseable,
         "I couldn't understand this value change",
         "값을 어떻게 바꿀지 이해하지 못했어요",
         span,
@@ -1504,6 +1519,7 @@ fn match_break(
         .any(|token| !is_command_ending(token))
     {
         return Err(Diagnostic::bilingual(
+            DiagnosticCode::BreakCommandUnparseable,
             "I couldn't understand this break command",
             "이 반복 중단 명령을 이해하지 못했어요",
             span_of(tokens),
@@ -2912,7 +2928,11 @@ fn condition_connector_recovered(token: &Token, is_last: bool) -> Option<Conditi
 }
 
 fn condition_missing(_spelling: Spelling, span: Span) -> Diagnostic {
-    Diagnostic::bilingual("the condition is missing", "조건이 비어 있어요", span)
+    Diagnostic::bilingual(
+        DiagnosticCode::ConditionMissing,
+        "the condition is missing",
+        "조건이 비어 있어요",
+        span)
         .with_bilingual_hint(
             "write `if ready` or `if score > 10` and indent the next line",
             "`만약에 준비됐으면`처럼 적고 다음 줄을 들여쓰세요",
@@ -2921,6 +2941,7 @@ fn condition_missing(_spelling: Spelling, span: Span) -> Diagnostic {
 
 fn condition_invalid(_spelling: Spelling, span: Span) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::ConditionInvalid,
         "I couldn't understand this condition",
         "이 조건을 확실하게 이해하지 못했어요",
         span,
@@ -3105,6 +3126,7 @@ fn parse_sentence_repeat_body(
     if plain_words {
         let value = parse_value(source, body, known_names, true).map_err(|()| {
             Diagnostic::bilingual(
+                DiagnosticCode::RepeatBodyUnparseable,
                 "I couldn't understand what to repeat",
                 "무엇을 반복할지 이해하지 못했어요",
                 span_of(body),
@@ -3156,6 +3178,7 @@ fn parse_count(source: &str, tokens: &[Token], spelling: Spelling) -> Result<Cod
     let span = span_of(tokens);
     if !is_valid_python_expression(&source[span.start..span.end]) {
         return Err(Diagnostic::bilingual(
+            DiagnosticCode::RepeatCountUnparseable,
             "I couldn't understand how many times to repeat",
             "몇 번 반복할지 이해하지 못했어요",
             span,
@@ -3170,6 +3193,7 @@ fn parse_count(source: &str, tokens: &[Token], spelling: Spelling) -> Result<Cod
 
 fn repeat_count_missing(_spelling: Spelling, span: Span) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::RepeatCountMissing,
         "the repeat count is missing",
         "반복 횟수가 비어 있어요",
         span,
@@ -3211,6 +3235,7 @@ fn match_use_random(
         .collect::<Vec<_>>();
     if random_positions.len() != 1 {
         return Err(Diagnostic::bilingual(
+            DiagnosticCode::UnsupportedModule,
             "NME only bundles `use random` for now",
             "NME에는 아직 쉬운 `랜덤` 모듈만 들어 있어요",
             span_of(tokens),
@@ -3236,6 +3261,7 @@ fn match_use_random(
         .collect::<Vec<_>>();
     if !latest_positions.is_empty() && !version_positions.is_empty() {
         return Err(Diagnostic::bilingual(
+            DiagnosticCode::LatestAndVersion,
             "choose either latest or one exact module version",
             "최신 버전과 특정 버전 중 하나만 골라 주세요",
             span_of(tokens),
@@ -3272,6 +3298,7 @@ fn match_use_random(
         }
         let value_tokens = tokens.get(version_at + 1..value_end).ok_or_else(|| {
             Diagnostic::bilingual(
+                DiagnosticCode::ModuleVersionMissing,
                 "the module version is missing",
                 "모듈 버전이 비어 있어요",
                 tokens[version_at].span,
@@ -3283,6 +3310,7 @@ fn match_use_random(
         })?;
         if value_tokens.is_empty() {
             return Err(Diagnostic::bilingual(
+                DiagnosticCode::ModuleVersionMissing,
                 "the module version is missing",
                 "모듈 버전이 비어 있어요",
                 tokens[version_at].span,
@@ -3300,6 +3328,7 @@ fn match_use_random(
         let version = raw.trim_matches(['\'', '"']).to_string();
         if version != RANDOM_MODULE_VERSION {
             return Err(Diagnostic::bilingual(
+                DiagnosticCode::UnbundledVersion,
                 format!("random version {version} is not bundled"),
                 format!("랜덤 버전 {version}은 내장되어 있지 않아요"),
                 value_span,
@@ -3359,6 +3388,7 @@ fn random_binding_names() -> &'static [&'static str] {
 fn random_name_collision_diagnostic(span: Span, collisions: &[&str]) -> Diagnostic {
     let names = collisions.join(", ");
     Diagnostic::bilingual(
+        DiagnosticCode::RandomNameCollision,
         format!("the random module would overwrite existing name(s): {names}"),
         format!("랜덤 모듈이 이미 있는 이름을 덮어쓸 수 있어요: {names}"),
         span,
@@ -3425,6 +3455,7 @@ fn recoverable_module_shape(tokens: &[Token]) -> bool {
 
 fn module_shape_diagnostic(_spelling: Spelling, span: Span) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::ModuleShapeInvalid,
         "I couldn't understand this module line",
         "이 모듈 문장을 확실하게 이해하지 못했어요",
         span,
@@ -3467,6 +3498,7 @@ fn match_set(
         }
         if value_start >= tokens.len() {
             return Err(Diagnostic::bilingual(
+                DiagnosticCode::SaveValueMissing,
                 "the value to save is missing",
                 "저장할 값이 비어 있어요",
                 target_token.span,
@@ -3479,6 +3511,7 @@ fn match_set(
         let value =
             parse_value(source, &tokens[value_start..], known_names, true).map_err(|()| {
                 Diagnostic::bilingual(
+                    DiagnosticCode::SaveValueUnparseable,
                     "I couldn't understand the value to save",
                     "저장할 값을 이해하지 못했어요",
                     span_of(&tokens[value_start..]),
@@ -3498,6 +3531,7 @@ fn match_set(
         if let Some(target) = strip_assignment_particle(first) {
             if tokens.len() == 1 {
                 return Err(Diagnostic::bilingual(
+                    DiagnosticCode::SaveValueMissing,
                     "the value to save is missing",
                     "저장할 값이 비어 있어요",
                     tokens[0].span,
@@ -3509,6 +3543,7 @@ fn match_set(
             }
             let value = parse_value(source, &tokens[1..], known_names, true).map_err(|()| {
                 Diagnostic::bilingual(
+                    DiagnosticCode::SaveValueUnparseable,
                     "I couldn't understand the value to save",
                     "저장할 값을 이해하지 못했어요",
                     span_of(&tokens[1..]),
@@ -3532,6 +3567,7 @@ fn match_set(
         let target = name_word(&tokens[0]).expect("checked name token");
         let value = parse_value(source, &tokens[2..], known_names, true).map_err(|()| {
             Diagnostic::bilingual(
+                DiagnosticCode::SaveValueUnparseable,
                 "I couldn't understand the value to save",
                 "저장할 값을 이해하지 못했어요",
                 span_of(&tokens[2..]),
@@ -3550,6 +3586,7 @@ fn match_set(
     if let Some((spelling, consumed)) = set_action_at(tokens, 0, mode) {
         let Some(target_token) = tokens.get(consumed) else {
             return Err(Diagnostic::bilingual(
+                DiagnosticCode::SaveNameMissing,
                 "the name to save is missing",
                 "값을 저장할 이름이 비어 있어요",
                 tokens[0].span,
@@ -3561,6 +3598,7 @@ fn match_set(
         };
         let Some(target_word) = name_word(target_token) else {
             return Err(Diagnostic::bilingual(
+                DiagnosticCode::SaveNameNotSimple,
                 "use a simple name here",
                 "여기에는 간단한 이름을 써 주세요",
                 target_token.span,
@@ -3586,6 +3624,7 @@ fn match_set(
         }
         if value_start >= tokens.len() {
             return Err(Diagnostic::bilingual(
+                DiagnosticCode::SaveValueMissing,
                 "the value to save is missing",
                 "저장할 값이 비어 있어요",
                 target_token.span,
@@ -3598,6 +3637,7 @@ fn match_set(
         let value =
             parse_value(source, &tokens[value_start..], known_names, true).map_err(|()| {
                 Diagnostic::bilingual(
+                    DiagnosticCode::SaveValueUnparseable,
                     "I couldn't understand the value to save",
                     "저장할 값을 이해하지 못했어요",
                     span_of(&tokens[value_start..]),
@@ -3909,6 +3949,7 @@ fn parse_suite_body(
 fn indentation_diagnostic(kind: SuiteKind, span: Span) -> Diagnostic {
     match kind {
         SuiteKind::Repeat => Diagnostic::bilingual(
+            DiagnosticCode::IndentationRequired,
             "the lines that should repeat must be indented",
             "반복할 다음 줄은 들여써야 해요",
             span,
@@ -3918,6 +3959,7 @@ fn indentation_diagnostic(kind: SuiteKind, span: Span) -> Diagnostic {
             "한 줄로 `3번 반복해서 안녕 말해줘`라고 써도 돼요",
         ),
         SuiteKind::Condition => Diagnostic::bilingual(
+            DiagnosticCode::ColonRequired,
             "this condition needs `:` or an indented next line",
             "조건 다음에는 실행할 줄이나 `:`이 필요해요",
             span,
@@ -3931,6 +3973,7 @@ fn indentation_diagnostic(kind: SuiteKind, span: Span) -> Diagnostic {
 
 fn inline_block_diagnostic(_kind: SuiteKind, span: Span) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::BlockWithoutStatement,
         "a block can't start here without a statement",
         "이 한 줄 블록에 실행할 문장이 없어요",
         span,
@@ -3943,6 +3986,7 @@ fn inline_block_diagnostic(_kind: SuiteKind, span: Span) -> Diagnostic {
 
 fn one_statement_diagnostic(_kind: SuiteKind, span: Span) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::OneStatementPerLine,
         "only one statement fits on this line",
         "한 줄에는 문장 하나만 넣을 수 있어요",
         span,
@@ -3955,6 +3999,7 @@ fn one_statement_diagnostic(_kind: SuiteKind, span: Span) -> Diagnostic {
 
 fn body_diagnostic(_kind: SuiteKind, span: Span) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::BodyUnparseable,
         "I couldn't understand the statement here",
         "여기 있는 문장을 이해하지 못했어요",
         span,
@@ -4599,6 +4644,7 @@ fn has_recoverable_sentence_shape(tokens: &[Token]) -> bool {
 
 fn ambiguous_action_diagnostic(tokens: &[Token]) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::AmbiguousAction,
         "this sentence could mean more than one action",
         "이 문장은 두 가지 동작으로 읽힐 수 있어요",
         span_of(tokens),
@@ -4611,6 +4657,7 @@ fn ambiguous_action_diagnostic(tokens: &[Token]) -> Diagnostic {
 
 fn missing_action_diagnostic(tokens: &[Token]) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::MissingAction,
         "I couldn't find one clear action on this line",
         "이 줄에서 무엇을 할지 찾지 못했어요",
         span_of(tokens),

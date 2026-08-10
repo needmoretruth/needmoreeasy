@@ -4,7 +4,7 @@
 //! [`lexer`] → [`parser`] → [`lower`]. Each stage has exactly one job and
 //! one reason to change; keep it that way.
 
-use crate::diagnostics::{Diagnostic, Span};
+use crate::diagnostics::{Diagnostic, DiagnosticCode, Span};
 use crate::{lexer, lower, parser};
 
 /// Transpiles NME source code into ordinary Python source code.
@@ -41,6 +41,7 @@ pub fn transpile(source: &str) -> Result<String, Vec<Diagnostic>> {
         })
         .map(|edit| {
             Diagnostic::bilingual(
+                DiagnosticCode::MultilineSentence,
                 "sentence-style NME must stay on one physical line",
                 "문장형 NME 한 문장은 실제 한 줄 안에 써야 해요",
                 Span::new(edit.span.start, edit.span.end),

@@ -454,6 +454,9 @@ See [the conversion guide](converting-python.md).
 - Indentation, blank lines, comments, line endings, and physical line counts
   are preserved.
 - NME diagnostics include a plain message, exact caret span, and repair hint.
+- Every diagnostic carries a stable error code such as `E0102`, printed next
+  to the message as `error[E0102]:`. Read the long Korean explanation with
+  `nme ko <CODE>` (English: `nme en <CODE>`); `nme ko` alone lists every code.
 - Independent problems are collected when possible.
 - Korean-led forms receive Korean guidance.
 

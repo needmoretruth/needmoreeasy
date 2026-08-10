@@ -617,7 +617,7 @@ fn check_rejects_broken_nme_with_a_friendly_error() {
     let output = nme(&["check", &file.to_string_lossy()]);
     assert!(!output.status.success());
     let error = stderr(&output);
-    assert!(error.contains("error:"), "{error}");
+    assert!(error.contains("error[E0501]:"), "{error}");
     assert!(error.contains("indented"), "{error}");
     assert!(error.contains("hint:"), "{error}");
 
@@ -1137,10 +1137,77 @@ fn help_and_help_shortcut_ignore_extra_arguments() {
 
     let english_help = nme(&["h"]);
     assert!(stdout(&english_help).contains("stay unique"), "{}", stdout(&english_help));
+    assert!(stdout(&english_help).contains("nme ko E0001"), "{}", stdout(&english_help));
     let korean_help = nme(&["도움"]);
     assert!(
         stdout(&korean_help).contains("줄여 쓸 수"),
         "{}",
         stdout(&korean_help)
     );
+}
+
+#[test]
+fn error_lookup_commands_print_the_requested_explanation() {
+    let korean = nme(&["ko", "E0101"]);
+    assert!(korean.status.success(), "{}", stderr(&korean));
+    let korean_out = stdout(&korean);
+    assert!(korean_out.contains("E0101"), "{korean_out}");
+    assert!(korean_out.contains("열린 블록이 없는 `끝`"), "{korean_out}");
+    assert!(korean_out.contains("E0101 — an `end` with no open block"), "{korean_out}");
+
+    let english = nme(&["en", "E0101"]);
+    assert!(english.status.success(), "{}", stderr(&english));
+    let english_out = stdout(&english);
+    assert!(english_out.contains("an `end` with no open block"), "{english_out}");
+    assert!(!english_out.contains("열린 블록"), "{english_out}");
+
+    let korean_alias = nme(&["에러", "E0101"]);
+    assert!(korean_alias.status.success(), "{}", stderr(&korean_alias));
+    assert!(stdout(&korean_alias).contains("열린 블록이 없는 `끝`"), "{}", stdout(&korean_alias));
+
+    let english_alias = nme(&["error", "E0101"]);
+    assert!(english_alias.status.success(), "{}", stderr(&english_alias));
+    assert!(stdout(&english_alias).contains("an `end` with no open block"), "{}", stdout(&english_alias));
+
+    let unknown = nme(&["ko", "E9999"]);
+    assert!(!unknown.status.success());
+    let unknown_error = stderr(&unknown);
+    assert!(unknown_error.contains("there is no error code `E9999`"), "{unknown_error}");
+    assert!(unknown_error.contains("`nme ko`"), "{unknown_error}");
+}
+
+#[test]
+fn error_lookup_without_a_code_lists_every_code() {
+    let english = nme(&["en"]);
+    assert!(english.status.success(), "{}", stderr(&english));
+    let out = stdout(&english);
+    assert!(out.contains("E0001"), "{out}");
+    assert!(out.contains("E0702"), "{out}");
+    assert!(out.contains("E0102  `break` outside a loop"), "{out}");
+
+    let korean = nme(&["ko"]);
+    assert!(korean.status.success(), "{}", stderr(&korean));
+    let korean_out = stdout(&korean);
+    assert!(korean_out.contains("E0102  반복문 밖의 `break`"), "{korean_out}");
+}
+
+#[test]
+fn a_real_error_reports_its_lookup_code() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-code-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("loop.nme");
+    std::fs::write(&file, "break here\n").unwrap();
+
+    let output = nme(&["check", &file.to_string_lossy()]);
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(error.contains("error[E0102]:"), "{error}");
+    assert!(error.contains("inside a loop"), "{error}");
+
+    let korean = nme(&["검사", &file.to_string_lossy()]);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(korean_error.contains("오류[E0102]:"), "{korean_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
 }
