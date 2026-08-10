@@ -2,9 +2,10 @@
 
 English | [한국어](README.ko.md)
 
-NME lets you start with ordinary sentences and grow into Python without
-changing languages. Every valid Python program is valid NME, while common
-first-program tasks can be written with far less punctuation.
+**If Python still feels hard, start simpler and grow into Python one line at
+a time.** NME is a learning bridge: begin with ordinary sentences, mix in
+beginner syntax when you are ready, then replace pieces with Python inside the
+same file. You never have to restart the project in another language.
 
 ```text
 ask name What is your name?
@@ -28,7 +29,7 @@ No language-mode declaration is needed.
 | --- | --- | --- |
 | Sentence | First-day coding with almost no code punctuation | `3번 반복해서 안녕 말해줘` |
 | Beginner | Compact, precise, practical NME | `3 times: say "Hello"` |
-| Advanced | Python syntax, unchanged and 100% compatible | `for i in range(3): print(i)` |
+| Advanced | Ordinary Python syntax, preserved unchanged | `for i in range(3): print(i)` |
 
 The levels are not separate modes. Use any of them on any line. Valid Python
 always wins and is kept byte-for-byte identical.
@@ -57,7 +58,7 @@ warns that its `bin` directory is not on `PATH`. It does not reinstall NME.
 Windows PowerShell uses the PATH step in the
 [installation guide](docs/install.md#windows-10-or-11).
 
-Expected version: `nme 0.0.1-beta.2`.
+Expected version: `nme 0.0.1-beta.3`.
 
 Windows, macOS, and Linux instructions are in the
 [installation guide](docs/install.md). The [five-minute guide](docs/getting-started.md)
@@ -66,11 +67,15 @@ starts from zero programming knowledge.
 ## Use it
 
 ```sh
-nme run examples/hello-sentence.nme
-nme check examples/guessing-game.ko.nme
-nme build examples/three-levels.nme -o three-levels.py
+nme run examples/hello-sentence
+nme check examples/guessing-game.ko
+nme build examples/three-levels -o three-levels.py
 nme modules
 ```
+
+The `.nme` ending is optional. `nme run program` and even `nme program` both
+run `program.nme`. NME chooses the normal Python command for your operating
+system; `--python` is only an advanced override for unusual setups.
 
 `run` is a development shortcut: NME compiles the file to Python and invokes
 CPython. `build` emits the compiled Python source. For a standalone native

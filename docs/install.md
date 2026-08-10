@@ -2,7 +2,7 @@
 
 English | [한국어](install.ko.md)
 
-NME `0.0.1-beta.2` currently installs from the beta branch. You need Git,
+NME `0.0.1-beta.3` currently installs from the beta branch. You need Git,
 stable Rust with Cargo, and Python 3.8 or newer. Use the official
 [Rust installer](https://www.rust-lang.org/tools/install),
 [Python downloads](https://www.python.org/downloads/), and
@@ -30,10 +30,10 @@ PowerShell session. If a new PowerShell still cannot find `nme`, add
 `%USERPROFILE%\.cargo\bin` to your user `PATH`. You do not need to reinstall;
 `& "$HOME\.cargo\bin\nme.exe" --version` verifies the installed binary directly.
 
-Run with the Windows Python launcher:
+Run the example. NME chooses the Windows `py` launcher automatically:
 
 ```powershell
-nme run examples\hello-sentence.nme --python py
+nme run examples\hello-sentence
 ```
 
 ## macOS
@@ -53,7 +53,7 @@ cd needmoreeasy
 cargo install --path crates/nme-cli --locked
 export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
-nme run examples/hello-sentence.nme
+nme run examples/hello-sentence
 ```
 
 The `export` line must run before the first `nme` command when Cargo warns that
@@ -89,7 +89,7 @@ cd needmoreeasy
 cargo install --path crates/nme-cli --locked
 export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
-nme run examples/hello-sentence.nme
+nme run examples/hello-sentence
 ```
 
 The `export` line is deliberately before `nme --version`. Fedora's system
@@ -104,19 +104,20 @@ successfully to `~/.cargo/bin` without adding that directory to the shell's
 ```sh
 nme --version
 nme modules
-nme check examples/three-levels.nme
-nme run examples/hello-sentence.nme
+nme check examples/three-levels
+nme run examples/hello-sentence
 ```
 
-Expected NME version: `0.0.1-beta.2`. Expected random adapter: `0.0.1`.
+Expected NME version: `0.0.1-beta.3`. Expected random adapter: `0.0.1`.
 
-## Choose a different Python command
+## Advanced: choose a different Python command
 
-NME uses `python3` by default. If your command is `python` or `py`, use:
+NME automatically uses `py` on Windows and `python3` elsewhere. Only unusual
+setups need the advanced override:
 
 ```sh
-nme run program.nme --python python
-nme compile program.nme -o program --python python
+nme run program --python python
+nme compile program -o program --python python
 ```
 
 On Windows, replace the final command with `py`.
@@ -130,7 +131,7 @@ standalone one-file artifact:
 ```sh
 python3 -m pip install -U "Nuitka[app]"
 python3 -m nuitka --version
-nme compile examples/hello-sentence.nme -o hello
+nme compile examples/hello-sentence -o hello
 ```
 
 Nuitka requires a platform C compiler and recommends testing standalone mode

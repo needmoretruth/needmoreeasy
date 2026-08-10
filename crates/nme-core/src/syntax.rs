@@ -13,6 +13,9 @@ use crate::diagnostics::Span;
 
 pub const SAY_KEYWORD: &str = "say";
 pub const SAY_KEYWORD_KO: &str = "말해";
+pub(crate) const SAY_WORDS_EN: &[&str] = &[
+    "say", "show", "showme", "display", "tell", "tellme", "print",
+];
 pub const ASK_KEYWORD: &str = "ask";
 pub const ASK_KEYWORD_KO: &str = "물어봐";
 pub const TIMES_KEYWORD: &str = "times";
@@ -34,12 +37,20 @@ pub enum Spelling {
     Korean,
 }
 
-/// Python code copied from the source or safely generated from sentence
-/// syntax. Source expressions are never re-parsed or reformatted by NME.
+/// Python code copied from the source. Expressions are never reformatted or
+/// reconstructed by NME.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Code {
     Source(Span),
-    Generated(String),
+}
+
+/// Language-neutral literal values shared by English and Korean sentence
+/// spellings.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Literal {
+    True,
+    False,
+    None,
 }
 
 /// One piece of sentence-style text.
@@ -61,8 +72,41 @@ pub struct TextTemplate {
 pub enum Value {
     Python(Code),
     Text(TextTemplate),
+    Literal(Literal),
     RandomInteger { low: Code, high: Code },
     RandomChoice { choices: Vec<String> },
+}
+
+/// One operand in a conversational condition. The parser records meaning;
+/// only the lowering stage chooses Python operators and string syntax.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ConditionValue {
+    Python(Code),
+    Name(String),
+    Text(String),
+    Literal(Literal),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CompareOp {
+    Equal,
+    Greater,
+    Less,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Condition {
+    Python(Code),
+    Truthy {
+        value: ConditionValue,
+        negated: bool,
+    },
+    Compare {
+        left: ConditionValue,
+        operator: CompareOp,
+        right: ConditionValue,
+        negated: bool,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -99,7 +143,7 @@ pub enum NmeStmt {
         inline: Option<InlineStmt>,
     },
     When {
-        condition: Code,
+        condition: Condition,
         inline: Option<InlineStmt>,
     },
     UseRandom {

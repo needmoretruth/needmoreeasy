@@ -74,19 +74,90 @@ fn build_prints_transpiled_python() {
 fn version_reports_the_current_beta() {
     let output = nme(&["--version"]);
     assert!(output.status.success(), "{}", stderr(&output));
-    assert_eq!(stdout(&output), "nme 0.0.1-beta.2\n");
+    assert_eq!(stdout(&output), "nme 0.0.1-beta.3\n");
 }
 
 #[test]
-fn modules_reports_the_bundled_random_version_in_both_languages() {
-    for command in ["modules", "모듈"] {
-        let output = nme(&[command]);
-        assert!(output.status.success(), "{}", stderr(&output));
-        assert_eq!(
-            stdout(&output),
-            "random / 랜덤  0.0.1  bundled, latest / 내장, 최신\n"
-        );
-    }
+fn modules_uses_the_language_of_the_command() {
+    let english = nme(&["modules"]);
+    assert!(english.status.success(), "{}", stderr(&english));
+    assert_eq!(stdout(&english), "random  0.0.1  bundled, latest\n");
+    assert!(!stdout(&english).contains("내장"));
+
+    let bilingual = nme(&["모듈"]);
+    assert!(bilingual.status.success(), "{}", stderr(&bilingual));
+    assert_eq!(
+        stdout(&bilingual),
+        "랜덤  0.0.1  내장, 최신\nrandom  0.0.1  bundled, latest\n"
+    );
+}
+
+#[test]
+fn help_is_english_only_for_english_commands_and_bilingual_for_korean_help() {
+    let english = nme(&["help"]);
+    assert!(english.status.success(), "{}", stderr(&english));
+    let english_help = stdout(&english);
+    assert!(english_help.contains("START HERE:"), "{english_help}");
+    assert!(english_help.contains("nme run hello"), "{english_help}");
+    assert!(!english_help.contains("처음 시작"), "{english_help}");
+    assert!(!english_help.contains("nme 실행"), "{english_help}");
+    let beginner_section = english_help
+        .split("MORE COMMANDS:")
+        .next()
+        .expect("help has a beginner section");
+    assert!(!beginner_section.contains("--python"), "{english_help}");
+
+    let bilingual = nme(&["도움"]);
+    assert!(bilingual.status.success(), "{}", stderr(&bilingual));
+    let bilingual_help = stdout(&bilingual);
+    let korean_position = bilingual_help.find("처음 시작:").unwrap();
+    let english_position = bilingual_help.find("START HERE:").unwrap();
+    assert!(korean_position < english_position, "{bilingual_help}");
+    assert!(
+        bilingual_help.contains("nme 실행 hello"),
+        "{bilingual_help}"
+    );
+    assert!(bilingual_help.contains("nme run hello"), "{bilingual_help}");
+    assert!(bilingual_help.contains("파일 이름의 .nme는 생략"));
+    assert!(bilingual_help.contains("File names may be\nwritten with or without .nme"));
+}
+
+#[test]
+fn command_errors_follow_the_command_language() {
+    let english = nme(&["run", "--not-an-option"]);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(
+        english_error.contains("error: unknown option"),
+        "{english_error}"
+    );
+    assert!(!english_error.contains("오류:"), "{english_error}");
+    assert!(
+        !english_error.contains("알 수 없는 옵션"),
+        "{english_error}"
+    );
+
+    let bilingual = nme(&["실행", "--not-an-option"]);
+    assert!(!bilingual.status.success());
+    let bilingual_error = stderr(&bilingual);
+    let korean_position = bilingual_error.find("오류: 알 수 없는 옵션").unwrap();
+    let english_position = bilingual_error.find("error: unknown option").unwrap();
+    assert!(korean_position < english_position, "{bilingual_error}");
+}
+
+#[test]
+fn korean_missing_file_errors_are_substantively_bilingual() {
+    let output = nme(&["실행", "nme-file-that-does-not-exist"]);
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(
+        error.contains("nme-file-that-does-not-exist.nme 파일을 읽을 수 없습니다"),
+        "{error}"
+    );
+    assert!(
+        error.contains("couldn't read nme-file-that-does-not-exist.nme"),
+        "{error}"
+    );
 }
 
 #[test]
@@ -112,7 +183,7 @@ fn convert_turns_python_into_a_chosen_nme_level_and_language() {
     let converted = stdout(&output);
     assert_eq!(
         converted,
-        "name을 물어봐 \"이름이 뭐예요?\"\n만약에 name\n    보여줘 \"안녕하세요!\"\n"
+        "name을 물어봐 \"이름이 뭐예요?\"\nif name:\n    보여줘 \"안녕하세요!\"\n"
     );
     let converted_file = dir.join("hello.nme");
     std::fs::write(&converted_file, converted).unwrap();
@@ -252,6 +323,95 @@ fn check_uses_cpython_to_reject_invalid_advanced_syntax() {
 }
 
 #[test]
+fn build_validates_with_cpython_before_writing_output() {
+    if !python_available() {
+        eprintln!("Python not available; skipping CPython build validation test");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("nme-cli-build-check-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("broken.nme");
+    let built = dir.join("must-not-exist.py");
+    std::fs::write(&file, "if True:\nprint('not indented')\n").unwrap();
+
+    let english = nme(&[
+        "build",
+        &file.to_string_lossy(),
+        "-o",
+        &built.to_string_lossy(),
+    ]);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(
+        english_error.contains("IndentationError"),
+        "{english_error}"
+    );
+    assert!(
+        english_error.contains("generated Python did not pass CPython's syntax check"),
+        "{english_error}"
+    );
+    assert!(!english_error.contains("오류:"), "{english_error}");
+    assert!(!built.exists(), "a failed build must not write its output");
+
+    let bilingual = nme(&[
+        "빌드",
+        &file.to_string_lossy(),
+        "-o",
+        &built.to_string_lossy(),
+    ]);
+    assert!(!bilingual.status.success());
+    let bilingual_error = stderr(&bilingual);
+    assert!(
+        bilingual_error.contains("만들어진 Python이 CPython 문법 검사를 통과하지 못했습니다"),
+        "{bilingual_error}"
+    );
+    assert!(
+        bilingual_error.contains("generated Python did not pass CPython's syntax check"),
+        "{bilingual_error}"
+    );
+    let korean_position = bilingual_error
+        .find("만들어진 Python이 CPython 문법 검사를 통과하지 못했습니다")
+        .unwrap();
+    let python_position = bilingual_error.find("IndentationError").unwrap();
+    assert!(korean_position < python_position, "{bilingual_error}");
+    assert!(!built.exists(), "a failed build must not write its output");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn python_launch_errors_follow_the_command_language() {
+    let file = example("hello.nme");
+    let missing_python = "nme-python-command-that-does-not-exist";
+
+    let english = nme(&["run", &file, "--python", missing_python]);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(
+        english_error.contains("couldn't start Python"),
+        "{english_error}"
+    );
+    assert!(
+        english_error.contains("install Python 3"),
+        "{english_error}"
+    );
+    assert!(!english_error.contains("오류:"), "{english_error}");
+
+    let bilingual = nme(&["실행", &file, "--python", missing_python]);
+    assert!(!bilingual.status.success());
+    let bilingual_error = stderr(&bilingual);
+    assert!(bilingual_error.contains("Python("), "{bilingual_error}");
+    assert!(
+        bilingual_error.contains("시작할 수 없습니다"),
+        "{bilingual_error}"
+    );
+    assert!(
+        bilingual_error.contains("couldn't start Python"),
+        "{bilingual_error}"
+    );
+}
+
+#[test]
 fn run_build_and_check_reject_extra_files_and_unknown_options() {
     let first = example("hello.nme");
     let second = example("pure_python.nme");
@@ -308,6 +468,21 @@ fn check_rejects_broken_nme_with_a_friendly_error() {
     assert!(error.contains("indented"), "{error}");
     assert!(error.contains("hint:"), "{error}");
 
+    let bilingual = nme(&["검사", &file.to_string_lossy()]);
+    assert!(!bilingual.status.success());
+    let bilingual_error = stderr(&bilingual);
+    let korean_position = bilingual_error
+        .find("반복할 다음 줄은 들여써야 해요")
+        .unwrap();
+    let english_position = bilingual_error
+        .find("the lines that should repeat must be indented")
+        .unwrap();
+    assert!(korean_position < english_position, "{bilingual_error}");
+    assert!(bilingual_error.contains("도움말:"), "{bilingual_error}");
+
+    assert!(!error.contains("반복할 다음 줄"), "{error}");
+    assert!(!error.contains("오류:"), "{error}");
+
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -320,6 +495,61 @@ fn missing_file_is_a_clean_error() {
         "{}",
         stderr(&output)
     );
+}
+
+#[test]
+fn extensionless_names_work_with_run_check_build_and_the_direct_shortcut() {
+    if !python_available() {
+        eprintln!("Python not available; skipping extensionless command test");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("nme-cli-extensionless-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let stem = dir.join("program");
+    std::fs::write(stem.with_extension("nme"), "show extensionless works\n").unwrap();
+    let stem = stem.to_string_lossy().into_owned();
+
+    for command in ["run", "실행"] {
+        let output = nme(&[command, &stem]);
+        assert!(output.status.success(), "{command}: {}", stderr(&output));
+        assert_eq!(stdout(&output), "extensionless works\n");
+    }
+    for command in ["check", "검사"] {
+        let output = nme(&[command, &stem]);
+        assert!(output.status.success(), "{command}: {}", stderr(&output));
+        assert!(stdout(&output).is_empty());
+    }
+    for command in ["build", "빌드"] {
+        let output = nme(&[command, &stem]);
+        assert!(output.status.success(), "{command}: {}", stderr(&output));
+        assert_eq!(stdout(&output), "print(\"extensionless works\")\n");
+    }
+
+    let direct = nme(&[&stem]);
+    assert!(direct.status.success(), "{}", stderr(&direct));
+    assert_eq!(stdout(&direct), "extensionless works\n");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn an_exact_extensionless_path_wins_over_the_nme_fallback() {
+    if !python_available() {
+        eprintln!("Python not available; skipping exact path command test");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("nme-cli-exact-path-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let stem = dir.join("program");
+    std::fs::write(&stem, "show exact path\n").unwrap();
+    std::fs::write(stem.with_extension("nme"), "show fallback path\n").unwrap();
+    let stem = stem.to_string_lossy().into_owned();
+
+    let output = nme(&["build", &stem]);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert_eq!(stdout(&output), "print(\"exact path\")\n");
+
+    let _ = std::fs::remove_dir_all(&dir);
 }
 
 #[test]

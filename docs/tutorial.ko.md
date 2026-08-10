@@ -14,7 +14,7 @@
 ```
 
 ```sh
-nme 실행 hello.nme
+nme 실행 hello
 ```
 
 `말해줘`가 동작이고 그 앞의 내용이 보여 줄 문장입니다. 영어도 같습니다.
@@ -69,7 +69,7 @@ show Nice to meet you name!
 [`examples/guessing-game.ko.nme`](../examples/guessing-game.ko.nme)에 있습니다.
 
 ```sh
-nme 실행 examples/guessing-game.ko.nme
+nme 실행 examples/guessing-game.ko
 ```
 
 컴파일되는 내용입니다.
@@ -127,8 +127,8 @@ for _ in range(3): print('NME로 컴파일러를 만들었어요')
 컴파일러를 실행하고 컴파일러 자체가 생성한 Python도 확인합니다.
 
 ```sh
-nme 실행 examples/tiny-compiler.nme
-nme 빌드 examples/tiny-compiler.nme -o tiny-compiler.py
+nme 실행 examples/tiny-compiler
+nme 빌드 examples/tiny-compiler -o tiny-compiler.py
 ```
 
 예제는 목록 처리에 고급 Python, 결과 출력에 문장형 NME를 일부러 섞었습니다.

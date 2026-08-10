@@ -1,7 +1,7 @@
 //! Broken input must produce friendly, beginner-oriented diagnostics —
 //! never silently broken Python output.
 
-use nme_core::diagnostics::render_all;
+use nme_core::diagnostics::{render_all, render_all_bilingual};
 use nme_core::transpile;
 
 /// Transpiles and expects exactly one diagnostic; returns message + hint.
@@ -21,6 +21,11 @@ fn err(source: &str) -> String {
             }
         }
     }
+}
+
+fn bilingual_err(source: &str) -> String {
+    let problems = transpile(source).expect_err("expected an error");
+    render_all_bilingual(&problems, source, "test.nme")
 }
 
 #[test]
@@ -124,14 +129,17 @@ fn when_requires_a_condition_colon_and_body() {
 
 #[test]
 fn korean_forms_return_korean_guidance() {
-    let say = err("말해 1 +\n");
+    let say = bilingual_err("말해 1 +\n");
     assert!(say.contains("이해하지 못했어요"), "{say}");
+    assert!(say.contains("couldn't understand"), "{say}");
 
-    let repeat = err("3번:\n말해 \"들여쓰기 없음\"\n");
+    let repeat = bilingual_err("3번:\n말해 \"들여쓰기 없음\"\n");
     assert!(repeat.contains("들여써야"), "{repeat}");
+    assert!(repeat.contains("must be indented"), "{repeat}");
 
-    let when = err("만약 준비됨\n");
+    let when = bilingual_err("만약 준비됨\n");
     assert!(when.contains("필요해요"), "{when}");
+    assert!(when.contains("needs `:`"), "{when}");
 }
 
 #[test]
@@ -152,4 +160,58 @@ fn sentence_punctuation_without_an_action_is_ambiguous() {
     let message = err("Hello there!\n");
     assert!(message.contains("ambiguous"), "{message}");
     assert!(message.contains("show"), "{message}");
+}
+
+#[test]
+fn action_typos_must_have_one_unambiguous_meaning() {
+    let say_or_ask = err("asy name Hello\n");
+    assert!(say_or_ask.contains("more than one action"), "{say_or_ask}");
+
+    let ask_or_use = err("usk random latest\n");
+    assert!(ask_or_use.contains("more than one action"), "{ask_or_use}");
+}
+
+#[test]
+fn unknown_prose_and_broken_sentence_actions_never_pass_silently() {
+    let prose = err("hello world\n");
+    assert!(prose.contains("clear action"), "{prose}");
+
+    let typo = err("shwoe Hello\n");
+    assert!(typo.contains("clear action"), "{typo}");
+}
+
+#[test]
+fn condition_templates_reject_unexplained_middle_words() {
+    let message = err("ready = True\nif ready banana exists then show no\n");
+    assert!(message.contains("condition"), "{message}");
+}
+
+#[test]
+fn module_sentences_reject_negation_reordering_and_extra_words() {
+    for source in [
+        "never use random\n",
+        "version 0.0.1 random use\n",
+        "use random latest version 9.9.9\n",
+        "use os and random\n",
+    ] {
+        let message = err(source);
+        assert!(
+            message.contains("module") || message.contains("choose either"),
+            "{source:?}: {message}"
+        );
+    }
+}
+
+#[test]
+fn a_one_edit_condition_connector_is_recovered() {
+    assert_eq!(
+        transpile("name = \"Ada\"\n만약에 name이 있으먄 안녕 말해줘\n").unwrap(),
+        "name = \"Ada\"\nif (name): print(\"안녕\")\n"
+    );
+}
+
+#[test]
+fn sentence_lowering_never_changes_physical_line_numbers() {
+    let message = err("show Hello \\\nworld\n");
+    assert!(message.contains("one physical line"), "{message}");
 }

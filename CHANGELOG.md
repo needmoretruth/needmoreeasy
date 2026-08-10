@@ -4,6 +4,23 @@ English | [한국어](CHANGELOG.ko.md)
 
 All notable changes to NME are recorded here.
 
+## 0.0.1-beta.3 — 2026-08-11
+
+- Center NME on growing from ordinary sentences, through compact beginner
+  syntax, into Python inside the same project.
+- Add extensionless `nme run program`, `nme 실행 program`, and `nme program`
+  commands with automatic platform Python selection.
+- Make Korean CLI flows substantively bilingual while English flows remain
+  English-only, including syntax messages, hints, and command failures.
+- Make `check` and `build` validate generated source with CPython; failed
+  builds never create an output file.
+- Fix ambiguous action recovery, condition negation and literals, lexical
+  scope leakage, Korean particles/actions, module validation, apostrophes in
+  English sentences, and physical-line preservation.
+- Make Python conversion conservative around calls, multiline statements,
+  aliases, scopes, prompts, expressions, and ordinary `import random`.
+- Fix Cargo PATH instructions for Fedora and package-manager installations.
+
 ## 0.0.1-beta.2 — 2026-08-10
 
 - Add freely mixable advanced Python, compact beginner, and conversational

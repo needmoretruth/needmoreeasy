@@ -41,26 +41,59 @@ impl Span {
 /// One problem found in NME source code.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Diagnostic {
-    /// What is wrong, in plain language. No compiler jargon.
+    /// What is wrong in English, in plain language. No compiler jargon.
     pub message: String,
+    /// The same message in Korean when this is a user-facing diagnostic.
+    pub message_ko: Option<String>,
     /// Where it is wrong.
     pub span: Span,
-    /// What to try instead, if we know.
+    /// What to try instead in English, if we know.
     pub hint: Option<String>,
+    /// The same hint in Korean when this is a user-facing diagnostic.
+    pub hint_ko: Option<String>,
 }
 
 impl Diagnostic {
     pub fn new(message: impl Into<String>, span: Span) -> Self {
         Self {
             message: message.into(),
+            message_ko: None,
             span,
             hint: None,
+            hint_ko: None,
+        }
+    }
+
+    /// Creates one diagnostic with equivalent English and Korean messages.
+    pub fn bilingual(
+        message: impl Into<String>,
+        message_ko: impl Into<String>,
+        span: Span,
+    ) -> Self {
+        Self {
+            message: message.into(),
+            message_ko: Some(message_ko.into()),
+            span,
+            hint: None,
+            hint_ko: None,
         }
     }
 
     #[must_use]
     pub fn with_hint(mut self, hint: impl Into<String>) -> Self {
         self.hint = Some(hint.into());
+        self
+    }
+
+    /// Adds equivalent English and Korean recovery advice.
+    #[must_use]
+    pub fn with_bilingual_hint(
+        mut self,
+        hint: impl Into<String>,
+        hint_ko: impl Into<String>,
+    ) -> Self {
+        self.hint = Some(hint.into());
+        self.hint_ko = Some(hint_ko.into());
         self
     }
 
@@ -93,6 +126,17 @@ impl Diagnostic {
     ///   = hint: try `say "Hello"`
     /// ```
     pub fn render(&self, source: &str, path: &str) -> String {
+        self.render_with_korean(source, path, false)
+    }
+
+    /// Renders Korean first and then the equivalent English when available.
+    /// Source locations and carets are shared, so the beginner sees one
+    /// problem rather than two duplicate diagnostics.
+    pub fn render_bilingual(&self, source: &str, path: &str) -> String {
+        self.render_with_korean(source, path, true)
+    }
+
+    fn render_with_korean(&self, source: &str, path: &str, bilingual: bool) -> String {
         let (line_no, col) = self.line_col(source);
         let line_text = source_line(source, line_no);
         let rendered_line = expand_tabs(line_text);
@@ -116,6 +160,11 @@ impl Diagnostic {
 
         let mut out = String::new();
         let gutter = line_no.to_string().len();
+        if bilingual {
+            if let Some(message_ko) = &self.message_ko {
+                let _ = writeln!(out, "오류: {message_ko}");
+            }
+        }
         let _ = writeln!(out, "error: {}", self.message);
         let _ = writeln!(out, "{:>gutter$} --> {path}:{line_no}:{col}", "");
         let _ = writeln!(out, "{:>gutter$} |", "");
@@ -128,6 +177,11 @@ impl Diagnostic {
             "^".repeat(underline_len),
             width = underline_start
         );
+        if bilingual {
+            if let Some(hint_ko) = &self.hint_ko {
+                let _ = writeln!(out, "{:>gutter$} = 도움말: {hint_ko}", "");
+            }
+        }
         if let Some(hint) = &self.hint {
             let _ = writeln!(out, "{:>gutter$} = hint: {hint}", "");
         }
@@ -140,6 +194,16 @@ pub fn render_all(diagnostics: &[Diagnostic], source: &str, path: &str) -> Strin
     diagnostics
         .iter()
         .map(|d| d.render(source, path))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+/// Renders several diagnostics with Korean first and English immediately
+/// after it, separated by blank lines.
+pub fn render_all_bilingual(diagnostics: &[Diagnostic], source: &str, path: &str) -> String {
+    diagnostics
+        .iter()
+        .map(|diagnostic| diagnostic.render_bilingual(source, path))
         .collect::<Vec<_>>()
         .join("\n")
 }
@@ -231,6 +295,25 @@ mod tests {
         assert!(rendered.contains("2 | say"));
         assert!(rendered.contains("^^^"));
         assert!(rendered.contains("hint: try `say \"Hello\"`"));
+    }
+
+    #[test]
+    fn bilingual_rendering_puts_korean_before_equivalent_english() {
+        let source = "말해\n";
+        let diag = Diagnostic::bilingual(
+            "there is nothing to show",
+            "말할 내용이 비어 있어요",
+            Span::new(0, 6),
+        )
+        .with_bilingual_hint("write `show Hello`", "`안녕하세요 말해줘`처럼 적어 주세요");
+        let rendered = diag.render_bilingual(source, "hello.nme");
+
+        let korean_at = rendered.find("오류: 말할 내용이 비어 있어요").unwrap();
+        let english_at = rendered.find("error: there is nothing to show").unwrap();
+        assert!(korean_at < english_at, "{rendered}");
+        assert!(rendered.contains("도움말: `안녕하세요 말해줘`처럼 적어 주세요"));
+        assert!(rendered.contains("hint: write `show Hello`"));
+        assert!(!diag.render(source, "hello.nme").contains("오류:"));
     }
 
     #[test]

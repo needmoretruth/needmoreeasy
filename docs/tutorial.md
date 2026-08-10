@@ -14,7 +14,7 @@ show Hello world!
 ```
 
 ```sh
-nme run hello.nme
+nme run hello
 ```
 
 `show` is an action. Everything after it is the sentence to display. Korean is
@@ -70,7 +70,7 @@ The complete Korean program is
 [`examples/guessing-game.ko.nme`](../examples/guessing-game.ko.nme):
 
 ```sh
-nme run examples/guessing-game.ko.nme
+nme run examples/guessing-game.ko
 ```
 
 What was compiled:
@@ -129,8 +129,8 @@ for _ in range(3): print('NME로 컴파일러를 만들었어요')
 Run the compiler, then inspect the compiler's own generated Python:
 
 ```sh
-nme run examples/tiny-compiler.nme
-nme build examples/tiny-compiler.nme -o tiny-compiler.py
+nme run examples/tiny-compiler
+nme build examples/tiny-compiler -o tiny-compiler.py
 ```
 
 The example deliberately mixes advanced Python for list processing with

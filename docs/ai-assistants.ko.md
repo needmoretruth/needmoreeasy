@@ -100,12 +100,17 @@ use random
 파일을 작성하거나 고친 뒤 실행하세요.
 
 ```sh
-nme 검사 program.nme
-nme 빌드 program.nme -o program.py
+nme 버전
+nme 검사 program
+nme 빌드 program -o program.py
 ```
 
-실행해도 안전하고 사용자가 원하면 `nme 실행 program.nme`를 사용합니다.
+실행해도 안전하고 사용자가 원하면 `nme 실행 program`을 사용합니다.
 네이티브 결과물을 원하고 Nuitka가 설치됐을 때만 `nme 컴파일`을 사용합니다.
+
+문서에 나온 NME 동작만 한국어와 영어 별칭을 지원합니다. 고급 문법은 Python이므로
+`def`, `for`, `import`, `return` 같은 Python 키워드는 그대로 사용합니다. 없는
+한국어 고급 키워드를 만들어 내지 마세요.
 
 요청한 문장이 여기에 없다면 전체
 [한국어 문법 레퍼런스](https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/language.ko.md)나

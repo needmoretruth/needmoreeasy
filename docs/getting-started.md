@@ -1,8 +1,10 @@
-# NME in five minutes
+# Grow from sentences to Python
 
 English | [한국어](getting-started.ko.md)
 
-If `nme --version` does not work yet, follow the
+If Python still feels hard, this guide starts with something simpler and
+changes one small idea at a time until you are writing Python. The five-minute
+part starts after installation. If `nme --version` does not work yet, follow the
 [Windows, macOS, or Linux installation guide](install.md) first.
 
 ## 1. Hello World
@@ -16,10 +18,11 @@ show Hello world!
 Run it:
 
 ```sh
-nme run hello.nme
+nme run hello
 ```
 
-You just wrote a complete program. There are no quotes or parentheses.
+Expected output: `Hello world!` You just wrote a complete program. There are
+no quotes or parentheses.
 
 ## 2. Have a conversation
 
@@ -75,7 +78,7 @@ if guess is greater than answer
 Run the complete Korean version:
 
 ```sh
-nme run examples/guessing-game.ko.nme
+nme run examples/guessing-game.ko
 ```
 
 The random number, numeric input, comparisons, and output compile to ordinary
@@ -112,8 +115,8 @@ for number in numbers:
 ## 6. Check, build, and compile
 
 ```sh
-nme check hello.nme
-nme build hello.nme -o hello.py
+nme check hello
+nme build hello -o hello.py
 python3 hello.py
 ```
 
@@ -124,8 +127,8 @@ python3 -m pip install nuitka
 nme compile hello.nme -o hello
 ```
 
-Use `python` or `py` instead of `python3` when that is your platform command,
-and pass it to NME with `--python`.
+NME automatically chooses `python3` on macOS/Linux and `py` on Windows. The
+advanced `--python` option is only for unusual local setups.
 
 ## 7. Let NME simplify Python
 

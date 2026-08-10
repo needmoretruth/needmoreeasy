@@ -148,17 +148,19 @@ Add no dependency or abstraction without a current, demonstrated need.
 
 ## Execution and build model
 
-- `nme run` transpiles to a temporary `.py` file and starts the selected
-  CPython interpreter with inherited stdio.
-- `nme build` writes readable Python. This is the portable, dependency-light
-  artifact and the source of truth for what NME executes.
+- `nme run` sends compiled source to the selected CPython without a temporary
+  user file, while preserving the original `.nme` path, imports, resources,
+  arguments, standard input, and traceback names.
+- `nme build` asks CPython to validate the generated source before printing or
+  writing readable Python. It never creates the output file after a failed
+  syntax check.
 - `nme compile` is an optional CLI adapter for installed Nuitka. It can create
   a standalone executable, but it does not change NME semantics and does not
   make universal speed or size guarantees. Results depend on the program,
   platform, compiler, and packaging mode.
 
-The current traceback limitation is cosmetic: line numbers match the NME
-source, but the displayed file name is the temporary `.py` path.
+Traceback line numbers and displayed file names both point to the original
+`.nme` source.
 
 ## Out of scope
 

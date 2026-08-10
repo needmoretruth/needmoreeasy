@@ -150,7 +150,7 @@ fn python_beginner_sentence_korean_and_english_mix_line_by_line() {
     let expected = concat!(
         "조건 = True\n",
         "if (조건):\n",
-        "    print(\"성공이라고\")\n",
+        "    print(\"성공\")\n",
         "for _ in range(2):\n",
         "    print(\"mixed\")\n",
     );
@@ -261,6 +261,124 @@ fn english_sentence_conditions_support_comparisons_and_inline_then() {
         "if (score == 7): print(\"일곱\")\n",
     );
     assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn exact_output_words_are_never_reinterpreted_as_questions() {
+    let source = concat!(
+        "show task\n",
+        "show mask\n",
+        "show question\n",
+        "show prompt\n",
+        "show ask\n",
+    );
+    let expected = concat!(
+        "print(\"task\")\n",
+        "print(\"mask\")\n",
+        "print(\"question\")\n",
+        "print(\"prompt\")\n",
+        "print(\"ask\")\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn sentence_names_follow_source_order_and_python_scope() {
+    let source = concat!(
+        "show Hello world\n",
+        "world = \"earth\"\n",
+        "def remember():\n",
+        "    secret = \"inside\"\n",
+        "show secret\n",
+    );
+    let expected = concat!(
+        "print(\"Hello world\")\n",
+        "world = \"earth\"\n",
+        "def remember():\n",
+        "    secret = \"inside\"\n",
+        "print(\"secret\")\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn natural_conditions_keep_negation_literals_and_text_values() {
+    let source = concat!(
+        "set color to red\n",
+        "if color equals red then show yes\n",
+        "set score to 3\n",
+        "if score is not greater than 5 then show expected\n",
+        "set ready to false\n",
+        "if ready is missing then show missing\n",
+        "준비는 거짓\n",
+        "값은 없음\n",
+    );
+    let expected = concat!(
+        "color = \"red\"\n",
+        "if (color == \"red\"): print(\"yes\")\n",
+        "score = 3\n",
+        "if (not (score > 5)): print(\"expected\")\n",
+        "ready = False\n",
+        "if (not (ready)): print(\"missing\")\n",
+        "준비 = False\n",
+        "값 = None\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn sentence_actions_accept_spaced_korean_phrases_and_particles() {
+    let source = concat!(
+        "안녕 말해 줘\n",
+        "이름 을 물어 봐 이름이 뭐예요?\n",
+        "2 번 반복 해 그리고 다시 말해 줘\n",
+    );
+    let expected = concat!(
+        "print(\"안녕\")\n",
+        "이름 = input(\"이름이 뭐예요?\" + \" \")\n",
+        "for _ in range(2): print(\"다시\")\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn a_named_korean_repeat_count_can_keep_the_suffix_attached() {
+    let source = "횟수 = 3\n횟수번:\n    안녕 말해줘\n";
+    let expected = "횟수 = 3\nfor _ in range(횟수):\n    print(\"안녕\")\n";
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn one_word_sentence_output_uses_known_names_and_quotes_unknown_words() {
+    let source = "say Hello\nHello = \"hi\"\nsay Hello\n말해 안녕하세요\n";
+    let expected = concat!(
+        "print(\"Hello\")\n",
+        "Hello = \"hi\"\n",
+        "print(Hello)\n",
+        "print(\"안녕하세요\")\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn english_output_sentences_keep_apostrophes_without_escaping() {
+    assert_eq!(
+        ok("show I'm happy!\nshow John's book\n"),
+        "print(\"I'm happy!\")\nprint(\"John's book\")\n"
+    );
+}
+
+#[test]
+fn module_sentences_accept_the_exact_unquoted_version() {
+    let tools = concat!(
+        "import random as 랜덤; random = 랜덤; ",
+        "random_number = 랜덤.randint; random_pick = 랜덤.choice; ",
+        "shuffle = 랜덤.shuffle; 랜덤정수 = 랜덤.randint; ",
+        "랜덤선택 = 랜덤.choice; 섞기 = 랜덤.shuffle; ",
+        "random_version = 랜덤버전 = \"0.0.1\"\n",
+    );
+    assert_eq!(ok("use random version 0.0.1\n"), tools);
+    assert_eq!(ok("랜덤 사용 버전 0.0.1\n"), tools);
 }
 
 #[test]

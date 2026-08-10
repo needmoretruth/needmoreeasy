@@ -1,8 +1,9 @@
-# NME 5분 시작
+# 쉬운 문장에서 Python까지
 
 [English](getting-started.md) | 한국어
 
-아직 `nme --version`이 동작하지 않으면 먼저
+Python도 어렵다면 더 쉬운 문장부터 시작해 한 단계씩 Python으로 넘어갑니다.
+5분 과정은 설치가 끝난 뒤부터입니다. 아직 `nme --version`이 동작하지 않으면 먼저
 [Windows, macOS, Linux 설치 안내](install.ko.md)를 따라 하세요.
 
 ## 1. Hello World
@@ -16,10 +17,11 @@ UTF-8 파일 `hello.nme`를 만듭니다.
 실행합니다.
 
 ```sh
-nme 실행 hello.nme
+nme 실행 hello
 ```
 
-완전한 프로그램을 만들었습니다. 따옴표와 괄호가 하나도 없습니다.
+`안녕하세요!`가 출력됩니다. 완전한 프로그램을 만들었지만 따옴표와 괄호가
+하나도 없습니다.
 
 ## 2. 프로그램과 대화하기
 
@@ -75,7 +77,7 @@ show Hello 이름!
 저장소의 완성된 예제를 실행합니다.
 
 ```sh
-nme 실행 examples/guessing-game.ko.nme
+nme 실행 examples/guessing-game.ko
 ```
 
 랜덤 숫자, 숫자 입력, 비교, 출력이 평범한 Python으로 컴파일됩니다. 목록,
@@ -112,8 +114,8 @@ for 숫자 in 숫자들:
 ## 6. 검사, 빌드, 컴파일
 
 ```sh
-nme 검사 hello.nme
-nme 빌드 hello.nme -o hello.py
+nme 검사 hello
+nme 빌드 hello -o hello.py
 python3 hello.py
 ```
 
@@ -124,8 +126,8 @@ python3 -m pip install nuitka
 nme 컴파일 hello.nme -o hello
 ```
 
-운영체제의 Python 명령이 `python`이나 `py`라면 `python3` 대신 사용하고,
-NME에는 `--python`으로 전달하세요.
+NME는 macOS/Linux에서 `python3`, Windows에서 `py`를 자동으로 고릅니다.
+특수한 환경에서만 고급 옵션 `--python`을 사용합니다.
 
 ## 7. Python을 NME로 쉽게 바꾸기
 

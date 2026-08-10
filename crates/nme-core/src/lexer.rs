@@ -16,6 +16,7 @@ use rustpython_parser::lexer::{lex, LexicalErrorType};
 use rustpython_parser::{Mode, Tok};
 
 use crate::diagnostics::{Diagnostic, Span};
+use crate::syntax::SAY_WORDS_EN;
 
 /// One Python token together with its byte span in the source.
 #[derive(Debug, Clone)]
@@ -64,12 +65,39 @@ impl LogicalLine {
 /// source (for example an unterminated string). Such input cannot be
 /// Python and cannot be NME, so one clear error is all we can offer.
 pub fn logical_lines(source: &str) -> Result<Vec<LogicalLine>, Diagnostic> {
+    let mut lexer_source = source.to_string();
+    loop {
+        match logical_lines_once(source, &lexer_source) {
+            Ok(lines) => return Ok(lines),
+            Err(LexAttemptError::Diagnostic(problem)) => return Err(problem),
+            Err(LexAttemptError::SentenceApostrophe(offset)) => {
+                // The lexer established both the exact sentence action and
+                // the failing quote location. Replacing that one ASCII byte
+                // with whitespace lets rustpython-parser finish tokenizing;
+                // all spans still address the untouched original source, so
+                // lowering preserves the apostrophe as ordinary sentence
+                // text (`show I'm ready`).
+                lexer_source.replace_range(offset..offset + 1, " ");
+            }
+        }
+    }
+}
+
+enum LexAttemptError {
+    Diagnostic(Diagnostic),
+    SentenceApostrophe(usize),
+}
+
+fn logical_lines_once(
+    source: &str,
+    lexer_source: &str,
+) -> Result<Vec<LogicalLine>, LexAttemptError> {
     let line_starts = line_start_offsets(source);
     let mut lines = Vec::new();
     let mut current: Vec<Token> = Vec::new();
     let mut indent: usize = 0;
 
-    for result in lex(source, Mode::Module) {
+    for result in lex(lexer_source, Mode::Module) {
         let (tok, range) = match result {
             Ok(token) => token,
             Err(err) => {
@@ -92,7 +120,12 @@ pub fn logical_lines(source: &str) -> Result<Vec<LogicalLine>, Diagnostic> {
                     });
                     continue;
                 }
-                return Err(lexical_diagnostic(source, &err));
+                if let Some(offset) = sentence_apostrophe(lexer_source, &current, &err) {
+                    return Err(LexAttemptError::SentenceApostrophe(offset));
+                }
+                return Err(LexAttemptError::Diagnostic(lexical_diagnostic(
+                    source, &err,
+                )));
             }
         };
         let span = Span::new(usize::from(range.start()), usize::from(range.end()));
@@ -115,6 +148,50 @@ pub fn logical_lines(source: &str) -> Result<Vec<LogicalLine>, Diagnostic> {
         lines.push(finish_line(source, &line_starts, indent, &mut current));
     }
     Ok(lines)
+}
+
+fn sentence_apostrophe(
+    source: &str,
+    current: &[Token],
+    err: &rustpython_parser::lexer::LexicalError,
+) -> Option<usize> {
+    let is_unterminated_single_quote = matches!(err.error, LexicalErrorType::StringError)
+        || matches!(
+            &err.error,
+            LexicalErrorType::OtherError(message)
+                if message == "EOL while scanning string literal"
+        );
+    if !is_unterminated_single_quote
+        || current.len() < 2
+        || !matches!(
+            current.first().map(|token| &token.tok),
+            Some(Tok::Name { name })
+                if SAY_WORDS_EN
+                    .iter()
+                    .any(|candidate| name.eq_ignore_ascii_case(candidate))
+        )
+        || !current[1..]
+            .iter()
+            .all(|token| matches!(token.tok, Tok::Name { .. }))
+    {
+        return None;
+    }
+
+    let reported = usize::from(err.location);
+    let after_previous_token = current.last().map_or(reported, |token| token.span.end);
+    [reported, reported.saturating_sub(1), after_previous_token]
+        .into_iter()
+        .find(|&offset| {
+            source.as_bytes().get(offset) == Some(&b'\'')
+                && source[..offset]
+                    .chars()
+                    .next_back()
+                    .is_some_and(char::is_alphanumeric)
+                && source[offset + 1..]
+                    .chars()
+                    .next()
+                    .is_some_and(char::is_alphabetic)
+        })
 }
 
 fn finish_line(
@@ -160,14 +237,18 @@ fn lexical_diagnostic(source: &str, err: &rustpython_parser::lexer::LexicalError
     // The lexer points at the offending character; underline it (or the
     // final byte when the error is at end of input).
     let start = offset.min(source.len().saturating_sub(1));
-    Diagnostic::new(
+    Diagnostic::bilingual(
         format!(
             "this is not something Python or NME can read: {}",
             err.error
         ),
+        format!("Python이나 NME가 읽을 수 없는 내용이에요: {}", err.error),
         Span::new(start, start + 1),
     )
-    .with_hint("check for an unterminated string or a stray character")
+    .with_bilingual_hint(
+        "check for an unterminated string or a stray character",
+        "닫히지 않은 문자열이나 잘못 들어간 문자가 있는지 확인하세요",
+    )
 }
 
 #[cfg(test)]
@@ -246,5 +327,19 @@ mod tests {
         assert_eq!(ls.len(), 2);
         assert_eq!(ls[0].text(src), "이름을 물어봐 이름이 뭐예요?");
         assert_eq!(ls[1].text(src), "안녕하세요! 말해줘");
+    }
+
+    #[test]
+    fn apostrophes_inside_exact_english_output_sentences_are_text() {
+        let src = "show I'm sure it's ready!\n";
+        let ls = lines(src);
+        assert_eq!(ls.len(), 1);
+        assert_eq!(ls[0].text(src), "show I'm sure it's ready!");
+    }
+
+    #[test]
+    fn apostrophe_recovery_never_masks_broken_python_or_a_started_string() {
+        assert!(logical_lines("value = O'Reilly\n").is_err());
+        assert!(logical_lines("show 'oops\n").is_err());
     }
 }

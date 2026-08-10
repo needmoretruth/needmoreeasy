@@ -30,13 +30,15 @@ nme 변환 app.py --level 문장형 --language 한국어 -o app.nme
 | `n = int(input(prompt))` | Python 유지 | `n을 숫자로 물어봐 prompt` |
 | `for _ in range(n):` | `n번:` | `n번 반복해` |
 | `if condition:` | `만약 condition:` | `만약에 condition` |
-| `import random` | `랜덤 사용` | `랜덤 사용 최신` |
+| `import random` | Python 유지 | Python 유지 |
 | 간단한 대입 | Python 유지 | `name은 value` |
 
 영어 출력은 `say`, `ask`, `times`, `when`, `use random`과 자연스러운 영어
 문장형을 사용합니다.
 
-자동 변환이 글자를 변수로 잘못 끼워 넣거나 자연어 질문용 공백을 새로 붙이지
+평범한 `import random`을 바꾸면 사용자가 만든 `random`, `random_number`, 한국어
+도구 이름을 덮어쓸 수 있으므로 Python으로 유지합니다. 자동 변환이 글자를 변수로
+잘못 끼워 넣거나 자연어 질문용 공백을 새로 붙이지
 않도록 문자열 따옴표와 질문 내용을 정확히 유지합니다. 결과를 확인한 뒤 더
 문장처럼 쓰고 싶을 때 직접 따옴표를 없앨 수 있습니다. 주석, 들여쓰기, 빈 줄,
 줄바꿈, 변환 대상이 아닌 Python은 그대로 유지합니다.
@@ -51,6 +53,6 @@ NME 고급 문법은 Python입니다. 클래스, 예외 처리, 복잡한 호출
 결과를 확인하고 검사하세요.
 
 ```sh
-nme 검사 app.nme
-nme 빌드 app.nme -o app.generated.py
+nme 검사 app
+nme 빌드 app -o app.generated.py
 ```

@@ -106,13 +106,18 @@ set color to pick from red or green or blue
 After writing or editing a file, run:
 
 ```sh
-nme check program.nme
-nme build program.nme -o program.py
+nme --version
+nme check program
+nme build program -o program.py
 ```
 
-Use `nme run program.nme` when execution is safe and desired. Use
-`nme compile program.nme -o program` only when the user wants a native artifact
+Use `nme run program` when execution is safe and desired. Use
+`nme compile program -o program` only when the user wants a native artifact
 and Nuitka is installed.
+
+Only the documented NME actions have Korean and English aliases. Advanced
+syntax is Python, so Python keywords such as `def`, `for`, `import`, and
+`return` remain Python keywords. Never invent Korean versions of them.
 
 If a requested phrase is not described here, read the full
 [English language reference](https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/language.md)
