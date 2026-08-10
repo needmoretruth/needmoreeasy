@@ -11,9 +11,8 @@ rustc-ice-*.txt
 __pycache__/
 *.py[cod]
 
-# Local editor files
+# Local editor files (shared NME tasks live in .vscode/ and .zed/)
 /.idea/
-/.vscode/
 *.swp
 *.swo
 *~

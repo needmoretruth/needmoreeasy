@@ -88,12 +88,17 @@ fn diagnostics_render_with_location_and_hint() {
 }
 
 #[test]
-fn ask_requires_a_simple_target_and_comma() {
+fn ask_requires_a_simple_target() {
     let target = err("ask 123, \"Number? \"\n");
     assert!(target.contains("name that should hold"), "{target}");
+}
 
-    let comma = err("ask name \"Name? \"\n");
-    assert!(comma.contains("comma"), "{comma}");
+#[test]
+fn ask_recovers_a_missing_comma_as_sentence_syntax() {
+    assert_eq!(
+        transpile("ask name \"Name? \"\n").unwrap(),
+        "name = input(\"Name? \")\n"
+    );
 }
 
 #[test]
@@ -133,4 +138,18 @@ fn korean_forms_return_korean_guidance() {
 fn only_random_is_bundled() {
     let message = err("use math\n");
     assert!(message.contains("only bundles `use random`"), "{message}");
+}
+
+#[test]
+fn unavailable_random_version_reports_the_bundled_version() {
+    let message = err("use random version \"9.9.9\"\n");
+    assert!(message.contains("9.9.9"), "{message}");
+    assert!(message.contains("0.0.1"), "{message}");
+}
+
+#[test]
+fn sentence_punctuation_without_an_action_is_ambiguous() {
+    let message = err("Hello there!\n");
+    assert!(message.contains("ambiguous"), "{message}");
+    assert!(message.contains("show"), "{message}");
 }

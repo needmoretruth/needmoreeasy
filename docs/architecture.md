@@ -1,141 +1,173 @@
 # NME architecture
 
-This document explains how the NME compiler is built and *why*. It is the
-first thing to read before changing anything. The audience is future
-contributors.
+This is the canonical design document for contributors. Read it before
+changing compiler behavior.
 
-## What NME is (and is not)
+## Product model
 
-NME is a **thin, easy syntax layer on top of Python**, not a new language
-implementation. The compiler turns `.nme` source into ordinary `.py` source;
-the real CPython interpreter executes it. NME does not have its own runtime,
-evaluator, garbage collector, or standard library — on purpose. Everything
-Python can do, NME can do, because NME programs *are* Python programs after
-a small, safe rewrite.
+NME is one language with three syntax levels that may be mixed line by line:
 
-## The pipeline
+1. **Advanced** — ordinary Python. Every valid Python program is valid NME.
+2. **Beginner** — compact NME forms such as `say`, `ask`, and `3 times:`.
+3. **Sentence** — conversational English or Korean without required quotes,
+   commas, braces, or block colons for the supported beginner tasks.
+
+English and Korean are two spellings of the same AST and may also be mixed.
+NME transpiles all claimed syntax to ordinary Python; CPython remains the
+runtime and standard library. NME does not implement a second evaluator,
+garbage collector, or general-purpose standard library.
+
+## Compiler pipeline
 
 ```text
 source text (.nme)
   │
-  ▼  lexer.rs     rustpython-parser's lexer → logical lines
-  ▼  parser.rs    token-pattern matching, "Python wins" rule → NmeStmt list
-  ▼  lower.rs     NmeStmt → Python text edits (line-preserving)
+  ▼  lexer.rs     rustpython-parser tokens → logical lines
+  ▼  parser.rs    Python-wins check + token patterns → NmeStmt list
+  ▼  lower.rs     NmeStmt → same-line Python edits
   ▼  transpile.rs apply edits → Python source
 ```
 
-`nme-core` is a **pure function** `&str -> Result<String, Vec<Diagnostic>>`.
-No IO, no processes, no global state. All IO (reading files, printing,
-running Python) lives in `nme-cli`. This keeps the compiler trivially
-testable and reusable (future REPL, LSP, playground, ...).
+`nme-core` stays pure: its main compiler is `&str -> Result<String,
+Vec<Diagnostic>>`. `nme-cli` owns file IO, process execution, and optional
+native compilation.
 
-## Module responsibilities (one job each — keep it that way)
+Python conversion is a second pure path:
 
-| Module         | Responsibility                                              | May NOT do                            |
-| -------------- | ----------------------------------------------------------- | ------------------------------------- |
-| `diagnostics`  | describe problems + render them for beginners               | know about tokens or grammar          |
-| `lexer`        | group Python tokens into logical lines                      | know about NME syntax                 |
-| `syntax`       | define NME's AST and keywords (the language definition)     | any logic beyond data                 |
-| `parser`       | decide which logical lines are NME, and which construct     | generate Python text                  |
-| `lower`        | turn one NME statement into Python text                     | decide what is NME                    |
-| `transpile`    | wire the pipeline together                                   | any logic of its own                  |
-| `cli::exec`    | run the transpiled program with the system Python           | transpilation details                 |
+```text
+valid Python
+  │
+  ▼  convert.rs   safe token patterns → requested NME surface level
+  ▼               unsupported lines remain advanced Python
+```
 
-## Key design decisions (do not regress these)
+The converter is deliberately partial and lossless. Since advanced Python is
+already NME, retaining a line is always safer than guessing at a conversational
+rewrite.
 
-### 1. Python wins
+## Module responsibilities
 
-A line that is valid Python is **always** treated as Python, even if it
-looks like NME. NME only claims lines Python itself rejects. Validity is
-decided by `rustpython_parser::parse` — a real Python parser, not a guess.
-Two forms are tried: the line alone (`say(x)` is valid) and the line with a
-`s pass` body (`if times:` is a valid header). This is what makes "mix
-Python and NME in one file" safe by construction.
+| Module | Responsibility | Must not do |
+| --- | --- | --- |
+| `diagnostics` | problem data and beginner-friendly rendering | know grammar |
+| `lexer` | Python tokens and logical lines | decide NME meaning |
+| `syntax` | AST, shared language data, bundled module versions | perform IO |
+| `parser` | Python-wins classification and NME token matching | emit Python text |
+| `lower` | same-line Python replacements | decide which syntax matched |
+| `transpile` | compiler pipeline glue | contain language policy |
+| `convert` | safe Python-to-NME surface conversion | invent semantics |
+| `cli::exec` | Python execution and optional native backend | parse NME |
 
-### 2. Never scan text ourselves
+## Invariants
 
-All understanding of Python source comes from `rustpython-parser` tokens.
-No regex, no `str::replace`, no hand-rolled string scanning anywhere in the
-pipeline. That is why NME-looking text inside strings, triple-quoted
-strings, f-strings and comments can never be rewritten by accident — the
-tokenizer hands us whole tokens with byte spans, and comments/strings never
-appear as statement starts.
+### 1. Python always wins
 
-### 3. NME expressions are opaque Python
+A valid Python statement or compound header is copied byte for byte, even when
+its names resemble NME words. Validity is decided with the real
+`rustpython_parser::parse`, including the synthetic `pass` body needed to test
+headers. Every new matcher must stay behind this check.
 
-NME never parses, rewrites or re-prints expressions. The parser checks output
-values, input prompts, repetition counts, and conditions with
-`Mode::Expression`, records their **byte spans**, and lowering copies the
-original text verbatim. Every Python expression feature — present and future —
-works inside NME statements for free.
+The one intentional-looking case is colon-free `if condition`: it is invalid
+Python and can therefore be claimed by sentence NME. Normal `if condition:` is
+advanced Python and remains untouched.
 
-### 4. Line-preserving lowering
+### 2. Tokens define structure
 
-Every NME statement lowers to Python **on the same single line**, and the
-edit span never includes leading indentation or trailing comments. Result:
-output has exactly as many lines as input, so CPython tracebacks point at
-the line numbers the user wrote, and comments survive untouched. (Verified
-by tests, including a real `ZeroDivisionError` traceback line check.)
+All structural understanding comes from `rustpython-parser` tokens and byte
+spans. Never use regexes, global replacement, or a hand-written Python scanner.
+Strings, comments, f-strings, and NME-looking text inside them remain sacred.
 
-### 5. Errors are a feature
+Sentence punctuation has one narrow lexer exception. Python reports `?` and
+`!` as unrecognized tokens, so `lexer.rs` preserves those exact reported spans
+as synthetic punctuation tokens. Only an already-recognized sentence matcher
+may consume them. An unrelated invalid line still produces a diagnostic.
 
-NME's users are beginners. Diagnostics say what is wrong, where (caret
-under the exact span), and what to try instead (`hint`). The compiler
-collects **all** problems in one pass instead of stopping at the first.
-Anything that is neither valid Python nor valid NME produces a diagnostic —
-never silently broken Python output.
+### 3. Three levels share semantics
 
-### 6. A small bilingual starter set
+Beginner expressions are validated as opaque Python expressions and copied by
+span. Sentence forms instead build the same small AST variants (`Say`, `Ask`,
+`Set`, `Times`, `When`, `UseRandom`) from explicit token templates. Known
+variable names may be interpolated into sentence output; unknown words remain
+literal text. Both languages lower through the same code path.
 
-The first beta has five concepts: output, text input, repetition, conditions,
-and an explicit `random` toolkit. English and Korean spellings share the same
-AST variants and Python semantics. This is enough for a beginner to make an
-interactive program without creating a second standard library or duplicating
-Python's general-purpose syntax. Consistency still beats feature count: add a
-new concept only when the existing set cannot express a common beginner task
-clearly.
+Do not add a parallel Korean runtime, duplicate AST variants per language, or
+different behavior for equivalent English and Korean forms.
 
-The bundled `random` toolkit is a one-line import expansion backed entirely by
-Python's standard-library `random` module. It is not a runtime or dependency,
-and it remains explicit so pure Python files stay byte-identical.
+### 4. Friendly tolerance is bounded
 
-### 7. No `unsafe`, minimal dependencies
+The sentence parser accepts documented connecting words, common Korean
+particles, and a single insertion, deletion, substitution, or adjacent
+transposition in action words. Recovery only runs after Python rejects the
+line and only when the surrounding token pattern identifies one construct.
 
-`unsafe_code` is forbidden workspace-wide (`Cargo.toml` `[workspace.lints]`).
-The only dependency is `rustpython-parser` — a proven, maintained crate that
-saves us from reimplementing Python's lexical rules and grammar. Do not add
-dependencies without a clear, present need. The CLI parses its two flags by
-hand on purpose; if subcommands grow, adopting `clap` is a reasonable
-*future* decision.
+Unlimited typo correction would silently change programs. When more than one
+meaning is plausible, emit an exact caret diagnostic and an actionable hint.
+Never guess across expressions, identifiers, numbers, or arbitrary prose.
 
-## Adding a new NME construct (recipe)
+### 5. Lowering preserves lines
 
-1. **Design the Python meaning first.** The lowering must be one line in,
-   one line out, and valid Python 3.8+.
-2. Add a variant to `syntax::NmeStmt` (spans, never owned text).
-3. Add a `match_*` function in `parser.rs`; call it from `classify`.
-   Match on **tokens only**. Reuse the Python-wins checks
-   (`is_valid_python_statement` / `is_valid_python_header`) so your
-   construct can never hijack valid Python.
-4. Add lowering in `lower.rs` (`lower_stmt`).
-5. Add beginner-friendly diagnostics (message + hint) for the ways a
-   beginner can get the construct wrong.
-6. Add tests: both language spellings when applicable, mixed Python/NME,
-   look-alike valid Python that must stay untouched, and every error case.
-7. Update both language references (`docs/language.md` and
-   `docs/language.ko.md`), both READMEs, and an example.
+Every claimed logical line becomes exactly one Python line. Edits exclude
+indentation, line endings, and trailing comments. This keeps CPython traceback
+line numbers aligned with the `.nme` source. Multi-line runtime helpers are not
+allowed in lowering; use one-line expressions or explicit imports.
 
-## Execution model
+### 6. Errors are part of the language
 
-`nme run` writes the transpiled program to a temporary file named after the
-source (`<stem>.py`) and runs it with the system Python (`--python` to
-override). stdio is inherited; the exit code is the interpreter's. Known
-limitation (future work): Python tracebacks show the temporary file *name*
-(correct line numbers, though); mapping file names back to `.nme` paths is
-a deliberately postponed nicety, e.g. via a linecache hook.
+Every user-facing compiler error needs a plain message, an exact caret span,
+and a useful `hint`. Collect independent errors in one pass. Input that is
+neither valid Python nor an unambiguous NME form must never be emitted as
+silently broken Python.
 
-## What is explicitly out of scope (for now)
+### 7. Bundled modules are local and versioned
 
-LLVM/JIT/machine code, a garbage collector, a package manager, a
-Python-grammar reimplementation, an NME runtime. If a task seems to require
-one of these, the task is off-course.
+`use random latest` / `랜덤 사용 최신` resolves to the newest random helper
+shipped in this NME binary. An exact supported version may be requested. The
+version constant lives in `syntax.rs`; both English and Korean aliases are
+always exposed so languages can be mixed after one import.
+
+This is a deterministic bundled-module registry, not a network package
+manager. Adding a module requires a present beginner use case, a fixed version,
+both language aliases, diagnostics, tests, and bilingual documentation.
+
+### 8. Small and safe Rust
+
+`unsafe` is forbidden workspace-wide. `rustpython-parser` is the only Rust
+dependency because it prevents an unsafe reimplementation of Python syntax.
+Add no dependency or abstraction without a current, demonstrated need.
+
+## Adding syntax
+
+1. Define one-line Python semantics first.
+2. Add or reuse a language-neutral `NmeStmt` variant in `syntax.rs`.
+3. Add a token-only matcher in `parser.rs`, after Python-wins checks.
+4. Lower it in `lower.rs` without changing line count.
+5. Add message, caret, and hint diagnostics for every failure form.
+6. Test the construct, English/Korean equivalence, all-level mixing,
+   look-alike valid Python, preservation, and errors.
+7. Update both language references, READMEs, and a runnable example.
+
+## Execution and build model
+
+- `nme run` transpiles to a temporary `.py` file and starts the selected
+  CPython interpreter with inherited stdio.
+- `nme build` writes readable Python. This is the portable, dependency-light
+  artifact and the source of truth for what NME executes.
+- `nme compile` is an optional CLI adapter for installed Nuitka. It can create
+  a standalone executable, but it does not change NME semantics and does not
+  make universal speed or size guarantees. Results depend on the program,
+  platform, compiler, and packaging mode.
+
+The current traceback limitation is cosmetic: line numbers match the NME
+source, but the displayed file name is the temporary `.py` path.
+
+## Out of scope
+
+- replacing CPython or reimplementing the full Python grammar;
+- silently rewriting ambiguous prose or every possible typo;
+- a network package registry or floating remote dependency resolution;
+- claims that every native build is faster or smaller;
+- LLVM/JIT, a new garbage collector, or an NME-specific runtime.
+
+NME can still be used to *write* compilers, including a small NME-to-Python
+translator, because advanced Python and all installed Python libraries remain
+available inside an NME file.

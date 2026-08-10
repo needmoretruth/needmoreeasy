@@ -1,0 +1,17 @@
+[
+  {
+    "label": "NME: run current file",
+    "command": "nme",
+    "args": ["run", "$ZED_FILE"]
+  },
+  {
+    "label": "NME: check current file",
+    "command": "nme",
+    "args": ["check", "$ZED_FILE"]
+  },
+  {
+    "label": "NME: build current file",
+    "command": "nme",
+    "args": ["build", "$ZED_FILE"]
+  }
+]

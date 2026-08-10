@@ -12,7 +12,7 @@
 //! brackets or after a backslash), which keeps multi-line Python expressions
 //! intact and invisible to NME's line-oriented grammar.
 
-use rustpython_parser::lexer::lex;
+use rustpython_parser::lexer::{lex, LexicalErrorType};
 use rustpython_parser::{Mode, Tok};
 
 use crate::diagnostics::{Diagnostic, Span};
@@ -70,7 +70,31 @@ pub fn logical_lines(source: &str) -> Result<Vec<LogicalLine>, Diagnostic> {
     let mut indent: usize = 0;
 
     for result in lex(source, Mode::Module) {
-        let (tok, range) = result.map_err(|err| lexical_diagnostic(source, &err))?;
+        let (tok, range) = match result {
+            Ok(token) => token,
+            Err(err) => {
+                if let LexicalErrorType::UnrecognizedToken {
+                    tok: punctuation @ ('?' | '!'),
+                } = err.error
+                {
+                    let reported = usize::from(err.location);
+                    let width = punctuation.len_utf8();
+                    let start = if source[reported.min(source.len())..].starts_with(punctuation) {
+                        reported
+                    } else {
+                        reported.saturating_sub(width)
+                    };
+                    current.push(Token {
+                        tok: Tok::Name {
+                            name: punctuation.to_string(),
+                        },
+                        span: Span::new(start, start + width),
+                    });
+                    continue;
+                }
+                return Err(lexical_diagnostic(source, &err));
+            }
+        };
         let span = Span::new(usize::from(range.start()), usize::from(range.end()));
         match tok {
             // Framing tokens carry no meaning for us.
@@ -213,5 +237,14 @@ mod tests {
     fn unterminated_string_is_a_friendly_error() {
         let err = logical_lines("say \"oops\n").unwrap_err();
         assert!(err.message.contains("not something Python or NME can read"));
+    }
+
+    #[test]
+    fn keeps_sentence_question_and_exclamation_marks_as_tokens() {
+        let src = "이름을 물어봐 이름이 뭐예요?\n안녕하세요! 말해줘\n";
+        let ls = lines(src);
+        assert_eq!(ls.len(), 2);
+        assert_eq!(ls[0].text(src), "이름을 물어봐 이름이 뭐예요?");
+        assert_eq!(ls[1].text(src), "안녕하세요! 말해줘");
     }
 }
