@@ -21,11 +21,15 @@
 git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
 cd needmoreeasy
 cargo install --path crates/nme-cli --locked
+$env:Path = "$HOME\.cargo\bin;$env:Path"
 nme --version
 ```
 
-`nme`를 찾지 못하면 터미널을 다시 열고 `%USERPROFILE%\.cargo\bin`이
-`PATH`에 있는지 확인하세요.
+`$env:Path` 줄은 방금 설치한 명령을 현재 PowerShell에서 바로 찾게 합니다. 새
+PowerShell에서도 `nme`를 찾지 못하면 `%USERPROFILE%\.cargo\bin`을 사용자
+`PATH`에 추가하세요. 다시 설치할 필요는 없으며
+`& "$HOME\.cargo\bin\nme.exe" --version`으로 설치된 파일을 직접 확인할 수
+있습니다.
 
 Windows Python 실행기로 예제를 실행합니다.
 
@@ -48,11 +52,15 @@ python.org에서 현재 Python을 설치하고 공식 rustup 페이지의 명령
 git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
 cd needmoreeasy
 cargo install --path crates/nme-cli --locked
+export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 nme 실행 examples/hello-sentence.nme
 ```
 
-셸이 `nme`를 찾지 못하면 Cargo 환경을 한 번 불러오고 터미널을 다시 여세요.
+Cargo가 바이너리 폴더가 `PATH`에 없다고 경고하면 첫 `nme` 명령보다 `export`
+줄을 먼저 실행해야 합니다. 다음 터미널에도 유지하려면 같은 줄을 macOS 기본
+셸의 `~/.zshrc` 또는 사용 중인 셸의 프로필에 추가하세요. rustup으로 Rust를
+설치했다면 다음 명령이 같은 설정을 이미 제공할 수 있습니다.
 
 ```sh
 source "$HOME/.cargo/env"
@@ -79,9 +87,17 @@ rustup으로 안정 Rust를 설치하고 새 셸에서 실행합니다.
 git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
 cd needmoreeasy
 cargo install --path crates/nme-cli --locked
+export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 nme 실행 examples/hello-sentence.nme
 ```
+
+`export` 줄을 의도적으로 첫 `nme` 명령보다 앞에 두었습니다. Fedora의 시스템
+`cargo` 같은 패키지 관리자 버전은 설치에 성공해도 `~/.cargo/bin`을 셸의
+`PATH`에 자동으로 넣지 않을 수 있습니다. 필요하면
+`"${CARGO_HOME:-$HOME/.cargo}/bin/nme" --version`으로 설치 파일을 직접 확인한
+뒤, 같은 export 줄을 `~/.bashrc`, `~/.zshrc` 또는 사용 중인 셸 프로필에
+추가하세요.
 
 ## 전체 도구 확인
 

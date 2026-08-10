@@ -15,3 +15,6 @@ workspace = true
 # understands strings, comments, f-strings and every Python construct exactly
 # the way CPython does. We never reimplement Python's grammar ourselves.
 rustpython-parser = "0.4"
+# Diagnostics use terminal display-cell widths so carets stay aligned under
+# CJK text and other non-ASCII characters.
+unicode-width = "0.2.2"

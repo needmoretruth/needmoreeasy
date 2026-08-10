@@ -221,6 +221,7 @@ name = "nme-core"
 version = "0.0.1-beta.2"
 dependencies = [
  "rustpython-parser",
+ "unicode-width",
 ]
 
 [[package]]

@@ -20,11 +20,12 @@ use std::process::ExitCode;
 const HELP: &str = r"nme — NeedMoreEasy: programming, easier than Python.
 
 USAGE:
+    nme <file.nme> [--python <command>]       Shortcut for `nme run`
     nme run <file.nme> [--python <command>]   Run an NME program with Python
     nme build <file.nme> [-o <output.py>]     Transpile to Python and print it
     nme compile <file.nme> [-o <executable>]  Build a native executable (Nuitka)
         --python <command>                     Select Python for the native build
-    nme check <file.nme>                      Check for problems without running
+    nme check <file.nme> [--python <command>] Check with NME and CPython
     nme convert <file.py> [options]           Convert Python to an NME level
         --level advanced|beginner|sentence    Choose the syntax level
         --language en|ko                      Choose generated words (default: en)
@@ -36,7 +37,10 @@ USAGE:
 Every valid Python program is already a valid NME program. NME offers advanced
 Python, compact beginner syntax, and conversational sentence syntax.
 English and Korean may be mixed. See README.md or README.ko.md to begin.
+Python defaults to `py` on Windows and `python3` on macOS and Linux.
 ";
+
+const DEFAULT_PYTHON: &str = if cfg!(windows) { "py" } else { "python3" };
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -55,6 +59,7 @@ fn main() -> ExitCode {
             print!("{HELP}");
             ExitCode::SUCCESS
         }
+        Some(path) if is_nme_path(path) => command_run(&args),
         _ => {
             eprint!("{HELP}");
             ExitCode::FAILURE
@@ -137,7 +142,7 @@ fn command_convert(args: &[String]) -> ExitCode {
 }
 
 fn command_compile(args: &[String]) -> ExitCode {
-    let mut python = "python3".to_string();
+    let mut python = DEFAULT_PYTHON.to_string();
     let mut file = None;
     let mut output = None;
     let mut rest = args.iter();
@@ -145,7 +150,11 @@ fn command_compile(args: &[String]) -> ExitCode {
         match arg.as_str() {
             "--python" => match rest.next() {
                 Some(command) => python.clone_from(command),
-                None => return fail("--python needs a command, e.g. --python python3"),
+                None => {
+                    return fail(&format!(
+                        "--python needs a command, e.g. --python {DEFAULT_PYTHON}"
+                    ));
+                }
             },
             "-o" | "--output" => match rest.next() {
                 Some(path) => output = Some(std::path::PathBuf::from(path)),
@@ -209,17 +218,22 @@ fn command_compile(args: &[String]) -> ExitCode {
 
 /// `nme run`: transpile, then execute with the real Python runtime.
 fn command_run(args: &[String]) -> ExitCode {
-    let mut python = "python3".to_string();
+    let mut python = DEFAULT_PYTHON.to_string();
     let mut file = None;
     let mut rest = args.iter();
     while let Some(arg) = rest.next() {
         match arg.as_str() {
             "--python" => match rest.next() {
                 Some(command) => python.clone_from(command),
-                None => return fail("--python needs a command, e.g. --python python3"),
+                None => {
+                    return fail(&format!(
+                        "--python needs a command, e.g. --python {DEFAULT_PYTHON}"
+                    ));
+                }
             },
             flag if flag.starts_with('-') => return fail(&format!("unknown option: {flag}")),
-            path => file = Some(path.to_string()),
+            path if file.is_none() => file = Some(path.to_string()),
+            path => return fail(&format!("unexpected extra file: {path}")),
         }
     }
     let Some(file) = file else {
@@ -230,11 +244,8 @@ fn command_run(args: &[String]) -> ExitCode {
         Ok(ok) => ok,
         Err(code) => return code,
     };
-    let stem = path
-        .file_stem()
-        .map_or("program", |s| s.to_str().unwrap_or("program"));
-    match exec::run_python(&python_source, stem, &python) {
-        Ok(status) => ExitCode::from(u8::try_from(status.code().unwrap_or(1)).unwrap_or(1)),
+    match exec::run_python(&python_source, &path, &python) {
+        Ok(status) => exit_code(status),
         Err(err) => fail(&format!(
             "couldn't start Python ({python}): {err}\n\
              hint: make sure Python is installed, or pass --python <command>"
@@ -254,7 +265,8 @@ fn command_build(args: &[String]) -> ExitCode {
                 None => return fail("-o needs a path, e.g. -o hello.py"),
             },
             flag if flag.starts_with('-') => return fail(&format!("unknown option: {flag}")),
-            path => file = Some(path.to_string()),
+            path if file.is_none() => file = Some(path.to_string()),
+            path => return fail(&format!("unexpected extra file: {path}")),
         }
     }
     let Some(file) = file else {
@@ -276,15 +288,51 @@ fn command_build(args: &[String]) -> ExitCode {
     }
 }
 
-/// `nme check`: transpile only; report problems.
+/// `nme check`: transpile, then ask CPython to compile without executing.
 fn command_check(args: &[String]) -> ExitCode {
-    match args.first() {
-        Some(file) if !file.starts_with('-') => match transpile_file(file) {
-            Ok(_) => ExitCode::SUCCESS,
-            Err(code) => code,
-        },
-        _ => fail("which file should I check? e.g. nme check hello.nme"),
+    let mut python = DEFAULT_PYTHON.to_string();
+    let mut file = None;
+    let mut rest = args.iter();
+    while let Some(arg) = rest.next() {
+        match arg.as_str() {
+            "--python" => match rest.next() {
+                Some(command) => python.clone_from(command),
+                None => {
+                    return fail(&format!(
+                        "--python needs a command, e.g. --python {DEFAULT_PYTHON}"
+                    ));
+                }
+            },
+            flag if flag.starts_with('-') => return fail(&format!("unknown option: {flag}")),
+            path if file.is_none() => file = Some(path.to_string()),
+            path => return fail(&format!("unexpected extra file: {path}")),
+        }
     }
+    let Some(file) = file else {
+        return fail("which file should I check? e.g. nme check hello.nme");
+    };
+    let (path, python_source) = match transpile_file(&file) {
+        Ok(ok) => ok,
+        Err(code) => return code,
+    };
+    match exec::check_python(&python_source, &path, &python) {
+        Ok(status) => exit_code(status),
+        Err(error) => fail(&format!(
+            "couldn't start Python ({python}): {error}\n\
+             hint: make sure Python is installed, or pass --python <command>"
+        )),
+    }
+}
+
+fn is_nme_path(path: &str) -> bool {
+    Path::new(path)
+        .extension()
+        .and_then(|extension| extension.to_str())
+        .is_some_and(|extension| extension.eq_ignore_ascii_case("nme"))
+}
+
+fn exit_code(status: std::process::ExitStatus) -> ExitCode {
+    ExitCode::from(u8::try_from(status.code().unwrap_or(1)).unwrap_or(1))
 }
 
 /// Reads and transpiles one `.nme` file, reporting all problems nicely.

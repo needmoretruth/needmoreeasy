@@ -48,8 +48,14 @@ then run:
 git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
 cd needmoreeasy
 cargo install --path crates/nme-cli --locked
+export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 ```
+
+The `export` line is required in the current macOS/Linux terminal when Cargo
+warns that its `bin` directory is not on `PATH`. It does not reinstall NME.
+Windows PowerShell uses the PATH step in the
+[installation guide](docs/install.md#windows-10-or-11).
 
 Expected version: `nme 0.0.1-beta.2`.
 
