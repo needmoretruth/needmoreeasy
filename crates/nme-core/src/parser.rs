@@ -2003,19 +2003,26 @@ enum ConditionConnector {
 }
 
 fn find_exact_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionConnector)> {
+    let last_operand = last_logical_operand_start(tokens);
     let exact = tokens
         .iter()
         .enumerate()
         .filter_map(|(index, token)| {
-            condition_connector_exact(token, index + 1 == tokens.len())
-                .map(|connector| (index, connector))
+            let connector = condition_connector_exact(token, index + 1 == tokens.len())?;
+            // A `then` body marker may sit before the final `and`/`or`
+            // operand because it separates the inline body. Korean
+            // comparison endings may only close the final operand, so an
+            // earlier comparison (`점수가 0보다 크면 그리고 ...`) stays
+            // intact instead of being cut at its ending.
+            (index >= last_operand || token_word(token) == Some("then")).then_some((index, connector))
         })
         .collect::<Vec<_>>();
     if exact.is_empty() {
         // Spoken Korean splits the negation into two tokens: `같지 않으면`,
         // `같지 않다면`, or `같지 않을` at the end of a condition.
         for (index, pair) in tokens.windows(2).enumerate() {
-            if token_word(&pair[0]) == Some("같지")
+            if index >= last_operand
+                && token_word(&pair[0]) == Some("같지")
                 && matches!(
                     token_word(&pair[1]),
                     Some("않으면" | "않다면" | "않을")
@@ -2032,6 +2039,30 @@ fn find_exact_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionC
         .or_else(|| exact.first().copied())
 }
 
+/// First token index of the last `and`/`or` operand at bracket depth zero.
+/// English `then` ends the condition scan: logical words after it belong to
+/// the inline body (`if a then show x or y`).
+fn last_logical_operand_start(tokens: &[Token]) -> usize {
+    let mut last = 0usize;
+    let mut depth = 0usize;
+    for (index, token) in tokens.iter().enumerate() {
+        match token.tok {
+            Tok::Lpar | Tok::Lsqb | Tok::Lbrace => depth += 1,
+            Tok::Rpar | Tok::Rsqb | Tok::Rbrace => depth = depth.saturating_sub(1),
+            _ => {}
+        }
+        if depth == 0 {
+            if token_word(token) == Some("then") {
+                break;
+            }
+            if token_matches_exact(token, &["and", "or", "그리고", "또는"]) {
+                last = index + 1;
+            }
+        }
+    }
+    last
+}
+
 fn find_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionConnector)> {
     if let Some(connector) = find_exact_condition_connector(tokens) {
         return Some(connector);
@@ -2040,12 +2071,13 @@ fn find_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionConnect
     // Only recover a connector typo when the whole condition has no exact
     // connector. Otherwise `than ... then` could split at `than`, because it
     // is one edit away from `then`.
+    let last_operand = last_logical_operand_start(tokens);
     let recovered = tokens
         .iter()
         .enumerate()
         .filter_map(|(index, token)| {
-            condition_connector_recovered(token, index + 1 == tokens.len())
-                .map(|connector| (index, connector))
+            let connector = condition_connector_recovered(token, index + 1 == tokens.len())?;
+            (index >= last_operand || token_word(token) == Some("then")).then_some((index, connector))
         })
         .collect::<Vec<_>>();
     (recovered.len() == 1).then(|| recovered[0])
@@ -2287,38 +2319,47 @@ fn parse_natural_condition(
     known_names: &HashSet<String>,
     spelling: Spelling,
 ) -> Result<Condition, Diagnostic> {
+    if tokens.is_empty() {
+        return Err(condition_missing(spelling, Span::new(0, 0)));
+    }
     // `or` has lower precedence than `and`, just like Python.  Splitting on
     // tokens (rather than source text) keeps strings and nested expressions
-    // out of the easy-language grammar.
+    // out of the easy-language grammar. A split that would produce an empty
+    // operand (leading or trailing logical word) falls through to the atom
+    // parser, which reports an exact diagnostic instead of panicking.
     if let Some(index) = logical_operator_at(tokens, LogicalOp::Or) {
-        let left = parse_natural_condition(source, &tokens[..index], None, known_names, spelling)?;
-        let right = parse_natural_condition(
-            source,
-            &tokens[index + 1..],
-            connector,
-            known_names,
-            spelling,
-        )?;
-        return Ok(Condition::Logical {
-            left: Box::new(left),
-            operator: LogicalOp::Or,
-            right: Box::new(right),
-        });
+        if index > 0 && index + 1 < tokens.len() {
+            let left = parse_natural_condition(source, &tokens[..index], None, known_names, spelling)?;
+            let right = parse_natural_condition(
+                source,
+                &tokens[index + 1..],
+                connector,
+                known_names,
+                spelling,
+            )?;
+            return Ok(Condition::Logical {
+                left: Box::new(left),
+                operator: LogicalOp::Or,
+                right: Box::new(right),
+            });
+        }
     }
     if let Some(index) = logical_operator_at(tokens, LogicalOp::And) {
-        let left = parse_natural_condition(source, &tokens[..index], None, known_names, spelling)?;
-        let right = parse_natural_condition(
-            source,
-            &tokens[index + 1..],
-            connector,
-            known_names,
-            spelling,
-        )?;
-        return Ok(Condition::Logical {
-            left: Box::new(left),
-            operator: LogicalOp::And,
-            right: Box::new(right),
-        });
+        if index > 0 && index + 1 < tokens.len() {
+            let left = parse_natural_condition(source, &tokens[..index], None, known_names, spelling)?;
+            let right = parse_natural_condition(
+                source,
+                &tokens[index + 1..],
+                connector,
+                known_names,
+                spelling,
+            )?;
+            return Ok(Condition::Logical {
+                left: Box::new(left),
+                operator: LogicalOp::And,
+                right: Box::new(right),
+            });
+        }
     }
     parse_natural_condition_atom(source, tokens, connector, known_names, spelling)
 }
@@ -2385,6 +2426,31 @@ fn parse_natural_condition_atom(
     if looks_like_incomplete_english_condition(&cleaned) {
         let condition_span = Span::new(cleaned[0].span.start, cleaned[cleaned.len() - 1].span.end);
         return Err(condition_invalid(spelling, condition_span));
+    }
+
+    if connector.is_none()
+        && cleaned.len() > 1
+        && !cleaned
+            .iter()
+            .any(|token| token_matches_exact(token, &["and", "or", "그리고", "또는"]))
+    {
+        // A Korean comparison ending may live in a logical operand that has
+        // no connector of its own: `점수가 0보다 크면 그리고 점수가 3보다
+        // 작으면`. Discover the ending inside this operand and reparse it.
+        let owned: Vec<Token> = cleaned.iter().map(|token| (*token).clone()).collect();
+        if let Some((relative_at, found)) = find_condition_connector(&owned) {
+            let (condition, body_start, found) =
+                condition_tokens_before(&owned, 0, relative_at, found);
+            if body_start == owned.len() && !condition.is_empty() {
+                return parse_natural_condition(
+                    source,
+                    &condition,
+                    Some(found),
+                    known_names,
+                    spelling,
+                );
+            }
+        }
     }
 
     match connector {

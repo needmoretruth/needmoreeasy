@@ -1172,6 +1172,56 @@ fn korean_negation_works_inside_a_while_ending() {
 }
 
 #[test]
+fn korean_comparison_endings_combine_with_logical_connectors() {
+    let source = concat!(
+        "만약 점수가 0보다 크면 그리고 점수가 3보다 작으면\n",
+        "말해 \"사이\"\n",
+        "끝\n",
+        "만약에 점수가 5와 같지 않으면 그리고 점수가 0보다 크면\n",
+        "말해 \"둘 다\"\n",
+        "끝\n",
+        "만약 준비가 거짓이면 그리고 점수가 0보다 크면\n",
+        "말해 \"셋\"\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "if ((점수 > 0 and 점수 < 3)):\n",
+        "    print(\"사이\")\n",
+        "# end\n",
+        "if ((not (점수 == 5) and 점수 > 0)):\n",
+        "    print(\"둘 다\")\n",
+        "# end\n",
+        "if ((준비 == False and 점수 > 0)):\n",
+        "    print(\"셋\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+    // An English `then` body may contain logical words without changing the
+    // condition parse.
+    assert_eq!(
+        ok("if a then show x or y\n"),
+        "if (a): print(\"x or y\")\n"
+    );
+}
+
+#[test]
+fn korean_logical_conditions_never_panic() {
+    // Two negation pairs in one condition used to cut at the first ending and
+    // then panic on an empty logical operand.
+    let source = concat!(
+        "만약 점수가 5와 같지 않으면 그리고 점수가 5와 같지 않다면\n",
+        "말해 \"y\"\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "if ((not (점수 == 5) and not (점수 == 5))):\n",
+        "    print(\"y\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
 fn attached_korean_while_endings_are_easy_to_say() {
     assert_eq!(
         ok("준비하는동안 성공 말해줘\n"),
