@@ -222,6 +222,28 @@ fn a_one_edit_condition_connector_is_recovered() {
 }
 
 #[test]
+fn module_action_and_latest_typos_are_recovered_when_the_shape_is_clear() {
+    assert_eq!(
+        transpile("use random lates\n").unwrap(),
+        concat!(
+            "import random as 랜덤; random = 랜덤; random_number = 랜덤.randint; ",
+            "random_pick = 랜덤.choice; shuffle = 랜덤.shuffle; ",
+            "랜덤정수 = 랜덤.randint; 랜덤선택 = 랜덤.choice; 섞기 = 랜덤.shuffle; ",
+            "random_version = 랜덤버전 = \"0.0.1\"\n",
+        )
+    );
+    assert_eq!(
+        transpile("랜덤 사요 최신\n").unwrap(),
+        concat!(
+            "import random as 랜덤; random = 랜덤; random_number = 랜덤.randint; ",
+            "random_pick = 랜덤.choice; shuffle = 랜덤.shuffle; ",
+            "랜덤정수 = 랜덤.randint; 랜덤선택 = 랜덤.choice; 섞기 = 랜덤.shuffle; ",
+            "random_version = 랜덤버전 = \"0.0.1\"\n",
+        )
+    );
+}
+
+#[test]
 fn sentence_lowering_never_changes_physical_line_numbers() {
     let message = err("show Hello \\\nworld\n");
     assert!(message.contains("one physical line"), "{message}");

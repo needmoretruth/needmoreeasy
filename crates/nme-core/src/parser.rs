@@ -662,6 +662,9 @@ fn classify(
     if action_phrase_at(tokens, 0, USE_WORDS_EN, MatchMode::Exact).is_some()
         || action_phrase_at(tokens, 0, USE_WORDS_KO, MatchMode::Exact).is_some()
     {
+        if recoverable_module_shape(tokens) {
+            return match_use_random(source, tokens, MatchMode::Recover);
+        }
         return match_use_random(source, tokens, MatchMode::Exact);
     }
     exact_match!(match_when(
@@ -684,6 +687,22 @@ fn classify(
     // instead of printing the entire prefix as plain text.
     if has_recoverable_repeat_shape(tokens) {
         exact_match!(match_times(
+            source,
+            tokens,
+            block,
+            known_names,
+            MatchMode::Recover
+        ));
+    }
+    // A misspelled condition starter followed by a real connector is a
+    // stronger sentence shape than an exact output word at the end. Without
+    // this early recovery, `만악에 이름이 있으면 안녕 말해줘` would be read as
+    // plain output because `말해줘` is exact.
+    let recoverable_condition_starter = when_action_at(tokens, 0, MatchMode::Exact).is_none()
+        && when_action_at(tokens, 0, MatchMode::Recover)
+            .is_some_and(|(_, consumed)| find_condition_connector(&tokens[consumed..]).is_some());
+    if recoverable_condition_starter {
+        exact_match!(match_when(
             source,
             tokens,
             block,
@@ -993,9 +1012,20 @@ fn match_natural_question(
         } else {
             0
         };
-        let predicate_at = target_at + 1;
         let target_word = tokens.get(target_at).and_then(name_word)?;
-        let korean_target = strip_any_suffix(target_word, &["은", "는", "이", "가", "을", "를"]);
+        let particle_at = target_at + 1;
+        let predicate_at = if tokens
+            .get(particle_at)
+            .is_some_and(|token| token_matches_exact(token, &["은", "는", "이", "가", "을", "를"]))
+        {
+            particle_at + 1
+        } else {
+            particle_at
+        };
+        // Both attached (`이름이`) and spoken, separated particles (`이름 이`)
+        // are common. A bare target is also safe once the distinctive
+        // question predicate has been proven below.
+        let korean_target = strip_natural_question_particle(target_word).or(Some(target_word));
         let predicate = tokens.get(predicate_at).and_then(token_word)?;
         let is_korean_question = [
             "뭐예요",
@@ -1043,7 +1073,10 @@ fn match_natural_question(
                 .get(subject_at)
                 .and_then(token_word)
                 .is_some_and(|word| {
-                    word.eq_ignore_ascii_case("your") || word.eq_ignore_ascii_case("the")
+                    word.eq_ignore_ascii_case("your")
+                        || word.eq_ignore_ascii_case("the")
+                        || word.eq_ignore_ascii_case("my")
+                        || word.eq_ignore_ascii_case("our")
                 })
         {
             return None;
@@ -1062,6 +1095,29 @@ fn match_natural_question(
         prompt: Some(prompt),
         kind: InputKind::Text,
     })
+}
+
+fn strip_natural_question_particle(word: &str) -> Option<&str> {
+    // A final `이` can be either the subject particle (`이름이`) or part of a
+    // normal Korean noun (`나이`, `아이`, `종이`). Keep the common noun forms
+    // intact; attached `은`/`는` and less ambiguous particles still strip as
+    // expected.
+    if [
+        "나이",
+        "아이",
+        "고양이",
+        "강아지",
+        "종이",
+        "사이",
+        "회의",
+        "이야기",
+        "의미",
+    ]
+    .contains(&word)
+    {
+        return None;
+    }
+    strip_any_suffix(word, &["은", "는", "이", "가", "을", "를"])
 }
 
 struct AskShape {
@@ -1883,6 +1939,7 @@ fn split_attached_condition_token(token: &Token) -> Option<(Token, ConditionConn
     // otherwise its generic suffix would produce the bogus right-hand value
     // `같으`.
     if [
+        "그러면",
         "그렇다면",
         "있으면",
         "없으면",
@@ -1912,6 +1969,7 @@ fn split_attached_condition_token(token: &Token) -> Option<(Token, ConditionConn
         return None;
     }
     let (suffix, connector) = [
+        ("그러면", ConditionConnector::Then),
         ("그렇다면", ConditionConnector::Then),
         ("있으면", ConditionConnector::Exists),
         ("없으면", ConditionConnector::Missing),
@@ -1970,13 +2028,33 @@ fn condition_tokens_before(
                 && name_word(token).is_some_and(|word| {
                     word.ends_with("이면") || word.ends_with("이라면") || word.ends_with("먄")
                 });
+            // A short ending attached directly to the only subject —
+            // `준비면` / `준비라면` — is a truthy condition, not an equality
+            // with a missing right-hand value. Equality needs a preceding
+            // subject and a separate right-hand word, as in `이름이 철수면`.
+            let subject_only_then =
+                attached_connector == ConditionConnector::Equals && condition.is_empty();
             if context_equality {
                 connector = ConditionConnector::Equals;
             }
-            if attached_connector == connector || context_equality {
+            if subject_only_then {
+                connector = ConditionConnector::Then;
+            }
+            if attached_connector == connector || context_equality || subject_only_then {
                 condition.push(base);
                 body_start = at + 1;
             }
+        }
+        // Spoken Korean may separate both the subject particle and the short
+        // ending: `준비 가 거짓 이면` or `이름 이 철수 면`. A multi-token
+        // condition is an equality comparison; a single subject keeps the
+        // truthy/then meaning.
+        if token_matches_exact(token, &["이면", "이라면", "면", "먄"]) {
+            connector = if condition.len() > 1 {
+                ConditionConnector::Equals
+            } else {
+                ConditionConnector::Then
+            };
         }
     }
     (condition, body_start, connector)
@@ -2153,6 +2231,12 @@ fn parse_truth_subject(
     known_names: &HashSet<String>,
     spelling: Spelling,
 ) -> Result<(ConditionValue, bool), Diagnostic> {
+    let tokens = if tokens.len() == 2 && token_matches_exact(tokens[1], &["은", "는", "이", "가"])
+    {
+        &tokens[..1]
+    } else {
+        tokens
+    };
     let mut cursor = 1;
     if tokens
         .get(cursor)
@@ -2405,7 +2489,7 @@ fn condition_connector_exact(token: &Token, is_last: bool) -> Option<ConditionCo
         (ConditionConnector::Missing, &["없으면", "없다면"][..]),
         (
             ConditionConnector::Equals,
-            &["같으면", "같다면", "라면"][..],
+            &["같으면", "같다면", "라면", "면"][..],
         ),
         (ConditionConnector::Greater, &["크면", "크다면", "클"][..]),
         (ConditionConnector::Less, &["작으면", "작다면", "작을"][..]),
@@ -2457,7 +2541,7 @@ fn condition_connector_recovered(token: &Token, is_last: bool) -> Option<Conditi
         (ConditionConnector::Missing, &["없으면", "없다면"][..]),
         (
             ConditionConnector::Equals,
-            &["같으면", "같다면", "라면"][..],
+            &["같으면", "같다면", "라면", "면"][..],
         ),
         (ConditionConnector::Greater, &["크면", "크다면", "클"][..]),
         (ConditionConnector::Less, &["작으면", "작다면", "작을"][..]),
@@ -2505,6 +2589,7 @@ fn condition_connector_recovered(token: &Token, is_last: bool) -> Option<Conditi
         "크먄" | "크으먄" => recovered.push(ConditionConnector::Greater),
         "작먄" | "작으먄" => recovered.push(ConditionConnector::Less),
         "라먄" => recovered.push(ConditionConnector::Equals),
+        "먄" => recovered.push(ConditionConnector::Equals),
         _ => {}
     }
     recovered.sort_by_key(|kind| *kind as u8);
@@ -2948,6 +3033,40 @@ fn find_use_action(tokens: &[Token], mode: MatchMode) -> Option<(usize, usize, S
         }
     }
     None
+}
+
+fn recoverable_module_shape(tokens: &[Token]) -> bool {
+    let action_recovered = find_use_action(tokens, MatchMode::Exact).is_none()
+        && find_use_action(tokens, MatchMode::Recover).is_some();
+    let exact_random = tokens
+        .iter()
+        .filter(|token| random_word_matches(token, MatchMode::Exact))
+        .count();
+    let recovered_random = tokens
+        .iter()
+        .filter(|token| random_word_matches(token, MatchMode::Recover))
+        .count();
+    let exact_latest = tokens
+        .iter()
+        .filter(|token| word_matches_any(token, LATEST_WORDS, MatchMode::Exact))
+        .count();
+    let recovered_latest = tokens
+        .iter()
+        .filter(|token| word_matches_any(token, LATEST_WORDS, MatchMode::Recover))
+        .count();
+    let exact_version = tokens
+        .iter()
+        .filter(|token| word_matches_any(token, &["version", "버전"], MatchMode::Exact))
+        .count();
+    let recovered_version = tokens
+        .iter()
+        .filter(|token| word_matches_any(token, &["version", "버전"], MatchMode::Recover))
+        .count();
+
+    action_recovered
+        || (exact_random == 0 && recovered_random == 1)
+        || (exact_latest == 0 && recovered_latest == 1)
+        || (exact_version == 0 && recovered_version == 1)
 }
 
 fn module_shape_diagnostic(_spelling: Spelling, span: Span) -> Diagnostic {
@@ -4056,6 +4175,7 @@ fn has_recoverable_sentence_shape(tokens: &[Token]) -> bool {
         || output_action_ending(tokens, MatchMode::Recover).is_some()
         || find_ask_shape(tokens, MatchMode::Recover).is_some()
         || (set_action_at(tokens, 0, MatchMode::Recover).is_some() && tokens.len() > 1)
+        || recoverable_module_shape(tokens)
         || (action_phrase_at(tokens, 0, USE_WORDS_EN, MatchMode::Recover).is_some()
             && tokens.len() > 1)
         || (action_phrase_at(tokens, 0, USE_WORDS_KO, MatchMode::Recover).is_some()

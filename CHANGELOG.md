@@ -4,6 +4,16 @@ English | [한국어](CHANGELOG.ko.md)
 
 All notable changes to NME are recorded here.
 
+## 0.0.1-beta.10 — 2026-08-11
+
+- Recover common Korean condition-starter typos (`만악에`), spaced Korean
+  particles/endings (`이름 이 철수 면`), and the spoken `그러면` connector
+  without turning the right-hand value into text.
+- Recover clear module typos such as `use random lates` and `랜덤 사요 최신`.
+- Natural questions accept bare or separated targets (`나이 몇 살이에요`,
+  `이름 은 뭐예요`) while preserving noun names that end in `이`.
+- Korean `nme 버전` now prints Korean and English version information.
+
 ## 0.0.1-beta.9 — 2026-08-11
 
 - Let a first program ask naturally with `What is your name?`, `What's your

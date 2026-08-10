@@ -168,20 +168,19 @@ always valid advanced NME.
 
 ## Product-specific ways to provide the link
 
-- Cursor: paste the URL with `@Link`. Cursor's current
-  [documentation](https://cursor.com/docs) describes the available link and
-  context features.
+- Cursor: paste the URL with `@Link`. Cursor's official
+  [@Link guide](https://docs.cursor.com/context/%40-symbols/%40-link) describes
+  the link context flow.
 - Claude Code: paste the handoff prompt at session start. Claude Code also
-  supports persistent `CLAUDE.md` memory, documented by
-  [Anthropic](https://docs.anthropic.com/en/docs/claude-code/memory), but it is
+  supports persistent `CLAUDE.md` memory, documented in the official
+  [Claude Code memory guide](https://code.claude.com/docs/en/memory), but it is
   not required for NME.
 - Codex: paste the handoff prompt as the task. Codex also supports layered
-  `AGENTS.md` instructions according to the
-  [official OpenAI documentation](https://learn.chatgpt.com/docs/agent-configuration/agents-md),
+  `AGENTS.md` instructions, as described by [OpenAI](https://openai.com/index/introducing-codex/),
   but NME projects do not need to track one.
 - OpenCode: paste the handoff prompt. Its official
-  [rules documentation](https://opencode.ai/docs/rules/) also supports remote
-  instruction URLs when a user wants persistent configuration.
+  [rules documentation](https://dev.opencode.ai/docs/rules/) also supports
+  remote instruction URLs when a user wants persistent configuration.
 
 Keep tool-specific assistant metadata outside the NME program repository
 unless the repository owner explicitly asks to track it.

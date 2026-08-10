@@ -345,6 +345,7 @@ fn short_korean_condition_endings_accept_natural_equality_and_literals() {
         "이름은 철수\n",
         "이름이 철수면 안녕 말해줘\n",
         "이름이 철수라면 다시 말해줘\n",
+        "준비면 준비됐어 말해줘\n",
         "준비는 참\n",
         "만약 준비가 거짓이면 아니야 말해줘\n",
     );
@@ -352,6 +353,7 @@ fn short_korean_condition_endings_accept_natural_equality_and_literals() {
         "이름 = \"철수\"\n",
         "if (이름 == \"철수\"): print(\"안녕\")\n",
         "if (이름 == \"철수\"): print(\"다시\")\n",
+        "if (준비): print(\"준비됐어\")\n",
         "준비 = True\n",
         "if (준비 == False): print(\"아니야\")\n",
     );
@@ -375,6 +377,40 @@ fn spoken_condition_typos_and_english_synonyms_stay_unambiguous() {
         "if (이름 == \"철수\"): print(\"맞아\")\n",
         "if (score > 5): print(\"high\")\n",
         "if (score == 5): print(\"equal\")\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn korean_then_connector_does_not_turn_the_subject_into_text() {
+    let source = "만약 준비 그리고 점수 > 2 또는 기다림 그러면 성공 말해줘\n";
+    assert_eq!(
+        ok(source),
+        "if (((준비 and 점수 > 2) or 기다림)): print(\"성공\")\n"
+    );
+}
+
+#[test]
+fn a_typo_in_the_korean_condition_starter_still_keeps_the_condition_shape() {
+    assert_eq!(
+        ok("만악에 이름이 있으면 안녕 말해줘\n"),
+        "if (이름): print(\"안녕\")\n"
+    );
+}
+
+#[test]
+fn spaced_korean_particles_and_short_condition_endings_are_mixable() {
+    let source = concat!(
+        "이름 은 철수\n",
+        "이름 이 철수 면 안녕 말해줘\n",
+        "준비 가 거짓 이면 아니야 말해줘\n",
+        "이름 이 있으면 환영 말해줘\n",
+    );
+    let expected = concat!(
+        "이름 = \"철수\"\n",
+        "if (이름 == \"철수\"): print(\"안녕\")\n",
+        "if (준비 == False): print(\"아니야\")\n",
+        "if (이름): print(\"환영\")\n",
     );
     assert_eq!(ok(source), expected);
 }
@@ -511,11 +547,15 @@ fn natural_questions_infer_a_target_without_ask_syntax() {
     let source = concat!(
         "이름이 뭐예요?\n",
         "내 이름은 뭐예요?\n",
+        "이름 은 뭐예요?\n",
+        "이름 뭐예요\n",
         "이름이 뭐예요\n",
+        "나이 몇 살이에요\n",
         "나이는 몇 살이에요?\n",
         "안녕하세요 이름!\n",
         "What is your age?\n",
         "What is your name\n",
+        "What is my name\n",
         "What's your city?\n",
         "What's your city\n",
         "오늘 어때?\n",
@@ -523,11 +563,15 @@ fn natural_questions_infer_a_target_without_ask_syntax() {
     let expected = concat!(
         "이름 = input(\"이름이 뭐예요?\" + \" \")\n",
         "이름 = input(\"내 이름은 뭐예요?\" + \" \")\n",
+        "이름 = input(\"이름 은 뭐예요?\" + \" \")\n",
+        "이름 = input(\"이름 뭐예요\" + \" \")\n",
         "이름 = input(\"이름이 뭐예요\" + \" \")\n",
+        "나이 = input(\"나이 몇 살이에요\" + \" \")\n",
         "나이 = input(\"나이는 몇 살이에요?\" + \" \")\n",
         "print(\"안녕하세요 \" + str(이름) + \"!\")\n",
         "age = input(\"What is your age?\" + \" \")\n",
         "name = input(\"What is your name\" + \" \")\n",
+        "name = input(\"What is my name\" + \" \")\n",
         "city = input(\"What's your city?\" + \" \")\n",
         "city = input(\"What's your city\" + \" \")\n",
         "print(\"오늘 어때?\")\n",

@@ -158,16 +158,17 @@ Python으로 돌아가세요.
 
 ## 제품별 링크 전달 방법
 
-- Cursor: URL을 `@Link`로 붙입니다. 최신 링크·문맥 기능은 Cursor 공식
-  [문서](https://cursor.com/docs)에서 확인하세요.
+- Cursor: URL을 `@Link`로 붙입니다. Cursor 공식
+  [`@Link` 안내](https://docs.cursor.com/context/%40-symbols/%40-link)를
+  참고하세요.
 - Claude Code: 세션을 시작할 때 전달 문장을 붙입니다. Anthropic 공식
-  [메모리 문서](https://docs.anthropic.com/en/docs/claude-code/memory)의
-  `CLAUDE.md`도 선택적으로 쓸 수 있지만 NME에는 필요하지 않습니다.
+  [메모리 문서](https://code.claude.com/docs/en/memory)의 `CLAUDE.md`도 선택적으로
+  쓸 수 있지만 NME에는 필요하지 않습니다.
 - Codex: 전달 문장을 작업으로 붙입니다. Codex는 OpenAI 공식
-  [AGENTS.md 문서](https://learn.chatgpt.com/docs/agent-configuration/agents-md)에
-  나온 계층형 지침도 지원하지만 NME 프로젝트에서 추적할 필요는 없습니다.
+  [안내](https://openai.com/index/introducing-codex/)에 나온 `AGENTS.md` 지침도
+  지원하지만 NME 프로젝트에서 추적할 필요는 없습니다.
 - OpenCode: 전달 문장을 붙입니다. 공식
-  [규칙 문서](https://opencode.ai/docs/rules/)는 사용자가 지속 설정을 원할 때
+  [규칙 문서](https://dev.opencode.ai/docs/rules/)는 사용자가 지속 설정을 원할 때
   원격 지침 URL도 지원합니다.
 
 저장소 소유자가 명시적으로 추적하라고 하지 않았다면 도구별 AI 메타데이터는

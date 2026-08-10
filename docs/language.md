@@ -231,9 +231,10 @@ unmistakable action body. Ordinary speech such as `Hello then world` remains
 prose.
 
 Korean can shorten the comparison ending without changing the meaning:
-`이름이 철수면`, `이름이 철수라면`, and `준비가 거짓이면` are accepted. A
-bounded spoken typo such as `있으먄` or `철수먄` is recovered when there is only
-one clear condition.
+`이름이 철수면`, `이름이 철수라면`, and `준비가 거짓이면` are accepted. Spoken
+particles may be separated too (`이름 이 철수 면`), and a bare subject can use
+`준비면` for a truthy condition. A bounded spoken typo such as `있으먄`,
+`철수먄`, or `만악에` is recovered when there is only one clear condition.
 
 Supported sentence comparisons:
 
@@ -278,7 +279,7 @@ line. A common two-keystroke pattern—one extra/missing character combined
 with an adjacent swap—is also accepted when it has one clear action. Examples
 include `물어바` → `물어봐`, `말헤` → `말해`, `repaet` → `repeat`, and
 `shwoe` → `show`, `thne` → `then` in `if score is greater than 5 thne ...`,
-and `그리거` → `그리고`.
+and `그리거` → `그리고`, and `만악에` → `만약에`.
 
 Recovery applies only to these action/connector tokens, never to Python
 expressions, strings, or comments. If a repair is not unique or the sentence
@@ -392,7 +393,8 @@ use random version "0.0.1"
 
 `latest` / `최신` selects the newest adapter bundled with the installed NME
 compiler. It is local and deterministic, not an uncontrolled network update.
-An unavailable exact version produces an error showing the installed version.
+Clear one-edit misspellings such as `use random lates` are recovered. An
+unavailable exact version produces an error showing the installed version.
 
 Every spelling exposes both vocabularies:
 
