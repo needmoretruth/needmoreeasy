@@ -1,0 +1,17 @@
+[package]
+name = "nme-core"
+description = "Compiler core for the NeedMoreEasy (NME) language. Pure source-to-source transpilation to Python; does no IO."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+# We reuse RustPython's production-grade Python lexer/parser so that NME
+# understands strings, comments, f-strings and every Python construct exactly
+# the way CPython does. We never reimplement Python's grammar ourselves.
+rustpython-parser = "0.4"

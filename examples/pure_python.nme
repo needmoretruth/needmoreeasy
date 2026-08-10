@@ -1,0 +1,14 @@
+# Every valid Python program is already a valid NME program.
+# This file is 100% ordinary Python and stays byte-identical
+# after transpilation.
+
+import math
+
+
+def circle_area(radius):
+    """Return the area of a circle."""
+    return math.pi * radius**2
+
+
+for r in range(1, 4):
+    print(f"r={r} area={circle_area(r):.2f}")

@@ -1,0 +1,11 @@
+# Python and NME live happily in one file.
+
+def cheer(name):
+    say f"Go, {name}!"          # NME inside a Python function
+
+for name in ["Ada", "Grace"]:
+    cheer(name)
+
+2 times:
+    say "NME block"             # NME block...
+    print("python block")       # ...with Python inside
