@@ -213,6 +213,8 @@ pub fn parse_program(
                 .tokens
                 .iter()
                 .any(|token| matches!(token.tok, Tok::Equal | Tok::Colon))
+            && (!is_valid_python_statement(token_text(source, &line.tokens))
+                || (depth > 0 && line.tokens.len() == 1))
         {
             Some(match_branch(
                 source,
