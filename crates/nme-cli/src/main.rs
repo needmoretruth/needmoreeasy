@@ -173,7 +173,12 @@ fn main() -> ExitCode {
                     MessageLanguage::English
                 };
                 let (english, korean) = ambiguous_program_message(path, &names, "run", "실행");
-                fail(language, &english, &korean)
+                fail(
+                    nme_core::diagnostics::DiagnosticCode::CliAmbiguousProgramPrefix,
+                    language,
+                    &english,
+                    &korean,
+                )
             }
             NameResolution::None => {
                 let language = if contains_korean(path) {
@@ -182,6 +187,7 @@ fn main() -> ExitCode {
                     MessageLanguage::English
                 };
                 fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnknownCommand,
                     language,
                     &format!(
                         "I don't know the command `{path}`. Run `nme help` to see the commands.\n\
@@ -208,6 +214,7 @@ fn print_bilingual_help() {
 fn command_modules(args: &[String], language: MessageLanguage) -> ExitCode {
     if let Some(extra) = args.first() {
         return fail(
+            nme_core::diagnostics::DiagnosticCode::CliModulesExtraArgument,
             language,
             &format!("`modules` does not take `{extra}`. Try `nme modules`."),
             &format!("`모듈` 명령에는 `{extra}`을(를) 적지 않습니다. `nme 모듈`을 사용하세요."),
@@ -253,6 +260,7 @@ fn command_error_lookup(args: &[String], language: MessageLanguage) -> ExitCode 
     };
     if args.len() > 1 {
         return fail(
+            nme_core::diagnostics::DiagnosticCode::CliErrorLookupInvalidArgs,
             language,
             &format!(
                 "`{code}`: one error code at a time. Try `nme ko {code}` or `nme ko` for the list."
@@ -264,6 +272,7 @@ fn command_error_lookup(args: &[String], language: MessageLanguage) -> ExitCode 
     }
     let Some(code) = nme_core::diagnostics::DiagnosticCode::from_code(code) else {
         return fail(
+            nme_core::diagnostics::DiagnosticCode::CliErrorLookupUnknownCode,
             language,
             &format!(
                 "there is no error code `{code}`. Run `nme ko` to list every code."
@@ -305,6 +314,7 @@ fn command_convert(args: &[String], language: MessageLanguage) -> ExitCode {
             "--level" => {
                 let Some(value) = rest.next() else {
                     return fail(
+                        nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
                         language,
                         "--level needs advanced, beginner, or sentence",
                         "--level 뒤에 advanced, beginner, sentence 중 하나를 적어 주세요",
@@ -316,6 +326,7 @@ fn command_convert(args: &[String], language: MessageLanguage) -> ExitCode {
                     "sentence" | "문장" | "문장형" => nme_core::SyntaxLevel::Sentence,
                     _ => {
                         return fail(
+                            nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
                             language,
                             "--level needs advanced, beginner, or sentence",
                             "--level 뒤에 advanced, beginner, sentence 중 하나를 적어 주세요",
@@ -326,6 +337,7 @@ fn command_convert(args: &[String], language: MessageLanguage) -> ExitCode {
             "--language" | "--lang" => {
                 let Some(value) = rest.next() else {
                     return fail(
+                        nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
                         language,
                         "--language needs en or ko",
                         "--language 뒤에 en(영어) 또는 ko(한국어)를 적어 주세요",
@@ -336,6 +348,7 @@ fn command_convert(args: &[String], language: MessageLanguage) -> ExitCode {
                     "ko" | "korean" | "한국어" => nme_core::Language::Korean,
                     _ => {
                         return fail(
+                            nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
                             language,
                             "--language needs en or ko",
                             "--language 뒤에 en(영어) 또는 ko(한국어)를 적어 주세요",
@@ -347,6 +360,7 @@ fn command_convert(args: &[String], language: MessageLanguage) -> ExitCode {
                 Some(path) => output = Some(path.clone()),
                 None => {
                     return fail(
+                        nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
                         language,
                         "-o needs a path, e.g. -o program.nme",
                         "-o 뒤에 저장할 경로가 필요합니다. 예: -o program.nme",
@@ -355,6 +369,7 @@ fn command_convert(args: &[String], language: MessageLanguage) -> ExitCode {
             },
             flag if flag.starts_with('-') => {
                 return fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnknownOption,
                     language,
                     &format!("unknown option: {flag}"),
                     &format!("알 수 없는 옵션입니다: {flag}"),
@@ -363,6 +378,7 @@ fn command_convert(args: &[String], language: MessageLanguage) -> ExitCode {
             path if file.is_none() => file = Some(path.to_string()),
             path => {
                 return fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnexpectedExtraFile,
                     language,
                     &format!("unexpected extra file: {path}"),
                     &format!("파일은 하나만 적어 주세요. 추가로 적힌 파일: {path}"),
@@ -372,6 +388,7 @@ fn command_convert(args: &[String], language: MessageLanguage) -> ExitCode {
     }
     let Some(file) = file else {
         return fail(
+            nme_core::diagnostics::DiagnosticCode::CliConvertNeedsFile,
             language,
             "which Python file should I convert? e.g. nme convert app.py",
             "변환할 Python 파일을 적어 주세요. 예: nme 변환 app.py",
@@ -391,6 +408,7 @@ fn convert_file(
         Ok(source) => source,
         Err(error) => {
             return fail(
+                nme_core::diagnostics::DiagnosticCode::CliFileReadFailed,
                 message_language,
                 &format!("couldn't read {file}: {error}"),
                 &format!("{file} 파일을 읽을 수 없습니다: {error}"),
@@ -411,6 +429,7 @@ fn convert_file(
         match std::fs::write(&path, conversion.source) {
             Ok(()) => ExitCode::SUCCESS,
             Err(error) => fail(
+                nme_core::diagnostics::DiagnosticCode::CliFileWriteFailed,
                 message_language,
                 &format!("couldn't write {path}: {error}"),
                 &format!("{path} 파일을 저장할 수 없습니다: {error}"),
@@ -431,7 +450,12 @@ fn command_compile(args: &[String], language: MessageLanguage) -> ExitCode {
         NameResolution::Found(path) => path,
         NameResolution::Ambiguous(names) => {
             let (english, korean) = ambiguous_program_message(&file, &names, "compile", "컴파일");
-            return fail(language, &english, &korean);
+            return fail(
+                nme_core::diagnostics::DiagnosticCode::CliAmbiguousProgramPrefix,
+                language,
+                &english,
+                &korean,
+            );
         }
         NameResolution::None => resolve_nme_path(Path::new(&file)),
     };
@@ -452,6 +476,7 @@ fn command_compile(args: &[String], language: MessageLanguage) -> ExitCode {
     }
     if output.exists() {
         return fail(
+            nme_core::diagnostics::DiagnosticCode::CliRefuseOverwrite,
             language,
             &format!(
                 "refusing to overwrite existing output: {}",
@@ -473,6 +498,7 @@ fn command_compile(args: &[String], language: MessageLanguage) -> ExitCode {
                 ExitCode::SUCCESS
             } else {
                 fail(
+                    nme_core::diagnostics::DiagnosticCode::CliNativeCompileFailed,
                     language,
                     &format!(
                         "native compiler succeeded but did not create {}",
@@ -486,6 +512,7 @@ fn command_compile(args: &[String], language: MessageLanguage) -> ExitCode {
             }
         }
         Ok(status) => fail(
+            nme_core::diagnostics::DiagnosticCode::CliNativeCompileFailed,
             language,
             &format!(
                 "native compilation failed with {status}\n\
@@ -497,6 +524,7 @@ fn command_compile(args: &[String], language: MessageLanguage) -> ExitCode {
             ),
         ),
         Err(error) => fail(
+            nme_core::diagnostics::DiagnosticCode::CliNativeCompileStartFailed,
             language,
             &format!(
                 "couldn't start native compilation: {error}\n\
@@ -526,6 +554,7 @@ fn compile_arguments(
                 Some(command) => python.clone_from(command),
                 None => {
                     return Err(fail(
+                        nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
                         language,
                         &format!("--python needs a command, e.g. --python {DEFAULT_PYTHON}"),
                         &format!(
@@ -538,6 +567,7 @@ fn compile_arguments(
                 Some(path) => output = Some(std::path::PathBuf::from(path)),
                 None => {
                     return Err(fail(
+                        nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
                         language,
                         "-o needs an executable path, e.g. -o hello",
                         "-o 뒤에 만들 실행 파일 경로가 필요합니다. 예: -o hello",
@@ -546,6 +576,7 @@ fn compile_arguments(
             },
             flag if flag.starts_with('-') => {
                 return Err(fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnknownOption,
                     language,
                     &format!("unknown option: {flag}"),
                     &format!("알 수 없는 옵션입니다: {flag}"),
@@ -554,6 +585,7 @@ fn compile_arguments(
             path if file.is_none() => file = Some(path.to_string()),
             path => {
                 return Err(fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnexpectedExtraFile,
                     language,
                     &format!("unexpected extra file: {path}"),
                     &format!("파일은 하나만 적어 주세요. 추가로 적힌 파일: {path}"),
@@ -582,6 +614,7 @@ fn command_run(args: &[String], language: MessageLanguage) -> ExitCode {
                 Some(command) => python.clone_from(command),
                 None => {
                     return fail(
+                        nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
                         language,
                         &format!("--python needs a command, e.g. --python {DEFAULT_PYTHON}"),
                         &format!(
@@ -592,6 +625,7 @@ fn command_run(args: &[String], language: MessageLanguage) -> ExitCode {
             },
             flag if flag.starts_with('-') => {
                 return fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnknownOption,
                     language,
                     &format!("unknown option: {flag}"),
                     &format!("알 수 없는 옵션입니다: {flag}"),
@@ -600,6 +634,7 @@ fn command_run(args: &[String], language: MessageLanguage) -> ExitCode {
             path if file.is_none() => file = Some(path.to_string()),
             path => {
                 return fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnexpectedExtraFile,
                     language,
                     &format!("unexpected extra file: {path}"),
                     &format!("파일은 하나만 적어 주세요. 추가로 적힌 파일: {path}"),
@@ -622,6 +657,7 @@ fn command_run(args: &[String], language: MessageLanguage) -> ExitCode {
     match exec::run_python(&python_source, &path, &python) {
         Ok(status) => exit_code(status),
         Err(err) => fail(
+            nme_core::diagnostics::DiagnosticCode::CliPythonStartFailed,
             language,
             &format!(
                 "couldn't start Python ({python}): {err}\n\
@@ -649,6 +685,7 @@ fn command_build(args: &[String], language: MessageLanguage) -> ExitCode {
                 Some(command) => python.clone_from(command),
                 None => {
                     return fail(
+                        nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
                         language,
                         &format!("--python needs a command, e.g. --python {DEFAULT_PYTHON}"),
                         &format!(
@@ -661,6 +698,7 @@ fn command_build(args: &[String], language: MessageLanguage) -> ExitCode {
                 Some(path) => output = Some(path.clone()),
                 None => {
                     return fail(
+                        nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
                         language,
                         "-o needs a path, e.g. -o hello.py",
                         "-o 뒤에 저장할 경로가 필요합니다. 예: -o hello.py",
@@ -669,6 +707,7 @@ fn command_build(args: &[String], language: MessageLanguage) -> ExitCode {
             },
             flag if flag.starts_with('-') => {
                 return fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnknownOption,
                     language,
                     &format!("unknown option: {flag}"),
                     &format!("알 수 없는 옵션입니다: {flag}"),
@@ -677,6 +716,7 @@ fn command_build(args: &[String], language: MessageLanguage) -> ExitCode {
             path if file.is_none() => file = Some(path.to_string()),
             path => {
                 return fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnexpectedExtraFile,
                     language,
                     &format!("unexpected extra file: {path}"),
                     &format!("파일은 하나만 적어 주세요. 추가로 적힌 파일: {path}"),
@@ -700,6 +740,7 @@ fn command_build(args: &[String], language: MessageLanguage) -> ExitCode {
         Ok(output) if output.status.success() => write_stderr(&output.stderr),
         Ok(output) => {
             return fail_with_details(
+                nme_core::diagnostics::DiagnosticCode::CliCpythonValidationFailed,
                 language,
                 "the generated Python did not pass CPython's syntax check\n\
                  hint: fix the Python syntax or indentation shown below, then build again",
@@ -710,6 +751,7 @@ fn command_build(args: &[String], language: MessageLanguage) -> ExitCode {
         }
         Err(error) => {
             return fail(
+                nme_core::diagnostics::DiagnosticCode::CliPythonStartFailed,
                 language,
                 &format!(
                     "couldn't start Python ({python}) to check the build: {error}\n\
@@ -728,6 +770,7 @@ fn command_build(args: &[String], language: MessageLanguage) -> ExitCode {
         match std::fs::write(&path, &python_source) {
             Ok(()) => ExitCode::SUCCESS,
             Err(err) => fail(
+                nme_core::diagnostics::DiagnosticCode::CliFileWriteFailed,
                 language,
                 &format!("couldn't write {path}: {err}"),
                 &format!("{path} 파일을 저장할 수 없습니다: {err}"),
@@ -750,6 +793,7 @@ fn command_check(args: &[String], language: MessageLanguage) -> ExitCode {
                 Some(command) => python.clone_from(command),
                 None => {
                     return fail(
+                        nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
                         language,
                         &format!("--python needs a command, e.g. --python {DEFAULT_PYTHON}"),
                         &format!(
@@ -760,6 +804,7 @@ fn command_check(args: &[String], language: MessageLanguage) -> ExitCode {
             },
             flag if flag.starts_with('-') => {
                 return fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnknownOption,
                     language,
                     &format!("unknown option: {flag}"),
                     &format!("알 수 없는 옵션입니다: {flag}"),
@@ -768,6 +813,7 @@ fn command_check(args: &[String], language: MessageLanguage) -> ExitCode {
             path if file.is_none() => file = Some(path.to_string()),
             path => {
                 return fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnexpectedExtraFile,
                     language,
                     &format!("unexpected extra file: {path}"),
                     &format!("파일은 하나만 적어 주세요. 추가로 적힌 파일: {path}"),
@@ -792,6 +838,7 @@ fn command_check(args: &[String], language: MessageLanguage) -> ExitCode {
             ExitCode::SUCCESS
         }
         Ok(output) => fail_with_details(
+            nme_core::diagnostics::DiagnosticCode::CliCpythonValidationFailed,
             language,
             "CPython found a syntax or indentation problem in the generated program\n\
              hint: fix the problem shown below, then check again",
@@ -800,6 +847,7 @@ fn command_check(args: &[String], language: MessageLanguage) -> ExitCode {
             &output.stderr,
         ),
         Err(error) => fail(
+            nme_core::diagnostics::DiagnosticCode::CliPythonStartFailed,
             language,
             &format!(
                 "couldn't start Python ({python}): {error}\n\
@@ -993,6 +1041,7 @@ fn discover_current_program(
             .collect(),
         Err(err) => {
             return Err(fail(
+                nme_core::diagnostics::DiagnosticCode::CliFolderReadFailed,
                 language,
                 &format!("couldn't read the current folder: {err}"),
                 &format!("현재 폴더를 읽을 수 없습니다: {err}"),
@@ -1002,6 +1051,7 @@ fn discover_current_program(
     found.sort();
     match found.as_slice() {
         [] => Err(fail(
+            nme_core::diagnostics::DiagnosticCode::CliNoProgramHere,
             language,
             &format!(
                 "no .nme program here. Create one (e.g. hello.nme), or name the file:\n\
@@ -1031,6 +1081,7 @@ fn discover_current_program(
             let mut answer = String::new();
             if std::io::stdin().read_line(&mut answer).is_err() {
                 return Err(fail(
+                    nme_core::diagnostics::DiagnosticCode::CliPickAnswerUnreadable,
                     language,
                     "couldn't read your answer",
                     "대답을 읽을 수 없습니다",
@@ -1039,6 +1090,7 @@ fn discover_current_program(
             let answer = answer.trim();
             if answer.is_empty() {
                 return Err(fail(
+                    nme_core::diagnostics::DiagnosticCode::CliEmptyPickAnswer,
                     language,
                     "no answer given — type a number or a program name, then press Enter",
                     "대답이 입력되지 않았어요 — 숫자나 프로그램 이름을 적고 Enter를 누르세요",
@@ -1073,6 +1125,7 @@ fn discover_current_program(
                         .collect::<Vec<String>>()
                         .join(", ");
                     return Err(fail(
+                        nme_core::diagnostics::DiagnosticCode::CliAmbiguousPickAnswer,
                         language,
                         &format!(
                             "`{answer}` matches several programs: {listed}\n\
@@ -1086,6 +1139,7 @@ fn discover_current_program(
                 }
             }
             Err(fail(
+                nme_core::diagnostics::DiagnosticCode::CliInvalidPickAnswer,
                 language,
                 &format!(
                     "`{answer}` is not one of the programs above.\n\
@@ -1125,7 +1179,12 @@ fn transpile_file(
         NameResolution::Ambiguous(names) => {
             let (english, korean) =
                 ambiguous_program_message(file, &names, action_en, action_ko);
-            return Err(fail(language, &english, &korean));
+            return Err(fail(
+                nme_core::diagnostics::DiagnosticCode::CliAmbiguousProgramPrefix,
+                language,
+                &english,
+                &korean,
+            ));
         }
         NameResolution::None => resolve_nme_path(Path::new(file)),
     };
@@ -1135,6 +1194,7 @@ fn transpile_file(
         Err(err) => {
             if path.is_dir() {
                 return Err(fail(
+                    nme_core::diagnostics::DiagnosticCode::CliFolderNotProgram,
                     language,
                     &format!(
                         "`{}` is a folder, not a program.\n\
@@ -1173,6 +1233,7 @@ fn transpile_file(
                 ),
             };
             return Err(fail(
+                nme_core::diagnostics::DiagnosticCode::CliMissingProgram,
                 language,
                 &format!("couldn't read {shown_path}: {err}\n{english_hint}"),
                 &format!("{shown_path} 파일을 읽을 수 없습니다: {err}\n{korean_hint}"),
@@ -1205,23 +1266,29 @@ fn render_diagnostics(
     }
 }
 
-fn fail(language: MessageLanguage, english: &str, korean: &str) -> ExitCode {
+fn fail(
+    code: nme_core::diagnostics::DiagnosticCode,
+    language: MessageLanguage,
+    english: &str,
+    korean: &str,
+) -> ExitCode {
     if language == MessageLanguage::KoreanAndEnglish {
-        eprintln!("오류: {korean}");
+        eprintln!("오류[{}]: {korean}", code.code());
     }
-    eprintln!("error: {english}");
+    eprintln!("error[{}]: {english}", code.code());
     ExitCode::FAILURE
 }
 
 fn fail_with_details(
+    code: nme_core::diagnostics::DiagnosticCode,
     language: MessageLanguage,
     english: &str,
     korean: &str,
     details: &[u8],
 ) -> ExitCode {
-    let code = fail(language, english, korean);
+    let exit = fail(code, language, english, korean);
     write_stderr(details);
-    code
+    exit
 }
 
 /// Prints without panicking when the reader closes the pipe early

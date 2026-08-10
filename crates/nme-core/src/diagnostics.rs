@@ -120,6 +120,57 @@ pub enum DiagnosticCode {
     MultilineSentence,
     /// The Python source given to the converter is not valid.
     ConvertInvalidPython,
+    // E9xxx codes describe CLI-level problems (bad arguments, missing files,
+    // Python/Nuitka startup). They never appear on a `Diagnostic` span; the
+    // `nme ko`/`nme en` lookup shares one registry for both kinds.
+    /// An unknown command word.
+    CliUnknownCommand,
+    /// `modules` was given an extra argument.
+    CliModulesExtraArgument,
+    /// An option is missing its value or got an invalid one.
+    CliInvalidOptionValue,
+    /// An unrecognized option flag.
+    CliUnknownOption,
+    /// More than one file argument.
+    CliUnexpectedExtraFile,
+    /// `convert` needs a file to convert.
+    CliConvertNeedsFile,
+    /// A file could not be read.
+    CliFileReadFailed,
+    /// A file could not be written.
+    CliFileWriteFailed,
+    /// The build output already exists.
+    CliRefuseOverwrite,
+    /// The native compiler reported a failure.
+    CliNativeCompileFailed,
+    /// The native compiler could not be started.
+    CliNativeCompileStartFailed,
+    /// CPython rejected the generated Python.
+    CliCpythonValidationFailed,
+    /// The Python command could not be started.
+    CliPythonStartFailed,
+    /// The argument is a folder, not a program.
+    CliFolderNotProgram,
+    /// The program file does not exist.
+    CliMissingProgram,
+    /// The current folder could not be read.
+    CliFolderReadFailed,
+    /// No `.nme` program exists in the current folder.
+    CliNoProgramHere,
+    /// The numbered-pick answer could not be read.
+    CliPickAnswerUnreadable,
+    /// The numbered-pick answer was empty.
+    CliEmptyPickAnswer,
+    /// The numbered-pick answer is not one of the programs.
+    CliInvalidPickAnswer,
+    /// The numbered-pick answer matches several programs.
+    CliAmbiguousPickAnswer,
+    /// A typed program name matches several `.nme` files.
+    CliAmbiguousProgramPrefix,
+    /// The error-lookup command got more than one code.
+    CliErrorLookupInvalidArgs,
+    /// The error-lookup command got a code that does not exist.
+    CliErrorLookupUnknownCode,
 }
 
 impl DiagnosticCode {
@@ -164,11 +215,35 @@ impl DiagnosticCode {
             Self::MissingAction => "E0602",
             Self::MultilineSentence => "E0701",
             Self::ConvertInvalidPython => "E0702",
+            Self::CliUnknownCommand => "E9001",
+            Self::CliModulesExtraArgument => "E9002",
+            Self::CliInvalidOptionValue => "E9003",
+            Self::CliUnknownOption => "E9004",
+            Self::CliUnexpectedExtraFile => "E9005",
+            Self::CliConvertNeedsFile => "E9006",
+            Self::CliFileReadFailed => "E9007",
+            Self::CliFileWriteFailed => "E9008",
+            Self::CliRefuseOverwrite => "E9009",
+            Self::CliNativeCompileFailed => "E9010",
+            Self::CliNativeCompileStartFailed => "E9011",
+            Self::CliCpythonValidationFailed => "E9012",
+            Self::CliPythonStartFailed => "E9013",
+            Self::CliFolderNotProgram => "E9014",
+            Self::CliMissingProgram => "E9015",
+            Self::CliFolderReadFailed => "E9016",
+            Self::CliNoProgramHere => "E9017",
+            Self::CliPickAnswerUnreadable => "E9018",
+            Self::CliEmptyPickAnswer => "E9019",
+            Self::CliInvalidPickAnswer => "E9020",
+            Self::CliAmbiguousPickAnswer => "E9021",
+            Self::CliAmbiguousProgramPrefix => "E9022",
+            Self::CliErrorLookupInvalidArgs => "E9023",
+            Self::CliErrorLookupUnknownCode => "E9024",
         }
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 39] = [
+    pub const ALL: [DiagnosticCode; 63] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -208,6 +283,30 @@ impl DiagnosticCode {
         Self::MissingAction,
         Self::MultilineSentence,
         Self::ConvertInvalidPython,
+        Self::CliUnknownCommand,
+        Self::CliModulesExtraArgument,
+        Self::CliInvalidOptionValue,
+        Self::CliUnknownOption,
+        Self::CliUnexpectedExtraFile,
+        Self::CliConvertNeedsFile,
+        Self::CliFileReadFailed,
+        Self::CliFileWriteFailed,
+        Self::CliRefuseOverwrite,
+        Self::CliNativeCompileFailed,
+        Self::CliNativeCompileStartFailed,
+        Self::CliCpythonValidationFailed,
+        Self::CliPythonStartFailed,
+        Self::CliFolderNotProgram,
+        Self::CliMissingProgram,
+        Self::CliFolderReadFailed,
+        Self::CliNoProgramHere,
+        Self::CliPickAnswerUnreadable,
+        Self::CliEmptyPickAnswer,
+        Self::CliInvalidPickAnswer,
+        Self::CliAmbiguousPickAnswer,
+        Self::CliAmbiguousProgramPrefix,
+        Self::CliErrorLookupInvalidArgs,
+        Self::CliErrorLookupUnknownCode,
     ];
 
     pub fn from_code(code: &str) -> Option<Self> {
@@ -502,6 +601,174 @@ impl DiagnosticCode {
                 "Python 소스가 올바르지 않습니다",
                 "`nme convert` only rewrites valid Python. Fix the syntax error shown in the message, then convert again.",
                 "`nme 변환`은 올바른 Python만 변환합니다. 메시지에 표시된 문법 오류를 고친 뒤 다시 변환하세요.",
+            ),
+            Self::CliUnknownCommand => (
+                "E9001",
+                "unknown command",
+                "알 수 없는 명령",
+                "The first word of the command is not one NME knows. Run `nme help` (or `nme 도움`) for the command list; `nme r` runs the single .nme program in the current folder.",
+                "명령의 첫 단어가 NME가 아는 명령이 아닙니다. `nme 도움`(`nme help`)으로 명령 목록을 보세요. 현재 폴더에 .nme 프로그램이 하나뿐이면 `nme r`만으로 실행할 수 있습니다.",
+            ),
+            Self::CliModulesExtraArgument => (
+                "E9002",
+                "`modules` takes no extra arguments",
+                "`모듈` 명령에는 추가 인자가 없습니다",
+                "`nme modules` only lists the bundled modules. Do not add a file name or option.",
+                "`nme modules`는 내장 모듈 목록만 보여 줍니다. 파일 이름이나 옵션을 붙이지 마세요.",
+            ),
+            Self::CliInvalidOptionValue => (
+                "E9003",
+                "an option is missing its value",
+                "옵션 뒤에 값이 없습니다",
+                "Options like `--level`, `--language`, `-o`, and `--python` need a value right after them, for example `--python python3`. Read the value from the option that failed, or run `nme help`.",
+                "`--level`, `--language`, `-o`, `--python` 같은 옵션은 바로 뒤에 값이 필요합니다. 예: `--python python3`. 오류가 난 옵션의 값을 확인하거나 `nme 도움`을 실행하세요.",
+            ),
+            Self::CliUnknownOption => (
+                "E9004",
+                "unknown option",
+                "알 수 없는 옵션",
+                "The option flag starting with `-` is not one NME knows. Run `nme help` for the supported options of each command.",
+                "`-`로 시작하는 옵션이 NME가 아는 옵션이 아닙니다. `nme 도움`에서 각 명령의 지원 옵션을 확인하세요.",
+            ),
+            Self::CliUnexpectedExtraFile => (
+                "E9005",
+                "unexpected extra file",
+                "추가로 적힌 파일",
+                "These commands take one file. Remove the extra file name, or run the commands one at a time.",
+                "이 명령은 파일 하나만 받습니다. 추가로 적은 파일을 지우거나, 명령을 하나씩 실행하세요.",
+            ),
+            Self::CliConvertNeedsFile => (
+                "E9006",
+                "`convert` needs a file",
+                "`변환`에는 파일이 필요합니다",
+                "`nme convert` turns a Python file into NME, so it needs a file name: `nme convert app.py`.",
+                "`nme 변환`은 Python 파일을 NME로 바꾸므로 파일 이름이 필요합니다: `nme 변환 app.py`.",
+            ),
+            Self::CliFileReadFailed => (
+                "E9007",
+                "a file could not be read",
+                "파일을 읽을 수 없습니다",
+                "NME could not open the file. Check the path, the file name, and the folder permissions, then run the command again.",
+                "NME가 파일을 열 수 없습니다. 경로, 파일 이름, 폴더 권한을 확인한 뒤 다시 실행하세요.",
+            ),
+            Self::CliFileWriteFailed => (
+                "E9008",
+                "a file could not be written",
+                "파일을 저장할 수 없습니다",
+                "NME could not write the output file. Check the folder permissions and that no program has the file locked.",
+                "NME가 결과 파일을 저장하지 못했습니다. 폴더 권한과 파일이 다른 프로그램에 잠겨 있지 않은지 확인하세요.",
+            ),
+            Self::CliRefuseOverwrite => (
+                "E9009",
+                "refusing to overwrite the output",
+                "결과 파일을 덮어쓰지 않습니다",
+                "`nme build -o` and `nme compile -o` never overwrite an existing file by accident. Delete or rename the existing file, or choose another output name.",
+                "`nme build -o`와 `nme compile -o`는 실수로 기존 파일을 덮어쓰지 않습니다. 기존 파일을 삭제하거나 이름을 바꾸거나 다른 출력 이름을 고르세요.",
+            ),
+            Self::CliNativeCompileFailed => (
+                "E9010",
+                "the native compiler failed",
+                "네이티브 컴파일이 실패했습니다",
+                "Nuitka stopped with an error while building the executable. The compiler message above says why. Confirm Python, Nuitka, and a platform C compiler are installed, then try again.",
+                "실행 파일을 만드는 동안 Nuitka가 오류로 멈췄습니다. 위의 컴파일러 메시지에서 이유를 확인하세요. Python, Nuitka, 운영체제용 C 컴파일러가 설치되어 있는지 확인한 뒤 다시 시도하세요.",
+            ),
+            Self::CliNativeCompileStartFailed => (
+                "E9011",
+                "the native compiler could not be started",
+                "네이티브 컴파일러를 시작할 수 없습니다",
+                "NME could not launch Nuitka. Install Python and Nuitka (`python3 -m pip install nuitka`), then run the command again.",
+                "NME가 Nuitka를 실행하지 못했습니다. Python과 Nuitka를 설치(`python3 -m pip install nuitka`)한 뒤 다시 실행하세요.",
+            ),
+            Self::CliCpythonValidationFailed => (
+                "E9012",
+                "CPython rejected the generated Python",
+                "CPython이 만들어진 Python을 거부했습니다",
+                "`nme check` and `nme build` ask CPython to compile the generated program. The message below shows the exact Python problem (usually indentation). Fix the NME source that produced it.",
+                "`nme 검사`와 `nme 빌드`는 생성된 프로그램을 CPython이 컴파일할 수 있는지 확인합니다. 아래 메시지가 정확한 Python 문제(보통 들여쓰기)를 보여 줍니다. 그 원인이 된 NME 소스를 고치세요.",
+            ),
+            Self::CliPythonStartFailed => (
+                "E9013",
+                "Python could not be started",
+                "Python을 시작할 수 없습니다",
+                "NME runs programs with the Python command it chose. Install Python 3 so that `python3` (or `py` on Windows) works, then run the command again. Only unusual setups need `--python <command>`.",
+                "NME는 선택한 Python 명령으로 프로그램을 실행합니다. `python3`(Windows에서는 `py`)이 동작하도록 Python 3를 설치한 뒤 다시 실행하세요. 특별한 환경에서만 `--python <명령>`이 필요합니다.",
+            ),
+            Self::CliFolderNotProgram => (
+                "E9014",
+                "that is a folder, not a program",
+                "폴더는 프로그램이 아닙니다",
+                "NME runs a single .nme file, not a folder. Type a program name, or run `nme r` inside the folder that contains one .nme program.",
+                "NME는 폴더가 아니라 .nme 파일 하나를 실행합니다. 프로그램 이름을 적거나, .nme 프로그램이 있는 폴더 안에서 `nme r`을 실행하세요.",
+            ),
+            Self::CliMissingProgram => (
+                "E9015",
+                "the program file does not exist",
+                "프로그램 파일이 없습니다",
+                "The typed name does not match a file. If you see a `did you mean` hint, use that name; otherwise create the file or run `nme r` to run the single .nme program here.",
+                "적은 이름과 일치하는 파일이 없습니다. `did you mean` 힌트가 보이면 그 이름을 쓰세요. 아니면 파일을 만들거나, 여기 있는 .nme 프로그램 하나를 `nme r`로 실행하세요.",
+            ),
+            Self::CliFolderReadFailed => (
+                "E9016",
+                "the current folder could not be read",
+                "현재 폴더를 읽을 수 없습니다",
+                "NME needs to list the folder to find .nme programs. Check the folder permissions, then try again.",
+                "NME가 .nme 프로그램을 찾으려면 폴더 목록을 읽어야 합니다. 폴더 권한을 확인한 뒤 다시 시도하세요.",
+            ),
+            Self::CliNoProgramHere => (
+                "E9017",
+                "no .nme program in this folder",
+                "이 폴더에 .nme 프로그램이 없습니다",
+                "`nme r` without a file name needs one .nme program in the current folder. Create one (for example hello.nme) or type a file name: `nme r hello`.",
+                "파일 이름 없이 `nme r`을 실행하려면 현재 폴더에 .nme 프로그램이 하나 필요합니다. 파일을 만들거나(예: hello.nme) 파일 이름을 적으세요: `nme r hello`.",
+            ),
+            Self::CliPickAnswerUnreadable => (
+                "E9018",
+                "the pick answer could not be read",
+                "선택 답변을 읽을 수 없습니다",
+                "NME could not read the answer from the keyboard. Run the command again and type a number or a program name, then press Enter.",
+                "NME가 키보드에서 답변을 읽지 못했습니다. 명령을 다시 실행하고 숫자나 프로그램 이름을 적은 뒤 Enter를 누르세요.",
+            ),
+            Self::CliEmptyPickAnswer => (
+                "E9019",
+                "no pick answer given",
+                "선택 답변이 비어 있습니다",
+                "The answer was empty. Type a number from the list or a program name, then press Enter.",
+                "답변이 비어 있습니다. 목록에서 숫자를 고르거나 프로그램 이름을 적은 뒤 Enter를 누르세요.",
+            ),
+            Self::CliInvalidPickAnswer => (
+                "E9020",
+                "the pick answer is not a listed program",
+                "선택 답변이 목록에 없습니다",
+                "The number or name is not one of the programs above. Use a number from the list, or the exact program name.",
+                "숫자나 이름이 위 목록의 프로그램이 아닙니다. 목록의 숫자나 정확한 프로그램 이름을 사용하세요.",
+            ),
+            Self::CliAmbiguousPickAnswer => (
+                "E9021",
+                "the pick answer matches several programs",
+                "선택 답변이 여러 프로그램과 일치합니다",
+                "The typed name is a prefix of more than one program. Pick a number from the list above, or type more of the name.",
+                "적은 이름이 여러 프로그램의 앞부분과 일치합니다. 위 목록에서 숫자를 고르거나 이름을 더 길게 입력하세요.",
+            ),
+            Self::CliAmbiguousProgramPrefix => (
+                "E9022",
+                "several programs match this name",
+                "이 이름과 일치하는 프로그램이 여러 개입니다",
+                "A short name may be used only while it names exactly one .nme program. Type more of the name so only one program matches.",
+                "짧은 이름은 정확히 하나의 .nme 프로그램을 가리킬 때만 쓸 수 있습니다. 하나만 일치하도록 이름을 더 길게 적으세요.",
+            ),
+            Self::CliErrorLookupInvalidArgs => (
+                "E9023",
+                "the error lookup takes one code",
+                "오류 코드는 한 번에 하나만 확인할 수 있습니다",
+                "`nme ko <CODE>` and `nme en <CODE>` take exactly one code. Run `nme ko` with no code to list every code.",
+                "`nme ko <코드>`와 `nme en <코드>`는 코드 하나만 받습니다. 코드 없이 `nme ko`를 실행하면 모든 코드를 볼 수 있습니다.",
+            ),
+            Self::CliErrorLookupUnknownCode => (
+                "E9024",
+                "unknown error code",
+                "알 수 없는 오류 코드",
+                "The code is not one NME uses. Run `nme ko` to see the full list, or copy the code exactly from the error message.",
+                "이 코드는 NME가 쓰는 코드가 아닙니다. `nme ko`로 전체 목록을 보거나, 오류 메시지에서 코드를 정확히 복사하세요.",
             ),
         };
         CodeExplanation {

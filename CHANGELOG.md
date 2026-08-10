@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+- Extend stable error codes to command-line diagnostics: `nme ko <CODE>` and
+  `nme en <CODE>` now also explain CLI errors (`E9001` unknown command,
+  `E9015` missing program, `E9013` Python startup, ...). Compiler codes stay
+  `E0001`+; CLI codes use the `E9xxx` range and render the same way
+  (`error[E9015]:`). Every `fail()` path in the CLI now carries a code.
 - Fix explicit `end`/`끝` block parsing when an indented sentence block is
   followed by a flat block: an indented body that cannot be closed by the
   remaining `end` lines now closes at the dedent, so `만약 ...` with an

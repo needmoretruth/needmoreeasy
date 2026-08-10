@@ -457,6 +457,8 @@ See [the conversion guide](converting-python.md).
 - Every diagnostic carries a stable error code such as `E0102`, printed next
   to the message as `error[E0102]:`. Read the long Korean explanation with
   `nme ko <CODE>` (English: `nme en <CODE>`); `nme ko` alone lists every code.
+  Compiler codes run from `E0001`; command-line errors (missing file, unknown
+  command, Python startup) use `E9xxx` and are explained the same way.
 - Independent problems are collected when possible.
 - Korean-led forms receive Korean guidance.
 

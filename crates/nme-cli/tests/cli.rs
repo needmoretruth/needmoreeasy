@@ -277,7 +277,7 @@ fn command_errors_follow_the_command_language() {
     assert!(!english.status.success());
     let english_error = stderr(&english);
     assert!(
-        english_error.contains("error: unknown option"),
+        english_error.contains("error[E9004]: unknown option"),
         "{english_error}"
     );
     assert!(!english_error.contains("오류:"), "{english_error}");
@@ -289,8 +289,12 @@ fn command_errors_follow_the_command_language() {
     let bilingual = nme(&["실행", "--not-an-option"]);
     assert!(!bilingual.status.success());
     let bilingual_error = stderr(&bilingual);
-    let korean_position = bilingual_error.find("오류: 알 수 없는 옵션").unwrap();
-    let english_position = bilingual_error.find("error: unknown option").unwrap();
+    let korean_position = bilingual_error
+        .find("오류[E9004]: 알 수 없는 옵션")
+        .unwrap();
+    let english_position = bilingual_error
+        .find("error[E9004]: unknown option")
+        .unwrap();
     assert!(korean_position < english_position, "{bilingual_error}");
 }
 
@@ -1210,4 +1214,39 @@ fn a_real_error_reports_its_lookup_code() {
     assert!(korean_error.contains("오류[E0102]:"), "{korean_error}");
 
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn cli_errors_carry_lookup_codes() {
+    let unknown_command = nme(&["this-command-does-not-exist"]);
+    assert!(!unknown_command.status.success());
+    assert!(
+        stderr(&unknown_command).contains("error[E9001]:"),
+        "{}",
+        stderr(&unknown_command)
+    );
+
+    let missing_file = nme(&["run", "definitely-not-a-program.nme"]);
+    assert!(!missing_file.status.success());
+    assert!(
+        stderr(&missing_file).contains("error[E9015]:"),
+        "{}",
+        stderr(&missing_file)
+    );
+
+    let cli_code_page = nme(&["en", "E9004"]);
+    assert!(cli_code_page.status.success(), "{}", stderr(&cli_code_page));
+    assert!(
+        stdout(&cli_code_page).contains("E9004 — unknown option"),
+        "{}",
+        stdout(&cli_code_page)
+    );
+
+    let cli_code_korean = nme(&["ko", "E9001"]);
+    assert!(cli_code_korean.status.success(), "{}", stderr(&cli_code_korean));
+    assert!(
+        stdout(&cli_code_korean).contains("알 수 없는 명령"),
+        "{}",
+        stdout(&cli_code_korean)
+    );
 }
