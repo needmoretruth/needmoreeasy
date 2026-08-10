@@ -1,6 +1,10 @@
 # This example intentionally uses no indentation for the easy block syntax.
 score = 0
-while score < 3
+while score is less than 5
 show score
+if score is not equal to 3
 add 1 to score
+otherwise
+break here
+end
 end
