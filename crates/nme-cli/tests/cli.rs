@@ -2,7 +2,7 @@
 //! execution through the system's Python interpreter.
 
 use std::io::Write as _;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
 
 fn nme(args: &[&str]) -> Output {
@@ -80,7 +80,7 @@ fn version_reports_the_current_beta() {
     assert!(korean.status.success(), "{}", stderr(&korean));
     assert_eq!(
         stdout(&korean),
-        "NME 버전: 0.0.1-beta.15\nnme version: nme 0.0.1-beta.15\n"
+        "NME 버전: 0.0.1-beta.15\nnme version: 0.0.1-beta.15\n"
     );
 }
 
@@ -128,7 +128,7 @@ fn help_is_english_only_for_english_commands_and_bilingual_for_korean_help() {
     );
     assert!(bilingual_help.contains("nme run hello"), "{bilingual_help}");
     assert!(bilingual_help.contains("파일 이름의 .nme는 생략"));
-    assert!(bilingual_help.contains("File names may be\nwritten with or without .nme"));
+    assert!(bilingual_help.contains("File names work\nwith or without .nme"));
 }
 
 fn temporary_dir(name: &str) -> std::path::PathBuf {
@@ -300,11 +300,15 @@ fn korean_missing_file_errors_are_substantively_bilingual() {
     assert!(!output.status.success());
     let error = stderr(&output);
     assert!(
-        error.contains("nme-file-that-does-not-exist.nme 파일을 읽을 수 없습니다"),
+        error.contains("nme-file-that-does-not-exist 파일을 읽을 수 없습니다"),
         "{error}"
     );
     assert!(
-        error.contains("couldn't read nme-file-that-does-not-exist.nme"),
+        error.contains("couldn't read nme-file-that-does-not-exist"),
+        "{error}"
+    );
+    assert!(
+        error.contains("nme-file-that-does-not-exist.nme"),
         "{error}"
     );
 }
@@ -896,4 +900,103 @@ fn runtime_errors_keep_the_original_line_numbers() {
     assert!(!error.contains("nme-run-"), "{error}");
 
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn a_ko_suffixed_name_resolves_to_the_korean_twin_file() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-ko-twin-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let stem = dir.join("game");
+    std::fs::write(
+        stem.with_extension("nme"),
+        "show english game\n",
+    ).unwrap();
+    std::fs::write(
+        Path::new(&format!("{}.ko", stem.display())).with_extension("nme"),
+        "show korean game\n",
+    )
+    .unwrap();
+    let korean_stem = format!("{}.ko", stem.display());
+
+    let output = nme(&["build", &korean_stem]);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert_eq!(stdout(&output), "print(\"korean game\")\n");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn a_directory_argument_explains_that_it_is_a_folder() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-folder-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let output = nme(&["run", &dir.to_string_lossy()]);
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(error.contains("is a folder, not a program"), "{error}");
+
+    let korean = nme(&["실행", &dir.to_string_lossy()]);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(korean_error.contains("폴더이지 프로그램이 아니에요"), "{korean_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn a_misspelled_or_miscased_name_suggests_the_nearby_program() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-suggest-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let stem = dir.join("guessing-game");
+    std::fs::write(stem.with_extension("nme"), "show guessing\n").unwrap();
+
+    let miscased = nme(&["run", &dir.join("GUESSING-GAME").to_string_lossy()]);
+    assert!(!miscased.status.success());
+    let miscased_error = stderr(&miscased);
+    assert!(
+        miscased_error.contains("did you mean `guessing-game.nme`"),
+        "{miscased_error}"
+    );
+
+    let truncated = nme(&["run", &dir.join("guessing-gam").to_string_lossy()]);
+    assert!(!truncated.status.success());
+    let truncated_error = stderr(&truncated);
+    assert!(
+        truncated_error.contains("did you mean `guessing-game.nme`"),
+        "{truncated_error}"
+    );
+    assert!(
+        truncated_error.contains("Try `nme run guessing-game`"),
+        "{truncated_error}"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn an_empty_pick_answer_gets_a_friendly_message() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-empty-pick-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    write_nme(&dir, "one.nme", "show one\n");
+    write_nme(&dir, "two.nme", "show two\n");
+
+    let output = run_in(&dir, &["r"], Some(""));
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(
+        error.contains("no answer given — type a number or a program name"),
+        "{error}"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn help_and_help_shortcut_ignore_extra_arguments() {
+    let output = nme(&["h", "extra"]);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert!(stdout(&output).contains("START HERE:"), "{}", stdout(&output));
+
+    let korean = nme(&["도움", "extra"]);
+    assert!(korean.status.success(), "{}", stderr(&korean));
+    assert!(stdout(&korean).contains("처음 시작:"), "{}", stdout(&korean));
 }

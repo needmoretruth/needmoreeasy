@@ -170,6 +170,11 @@ pub fn parse_program(
     let mut bindings = BindingEnv::new();
     let mut virtual_indents = vec![0; lines.len()];
     let mut blocks = Vec::<ExplicitBlock>::new();
+    // Tracks whether any NME statement has been seen. A lone `end`/`끝`
+    // after that is almost always a leftover block terminator, so it gets a
+    // friendly diagnostic instead of silently staying Python (where it would
+    // fail at runtime). Pure-Python files still keep `end` byte-identical.
+    let mut saw_nme = false;
     // Python compound headers normally get their body indentation from the
     // source.  Inside an indentation-free NME block, however, a learner may
     // write a normal Python header (`if x:`) and then continue with the body
@@ -259,10 +264,13 @@ pub fn parse_program(
 
         // `end` and a bare `break` are valid Python-shaped words in a few
         // contexts, so an already-open explicit block claims them before
-        // Python-wins. Outside a block, valid Python identifiers such as
-        // `end`/`끝` remain untouched by the compatibility rule.
+        // Python-wins. Outside a block, a stray `end` after any NME
+        // statement is reported (it would only fail at runtime as Python);
+        // in a pure-Python file `end`/`끝` remain untouched identifiers.
         let direct_stmt = if is_end.is_some() && depth > 0 {
             Some(Ok(Some(NmeStmt::End)))
+        } else if is_end.is_some() && saw_nme {
+            Some(Err(unmatched_end_diagnostic(line.span)))
         } else if is_break
             && (depth > 0
                 || (line.indent == 0
@@ -304,6 +312,7 @@ pub fn parse_program(
             direct_stmt.unwrap_or_else(|| classify(source, &line.tokens, &block, &known_names));
         match classified {
             Ok(Some(stmt)) => {
+                saw_nme = true;
                 if matches!(stmt, NmeStmt::End) {
                     if blocks.is_empty() {
                         problems.push(unmatched_end_diagnostic(line.span));
