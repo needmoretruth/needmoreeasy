@@ -89,7 +89,7 @@ nme --version
 The `export` line is required in the current macOS/Linux terminal when Cargo
 warns that its `bin` directory is not on `PATH`. It does not reinstall NME.
 Windows PowerShell uses the PATH step in the
-[installation guide](docs/install.md#windows-10-or-11).
+[installation guide](docs/install.md#windows-11).
 
 Expected version: `nme 0.0.1-beta.15`.
 
@@ -194,6 +194,9 @@ See [Python conversion](docs/converting-python.md).
 
 - [Language reference](docs/language.md) — all three levels, exact meanings,
   typo recovery, mixing, modules, and limitations
+- [Learning guides](docs/guides/index.md) — small progressive guides with
+  difficulty, prerequisites, topic, and result labels; learn in order or look
+  up a topic
 - [Learning path](docs/tutorial.md) — six projects: Hello World, conversation,
   number guessing, mixed Python, the time-loop game, and a tiny compiler
 - [VS Code, Cursor, and Zed](docs/editors.md) — ready tasks and file setup

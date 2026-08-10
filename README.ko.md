@@ -89,7 +89,7 @@ nme --version
 Cargo가 설치한 `bin` 폴더가 `PATH`에 없다고 경고하면 macOS/Linux의 현재
 터미널에서는 `export` 줄을 반드시 먼저 실행해야 합니다. NME를 다시 설치하는
 명령이 아닙니다. Windows PowerShell은
-[설치 안내](docs/install.ko.md#windows-10-또는-11)의 PATH 단계를 사용하세요.
+[설치 안내](docs/install.ko.md#windows-11)의 PATH 단계를 사용하세요.
 
 표시될 버전은 `nme 0.0.1-beta.15`입니다.
 
@@ -194,6 +194,8 @@ nme 변환 app.py --level 문장형 --language 한국어 -o app.nme
 
 - [문법 레퍼런스](docs/language.ko.md) — 세 단계, 정확한 뜻, 오타 복구,
   혼용, 모듈, 제한
+- [학습 가이드](docs/guides/index.ko.md) — 난이도, 선수 지식, 주제, 결과물을
+  표시한 작은 점진적 가이드. 순서대로 배우거나 주제로 찾아볼 수 있습니다
 - [학습 과정](docs/tutorial.ko.md) — 여섯 프로젝트: Hello World, 대화,
   숫자 맞히기, Python 혼용, 타임루프 게임, NME로 작은 컴파일러 만들기
 - [VS Code, Cursor, Zed](docs/editors.ko.md) — 준비된 작업과 파일 설정

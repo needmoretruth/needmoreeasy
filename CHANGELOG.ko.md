@@ -18,6 +18,15 @@ NME의 중요한 변경 사항을 이 문서에 기록합니다.
   `nme ko`(또는 `nme 에러`/`nme error`)를 실행하면 모든 코드를 나열합니다.
   각 코드는 무엇이 잘못됐는지, 왜 그런지, 어떻게 고치는지를 안내하며,
   도움말과 두 README, 두 언어 레퍼런스에서도 이 기능을 소개합니다.
+- 설치 문서를 운영체제별 독립 섹션(Windows 11, Windows 10, 이전 Windows,
+  macOS, Debian/Ubuntu, Fedora, Arch Linux)으로 나누었습니다. 각 섹션에
+  복사해서 쓸 설치 명령, PATH, 버전 확인, 첫 실행, 흔한 오류 해결이
+  들어 있습니다.
+- 100개 가이드 과정을 시작했습니다. `docs/guides/`에 난이도 범례, 순서 학습
+  경로, 주제 찾아보기, 전체 표가 있는 인덱스와 초급 가이드 12개(hello →
+  ask → set → update → repeat → if → while → break → and/or → random →
+  check/build → convert)가 있으며, 각 가이드는 난이도, 선수 지식, 주제,
+  결과물을 두 언어로 표시합니다. 모든 코드 블록은 `nme check`로 검증했습니다.
 - 프로그램 이름을 겹치지 않는 범위에서 줄여 쓸 수 있습니다: `nme r gue`는
   `guessing-game.nme`를 실행합니다. `run`/`실행`, `check`/`검사`,
   `build`/`빌드`, `compile`, `convert`, 파일 이름만 적는 실행 단축

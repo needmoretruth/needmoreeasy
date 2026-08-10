@@ -20,6 +20,16 @@ All notable changes to NME are recorded here.
   Each code documents what went wrong, why, and the recovery steps; the code
   list and lookup pages are also taught in the help text, both READMEs, and
   both language references.
+- Split the installation guide into independent per-OS sections (Windows 11,
+  Windows 10, older Windows, macOS, Debian/Ubuntu, Fedora, Arch Linux), each
+  with copy-paste install commands, PATH, version check, first run, and common
+  errors.
+- Start the 100-guide curriculum: `docs/guides/` now has an index (difficulty
+  legend, learn-in-order path, topic lookup, full table) and the first twelve
+  beginner guides (hello → ask → set → update → repeat → if → while → break →
+  and/or → random → check/build → convert), each labeled with difficulty,
+  prerequisites, topic, and result in both languages; every code block is
+  verified with `nme check`.
 - Accept shortened unique program names everywhere: `nme r gue` runs
   `guessing-game.nme`, and the same prefix rule works for `run`/`실행`,
   `check`/`검사`, `build`/`빌드`, `compile`, `convert`, the bare run shortcut

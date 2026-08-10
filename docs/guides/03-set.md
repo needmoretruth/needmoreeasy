@@ -1,0 +1,69 @@
+# 03 — Set: store a value
+
+English | [한국어](03-set.ko.md)
+
+[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+
+- 난이도 (Difficulty): ★☆☆☆☆ (1/5)
+- 선수 지식 (Prerequisites): [02 — Ask](02-ask.md)
+- 주제 (Topic): 값 저장 / storing values
+- 결과물 (Result): 글자나 숫자를 이름 붙여 저장하는 프로그램 / a program that keeps text or numbers in named values
+
+A value is a box with a name. `set` puts something in the box, and `show`
+takes it out later.
+
+## Steps
+
+1. Create `store.nme`:
+
+   ```text
+   set greeting to Hello
+   show greeting
+   ```
+
+   This prints `Hello`. The name `greeting` now stands for that text.
+
+2. Numbers work the same way:
+
+   ```text
+   set answer to 7
+   set answer to 10
+   show answer
+   ```
+
+   `answer` is a box: putting `10` in replaces `7`, so the program prints
+   `10`.
+
+3. Korean puts the name first:
+
+   ```text
+   인사는 안녕하세요
+   정답은 7
+   ```
+
+   `인사는 ...` and `정답은 ...` store text and numbers exactly like the
+   English forms.
+
+4. The action word can come after the name too:
+
+   ```text
+   name save Mina
+   이름 저장 민수
+   ```
+
+## Try it yourself
+
+Store your age as a number and a favorite place as text, then show both:
+
+```text
+set age to 12
+set place to Seoul
+show place
+```
+
+## What you learned
+
+- `set name to value` stores a value; `이름은 값` is the Korean form.
+- Putting a new value in a name replaces the old one.
+- Text and numbers are both stored without quotes.
+- `name save value` / `이름 저장 값` are accepted word orders.

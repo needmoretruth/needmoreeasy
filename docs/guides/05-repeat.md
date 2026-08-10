@@ -1,0 +1,72 @@
+# 05 — Repeat: do something many times
+
+English | [한국어](05-repeat.ko.md)
+
+[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+
+- 난이도 (Difficulty): ★★☆☆☆ (2/5)
+- 선수 지식 (Prerequisites): [04 — Update](04-update.md)
+- 주제 (Topic): 반복 / loops
+- 결과물 (Result): 줄을 여러 번 실행하는 프로그램 / a program that runs lines several times
+
+Computers are great at doing the same thing many times. `repeat` runs a line
+or a block again and again.
+
+## Steps
+
+1. Create `repeat.nme`:
+
+   ```text
+   repeat 3 times and show Again
+   ```
+
+   This prints `Again` three times. Korean is equally valid:
+
+   ```text
+   3번 반복해서 다시 말해줘
+   ```
+
+2. When the count comes first, the rest of the line is repeated output:
+
+   ```text
+   3 times Welcome to NME
+   3번 안녕하세요
+   ```
+
+3. Several lines use indentation and no colon:
+
+   ```text
+   repeat 3 times
+       show First sentence
+       둘째 문장 말해줘
+   ```
+
+4. Indentation can be optional: put `end` (or `끝`) on its own line to close
+   the block:
+
+   ```text
+   3 times:
+   show one line
+   show another line
+   end
+   ```
+
+   The Korean twin uses `3번:` and `끝`.
+
+## Try it yourself
+
+Repeat a greeting five times, mixing both languages:
+
+```text
+5 times:
+show Hello!
+반가워요! 말해줘
+end
+```
+
+## What you learned
+
+- `repeat 3 times and show Again` prints one line three times.
+- `3 times Welcome to NME` / `3번 안녕하세요` repeat the rest of the line.
+- An indented block repeats every indented line.
+- `3 times:` ... `end` closes a flat block without indentation.

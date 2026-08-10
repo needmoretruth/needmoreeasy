@@ -1,0 +1,67 @@
+# NME 학습 가이드
+
+[English](index.md) | 한국어
+
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
+
+초보자 길을 따라가는 작고 점진적인 가이드입니다. 각 가이드는 하나의
+아이디어만 가르치고, 앞 가이드보다 조금씩 어려워지며, `nme check`로
+확인할 수 있습니다. 01–04는 첫날 문장형이고, 05–10은 초급 문법과
+제어 흐름을 더하며, 11–12는 CLI 도구를 다룹니다.
+
+## 난이도
+
+- ★☆☆☆☆ (1/5) — 첫날
+- ★★☆☆☆ (2/5) — 문장형에 익숙함
+- ★★★☆☆ (3/5) — 초급 문법
+- ★★★★☆ (4/5) — 여러 단계 섞기
+- ★★★★★ (5/5) — Python에 가까움
+
+## 순서대로 배우기
+
+1. [01 — 인사](01-hello.ko.md)
+2. [02 — 물어보기](02-ask.ko.md)
+3. [03 — 저장](03-set.ko.md)
+4. [04 — 변경](04-update.ko.md)
+5. [05 — 반복](05-repeat.ko.md)
+6. [06 — 조건](06-if.ko.md)
+7. [07 — 동안](07-while.ko.md)
+8. [08 — 멈춤](08-break.ko.md)
+9. [09 — 그리고/또는](09-and-or.ko.md)
+10. [10 — 랜덤](10-random.ko.md)
+11. [11 — 확인과 빌드](11-check-build.ko.md)
+12. [12 — 변환](12-convert.ko.md)
+
+## 주제별 찾아보기
+
+- 첫 프로그램 / First program: [01](01-hello.ko.md)
+- 문장/출력 / Sentences and output: [01](01-hello.ko.md), [05](05-repeat.ko.md)
+- 입력 / Input: [02](02-ask.ko.md)
+- 값 저장/변경 / Storing and changing values: [03](03-set.ko.md), [04](04-update.ko.md)
+- 반복 / Loops: [05](05-repeat.ko.md), [07](07-while.ko.md), [08](08-break.ko.md)
+- 조건 / Conditions: [06](06-if.ko.md), [07](07-while.ko.md), [09](09-and-or.ko.md)
+- 랜덤 / Random: [10](10-random.ko.md)
+- 도구 사용 / Using the tools: [11](11-check-build.ko.md), [12](12-convert.ko.md)
+
+## 전체 목록
+
+| 번호 | 난이도 | 주제 | 제목 | 결과물 |
+| --- | --- | --- | --- | --- |
+| 01 | ★☆☆☆☆ | 첫 프로그램 / First program | [인사 — 첫 문장 말하기](01-hello.ko.md) | `nme run`으로 메시지를 출력하는 프로그램 |
+| 02 | ★☆☆☆☆ | 입력 / Input | [물어보기 — 대화 나누기](02-ask.ko.md) | 이름을 물어보고 문장으로 인사하기 |
+| 03 | ★☆☆☆☆ | 값 저장 / Storing values | [저장 — 값 넣어 두기](03-set.ko.md) | 글자나 숫자를 이름 붙여 저장하기 |
+| 04 | ★★☆☆☆ | 값 변경 / Changing values | [변경 — 값 바꾸기](04-update.ko.md) | 점수에 더하고 빼기 |
+| 05 | ★★☆☆☆ | 반복 / Loops | [반복 — 여러 번 반복하기](05-repeat.ko.md) | `repeat`이나 `3번:`으로 줄 여러 번 실행 |
+| 06 | ★★☆☆☆ | 조건 / Conditions | [조건 — 갈림길 선택](06-if.ko.md) | `만약`과 `아니면`으로 다른 줄 실행 |
+| 07 | ★★★☆☆ | 반복/조건 / Loops & conditions | [동안 — 조건이 참인 동안 반복](07-while.ko.md) | 조건이 참인 동안 반복, `끝`으로 닫기 |
+| 08 | ★★★☆☆ | 반복 / Loops | [멈춤 — 반복 멈추기](08-break.ko.md) | `멈춰`로 반복을 일찍 끝내기 |
+| 09 | ★★★☆☆ | 조건 / Conditions | [그리고/또는 — 조건 합치기](09-and-or.ko.md) | `그리고`와 `또는`으로 조건 합치기 |
+| 10 | ★★★☆☆ | 랜덤 / Random | [랜덤 — 주사위와 선택](10-random.ko.md) | `랜덤 사용`으로 주사위 굴리고 색 고르기 |
+| 11 | ★★★★☆ | 도구 사용 / Using the tools | [확인과 빌드 — Python 보기](11-check-build.ko.md) | 프로그램 확인하고 Python 결과 읽기 |
+| 12 | ★★★★★ | 도구 사용 / Using the tools | [변환 — Python을 NME로](12-convert.ko.md) | 작은 Python 파일을 NME로 변환하기 |
+
+## 다음 단계
+
+- [시작하기](../getting-started.ko.md): 인사부터 숫자 게임까지 5분 길
+- [학습 과정](../tutorial.ko.md): Hello World부터 컴파일러까지 여섯 프로젝트
+- [문법 안내](../language.ko.md): 세 단계의 정확한 규칙

@@ -1,0 +1,67 @@
+# 03 — 저장: 값 넣어 두기
+
+[English](03-set.md) | 한국어
+
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
+
+- 난이도 (Difficulty): ★☆☆☆☆ (1/5)
+- 선수 지식 (Prerequisites): [02 — 물어보기](02-ask.ko.md)
+- 주제 (Topic): 값 저장 / storing values
+- 결과물 (Result): 글자나 숫자를 이름 붙여 저장하는 프로그램 / a program that keeps text or numbers in named values
+
+값은 이름이 붙은 상자입니다. `은`으로 상자에 넣어 두고, 나중에
+`보여줘`로 꺼냅니다.
+
+## 단계
+
+1. `store.nme` 파일을 만듭니다:
+
+   ```text
+   인사는 안녕하세요
+   인사 보여줘
+   ```
+
+   `안녕하세요`가 출력됩니다. 이름 `인사`가 그 글자를 가리킵니다.
+
+2. 숫자도 같습니다:
+
+   ```text
+   정답은 7
+   정답은 10
+   정답 보여줘
+   ```
+
+   `정답`은 상자입니다. `10`을 넣으면 `7`을 덮어쓰므로 `10`이 출력됩니다.
+
+3. 영어는 이름 뒤에 동작이 옵니다:
+
+   ```text
+   set greeting to Hello
+   set answer to 7
+   ```
+
+   `set ... to ...`이 영어 저장 형식입니다.
+
+4. 동작이 이름 뒤에 와도 됩니다:
+
+   ```text
+   이름 저장 민수
+   name save Mina
+   ```
+
+## 직접 해보기
+
+여러분의 나이를 숫자로, 좋아하는 곳을 글자로 저장하고 둘 다 보여 주세요:
+
+```text
+나이는 12
+장소는 서울
+장소 보여줘
+```
+
+## 배운 것
+
+- `이름은 값`은 값을 저장하고, `set name to value`가 영어 형식입니다.
+- 같은 이름에 새 값을 넣으면 옛 값을 덮어씁니다.
+- 글자와 숫자 모두 따옴표 없이 저장합니다.
+- `이름 저장 값` / `name save value` 순서도 쓸 수 있습니다.
