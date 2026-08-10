@@ -71,6 +71,15 @@ add 1 to score
 end
 ```
 
+The compact beginner repeat form can use the same trick:
+
+```text
+3 times:
+show one line
+show another line
+end
+```
+
 The same style supports `break`, `and`/`or`, `elif`, and `else`; Korean
 spellings are `멈춰`, `그리고`/`또는`, `아니면 만약에`, and `아니면`.
 

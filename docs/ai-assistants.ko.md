@@ -8,7 +8,7 @@ AI 코딩 도우미에게 다음 문장 하나를 전달하세요.
 NME 코드를 작성하기 전에 이 문서를 읽고 따르세요.
 https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.ko.md
 
-먼저 `nme --version`으로 지원되는 베타를 확인하세요. 그다음 요청한 프로그램을 .nme 파일로 작성하세요. 초보자에게는 문장형을 우선하고,
+먼저 `nme --version`으로 지원되는 베타(현재 `0.0.1-beta.11`)를 확인하세요. 그다음 요청한 프로그램을 .nme 파일로 작성하세요. 초보자에게는 문장형을 우선하고,
 더 분명할 때만 초급 문법이나 고급 Python을 섞으며, nme 검사로 확인하세요.
 ```
 
@@ -69,7 +69,8 @@ if score is greater than 10 then show You won
 문장 출력에서 앞서 입력받거나 저장한 이름은 실제 값으로 바뀝니다. `내 이름은
 뭐예요?`처럼 평범한 질문을 쓰면 이름에 답이 자동으로 저장됩니다. 마지막 `?`는
 생략할 수 있고, 따옴표 없는 질문에는 끝 공백이 자동으로 붙습니다. 처음에는 들여쓰기 대신 `끝`/`end`로
-블록을 닫으세요.
+블록을 닫으세요. `How old are you?`, `몇 살이에요?` 같은 나이 질문은 각각
+`age`, `나이`에 자동으로 저장됩니다.
 
 ```text
 동안 점수 < 3
@@ -91,6 +92,9 @@ say <Python expression>
 ask name, <Python prompt>
 횟수번:
 count times:
+3번:
+첫 줄 말해줘
+끝
 만약 <Python 조건>:
 when <Python condition>:
 동안 <조건> ... 끝

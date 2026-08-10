@@ -8,7 +8,7 @@ Give an AI coding assistant this one prompt:
 Read and follow this NME language handoff before writing code:
 https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
 
-Then confirm that `nme --version` is the supported beta, then write the requested program as a .nme file, prefer sentence syntax for a
+Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.11`), then write the requested program as a .nme file, prefer sentence syntax for a
 beginner, mix beginner or advanced Python only where it makes the result
 clearer, and verify it with nme check.
 ```
@@ -72,7 +72,8 @@ action, logical, and condition typos such as `repaet`, `shwoe`, `그리거`, and
 Known input or assignment names are interpolated in sentence output. Natural
 questions such as `What is your name` infer the target; Korean forms such as
 `내 이름은 뭐예요?` do too. The final `?` is optional, and natural prompts get
-a trailing space automatically.
+a trailing space automatically. Age questions such as `How old are you?` and
+`몇 살이에요?` infer `age` and `나이`.
 For the gentlest start, close a
 flat block with `end`/`끝` instead of relying on indentation:
 
@@ -96,6 +97,9 @@ ask name, <Python prompt>
 물어봐 이름, <Python 질문>
 count times:
 횟수번:
+3 times:
+show one line
+end
 when <Python condition>:
 만약 <Python 조건>:
 while <condition> ... end

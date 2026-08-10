@@ -84,7 +84,7 @@ warns that its `bin` directory is not on `PATH`. It does not reinstall NME.
 Windows PowerShell uses the PATH step in the
 [installation guide](docs/install.md#windows-10-or-11).
 
-Expected version: `nme 0.0.1-beta.10`.
+Expected version: `nme 0.0.1-beta.11`.
 
 Windows, macOS, and Linux instructions are in the
 [installation guide](docs/install.md). The [five-minute guide](docs/getting-started.md)
@@ -98,6 +98,11 @@ nme check examples/guessing-game.ko
 nme build examples/three-levels -o three-levels.py
 nme modules
 ```
+
+For a larger learning project, compare the same time-loop mystery in
+[`time-loop-sentence.ko.nme`](examples/time-loop-sentence.ko.nme),
+[`time-loop-beginner.ko.nme`](examples/time-loop-beginner.ko.nme), and
+[`time-loop-python.nme`](examples/time-loop-python.nme).
 
 The `.nme` ending is optional. `nme run program` and even `nme program` both
 run `program.nme`. NME chooses the normal Python command for your operating

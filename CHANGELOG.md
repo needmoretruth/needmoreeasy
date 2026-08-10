@@ -4,6 +4,19 @@ English | [한국어](CHANGELOG.ko.md)
 
 All notable changes to NME are recorded here.
 
+## 0.0.1-beta.11 — 2026-08-11
+
+- Let compact `3 times:` / `3번:` beginner repeat blocks close with `end` / `끝`
+  without requiring physical indentation.
+- Accept the natural beginner spelling `repeat 3 times:` and keep ordinary
+  colon-bearing Python suites on Python's indentation rules.
+- Infer common age questions (`How old are you?`, `몇 살이에요?`) and accept
+  spoken Korean loop endings such as `준비하는동안`.
+- Treat polite show requests such as `Please show me hello` as the same simple
+  output sentence instead of printing the request word.
+- Document the sentence-to-beginner path with matching English and Korean
+  flat-block examples.
+
 ## 0.0.1-beta.10 — 2026-08-11
 
 - Recover common Korean condition-starter typos (`만악에`), spaced Korean
