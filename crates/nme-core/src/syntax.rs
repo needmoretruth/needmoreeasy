@@ -107,6 +107,17 @@ pub enum Condition {
         right: ConditionValue,
         negated: bool,
     },
+    Logical {
+        left: Box<Condition>,
+        operator: LogicalOp,
+        right: Box<Condition>,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LogicalOp {
+    And,
+    Or,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -146,6 +157,19 @@ pub enum NmeStmt {
         condition: Condition,
         inline: Option<InlineStmt>,
     },
+    While {
+        condition: Condition,
+        inline: Option<InlineStmt>,
+    },
+    ElseIf {
+        condition: Condition,
+        inline: Option<InlineStmt>,
+    },
+    Else {
+        inline: Option<InlineStmt>,
+    },
+    Break,
+    End,
     UseRandom {
         requested: ModuleVersion,
     },
@@ -161,6 +185,10 @@ pub enum InlineStmt {
 /// A fully parsed NME statement plus the source span it replaces.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NmeLine {
+    /// Index in the lexer's logical-line list.
+    pub line_index: usize,
     pub span: Span,
     pub stmt: NmeStmt,
+    /// Indentation inserted by an explicit `end`/`끝` block.
+    pub virtual_indent: usize,
 }

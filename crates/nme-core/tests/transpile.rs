@@ -603,3 +603,105 @@ fn crlf_line_endings_are_preserved() {
 fn missing_trailing_newline_is_fine() {
     assert_eq!(ok("say \"hi\""), "print(\"hi\")");
 }
+
+#[test]
+fn sentence_while_break_and_end_do_not_need_indentation() {
+    let source = concat!(
+        "score = 0\n",
+        "while score < 3\n",
+        "show score\n",
+        "score = score + 1\n",
+        "if score == 3\n",
+        "break\n",
+        "end\n",
+        "end\n",
+    );
+    let expected = concat!(
+        "score = 0\n",
+        "while (score < 3):\n",
+        "    print(score)\n",
+        "    score = score + 1\n",
+        "    if (score == 3):\n",
+        "        break\n",
+        "    # end\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn sentence_logical_conditions_and_branches_are_python_shaped() {
+    let source = concat!(
+        "ready = True\n",
+        "score = 3\n",
+        "만약 ready 그리고 score > 2\n",
+        "말해 yes\n",
+        "아니면 만약 score == 0\n",
+        "말해 zero\n",
+        "아니면\n",
+        "말해 no\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "ready = True\n",
+        "score = 3\n",
+        "if ((ready and score > 2)):\n",
+        "    print(\"yes\")\n",
+        "elif (score == 0):\n",
+        "    print(\"zero\")\n",
+        "else:\n",
+        "    print(\"no\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn korean_while_sentence_uses_an_explicit_end() {
+    let source = concat!(
+        "점수는 0\n",
+        "점수가 3보다 작을 동안\n",
+        "점수 말해줘\n",
+        "점수는 점수 + 1\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "점수 = 0\n",
+        "while (점수 < 3):\n",
+        "    print(점수)\n",
+        "    점수 = 점수 + 1\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn attached_korean_else_if_is_supported() {
+    let source = concat!(
+        "만약 준비\n",
+        "말해 one\n",
+        "아니면만약 다른준비\n",
+        "말해 two\n",
+        "아니면\n",
+        "말해 three\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "if (준비):\n",
+        "    print(\"one\")\n",
+        "elif (다른준비):\n",
+        "    print(\"two\")\n",
+        "else:\n",
+        "    print(\"three\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn attached_korean_repeat_can_use_end_without_indentation() {
+    assert_eq!(
+        ok("3번\n말해 hi\n끝\n"),
+        "for _ in range(3):\n    print(\"hi\")\n# end\n"
+    );
+}

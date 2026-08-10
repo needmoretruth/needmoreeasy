@@ -215,3 +215,13 @@ fn sentence_lowering_never_changes_physical_line_numbers() {
     let message = err("show Hello \\\nworld\n");
     assert!(message.contains("one physical line"), "{message}");
 }
+
+#[test]
+fn explicit_blocks_report_structural_mistakes() {
+    let missing = err("while ready\nshow waiting\n");
+    assert!(missing.contains("missing its closing `end`"), "{missing}");
+    let unmatched = err("끝\n");
+    assert!(unmatched.contains("no open NME block"), "{unmatched}");
+    let outside = err("멈춰\n");
+    assert!(outside.contains("inside a loop"), "{outside}");
+}

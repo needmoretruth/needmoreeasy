@@ -10,8 +10,8 @@
 //! line numbers the user actually sees in their `.nme` file.
 
 use crate::syntax::{
-    Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, Literal, NmeLine, NmeStmt,
-    TextPart, TextTemplate, Value, RANDOM_MODULE_VERSION,
+    Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, Literal, LogicalOp, NmeLine,
+    NmeStmt, TextPart, TextTemplate, Value, RANDOM_MODULE_VERSION,
 };
 
 const BILINGUAL_RANDOM_TOOLS_PREFIX: &str = concat!(
@@ -41,7 +41,11 @@ pub fn lower_lines(lines: &[NmeLine], source: &str) -> Vec<Edit> {
         .iter()
         .map(|line| Edit {
             span: line.span,
-            replacement: lower_stmt(&line.stmt, source),
+            replacement: format!(
+                "{}{}",
+                indent_prefix(line.virtual_indent),
+                lower_stmt(&line.stmt, source)
+            ),
         })
         .collect()
 }
@@ -86,6 +90,17 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
             let header = format!("if ({}):", lower_condition(condition, source));
             lower_suite(header, inline.as_ref(), source)
         }
+        NmeStmt::While { condition, inline } => {
+            let header = format!("while ({}):", lower_condition(condition, source));
+            lower_suite(header, inline.as_ref(), source)
+        }
+        NmeStmt::ElseIf { condition, inline } => {
+            let header = format!("elif ({}):", lower_condition(condition, source));
+            lower_suite(header, inline.as_ref(), source)
+        }
+        NmeStmt::Else { inline } => lower_suite("else:".to_string(), inline.as_ref(), source),
+        NmeStmt::Break => "break".to_string(),
+        NmeStmt::End => "# end".to_string(),
         NmeStmt::UseRandom { .. } => {
             format!("{BILINGUAL_RANDOM_TOOLS_PREFIX}\"{RANDOM_MODULE_VERSION}\"")
         }
@@ -128,6 +143,22 @@ fn lower_condition(condition: &Condition, source: &str) -> String {
             } else {
                 comparison
             }
+        }
+        Condition::Logical {
+            left,
+            operator,
+            right,
+        } => {
+            let operator = match operator {
+                LogicalOp::And => "and",
+                LogicalOp::Or => "or",
+            };
+            format!(
+                "({} {} {})",
+                lower_condition(left, source),
+                operator,
+                lower_condition(right, source)
+            )
         }
     }
 }
@@ -217,6 +248,10 @@ fn lower_suite(header: String, inline: Option<&InlineStmt>, source: &str) -> Str
         Some(InlineStmt::Nme(inner)) => format!("{header} {}", lower_stmt(inner, source)),
         Some(InlineStmt::Python(span)) => format!("{header} {}", slice(source, *span)),
     }
+}
+
+fn indent_prefix(level: usize) -> String {
+    "    ".repeat(level)
 }
 
 /// Applies edits to `source`, returning the final Python program.

@@ -26,7 +26,7 @@ pub struct Token {
 }
 
 /// A logical line of source: one statement's worth of tokens.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LogicalLine {
     /// 1-based number of the physical line the statement starts on.
     pub number: usize,
