@@ -389,16 +389,20 @@ for 단어 in 단어들("notes.txt"):
 
 ## 버전이 있는 내장 모듈
 
-쉬운 랜덤 어댑터 버전은 `0.0.1`입니다. 프로그램마다 `사용` 줄은 하나만 쓸 수
-있으므로 표기 하나를 고릅니다.
+NME에는 초보자용 모듈 두 개가 들어 있습니다: 주사위·선택용 `random`(`랜덤`)과
+읽기·쓰기·JSON용 `file`(`파일`)입니다. 각 모듈의 내장 버전은 `0.0.1`입니다.
+프로그램마다 `사용` 줄은 하나만 쓸 수 있으므로 모듈 하나를 고릅니다.
 
 ```text
 랜덤 사용
+파일 사용
 ```
 
 `랜덤 사용 최신`, `최신 랜덤 사용`, `랜덤 사용 버전 "0.0.1"`도 같은 뜻이며,
 영어 표기 `use random`, `use random latest`, `use latest random`,
-`use random version "0.0.1"`도 같습니다.
+`use random version "0.0.1"`도 같습니다. `file` 모듈도 같은 형태를
+`file`/`파일`로 받습니다: `파일 사용`, `파일 사용 최신`,
+`파일 사용 버전 "0.0.1"`.
 
 `최신` / `latest`는 설치한 NME 컴파일러에 들어 있는 가장 새 어댑터를
 고릅니다. 제어되지 않은 네트워크 업데이트가 아니라 로컬에서 항상 같은 결과를
@@ -415,11 +419,20 @@ for 단어 in 단어들("notes.txt"):
 | `섞기(값들)` | `shuffle(values)` | `random.shuffle(values)` |
 | `랜덤버전` | `random_version` | 어댑터 버전 문자열 |
 
-이 모듈은 위의 도우미 이름을 예약합니다. 이미 같은 이름을 쓰고 있으면 값을
+| 한국어 | 영어 | Python 뜻 |
+| --- | --- | --- |
+| `파일읽기(경로)` | `file_read(path)` | `pathlib.Path(path).read_text()` |
+| `파일쓰기(경로, 내용)` | `file_write(path, text)` | `pathlib.Path(path).write_text(text)` |
+| `json읽기(경로)` | `json_load(path)` | `json.loads(pathlib.Path(path).read_text())` |
+| `json저장(경로, 값)` | `json_save(path, value)` | `pathlib.Path(path).write_text(json.dumps(value))` |
+| `파일버전` | `file_version` | 어댑터 버전 문자열 |
+
+두 모듈 모두 위의 도우미 이름을 예약합니다. 이미 같은 이름을 쓰고 있으면 값을
 조용히 덮어쓰지 않고 이름을 바꾸라는 오류를 보여 줍니다.
 
-`nme 모듈` 또는 `nme modules`로 버전을 확인합니다. 보안 번호나 비밀번호에는
-랜덤 도구를 사용하지 마세요.
+`nme 모듈` 또는 `nme modules`로 버전과 이름을 확인합니다. 파일은 프로그램을
+실행하는 폴더에 만들어지므로 프로젝트 폴더에 저장하세요. 보안 번호나
+비밀번호에는 랜덤 도구를 사용하지 마세요.
 
 ## Python 변환
 
@@ -457,7 +470,8 @@ nme 변환 app.py --level 문장형 --language 한국어 -o app.nme
   글은 초급 표현식을 쓰세요.
 - 문장형 비교 단어는 의도적으로 작습니다. `그리고`/`또는` 논리와 복잡한
   표현식은 명시적 `끝` 블록이나 고급 Python을 쓰세요.
-- 쉬운 모듈 문법은 이번 베타에서 내장 random 어댑터만 제공합니다.
+- 내장 `random`과 `file` 모듈은 이번 베타에서 쉬운 모듈 문법을 제공합니다.
+  다른 Python 라이브러리는 일반 `import`로 씁니다.
 - `검사`와 `빌드`는 생성된 Python을 선택한 CPython으로 컴파일까지 확인하지만
   실행하지는 않습니다. 실행 오류는 CPython이 담당합니다.
 - `실행`, `빌드`, `검사`에는 CPython이 필요합니다. 선택적인 `컴파일`에는

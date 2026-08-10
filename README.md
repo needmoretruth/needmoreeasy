@@ -155,7 +155,7 @@ startup time, distribution size, and performance, so measure the actual
 program; NME does not make a false blanket claim that every Python-compatible
 program becomes faster or smaller.
 
-## Versioned random tools
+## Versioned random and file tools
 
 ```text
 랜덤 사용 최신
@@ -165,7 +165,22 @@ show 랜덤선택(["red", "blue"])
 
 `random` / `랜덤` adapter version `0.0.1` is bundled, so `latest` / `최신`
 resolves locally without a network download. Loading it exposes both Korean
-and English helper names, allowing them to mix on the same line. Run
+and English helper names, allowing them to mix on the same line.
+
+Reading and writing files works the same way with `file` / `파일`:
+
+```text
+파일 사용 최신
+파일쓰기("note.txt", "안녕")
+show 파일읽기("note.txt")
+점수 = {"이름": "민수", "점수": 3}
+json저장("save.json", 점수)
+보관 = json_load("save.json")
+show 보관["이름"]
+```
+
+`file` exposes `file_read`/`파일읽기`, `file_write`/`파일쓰기`,
+`json_load`/`json읽기`, and `json_save`/`json저장` on version `0.0.1`. Run
 `nme modules` to see installed module versions.
 
 Sentence syntax can use random without any punctuation or prior module line:

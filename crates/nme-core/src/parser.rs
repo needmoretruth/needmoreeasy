@@ -12,9 +12,9 @@ use rustpython_parser::{parse as parse_python, Mode, Tok};
 use crate::diagnostics::{Diagnostic, DiagnosticCode, Span};
 use crate::lexer::{LogicalLine, Token};
 use crate::syntax::{
-    Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, Literal, LogicalOp,
-    ModuleVersion, NmeLine, NmeStmt, Spelling, TextPart, TextTemplate, UpdateOp, Value,
-    RANDOM_MODULE, RANDOM_MODULE_KO, RANDOM_MODULE_VERSION, SAY_KEYWORD, SAY_KEYWORD_KO,
+    BundledModuleId, Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, Literal,
+    LogicalOp, ModuleVersion, NmeLine, NmeStmt, Spelling, TextPart, TextTemplate, UpdateOp, Value,
+    FILE_MODULE, FILE_MODULE_KO, RANDOM_MODULE, RANDOM_MODULE_KO, SAY_KEYWORD, SAY_KEYWORD_KO,
     SAY_WORDS_EN, TIMES_KEYWORD, TIMES_KEYWORD_KO,
 };
 
@@ -767,9 +767,9 @@ fn classify(
         || action_phrase_at(tokens, 0, USE_WORDS_KO, MatchMode::Exact).is_some()
     {
         if recoverable_module_shape(tokens) {
-            return match_use_random(source, tokens, known_names, MatchMode::Recover);
+            return match_use_module(source, tokens, known_names, MatchMode::Recover);
         }
-        return match_use_random(source, tokens, known_names, MatchMode::Exact);
+        return match_use_module(source, tokens, known_names, MatchMode::Exact);
     }
     exact_match!(match_when(
         source,
@@ -825,7 +825,7 @@ fn classify(
     }
 
     exact_match!(match_set(source, tokens, known_names, MatchMode::Exact));
-    exact_match!(match_use_random(
+    exact_match!(match_use_module(
         source,
         tokens,
         known_names,
@@ -850,7 +850,7 @@ fn classify(
         match_ask(source, tokens, known_names, MatchMode::Recover),
         match_say(source, tokens, known_names, MatchMode::Recover),
         match_set(source, tokens, known_names, MatchMode::Recover),
-        match_use_random(source, tokens, known_names, MatchMode::Recover),
+        match_use_module(source, tokens, known_names, MatchMode::Recover),
     ];
     let mut candidates = Vec::new();
     let mut recovery_problems = Vec::new();
@@ -3296,7 +3296,7 @@ fn find_count_marker(tokens: &[Token], mode: MatchMode) -> Option<(usize, Spelli
 
 // --------------------------------------------------------------- modules
 
-fn match_use_random(
+fn match_use_module(
     source: &str,
     tokens: &[Token],
     known_names: &HashSet<String>,
@@ -3306,24 +3306,29 @@ fn match_use_random(
         return Ok(None);
     };
 
-    let random_positions = tokens
-        .iter()
-        .enumerate()
-        .filter_map(|(index, token)| random_word_matches(token, mode).then_some(index))
-        .collect::<Vec<_>>();
-    if random_positions.len() != 1 {
-        return Err(Diagnostic::bilingual(
-            DiagnosticCode::UnsupportedModule,
-            "NME only bundles `use random` for now",
-            "NME에는 아직 쉬운 `랜덤` 모듈만 들어 있어요",
-            span_of(tokens),
-        )
-        .with_bilingual_hint(
-            "write one module line such as `use random latest`",
-            "`랜덤 사용 최신`처럼 모듈 하나를 적어 주세요",
-        ));
+    let mut module = None;
+    for candidate in BundledModuleId::ALL {
+        let positions = tokens
+            .iter()
+            .enumerate()
+            .filter_map(|(index, token)| {
+                module_word_matches(token, candidate, mode).then_some(index)
+            })
+            .collect::<Vec<_>>();
+        match positions.as_slice() {
+            [] => {}
+            [single] => {
+                if module.is_some() {
+                    return Err(unsupported_module_diagnostic(span_of(tokens)));
+                }
+                module = Some((candidate, *single));
+            }
+            _ => return Err(unsupported_module_diagnostic(span_of(tokens))),
+        }
     }
-    let random_at = random_positions[0];
+    let Some((module, module_at)) = module else {
+        return Err(unsupported_module_diagnostic(span_of(tokens)));
+    };
 
     let latest_positions = tokens
         .iter()
@@ -3345,8 +3350,18 @@ fn match_use_random(
             span_of(tokens),
         )
         .with_bilingual_hint(
-            "write `use random latest` or `use random version 0.0.1`",
-            "`랜덤 사용 최신` 또는 `랜덤 사용 버전 0.0.1`처럼 쓰세요",
+            format!(
+                "write `use {} latest` or `use {} version {}`",
+                module.name_en(),
+                module.name_en(),
+                module.version()
+            ),
+            format!(
+                "`{} 사용 최신` 또는 `{} 사용 버전 {}`처럼 쓰세요",
+                module.name_ko(),
+                module.name_ko(),
+                module.version()
+            ),
         ));
     }
     if latest_positions.len() > 1 || version_positions.len() > 1 {
@@ -3357,7 +3372,7 @@ fn match_use_random(
     for slot in &mut used[action_start..action_end] {
         *slot = true;
     }
-    used[random_at] = true;
+    used[module_at] = true;
     for &index in &latest_positions {
         used[index] = true;
     }
@@ -3365,7 +3380,7 @@ fn match_use_random(
     let requested = if !latest_positions.is_empty() {
         ModuleVersion::Latest
     } else if let Some(&version_at) = version_positions.first() {
-        if version_at < action_end.max(random_at + 1) {
+        if version_at < action_end.max(module_at + 1) {
             return Err(module_shape_diagnostic(spelling, tokens[version_at].span));
         }
         used[version_at] = true;
@@ -3382,8 +3397,8 @@ fn match_use_random(
                 tokens[version_at].span,
             )
             .with_bilingual_hint(
-                format!("use `latest`, or version {RANDOM_MODULE_VERSION}"),
-                format!("`최신` 또는 버전 {RANDOM_MODULE_VERSION}을 사용하세요"),
+                format!("use `latest`, or version {}", module.version()),
+                format!("`최신` 또는 버전 {}을 사용하세요", module.version()),
             )
         })?;
         if value_tokens.is_empty() {
@@ -3394,8 +3409,8 @@ fn match_use_random(
                 tokens[version_at].span,
             )
             .with_bilingual_hint(
-                format!("use `latest`, or version {RANDOM_MODULE_VERSION}"),
-                format!("`최신` 또는 버전 {RANDOM_MODULE_VERSION}을 사용하세요"),
+                format!("use `latest`, or version {}", module.version()),
+                format!("`최신` 또는 버전 {}을 사용하세요", module.version()),
             ));
         }
         for slot in &mut used[version_at + 1..value_end] {
@@ -3404,17 +3419,18 @@ fn match_use_random(
         let value_span = span_of(value_tokens);
         let raw = &source[value_span.start..value_span.end];
         let version = raw.trim_matches(['\'', '"']).to_string();
-        if version != RANDOM_MODULE_VERSION {
+        if version != module.version() {
             return Err(Diagnostic::bilingual(
                 DiagnosticCode::UnbundledVersion,
-                format!("random version {version} is not bundled"),
-                format!("랜덤 버전 {version}은 내장되어 있지 않아요"),
+                format!("{} version {version} is not bundled", module.name_en()),
+                format!("{} 버전 {version}은 내장되어 있지 않아요", module.name_ko()),
                 value_span,
             )
             .with_bilingual_hint(
-                format!("use `latest`; this compiler bundles {RANDOM_MODULE_VERSION}"),
+                format!("use `latest`; this compiler bundles {}", module.version()),
                 format!(
-                    "`최신`을 사용하세요. 이 컴파일러에는 {RANDOM_MODULE_VERSION}이 들어 있어요"
+                    "`최신`을 사용하세요. 이 컴파일러에는 {}이 들어 있어요",
+                    module.version()
                 ),
             ));
         }
@@ -3433,56 +3449,98 @@ fn match_use_random(
         return Err(module_shape_diagnostic(spelling, token.span));
     }
 
-    let collisions = random_binding_names()
+    let collisions = module_binding_names(module)
         .iter()
         .filter(|name| known_names.contains(**name))
         .copied()
         .collect::<Vec<_>>();
     if !collisions.is_empty() {
-        return Err(random_name_collision_diagnostic(
+        return Err(module_name_collision_diagnostic(
+            module,
             span_of(tokens),
             &collisions,
         ));
     }
 
-    Ok(Some(NmeStmt::UseRandom { requested }))
+    Ok(Some(NmeStmt::UseModule { module, requested }))
 }
 
-fn random_binding_names() -> &'static [&'static str] {
-    &[
-        RANDOM_MODULE,
-        RANDOM_MODULE_KO,
-        "random_number",
-        "random_pick",
-        "shuffle",
-        "랜덤정수",
-        "랜덤선택",
-        "섞기",
-        "random_version",
-        "랜덤버전",
-    ]
+/// Names a bundled module would bind, so a later `use` can refuse to
+/// overwrite an existing value.
+fn module_binding_names(module: BundledModuleId) -> &'static [&'static str] {
+    match module {
+        BundledModuleId::Random => &[
+            RANDOM_MODULE,
+            RANDOM_MODULE_KO,
+            "random_number",
+            "random_pick",
+            "shuffle",
+            "랜덤정수",
+            "랜덤선택",
+            "섞기",
+            "random_version",
+            "랜덤버전",
+        ],
+        BundledModuleId::File => &[
+            FILE_MODULE,
+            FILE_MODULE_KO,
+            "file_read",
+            "file_write",
+            "json_load",
+            "json_save",
+            "파일읽기",
+            "파일쓰기",
+            "json읽기",
+            "json저장",
+            "file_version",
+            "파일버전",
+        ],
+    }
 }
 
-fn random_name_collision_diagnostic(span: Span, collisions: &[&str]) -> Diagnostic {
+fn module_name_collision_diagnostic(
+    module: BundledModuleId,
+    span: Span,
+    collisions: &[&str],
+) -> Diagnostic {
     let names = collisions.join(", ");
     Diagnostic::bilingual(
-        DiagnosticCode::RandomNameCollision,
-        format!("the random module would overwrite existing name(s): {names}"),
-        format!("랜덤 모듈이 이미 있는 이름을 덮어쓸 수 있어요: {names}"),
+        DiagnosticCode::ModuleNameCollision,
+        format!(
+            "the {} module would overwrite existing name(s): {names}",
+            module.name_en()
+        ),
+        format!(
+            "{} 모듈이 이미 있는 이름을 덮어쓸 수 있어요: {names}",
+            module.name_ko()
+        ),
         span,
     )
     .with_bilingual_hint(
-        "rename the existing value, or load random before assigning that name",
-        "기존 값을 다른 이름으로 바꾸거나, 그 이름을 쓰기 전에 랜덤 모듈을 불러오세요",
+        "rename the existing value, or load the module before assigning that name",
+        "기존 값을 다른 이름으로 바꾸거나, 그 이름을 쓰기 전에 모듈을 불러오세요",
     )
 }
 
-fn random_word_matches(token: &Token, mode: MatchMode) -> bool {
+fn module_word_matches(token: &Token, module: BundledModuleId, mode: MatchMode) -> bool {
     name_word(token).is_some_and(|word| {
-        word_matches(word, RANDOM_MODULE, mode)
-            || word == RANDOM_MODULE_KO
-            || strip_target_particle(word) == RANDOM_MODULE_KO
+        word_matches(word, module.name_en(), mode)
+            || word == module.name_ko()
+            || strip_target_particle(word) == module.name_ko()
     })
+}
+
+fn unsupported_module_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::UnsupportedModule,
+        "NME bundles `use random` and `use file`",
+        "NME에는 쉬운 `랜덤`과 `파일` 모듈만 들어 있어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "write one module line such as `use random latest` or `use file latest`",
+        "`랜덤 사용 최신` 또는 `파일 사용 최신`처럼 모듈 하나를 적어 주세요",
+    )
 }
 
 fn find_use_action(tokens: &[Token], mode: MatchMode) -> Option<(usize, usize, Spelling)> {
@@ -3500,13 +3558,21 @@ fn find_use_action(tokens: &[Token], mode: MatchMode) -> Option<(usize, usize, S
 fn recoverable_module_shape(tokens: &[Token]) -> bool {
     let action_recovered = find_use_action(tokens, MatchMode::Exact).is_none()
         && find_use_action(tokens, MatchMode::Recover).is_some();
-    let exact_random = tokens
+    let module_exact = tokens
         .iter()
-        .filter(|token| random_word_matches(token, MatchMode::Exact))
+        .filter(|token| {
+            BundledModuleId::ALL
+                .iter()
+                .any(|module| module_word_matches(token, *module, MatchMode::Exact))
+        })
         .count();
-    let recovered_random = tokens
+    let module_recovered = tokens
         .iter()
-        .filter(|token| random_word_matches(token, MatchMode::Recover))
+        .filter(|token| {
+            BundledModuleId::ALL
+                .iter()
+                .any(|module| module_word_matches(token, *module, MatchMode::Recover))
+        })
         .count();
     let exact_latest = tokens
         .iter()
@@ -3526,7 +3592,7 @@ fn recoverable_module_shape(tokens: &[Token]) -> bool {
         .count();
 
     action_recovered
-        || (exact_random == 0 && recovered_random == 1)
+        || (module_exact == 0 && module_recovered == 1)
         || (exact_latest == 0 && recovered_latest == 1)
         || (exact_version == 0 && recovered_version == 1)
 }
@@ -3539,8 +3605,8 @@ fn module_shape_diagnostic(_spelling: Spelling, span: Span) -> Diagnostic {
         span,
     )
     .with_bilingual_hint(
-        "write `use random latest` or `use random version 0.0.1`",
-        "`랜덤 사용 최신` 또는 `랜덤 사용 버전 0.0.1`처럼 쓰세요",
+        "write `use random latest` or `use file latest`, with an optional version",
+        "`랜덤 사용 최신` 또는 `파일 사용 최신`처럼 쓰고, 원하면 버전을 붙이세요",
     )
 }
 
@@ -4284,9 +4350,9 @@ fn remember_bindings(stmt: &NmeStmt, names: &mut HashSet<String>) {
         NmeStmt::Ask { target, .. } | NmeStmt::Set { target, .. } => {
             names.insert(target.clone());
         }
-        NmeStmt::UseRandom { .. } => {
+        NmeStmt::UseModule { module, .. } => {
             names.extend(
-                random_binding_names()
+                module_binding_names(*module)
                     .iter()
                     .map(|name| (*name).to_string()),
             );

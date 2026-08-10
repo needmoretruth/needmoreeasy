@@ -88,14 +88,17 @@ fn version_reports_the_current_beta() {
 fn modules_uses_the_language_of_the_command() {
     let english = nme(&["modules"]);
     assert!(english.status.success(), "{}", stderr(&english));
-    assert_eq!(stdout(&english), "random  0.0.1  bundled, latest\n");
+    assert_eq!(
+        stdout(&english),
+        "random  0.0.1  bundled, latest\nfile  0.0.1  bundled, latest\n"
+    );
     assert!(!stdout(&english).contains("내장"));
 
     let bilingual = nme(&["모듈"]);
     assert!(bilingual.status.success(), "{}", stderr(&bilingual));
     assert_eq!(
         stdout(&bilingual),
-        "랜덤  0.0.1  내장, 최신\nrandom  0.0.1  bundled, latest\n"
+        "랜덤  0.0.1  내장, 최신\nrandom  0.0.1  bundled, latest\n파일  0.0.1  내장, 최신\nfile  0.0.1  bundled, latest\n"
     );
 }
 
@@ -163,6 +166,7 @@ fn command_shortcuts_run_check_build_and_modules() {
     let modules = nme(&["m"]);
     assert!(modules.status.success(), "{}", stderr(&modules));
     assert!(stdout(&modules).contains("random"), "{}", stdout(&modules));
+    assert!(stdout(&modules).contains("file"), "{}", stdout(&modules));
 
     let version = nme(&["v"]);
     assert!(version.status.success(), "{}", stderr(&version));
@@ -171,6 +175,60 @@ fn command_shortcuts_run_check_build_and_modules() {
     let help = nme(&["h"]);
     assert!(help.status.success(), "{}", stderr(&help));
     assert!(stdout(&help).contains("SHORTCUTS:"), "{}", stdout(&help));
+}
+
+#[test]
+fn the_file_module_reads_and_writes_text_and_json() {
+    if !python_available() {
+        eprintln!("Python not available; skipping file module test");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("nme-cli-file-module-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join("roundtrip.nme"),
+        "use file\n\
+         file_write(\"out.txt\", \"hello 파일\")\n\
+         show file_read(\"out.txt\")\n\
+         점수 = {\"이름\": \"민수\", \"점수\": 3}\n\
+         json_save(\"save.json\", 점수)\n\
+         보관 = json_load(\"save.json\")\n\
+         show 보관[\"이름\"]\n\
+         show file_version\n",
+    )
+    .unwrap();
+
+    let output = run_in(&dir, &["run", "roundtrip.nme"], None);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert_eq!(stdout(&output), "hello 파일\n민수\n0.0.1\n");
+
+    let saved = std::fs::read_to_string(dir.join("save.json")).unwrap();
+    assert!(saved.contains("민수"), "{saved}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn the_korean_file_module_spelling_works() {
+    if !python_available() {
+        eprintln!("Python not available; skipping Korean file module test");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("nme-cli-file-ko-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join("roundtrip.ko.nme"),
+        "파일 사용 최신\n\
+         파일쓰기(\"out.txt\", \"안녕\")\n\
+         말해 파일읽기(\"out.txt\")\n",
+    )
+    .unwrap();
+
+    let output = run_in(&dir, &["run", "roundtrip.ko.nme"], None);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert_eq!(stdout(&output), "안녕\n");
+
+    let _ = std::fs::remove_dir_all(&dir);
 }
 
 fn run_in(dir: &std::path::Path, args: &[&str], input: Option<&str>) -> Output {

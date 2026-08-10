@@ -401,16 +401,20 @@ NME.
 
 ## Versioned bundled modules
 
-The easy random adapter has version `0.0.1`. Only one `use` line is allowed
-per program, so pick one spelling:
+Two beginner modules ship with NME: `random` (dice and picks) and `file`
+(reading, writing, and JSON). Each has one bundled version, `0.0.1`. Only one
+`use` line is allowed per program, so pick one spelling:
 
 ```text
 use random
+use file
 ```
 
 `use random latest`, `use latest random`, and `use random version "0.0.1"` are
 equivalents, and so are the Korean spellings `랜덤 사용`, `랜덤 사용 최신`,
-`최신 랜덤 사용`, and `랜덤 사용 버전 "0.0.1"`.
+`최신 랜덤 사용`, and `랜덤 사용 버전 "0.0.1"`. The `file` module accepts the
+same forms with `file` / `파일`: `파일 사용`, `파일 사용 최신`, `파일 사용
+버전 "0.0.1"`.
 
 `latest` / `최신` selects the newest adapter bundled with the installed NME
 compiler. It is local and deterministic, not an uncontrolled network update.
@@ -426,11 +430,20 @@ Every spelling exposes both vocabularies:
 | `shuffle(values)` | `섞기(values)` | `random.shuffle(values)` |
 | `random_version` | `랜덤버전` | adapter version string |
 
-The adapter reserves these helper names. If one already exists, NME stops and
+| English | Korean | Python meaning |
+| --- | --- | --- |
+| `file_read(path)` | `파일읽기(path)` | `pathlib.Path(path).read_text()` |
+| `file_write(path, text)` | `파일쓰기(path, text)` | `pathlib.Path(path).write_text(text)` |
+| `json_load(path)` | `json읽기(path)` | `json.loads(pathlib.Path(path).read_text())` |
+| `json_save(path, value)` | `json저장(path, value)` | `pathlib.Path(path).write_text(json.dumps(value))` |
+| `file_version` | `파일버전` | adapter version string |
+
+Both adapters reserve their helper names. If one already exists, NME stops and
 asks you to rename it instead of silently overwriting your value.
 
-Run `nme modules` or `nme 모듈` to list versions. Random is not suitable for
-passwords or other security decisions.
+Run `nme modules` or `nme 모듈` to list versions and names. Files are written
+next to the program's working folder, so save them in your project folder.
+`random` is not suitable for passwords or other security decisions.
 
 ## Python conversion
 
@@ -470,7 +483,8 @@ See [the conversion guide](converting-python.md).
   ambiguous literal words.
 - Sentence comparison vocabulary is intentionally small; arbitrary expressions
   and `and`/`or` logic can use the explicit block form or advanced Python.
-- Only the bundled random adapter has easy module syntax in this beta.
+- The bundled `random` and `file` modules have easy module syntax in this
+  beta; other Python libraries are used with ordinary `import`.
 - `check` and `build` ask the selected CPython to compile the lowered output;
   they do not run it. Runtime errors still belong to Python.
 - `run`, `build`, and `check` require CPython. Optional `compile` requires

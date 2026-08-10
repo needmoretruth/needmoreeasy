@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+- Bundle a `use file` / `파일 사용` module (version `0.0.1`) for reading,
+  writing, and JSON, next to `use random`. One import exposes both
+  vocabularies: `file_read`/`파일읽기`, `file_write`/`파일쓰기`,
+  `json_load`/`json읽기`, `json_save`/`json저장`, plus version names. The
+  `use` line parser is now shared by both modules (same latest/version forms,
+  same collision protection, same diagnostics), and `nme modules` lists both.
+  Sentence-level file wrappers are the next step.
 - Extend stable error codes to command-line diagnostics: `nme ko <CODE>` and
   `nme en <CODE>` now also explain CLI errors (`E9001` unknown command,
   `E9015` missing program, `E9013` Python startup, ...). Compiler codes stay

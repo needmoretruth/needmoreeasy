@@ -90,8 +90,8 @@ pub enum DiagnosticCode {
     ModuleVersionMissing,
     /// A version number NME does not bundle.
     UnbundledVersion,
-    /// `use random` would overwrite existing names.
-    RandomNameCollision,
+    /// A `use` module would overwrite existing names.
+    ModuleNameCollision,
     /// The `use` line shape is not understood.
     ModuleShapeInvalid,
     /// `set`/`save` with no value.
@@ -200,7 +200,7 @@ impl DiagnosticCode {
             Self::LatestAndVersion => "E0402",
             Self::ModuleVersionMissing => "E0403",
             Self::UnbundledVersion => "E0404",
-            Self::RandomNameCollision => "E0405",
+            Self::ModuleNameCollision => "E0405",
             Self::ModuleShapeInvalid => "E0406",
             Self::SaveValueMissing => "E0411",
             Self::SaveValueUnparseable => "E0412",
@@ -268,7 +268,7 @@ impl DiagnosticCode {
         Self::LatestAndVersion,
         Self::ModuleVersionMissing,
         Self::UnbundledVersion,
-        Self::RandomNameCollision,
+        Self::ModuleNameCollision,
         Self::ModuleShapeInvalid,
         Self::SaveValueMissing,
         Self::SaveValueUnparseable,
@@ -471,10 +471,10 @@ impl DiagnosticCode {
             ),
             Self::UnsupportedModule => (
                 "E0401",
-                "NME only bundles `use random`",
-                "NME에는 `랜덤 사용`만 내장되어 있습니다",
-                "NME ships a small set of beginner modules. `random` (or `랜덤`) is the only one so far. Anything else is a Python import: write `import name` on its own line.",
-                "NME는 초보자용 모듈을 소수만 제공합니다. 현재는 `random`(`랜덤`)뿐입니다. 다른 것은 Python import로 쓸 수 있습니다: `import name`을 한 줄로 쓰세요.",
+                "NME bundles `use random` and `use file`",
+                "NME에는 `랜덤 사용`과 `파일 사용`이 내장되어 있습니다",
+                "NME ships a small set of beginner modules: `random` (or `랜덤`) for dice and picks, and `file` (or `파일`) for reading, writing, and JSON. Anything else is a Python import: write `import name` on its own line.",
+                "NME는 초보자용 모듈을 소수만 제공합니다: 주사위·선택용 `random`(`랜덤`)과 읽기·쓰기·JSON용 `file`(`파일`)입니다. 다른 것은 Python import로 쓸 수 있습니다: `import name`을 한 줄로 쓰세요.",
             ),
             Self::LatestAndVersion => (
                 "E0402",
@@ -497,12 +497,12 @@ impl DiagnosticCode {
                 "NME only ships specific versions of `random`. Run `nme modules` to see the bundled version, then write `use random version \"<that version>\"` or simply `use random latest`.",
                 "NME는 `random`의 특정 버전만 제공합니다. `nme 모듈`로 내장 버전을 확인한 뒤 `use random version \"<그 버전>\"` 또는 그냥 `use random latest`라고 쓰세요.",
             ),
-            Self::RandomNameCollision => (
+            Self::ModuleNameCollision => (
                 "E0405",
-                "the random module would overwrite your names",
-                "random 모듈이 기존 이름을 덮어씁니다",
-                "The bundled random adapter needs helper names such as `random_number` and `랜덤선택`. One of those names is already in use in this file. Rename your variable or import the adapter before using that name.",
-                "내장 random 어댑터는 `random_number`, `랜덤선택` 같은 도우미 이름을 사용합니다. 그 이름 중 하나가 이 파일에서 이미 쓰이고 있습니다. 변수 이름을 바꾸거나 그 이름을 쓰기 전에 어댑터를 가져오세요.",
+                "the module would overwrite your names",
+                "모듈이 기존 이름을 덮어씁니다",
+                "The bundled module needs helper names such as `random_number`, `랜덤선택`, `file_read`, and `파일읽기`. One of those names is already in use in this file. Rename your variable or import the module before using that name.",
+                "내장 모듈은 `random_number`, `랜덤선택`, `file_read`, `파일읽기` 같은 도우미 이름을 사용합니다. 그 이름 중 하나가 이 파일에서 이미 쓰이고 있습니다. 변수 이름을 바꾸거나 그 이름을 쓰기 전에 모듈을 불러오세요.",
             ),
             Self::ModuleShapeInvalid => (
                 "E0406",

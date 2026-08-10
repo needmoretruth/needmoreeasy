@@ -852,6 +852,41 @@ fn random_tools_are_ready_after_one_easy_line() {
 }
 
 #[test]
+fn file_tools_are_ready_after_one_easy_line() {
+    let tools = concat!(
+        "import pathlib as 파일경로; ",
+        "file_read = lambda 경로: 파일경로.Path(경로).read_text(); ",
+        "file_write = lambda 경로, 내용: 파일경로.Path(경로).write_text(내용); ",
+        "json_load = lambda 경로: __import__(\"json\").loads(파일경로.Path(경로).read_text()); ",
+        "json_save = lambda 경로, 값: 파일경로.Path(경로).write_text(__import__(\"json\").dumps(값, ensure_ascii=False)); ",
+        "파일읽기 = file_read; ",
+        "파일쓰기 = file_write; ",
+        "json읽기 = json_load; ",
+        "json저장 = json_save; ",
+        "file_version = 파일버전 = \"0.0.1\"\n",
+    );
+    assert_eq!(ok("use file\nshow file_read(\"notes.txt\")\n"), format!("{tools}print(file_read(\"notes.txt\"))\n"));
+    assert_eq!(
+        ok("파일 사용\n말해 파일쓰기(\"out.txt\", \"안녕\")\n"),
+        format!("{tools}print(파일쓰기(\"out.txt\", \"안녕\"))\n")
+    );
+    assert_eq!(ok("파일 사용 최신\n"), tools);
+    assert_eq!(ok("use latest file\n"), tools);
+    assert_eq!(ok("use file version \"0.0.1\"\n"), tools);
+    assert_eq!(ok("파일 사용 버전 \"0.0.1\"\n"), tools);
+}
+
+#[test]
+fn both_modules_can_be_loaded_in_one_program() {
+    let source = "use random\nuse file\nshow random_number(1, 6)\nshow file_read(\"x.txt\")\n";
+    let python = ok(source);
+    assert!(python.contains("random_number = 랜덤.randint"), "{python}");
+    assert!(python.contains("file_read = lambda 경로"), "{python}");
+    assert!(python.contains("print(random_number(1, 6))"), "{python}");
+    assert!(python.contains("print(file_read(\"x.txt\"))"), "{python}");
+}
+
+#[test]
 fn a_program_can_use_korean_vocabulary_and_identifiers() {
     let source = r#"랜덤 사용
 후보 = ["고양이", "강아지"]

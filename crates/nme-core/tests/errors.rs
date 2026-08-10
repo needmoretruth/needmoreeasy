@@ -143,9 +143,12 @@ fn korean_forms_return_korean_guidance() {
 }
 
 #[test]
-fn only_random_is_bundled() {
+fn only_the_bundled_modules_are_available() {
     let message = err("use math\n");
-    assert!(message.contains("only bundles `use random`"), "{message}");
+    assert!(
+        message.contains("bundles `use random` and `use file`"),
+        "{message}"
+    );
 }
 
 #[test]
@@ -164,6 +167,25 @@ fn random_module_does_not_overwrite_existing_names() {
     let imported = err("import random_number\nuse random\n");
     assert!(imported.contains("overwrite existing name"), "{imported}");
     assert!(imported.contains("random_number"), "{imported}");
+}
+
+#[test]
+fn file_module_does_not_overwrite_existing_names() {
+    let message = err("file_read = \"mine\"\nuse file\n");
+    assert!(message.contains("overwrite existing name"), "{message}");
+    assert!(message.contains("file_read"), "{message}");
+
+    let korean = bilingual_err("파일버전 = 1\n파일 사용\n");
+    assert!(korean.contains("덮어쓸 수 있어요"), "{korean}");
+}
+
+#[test]
+fn two_modules_on_one_line_are_rejected() {
+    let message = err("use random and file\n");
+    assert!(
+        message.contains("bundles `use random` and `use file`"),
+        "{message}"
+    );
 }
 
 #[test]

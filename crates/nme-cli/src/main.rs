@@ -220,17 +220,30 @@ fn command_modules(args: &[String], language: MessageLanguage) -> ExitCode {
             &format!("`모듈` 명령에는 `{extra}`을(를) 적지 않습니다. `nme 모듈`을 사용하세요."),
         );
     }
-    match language {
-        MessageLanguage::English => print_out(&format!(
-            "random  {}  bundled, latest\n",
-            nme_core::syntax::RANDOM_MODULE_VERSION
-        )),
-        MessageLanguage::KoreanAndEnglish => print_out(&format!(
-            "랜덤  {}  내장, 최신\nrandom  {}  bundled, latest\n",
-            nme_core::syntax::RANDOM_MODULE_VERSION,
-            nme_core::syntax::RANDOM_MODULE_VERSION
-        )),
+    let mut list = String::new();
+    for module in nme_core::syntax::BundledModuleId::ALL {
+        match language {
+            MessageLanguage::English => {
+                let _ = writeln!(
+                    list,
+                    "{}  {}  bundled, latest",
+                    module.name_en(),
+                    module.version()
+                );
+            }
+            MessageLanguage::KoreanAndEnglish => {
+                let _ = writeln!(
+                    list,
+                    "{}  {}  내장, 최신\n{}  {}  bundled, latest",
+                    module.name_ko(),
+                    module.version(),
+                    module.name_en(),
+                    module.version()
+                );
+            }
+        }
     }
+    print_out(&list);
     ExitCode::SUCCESS
 }
 
