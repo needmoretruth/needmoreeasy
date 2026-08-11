@@ -6,6 +6,7 @@ NME의 중요한 변경 사항을 이 문서에 기록합니다.
 
 ## 미출시 (Unreleased)
 
+- 네이티브 백엔드 조사 문서(`docs/native-backend.ko.md`)를 추가했습니다: 제한된 정적 타입 코어 부분집합을 목표로 하는 첫 NME 네이티브 AOT 컴파일러를 위해 C 백엔드 vs LLVM vs Cranelift vs 직접 코드젠을 정직하게 평가하고 C를 권장하며, Python 호환 백엔드 및 Nuitka와 명확히 분리합니다.
 - NME 안에서 `datetime` 표준 패키지를 쓰는 `birthday.nme` 카운트다운 예제(한국어 버전 포함)와 표준 라이브러리·pip 패키지를 다루는 가이드 24를 추가했습니다.
 - `.nme` 모듈 가져오기를 추가했습니다: `from "helper.nme" import greet,
   score`는 옆에 있는 `.nme` 파일에서 이름 있는 값들만 가져옵니다. 프로젝트를

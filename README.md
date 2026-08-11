@@ -234,6 +234,7 @@ See [Python conversion](docs/converting-python.md).
 - [AI coding assistants](docs/ai-assistants.md) — one link that Claude Code,
   Codex, Cursor Agent, or OpenCode can read before writing NME
 - [Compiler architecture](docs/architecture.md) — contributor design rules
+- [Native backend research](docs/native-backend.md) — the honest plan for a real NME-native AOT compiler, separate from Python compatibility
 - [Version policy](docs/versioning.md) and [changelog](CHANGELOG.md)
 
 ## Compiler model

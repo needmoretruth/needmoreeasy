@@ -232,6 +232,7 @@ nme 변환 app.py --level 문장형 --language 한국어 -o app.nme
 - [AI 코딩 도우미](docs/ai-assistants.ko.md) — Claude Code, Codex,
   Cursor Agent, OpenCode에 링크 하나만 전달하는 방법
 - [컴파일러 구조](docs/architecture.md) — 기여자용 설계 규칙 (영어 문서)
+- [네이티브 백엔드 조사](docs/native-backend.ko.md) — Python 호환과 분리된 진짜 NME 네이티브 AOT 컴파일러를 위한 정직한 계획
 - [버전 정책](docs/versioning.ko.md), [변경 기록](CHANGELOG.ko.md)
 
 ## 컴파일 방식

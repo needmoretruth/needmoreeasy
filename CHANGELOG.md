@@ -6,6 +6,7 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+- Add the native-backend research memo (`docs/native-backend.md`): an honest evaluation of a C backend vs LLVM vs Cranelift vs direct codegen, recommending C for the first NME-native AOT compiler targeting a restricted statically-typed core subset, explicitly separated from the Python compatibility backend and from Nuitka.
 - Add a `birthday.nme` countdown example that uses the `datetime` standard package from inside NME (with a Korean twin) and guide 24 on the standard library and pip-installed packages.
 - Add `.nme` module imports: `from "helper.nme" import greet, score` imports
   only the listed names from a sibling `.nme` file, so a project can split
