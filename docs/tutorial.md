@@ -159,20 +159,21 @@ version, and finally read the ordinary Python version:
   `save`, `ask`, `when`, and `N times:` forms. `save` is the beginner store
   action (e.g. `save score to 3`); the Korean twin is
   [`time-loop-beginner.ko.nme`](../examples/time-loop-beginner.ko.nme);
-- [`time-loop-python.nme`](../examples/time-loop-python.nme) — lists,
-  dictionaries, f-strings, `while`, `break`, and ordinary Python.
+- [`time-loop-python.en.nme`](../examples/time-loop-python.en.nme) — lists,
+  dictionaries, f-strings, `while`, `break`, and ordinary Python (Korean
+  twin: [`time-loop-python.nme`](../examples/time-loop-python.nme)).
 
 All three compile with the same command:
 
 ```sh
 nme check examples/time-loop-sentence
 nme check examples/time-loop-beginner
-nme check examples/time-loop-python
+nme check examples/time-loop-python.en
 ```
 
 For a larger standalone example before the Python version feels comfortable,
-try [`roulette.nme`](../examples/roulette.nme). Its English companion is
-[`roulette.en.nme`](../examples/roulette.en.nme).
+try the Korean [`roulette.nme`](../examples/roulette.nme). Its English
+companion is [`roulette.en.nme`](../examples/roulette.en.nme).
 
 Run one when you are ready to answer its prompts. The point is not to rewrite
 the whole project at once: replace one block or line with the next level and
@@ -196,26 +197,26 @@ end
 
 A compiler reads one language and writes another. It does not need to execute
 the source directly. The example
-[`examples/tiny-compiler.nme`](../examples/tiny-compiler.nme) compiles this
+[`examples/tiny-compiler.en.nme`](../examples/tiny-compiler.en.nme) compiles this
 tiny two-sentence language:
 
 ```text
-말하기 안녕하세요
-3번 말하기 NME로 컴파일러를 만들었어요
+say Hello
+3 times say I built a compiler in NME
 ```
 
 The compiler produces Python equivalent to:
 
 ```python
-print('안녕하세요')
-for _ in range(3): print('NME로 컴파일러를 만들었어요')
+print('Hello')
+for _ in range(3): print('I built a compiler in NME')
 ```
 
 Run the compiler, then inspect the compiler's own generated Python:
 
 ```sh
-nme run examples/tiny-compiler
-nme build examples/tiny-compiler -o tiny-compiler.py
+nme run examples/tiny-compiler.en
+nme build examples/tiny-compiler.en -o tiny-compiler.py
 ```
 
 The example deliberately mixes advanced Python for list processing with

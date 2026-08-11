@@ -102,8 +102,7 @@ if suspicious missing
 show subject said they were writing reports in the command room at 22:00
 end
 set talked1 to 1
-end
-if talked1 exists
+else
 show You already heard this story - no new clues
 end
 end
@@ -120,8 +119,7 @@ if suspicious missing
 show subject said they were checking the generator at 22:00
 end
 set talked2 to 1
-end
-if talked2 exists
+else
 show You already heard this story - no new clues
 end
 end
@@ -138,8 +136,7 @@ if suspicious missing
 show subject said they were organizing records in the infirmary at 22:00
 end
 set talked3 to 1
-end
-if talked3 exists
+else
 show You already heard this story - no new clues
 end
 end
@@ -156,8 +153,7 @@ if suspicious missing
 show subject said they were backing up data at 22:00
 end
 set talked4 to 1
-end
-if talked4 exists
+else
 show You already heard this story - no new clues
 end
 end
@@ -174,8 +170,7 @@ if suspicious missing
 show subject said they were patrolling the corridor at 22:00
 end
 set talked5 to 1
-end
-if talked5 exists
+else
 show You already heard this story - no new clues
 end
 end
@@ -192,8 +187,7 @@ if time equals 1
 if watched1 missing
 show 18:00 footage - Jung walked through the corridor
 set watched1 to 1
-end
-if watched1 exists
+else
 show You already saw this footage
 end
 end
@@ -201,8 +195,7 @@ if time equals 2
 if watched2 missing
 show 20:00 footage - Kim was seen leaving the research room
 set watched2 to 1
-end
-if watched2 exists
+else
 show You already saw this footage
 end
 end
@@ -211,8 +204,7 @@ if watched3 missing
 show 22:00 footage - the lab door opened and someone slipped out! It was name!
 set watched3 to 1
 set camera_seen to 1
-end
-if watched3 exists
+else
 show You already saw this footage
 end
 end

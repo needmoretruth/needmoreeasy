@@ -1,0 +1,137 @@
+# Time Loop Mystery — the advanced Python version (English twin).
+# Korean twin: time-loop-python.nme keeps Korean flavor text.
+# Plain Python: lists, dictionaries, f-strings, while, break.
+# Run: nme r time-loop-python.en.nme
+import random
+
+names = ["Kwon", "Lee", "Kim", "Park", "Jung"]
+alibis = {
+    "Kwon": "said they were writing reports in the command room at 22:00",
+    "Lee": "said they were checking the generator at 22:00",
+    "Kim": "said they were organizing records in the infirmary at 22:00",
+    "Park": "said they were backing up data at 22:00",
+    "Jung": "said they were patrolling the corridor at 22:00",
+}
+contradictions = {
+    "Kwon": "said they were in the command room at 22:00, but their voice trembled",
+    "Lee": "said they were checking the generator at 22:00, but their hands were greasy",
+    "Kim": "said they were in the infirmary at 22:00, but the lights were off",
+    "Park": "said they were backing up data at 22:00, but the backup log was erased",
+    "Jung": "said they were patrolling the corridor at 22:00, but there is no patrol log",
+}
+stories = {
+    "Kwon": "they tried to sell the experiment data to pirates",
+    "Lee": "they wanted revenge after a pay raise was refused",
+    "Kim": "they hated the base that blocked incurable-disease research",
+    "Park": "they were furious at the lab that stole their paper",
+    "Jung": "they wanted revenge on a violent commander",
+}
+culprit_name = random.choice(names)
+loop_count = 0
+won = False
+win_loop = 0
+investigated = False
+camera_seen = False
+interview_contradiction = False
+interview = {name: False for name in names}
+camera = {1: False, 2: False, 3: False}
+
+print("Explosion at 22:00 - welcome to the vanished laboratory!")
+print("Last night at 22:00, the Mars base laboratory exploded")
+print("You witnessed time rewinding right before the explosion")
+print("You can relive the same day up to 10 times")
+print("Clues persist between tries, so act differently every loop")
+print("Crew list: 1 Kwon 2 Lee 3 Kim 4 Park 5 Jung")
+
+while True:
+    loop_count += 1
+    left_loops = 10 - loop_count
+    if loop_count > 10:
+        print("Game over - the 10-loop limit passed and the culprit escaped")
+        print(f"Game over - the real culprit is {culprit_name}")
+        break
+    print(f"Time rewinds - this is loop {loop_count}")
+    print(f"You have {left_loops} chances remaining")
+    if investigated:
+        print("Investigation clue: the lab was damaged on purpose")
+    if camera_seen:
+        print("Camera clue: someone entered the lab at 22:00")
+    if interview_contradiction:
+        print("Interview clue: one of the alibis is a lie")
+    print("1. Investigate the lab")
+    print("2. Interview the crew")
+    print("3. Check the cameras")
+    print("4. Accuse someone")
+    choice = input("What will you do? ")
+    if choice == "1":
+        if loop_count == 1:
+            print("You investigated the battery - it was separated on purpose!")
+            investigated = True
+        elif loop_count == 2:
+            print("You checked the fingerprints - clear prints on the lab door handle")
+            investigated = True
+        elif loop_count == 3:
+            print("You checked the timestamp - the door was unlocked moments after 22:00")
+            investigated = True
+        else:
+            print("No new clues at the scene")
+    elif choice == "2":
+        target = input("Who will you talk to? ")
+        if target in ("1", "2", "3", "4", "5"):
+            subject = names[int(target) - 1]
+            if not interview[subject]:
+                if subject == culprit_name:
+                    print(f"{subject} {contradictions[subject]}")
+                    interview_contradiction = True
+                else:
+                    print(f"{subject} {alibis[subject]}")
+                interview[subject] = True
+            else:
+                print("You already heard this story - no new clues")
+        else:
+            print("Invalid target number")
+    elif choice == "3":
+        hour = input("Which hour is on the footage? ")
+        if hour == "1":
+            if not camera[1]:
+                print("18:00 footage - Jung walked through the corridor")
+                camera[1] = True
+            else:
+                print("You already saw this footage")
+        elif hour == "2":
+            if not camera[2]:
+                print("20:00 footage - Kim was seen leaving the research room")
+                camera[2] = True
+            else:
+                print("You already saw this footage")
+        elif hour == "3":
+            if not camera[3]:
+                print(f"22:00 footage - the lab door opened and someone slipped out! It was {culprit_name}!")
+                camera[3] = True
+                camera_seen = True
+            else:
+                print("You already saw this footage")
+        else:
+            print("Invalid hour")
+    elif choice == "4":
+        accuser = input("Who is the culprit? ")
+        if accuser == culprit_name:
+            won = True
+            win_loop = loop_count
+            print(f"Correct! The culprit is {culprit_name}!")
+            break
+        else:
+            print("Wrong accusation - the time rewinds")
+    else:
+        print("Invalid choice")
+    print("Night falls and the laboratory explodes!")
+    print("Time rewinds and the day starts again")
+
+if won:
+    if win_loop < 4:
+        print(f"Perfect win! You caught the culprit on loop {win_loop}")
+    else:
+        print("You win! You caught the culprit and stopped the explosion!")
+else:
+    print("Game over - the culprit escaped on a spaceship")
+print(f"Culprit backstory: {stories[culprit_name]}")

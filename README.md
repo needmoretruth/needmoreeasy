@@ -110,9 +110,10 @@ nme modules
 For a larger learning project, compare the same time-loop mystery in
 [`time-loop-sentence.nme`](examples/time-loop-sentence.nme),
 [`time-loop-beginner.nme`](examples/time-loop-beginner.nme), and
-[`time-loop-python.nme`](examples/time-loop-python.nme). The Korean twins
-are [`time-loop-sentence.ko.nme`](examples/time-loop-sentence.ko.nme) and
-[`time-loop-beginner.ko.nme`](examples/time-loop-beginner.ko.nme).
+[`time-loop-python.en.nme`](examples/time-loop-python.en.nme). The Korean
+twins are [`time-loop-sentence.ko.nme`](examples/time-loop-sentence.ko.nme),
+[`time-loop-beginner.ko.nme`](examples/time-loop-beginner.ko.nme), and
+[`time-loop-python.nme`](examples/time-loop-python.nme).
 
 For a larger Korean sentence-only project, try the
 [`roulette.nme`](examples/roulette.nme) simulator (English twin:

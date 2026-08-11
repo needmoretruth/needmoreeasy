@@ -119,15 +119,15 @@ nme 모듈
 
 블록체인이 데이터를 저장하고, 보호하고, 합의에 이르는 방법을 배우려면 교육용
 프로젝트 네 개를 따라가 보세요(학습용이며 투자 조언이 아닙니다):
-[`blockchain-ledger.nme`](examples/blockchain-ledger.nme)(초급),
-[`proof-of-work.nme`](examples/proof-of-work.nme)(중급),
-[`signatures.nme`](examples/signatures.nme)(고급),
-[`consensus.nme`](examples/consensus.nme)(초고급). 각각 한국어 버전도
-있습니다.
+[`blockchain-ledger.ko.nme`](examples/blockchain-ledger.ko.nme)(초급),
+[`proof-of-work.ko.nme`](examples/proof-of-work.ko.nme)(중급),
+[`signatures.ko.nme`](examples/signatures.ko.nme)(고급),
+[`consensus.ko.nme`](examples/consensus.ko.nme)(초고급). 영어판은
+blockchain-ledger.nme, proof-of-work.nme, signatures.nme, consensus.nme입니다.
 
-NME는 컴파일러도 쓸 수 있습니다: [`bootstrap.nme`](examples/bootstrap.nme)가 아주 작은 언어를 Python으로 변환해 실행합니다 — 셀프호스팅의 씨앗.
+NME는 컴파일러도 쓸 수 있습니다: [`bootstrap.ko.nme`](examples/bootstrap.ko.nme)가 아주 작은 언어를 Python으로 변환해 실행합니다 — 셀프호스팅의 씨앗(영어판 `bootstrap.nme`).
 
-Python 패키지는 NME 안에서 일반 import로 씁니다 — `datetime` 패키지로 만든 [`birthday.nme`](examples/birthday.nme) 카운트다운을 보세요.
+Python 패키지는 NME 안에서 일반 import로 씁니다 — `datetime` 패키지로 만든 [`birthday.ko.nme`](examples/birthday.ko.nme) 카운트다운을 보세요(영어판 `birthday.nme`).
 
 네트워크와 터미널 프로그램은 NME 안에서 일반 Python으로 씁니다:
 [`http-client.nme`](examples/http-client.nme)는 로컬 서버에서 페이지를

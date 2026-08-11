@@ -95,7 +95,7 @@ say "Crew list: 1 Kwon 2 Lee 3 Kim 4 Park 5 Jung"
                     when suspicious == 0:
                         say subject + " said they were writing reports in the command room at 22:00"
                     save interview1 1
-                when interview1 == 1:
+                else:
                     say "You already heard this story - no new clues"
             when target == "2":
                 when interview2 == 0:
@@ -107,7 +107,7 @@ say "Crew list: 1 Kwon 2 Lee 3 Kim 4 Park 5 Jung"
                     when suspicious == 0:
                         say subject + " said they were checking the generator at 22:00"
                     save interview2 1
-                when interview2 == 1:
+                else:
                     say "You already heard this story - no new clues"
             when target == "3":
                 when interview3 == 0:
@@ -119,7 +119,7 @@ say "Crew list: 1 Kwon 2 Lee 3 Kim 4 Park 5 Jung"
                     when suspicious == 0:
                         say subject + " said they were organizing records in the infirmary at 22:00"
                     save interview3 1
-                when interview3 == 1:
+                else:
                     say "You already heard this story - no new clues"
             when target == "4":
                 when interview4 == 0:
@@ -131,7 +131,7 @@ say "Crew list: 1 Kwon 2 Lee 3 Kim 4 Park 5 Jung"
                     when suspicious == 0:
                         say subject + " said they were backing up data at 22:00"
                     save interview4 1
-                when interview4 == 1:
+                else:
                     say "You already heard this story - no new clues"
             when target == "5":
                 when interview5 == 0:
@@ -143,7 +143,7 @@ say "Crew list: 1 Kwon 2 Lee 3 Kim 4 Park 5 Jung"
                     when suspicious == 0:
                         say subject + " said they were patrolling the corridor at 22:00"
                     save interview5 1
-                when interview5 == 1:
+                else:
                     say "You already heard this story - no new clues"
             when target > "5":
                 say "Invalid target number"
@@ -155,20 +155,20 @@ say "Crew list: 1 Kwon 2 Lee 3 Kim 4 Park 5 Jung"
                 when camera1 == 0:
                     say "18:00 footage - Jung walked through the corridor"
                     save camera1 1
-                when camera1 == 1:
+                else:
                     say "You already saw this footage"
             when hour == "2":
                 when camera2 == 0:
                     say "20:00 footage - Kim was seen leaving the research room"
                     save camera2 1
-                when camera2 == 1:
+                else:
                     say "You already saw this footage"
             when hour == "3":
                 when camera3 == 0:
                     say "22:00 footage - the lab door opened and someone slipped out! It was " + culprit_name + "!"
                     save camera3 1
                     save camera_seen 1
-                when camera3 == 1:
+                else:
                     say "You already saw this footage"
             when hour > "3":
                 say "Invalid hour"
