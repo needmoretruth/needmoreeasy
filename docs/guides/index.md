@@ -15,7 +15,8 @@ and a summary report; 41–43 add a text-stats report, a two-group comparison,
 and a habit-tracker project; 44–46 add a random music player, CSV rows of
 data, and an expression language; 47–49 add a terminal progress bar, an inventory
 store, and reading tokens; 50–52 add string tools, a grid board, and
-tic-tac-toe; 56–58 add logging, grouping, and a tiny bytecode runner.
+tic-tac-toe; 56–58 add logging, grouping, and a tiny bytecode runner;
+59–61 add a text editor, catalog search, and a mini bank.
 
 ## Difficulty
 
@@ -85,6 +86,9 @@ tic-tac-toe; 56–58 add logging, grouping, and a tiny bytecode runner.
 56. [56 — Log](56-log.md)
 57. [57 — Group](57-group.md)
 58. [58 — Bytecode](58-bytecode.md)
+59. [59 — Editor](59-editor.md)
+60. [60 — Search](60-search.md)
+61. [61 — Mini bank](61-bank.md)
 
 ## Topic lookup
 
@@ -138,6 +142,9 @@ tic-tac-toe; 56–58 add logging, grouping, and a tiny bytecode runner.
 - 기록 / Log: [56](56-log.md)
 - 묶기 / Group: [57](57-group.md)
 - 바이트코드 / Bytecode: [58](58-bytecode.md)
+- 편집기 / Editor: [59](59-editor.md)
+- 검색 / Search: [60](60-search.md)
+- 은행 / Bank: [61](61-bank.md)
 
 ## All guides
 
@@ -198,6 +205,9 @@ tic-tac-toe; 56–58 add logging, grouping, and a tiny bytecode runner.
 | 56 | ★★★★★ | 파일/기록 / Files & logging | [Log — an event record](56-log.md) | Append a dated line to a log file every run with datetime and file_write |
 | 57 | ★★★★★ | 데이터 / Data | [Group — data by category](57-group.md) | Group a list of dicts by a category key into a dict of lists and report counts |
 | 58 | ★★★★★ | 컴파일러 / Compiler | [Compiler tier — a tiny bytecode runner](58-bytecode.md) | Compile instructions into a list of steps and run them one by one like a virtual machine |
+| 59 | ★★★★★ | TUI/터미널 앱 / TUI & terminal app | [Editor — a tiny text editor](59-editor.md) | A line-based editor with a buffer and add, list, remove, save, and quit commands |
+| 60 | ★★★★★ | 검색/데이터 / Search & data | [Search — finding items in JSON](60-search.md) | Load a JSON catalog from a local server or file and search it by keyword, case-insensitively |
+| 61 | ★★★★★ | 프로젝트 / Project | [Mini bank — a JSON account](61-bank.md) | A JSON-persisted bank account with deposit, withdraw, balance, history, and a storage module |
 
 ## Where to continue
 
