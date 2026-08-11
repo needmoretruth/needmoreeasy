@@ -45,6 +45,9 @@ CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
 23. [23 — Modules](23-modules.md)
 24. [24 — Python packages](24-python-packages.md)
 25. [25 — Native](25-native.md)
+26. [26 — Adventure](26-adventure.md)
+27. [27 — Calculator](27-calculator.md)
+28. [28 — Compiler](28-compiler.md)
 
 ## Topic lookup
 
@@ -67,6 +70,9 @@ CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
 - 모듈 / Modules: [23](23-modules.md)
 - Python 패키지 / Python packages: [24](24-python-packages.md)
 - 네이티브 / Native: [25](25-native.md)
+- 게임 / Game: [26](26-adventure.md)
+- 계산기 / Calculator: [27](27-calculator.md)
+- 컴파일러 / Compiler: [28](28-compiler.md)
 
 ## All guides
 
@@ -97,6 +103,9 @@ CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
 | 23 | ★★★★★ | 모듈 / Modules | [Modules — split your program into files](23-modules.md) | Import named values from another .nme file |
 | 24 | ★★★★★ | Python 패키지 / Python packages | [Python packages — the standard library and installed libraries](24-python-packages.md) | Use datetime and other Python packages from NME |
 | 25 | ★★★★★ | 네이티브 / Native | [Native — compile to machine code](25-native.md) | Run a core-subset program without CPython |
+| 26 | ★★★★★ | 게임 / Game | [Adventure — a small text game](26-adventure.md) | A room-by-room text adventure with choices |
+| 27 | ★★★★★ | 계산기 / Calculator | [Calculator — a command-line project](27-calculator.md) | A repeat-until-quit calculator with a module |
+| 28 | ★★★★★ | 컴파일러 / Compiler | [Your first compiler — a tiny language](28-compiler.md) | A tiny calculator language that interprets lines |
 
 ## Where to continue
 
