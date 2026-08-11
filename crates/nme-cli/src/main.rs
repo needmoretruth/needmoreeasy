@@ -421,15 +421,17 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
     } else {
         None
     };
-    let dir = std::env::temp_dir().join(format!("nme-native-run-{}", std::process::id()));
-    if let Err(err) = std::fs::create_dir_all(&dir) {
-        return fail(
-            nme_core::diagnostics::DiagnosticCode::CliFolderCreateFailed,
-            language,
-            &format!("couldn't create the native build folder: {err}"),
-            &format!("네이티브 빌드 폴더를 만들 수 없습니다: {err}"),
-        );
-    }
+    let dir = match exec::fresh_temp_dir("nme-native-run") {
+        Ok(dir) => dir,
+        Err(err) => {
+            return fail(
+                nme_core::diagnostics::DiagnosticCode::CliFolderCreateFailed,
+                language,
+                &format!("couldn't create the native build folder: {err}"),
+                &format!("네이티브 빌드 폴더를 만들 수 없습니다: {err}"),
+            );
+        }
+    };
     let c_path = dir.join(format!("{stem}.c"));
     if let Err(err) = std::fs::write(&c_path, c_source) {
         return fail(
@@ -1806,15 +1808,14 @@ fn write_modules_to_temp(
     modules: &[(String, String)],
     language: MessageLanguage,
 ) -> Result<PathBuf, ExitCode> {
-    let dir = std::env::temp_dir().join(format!("nme-modules-{}", std::process::id()));
-    if let Err(err) = std::fs::create_dir_all(&dir) {
-        return Err(fail(
+    let dir = exec::fresh_temp_dir("nme-modules").map_err(|err| {
+        fail(
             nme_core::diagnostics::DiagnosticCode::CliFolderCreateFailed,
             language,
             &format!("couldn't create the temporary working folder: {err}"),
             &format!("임시 작업 폴더를 만들 수 없습니다: {err}"),
-        ));
-    }
+        )
+    })?;
     for (stem, python) in modules {
         if let Err(err) = std::fs::write(dir.join(format!("{stem}.py")), python) {
             return Err(fail(

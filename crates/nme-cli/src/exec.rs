@@ -150,6 +150,34 @@ fn stop_after_input_error(child: &mut std::process::Child) {
     let _ = child.wait();
 }
 
+/// Creates a fresh temporary directory for one staging operation.
+///
+/// The process ID alone is not enough: a crashed invocation can leave its
+/// directory behind, and a later process can reuse that ID. A timestamp plus
+/// an existence check keeps stale files out of the next operation.
+pub fn fresh_temp_dir(prefix: &str) -> io::Result<PathBuf> {
+    let root = std::env::temp_dir();
+    std::fs::create_dir_all(&root)?;
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |duration| duration.as_nanos());
+    for attempt in 0..100 {
+        let dir = root.join(format!(
+            "{prefix}-{}-{timestamp}-{attempt}",
+            std::process::id()
+        ));
+        match std::fs::create_dir(&dir) {
+            Ok(()) => return Ok(dir),
+            Err(error) if error.kind() == io::ErrorKind::AlreadyExists => {}
+            Err(error) => return Err(error),
+        }
+    }
+    Err(io::Error::new(
+        io::ErrorKind::AlreadyExists,
+        "could not find a fresh temporary directory name",
+    ))
+}
+
 /// Compiles transpiled Python to a native executable through Nuitka.
 ///
 /// Nuitka and a platform C compiler are intentionally external tools: the NME
@@ -180,8 +208,7 @@ pub fn compile_native(
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "output needs a file name"))
         .map_err(CompileNativeError::Other)?;
 
-    let dir = std::env::temp_dir().join(format!("nme-compile-{}", std::process::id()));
-    std::fs::create_dir_all(&dir).map_err(CompileNativeError::TemporaryFolder)?;
+    let dir = fresh_temp_dir("nme-compile").map_err(CompileNativeError::TemporaryFolder)?;
     let program = dir.join(format!("{stem}.py"));
     std::fs::write(&program, python_source).map_err(CompileNativeError::TemporarySource)?;
 

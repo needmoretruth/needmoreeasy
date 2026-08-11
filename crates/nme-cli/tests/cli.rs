@@ -411,6 +411,52 @@ fn module_imports_reach_nested_imports() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+#[cfg(unix)]
+#[test]
+fn module_staging_does_not_reuse_stale_python_files() {
+    use std::os::unix::fs::PermissionsExt as _;
+
+    if !python_available() {
+        eprintln!("Python not available; skipping stale module staging test");
+        return;
+    }
+    let dir = temporary_dir("stale-module-staging");
+    let temp_root = dir.join("tmp");
+    std::fs::create_dir_all(&temp_root).unwrap();
+    write_nme(&dir, "helper.nme", "fresh = \"fresh\"\n");
+    write_nme(
+        &dir,
+        "main.nme",
+        "from \"helper.nme\" import fresh\nshow fresh\nimport stale\nshow stale.value\n",
+    );
+
+    let wrapper = dir.join("nme-wrapper.sh");
+    std::fs::write(
+        &wrapper,
+        format!(
+            "#!/bin/sh\nmkdir -p \"$TMPDIR/nme-modules-$$\"\nprintf '%s\\n' 'value = \"stale\"' > \"$TMPDIR/nme-modules-$$/stale.py\"\nexec \"{}\" \"$@\"\n",
+            env!("CARGO_BIN_EXE_nme")
+        ),
+    )
+    .unwrap();
+    let mut permissions = std::fs::metadata(&wrapper).unwrap().permissions();
+    permissions.set_mode(0o755);
+    std::fs::set_permissions(&wrapper, permissions).unwrap();
+
+    let output = Command::new(&wrapper)
+        .args(["run", "main"])
+        .current_dir(&dir)
+        .env("TMPDIR", &temp_root)
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    assert_eq!(stdout(&output), "fresh\n");
+    let error = stderr(&output);
+    assert!(error.contains("ModuleNotFoundError"), "{error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 #[test]
 fn imported_module_stem_collisions_are_bilingual_and_precise() {
     let dir = temporary_dir("module-stem-collision");

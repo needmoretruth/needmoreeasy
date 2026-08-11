@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.40 — 2026-08-12
+
+- Use fresh per-invocation temporary directories for imported-module, native,
+  and Nuitka staging instead of reusing process-ID-only folders.
+- Prevent stale Python files left by a crashed run or PID reuse from shadowing
+  ordinary imports in a later program.
+
 ## 0.0.1-beta.39 — 2026-08-12
 
 - Make `nme native build` refuse to overwrite an existing executable or
