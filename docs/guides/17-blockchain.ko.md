@@ -1,82 +1,60 @@
-# 17 — 블록체인 — 해시로 연결된 장부
+# 17 — 암호화폐 장부 — 상태와 거래
 
 [English](17-blockchain.md) | 한국어
 
-[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
+[README](../../README.ko.md) | [가이드](index.ko.md) | [전체 니드모어코인 가이드](cryptocurrency.ko.md)
 
-- 난이도 (Difficulty): ★★★★☆ (4/5)
-- 선수 지식 (Prerequisites): [13 — 파일](13-files.ko.md), [03 — 저장](03-set.ko.md), [05 — 반복](05-repeat.ko.md)
-- 주제 (Topic): 블록체인 / blockchain
-- 결과물 (Result): 해시로 연결된 블록들의 이해 / an understanding of blocks linked by hashes
+- 난이도: ★★★★☆
+- 선수 지식: [03 — 저장](03-set.ko.md), [06 — 조건](06-if.ko.md), [07 — 동안](07-while.ko.md)
+- 결과물: 잔액·거래번호·수수료·발행량을 검증하는 작은 암호화폐 상태 장부
 
-블록체인은 각 기록이 앞의 기록을 가리키는 목록입니다. 예제
-`examples/blockchain-ledger.ko.nme`는 해시 함수로 연결된 블록 세 개를
-만듭니다. 이 프로젝트는 학습용이며 투자 조언이 아닙니다.
+이제 블록체인 학습 예제는 단순한 해시 목록 대신 `NeedMoreCoin`이라는 하나의
+암호화폐 예제 세트를 사용합니다. 여섯 버전은 문장형/초급/고급 × 한국어/영어로
+같은 핵심 규칙을 보여 줍니다.
+
+가장 쉬운 시작은 다음 파일입니다.
 
 ```sh
-nme run examples/blockchain-ledger.ko
+nme 검사 examples/needmorecoin-sentence.ko
+nme 실행 examples/needmorecoin-sentence.ko
 ```
+
+한국어 문장형 파일은 한글·숫자·공백만 사용하며, 모든 비어 있지 않은 줄이 실제
+NME 문장으로 컴파일되는지 자동 테스트합니다.
+
+## 장부가 기억해야 하는 것
+
+니드모어코인의 상태는 주소별 잔액과 마지막 거래번호, 총 발행량입니다. 거래가
+도착하면 바로 잔액을 바꾸지 않고 다음 순서로 검증합니다.
+
+1. 거래 증명이 보내는 주소와 정확한 거래 내용에 맞는지 확인합니다.
+2. 금액이 0보다 큰지 확인합니다.
+3. 잔액이 `금액 + 수수료` 이상인지 확인합니다.
+4. 거래번호가 직전 번호보다 정확히 1 큰지 확인합니다.
+5. 모두 통과한 뒤에만 보내는 잔액을 줄이고 받는 잔액을 늘립니다.
+
+거래번호는 같은 서명된 거래를 다시 제출하는 재전송 공격을 막는 상태입니다.
+
+## 통화량 규칙
+
+예제는 100코인에서 시작하고 거래 블록을 채굴할 때마다 10코인을 새로 발행합니다.
+수수료는 새 발행이 아니라 보내는 사람에서 채굴자로 이동합니다. 따라서 검증이 끝난
+뒤에는 항상 다음 성질이 성립해야 합니다.
 
 ```text
-블록 55e0751f -> 이전 0
-블록 24752448 -> 이전 55e0751f
-블록 97b085ce -> 이전 24752448
-연결된 블록이 3개입니다
+모든 지갑 잔액의 합 = 초기 발행량 + 채굴 보상들의 합
 ```
 
-해시는 실행마다 바뀝니다 — 데이터가 무작위이기 때문입니다 — 하지만 각
-블록은 여전히 앞 블록을 가리킵니다.
+이 등식이 깨지면 상태 전이 또는 보상 처리가 잘못된 것입니다.
 
-## 단계
+## 여섯 버전 비교
 
-1. 해시는 어떤 글자든 고정된 길이의 지문으로 만듭니다. 프로그램은 Python의
-   `hashlib`을 가져와 이전 해시와 새 데이터를 합쳐 해시합니다:
+- 문장형 한국어: `needmorecoin-sentence.ko.nme`
+- 문장형 영어: `needmorecoin-sentence.en.nme`
+- 초급 한국어: `needmorecoin-beginner.ko.nme`
+- 초급 영어: `needmorecoin-beginner.en.nme`
+- 고급 한국어: `needmorecoin-advanced.ko.nme`
+- 고급 영어: `needmorecoin-advanced.en.nme`
 
-   ```text
-   # examples/blockchain-ledger.ko.nme의 일부
-   import hashlib
-   previous_hash = "0"
-   data = "메시지 1"
-   combined = previous_hash + data
-   block_hash = hashlib.sha256(combined.encode()).hexdigest()
-   말해 f"블록 {block_hash[:8]} -> 이전 {previous_hash}"
-   ```
-
-   `sha256`은 같은 입력에 항상 같은 64글자를 돌려주고, 다른 입력이면 완전히
-   다른 해시가 나옵니다.
-
-2. 각 블록은 데이터, 이전 해시, 자기 해시를 저장합니다. `previous_hash`를
-   저장하는 것이 바로 연결입니다 — 다음 블록의 `prev`가 이 해시가 됩니다:
-
-   ```text
-   # examples/blockchain-ledger.ko.nme의 일부
-   import hashlib
-   previous_hash = "0"
-   data = "메시지 1"
-   combined = previous_hash + data
-   block_hash = hashlib.sha256(combined.encode()).hexdigest()
-   block = {"data": data, "prev": previous_hash[:8], "hash": block_hash[:8]}
-   chain = [block]
-   말해 f"블록 {block['hash']} -> 이전 {block['prev']}"
-   ```
-
-   [05](05-repeat.ko.md) 가이드의 `3 times:` 반복이 한 차례에 블록 하나를
-   만들어 `chain.append(block)`으로 모읍니다. 가운데 블록을 바꾸면 다음
-   블록의 `prev`가 그 해시와 어긋나는데, 그 어긋남이 사슬을 유용하게
-   만드는 변조의 증거입니다.
-
-3. 영어 쌍둥이 `examples/blockchain-ledger.nme`는 `use random latest`,
-   `show`, `"message "` 데이터로 같은 프로그램을 씁니다. 같은 방법으로
-   실행하면 영어로 같은 모양이 나옵니다.
-
-## 직접 해보기
-
-예제를 내 폴더에 복사하고 `3 times:`를 `5번:`으로 바꿔 보세요 — 다섯
-블록이 각자 앞 블록을 가리키는 모습을 볼 수 있습니다.
-
-## 배운 것
-
-- 블록체인은 블록들의 목록이며, 각 블록은 이전 블록의 해시로 연결됩니다.
-- `hashlib.sha256(...)`는 글자를 고정된 64글자 지문으로 만듭니다.
-- `chain.append(block)`은 블록을 추가하고 `len(chain)`은 개수를 셉니다.
-- 각 블록이 이전 해시를 저장하므로 변조가 눈에 보입니다.
+다음 [18 — 작업증명](18-proof-of-work.ko.md)에서는 이 거래 상태를 이전 블록
+해시와 함께 묶고 실제 SHA-256 작업을 반복해 블록을 채굴합니다.
