@@ -164,6 +164,12 @@ fn truthy_conditions_compile_natively() {
 }
 
 #[test]
+fn string_concat_at_first_assignment_compiles_natively() {
+    let source = "greeting = \"hello\" + \" world\"\nshow greeting\nname = \"NME\"\nname = name + \" rocks\"\nshow name\n";
+    assert_eq!(native_run(source).unwrap(), "hello world\nNME rocks\n");
+}
+
+#[test]
 fn string_concat_into_variables_works() {
     let source = "greeting = \"hello\"\ngreeting = greeting + \" world\"\nshow greeting\nname = \"NME\"\nname = \"great \" + name\nshow name\n";
     assert_eq!(native_run(source).unwrap(), "hello world\ngreat NME\n");

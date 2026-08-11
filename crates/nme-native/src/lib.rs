@@ -703,9 +703,14 @@ fn emit_set(
                 }
                 ExprType::Str => {
                     declared.insert(target.to_string(), VarType::Str);
-                    if is_new {
+                    if is_new && lowered.starts_with('"') {
                         out.push_str(&format!("char {target}[8192] = {lowered};\n"));
                     } else {
+                        // A C array cannot be initialized from a function
+                        // call, so declare the buffer first, then copy.
+                        if is_new {
+                            out.push_str(&format!("char {target}[8192];\n"));
+                        }
                         out.push_str(&format!("strcpy({target}, {lowered});\n"));
                     }
                     Ok(())
@@ -856,9 +861,12 @@ fn emit_python_line(
                 Ok((lowered, ExprType::Str)) => {
                     let is_new = !declared.contains_key(&name);
                     declared.insert(name.clone(), VarType::Str);
-                    if is_new {
+                    if is_new && lowered.starts_with('"') {
                         out.push_str(&format!("char {name}[8192] = {lowered};\n"));
                     } else {
+                        if is_new {
+                            out.push_str(&format!("char {name}[8192];\n"));
+                        }
                         out.push_str(&format!("strcpy({name}, {lowered});\n"));
                     }
                     None
