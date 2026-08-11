@@ -26,6 +26,8 @@
  74–76은 데이터 병합, 전략 게임, 서버 폴링을 다룹니다.
  77–79는 웹에서 파일 받기, 데이터 분석, 미니 언어에 함수 넣기를
  다룹니다.
+ 80–82는 명령 줄 도구, 자기 코드 테스트, 식을 트리로 파싱하기를
+ 다룹니다.
 
 ## 난이도
 
@@ -116,6 +118,9 @@
 77. [77 — 네트워크](77-download.ko.md)
 78. [78 — 데이터](78-analysis.ko.md)
 79. [79 — 컴파일러](79-functions.ko.md)
+80. [80 — 도구](80-argv.ko.md)
+81. [81 — 테스트](81-testing.ko.md)
+82. [82 — 컴파일러](82-ast.ko.md)
 
 ## 주제별 찾아보기
 
@@ -189,6 +194,9 @@
 - 다운로드 / Download: [77](77-download.ko.md)
 - 데이터 분석 / Analysis: [78](78-analysis.ko.md)
 - 컴파일러/함수 / Compiler & functions: [79](79-functions.ko.md)
+- 명령 줄 인자 / Command-line arguments: [80](80-argv.ko.md)
+- 테스트 / Testing: [81](81-testing.ko.md)
+- AST/컴파일러 / Compiler & AST: [82](82-ast.ko.md)
 
 ## 전체 목록
 
@@ -270,6 +278,9 @@
 | 77 | ★★★★★ | 네트워크/파일 / Network & files | [다운로드 — 웹에서 파일 받아 저장하기](77-download.ko.md) | 로컬 HTTP 서버에서 파일을 받아 진행 상황을 보여 주며 저장하기 |
 | 78 | ★★★★★ | 데이터 분석 / Data analysis | [분석 — 한 달 온도 분석하기](78-analysis.ko.md) | 한 달치 온도를 읽어 통계와 히스토그램을 계산하고 보고서 파일로 저장하기 |
 | 79 | ★★★★★ | 컴파일러/함수 / Compiler & functions | [컴파일러 — 미니 언어에 함수 넣기](79-functions.ko.md) | def·return·호출이 있는 미니 언어를 Python으로 컴파일하고 실행하기 |
+| 80 | ★★★★★ | CLI 도구 / Command-line tools | [도구 — 명령 줄에서 말 받기](80-argv.ko.md) | `nme r todo add "buy milk"`처럼 명령 줄에서 명령을 받아 동작하는 할 일 도구 |
+| 81 | ★★★★★ | 테스트 / Testing | [테스트 — 내가 쓴 함수 확인하기](81-testing.ko.md) | 자기 함수를 예상값과 비교해 통과·실패를 보고하는 작은 테스트 실행기 |
+| 82 | ★★★★★ | 컴파일러/AST / Compiler & AST | [컴파일러 — 식을 트리로 만들기](82-ast.ko.md) | 식을 트리로 파싱하고 재귀로 평가해 우선순위를 지키는 계산기 |
 
 ## 다음 단계
 

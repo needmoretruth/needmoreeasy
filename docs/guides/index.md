@@ -22,7 +22,8 @@ grade book; 68–70 add error handling, regex patterns, and a reaction game;
 71–73 add a terminal bar chart, a three-module project, and the capstone
 compiler; 74–76 merge data, play a strategy game, and poll a server;
 77–79 download files from the web, analyze a dataset, and add functions
-to the mini language.
+to the mini language; 80–82 build command-line tools, test them, and
+parse expressions into trees.
 
 ## Difficulty
 
@@ -113,6 +114,9 @@ to the mini language.
 77. [77 — Network](77-download.md)
 78. [78 — Data](78-analysis.md)
 79. [79 — Compiler](79-functions.md)
+80. [80 — Tools](80-argv.md)
+81. [81 — Testing](81-testing.md)
+82. [82 — Compiler](82-ast.md)
 
 ## Topic lookup
 
@@ -186,6 +190,9 @@ to the mini language.
 - 다운로드 / Download: [77](77-download.md)
 - 데이터 분석 / Analysis: [78](78-analysis.md)
 - 컴파일러/함수 / Compiler & functions: [79](79-functions.md)
+- 명령 줄 인자 / Command-line arguments: [80](80-argv.md)
+- 테스트 / Testing: [81](81-testing.md)
+- AST/컴파일러 / Compiler & AST: [82](82-ast.md)
 
 ## All guides
 
@@ -267,6 +274,9 @@ to the mini language.
 | 77 | ★★★★★ | 네트워크/파일 / Network & files | [Download — saving files from the web](77-download.md) | Download a file from a local HTTP server and save it while showing progress |
 | 78 | ★★★★★ | 데이터 분석 / Data analysis | [Analysis — a month of temperatures](78-analysis.md) | Load a month of temperatures, compute statistics and a histogram, and save a report file |
 | 79 | ★★★★★ | 컴파일러/함수 / Compiler & functions | [Compiler tier — functions](79-functions.md) | Compile a mini language with def, return, and calls into Python and run it |
+| 80 | ★★★★★ | CLI 도구 / Command-line tools | [Tools — reading command-line arguments](80-argv.md) | A todo tool that takes commands like `nme r todo add "buy milk"` on the command line |
+| 81 | ★★★★★ | 테스트 / Testing | [Testing — checking the functions you wrote](81-testing.md) | A tiny test runner that calls your own functions, compares each result with the expected value, and reports pass or fail |
+| 82 | ★★★★★ | 컴파일러/AST / Compiler & AST | [Compiler tier — expressions as trees](82-ast.md) | A calculator that parses an expression into a tree and evaluates the tree recursively, respecting precedence |
 
 ## Where to continue
 
