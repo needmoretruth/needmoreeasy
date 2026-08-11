@@ -1,0 +1,210 @@
+# Time Loop Mystery — the beginner NME version.
+# Beginner level: the bridge between the sentence version and the Python
+# version. Uses only say, ask, save, when, times, and random.
+# Run: nme r time-loop-beginner.nme
+use random latest
+save code random_number(1, 5)
+save culprit_name "unknown"
+when code == 1:
+    save culprit_name "Kwon"
+when code == 2:
+    save culprit_name "Lee"
+when code == 3:
+    save culprit_name "Kim"
+when code == 4:
+    save culprit_name "Park"
+when code == 5:
+    save culprit_name "Jung"
+save loop_count 0
+save left_loops 10
+save playing 1
+save won 0
+save win_loop 0
+save investigated 0
+save camera_seen 0
+save interview_contradiction 0
+save suspicious 0
+save interview1 0
+save interview2 0
+save interview3 0
+save interview4 0
+save interview5 0
+save camera1 0
+save camera2 0
+save camera3 0
+
+say "Explosion at 22:00 - welcome to the vanished laboratory!"
+say "Last night at 22:00, the Mars base laboratory exploded"
+say "You witnessed time rewinding right before the explosion"
+say "You can relive the same day up to 10 times"
+say "Clues persist between tries, so act differently every loop"
+say "Crew list: 1 Kwon 2 Lee 3 Kim 4 Park 5 Jung"
+
+100 times:
+    save loop_count loop_count + 1
+    save left_loops 10 - loop_count
+    when loop_count > 10 and playing == 1:
+        say "Game over - the 10-loop limit passed and the culprit escaped"
+        say "Game over - the real culprit is " + culprit_name
+        save playing 0
+    when playing == 1:
+        say "Time rewinds - this is loop " + str(loop_count)
+        say "You have " + str(left_loops) + " chances remaining"
+        when investigated == 1:
+            say "Investigation clue: the lab was damaged on purpose"
+        when camera_seen == 1:
+            say "Camera clue: someone entered the lab at 22:00"
+        when interview_contradiction == 1:
+            say "Interview clue: one of the alibis is a lie"
+        say "1. Investigate the lab"
+        say "2. Interview the crew"
+        say "3. Check the cameras"
+        say "4. Accuse someone"
+        ask choice, "What will you do? "
+        when choice == "1":
+            when loop_count == 1:
+                say "You investigated the battery - it was separated on purpose!"
+                save investigated 1
+            when loop_count == 2:
+                say "You checked the fingerprints - clear prints on the lab door handle"
+                save investigated 1
+            when loop_count == 3:
+                say "You checked the timestamp - the door was unlocked moments after 22:00"
+                save investigated 1
+            when loop_count > 3:
+                say "No new clues at the scene"
+        when choice == "2":
+            ask target, "Who will you talk to? "
+            when target == "1":
+                save subject "Kwon"
+            when target == "2":
+                save subject "Lee"
+            when target == "3":
+                save subject "Kim"
+            when target == "4":
+                save subject "Park"
+            when target == "5":
+                save subject "Jung"
+            when target == "1":
+                when interview1 == 0:
+                    save suspicious 0
+                    when subject == culprit_name:
+                        say subject + " said they were in the command room at 22:00, but their voice trembled"
+                        save interview_contradiction 1
+                        save suspicious 1
+                    when suspicious == 0:
+                        say subject + " said they were writing reports in the command room at 22:00"
+                    save interview1 1
+                else:
+                    say "You already heard this story - no new clues"
+            when target == "2":
+                when interview2 == 0:
+                    save suspicious 0
+                    when subject == culprit_name:
+                        say subject + " said they were checking the generator at 22:00, but their hands were greasy"
+                        save interview_contradiction 1
+                        save suspicious 1
+                    when suspicious == 0:
+                        say subject + " said they were checking the generator at 22:00"
+                    save interview2 1
+                else:
+                    say "You already heard this story - no new clues"
+            when target == "3":
+                when interview3 == 0:
+                    save suspicious 0
+                    when subject == culprit_name:
+                        say subject + " said they were in the infirmary at 22:00, but the lights were off"
+                        save interview_contradiction 1
+                        save suspicious 1
+                    when suspicious == 0:
+                        say subject + " said they were organizing records in the infirmary at 22:00"
+                    save interview3 1
+                else:
+                    say "You already heard this story - no new clues"
+            when target == "4":
+                when interview4 == 0:
+                    save suspicious 0
+                    when subject == culprit_name:
+                        say subject + " said they were backing up data at 22:00, but the backup log was erased"
+                        save interview_contradiction 1
+                        save suspicious 1
+                    when suspicious == 0:
+                        say subject + " said they were backing up data at 22:00"
+                    save interview4 1
+                else:
+                    say "You already heard this story - no new clues"
+            when target == "5":
+                when interview5 == 0:
+                    save suspicious 0
+                    when subject == culprit_name:
+                        say subject + " said they were patrolling the corridor at 22:00, but there is no patrol log"
+                        save interview_contradiction 1
+                        save suspicious 1
+                    when suspicious == 0:
+                        say subject + " said they were patrolling the corridor at 22:00"
+                    save interview5 1
+                else:
+                    say "You already heard this story - no new clues"
+            when target > "5":
+                say "Invalid target number"
+            when target < "1":
+                say "Invalid target number"
+        when choice == "3":
+            ask hour, "Which hour is on the footage? "
+            when hour == "1":
+                when camera1 == 0:
+                    say "18:00 footage - Jung walked through the corridor"
+                    save camera1 1
+                else:
+                    say "You already saw this footage"
+            when hour == "2":
+                when camera2 == 0:
+                    say "20:00 footage - Kim was seen leaving the research room"
+                    save camera2 1
+                else:
+                    say "You already saw this footage"
+            when hour == "3":
+                when camera3 == 0:
+                    say "22:00 footage - the lab door opened and someone slipped out! It was " + culprit_name + "!"
+                    save camera3 1
+                    save camera_seen 1
+                else:
+                    say "You already saw this footage"
+            when hour > "3":
+                say "Invalid hour"
+            when hour < "1":
+                say "Invalid hour"
+        when choice == "4":
+            ask accuser, "Who is the culprit? "
+            when accuser == culprit_name:
+                save won 1
+                save win_loop loop_count
+                save playing 0
+                say "Correct! The culprit is " + culprit_name + "!"
+            when won == 0:
+                say "Wrong accusation - the time rewinds"
+        when choice > "4":
+            say "Invalid choice"
+        when choice < "1":
+            say "Invalid choice"
+        when playing == 1:
+            say "Night falls and the laboratory explodes!"
+            say "Time rewinds and the day starts again"
+
+when won == 1:
+    when win_loop < 4:
+        say "Perfect win! You caught the culprit on loop " + str(win_loop)
+    when win_loop >= 4:
+        say "You win! You caught the culprit and stopped the explosion!"
+when won == 0:
+    say "Game over - the culprit escaped on a spaceship"
+when culprit_name == "Kwon":
+    say "Culprit backstory: they tried to sell the experiment data to pirates"
+when culprit_name == "Lee":
+    say "Culprit backstory: they wanted revenge after a pay raise was refused"
+when culprit_name == "Kim":
+    say "Culprit backstory: they hated the base that blocked incurable-disease research"
+when culprit_name == "Park":
+    say "Culprit backstory: they were furious at the lab that stole their paper"
+when culprit_name == "Jung":
+    say "Culprit backstory: they wanted revenge on a violent commander"

@@ -1,0 +1,264 @@
+# Time Loop Mystery — the same game in sentence syntax.
+# Sentence level: compare this English version with the Korean twin
+# time-loop-sentence.ko.nme line by line.
+# Run: nme r time-loop-sentence.nme
+use random latest
+
+set code to random number from 1 to 5
+set name to none
+if code equals 1
+set name to Kwon
+end
+if code equals 2
+set name to Lee
+end
+if code equals 3
+set name to Kim
+end
+if code equals 4
+set name to Park
+end
+if code equals 5
+set name to Jung
+end
+set loops to 0
+set left to 10
+set playing to 1
+set won to 0
+set scene_seen to 0
+set camera_seen to 0
+set contradiction to 0
+set suspicious to 0
+set talked1 to 0
+set talked2 to 0
+set talked3 to 0
+set talked4 to 0
+set talked5 to 0
+set watched1 to 0
+set watched2 to 0
+set watched3 to 0
+
+show Explosion at 22:00 - welcome to the vanished laboratory!
+show Last night at 22:00, the Mars base laboratory exploded
+show You witnessed time rewinding right before the explosion
+show You can relive the same day up to 10 times
+show Clues persist between tries, so act differently every loop
+show Crew list: 1 Kwon 2 Lee 3 Kim 4 Park 5 Jung
+
+while playing
+add 1 to loops
+set left to 10 - loops
+if loops is greater than 10
+show Game over - the 10-loop limit passed and the culprit escaped
+show Game over - the real culprit was name
+set playing to 0
+break here
+end
+show Time rewinds - this is loop loops
+show You have left chances remaining
+if scene_seen exists
+show Investigation clue: the lab was damaged on purpose
+end
+if camera_seen exists
+show Camera clue: someone entered the lab at 22:00
+end
+if contradiction exists
+show Interview clue: one of the alibis is a lie
+end
+show 1. Investigate the lab
+show 2. Interview the crew
+show 3. Check the cameras
+show 4. Accuse someone
+ask number choice, "What will you do? "
+if choice equals 1
+if loops equals 1
+show You investigated the battery - it was separated on purpose!
+set scene_seen to 1
+end
+if loops equals 2
+show You checked the fingerprints - clear prints on the lab door handle
+set scene_seen to 1
+end
+if loops equals 3
+show You checked the timestamp - the door was unlocked moments after 22:00
+set scene_seen to 1
+end
+if loops is greater than 3
+show No new clues at the scene
+end
+end
+if choice equals 2
+ask number target, "Who will you talk to? "
+if target equals 1
+set subject to Kwon
+if talked1 missing
+set suspicious to 0
+if subject equals name
+show subject said they were in the command room at 22:00, but their voice trembled
+set contradiction to 1
+set suspicious to 1
+end
+if suspicious missing
+show subject said they were writing reports in the command room at 22:00
+end
+set talked1 to 1
+else
+show You already heard this story - no new clues
+end
+end
+if target equals 2
+set subject to Lee
+if talked2 missing
+set suspicious to 0
+if subject equals name
+show subject said they were checking the generator at 22:00, but their hands were greasy
+set contradiction to 1
+set suspicious to 1
+end
+if suspicious missing
+show subject said they were checking the generator at 22:00
+end
+set talked2 to 1
+else
+show You already heard this story - no new clues
+end
+end
+if target equals 3
+set subject to Kim
+if talked3 missing
+set suspicious to 0
+if subject equals name
+show subject said they were in the infirmary at 22:00, but the lights were off
+set contradiction to 1
+set suspicious to 1
+end
+if suspicious missing
+show subject said they were organizing records in the infirmary at 22:00
+end
+set talked3 to 1
+else
+show You already heard this story - no new clues
+end
+end
+if target equals 4
+set subject to Park
+if talked4 missing
+set suspicious to 0
+if subject equals name
+show subject said they were backing up data at 22:00, but the backup log was erased
+set contradiction to 1
+set suspicious to 1
+end
+if suspicious missing
+show subject said they were backing up data at 22:00
+end
+set talked4 to 1
+else
+show You already heard this story - no new clues
+end
+end
+if target equals 5
+set subject to Jung
+if talked5 missing
+set suspicious to 0
+if subject equals name
+show subject said they were patrolling the corridor at 22:00, but there is no patrol log
+set contradiction to 1
+set suspicious to 1
+end
+if suspicious missing
+show subject said they were patrolling the corridor at 22:00
+end
+set talked5 to 1
+else
+show You already heard this story - no new clues
+end
+end
+if target is greater than 5
+show Invalid target number
+end
+if target is less than 1
+show Invalid target number
+end
+end
+if choice equals 3
+ask number time, "Which hour is on the footage? "
+if time equals 1
+if watched1 missing
+show 18:00 footage - Jung walked through the corridor
+set watched1 to 1
+else
+show You already saw this footage
+end
+end
+if time equals 2
+if watched2 missing
+show 20:00 footage - Kim was seen leaving the research room
+set watched2 to 1
+else
+show You already saw this footage
+end
+end
+if time equals 3
+if watched3 missing
+show 22:00 footage - the lab door opened and someone slipped out! It was name!
+set watched3 to 1
+set camera_seen to 1
+else
+show You already saw this footage
+end
+end
+if time is greater than 3
+show Invalid hour
+end
+if time is less than 1
+show Invalid hour
+end
+end
+if choice equals 4
+ask accuser, "Who is the culprit? "
+if accuser equals name
+set won to 1
+set playing to 0
+show Correct! The culprit is name!
+break here
+end
+if won missing
+show Wrong accusation - the time rewinds
+end
+end
+if choice is greater than 4
+show Invalid choice
+end
+if choice is less than 1
+show Invalid choice
+end
+show Night falls and the laboratory explodes!
+show Time rewinds and the day starts again
+end
+
+if won exists
+if loops is less than 4
+show Perfect win! You caught the culprit on loop loops
+else
+show You win! You caught the culprit and stopped the explosion!
+end
+end
+if won missing
+show Game over - the culprit escaped on a spaceship
+end
+if name equals Kwon
+show Culprit backstory: they tried to sell the experiment data to pirates
+end
+if name equals Lee
+show Culprit backstory: they wanted revenge after a pay raise was refused
+end
+if name equals Kim
+show Culprit backstory: they hated the base that blocked incurable-disease research
+end
+if name equals Park
+show Culprit backstory: they were furious at the lab that stole their paper
+end
+if name equals Jung
+show Culprit backstory: they wanted revenge on a violent commander
+end

@@ -50,7 +50,8 @@ into a native executable with your system's C compiler.
    is how you see what your program really becomes.
 
 4. Functions and recursion work inside the core — the example
-   `examples/native-factorial.nme` computes factorials on both backends:
+   `examples/native-factorial.nme` (Korean twin
+   `examples/native-factorial.ko.nme`) computes factorials on both backends:
 
    ```text
    # part of examples/native-factorial.nme
