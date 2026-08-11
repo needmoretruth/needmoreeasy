@@ -39,6 +39,11 @@ EXPECTED_GUIDE_NAVIGATION_LINES = {
     "[문법 안내](../language.ko.md) | [가이드](index.ko.md)",
 }
 
+GUIDE_METADATA = {
+    ".md": ("Difficulty", "Prerequisites", "Topic", "Result"),
+    ".ko.md": ("난이도", "선수 지식", "주제", "결과물"),
+}
+
 
 def local_markdown_target(path: Path, raw_target: str) -> Path | None:
     target = raw_target.split("#", 1)[0].strip().strip("<>")
@@ -102,9 +107,52 @@ def check_guide_navigation(problems: list[str]) -> None:
                 )
 
 
+def check_guide_metadata(problems: list[str]) -> None:
+    guides = ROOT / "docs" / "guides"
+    for path in guides.iterdir():
+        if not path.is_file() or not re.match(r"\d+-", path.name):
+            continue
+        suffix = ".ko.md" if path.name.endswith(".ko.md") else ".md"
+        head = "\n".join(path.read_text(encoding="utf-8").splitlines()[:14])
+        for field in GUIDE_METADATA[suffix]:
+            if field not in head:
+                problems.append(
+                    f"{path.relative_to(ROOT)}: missing guide metadata {field}"
+                )
+
+
+def check_guide_code_block_parity(problems: list[str]) -> None:
+    guides = ROOT / "docs" / "guides"
+    for english in guides.iterdir():
+        if (
+            not english.is_file()
+            or english.name.endswith(".ko.md")
+            or not re.match(r"\d+-", english.name)
+        ):
+            continue
+        korean = english.with_name(f"{english.stem}.ko.md")
+        if not korean.is_file():
+            continue
+        english_blocks = sum(
+            line.strip().startswith("```")
+            for line in english.read_text(encoding="utf-8").splitlines()
+        )
+        korean_blocks = sum(
+            line.strip().startswith("```")
+            for line in korean.read_text(encoding="utf-8").splitlines()
+        )
+        if english_blocks != korean_blocks:
+            problems.append(
+                f"{english.relative_to(ROOT)} and {korean.relative_to(ROOT)}: "
+                f"code-block markers differ ({english_blocks}/{korean_blocks})"
+            )
+
+
 problems: list[str] = []
 check_korean_links(problems)
 check_guide_navigation(problems)
+check_guide_metadata(problems)
+check_guide_code_block_parity(problems)
 if problems:
     print(f"doc-parity: {len(problems)} problem(s)", file=sys.stderr)
     for problem in problems:

@@ -8,6 +8,7 @@ English | [한국어](18-proof-of-work.ko.md)
 
 - Difficulty: ★★★★★
 - Prerequisites: [17 — Cryptocurrency ledger](17-blockchain.md), [07 — While](07-while.md)
+- Topic: proof of work and block linkage
 - Result: link transactions to the previous block and perform SHA-256 proof of work
 
 A valid transaction is not yet a blockchain. Every new block must commit to the
@@ -22,6 +23,22 @@ The advanced examples show conventional proof of work directly: serialize the
 height, previous hash, transaction, proof, miner, reward, and work nonce; hash
 that payload with `hashlib.sha256`; increment the work nonce until the hex hash
 starts with `00`.
+
+The English sentence form exposes the mining loop directly:
+
+```text
+while genesismining
+genesisrandom save zero knowledge nonce make
+genesiscandidatecommitment save genesisrandom zero knowledge commitment make
+genesiscandidatehash save mineraddress genesiscandidatecommitment genesiscontext zero knowledge challenge make
+add 1 to genesisattempts
+if genesiscandidatehash is less than worktarget
+genesiscommitment save genesiscandidatecommitment
+genesishash save genesiscandidatehash
+genesismining save 0
+end
+end
+```
 
 ```sh
 nme run examples/needmorecoin-advanced.en

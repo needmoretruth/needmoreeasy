@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.25 — 2026-08-12
+
+- Complete the missing Topic metadata in the four NeedMoreCoin sequence guides
+  in both languages.
+- Add equivalent English sentence-level proof-of-work and transaction-proof
+  snippets, and enforce numbered-guide code-block parity in CI.
+
 ## 0.0.1-beta.24 — 2026-08-12
 
 - Repair Korean documentation links so local pages lead to their Korean twins,
