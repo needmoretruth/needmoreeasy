@@ -1187,6 +1187,43 @@ fn compile_invokes_the_native_backend_and_creates_the_requested_artifact() {
 }
 
 #[test]
+fn build_refuses_to_overwrite_an_existing_python_artifact() {
+    let dir = temporary_dir("build-overwrite");
+    write_nme(&dir, "main.nme", "show Hello\n");
+    write_nme(&dir, "already.py", "keep Python\n");
+
+    let english = run_in(&dir, &["build", "main", "-o", "already.py"], None);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(
+        english_error.contains("error[E9009]: refusing to overwrite existing output"),
+        "{english_error}"
+    );
+    assert_eq!(
+        std::fs::read_to_string(dir.join("already.py")).unwrap(),
+        "keep Python\n"
+    );
+
+    let korean = run_in(&dir, &["빌드", "main", "-o", "already.py"], None);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(
+        korean_error.contains("오류[E9009]: 이미 있는 결과 파일을 덮어쓰지 않습니다"),
+        "{korean_error}"
+    );
+    assert!(
+        korean_error.contains("error[E9009]: refusing to overwrite existing output"),
+        "{korean_error}"
+    );
+    assert_eq!(
+        std::fs::read_to_string(dir.join("already.py")).unwrap(),
+        "keep Python\n"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn compile_module_imports_have_a_precise_bilingual_diagnostic() {
     let dir = temporary_dir("compile-module-import");
     write_nme(&dir, "helper.nme", "value = 1\n");

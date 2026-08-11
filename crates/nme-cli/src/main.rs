@@ -1128,6 +1128,16 @@ fn command_build(args: &[String], language: MessageLanguage) -> ExitCode {
             Err(code) => return code,
         },
     };
+    if let Some(path) = output.as_deref().map(Path::new) {
+        if path.exists() {
+            return fail(
+                nme_core::diagnostics::DiagnosticCode::CliRefuseOverwrite,
+                language,
+                &format!("refusing to overwrite existing output: {}", path.display()),
+                &format!("이미 있는 결과 파일을 덮어쓰지 않습니다: {}", path.display()),
+            );
+        }
+    }
 
     let compiled = match transpile_file(&file, language, "build", "빌드") {
         Ok(ok) => ok,

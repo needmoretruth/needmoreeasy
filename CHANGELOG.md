@@ -6,6 +6,12 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.42 — 2026-08-12
+
+- Make `nme build -o` refuse to overwrite an existing Python output with E9009.
+- Keep the existing artifact unchanged for English and Korean build commands,
+  matching `nme compile` and `nme native build`.
+
 ## 0.0.1-beta.41 — 2026-08-12
 
 - Own imported-module, native, and Nuitka staging directories for the whole
