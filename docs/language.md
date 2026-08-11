@@ -491,6 +491,23 @@ the generated Python is the same stdlib the `file` module teaches. Weak
 matches such as `read the book` or `write hello` stay plain sentence output
 instead of becoming file operations.
 
+## Native backend
+
+A restricted, statically typed core subset can compile straight to native
+machine code, independent of CPython. `nme native run hello` compiles to C
+with the system C compiler and runs the executable; `nme native build hello
+-o hello` keeps the C source and the executable.
+
+The native core covers: integers and `+ - *` arithmetic; string literals and
+string variables with one binary `+` concatenation; `while`/`if`/`else`/
+`else if` over integer comparisons and string `==`/`!=`; `break`; functions
+over integer parameters with `return` (recursion works); `say`/`show`/`말해`
+of integers, strings, and `len`. Everything else — input, modules, files,
+classes, packages — is rejected with a clear diagnostic and still runs on
+CPython with `nme run`. Identifiers that collide with C keywords are rejected,
+never renamed. See the [native-backend memo](native-backend.md) for the design
+and the honest measured benchmark.
+
 ## Python conversion
 
 `nme convert` safely converts Python into a selected level and language:
