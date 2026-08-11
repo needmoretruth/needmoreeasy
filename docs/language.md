@@ -445,6 +445,32 @@ Run `nme modules` or `nme 모듈` to list versions and names. Files are written
 next to the program's working folder, so save them in your project folder.
 `random` is not suitable for passwords or other security decisions.
 
+## Modules: importing another `.nme` program
+
+A program can import named values from another `.nme` file in the same folder.
+The explicit name list is the module's interface — only those names cross the
+file boundary, so there is no hidden global state:
+
+```text
+from "helper.nme" import greet, score
+show greet
+```
+
+The module file defines the values with ordinary NME or Python:
+
+```text
+# helper.nme
+greet = "hello"
+score = 0
+```
+
+`nme run` (and `nme check` / `nme build`) finds `helper.nme` next to the main
+program, transpiles it, and makes it importable; module errors surface with
+the module's file name. Imports may chain (`helper.nme` can import another
+module), the file name must be a Python identifier (`helper.nme`, not
+`my-helper.nme` or `shapes.ko.nme`), and two imported modules must not share a
+name. `nme compile` does not support module imports yet.
+
 Sentence syntax can read and write files without the module line or Python
 punctuation. The path is always a quoted string:
 

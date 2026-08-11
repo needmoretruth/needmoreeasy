@@ -232,6 +232,88 @@ fn the_korean_file_module_spelling_works() {
 }
 
 #[test]
+fn nme_module_imports_run_across_files() {
+    if !python_available() {
+        eprintln!("Python not available; skipping module import test");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("nme-cli-module-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join("helper.nme"),
+        "인사말 = \"안녕하세요\"\ndef double(n):\n    return n * 2\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("main.nme"),
+        "from \"helper.nme\" import 인사말, double\nshow 인사말\nshow double(21)\n",
+    )
+    .unwrap();
+
+    let output = run_in(&dir, &["run", "main"], None);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert_eq!(stdout(&output), "안녕하세요\n42\n");
+
+    let checked = run_in(&dir, &["check", "main"], None);
+    assert!(checked.status.success(), "{}", stderr(&checked));
+
+    let built = run_in(&dir, &["b", "main"], None);
+    assert!(built.status.success(), "{}", stderr(&built));
+    assert!(stdout(&built).contains("from helper import 인사말, double"), "{}", stdout(&built));
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn a_missing_module_gets_a_clear_error() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-module-missing-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("main.nme"), "from \"nope.nme\" import greet\nshow greet\n").unwrap();
+
+    let output = run_in(&dir, &["run", "main"], None);
+    assert!(!output.status.success());
+    assert!(
+        stderr(&output).contains("couldn't read module"),
+        "{}",
+        stderr(&output)
+    );
+    assert!(
+        stderr(&output).contains("nope.nme"),
+        "{}",
+        stderr(&output)
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn module_imports_reach_nested_imports() {
+    if !python_available() {
+        eprintln!("Python not available; skipping nested module test");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("nme-cli-module-nested-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("base.nme"), "기본값 = 100\n").unwrap();
+    std::fs::write(
+        dir.join("helper.nme"),
+        "from \"base.nme\" import 기본값\n값 = 기본값 + 1\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("main.nme"),
+        "from \"helper.nme\" import 값\nshow 값\n",
+    )
+    .unwrap();
+
+    let output = run_in(&dir, &["run", "main"], None);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert_eq!(stdout(&output), "101\n");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn the_terminal_menu_example_runs_with_scripted_input() {
     if !python_available() {
         eprintln!("Python not available; skipping terminal menu test");

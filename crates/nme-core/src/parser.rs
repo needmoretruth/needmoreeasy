@@ -738,6 +738,18 @@ fn classify(
         return Ok(Some(stmt));
     }
 
+    // `from "module.nme" import names` is not valid Python, so the keyword
+    // gate below must not swallow it.
+    if matches!(tokens.first().map(|token| &token.tok), Some(Tok::From))
+        && tokens
+            .get(1)
+            .is_some_and(|token| matches!(token.tok, Tok::String { .. }))
+    {
+        if let Some(stmt) = match_module_import(source, tokens, known_names, MatchMode::Exact)? {
+            return Ok(Some(stmt));
+        }
+    }
+
     if is_python_keyword(&tokens[0].tok) && !matches!(tokens[0].tok, Tok::If) {
         return Ok(None);
     }
@@ -3549,6 +3561,105 @@ fn file_path_diagnostic(span: Span) -> Diagnostic {
     )
 }
 
+/// `from "helper.nme" import greet, score` — a beginner module import. The
+/// quoted path is not valid Python (`from <string>` is a syntax error), so
+/// NME can claim it. The explicit name list is the module interface: only
+/// those names cross the file boundary.
+fn match_module_import(
+    source: &str,
+    tokens: &[Token],
+    _known_names: &HashSet<String>,
+    mode: MatchMode,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    if !matches!(tokens.first().map(|token| &token.tok), Some(Tok::From))
+        || !matches!(tokens.get(1).map(|token| &token.tok), Some(Tok::String { .. }))
+        || !matches!(tokens.get(2).map(|token| &token.tok), Some(Tok::Import))
+        || mode != MatchMode::Exact
+    {
+        return Ok(None);
+    }
+    let path_span = tokens[1].span;
+    let path_text = &source[path_span.start..path_span.end];
+    let path_stripped = path_text.trim_matches(['\'', '"']);
+    if !path_stripped.ends_with(".nme") {
+        return Err(Diagnostic::bilingual(
+            DiagnosticCode::MissingAction,
+            "a module import path must end in .nme",
+            "모듈 경로는 .nme로 끝나야 해요",
+            path_span,
+        )
+        .with_bilingual_hint(
+            "write the other program's name in quotes, e.g. `from \"helper.nme\" import greet`",
+            "다른 프로그램의 이름을 따옴표로 적으세요. 예: `from \"helper.nme\" import greet`",
+        ));
+    }
+    let stem = path_stripped
+        .rsplit(['/', '\\'])
+        .next()
+        .unwrap_or(path_stripped)
+        .strip_suffix(".nme")
+        .unwrap_or(path_stripped);
+    let valid_identifier = !stem.is_empty()
+        && stem
+            .chars()
+            .enumerate()
+            .all(|(index, character)| {
+                character == '_' || character.is_alphanumeric()
+                    && (index > 0 || character.is_alphabetic() || character == '_')
+            });
+    if !valid_identifier {
+        return Err(Diagnostic::bilingual(
+            DiagnosticCode::MissingAction,
+            "the module file name must be a Python identifier",
+            "모듈 파일 이름은 Python 식별자여야 해요",
+            path_span,
+        )
+        .with_bilingual_hint(
+            "rename the module with letters, numbers, and underscores only, e.g. `shape_math.nme`",
+            "모듈 이름은 문자·숫자·밑줄만 사용하세요. 예: `shape_math.nme`",
+        ));
+    }
+    let mut names = Vec::new();
+    let mut index = 3;
+    let mut expected = true;
+    while index < tokens.len() {
+        match &tokens[index].tok {
+            Tok::Comma => {
+                if expected {
+                    return Err(module_import_shape_diagnostic(span_of(tokens)));
+                }
+                expected = true;
+            }
+            Tok::Name { name } if expected => {
+                names.push(name.clone());
+                expected = false;
+            }
+            _ => return Err(module_import_shape_diagnostic(span_of(tokens))),
+        }
+        index += 1;
+    }
+    if expected || names.is_empty() {
+        return Err(module_import_shape_diagnostic(span_of(tokens)));
+    }
+    Ok(Some(NmeStmt::ModuleImport {
+        path: Code::Source(path_span),
+        names,
+    }))
+}
+
+fn module_import_shape_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::MissingAction,
+        "I couldn't understand this module import",
+        "모듈 가져오기 문장을 이해하지 못했어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "write `from \"helper.nme\" import greet` with simple names after `import`",
+        "`from \"helper.nme\" import greet`처럼 import 뒤에 간단한 이름을 적으세요",
+    )
+}
+
 fn match_use_module(
     source: &str,
     tokens: &[Token],
@@ -4605,6 +4716,11 @@ fn remember_bindings(stmt: &NmeStmt, names: &mut HashSet<String>) {
         }
         NmeStmt::FileRead { target, .. } => {
             names.insert(target.clone());
+        }
+        NmeStmt::ModuleImport { names: imported, .. } => {
+            for name in imported {
+                names.insert(name.clone());
+            }
         }
         NmeStmt::UseModule { module, .. } => {
             names.extend(

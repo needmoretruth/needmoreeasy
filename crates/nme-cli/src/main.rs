@@ -501,11 +501,19 @@ fn command_compile(args: &[String], language: MessageLanguage) -> ExitCode {
             ),
         );
     }
-    let (_, python_source) = match transpile_file(&file, language, "compile", "컴파일") {
+    let compiled = match transpile_file(&file, language, "compile", "컴파일") {
         Ok(ok) => ok,
         Err(code) => return code,
     };
-    match exec::compile_native(&python_source, stem, &python, &output) {
+    if !compiled.imports.is_empty() {
+        return fail(
+            nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
+            language,
+            "module imports are not supported by `nme compile` yet; run the program with `nme run`",
+            "`nme compile`은 아직 모듈 가져오기를 지원하지 않습니다. `nme run`으로 실행하세요",
+        );
+    }
+    match exec::compile_native(&compiled.source, stem, &python, &output) {
         Ok(status) if status.success() => {
             if output.exists() {
                 ExitCode::SUCCESS
@@ -663,11 +671,32 @@ fn command_run(args: &[String], language: MessageLanguage) -> ExitCode {
         },
     };
 
-    let (path, python_source) = match transpile_file(&file, language, "run", "실행") {
+    let compiled = match transpile_file(&file, language, "run", "실행") {
         Ok(ok) => ok,
         Err(code) => return code,
     };
-    match exec::run_python(&python_source, &path, &python) {
+    let main_dir = compiled
+        .path
+        .parent()
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| PathBuf::from("."));
+    let modules = match transpile_modules(&main_dir, &compiled.imports, language) {
+        Ok(modules) => modules,
+        Err(code) => return code,
+    };
+    let module_dir = if modules.is_empty() {
+        None
+    } else {
+        match write_modules_to_temp(&modules) {
+            Ok(dir) => Some(dir),
+            Err(code) => return code,
+        }
+    };
+    let run_status = exec::run_python(&compiled.source, &compiled.path, &python, module_dir.as_deref());
+    if let Some(dir) = module_dir {
+        let _ = std::fs::remove_dir_all(dir);
+    }
+    match run_status {
         Ok(status) => exit_code(status),
         Err(err) => fail(
             nme_core::diagnostics::DiagnosticCode::CliPythonStartFailed,
@@ -745,11 +774,23 @@ fn command_build(args: &[String], language: MessageLanguage) -> ExitCode {
         },
     };
 
-    let (path, python_source) = match transpile_file(&file, language, "build", "빌드") {
+    let compiled = match transpile_file(&file, language, "build", "빌드") {
         Ok(ok) => ok,
         Err(code) => return code,
     };
-    match exec::check_python(&python_source, &path, &python) {
+    let main_dir = compiled
+        .path
+        .parent()
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| PathBuf::from("."));
+    let modules = match transpile_modules(&main_dir, &compiled.imports, language) {
+        Ok(modules) => modules,
+        Err(code) => return code,
+    };
+    if let Err(code) = check_modules(&modules, language, "build") {
+        return code;
+    }
+    match exec::check_python(&compiled.source, &compiled.path, &python) {
         Ok(output) if output.status.success() => write_stderr(&output.stderr),
         Ok(output) => {
             return fail_with_details(
@@ -780,7 +821,7 @@ fn command_build(args: &[String], language: MessageLanguage) -> ExitCode {
         }
     }
     if let Some(path) = output {
-        match std::fs::write(&path, &python_source) {
+        match std::fs::write(&path, &compiled.source) {
             Ok(()) => ExitCode::SUCCESS,
             Err(err) => fail(
                 nme_core::diagnostics::DiagnosticCode::CliFileWriteFailed,
@@ -790,7 +831,7 @@ fn command_build(args: &[String], language: MessageLanguage) -> ExitCode {
             ),
         }
     } else {
-        print!("{python_source}");
+        print!("{}", compiled.source);
         ExitCode::SUCCESS
     }
 }
@@ -841,11 +882,23 @@ fn command_check(args: &[String], language: MessageLanguage) -> ExitCode {
             Err(code) => return code,
         },
     };
-    let (path, python_source) = match transpile_file(&file, language, "check", "검사") {
+    let compiled = match transpile_file(&file, language, "check", "검사") {
         Ok(ok) => ok,
         Err(code) => return code,
     };
-    match exec::check_python(&python_source, &path, &python) {
+    let main_dir = compiled
+        .path
+        .parent()
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| PathBuf::from("."));
+    let modules = match transpile_modules(&main_dir, &compiled.imports, language) {
+        Ok(modules) => modules,
+        Err(code) => return code,
+    };
+    if let Err(code) = check_modules(&modules, language, "check") {
+        return code;
+    }
+    match exec::check_python(&compiled.source, &compiled.path, &python) {
         Ok(output) if output.status.success() => {
             write_stderr(&output.stderr);
             ExitCode::SUCCESS
@@ -1181,12 +1234,20 @@ fn exit_code(status: std::process::ExitStatus) -> ExitCode {
 }
 
 /// Reads and transpiles one `.nme` file, reporting all problems nicely.
+/// A transpiled program plus its `.nme` module imports, ready for the CLI to
+/// transpile those modules too and make them importable at runtime.
+struct Compiled {
+    path: std::path::PathBuf,
+    source: String,
+    imports: Vec<nme_core::ModuleImport>,
+}
+
 fn transpile_file(
     file: &str,
     language: MessageLanguage,
     action_en: &str,
     action_ko: &str,
-) -> Result<(std::path::PathBuf, String), ExitCode> {
+) -> Result<Compiled, ExitCode> {
     let path = match resolve_program(Path::new(file)) {
         NameResolution::Found(path) => path,
         NameResolution::Ambiguous(names) => {
@@ -1253,8 +1314,12 @@ fn transpile_file(
             ));
         }
     };
-    match nme_core::transpile(&source) {
-        Ok(python) => Ok((path, python)),
+    match nme_core::transpile_with_modules(&source) {
+        Ok((python, imports)) => Ok(Compiled {
+            path,
+            source: python,
+            imports,
+        }),
         Err(problems) => {
             eprint!(
                 "{}",
@@ -1263,6 +1328,134 @@ fn transpile_file(
             Err(ExitCode::FAILURE)
         }
     }
+}
+
+/// Transpiles every `.nme` module the main program imports (transitively),
+/// returning `(stem, python_source)` pairs. Duplicate stems are rejected
+/// because the generated Python imports modules by their file stem.
+fn transpile_modules(
+    main_dir: &Path,
+    imports: &[nme_core::ModuleImport],
+    language: MessageLanguage,
+) -> Result<Vec<(String, String)>, ExitCode> {
+    let mut modules = Vec::<(String, String)>::new();
+    let mut seen = std::collections::HashSet::new();
+    let mut pending: Vec<nme_core::ModuleImport> = imports.to_vec();
+    while let Some(import) = pending.pop() {
+        if !seen.insert(import.file.clone()) {
+            continue;
+        }
+        let module_path = main_dir.join(&import.file);
+        let stem = module_path
+            .file_stem()
+            .and_then(|name| name.to_str())
+            .unwrap_or("module")
+            .to_string();
+        if let Some((existing, _)) = modules.iter().find(|(name, _)| name == &stem) {
+            return Err(fail(
+                nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
+                language,
+                &format!(
+                    "two imported modules are both named `{existing}`; rename one of them"
+                ),
+                &format!("가져온 모듈 두 개가 모두 `{existing}`라는 이름입니다. 하나를 바꾸세요"),
+            ));
+        }
+        let source = match std::fs::read_to_string(&module_path) {
+            Ok(source) => source,
+            Err(err) => {
+                return Err(fail(
+                    nme_core::diagnostics::DiagnosticCode::CliMissingProgram,
+                    language,
+                    &format!(
+                        "couldn't read module {}: {err}\n\
+                         hint: the module must sit next to the main program",
+                        module_path.display()
+                    ),
+                    &format!(
+                        "{} 모듈을 읽을 수 없습니다: {err}\n\
+                         도움말: 모듈은 주 프로그램 옆에 있어야 합니다",
+                        module_path.display()
+                    ),
+                ));
+            }
+        };
+        let (python, sub_imports) = match nme_core::transpile_with_modules(&source) {
+            Ok(ok) => ok,
+            Err(problems) => {
+                eprint!(
+                    "{}",
+                    render_diagnostics(
+                        &problems,
+                        &source,
+                        &module_path.to_string_lossy(),
+                        language
+                    )
+                );
+                return Err(ExitCode::FAILURE);
+            }
+        };
+        modules.push((stem, python));
+        pending.extend(sub_imports);
+    }
+    Ok(modules)
+}
+
+/// Asks CPython to validate each transpiled module's Python, reporting the
+/// module file in any failure.
+fn check_modules(modules: &[(String, String)], language: MessageLanguage, action: &str) -> Result<(), ExitCode> {
+    for (stem, python) in modules {
+        let module_path = PathBuf::from(format!("{stem}.nme"));
+        match exec::check_python(python, &module_path, DEFAULT_PYTHON) {
+            Ok(output) if output.status.success() => {}
+            Ok(output) => {
+                return Err(fail_with_details(
+                    nme_core::diagnostics::DiagnosticCode::CliCpythonValidationFailed,
+                    language,
+                    &format!(
+                        "the module {stem} did not pass CPython's syntax check during `nme {action}`"
+                    ),
+                    &format!(
+                        "{stem} 모듈이 `nme {action}` 중 CPython 문법 검사를 통과하지 못했습니다"
+                    ),
+                    &output.stderr,
+                ));
+            }
+            Err(error) => {
+                return Err(fail(
+                    nme_core::diagnostics::DiagnosticCode::CliPythonStartFailed,
+                    language,
+                    &format!("couldn't start Python to check the module {stem}: {error}"),
+                    &format!("{stem} 모듈을 검사할 Python을 시작할 수 없습니다: {error}"),
+                ));
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Writes transpiled modules to a fresh temporary folder and returns it.
+fn write_modules_to_temp(modules: &[(String, String)]) -> Result<PathBuf, ExitCode> {
+    let dir = std::env::temp_dir().join(format!("nme-modules-{}", std::process::id()));
+    if let Err(err) = std::fs::create_dir_all(&dir) {
+        return Err(fail(
+            nme_core::diagnostics::DiagnosticCode::CliFolderReadFailed,
+            MessageLanguage::English,
+            &format!("couldn't create the module folder: {err}"),
+            &format!("모듈 폴더를 만들 수 없습니다: {err}"),
+        ));
+    }
+    for (stem, python) in modules {
+        if let Err(err) = std::fs::write(dir.join(format!("{stem}.py")), python) {
+            return Err(fail(
+                nme_core::diagnostics::DiagnosticCode::CliFileWriteFailed,
+                MessageLanguage::English,
+                &format!("couldn't write the module {stem}.py: {err}"),
+                &format!("{stem}.py 모듈을 저장할 수 없습니다: {err}"),
+            ));
+        }
+    }
+    Ok(dir)
 }
 
 fn render_diagnostics(

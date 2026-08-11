@@ -195,6 +195,27 @@ fn a_file_read_without_a_target_is_reported() {
 }
 
 #[test]
+fn a_module_import_needs_a_nme_path_and_names() {
+    let not_nme = err("from \"helper.py\" import greet\n");
+    assert!(not_nme.contains(".nme"), "{not_nme}");
+
+    let no_names = err("from \"helper.nme\" import\n");
+    assert!(no_names.contains("module import"), "{no_names}");
+
+    let bad_shape = err("from \"helper.nme\" import greet 1\n");
+    assert!(bad_shape.contains("module import"), "{bad_shape}");
+}
+
+#[test]
+fn a_module_import_needs_a_python_identifier_file_name() {
+    let dashed = err("from \"my-helper.nme\" import greet\n");
+    assert!(dashed.contains("Python identifier"), "{dashed}");
+
+    let dotted = err("from \"shapes.ko.nme\" import rect\n");
+    assert!(dotted.contains("Python identifier"), "{dotted}");
+}
+
+#[test]
 fn a_file_write_without_a_path_is_reported() {
     let message = err("write \"hello\" to\n");
     assert!(message.contains("quoted path"), "{message}");

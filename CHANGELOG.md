@@ -6,6 +6,14 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+- Add `.nme` module imports: `from "helper.nme" import greet, score` imports
+  only the listed names from a sibling `.nme` file, so a project can split
+  into several files with an explicit interface and no shared global state.
+  `nme run`/`check`/`build` transpile imported modules transitively and make
+  them importable at runtime (via a temporary module folder on `sys.path`);
+  module errors report the module's file name. File names must be Python
+  identifiers, two modules may not share a name, and `nme compile` defers
+  module support. Includes a two-file example pair (`examples/modules/`).
 - Add an `http-client.nme` example that fetches a page from a local server
   with `urllib`, and a `terminal-menu.nme` TUI menu loop (both with Korean
   twins); a CLI test runs the menu with scripted input.

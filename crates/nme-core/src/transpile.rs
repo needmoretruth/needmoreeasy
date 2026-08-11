@@ -5,9 +5,20 @@
 //! one reason to change; keep it that way.
 
 use crate::diagnostics::{Diagnostic, DiagnosticCode, Span};
+use crate::syntax::{Code, NmeStmt};
 use crate::{lexer, lower, parser};
 
-/// Transpiles NME source code into ordinary Python source code.
+/// A `.nme` module import discovered while transpiling: the other file's
+/// path and the explicit names that form its interface.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ModuleImport {
+    /// Path as written, quotes stripped (for example `helper.nme`).
+    pub file: String,
+    /// The names this file imports from the module.
+    pub names: Vec<String>,
+}
+
+/// Transpiles NME source into ordinary Python source code.
 ///
 /// * Pure Python input comes out **byte-identical**.
 /// * NME statements are replaced by Python on the same line, so line
@@ -15,9 +26,34 @@ use crate::{lexer, lower, parser};
 /// * On failure, returns *all* problems found, ready to render with
 ///   [`crate::diagnostics::render_all`].
 pub fn transpile(source: &str) -> Result<String, Vec<Diagnostic>> {
+    transpile_with_modules(source).map(|(python, _)| python)
+}
+
+/// Like [`transpile`], but also reports every `from "module.nme" import ...`
+/// so the CLI can transpile those modules and make them importable at
+/// runtime.
+pub fn transpile_with_modules(
+    source: &str,
+) -> Result<(String, Vec<ModuleImport>), Vec<Diagnostic>> {
     let lines = lexer::logical_lines(source).map_err(|problem| vec![problem])?;
     let program = parser::parse_program(source, &lines)?;
     let nme_lines = &program.nme_lines;
+    let imports = nme_lines
+        .iter()
+        .filter_map(|line| match &line.stmt {
+            NmeStmt::ModuleImport { path, names } => {
+                let span = match path {
+                    Code::Source(span) => *span,
+                };
+                let raw = &source[span.start..span.end];
+                Some(ModuleImport {
+                    file: raw.trim_matches(['\'', '"']).to_string(),
+                    names: names.clone(),
+                })
+            }
+            _ => None,
+        })
+        .collect();
     let mut edits = lower::lower_lines(nme_lines, source);
     let nme_indexes = nme_lines
         .iter()
@@ -55,7 +91,7 @@ pub fn transpile(source: &str) -> Result<String, Vec<Diagnostic>> {
     if !line_break_problems.is_empty() {
         return Err(line_break_problems);
     }
-    Ok(lower::apply_edits(source, &edits))
+    Ok((lower::apply_edits(source, &edits), imports))
 }
 
 fn count_line_breaks(text: &str) -> usize {

@@ -46,4 +46,4 @@ pub mod syntax;
 pub mod transpile;
 
 pub use convert::{convert_python, Conversion, Language, SyntaxLevel};
-pub use transpile::transpile;
+pub use transpile::{transpile, transpile_with_modules, ModuleImport};

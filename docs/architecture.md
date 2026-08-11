@@ -151,6 +151,17 @@ This is a deterministic bundled-module registry, not a network package
 manager. Adding a module requires a present beginner use case, a fixed version,
 both language aliases, diagnostics, tests, and bilingual documentation.
 
+### 8. `.nme` modules import by explicit interface
+
+`from "helper.nme" import name1, name2` imports only the listed names from a
+sibling `.nme` file. The CLI transpiles imported modules (transitively) into a
+temporary folder and adds that folder to `sys.path` through an environment
+variable, so the transpiled `from helper import name1` is ordinary Python
+importing an ordinary Python module. The explicit name list is the module
+boundary: nothing else leaks between files, and there is no shared global
+state. Module file names must be valid Python identifiers because the
+generated import uses the file stem.
+
 ### 8. Small and safe Rust
 
 `unsafe` is forbidden workspace-wide. `rustpython-parser` is the only Rust

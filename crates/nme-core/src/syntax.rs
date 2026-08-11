@@ -232,6 +232,13 @@ pub enum NmeStmt {
         path: Code,
         value: Value,
     },
+    /// `from "helper.nme" import greet, score` — imports named values from
+    /// another `.nme` module. The explicit name list is the module interface;
+    /// nothing else leaks between files.
+    ModuleImport {
+        path: Code,
+        names: Vec<String>,
+    },
 }
 
 /// The single statement in an inline NME block.

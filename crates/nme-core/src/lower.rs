@@ -145,6 +145,17 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
             lower_code(path, source),
             lower_value(value, source)
         ),
+        NmeStmt::ModuleImport { path, names } => {
+            let path_text = lower_code(path, source);
+            let stripped = path_text.trim_matches(['\'', '"']);
+            let stem = stripped
+                .rsplit(['/', '\\'])
+                .next()
+                .unwrap_or(stripped)
+                .strip_suffix(".nme")
+                .unwrap_or(stripped);
+            format!("from {stem} import {}", names.join(", "))
+        }
     }
 }
 

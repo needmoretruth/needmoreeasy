@@ -910,6 +910,33 @@ fn sentence_file_read_and_write_lower_to_pathlib_lines() {
 }
 
 #[test]
+fn module_imports_lower_to_python_and_report_their_interface() {
+    let python = ok("from \"helper.nme\" import greet, score\nshow greet\n");
+    assert_eq!(
+        python,
+        "from helper import greet, score\nprint(greet)\n"
+    );
+
+    let (source, imports) = nme_core::transpile_with_modules(
+        "from \"helper.nme\" import greet, score\n",
+    )
+    .unwrap();
+    assert_eq!(source, "from helper import greet, score\n");
+    assert_eq!(imports.len(), 1);
+    assert_eq!(imports[0].file, "helper.nme");
+    assert_eq!(imports[0].names, vec!["greet".to_string(), "score".to_string()]);
+
+    let korean = ok("from \"util.nme\" import 안녕\nshow 안녕\n");
+    assert_eq!(korean, "from util import 안녕\nprint(안녕)\n");
+}
+
+#[test]
+fn a_python_from_import_stays_byte_identical() {
+    let python = ok("from helper import greet\nshow greet\n");
+    assert_eq!(python, "from helper import greet\nprint(greet)\n");
+}
+
+#[test]
 fn prose_with_read_or_write_words_stays_sentence_output() {
     assert_eq!(ok("write hello\n"), "print(\"write hello\")\n");
     assert_eq!(ok("read the book\n"), "print(\"read the book\")\n");
