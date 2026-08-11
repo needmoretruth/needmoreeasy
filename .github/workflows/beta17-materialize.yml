@@ -9,113 +9,28 @@ permissions:
 
 jobs:
   materialize:
-    if: github.event.head_commit.message == 'beta17-materialize'
+    if: github.event.head_commit.message == 'beta17-run'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - name: Check out work branch
+        uses: actions/checkout@v6
         with:
           ref: work/beta.17-nextgen
           fetch-depth: 0
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust tools
+        uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
-      - uses: actions/setup-python@v6
+      - name: Install CPython
+        uses: actions/setup-python@v6
         with:
           python-version: '3.14'
-      - name: Build candidate
+      - name: Materialize beta.17 source
+        run: python scripts/materialize-beta17.py
+      - name: Validate candidate
         shell: bash
         run: |
           set -euo pipefail
-          python - <<'PY'
-          from pathlib import Path
-          old = '0.0.1-beta.16'
-          new = '0.0.1-beta.17'
-          files = [
-              'Cargo.toml', 'Cargo.lock', 'README.md', 'README.ko.md',
-              'docs/install.md', 'docs/install.ko.md', 'docs/versioning.md',
-              'docs/versioning.ko.md', 'crates/nme-cli/tests/cli.rs',
-          ]
-          changed = []
-          for name in files:
-              path = Path(name)
-              text = path.read_text(encoding='utf-8')
-              if old in text:
-                  path.write_text(text.replace(old, new), encoding='utf-8')
-                  changed.append(name)
-          assert {'Cargo.toml', 'Cargo.lock', 'crates/nme-cli/tests/cli.rs'} <= set(changed), changed
-
-          Path('scripts').mkdir(exist_ok=True)
-          Path('scripts/check-beta-step.py').write_text(r'''#!/usr/bin/env python3
-from __future__ import annotations
-import re
-import subprocess
-import sys
-import tomllib
-from pathlib import Path
-
-ROOT = Path(__file__).resolve().parents[1]
-VERSION_RE = re.compile(r"^(?P<base>.+-beta\.)(?P<number>\d+)$")
-
-def fail(message: str) -> None:
-    print(f"beta-step: {message}", file=sys.stderr)
-    raise SystemExit(1)
-
-def version(text: str) -> str:
-    try:
-        return tomllib.loads(text)['workspace']['package']['version']
-    except KeyError as error:
-        fail(f"Cargo.toml has no workspace.package.version: {error}")
-
-def git(*args: str) -> str:
-    return subprocess.check_output(['git', *args], cwd=ROOT, text=True).strip()
-
-current = version((ROOT / 'Cargo.toml').read_text(encoding='utf-8'))
-current_match = VERSION_RE.fullmatch(current)
-if not current_match:
-    fail(f"current version is not a beta version: {current}")
-try:
-    parent = version(git('show', 'HEAD^:Cargo.toml'))
-except subprocess.CalledProcessError:
-    fail('beta commit needs a first parent with Cargo.toml')
-parent_match = VERSION_RE.fullmatch(parent)
-if not parent_match:
-    fail(f"parent version is not a beta version: {parent}")
-if current_match.group('base') != parent_match.group('base'):
-    fail(f"beta base changed unexpectedly: {parent} -> {current}")
-if int(current_match.group('number')) != int(parent_match.group('number')) + 1:
-    fail(f"beta must advance exactly one step: {parent} -> {current}")
-subject = git('log', '-1', '--format=%s')
-if current not in subject:
-    fail(f"commit subject must contain {current!r}: {subject!r}")
-lock = tomllib.loads((ROOT / 'Cargo.lock').read_text(encoding='utf-8'))
-expected = {'nme-cli', 'nme-core', 'nme-native'}
-seen = set()
-for package in lock.get('package', []):
-    if package.get('name') in expected:
-        seen.add(package['name'])
-        if package.get('version') != current:
-            fail(f"Cargo.lock {package['name']} is {package.get('version')}, expected {current}")
-if seen != expected:
-    fail(f"Cargo.lock workspace packages mismatch: {sorted(seen)}")
-print(f"beta-step: ok {parent} -> {current}")
-''', encoding='utf-8')
-
-          en = Path('CHANGELOG.md')
-          text = en.read_text(encoding='utf-8')
-          marker = '## Unreleased\n'
-          entry = '''\n## 0.0.1-beta.17 — 2026-08-12\n\n- Make `beta` the enforced next-generation release line. Every public beta push must advance the workspace beta number by exactly one, name that version in the commit subject, and keep the workspace package versions in `Cargo.lock` synchronized.\n- Upgrade CI to `actions/checkout@v6` and `actions/setup-python@v6`, and run Cargo checks and tests with `--locked`.\n- Add CPython 3.10, 3.12, and 3.14 compatibility jobs for beta and pull requests while retaining the full Ubuntu, Windows, and macOS quality gate.\n'''
-          assert marker in text and '## 0.0.1-beta.17' not in text
-          en.write_text(text.replace(marker, marker + entry, 1), encoding='utf-8')
-
-          ko = Path('CHANGELOG.ko.md')
-          text = ko.read_text(encoding='utf-8')
-          marker = '## 미출시 (Unreleased)\n'
-          entry = '''\n## 0.0.1-beta.17 — 2026-08-12\n\n- `beta`를 규칙으로 강제되는 차세대 릴리스 선으로 만들었습니다. 공개 beta push마다 workspace beta 번호가 부모보다 정확히 1 증가하고, 커밋 제목과 `Cargo.lock`의 workspace 패키지 버전이 모두 일치해야 합니다.\n- CI를 `actions/checkout@v6`, `actions/setup-python@v6`로 올리고 Cargo 검사와 테스트에 `--locked`를 적용했습니다.\n- beta와 PR에 CPython 3.10, 3.12, 3.14 호환성 검증을 추가하면서 Ubuntu, Windows, macOS 전체 품질 게이트도 유지합니다.\n'''
-          assert marker in text and '## 0.0.1-beta.17' not in text
-          ko.write_text(text.replace(marker, marker + entry, 1), encoding='utf-8')
-
-          Path('docs/release-beta.17.md').write_text('''# NME 0.0.1-beta.17\n\n`beta` is the repository's next-generation release line.\n\n## Public beta invariant\n\nEvery commit on public `beta` must advance `beta.N` to exactly `beta.N+1`. The release commit subject, workspace manifest, and the three workspace package entries in `Cargo.lock` must agree. The CI guard checks the real first parent with a two-commit checkout.\n\n## Compatibility gate\n\nThe release gate runs format, locked check, Clippy with warnings denied, locked full workspace tests, CLI installation, and smoke tests on Ubuntu, Windows, and macOS. Beta and pull requests also test with CPython 3.10, 3.12, and 3.14.\n''', encoding='utf-8')
-          PY
           cargo fmt --all
           cargo fmt --all -- --check
           cargo check --workspace --locked
@@ -127,10 +42,11 @@ print(f"beta-step: ok {parent} -> {current}")
           v = tomllib.loads(Path('Cargo.toml').read_text(encoding='utf-8'))['workspace']['package']['version']
           assert v == '0.0.1-beta.17', v
           lock = tomllib.loads(Path('Cargo.lock').read_text(encoding='utf-8'))
-          got = {p['name']: p['version'] for p in lock['package'] if p['name'] in {'nme-cli','nme-core','nme-native'}}
-          assert got == {'nme-cli':v,'nme-core':v,'nme-native':v}, got
+          got = {p['name']: p['version'] for p in lock['package'] if p['name'] in {'nme-cli', 'nme-core', 'nme-native'}}
+          assert got == {'nme-cli': v, 'nme-core': v, 'nme-native': v}, got
+          print('validated', v)
           PY
-      - name: Commit candidate source and metadata
+      - name: Commit candidate
         shell: bash
         run: |
           set -euo pipefail
