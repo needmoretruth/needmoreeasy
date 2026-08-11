@@ -26,7 +26,7 @@ jobs:
         with:
           python-version: '3.14'
       - name: Materialize beta.18 source
-        run: python scripts/materialize-beta18.py
+        run: python scripts/run-beta18-materializer.py
       - name: Validate candidate
         shell: bash
         run: |
