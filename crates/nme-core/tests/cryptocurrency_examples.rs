@@ -78,8 +78,14 @@ fn advanced_cryptocurrency_examples_are_byte_identical_python() {
     let korean = include_str!("../../../examples/needmorecoin-advanced.ko.nme");
     let english = include_str!("../../../examples/needmorecoin-advanced.en.nme");
 
-    assert_eq!(assert_transpiles("needmorecoin-advanced.ko.nme", korean), korean);
-    assert_eq!(assert_transpiles("needmorecoin-advanced.en.nme", english), english);
+    assert_eq!(
+        assert_transpiles("needmorecoin-advanced.ko.nme", korean),
+        korean
+    );
+    assert_eq!(
+        assert_transpiles("needmorecoin-advanced.en.nme", english),
+        english
+    );
 
     for source in [korean, english] {
         assert!(source.contains("hashlib.sha256"));
