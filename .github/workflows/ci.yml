@@ -36,26 +36,19 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
+          import re
 
           path = Path('crates/nme-native/src/lib.rs')
           text = path.read_text(encoding='utf-8')
-          old = '''    if problems.is_empty() {
-              Ok(out)
-          } else {'''
-          new = '''    if problems.is_empty() {
-              Ok(hoist_native_functions(&out))
-          } else {'''
-          assert text.count(old) == 1
-          text = text.replace(old, new, 1)
+          text, changed = re.subn(
+              r'(?m)^(\s*)Ok\(out\)$',
+              r'\1Ok(hoist_native_functions(&out))',
+              text,
+              count=1,
+          )
+          assert changed == 1
 
-          marker = '''fn close_braces(out: &mut String, open: &mut usize, target: usize) {
-              while *open > target {
-                  out.push_str("}\\n");
-                  *open -= 1;
-              }
-          }
-          '''
-          helper = marker + r'''
+          helper = r'''
           /// Moves top-level generated C function definitions before `main`.
           ///
           /// GCC accepts nested functions as a non-standard extension, while Clang
@@ -127,8 +120,9 @@ jobs:
               delta
           }
           '''
-          assert text.count(marker) == 1
-          text = text.replace(marker, helper, 1)
+          boundary = '\n/// Validates and lowers a Python expression to C for the native core,'
+          assert text.count(boundary) == 1
+          text = text.replace(boundary, '\n' + helper.strip() + '\n' + boundary, 1)
           path.write_text(text, encoding='utf-8')
 
           tests = Path('crates/nme-native/tests/native.rs')
