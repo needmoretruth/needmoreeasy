@@ -44,6 +44,7 @@ CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
 22. [22 — Terminal menu](22-terminal-menu.md)
 23. [23 — Modules](23-modules.md)
 24. [24 — Python packages](24-python-packages.md)
+25. [25 — Native](25-native.md)
 
 ## Topic lookup
 
@@ -65,6 +66,7 @@ CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
 - TUI/메뉴 / TUI & menus: [22](22-terminal-menu.md)
 - 모듈 / Modules: [23](23-modules.md)
 - Python 패키지 / Python packages: [24](24-python-packages.md)
+- 네이티브 / Native: [25](25-native.md)
 
 ## All guides
 
@@ -94,6 +96,7 @@ CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
 | 22 | ★★★★★ | TUI/메뉴 / TUI & menus | [Terminal menu — a small TUI](22-terminal-menu.md) | A loop-driven terminal menu |
 | 23 | ★★★★★ | 모듈 / Modules | [Modules — split your program into files](23-modules.md) | Import named values from another .nme file |
 | 24 | ★★★★★ | Python 패키지 / Python packages | [Python packages — the standard library and installed libraries](24-python-packages.md) | Use datetime and other Python packages from NME |
+| 25 | ★★★★★ | 네이티브 / Native | [Native — compile to machine code](25-native.md) | Run a core-subset program without CPython |
 
 ## Where to continue
 
