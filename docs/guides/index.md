@@ -9,7 +9,8 @@ gets harder than the last, and compiles with `nme check`. Guides 01–04 are
 first-day sentences; 05–10 add beginner syntax and control flow; 11–12 use the
 CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
 21–22 add HTTP and terminal menus; 30–31 add data and records; 32–34 add web
-data, a growing project, and self-hosting.
+data, a growing project, and self-hosting; 35–37 add a dated diary, word
+counting, and a hidden-word game.
 
 ## Difficulty
 
@@ -55,6 +56,9 @@ data, a growing project, and self-hosting.
 32. [32 — Weather](32-weather.md)
 33. [33 — Todo](33-todo.md)
 34. [34 — Self-host](34-selfhost.md)
+35. [35 — Diary](35-diary.md)
+36. [36 — Word count](36-word-count.md)
+37. [37 — Word guess](37-word-guess.md)
 
 ## Topic lookup
 
@@ -67,6 +71,7 @@ data, a growing project, and self-hosting.
 - 랜덤 / Random: [10](10-random.md)
 - 도구 사용 / Using the tools: [11](11-check-build.md), [12](12-convert.md)
 - 파일 / Files: [13](13-files.md), [16](16-name-list.md)
+- 일기 / Diary: [35](35-diary.md)
 - JSON / JSON: [14](14-json.md)
 - 프로젝트 / Project: [15](15-high-score.md), [33](33-todo.md)
 - 블록체인 / Blockchain: [17](17-blockchain.md), [18](18-proof-of-work.md)
@@ -79,10 +84,12 @@ data, a growing project, and self-hosting.
 - Python 패키지 / Python packages: [24](24-python-packages.md)
 - 네이티브 / Native: [25](25-native.md)
 - 게임 / Game: [26](26-adventure.md)
+- 게임 / Word guess: [37](37-word-guess.md)
 - 계산기 / Calculator: [27](27-calculator.md)
 - 컴파일러 / Compiler: [28](28-compiler.md)
 - 부트스트랩 / Bootstrap: [29](29-bootstrap.md)
 - 데이터/Data: [30](30-data.md), [31](31-address-book.md)
+- 단어 / Word count: [36](36-word-count.md)
 - 셀프호스팅 / Self-host: [34](34-selfhost.md)
 
 ## All guides
@@ -123,6 +130,9 @@ data, a growing project, and self-hosting.
 | 32 | ★★★★★ | 네트워크/데이터 / Web data | [Weather — reading JSON from the web](32-weather.md) | Fetch a local HTTP server's JSON and print a mini weather report |
 | 33 | ★★★★★ | 프로젝트 / Project | [Todo — a growing project](33-todo.md) | A JSON-persisted todo list with add, done, list, and a storage module |
 | 34 | ★★★★★ | 셀프호스팅 / Self-host | [Self-host — NME running NME](34-selfhost.md) | An NME program that compiles a tiny NME-like subset to Python |
+| 35 | ★★★★★ | 파일 / Files | [Diary — notes saved by date](35-diary.md) | A diary that saves each day's note to a dated file and can read it back |
+| 36 | ★★★★★ | 데이터/Data | [Word count — how often each word appears](36-word-count.md) | Read a text file and count how often each word appears with a dict and Counter |
+| 37 | ★★★★★ | 게임 / Game | [Word guess — a hidden-word game](37-word-guess.md) | A hangman-style game that guesses the letters of a hidden word with limited tries |
 
 ## Where to continue
 

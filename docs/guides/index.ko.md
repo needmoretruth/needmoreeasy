@@ -10,7 +10,7 @@
 제어 흐름을 더하며, 11–12는 CLI 도구를 다루고, 13–16은 파일·JSON·작은
 프로젝트를, 17–20은 블록체인을, 21–22는 HTTP와 터미널 메뉴를 다룹니다.
 30–31은 데이터와 기록을, 32–34는 웹 데이터, 커지는 프로젝트, 셀프호스팅을
-다룹니다.
+다룹니다. 35–37은 날짜별 일기, 단어 세기, 숨은 단어 게임을 다룹니다.
 
 ## 난이도
 
@@ -56,6 +56,9 @@
 32. [32 — 날씨](32-weather.ko.md)
 33. [33 — 할 일](33-todo.ko.md)
 34. [34 — 셀프호스트](34-selfhost.ko.md)
+35. [35 — 일기](35-diary.ko.md)
+36. [36 — 단어 세기](36-word-count.ko.md)
+37. [37 — 단어 맞히기](37-word-guess.ko.md)
 
 ## 주제별 찾아보기
 
@@ -68,6 +71,7 @@
 - 랜덤 / Random: [10](10-random.ko.md)
 - 도구 사용 / Using the tools: [11](11-check-build.ko.md), [12](12-convert.ko.md)
 - 파일 / Files: [13](13-files.ko.md), [16](16-name-list.ko.md)
+- 일기 / Diary: [35](35-diary.ko.md)
 - JSON / JSON: [14](14-json.ko.md)
 - 프로젝트 / Project: [15](15-high-score.ko.md), [33](33-todo.ko.md)
 - 블록체인 / Blockchain: [17](17-blockchain.ko.md), [18](18-proof-of-work.ko.md)
@@ -80,10 +84,12 @@
 - Python 패키지 / Python packages: [24](24-python-packages.ko.md)
 - 네이티브 / Native: [25](25-native.ko.md)
 - 게임 / Game: [26](26-adventure.ko.md)
+- 게임 / Word guess: [37](37-word-guess.ko.md)
 - 계산기 / Calculator: [27](27-calculator.ko.md)
 - 컴파일러 / Compiler: [28](28-compiler.ko.md)
 - 부트스트랩 / Bootstrap: [29](29-bootstrap.ko.md)
 - 데이터/Data: [30](30-data.ko.md), [31](31-address-book.ko.md)
+- 단어 / Word count: [36](36-word-count.ko.md)
 - 셀프호스팅 / Self-host: [34](34-selfhost.ko.md)
 
 ## 전체 목록
@@ -124,6 +130,9 @@
 | 32 | ★★★★★ | 네트워크/데이터 / Web data | [날씨 — 웹에서 JSON 읽기](32-weather.ko.md) | 로컬 HTTP 서버의 JSON을 가져와 미니 날씨 보고서 출력하기 |
 | 33 | ★★★★★ | 프로젝트 / Project | [할 일 — 커지는 프로젝트](33-todo.ko.md) | add, done, list를 지원하고 저장 모듈을 둔 JSON 저장 할 일 목록 |
 | 34 | ★★★★★ | 셀프호스팅 / Self-host | [셀프호스트 — NME가 NME를 실행](34-selfhost.ko.md) | 아주 작은 NME형 부분집합을 Python으로 컴파일하는 NME 프로그램 |
+| 35 | ★★★★★ | 파일 / Files | [일기 — 날짜별 메모](35-diary.ko.md) | 각 날의 메모를 날짜별 파일에 저장하고 다시 읽는 일기 |
+| 36 | ★★★★★ | 데이터/Data | [단어 세기 — 단어 빈도](36-word-count.ko.md) | dict와 Counter로 텍스트 파일의 단어 빈도 세기 |
+| 37 | ★★★★★ | 게임 / Game | [단어 맞히기 — 숨은 단어 게임](37-word-guess.ko.md) | 제한된 기회 안에 숨은 단어의 글자를 맞히는 행맨형 게임 |
 
 ## 다음 단계
 
