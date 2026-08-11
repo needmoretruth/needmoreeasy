@@ -16,7 +16,8 @@ and a habit-tracker project; 44–46 add a random music player, CSV rows of
 data, and an expression language; 47–49 add a terminal progress bar, an inventory
 store, and reading tokens; 50–52 add string tools, a grid board, and
 tic-tac-toe; 56–58 add logging, grouping, and a tiny bytecode runner;
-59–61 add a text editor, catalog search, and a mini bank.
+59–61 add a text editor, catalog search, and a mini bank; 62–64 add
+algorithms and ASCII art.
 
 ## Difficulty
 
@@ -89,6 +90,9 @@ tic-tac-toe; 56–58 add logging, grouping, and a tiny bytecode runner;
 59. [59 — Editor](59-editor.md)
 60. [60 — Search](60-search.md)
 61. [61 — Mini bank](61-bank.md)
+62. [62 — Bubble sort](62-bubble.md)
+63. [63 — ASCII art](63-ascii-art.md)
+64. [64 — Binary search](64-binary-search.md)
 
 ## Topic lookup
 
@@ -145,6 +149,8 @@ tic-tac-toe; 56–58 add logging, grouping, and a tiny bytecode runner;
 - 편집기 / Editor: [59](59-editor.md)
 - 검색 / Search: [60](60-search.md)
 - 은행 / Bank: [61](61-bank.md)
+- 알고리즘 / Algorithm: [62](62-bubble.md), [64](64-binary-search.md)
+- 아스키 아트 / ASCII art: [63](63-ascii-art.md)
 
 ## All guides
 
@@ -208,6 +214,9 @@ tic-tac-toe; 56–58 add logging, grouping, and a tiny bytecode runner;
 | 59 | ★★★★★ | TUI/터미널 앱 / TUI & terminal app | [Editor — a tiny text editor](59-editor.md) | A line-based editor with a buffer and add, list, remove, save, and quit commands |
 | 60 | ★★★★★ | 검색/데이터 / Search & data | [Search — finding items in JSON](60-search.md) | Load a JSON catalog from a local server or file and search it by keyword, case-insensitively |
 | 61 | ★★★★★ | 프로젝트 / Project | [Mini bank — a JSON account](61-bank.md) | A JSON-persisted bank account with deposit, withdraw, balance, history, and a storage module |
+| 62 | ★★★★★ | 알고리즘 / Algorithm | [Bubble sort — your first algorithm](62-bubble.md) | Implementing bubble sort by hand with nested loops and a swap, compared with Python's built-in sort |
+| 63 | ★★★★★ | 아스키 아트 / ASCII art | [ASCII art — drawing with characters](63-ascii-art.md) | A right triangle, an upside-down triangle, and a diamond drawn with nested loops and string multiplication |
+| 64 | ★★★★★ | 알고리즘 / Algorithm | [Binary search — halving the guess](64-binary-search.md) | Finding a number in a sorted list by halving the search each step, with a full walkthrough of the steps |
 
 ## Where to continue
 

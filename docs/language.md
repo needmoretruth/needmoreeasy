@@ -320,6 +320,9 @@ Beginner syntax is compact and exact. It accepts every Python expression and
 is useful when sentence interpretation would be ambiguous. Every documented
 beginner action has a Korean spelling, and both languages may be mixed.
 
+The `<...>` parts below are placeholders that stand for real values — copy a
+line and replace them, rather than running the template itself:
+
 ```text
 say <Python expression>
 말해 <Python 표현식>
