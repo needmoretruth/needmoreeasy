@@ -27,6 +27,21 @@ jobs:
         with:
           python-version: '3.x'
 
+      - name: Normalize one current-limit sentence for exact preparation
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('docs/language.ko.md')
+          text = path.read_text(encoding='utf-8')
+          old = '''- 내장 `random`과 `file` 모듈은 이번 베타에서 쉬운 모듈 문법을 제공합니다.
+            다른 Python 라이브러리는 일반 `import`로 씁니다.'''
+          new = '''- 내장 `random`과 `file` 모듈은 이 베타에서 쉬운 모듈 문법을 지원하며,
+            다른 Python 라이브러리는 일반 `import`를 사용합니다.'''
+          assert text.count(old) == 1
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+
       - name: Apply exact release preparation
         run: python scripts/prepare_beta16_zk.py
 
