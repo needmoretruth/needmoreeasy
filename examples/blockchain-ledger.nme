@@ -1,0 +1,22 @@
+# A tiny blockchain ledger — blocks linked by hashes
+# This is a learning project about how a blockchain stores data,
+# not investment advice.
+# Run: nme r blockchain-ledger
+
+use random latest
+
+import hashlib
+
+chain = []
+previous_hash = "0"
+
+3 times:
+    data = "message " + str(random_number(1, 99))
+    combined = previous_hash + data
+    block_hash = hashlib.sha256(combined.encode()).hexdigest()
+    block = {"data": data, "prev": previous_hash[:8], "hash": block_hash[:8]}
+    chain.append(block)
+    previous_hash = block_hash
+    show f"block {block['hash']} -> prev {block['prev']}"
+
+show "the chain has " + str(len(chain)) + " linked blocks"

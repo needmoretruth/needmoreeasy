@@ -6,6 +6,11 @@ NME의 중요한 변경 사항을 이 문서에 기록합니다.
 
 ## 미출시 (Unreleased)
 
+- 교육용 블록체인 학습 프로젝트 네 개를 추가했습니다(학습용이며 투자 조언이
+  아닙니다). 각각 한국어 버전도 있습니다: `blockchain-ledger.nme`(초급,
+  해시로 연결된 블록), `proof-of-work.nme`(중급, 난이도 있는 채굴과 사슬
+  검증), `signatures.nme`(고급, HMAC 서명과 검증), `consensus.nme`(초고급,
+  두 노드의 포크와 가장 긴 사슬 규칙 시뮬레이션).
 - 문장형 파일 문법을 추가했습니다: `read "notes.txt" into memo`,
   `memo read "notes.txt"`, `memo에 "notes.txt" 읽어서 (저장해)`,
   `write "hello" to "out.txt"`, `"out.txt" 파일에 "hello"를 저장해`가

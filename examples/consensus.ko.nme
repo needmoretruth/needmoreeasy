@@ -1,0 +1,55 @@
+# 합의 — 노드들이 같은 사슬에 동의하는 방법
+# 채굴자들이 경주하고 가장 긴 유효한 사슬을 따르는 작은 시뮬레이션입니다.
+# 학습용입니다. 실제 네트워크는 서명, 많은 노드, 시간 개념이 추가됩니다.
+# 이 프로젝트는 투자 조언이 아닙니다.
+# 실행: nme r consensus.ko
+
+import hashlib
+
+difficulty = 2
+target = "0" * difficulty
+
+
+def mine(chain, data):
+    previous = chain[-1]["hash"]
+    nonce = 0
+    while True:
+        text = previous + data + str(nonce)
+        block_hash = hashlib.sha256(text.encode()).hexdigest()
+        if block_hash.startswith(target):
+            return {"data": data, "nonce": nonce, "hash": block_hash, "prev": previous}
+        nonce = nonce + 1
+
+
+def is_valid(chain):
+    previous = chain[0]["hash"]
+    for block in chain[1:]:
+        text = previous + block["data"] + str(block["nonce"])
+        block_hash = hashlib.sha256(text.encode()).hexdigest()
+        if not block_hash.startswith(target) or block_hash != block["hash"]:
+            return False
+        previous = block_hash
+    return True
+
+
+genesis = {"data": "genesis", "nonce": 0, "hash": "0", "prev": ""}
+node_a = [genesis]
+node_b = [genesis]
+
+말해 "두 채굴자가 genesis 블록에서 시작합니다"
+a_block = mine(node_a, "A: 블록 1")
+node_a.append(a_block)
+말해 "A가 첫 블록을 채굴했습니다: " + str(len(node_a)) + " 대 " + str(len(node_b))
+
+말해 "B가 A의 블록을 듣고 복사합니다"
+node_b.append(a_block)
+말해 "두 노드 모두 " + str(len(node_a)) + "개 블록 보유"
+
+말해 "B가 위에 경쟁 블록을 채굴해 사슬을 갈라지게 합니다"
+b_block = mine(node_b, "B: 경쟁")
+node_b.append(b_block)
+말해 "B는 " + str(len(node_b)) + "개, A는 " + str(len(node_a)) + "개"
+
+말해 "A가 더 긴 사슬을 듣고 채택합니다 (가장 긴 사슬 규칙)"
+node_a = list(node_b)
+말해 "양쪽 합의: " + str(is_valid(node_a)) + " 그리고 " + str(is_valid(node_b))

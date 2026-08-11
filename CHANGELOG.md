@@ -6,6 +6,12 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+- Add four educational blockchain learning projects (learning only, never
+  investment advice), each with a Korean twin: `blockchain-ledger.nme`
+  (beginner, blocks linked by hashes), `proof-of-work.nme` (intermediate,
+  mining with difficulty and a chain-integrity check), `signatures.nme`
+  (advanced, HMAC signing and verification), and `consensus.nme` (expert, a
+  two-node fork and longest-chain rule simulation).
 - Add sentence-level file forms: `read "notes.txt" into memo`,
   `memo read "notes.txt"`, `memo에 "notes.txt" 읽어서 (저장해)`,
   `write "hello" to "out.txt"`, and `"out.txt" 파일에 "hello"를 저장해`

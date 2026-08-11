@@ -1,0 +1,49 @@
+# 작업 증명 — 블록을 채굴하고 사슬을 검증하기
+# 블록체인이 데이터를 보호하는 방법을 배우는 학습 프로젝트입니다.
+# 투자 조언이 아닙니다.
+# 실행: nme r proof-of-work.ko
+
+use random latest
+
+import hashlib
+
+difficulty = 2
+target = "0" * difficulty
+
+
+def mine(data, previous_hash):
+    nonce = 0
+    while True:
+        text = previous_hash + data + str(nonce)
+        block_hash = hashlib.sha256(text.encode()).hexdigest()
+        if block_hash.startswith(target):
+            return {"data": data, "nonce": nonce, "hash": block_hash}
+        nonce = nonce + 1
+
+
+chain = []
+previous_hash = "0"
+
+3 times:
+    block = mine("블록 " + str(random_number(1, 99)), previous_hash)
+    chain.append(block)
+    previous_hash = block["hash"]
+    말해 f"채굴됨 {block['hash'][:14]} nonce {block['nonce']}"
+
+말해 "모든 해시는 " + target + "로 시작합니다"
+
+
+def is_valid(blocks):
+    previous = "0"
+    for block in blocks:
+        text = previous + block["data"] + str(block["nonce"])
+        block_hash = hashlib.sha256(text.encode()).hexdigest()
+        if not block_hash.startswith(target) or block_hash != block["hash"]:
+            return False
+        previous = block_hash
+    return True
+
+
+말해 "사슬 검증: " + str(is_valid(chain))
+chain[0]["data"] = "변조됨"
+말해 "첫 블록을 바꾼 뒤: " + str(is_valid(chain))

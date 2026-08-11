@@ -118,6 +118,13 @@ conditions, loops, random numbers, and value updates in one beginner-friendly
 program.
 The matching English companion is [`roulette.en.nme`](examples/roulette.en.nme).
 
+To see how a blockchain stores data, secure it, and reach agreement, follow
+the four educational projects (learning only, never investment advice):
+[`blockchain-ledger.nme`](examples/blockchain-ledger.nme) (beginner),
+[`proof-of-work.nme`](examples/proof-of-work.nme) (intermediate),
+[`signatures.nme`](examples/signatures.nme) (advanced), and
+[`consensus.nme`](examples/consensus.nme) (expert), each with a Korean twin.
+
 The `.nme` ending is optional. `nme run program` and even `nme program` both
 run `program.nme`. NME chooses the normal Python command for your operating
 system; `--python` is only an advanced override for unusual setups.

@@ -232,6 +232,28 @@ fn the_korean_file_module_spelling_works() {
 }
 
 #[test]
+fn the_blockchain_learning_examples_run() {
+    if !python_available() {
+        eprintln!("Python not available; skipping blockchain example test");
+        return;
+    }
+    for name in [
+        "blockchain-ledger",
+        "blockchain-ledger.ko",
+        "proof-of-work",
+        "proof-of-work.ko",
+        "signatures",
+        "signatures.ko",
+        "consensus",
+        "consensus.ko",
+    ] {
+        let output = nme(&["run", &example(&format!("{name}.nme"))]);
+        assert!(output.status.success(), "{name}: {}", stderr(&output));
+        assert!(!stdout(&output).is_empty(), "{name}: no output");
+    }
+}
+
+#[test]
 fn sentence_file_forms_read_and_write() {
     if !python_available() {
         eprintln!("Python not available; skipping sentence file test");

@@ -117,6 +117,14 @@ nme 모듈
 랜덤 숫자, 값 변경을 하나의 초보자용 프로그램에서 함께 연습할 수 있습니다.
 같은 내용을 영어로 쓴 [`roulette.en.nme`](examples/roulette.en.nme)도 있습니다.
 
+블록체인이 데이터를 저장하고, 보호하고, 합의에 이르는 방법을 배우려면 교육용
+프로젝트 네 개를 따라가 보세요(학습용이며 투자 조언이 아닙니다):
+[`blockchain-ledger.nme`](examples/blockchain-ledger.nme)(초급),
+[`proof-of-work.nme`](examples/proof-of-work.nme)(중급),
+[`signatures.nme`](examples/signatures.nme)(고급),
+[`consensus.nme`](examples/consensus.nme)(초고급). 각각 한국어 버전도
+있습니다.
+
 `.nme`는 생략할 수 있습니다. `program.nme`는 `nme 실행 program`과 `nme
 program` 모두 실행됩니다. NME가 운영체제에 맞는 Python 명령을 자동으로 고르므로
 보통 `--python`을 쓸 필요가 없습니다.
