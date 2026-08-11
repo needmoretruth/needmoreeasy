@@ -9,6 +9,25 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 VERSION_RE = re.compile(r"^(?P<base>.+-beta\.)(?P<number>\d+)$")
+PUBLIC_VERSION_RE = re.compile(r"0\.0\.1-beta\.\d+")
+
+CURRENT_VERSION_DOCUMENTS = (
+    Path("README.md"),
+    Path("README.ko.md"),
+    Path("docs/versioning.md"),
+    Path("docs/versioning.ko.md"),
+    Path("docs/install.md"),
+    Path("docs/install.ko.md"),
+    Path("docs/ai-assistants.md"),
+    Path("docs/ai-assistants.ko.md"),
+)
+
+VERSION_ONLY_DOCUMENTS = (
+    Path("docs/install.md"),
+    Path("docs/install.ko.md"),
+    Path("docs/ai-assistants.md"),
+    Path("docs/ai-assistants.ko.md"),
+)
 
 
 def fail(message: str) -> None:
@@ -25,6 +44,41 @@ def version(text: str) -> str:
 
 def git(*args: str) -> str:
     return subprocess.check_output(["git", *args], cwd=ROOT, text=True).strip()
+
+
+def require_current_version(path: Path, current: str) -> None:
+    full_path = ROOT / path
+    if not full_path.is_file():
+        fail(f"missing current-version document: {path}")
+    text = full_path.read_text(encoding="utf-8")
+    if current not in text:
+        fail(f"{path} does not mention the current version {current}")
+
+
+def check_public_version_documents(current: str, beta_number: str) -> None:
+    for path in CURRENT_VERSION_DOCUMENTS:
+        require_current_version(path, current)
+
+    for path in VERSION_ONLY_DOCUMENTS:
+        text = (ROOT / path).read_text(encoding="utf-8")
+        versions = set(PUBLIC_VERSION_RE.findall(text))
+        if versions != {current}:
+            fail(
+                f"{path} has stale public versions: "
+                f"{', '.join(sorted(versions)) or '(none)'}; expected only {current}"
+            )
+
+    for path in (Path("CHANGELOG.md"), Path("CHANGELOG.ko.md")):
+        require_current_version(path, current)
+        text = (ROOT / path).read_text(encoding="utf-8")
+        if f"## {current}" not in text:
+            fail(f"{path} needs a {current} release heading")
+
+    for path in (
+        Path(f"docs/release-beta.{beta_number}.md"),
+        Path(f"docs/release-beta.{beta_number}.ko.md"),
+    ):
+        require_current_version(path, current)
 
 
 current = version((ROOT / "Cargo.toml").read_text(encoding="utf-8"))
@@ -55,4 +109,5 @@ for package in lock.get("package", []):
             fail(f"Cargo.lock {package['name']} is {package.get('version')}, expected {current}")
 if seen != expected:
     fail(f"Cargo.lock workspace packages mismatch: {sorted(seen)}")
+check_public_version_documents(current, current_match.group("number"))
 print(f"beta-step: ok {parent} -> {current}")

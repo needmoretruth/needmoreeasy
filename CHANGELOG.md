@@ -6,6 +6,34 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.23 — 2026-08-12
+
+- Keep the proof-of-work difficulty labels consistent across the six
+  NeedMoreCoin examples (Korean/English sentence, beginner, and advanced
+  surfaces), with a regression test for the shared learning contract.
+
+## 0.0.1-beta.22 — 2026-08-12
+
+- Make the six-way NeedMoreCoin learning matrix fast and deterministic enough
+  for regular example validation, and keep the sentence examples genuinely
+  punctuation-free where their surface promises that progression.
+- Add parser and regression coverage for the pure English sentence proof
+  expressions and validate the Korean and English sentence sources separately.
+
+## 0.0.1-beta.21 — 2026-08-12
+
+- Repair the locked release metadata and keep CLI and cryptocurrency example
+  regression checks aligned with the current beta package versions.
+
+## 0.0.1-beta.20 — 2026-08-12
+
+- Replace the earlier standalone blockchain demonstrations with the
+  NeedMoreCoin learning project: complete Korean/English sentence, beginner,
+  and advanced examples, a shared construction guide, and an authoring
+  standard for six-way examples.
+- Add automated coverage that checks all six examples, their intended syntax
+  surfaces, and their shared observable behavior.
+
 ## 0.0.1-beta.19 — 2026-08-12
 
 - Converge the public beta Git topology with `main`: the final beta.19 release commit keeps beta.18 as its first parent and records the current main tip as its second parent. The beta first-parent release line still advances exactly one version per public commit, while `main` becomes an actual ancestor of the next-generation `beta` branch.
