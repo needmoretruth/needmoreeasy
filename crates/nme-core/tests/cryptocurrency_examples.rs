@@ -4,6 +4,24 @@ fn assert_transpiles(path: &str, source: &str) -> String {
     transpile(source).unwrap_or_else(|problems| panic!("{path} should transpile: {problems:?}"))
 }
 
+fn assert_every_nonempty_line_lowers(path: &str, source: &str, python: &str) {
+    let source_lines = source.lines().collect::<Vec<_>>();
+    let python_lines = python.lines().collect::<Vec<_>>();
+    assert_eq!(source_lines.len(), python_lines.len(), "{path}");
+
+    for (line_number, (before, after)) in source_lines.iter().zip(&python_lines).enumerate() {
+        if before.trim().is_empty() {
+            continue;
+        }
+        assert_ne!(
+            before.trim(),
+            after.trim(),
+            "{path} line {} escaped the NME sentence parser instead of lowering",
+            line_number + 1
+        );
+    }
+}
+
 #[test]
 fn all_six_cryptocurrency_examples_transpile() {
     let examples = [
@@ -51,26 +69,45 @@ fn korean_sentence_cryptocurrency_is_pure_sentence_source() {
     );
 
     let python = assert_transpiles("needmorecoin-sentence.ko.nme", source);
-    let source_lines = source.lines().collect::<Vec<_>>();
-    let python_lines = python.lines().collect::<Vec<_>>();
-    assert_eq!(source_lines.len(), python_lines.len());
-
-    for (line_number, (before, after)) in source_lines.iter().zip(&python_lines).enumerate() {
-        if before.trim().is_empty() {
-            continue;
-        }
-        assert_ne!(
-            before.trim(),
-            after.trim(),
-            "line {} escaped the NME sentence parser instead of lowering",
-            line_number + 1
-        );
-    }
-
+    assert_every_nonempty_line_lowers("needmorecoin-sentence.ko.nme", source, &python);
     assert!(python.contains("zk_nizk_prove"));
     assert!(python.contains("zk_nizk_verify"));
     assert!(python.contains("zk_nizk_challenge"));
     assert!(python.contains("while ("));
+}
+
+#[test]
+fn english_sentence_cryptocurrency_is_pure_sentence_source() {
+    let source = include_str!("../../../examples/needmorecoin-sentence.en.nme");
+
+    assert!(
+        source
+            .chars()
+            .all(|ch| ch.is_whitespace() || ch.is_ascii_digit() || ch.is_ascii_alphabetic()),
+        "the English sentence example may contain only ASCII letters, decimal digits, and whitespace"
+    );
+
+    let python = assert_transpiles("needmorecoin-sentence.en.nme", source);
+    assert_every_nonempty_line_lowers("needmorecoin-sentence.en.nme", source, &python);
+    assert!(python.contains("zk_nizk_prove"));
+    assert!(python.contains("zk_nizk_verify"));
+    assert!(python.contains("zk_nizk_challenge"));
+    assert!(python.contains("while ("));
+}
+
+#[test]
+fn beginner_cryptocurrency_examples_stay_in_compact_nme() {
+    let korean = include_str!("../../../examples/needmorecoin-beginner.ko.nme");
+    let english = include_str!("../../../examples/needmorecoin-beginner.en.nme");
+
+    assert!(korean.contains("저장 "));
+    assert!(korean.contains("말해 "));
+    assert!(english.contains("set "));
+    assert!(english.contains("say "));
+    for source in [korean, english] {
+        assert!(!source.contains("def "));
+        assert!(!source.contains("class "));
+    }
 }
 
 #[test]
