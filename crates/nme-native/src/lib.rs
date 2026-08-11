@@ -46,8 +46,16 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
 
     for (index, line) in lines.iter().enumerate() {
         if let Some(nme_line) = by_index.get(&index) {
-            let total_depth = line.indent + nme_line.virtual_indent;
-            close_braces(&mut out, &mut open_braces, total_depth + 1);
+            // `else`/`else if` lines emit their own closing `}` before the
+            // next branch, so the generic brace closing must not run first.
+            let is_branch = matches!(
+                nme_line.stmt,
+                NmeStmt::ElseIf { .. } | NmeStmt::Else { .. }
+            );
+            if !is_branch {
+                let total_depth = line.indent + nme_line.virtual_indent;
+                close_braces(&mut out, &mut open_braces, total_depth + 1);
+            }
             match &nme_line.stmt {
                 NmeStmt::Say { value } => {
                     if let Err(diag) = emit_say(&mut out, value, source) {
@@ -89,6 +97,16 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                     Err(diag) => problems.push(diag),
                 },
                 NmeStmt::Break => out.push_str("break;\n"),
+                NmeStmt::ElseIf {
+                    condition,
+                    inline: None,
+                } => match check_condition(condition, source, nme_line.span) {
+                    Ok(condition_text) => {
+                        out.push_str(&format!("}} else if ({condition_text}) {{\n"));
+                    }
+                    Err(diag) => problems.push(diag),
+                },
+                NmeStmt::Else { inline: None } => out.push_str("} else {\n"),
                 NmeStmt::End => {}
                 other => problems.push(unsupported_statement(other, nme_line.span)),
             }
@@ -103,7 +121,9 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                 out.push('\n');
                 continue;
             }
-            if let Some(diag) = emit_python_assignment(&mut out, &mut declared, &line.tokens, text, source) {
+            if let Some(diag) =
+                emit_python_line(&mut out, &mut open_braces, &mut declared, &line.tokens, text, source)
+            {
                 problems.push(diag);
             }
         }
@@ -161,6 +181,21 @@ fn validate_int_expr(expr: &Expr, span: Span) -> Result<(), Diagnostic> {
             } else {
                 Err(not_supported("this operator", span))
             }
+        }
+        Expr::Call(call) => {
+            let Expr::Name(callee) = call.func.as_ref() else {
+                return Err(not_supported("this call", span));
+            };
+            if is_c_keyword(callee.id.as_str()) {
+                return Err(not_supported(
+                    &format!("a call to `{}` (C keyword)", callee.id),
+                    span,
+                ));
+            }
+            for argument in &call.args {
+                validate_int_expr(argument, span)?;
+            }
+            Ok(())
         }
         _ => Err(not_supported("this expression", span)),
     }
@@ -289,6 +324,12 @@ fn emit_set(
     value: &Value,
     source: &str,
 ) -> Result<(), Diagnostic> {
+    if is_c_keyword(target) {
+        return Err(not_supported(
+            &format!("a variable named `{target}` (C keyword)"),
+            Span::new(0, 0),
+        ));
+    }
     match value {
         Value::Python(code) => {
             let text = code_text(code, source);
@@ -315,6 +356,12 @@ fn emit_update(
     operation: nme_core::syntax::UpdateOp,
     source: &str,
 ) -> Result<(), Diagnostic> {
+    if is_c_keyword(target) {
+        return Err(not_supported(
+            &format!("a variable named `{target}` (C keyword)"),
+            Span::new(0, 0),
+        ));
+    }
     let amount_text = code_text(amount, source);
     check_int_expression(amount_text, source, code_span(amount))?;
     let prefix = if declared.insert(target.to_string()) {
@@ -330,40 +377,142 @@ fn emit_update(
     Ok(())
 }
 
-/// A Python line is accepted when it is a simple integer assignment such as
-/// `score = score + 1` or `score = 0`.
-fn emit_python_assignment(
+/// A Python line is accepted when it is a simple integer assignment
+/// (`score = 0`), an integer `return`, or a `def` header over integer
+/// parameters. `def` opens a C function body; `return` closes one value.
+fn emit_python_line(
     out: &mut String,
+    open_braces: &mut usize,
     declared: &mut HashSet<String>,
     tokens: &[lexer::Token],
     text: &str,
     source: &str,
 ) -> Option<Diagnostic> {
-    let name = match tokens.first().map(|token| &token.tok) {
-        Some(rustpython_parser::Tok::Name { name }) => name.clone(),
-        _ => return Some(not_supported("this Python line", Span::new(0, text.len()))),
-    };
-    if !matches!(tokens.get(1).map(|token| &token.tok), Some(rustpython_parser::Tok::Equal)) {
-        return Some(not_supported("this Python line", Span::new(0, text.len())));
-    }
-    let expression = text.split_once('=').map(|(_, right)| right.trim()).unwrap_or(text);
     let span = Span::new(0, text.len());
-    match check_int_expression(expression, source, span) {
-        Ok(expression) => {
-            let prefix = if declared.insert(name.clone()) {
-                "int "
-            } else {
-                ""
+    match tokens.first().map(|token| &token.tok) {
+        Some(rustpython_parser::Tok::Def) => {
+            let name = match tokens.get(1).map(|token| &token.tok) {
+                Some(rustpython_parser::Tok::Name { name }) => name.clone(),
+                _ => return Some(not_supported("this function header", span)),
             };
-            out.push_str(&format!("{prefix}{name} = {expression};\n"));
+            if is_c_keyword(&name) {
+                return Some(not_supported(
+                    &format!("a function named `{name}` (C keyword)"),
+                    span,
+                ));
+            }
+            let parameters = tokens
+                .iter()
+                .filter_map(|token| match &token.tok {
+                    rustpython_parser::Tok::Name { name } => Some(name.clone()),
+                    _ => None,
+                })
+                .skip(1) // the function name itself
+                .collect::<Vec<_>>();
+            if parameters.is_empty() {
+                out.push_str(&format!("int {name}() {{\n"));
+            } else {
+                let params = parameters
+                    .iter()
+                    .map(|parameter| format!("int {parameter}"))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                out.push_str(&format!("int {name}({params}) {{\n"));
+            }
+            for parameter in parameters {
+                declared.insert(parameter);
+            }
+            *open_braces += 1;
             None
         }
-        Err(diag) => Some(diag),
+        Some(rustpython_parser::Tok::Return) => {
+            let expression = text
+                .strip_prefix("return")
+                .map(str::trim)
+                .unwrap_or_default();
+            match check_int_expression(expression, source, span) {
+                Ok(expression) => {
+                    out.push_str(&format!("return {expression};\n"));
+                    None
+                }
+                Err(diag) => Some(diag),
+            }
+        }
+        Some(rustpython_parser::Tok::Name { .. })
+            if matches!(tokens.get(1).map(|token| &token.tok), Some(rustpython_parser::Tok::Equal)) =>
+        {
+            let name = match &tokens[0].tok {
+                rustpython_parser::Tok::Name { name } => name.clone(),
+                _ => return Some(not_supported("this Python line", span)),
+            };
+            if is_c_keyword(&name) {
+                return Some(not_supported(
+                    &format!("a variable named `{name}` (C keyword)"),
+                    span,
+                ));
+            }
+            let expression = text.split_once('=').map(|(_, right)| right.trim()).unwrap_or(text);
+            match check_int_expression(expression, source, span) {
+                Ok(expression) => {
+                    let prefix = if declared.insert(name.clone()) {
+                        "int "
+                    } else {
+                        ""
+                    };
+                    out.push_str(&format!("{prefix}{name} = {expression};\n"));
+                    None
+                }
+                Err(diag) => Some(diag),
+            }
+        }
+        _ => Some(not_supported("this Python line", span)),
     }
 }
 
-fn not_supported(what: &str, span: Span) -> Diagnostic {
-    Diagnostic::bilingual(
+/// C reserved words that a Python identifier must not collide with in the
+/// generated C. The native backend rejects them instead of silently
+/// renaming, so the C artifact always matches the NME source.
+fn is_c_keyword(name: &str) -> bool {
+    matches!(
+        name,
+        "auto"
+            | "break"
+            | "case"
+            | "char"
+            | "const"
+            | "continue"
+            | "default"
+            | "do"
+            | "double"
+            | "else"
+            | "enum"
+            | "extern"
+            | "float"
+            | "for"
+            | "goto"
+            | "if"
+            | "inline"
+            | "int"
+            | "long"
+            | "register"
+            | "restrict"
+            | "return"
+            | "short"
+            | "signed"
+            | "sizeof"
+            | "static"
+            | "struct"
+            | "switch"
+            | "typedef"
+            | "union"
+            | "unsigned"
+            | "void"
+            | "volatile"
+            | "while"
+    )
+}
+
+fn not_supported(what: &str, span: Span) -> Diagnostic {    Diagnostic::bilingual(
         DiagnosticCode::UnsupportedModule,
         &format!("the native backend does not support {what} yet"),
         &format!("네이티브 백엔드는 아직 {what}을(를) 지원하지 않습니다"),

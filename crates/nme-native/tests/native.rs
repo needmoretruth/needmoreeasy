@@ -23,6 +23,7 @@ fn native_run(source: &str) -> Result<String, String> {
     std::fs::write(&c_path, c_source).unwrap();
     let exe = dir.join("program");
     let status = Command::new("cc")
+        .arg("-O2")
         .arg(&c_path)
         .arg("-o")
         .arg(&exe)
@@ -64,6 +65,33 @@ fn a_string_literal_is_printed() {
 fn an_if_break_loop_works() {
     let source = "x = 0\nwhile x is less than 5\n    x add 1\n    if x is greater than 2\n        break\n    end\nend\nshow x\n";
     assert_eq!(native_run(source).unwrap(), "3\n");
+}
+
+#[test]
+fn functions_over_scalars_compile_natively() {
+    let source = "def twice(n):\n    return n * 2\n\nshow twice(5)\nshow twice(21)\n";
+    assert_eq!(native_run(source).unwrap(), "10\n42\n");
+}
+
+#[test]
+fn else_and_else_if_branches_compile_natively() {
+    let small = "score = 3\nif score is greater than 5\n    show \"big\"\n아니면\n    show \"small\"\n끝\n";
+    assert_eq!(native_run(small).unwrap(), "small\n");
+
+    let medium = "x = 4\nif x is greater than 5\n    show \"big\"\n아니면 만약에 x is greater than 2\n    show \"medium\"\n아니면\n    show \"small\"\n끝\n";
+    assert_eq!(native_run(medium).unwrap(), "medium\n");
+}
+
+#[test]
+fn recursive_functions_compile_natively() {
+    let source = "def fact(n):\n    if n is less than 2\n        return 1\n    end\n    return n * fact(n - 1)\n\nshow fact(5)\n";
+    assert_eq!(native_run(source).unwrap(), "120\n");
+}
+
+#[test]
+fn c_keyword_names_are_rejected_not_miscompiled() {
+    assert!(native_rejects("double = 3\nshow double\n"));
+    assert!(native_rejects("def double(n):\n    return n\nshow double(2)\n"));
 }
 
 #[test]

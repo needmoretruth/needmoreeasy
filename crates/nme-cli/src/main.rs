@@ -365,6 +365,7 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
     }
     let exe = dir.join(stem);
     let compile_status = std::process::Command::new("cc")
+        .arg("-O2")
         .arg(&c_path)
         .arg("-o")
         .arg(&exe)
