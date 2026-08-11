@@ -176,6 +176,8 @@ pub enum DiagnosticCode {
     CliPackageInstallFailed,
     /// The generated native executable could not be started.
     CliNativeRunStartFailed,
+    /// A temporary working folder could not be created.
+    CliFolderCreateFailed,
 }
 
 impl DiagnosticCode {
@@ -246,11 +248,12 @@ impl DiagnosticCode {
             Self::CliErrorLookupUnknownCode => "E9024",
             Self::CliPackageInstallFailed => "E9025",
             Self::CliNativeRunStartFailed => "E9026",
+            Self::CliFolderCreateFailed => "E9027",
         }
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 65] = [
+    pub const ALL: [DiagnosticCode; 66] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -316,6 +319,7 @@ impl DiagnosticCode {
         Self::CliErrorLookupUnknownCode,
         Self::CliPackageInstallFailed,
         Self::CliNativeRunStartFailed,
+        Self::CliFolderCreateFailed,
     ];
 
     pub fn from_code(code: &str) -> Option<Self> {
@@ -796,6 +800,13 @@ impl DiagnosticCode {
                 "네이티브 프로그램을 시작할 수 없습니다",
                 "`nme native` built an executable, but the operating system could not start it. Check executable permissions and platform compatibility, or run the program through CPython with `nme run`.",
                 "`nme 네이티브`가 실행 파일을 만들었지만 운영체제가 시작하지 못했습니다. 실행 권한과 운영체제 호환성을 확인하거나 `nme 실행`으로 CPython 경로를 사용하세요.",
+            ),
+            Self::CliFolderCreateFailed => (
+                "E9027",
+                "a temporary working folder could not be created",
+                "임시 작업 폴더를 만들 수 없습니다",
+                "NME could not create the temporary working folder needed for a native build or imported modules. Check the temporary-directory setting and folder permissions, then try again.",
+                "NME가 네이티브 빌드나 가져온 모듈에 필요한 임시 작업 폴더를 만들 수 없습니다. 임시 폴더 설정과 폴더 권한을 확인한 뒤 다시 시도하세요.",
             ),
         };
         CodeExplanation {

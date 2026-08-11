@@ -398,6 +398,43 @@ fn module_imports_reach_nested_imports() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+#[cfg(unix)]
+#[test]
+fn korean_module_staging_failures_are_bilingual_and_precise() {
+    let dir = std::env::temp_dir().join(format!(
+        "nme-cli-module-staging-failure-{}",
+        std::process::id()
+    ));
+    std::fs::create_dir_all(&dir).unwrap();
+    write_nme(
+        &dir,
+        "main.nme",
+        "from \"helper.nme\" import value\nshow value\n",
+    );
+    write_nme(&dir, "helper.nme", "value = 1\n");
+    let blocked_temp = dir.join("temp-file");
+    std::fs::write(&blocked_temp, "not a folder").unwrap();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_nme"))
+        .args(["실행", "main"])
+        .current_dir(&dir)
+        .env("TMPDIR", &blocked_temp)
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    let korean_position = error
+        .find("오류[E9027]: 임시 작업 폴더를 만들 수 없습니다")
+        .unwrap_or_else(|| panic!("{error}"));
+    let english_position = error
+        .find("error[E9027]: couldn't create the temporary working folder")
+        .unwrap_or_else(|| panic!("{error}"));
+    assert!(korean_position < english_position, "{error}");
+    assert!(!error.contains("E9016"), "{error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 #[test]
 fn the_native_example_matches_the_python_path_output() {
     if Command::new("cc").arg("--version").output().is_err() || !python_available() {
@@ -1778,6 +1815,14 @@ fn error_lookup_commands_print_the_requested_explanation() {
         stdout(&native_run_korean).contains("네이티브 프로그램을 시작할 수 없습니다"),
         "{}",
         stdout(&native_run_korean)
+    );
+
+    let folder_create = nme(&["en", "E9027"]);
+    assert!(folder_create.status.success(), "{}", stderr(&folder_create));
+    assert!(
+        stdout(&folder_create).contains("a temporary working folder could not be created"),
+        "{}",
+        stdout(&folder_create)
     );
 
     let unknown = nme(&["ko", "E9999"]);

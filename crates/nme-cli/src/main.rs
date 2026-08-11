@@ -356,7 +356,7 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
     let dir = std::env::temp_dir().join(format!("nme-native-run-{}", std::process::id()));
     if let Err(err) = std::fs::create_dir_all(&dir) {
         return fail(
-            nme_core::diagnostics::DiagnosticCode::CliFolderReadFailed,
+            nme_core::diagnostics::DiagnosticCode::CliFolderCreateFailed,
             language,
             &format!("couldn't create the native build folder: {err}"),
             &format!("네이티브 빌드 폴더를 만들 수 없습니다: {err}"),
@@ -960,7 +960,7 @@ fn command_run(args: &[String], language: MessageLanguage) -> ExitCode {
     let module_dir = if modules.is_empty() {
         None
     } else {
-        match write_modules_to_temp(&modules) {
+        match write_modules_to_temp(&modules, language) {
             Ok(dir) => Some(dir),
             Err(code) => return code,
         }
@@ -1714,21 +1714,24 @@ fn check_modules(
 }
 
 /// Writes transpiled modules to a fresh temporary folder and returns it.
-fn write_modules_to_temp(modules: &[(String, String)]) -> Result<PathBuf, ExitCode> {
+fn write_modules_to_temp(
+    modules: &[(String, String)],
+    language: MessageLanguage,
+) -> Result<PathBuf, ExitCode> {
     let dir = std::env::temp_dir().join(format!("nme-modules-{}", std::process::id()));
     if let Err(err) = std::fs::create_dir_all(&dir) {
         return Err(fail(
-            nme_core::diagnostics::DiagnosticCode::CliFolderReadFailed,
-            MessageLanguage::English,
-            &format!("couldn't create the module folder: {err}"),
-            &format!("모듈 폴더를 만들 수 없습니다: {err}"),
+            nme_core::diagnostics::DiagnosticCode::CliFolderCreateFailed,
+            language,
+            &format!("couldn't create the temporary working folder: {err}"),
+            &format!("임시 작업 폴더를 만들 수 없습니다: {err}"),
         ));
     }
     for (stem, python) in modules {
         if let Err(err) = std::fs::write(dir.join(format!("{stem}.py")), python) {
             return Err(fail(
                 nme_core::diagnostics::DiagnosticCode::CliFileWriteFailed,
-                MessageLanguage::English,
+                language,
                 &format!("couldn't write the module {stem}.py: {err}"),
                 &format!("{stem}.py 모듈을 저장할 수 없습니다: {err}"),
             ));

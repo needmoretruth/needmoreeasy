@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.32 — 2026-08-12
+
+- Add E9027 for temporary working-folder creation failures instead of labeling
+  them as current-folder read errors.
+- Preserve Korean-first bilingual diagnostics when imported modules are staged
+  for execution.
+
 ## 0.0.1-beta.31 — 2026-08-12
 
 - Give native executable startup failures their own stable diagnostic, E9026,
