@@ -310,7 +310,10 @@ impl DiagnosticCode {
     ];
 
     pub fn from_code(code: &str) -> Option<Self> {
-        Self::ALL.iter().copied().find(|candidate| candidate.code() == code)
+        Self::ALL
+            .iter()
+            .copied()
+            .find(|candidate| candidate.code() == code)
     }
 }
 
@@ -327,6 +330,7 @@ pub struct CodeExplanation {
 }
 
 impl DiagnosticCode {
+    #[allow(clippy::too_many_lines)]
     pub fn explanation(self) -> CodeExplanation {
         let (code, title_en, title_ko, detail_en, detail_ko) = match self {
             Self::UnrecognizedInput => (
@@ -1035,8 +1039,12 @@ mod tests {
     #[test]
     fn renders_line_column_and_caret() {
         let source = "say \"hi\"\nsay\n";
-        let diag = Diagnostic::new(DiagnosticCode::SayMissing, "`say` needs something to print", Span::new(9, 12))
-            .with_hint("try `say \"Hello\"`");
+        let diag = Diagnostic::new(
+            DiagnosticCode::SayMissing,
+            "`say` needs something to print",
+            Span::new(9, 12),
+        )
+        .with_hint("try `say \"Hello\"`");
         let rendered = diag.render(source, "hello.nme");
         assert!(rendered.contains("error[E0204]: `say` needs something to print"));
         assert!(rendered.contains("hello.nme:2:1"));
@@ -1057,8 +1065,12 @@ mod tests {
         .with_bilingual_hint("write `show Hello`", "`안녕하세요 말해줘`처럼 적어 주세요");
         let rendered = diag.render_bilingual(source, "hello.nme");
 
-        let korean_at = rendered.find("오류[E0204]: 말할 내용이 비어 있어요").unwrap();
-        let english_at = rendered.find("error[E0204]: there is nothing to show").unwrap();
+        let korean_at = rendered
+            .find("오류[E0204]: 말할 내용이 비어 있어요")
+            .unwrap();
+        let english_at = rendered
+            .find("error[E0204]: there is nothing to show")
+            .unwrap();
         assert!(korean_at < english_at, "{rendered}");
         assert!(rendered.contains("도움말: `안녕하세요 말해줘`처럼 적어 주세요"));
         assert!(rendered.contains("hint: write `show Hello`"));
@@ -1076,8 +1088,12 @@ mod tests {
     fn ascii_caret_uses_character_width() {
         let source = "show value\n";
         let start = source.find("value").unwrap();
-        let rendered = Diagnostic::new(DiagnosticCode::MissingAction, "x", Span::new(start, start + "value".len()))
-            .render(source, "hello.nme");
+        let rendered = Diagnostic::new(
+            DiagnosticCode::MissingAction,
+            "x",
+            Span::new(start, start + "value".len()),
+        )
+        .render(source, "hello.nme");
 
         assert_eq!(underline(&rendered), "     ^^^^^");
     }
@@ -1086,8 +1102,12 @@ mod tests {
     fn cjk_caret_uses_display_cell_width() {
         let source = "말해 잘못된값\n";
         let start = source.find("잘못된값").unwrap();
-        let rendered = Diagnostic::new(DiagnosticCode::MissingAction, "x", Span::new(start, start + "잘못된값".len()))
-            .render(source, "hello.nme");
+        let rendered = Diagnostic::new(
+            DiagnosticCode::MissingAction,
+            "x",
+            Span::new(start, start + "잘못된값".len()),
+        )
+        .render(source, "hello.nme");
 
         assert_eq!(underline(&rendered), "     ^^^^^^^^");
     }
@@ -1096,8 +1116,12 @@ mod tests {
     fn tabs_are_expanded_to_four_column_stops() {
         let source = "a\tbroken\n";
         let start = source.find("broken").unwrap();
-        let rendered = Diagnostic::new(DiagnosticCode::MissingAction, "x", Span::new(start, start + "broken".len()))
-            .render(source, "hello.nme");
+        let rendered = Diagnostic::new(
+            DiagnosticCode::MissingAction,
+            "x",
+            Span::new(start, start + "broken".len()),
+        )
+        .render(source, "hello.nme");
 
         assert!(rendered.contains("1 | a   broken"));
         assert_eq!(underline(&rendered), "    ^^^^^^");
@@ -1106,7 +1130,8 @@ mod tests {
     #[test]
     fn tab_inside_span_uses_its_expanded_width() {
         let source = "a\tb\n";
-        let rendered = Diagnostic::new(DiagnosticCode::MissingAction, "x", Span::new(1, 3)).render(source, "hello.nme");
+        let rendered = Diagnostic::new(DiagnosticCode::MissingAction, "x", Span::new(1, 3))
+            .render(source, "hello.nme");
 
         assert_eq!(underline(&rendered), " ^^^^");
     }
@@ -1114,7 +1139,8 @@ mod tests {
     #[test]
     fn zero_width_span_has_one_caret() {
         let source = "say\n";
-        let rendered = Diagnostic::new(DiagnosticCode::MissingAction, "x", Span::new(3, 3)).render(source, "hello.nme");
+        let rendered = Diagnostic::new(DiagnosticCode::MissingAction, "x", Span::new(3, 3))
+            .render(source, "hello.nme");
 
         assert_eq!(underline(&rendered), "   ^");
     }
@@ -1123,9 +1149,12 @@ mod tests {
     fn partial_unicode_byte_span_covers_the_whole_character() {
         let source = "show …\n";
         let start = source.find('…').unwrap();
-        let rendered =
-            Diagnostic::new(DiagnosticCode::MissingAction, "x", Span::new(start, start + 1))
-                .render(source, "hello.nme");
+        let rendered = Diagnostic::new(
+            DiagnosticCode::MissingAction,
+            "x",
+            Span::new(start, start + 1),
+        )
+        .render(source, "hello.nme");
 
         assert_eq!(underline(&rendered), "     ^");
     }

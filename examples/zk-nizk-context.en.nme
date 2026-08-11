@@ -1,0 +1,16 @@
+# Context-bound non-interactive Schnorr proof.
+# The Fiat-Shamir challenge hashes the public key, commitment, and explicit context.
+# For same-context replay protection, include a unique request ID or nonce in the context.
+
+use zero_knowledge latest
+
+secret = zk_secret()
+public_key = zk_public(secret)
+context = "payment approval request 7"
+proof = zk_nizk_prove(secret, context)
+valid = zk_nizk_verify(public_key, proof, context)
+if valid: print("Context-bound non-interactive proof verified.")
+
+other_context = "administrator delegation request 8"
+reused = zk_nizk_verify(public_key, proof, other_context)
+if not reused: print("The same proof was rejected under a different context.")

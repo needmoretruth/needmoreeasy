@@ -10,9 +10,9 @@
 //! line numbers the user actually sees in their `.nme` file.
 
 use crate::syntax::{
-    Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, Literal, LogicalOp, NmeLine,
-    NmeStmt, TextPart, TextTemplate, UpdateOp, Value, BundledModuleId, FILE_MODULE_VERSION,
-    RANDOM_MODULE_VERSION,
+    BundledModuleId, Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, Literal,
+    LogicalOp, NmeLine, NmeStmt, TextPart, TextTemplate, UpdateOp, Value, ZeroKnowledgeValue,
+    FILE_MODULE_VERSION, RANDOM_MODULE_VERSION, ZERO_KNOWLEDGE_MODULE_VERSION,
 };
 
 const BILINGUAL_RANDOM_TOOLS_PREFIX: &str = concat!(
@@ -38,6 +38,35 @@ const BILINGUAL_FILE_TOOLS_PREFIX: &str = concat!(
     "json읽기 = json_load; ",
     "json저장 = json_save; ",
     "file_version = 파일버전 = ",
+);
+
+const SCHNORR_GROUP15_PRIME: &str = "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F83655D23DCA3AD961C62F356208552BB9ED529077096966D670C354E4ABC9804F1746C08CA18217C32905E462E36CE3BE39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9DE2BCBF6955817183995497CEA956AE515D2261898FA051015728E5A8AAAC42DAD33170D04507A33A85521ABDF1CBA64ECFB850458DBEF0A8AEA71575D060C7DB3970F85A6E1E4C7ABF5AE8CDB0933D71E8C94E04A25619DCEE3D2261AD2EE6BF12FFA06D98A0864D87602733EC86A64521F2B18177B200CBBE117577A615D6C770988C0BAD946E208E24FA074E5AB3143DB5BFCE0FD108E4B82D120A93AD2CAFFFFFFFFFFFFFFFF";
+
+const BILINGUAL_ZERO_KNOWLEDGE_TOOLS_PREFIX: &str = concat!(
+    "import secrets as 영지식비밀난수; ",
+    "zk_prime = 영지식큰소수 = 0xFFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F83655D23DCA3AD961C62F356208552BB9ED529077096966D670C354E4ABC9804F1746C08CA18217C32905E462E36CE3BE39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9DE2BCBF6955817183995497CEA956AE515D2261898FA051015728E5A8AAAC42DAD33170D04507A33A85521ABDF1CBA64ECFB850458DBEF0A8AEA71575D060C7DB3970F85A6E1E4C7ABF5AE8CDB0933D71E8C94E04A25619DCEE3D2261AD2EE6BF12FFA06D98A0864D87602733EC86A64521F2B18177B200CBBE117577A615D6C770988C0BAD946E208E24FA074E5AB3143DB5BFCE0FD108E4B82D120A93AD2CAFFFFFFFFFFFFFFFF; ",
+    "zk_order = 영지식부분군크기 = (zk_prime - 1) // 2; ",
+    "zk_generator = 영지식생성원 = 2; ",
+    "zk_challenge_bits = 영지식도전비트 = 256; ",
+    "zk_challenge_limit = 영지식도전범위 = 1 << zk_challenge_bits; ",
+    "zk_secret = 영지식비밀만들기 = lambda: 영지식비밀난수.randbelow(zk_order - 1) + 1; ",
+    "zk_public = 영지식공개값 = lambda 비밀값: pow(zk_generator, 비밀값, zk_prime); ",
+    "zk_nonce = 영지식일회값만들기 = lambda: 영지식비밀난수.randbelow(zk_order); ",
+    "zk_commitment = 영지식약속 = lambda 일회값: pow(zk_generator, 일회값, zk_prime); ",
+    "zk_challenge = 영지식도전만들기 = lambda: 영지식비밀난수.randbelow(zk_challenge_limit); ",
+    "zk_challenge_except = 영지식다른도전 = lambda 제외: ((lambda 후보: 후보 + (1 if 후보 >= 제외 else 0))(영지식비밀난수.randbelow(zk_challenge_limit - 1))); ",
+    "zk_response = 영지식응답 = lambda 일회값, 비밀값, 도전값: (일회값 - 비밀값 * 도전값) % zk_order; ",
+    "zk_simulated_response = 영지식모의응답만들기 = lambda: 영지식비밀난수.randbelow(zk_order); ",
+    "zk_simulated_commitment = 영지식모의약속 = lambda 공개값, 도전값, 응답값: (pow(zk_generator, 응답값, zk_prime) * pow(공개값, 도전값, zk_prime)) % zk_prime; ",
+    "zk_verify = 영지식검증 = lambda 공개값, 약속값, 도전값, 응답값: (1 < 공개값 < zk_prime and pow(공개값, zk_order, zk_prime) == 1 and 1 <= 약속값 < zk_prime and pow(약속값, zk_order, zk_prime) == 1 and 0 <= 도전값 < zk_challenge_limit and 0 <= 응답값 < zk_order and 약속값 == (pow(zk_generator, 응답값, zk_prime) * pow(공개값, 도전값, zk_prime)) % zk_prime); ",
+    "zk_group_bytes = 영지식그룹바이트 = (zk_prime.bit_length() + 7) // 8; ",
+    "_nme_zk_context_bytes = lambda 문맥값: 문맥값 if isinstance(문맥값, bytes) else str(문맥값).encode(\"utf-8\"); ",
+    "_nme_zk_int_bytes = lambda 값: int(값).to_bytes(zk_group_bytes, \"big\"); ",
+    "_nme_zk_context_frame = lambda 문맥값: (lambda 바이트: len(바이트).to_bytes(8, \"big\") + 바이트)(_nme_zk_context_bytes(문맥값)); ",
+    "zk_nizk_challenge = 영지식비대화도전 = lambda 공개값, 약속값, 문맥값: int.from_bytes(__import__(\"hashlib\").sha256(b\"NME-SCHNORR-GROUP15-NIZK-v1\\0\" + _nme_zk_int_bytes(zk_generator) + _nme_zk_int_bytes(약속값) + _nme_zk_int_bytes(공개값) + _nme_zk_context_frame(문맥값)).digest(), \"big\"); ",
+    "zk_nizk_prove = 영지식비대화증명 = lambda 비밀값, 문맥값: (lambda 일회값: (lambda 약속값: (lambda 도전값: [약속값, (일회값 - 비밀값 * 도전값) % zk_order])(zk_nizk_challenge(zk_public(비밀값), 약속값, 문맥값)))(zk_commitment(일회값)))(zk_nonce()); ",
+    "zk_nizk_verify = 영지식비대화검증 = lambda 공개값, 증명값, 문맥값: (isinstance(증명값, (list, tuple)) and len(증명값) == 2 and zk_verify(공개값, 증명값[0], zk_nizk_challenge(공개값, 증명값[0], 문맥값), 증명값[1])); ",
+    "zero_knowledge_version = 영지식버전 = ",
 );
 
 /// A single source replacement: overwrite `span` with `replacement`.
@@ -136,9 +165,17 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
             BundledModuleId::File => {
                 format!("{BILINGUAL_FILE_TOOLS_PREFIX}\"{FILE_MODULE_VERSION}\"")
             }
+            BundledModuleId::ZeroKnowledge => {
+                format!(
+                    "{BILINGUAL_ZERO_KNOWLEDGE_TOOLS_PREFIX}\"{ZERO_KNOWLEDGE_MODULE_VERSION}\""
+                )
+            }
         },
         NmeStmt::FileRead { target, path } => {
-            format!("{target} = __import__(\"pathlib\").Path({}).read_text()", lower_code(path, source))
+            format!(
+                "{target} = __import__(\"pathlib\").Path({}).read_text()",
+                lower_code(path, source)
+            )
         }
         NmeStmt::FileWrite { path, value } => format!(
             "__import__(\"pathlib\").Path({}).write_text({})",
@@ -244,6 +281,95 @@ fn lower_value(value: &Value, source: &str) -> String {
                 .join(", ");
             format!("__import__(\"random\").choice(({values},))")
         }
+        Value::ZeroKnowledge(value) => lower_zero_knowledge(value, source),
+    }
+}
+
+fn lower_zero_knowledge(value: &ZeroKnowledgeValue, source: &str) -> String {
+    let p = format!("0x{SCHNORR_GROUP15_PRIME}");
+    let q = format!("(({p} - 1) // 2)");
+    let challenge_limit = "(1 << 256)";
+    match value {
+        ZeroKnowledgeValue::Secret => format!(
+            "__import__(\"secrets\").randbelow(({q}) - 1) + 1"
+        ),
+        ZeroKnowledgeValue::Public { secret } => format!(
+            "pow(2, {}, {p})",
+            lower_code(secret, source)
+        ),
+        ZeroKnowledgeValue::NizkChallenge {
+            public_key,
+            commitment,
+            context,
+        } => format!(
+            "zk_nizk_challenge({}, {}, {})",
+            lower_code(public_key, source),
+            lower_code(commitment, source),
+            lower_code(context, source)
+        ),
+        ZeroKnowledgeValue::NizkProof { secret, context } => format!(
+            "zk_nizk_prove({}, {})",
+            lower_code(secret, source),
+            lower_code(context, source)
+        ),
+        ZeroKnowledgeValue::NizkVerify {
+            public_key,
+            proof,
+            context,
+        } => format!(
+            "zk_nizk_verify({}, {}, {})",
+            lower_code(public_key, source),
+            lower_code(proof, source),
+            lower_code(context, source)
+        ),
+        ZeroKnowledgeValue::Nonce | ZeroKnowledgeValue::SimulatedResponse => format!(
+            "__import__(\"secrets\").randbelow({q})"
+        ),
+        ZeroKnowledgeValue::Commitment { nonce } => format!(
+            "pow(2, {}, {p})",
+            lower_code(nonce, source)
+        ),
+        ZeroKnowledgeValue::Challenge => format!(
+            "__import__(\"secrets\").randbelow({challenge_limit})"
+        ),
+        ZeroKnowledgeValue::ChallengeExcept { excluded } => format!(
+            "((lambda 후보: 후보 + (1 if 후보 >= ({}) else 0))(__import__(\"secrets\").randbelow({challenge_limit} - 1)))",
+            lower_code(excluded, source)
+        ),
+        ZeroKnowledgeValue::Response {
+            nonce,
+            secret,
+            challenge,
+        } => format!(
+            "(({}) - ({}) * ({})) % {q}",
+            lower_code(nonce, source),
+            lower_code(secret, source),
+            lower_code(challenge, source)
+        ),
+        ZeroKnowledgeValue::Verify {
+            public_key,
+            commitment,
+            challenge,
+            response,
+        } => {
+            let public_key = lower_code(public_key, source);
+            let commitment = lower_code(commitment, source);
+            let challenge = lower_code(challenge, source);
+            let response = lower_code(response, source);
+            format!(
+                "(1 < ({public_key}) < {p} and pow(({public_key}), {q}, {p}) == 1 and 1 <= ({commitment}) < {p} and pow(({commitment}), {q}, {p}) == 1 and 0 <= ({challenge}) < {challenge_limit} and 0 <= ({response}) < {q} and ({commitment}) == (pow(2, ({response}), {p}) * pow(({public_key}), ({challenge}), {p})) % {p})"
+            )
+        }
+        ZeroKnowledgeValue::SimulatedCommitment {
+            public_key,
+            challenge,
+            response,
+        } => format!(
+            "(pow(2, ({}), {p}) * pow(({}), ({}), {p})) % {p}",
+            lower_code(response, source),
+            lower_code(public_key, source),
+            lower_code(challenge, source)
+        ),
     }
 }
 

@@ -63,6 +63,7 @@ const PREAMBLE: &str = concat!(
 ///
 /// On failure returns every problem found, ready to render with
 /// [`nme_core::diagnostics::render_all`].
+#[allow(clippy::too_many_lines)]
 pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
     let lines = lexer::logical_lines(source).map_err(|problem| vec![problem])?;
     let program = parser::parse_program(source, &lines)?;
@@ -80,10 +81,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
         if let Some(nme_line) = by_index.get(&index) {
             // `else`/`else if` lines emit their own closing `}` before the
             // next branch, so the generic brace closing must not run first.
-            let is_branch = matches!(
-                nme_line.stmt,
-                NmeStmt::ElseIf { .. } | NmeStmt::Else { .. }
-            );
+            let is_branch = matches!(nme_line.stmt, NmeStmt::ElseIf { .. } | NmeStmt::Else { .. });
             if !is_branch {
                 let total_depth = line.indent + nme_line.virtual_indent;
                 close_braces(&mut out, &mut open_braces, total_depth + 1);
@@ -95,9 +93,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                     }
                 }
                 NmeStmt::Set { target, value } => {
-                    if let Err(diag) =
-                        emit_set(&mut out, &mut declared, target, value, source)
-                    {
+                    if let Err(diag) = emit_set(&mut out, &mut declared, target, value, source) {
                         problems.push(diag);
                     }
                 }
@@ -106,14 +102,9 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                     amount,
                     operation,
                 } => {
-                    if let Err(diag) = emit_update(
-                        &mut out,
-                        &mut declared,
-                        target,
-                        amount,
-                        *operation,
-                        source,
-                    ) {
+                    if let Err(diag) =
+                        emit_update(&mut out, &mut declared, target, amount, *operation, source)
+                    {
                         problems.push(diag);
                     }
                 }
@@ -142,9 +133,8 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                     let count_text = code_text(count, source);
                     match check_expr(count_text, nme_line.span, &declared) {
                         Ok((lowered, ExprType::Int)) => {
-                            let header = format!(
-                                "for (int _nme_i = 0; _nme_i < {lowered}; _nme_i++)"
-                            );
+                            let header =
+                                format!("for (int _nme_i = 0; _nme_i < {lowered}; _nme_i++)");
                             match inline {
                                 Some(InlineStmt::Nme(inner)) => {
                                     match lower_inline(inner, source, &declared, nme_line.span) {
@@ -162,10 +152,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                             }
                         }
                         Err(diag) => problems.push(diag),
-                        Ok(_) => problems.push(not_supported(
-                            "this repeat count",
-                            nme_line.span,
-                        )),
+                        Ok(_) => problems.push(not_supported("this repeat count", nme_line.span)),
                     }
                 }
                 NmeStmt::ElseIf {
@@ -210,7 +197,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
     close_braces(&mut out, &mut open_braces, 0);
 
     if problems.is_empty() {
-        Ok(out)
+        Ok(hoist_native_functions(&out))
     } else {
         Err(problems)
     }
@@ -241,6 +228,77 @@ fn close_braces(out: &mut String, open: &mut usize, target: usize) {
     }
 }
 
+/// Moves top-level generated C function definitions before `main`.
+///
+/// GCC accepts nested functions as a non-standard extension, while Clang
+/// correctly rejects them. NME functions are Python top-level definitions,
+/// so the portable C representation is a file-scope C function followed by
+/// the generated `main` body.
+fn hoist_native_functions(source: &str) -> String {
+    const MAIN_HEADER: &str = "int main(void) {\n";
+    let Some(main_at) = source.find(MAIN_HEADER) else {
+        return source.to_string();
+    };
+    let prefix = &source[..main_at];
+    let body = &source[main_at + MAIN_HEADER.len()..];
+    let lines = body.split_inclusive('\n').collect::<Vec<_>>();
+    let mut functions = String::new();
+    let mut main_body = String::new();
+    let mut index = 0usize;
+    let mut depth = 0isize;
+
+    while index < lines.len() {
+        let line = lines[index];
+        let trimmed = line.trim_end_matches(['\r', '\n']);
+        let is_function = depth == 0
+            && trimmed.starts_with("int ")
+            && trimmed.ends_with(") {")
+            && trimmed.contains('(');
+        if is_function {
+            let mut balance = c_brace_delta(line);
+            functions.push_str(line);
+            index += 1;
+            while balance > 0 && index < lines.len() {
+                let nested = lines[index];
+                balance += c_brace_delta(nested);
+                functions.push_str(nested);
+                index += 1;
+            }
+            continue;
+        }
+
+        depth = (depth + c_brace_delta(line)).max(0);
+        main_body.push_str(line);
+        index += 1;
+    }
+
+    format!("{prefix}{functions}{MAIN_HEADER}{main_body}")
+}
+
+fn c_brace_delta(line: &str) -> isize {
+    let mut delta = 0isize;
+    let mut in_string = false;
+    let mut escaped = false;
+    for character in line.chars() {
+        if in_string {
+            if escaped {
+                escaped = false;
+            } else if character == '\\' {
+                escaped = true;
+            } else if character == '"' {
+                in_string = false;
+            }
+        } else if character == '"' {
+            in_string = true;
+        } else if character == '{' {
+            delta += 1;
+        } else if character == '}' {
+            delta -= 1;
+        }
+    }
+    delta
+}
+
 /// Validates and lowers a Python expression to C for the native core,
 /// returning the C text and its static type. Integer expressions pass through
 /// unchanged; string expressions lower to a name, a literal, or one `+`
@@ -250,8 +308,7 @@ fn check_expr(
     span: Span,
     declared: &HashMap<String, VarType>,
 ) -> Result<(String, ExprType), Diagnostic> {
-    let expr = Expr::parse(text, "<native>")
-        .map_err(|_| not_supported("this expression", span))?;
+    let expr = Expr::parse(text, "<native>").map_err(|_| not_supported("this expression", span))?;
     lower_expr(&expr, span, declared)
 }
 
@@ -429,6 +486,7 @@ fn numeric_operand(
     Ok((text, kind))
 }
 
+#[allow(clippy::trivially_copy_pass_by_ref)]
 fn operator_text(operator: &Operator) -> &'static str {
     match operator {
         Operator::Add => "+",
@@ -497,8 +555,8 @@ fn check_condition(
         }
         Condition::Python(code) => {
             let text = code_text(code, source);
-            let expr = Expr::parse(text, "<native>")
-                .map_err(|_| not_supported("this condition", span))?;
+            let expr =
+                Expr::parse(text, "<native>").map_err(|_| not_supported("this condition", span))?;
             lower_compare(&expr, span, declared)
         }
         Condition::Truthy { value, negated } => {
@@ -541,7 +599,7 @@ fn check_condition(
                 format!("({text})")
             })
         }
-        _ => Err(not_supported("this condition", span)),
+        Condition::Logical { .. } => Err(not_supported("this condition", span)),
     }
 }
 
@@ -609,7 +667,10 @@ fn lower_compare(
             CmpOp::NotEq => Ok(format!("(strcmp({left}, {right}) != 0)")),
             _ => Err(not_supported("ordering text in a condition", span)),
         },
-        _ => Err(not_supported("mixing numbers and text in a condition", span)),
+        _ => Err(not_supported(
+            "mixing numbers and text in a condition",
+            span,
+        )),
     }
 }
 
@@ -651,7 +712,10 @@ fn emit_say(
                 match part {
                     nme_core::syntax::TextPart::Literal(text) => literal.push_str(text),
                     nme_core::syntax::TextPart::Variable(_) => {
-                        return Err(not_supported("a variable inside a sentence", span_of_value(value)));
+                        return Err(not_supported(
+                            "a variable inside a sentence",
+                            span_of_value(value),
+                        ));
                     }
                 }
             }
@@ -662,6 +726,9 @@ fn emit_say(
         Value::Literal(_) => Err(not_supported("boolean/null output", span_of_value(value))),
         Value::RandomInteger { .. } | Value::RandomChoice { .. } => {
             Err(not_supported("random values", span_of_value(value)))
+        }
+        Value::ZeroKnowledge(_) => {
+            Err(not_supported("zero-knowledge values", span_of_value(value)))
         }
     }
 }
@@ -714,9 +781,11 @@ fn emit_set(
                 }
             }
         }
-        Value::Text(_) | Value::Literal(_) | Value::RandomInteger { .. } | Value::RandomChoice { .. } => {
-            Err(not_supported("this value", span_of_value(value)))
-        }
+        Value::Text(_)
+        | Value::Literal(_)
+        | Value::RandomInteger { .. }
+        | Value::RandomChoice { .. }
+        | Value::ZeroKnowledge(_) => Err(not_supported("this value", span_of_value(value))),
     }
 }
 
@@ -737,7 +806,10 @@ fn emit_update(
     let amount_text = code_text(amount, source);
     let (lowered, kind) = check_expr(amount_text, Span::new(0, 0), declared)?;
     if kind != ExprType::Int {
-        return Err(not_supported("a text value in a value change", Span::new(0, 0)));
+        return Err(not_supported(
+            "a text value in a value change",
+            Span::new(0, 0),
+        ));
     }
     let is_new = !declared.contains_key(target);
     if is_new {
@@ -755,6 +827,7 @@ fn emit_update(
 /// A Python line is accepted when it is a simple integer or string-literal
 /// assignment, an integer `return`, or a `def` header over integer
 /// parameters. `def` opens a C function body.
+#[allow(clippy::too_many_lines)]
 fn emit_python_line(
     out: &mut String,
     open_braces: &mut usize,
@@ -833,10 +906,7 @@ fn emit_python_line(
                     span,
                 ));
             }
-            let expression = text
-                .split_once('=')
-                .map(|(_, right)| right.trim())
-                .unwrap_or(text);
+            let expression = text.split_once('=').map_or(text, |(_, right)| right.trim());
             match check_expr(expression, span, declared) {
                 Ok((lowered, ExprType::Int)) => {
                     let is_new = !declared.contains_key(&name);
@@ -922,8 +992,8 @@ fn is_c_keyword(name: &str) -> bool {
 fn not_supported(what: &str, span: Span) -> Diagnostic {
     Diagnostic::bilingual(
         DiagnosticCode::UnsupportedModule,
-        &format!("the native backend does not support {what} yet"),
-        &format!("네이티브 백엔드는 아직 {what}을(를) 지원하지 않습니다"),
+        format!("the native backend does not support {what} yet"),
+        format!("네이티브 백엔드는 아직 {what}을(를) 지원하지 않습니다"),
         span,
     )
     .with_bilingual_hint(

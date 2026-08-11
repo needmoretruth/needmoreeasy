@@ -1,0 +1,36 @@
+# Sender A proves knowledge of a secret to receiver B while malicious relay C observes.
+# This uses the real three-pass Schnorr proof-of-knowledge equations.
+# It is a reference/learning implementation, not a replacement for an audited production library.
+
+use zero_knowledge latest
+
+secret = zk_secret()
+public_key = zk_public(secret)
+
+nonce = zk_nonce()
+commitment = zk_commitment(nonce)
+challenge = zk_challenge()
+response = zk_response(nonce, secret, challenge)
+normal = zk_verify(public_key, commitment, challenge, response)
+if normal: print("Receiver B accepted sender A's zero-knowledge proof.")
+
+new_challenge = zk_challenge_except(challenge)
+replay = zk_verify(public_key, commitment, new_challenge, response)
+if not replay: print("Malicious relay C cannot replay the saved transcript against a fresh challenge.")
+
+sim_challenge = zk_challenge()
+sim_response = zk_simulated_response()
+sim_commitment = zk_simulated_commitment(public_key, sim_challenge, sim_response)
+simulated = zk_verify(public_key, sim_commitment, sim_challenge, sim_response)
+if simulated: print("A transcript for a preselected challenge can be simulated without the secret.")
+
+other_challenge = zk_challenge_except(sim_challenge)
+sim_reuse = zk_verify(public_key, sim_commitment, other_challenge, sim_response)
+if not sim_reuse: print("The simulated transcript cannot answer receiver B's different challenge.")
+
+relay_nonce = zk_nonce()
+relay_commitment = zk_commitment(relay_nonce)
+relay_challenge = zk_challenge()
+relay_response = zk_response(relay_nonce, secret, relay_challenge)
+relay = zk_verify(public_key, relay_commitment, relay_challenge, relay_response)
+if relay: print("A live relay can pass by forwarding sender A's real response; it did not learn the secret.")

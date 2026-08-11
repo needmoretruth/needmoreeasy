@@ -162,6 +162,7 @@ pub fn parse(source: &str, lines: &[LogicalLine]) -> Result<Vec<NmeLine>, Vec<Di
 /// Parse a complete program, including indentation-free blocks closed by
 /// `end`/`끝`.  Existing indentation-based blocks remain supported, so users
 /// can move one line at a time from sentence syntax to Python.
+#[allow(clippy::too_many_lines)]
 pub fn parse_program(
     source: &str,
     lines: &[LogicalLine],
@@ -207,9 +208,7 @@ pub fn parse_program(
             let remaining_ends = count_remaining_ends(lines, index);
             loop {
                 let open = blocks.len();
-                let Some(close_on_dedent) = blocks
-                    .last()
-                    .and_then(|block| block.close_on_dedent())
+                let Some(close_on_dedent) = blocks.last().and_then(|block| block.close_on_dedent())
                 else {
                     break;
                 };
@@ -451,9 +450,10 @@ enum ExplicitBlock {
 impl ExplicitBlock {
     fn close_on_dedent(self) -> Option<usize> {
         match self {
-            ExplicitBlock::Loop { close_on_dedent } | ExplicitBlock::Conditional { close_on_dedent, .. } => {
-                close_on_dedent
-            }
+            ExplicitBlock::Loop { close_on_dedent }
+            | ExplicitBlock::Conditional {
+                close_on_dedent, ..
+            } => close_on_dedent,
         }
     }
 
@@ -462,7 +462,9 @@ impl ExplicitBlock {
     fn clear_close_on_dedent(&mut self) {
         match self {
             ExplicitBlock::Loop { close_on_dedent }
-            | ExplicitBlock::Conditional { close_on_dedent, .. } => {
+            | ExplicitBlock::Conditional {
+                close_on_dedent, ..
+            } => {
                 *close_on_dedent = None;
             }
         }
@@ -499,11 +501,7 @@ fn exact_break(tokens: &[Token]) -> bool {
     }
     let consumed = action_phrase_at(tokens, 0, BREAK_WORDS_EN, MatchMode::Exact)
         .or_else(|| action_phrase_at(tokens, 0, BREAK_WORDS_KO, MatchMode::Exact));
-    consumed.is_some_and(|consumed| {
-        tokens[consumed..]
-            .iter()
-            .all(|token| is_command_ending(token))
-    })
+    consumed.is_some_and(|consumed| tokens[consumed..].iter().all(is_command_ending))
 }
 
 fn branch_shape(tokens: &[Token]) -> Option<BranchShape> {
@@ -536,8 +534,7 @@ fn branch_shape(tokens: &[Token]) -> Option<BranchShape> {
 }
 
 fn is_korean_branch_alias(tokens: &[Token]) -> bool {
-    tokens.first().is_some()
-        && action_phrase_at(tokens, 0, ELSE_WORDS_KO, MatchMode::Exact).is_some()
+    !tokens.is_empty() && action_phrase_at(tokens, 0, ELSE_WORDS_KO, MatchMode::Exact).is_some()
 }
 
 fn is_korean_break_alias(tokens: &[Token]) -> bool {
@@ -581,6 +578,7 @@ fn count_remaining_ends(lines: &[LogicalLine], index: usize) -> usize {
         .count()
 }
 
+#[allow(clippy::trivially_copy_pass_by_ref)]
 fn validate_branch(
     branch: &BranchShape,
     blocks: &mut [ExplicitBlock],
@@ -676,12 +674,19 @@ fn missing_end_diagnostic(block: &ExplicitBlock, offset: usize) -> Diagnostic {
             "이 조건문에는 닫는 `끝`이 필요해요",
         ),
     };
-    Diagnostic::bilingual(DiagnosticCode::MissingEnd, english, korean, Span::new(offset, offset)).with_bilingual_hint(
+    Diagnostic::bilingual(
+        DiagnosticCode::MissingEnd,
+        english,
+        korean,
+        Span::new(offset, offset),
+    )
+    .with_bilingual_hint(
         "add `end`/`끝` on a line by itself",
         "줄 하나에 `end` 또는 `끝`만 적어 주세요",
     )
 }
 
+#[allow(clippy::too_many_lines)]
 fn classify(
     source: &str,
     tokens: &[Token],
@@ -786,12 +791,15 @@ fn classify(
     }
     if action_phrase_at(tokens, 0, FILE_READ_WORDS_EN, MatchMode::Exact).is_some()
         || action_phrase_at(tokens, 0, FILE_WRITE_WORDS_EN, MatchMode::Exact).is_some()
-        || tokens
-            .iter()
-            .any(|token| {
-                action_phrase_at(std::slice::from_ref(token), 0, FILE_READ_WORDS_KO, MatchMode::Exact)
-                    .is_some()
-            })
+        || tokens.iter().any(|token| {
+            action_phrase_at(
+                std::slice::from_ref(token),
+                0,
+                FILE_READ_WORDS_KO,
+                MatchMode::Exact,
+            )
+            .is_some()
+        })
         || tokens.iter().any(|token| {
             action_phrase_at(
                 std::slice::from_ref(token),
@@ -802,12 +810,7 @@ fn classify(
             .is_some()
         })
     {
-        exact_match!(match_file_io(
-            source,
-            tokens,
-            known_names,
-            MatchMode::Exact
-        ));
+        exact_match!(match_file_io(source, tokens, known_names, MatchMode::Exact));
     }
     exact_match!(match_when(
         source,
@@ -1023,11 +1026,12 @@ fn say_missing(_spelling: Spelling, span: Span) -> Diagnostic {
         DiagnosticCode::SayMissing,
         "there is nothing to show",
         "말할 내용이 비어 있어요",
-        span)
-        .with_bilingual_hint(
-            "write `show Hello world`",
-            "`안녕하세요 말해줘`처럼 내용을 함께 적어 주세요",
-        )
+        span,
+    )
+    .with_bilingual_hint(
+        "write `show Hello world`",
+        "`안녕하세요 말해줘`처럼 내용을 함께 적어 주세요",
+    )
 }
 
 fn is_show_request_pronoun(token: &Token) -> bool {
@@ -1180,11 +1184,7 @@ fn match_natural_question(
         // `내 이름은 뭐예요?` is the same beginner question as
         // `이름이 뭐예요?`; the possessive is natural speech, not part of
         // the variable name.
-        let target_at = if matches!(first, "내" | "제" | "우리") {
-            1
-        } else {
-            0
-        };
+        let target_at = usize::from(matches!(first, "내" | "제" | "우리"));
         let target_word = tokens.get(target_at).and_then(name_word)?;
         let particle_at = target_at + 1;
         let predicate_at = if tokens
@@ -1649,6 +1649,7 @@ fn match_break(
     Ok(Some(NmeStmt::Break))
 }
 
+#[allow(clippy::too_many_lines)]
 fn match_while(
     source: &str,
     tokens: &[Token],
@@ -1701,12 +1702,11 @@ fn match_while(
         if matches!(tokens.first().map(|token| &token.tok), Some(Tok::While))
             || action_phrase_at(tokens, 0, WHILE_WORDS_EN, mode).is_some()
         {
-            let consumed =
-                if matches!(tokens.first().map(|token| &token.tok), Some(Tok::While)) {
-                    1
-                } else {
-                    action_phrase_at(tokens, 0, WHILE_WORDS_EN, mode).expect("checked above")
-                };
+            let consumed = if matches!(tokens.first().map(|token| &token.tok), Some(Tok::While)) {
+                1
+            } else {
+                action_phrase_at(tokens, 0, WHILE_WORDS_EN, mode).expect("checked above")
+            };
             // `while 준비 동안 성공 말해줘` and `while 점수가 3보다 작을 동안`
             // mix the English keyword with a Korean while ending. Split the
             // ending exactly like the Korean spellings so it cannot be
@@ -1742,7 +1742,8 @@ fn match_while(
                 (Spelling::English, consumed, tokens.len(), false)
             }
         } else if action_phrase_at(tokens, 0, WHILE_WORDS_KO, mode).is_some() {
-            let consumed = action_phrase_at(tokens, 0, WHILE_WORDS_KO, mode).expect("checked above");
+            let consumed =
+                action_phrase_at(tokens, 0, WHILE_WORDS_KO, mode).expect("checked above");
             (Spelling::Korean, consumed, tokens.len(), false)
         } else if tokens.len() > 1
             && tokens
@@ -1764,8 +1765,10 @@ fn match_while(
             if colon_at == condition_start {
                 return Err(condition_missing(spelling, tokens[colon_at].span));
             }
-            let condition_span =
-                Span::new(tokens[condition_start].span.start, tokens[colon_at - 1].span.end);
+            let condition_span = Span::new(
+                tokens[condition_start].span.start,
+                tokens[colon_at - 1].span.end,
+            );
             if !is_valid_python_expression(&source[condition_span.start..condition_span.end]) {
                 return Err(condition_invalid(spelling, condition_span));
             }
@@ -2164,8 +2167,7 @@ fn find_exact_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionC
         .filter_map(|(index, token)| {
             if is_or_equal_phrase_at(tokens, index)
                 || tokens.get(index.saturating_sub(1)).is_some_and(|previous| {
-                    token_word(previous) == Some("or")
-                        && is_or_equal_phrase_at(tokens, index - 1)
+                    token_word(previous) == Some("or") && is_or_equal_phrase_at(tokens, index - 1)
                 })
             {
                 return None;
@@ -2176,7 +2178,8 @@ fn find_exact_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionC
             // comparison endings may only close the final operand, so an
             // earlier comparison (`점수가 0보다 크면 그리고 ...`) stays
             // intact instead of being cut at its ending.
-            (index >= last_operand || token_word(token) == Some("then")).then_some((index, connector))
+            (index >= last_operand || token_word(token) == Some("then"))
+                .then_some((index, connector))
         })
         .collect::<Vec<_>>();
     if exact.is_empty() {
@@ -2185,10 +2188,7 @@ fn find_exact_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionC
         for (index, pair) in tokens.windows(2).enumerate() {
             if index >= last_operand
                 && token_word(&pair[0]) == Some("같지")
-                && matches!(
-                    token_word(&pair[1]),
-                    Some("않으면" | "않다면" | "않을")
-                )
+                && matches!(token_word(&pair[1]), Some("않으면" | "않다면" | "않을"))
             {
                 return Some((index, ConditionConnector::NotEquals));
             }
@@ -2234,9 +2234,9 @@ fn last_logical_operand_start(tokens: &[Token]) -> usize {
 /// natural-language `<=`/`>=` phrase.
 fn is_or_equal_phrase_at(tokens: &[Token], index: usize) -> bool {
     token_word(&tokens[index]) == Some("or")
-        && tokens.get(index + 1).is_some_and(|token| {
-            matches!(token_word(token), Some("equal") | Some("equals"))
-        })
+        && tokens
+            .get(index + 1)
+            .is_some_and(|token| matches!(token_word(token), Some("equal" | "equals")))
 }
 
 fn find_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionConnector)> {
@@ -2254,14 +2254,14 @@ fn find_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionConnect
         .filter_map(|(index, token)| {
             if is_or_equal_phrase_at(tokens, index)
                 || tokens.get(index.saturating_sub(1)).is_some_and(|previous| {
-                    token_word(previous) == Some("or")
-                        && is_or_equal_phrase_at(tokens, index - 1)
+                    token_word(previous) == Some("or") && is_or_equal_phrase_at(tokens, index - 1)
                 })
             {
                 return None;
             }
             let connector = condition_connector_recovered(token, index + 1 == tokens.len())?;
-            (index >= last_operand || token_word(token) == Some("then")).then_some((index, connector))
+            (index >= last_operand || token_word(token) == Some("then"))
+                .then_some((index, connector))
         })
         .collect::<Vec<_>>();
     (recovered.len() == 1).then(|| recovered[0])
@@ -2531,7 +2531,8 @@ fn parse_natural_condition(
     // parser, which reports an exact diagnostic instead of panicking.
     if let Some(index) = logical_operator_at(tokens, LogicalOp::Or) {
         if index > 0 && index + 1 < tokens.len() {
-            let left = parse_natural_condition(source, &tokens[..index], None, known_names, spelling)?;
+            let left =
+                parse_natural_condition(source, &tokens[..index], None, known_names, spelling)?;
             let right = parse_natural_condition(
                 source,
                 &tokens[index + 1..],
@@ -2548,7 +2549,8 @@ fn parse_natural_condition(
     }
     if let Some(index) = logical_operator_at(tokens, LogicalOp::And) {
         if index > 0 && index + 1 < tokens.len() {
-            let left = parse_natural_condition(source, &tokens[..index], None, known_names, spelling)?;
+            let left =
+                parse_natural_condition(source, &tokens[..index], None, known_names, spelling)?;
             let right = parse_natural_condition(
                 source,
                 &tokens[index + 1..],
@@ -2851,10 +2853,12 @@ fn parse_english_condition(
     }
     // `less than or equal to` / `greater than or equal to` narrow the
     // comparison to `<=` / `>=`.
-    if tokens.get(cursor).is_some_and(|token| token_word(token) == Some("or"))
-        && tokens
-            .get(cursor + 1)
-            .is_some_and(|token| condition_word_matches(token_word(token).unwrap_or(""), &["equal", "equals"]))
+    if tokens
+        .get(cursor)
+        .is_some_and(|token| token_word(token) == Some("or"))
+        && tokens.get(cursor + 1).is_some_and(|token| {
+            condition_word_matches(token_word(token).unwrap_or(""), &["equal", "equals"])
+        })
     {
         let operator = match operator {
             CompareOp::Greater => CompareOp::GreaterOrEqual,
@@ -3031,8 +3035,14 @@ fn condition_connector_exact(token: &Token, is_last: bool) -> Option<ConditionCo
         ),
         (ConditionConnector::Greater, &["크면", "크다면", "클"][..]),
         (ConditionConnector::Less, &["작으면", "작다면", "작을"][..]),
-        (ConditionConnector::GreaterOrEqual, &["크거나같으면", "크거나같다면"][..]),
-        (ConditionConnector::LessOrEqual, &["작거나같으면", "작거나같다면"][..]),
+        (
+            ConditionConnector::GreaterOrEqual,
+            &["크거나같으면", "크거나같다면"][..],
+        ),
+        (
+            ConditionConnector::LessOrEqual,
+            &["작거나같으면", "작거나같다면"][..],
+        ),
     ];
     for (kind, words) in candidates {
         if words.contains(&word) {
@@ -3121,15 +3131,11 @@ fn condition_connector_recovered(token: &Token, is_last: bool) -> Option<Conditi
     // `...먄` ending. It is a bounded connector-only repair, not a general
     // fuzzy match, and still goes through the unique-candidate check below.
     match word {
-        "있으먄" => recovered.push(ConditionConnector::Exists),
-        "없으먄" => recovered.push(ConditionConnector::Missing),
-        "있먄" => recovered.push(ConditionConnector::Exists),
-        "없먄" => recovered.push(ConditionConnector::Missing),
-        "같먄" | "같으먄" => recovered.push(ConditionConnector::Equals),
+        "있으먄" | "있먄" => recovered.push(ConditionConnector::Exists),
+        "없으먄" | "없먄" => recovered.push(ConditionConnector::Missing),
+        "같먄" | "같으먄" | "라먄" | "먄" => recovered.push(ConditionConnector::Equals),
         "크먄" | "크으먄" => recovered.push(ConditionConnector::Greater),
         "작먄" | "작으먄" => recovered.push(ConditionConnector::Less),
-        "라먄" => recovered.push(ConditionConnector::Equals),
-        "먄" => recovered.push(ConditionConnector::Equals),
         _ => {}
     }
     recovered.sort_by_key(|kind| *kind as u8);
@@ -3146,11 +3152,12 @@ fn condition_missing(_spelling: Spelling, span: Span) -> Diagnostic {
         DiagnosticCode::ConditionMissing,
         "the condition is missing",
         "조건이 비어 있어요",
-        span)
-        .with_bilingual_hint(
-            "write `if ready` or `if score > 10` and indent the next line",
-            "`만약에 준비됐으면`처럼 적고 다음 줄을 들여쓰세요",
-        )
+        span,
+    )
+    .with_bilingual_hint(
+        "write `if ready` or `if score > 10` and indent the next line",
+        "`만약에 준비됐으면`처럼 적고 다음 줄을 들여쓰세요",
+    )
 }
 
 fn condition_invalid(_spelling: Spelling, span: Span) -> Diagnostic {
@@ -3168,6 +3175,7 @@ fn condition_invalid(_spelling: Spelling, span: Span) -> Diagnostic {
 
 // --------------------------------------------------------------- repeat
 
+#[allow(clippy::too_many_lines)]
 fn match_times(
     source: &str,
     tokens: &[Token],
@@ -3204,9 +3212,7 @@ fn match_times(
         return Ok(Some(NmeStmt::Times { count, inline }));
     }
     if let Some((times_at, spelling)) = find_times_colon(tokens, mode) {
-        let count_start = repeat_action_at(tokens, 0, mode)
-            .map(|(_, consumed)| consumed)
-            .unwrap_or(0);
+        let count_start = repeat_action_at(tokens, 0, mode).map_or(0, |(_, consumed)| consumed);
         let count = parse_count(source, &tokens[count_start..times_at], spelling)?;
         let colon_at = times_at + 1;
         let inline = parse_suite_body(
@@ -3443,6 +3449,7 @@ fn find_count_marker(tokens: &[Token], mode: MatchMode) -> Option<(usize, Spelli
 /// The path is always a quoted string; the write value is a beginner value.
 /// Weak matches (`read the book`, `write hello`) fall through to plain
 /// sentence output instead of being claimed as file operations.
+#[allow(clippy::too_many_lines)]
 fn match_file_io(
     source: &str,
     tokens: &[Token],
@@ -3456,8 +3463,7 @@ fn match_file_io(
             return None;
         }
         let span = token.span;
-        is_valid_python_expression(&source[span.start..span.end])
-            .then_some(Code::Source(span))
+        is_valid_python_expression(&source[span.start..span.end]).then_some(Code::Source(span))
     };
 
     // English action-first read: `read "notes.txt" into memo`.
@@ -3472,7 +3478,11 @@ fn match_file_io(
         {
             rest = &rest[1..];
         }
-        if let Some(target) = rest.first().and_then(|t| name_word(t)).map(strip_saved_target) {
+        if let Some(target) = rest
+            .first()
+            .and_then(|t| name_word(t))
+            .map(strip_saved_target)
+        {
             if rest.len() == 1 || (rest.len() == 2 && is_command_ending(&rest[1])) {
                 return Ok(Some(NmeStmt::FileRead {
                     target: target.to_string(),
@@ -3486,31 +3496,24 @@ fn match_file_io(
     // Korean read and English/Korean target-first read:
     // `memo에 "notes.txt" 읽어서` / `memo read "notes.txt"`. The path sits
     // before a Korean read word but after the English `read`.
-    let ko_read_at = tokens
-        .iter()
-        .position(|token| {
-            action_phrase_at(std::slice::from_ref(token), 0, FILE_READ_WORDS_KO, mode).is_some()
-        });
-    let en_read_at = tokens
-        .iter()
-        .position(|token| {
-            action_phrase_at(std::slice::from_ref(token), 0, FILE_READ_WORDS_EN, mode).is_some()
-        });
+    let ko_read_at = tokens.iter().position(|token| {
+        action_phrase_at(std::slice::from_ref(token), 0, FILE_READ_WORDS_KO, mode).is_some()
+    });
+    let en_read_at = tokens.iter().position(|token| {
+        action_phrase_at(std::slice::from_ref(token), 0, FILE_READ_WORDS_EN, mode).is_some()
+    });
     if let Some(action_at) = ko_read_at.or(en_read_at) {
         let Some(target) = name_word(&tokens[0]).and_then(update_target_name) else {
             return Ok(None);
         };
         let path_tokens = if ko_read_at.is_some() {
             let mut middle = &tokens[1..action_at];
-            if middle
-                .first()
-                .is_some_and(|token| {
-                    is_update_connector(
-                        token,
-                        &["에", "에서", "에게", "한테", "는", "은", "으로", "로"],
-                    )
-                })
-            {
+            if middle.first().is_some_and(|token| {
+                is_update_connector(
+                    token,
+                    &["에", "에서", "에게", "한테", "는", "은", "으로", "로"],
+                )
+            }) {
                 middle = &middle[1..];
             }
             middle
@@ -3531,8 +3534,7 @@ fn match_file_io(
             let after = &tokens[action_at + 1..];
             after.len() <= 2
                 && after.iter().all(|token| {
-                    token_matches_exact(token, FILE_WRITE_WORDS_KO)
-                        || is_command_ending(token)
+                    token_matches_exact(token, FILE_WRITE_WORDS_KO) || is_command_ending(token)
                 })
         } else {
             let after = &tokens[action_at + 1..];
@@ -3548,7 +3550,10 @@ fn match_file_io(
     // English action-first write: `write "hello" to "out.txt"`.
     if let Some(consumed) = action_phrase_at(tokens, 0, FILE_WRITE_WORDS_EN, mode) {
         let mut end = tokens.len();
-        if tokens.get(end.saturating_sub(1)).is_some_and(is_command_ending) {
+        if tokens
+            .get(end.saturating_sub(1))
+            .is_some_and(is_command_ending)
+        {
             end -= 1;
         }
         let Some(to_at) = tokens[consumed..end]
@@ -3567,21 +3572,16 @@ fn match_file_io(
     }
 
     // Korean write: `"out.txt" 파일에 "hello"를 저장해`.
-    let write_at = tokens
-        .iter()
-        .rposition(|token| {
-            action_phrase_at(std::slice::from_ref(token), 0, FILE_WRITE_WORDS_KO, mode).is_some()
-        });
+    let write_at = tokens.iter().rposition(|token| {
+        action_phrase_at(std::slice::from_ref(token), 0, FILE_WRITE_WORDS_KO, mode).is_some()
+    });
     if let Some(write_at) = write_at {
         let Some(path) = path_of(&tokens[..1]) else {
             return Ok(None);
         };
-        if tokens
-            .get(1)
-            .is_some_and(|token| {
-                is_update_connector(token, &["파일에", "파일을", "에", "로", "으로", "에다"])
-            })
-        {
+        if tokens.get(1).is_some_and(|token| {
+            is_update_connector(token, &["파일에", "파일을", "에", "로", "으로", "에다"])
+        }) {
             let mut value_tokens = &tokens[2..write_at];
             while value_tokens
                 .last()
@@ -3662,6 +3662,7 @@ fn file_path_diagnostic(span: Span) -> Diagnostic {
 /// quoted path is not valid Python (`from <string>` is a syntax error), so
 /// NME can claim it. The explicit name list is the module interface: only
 /// those names cross the file boundary.
+#[allow(clippy::case_sensitive_file_extension_comparisons)]
 fn match_module_import(
     source: &str,
     tokens: &[Token],
@@ -3669,7 +3670,10 @@ fn match_module_import(
     mode: MatchMode,
 ) -> Result<Option<NmeStmt>, Diagnostic> {
     if !matches!(tokens.first().map(|token| &token.tok), Some(Tok::From))
-        || !matches!(tokens.get(1).map(|token| &token.tok), Some(Tok::String { .. }))
+        || !matches!(
+            tokens.get(1).map(|token| &token.tok),
+            Some(Tok::String { .. })
+        )
         || !matches!(tokens.get(2).map(|token| &token.tok), Some(Tok::Import))
         || mode != MatchMode::Exact
     {
@@ -3697,13 +3701,11 @@ fn match_module_import(
         .strip_suffix(".nme")
         .unwrap_or(path_stripped);
     let valid_identifier = !stem.is_empty()
-        && stem
-            .chars()
-            .enumerate()
-            .all(|(index, character)| {
-                character == '_' || character.is_alphanumeric()
+        && stem.chars().enumerate().all(|(index, character)| {
+            character == '_'
+                || character.is_alphanumeric()
                     && (index > 0 || character.is_alphabetic() || character == '_')
-            });
+        });
     if !valid_identifier {
         return Err(Diagnostic::bilingual(
             DiagnosticCode::MissingAction,
@@ -3757,6 +3759,7 @@ fn module_import_shape_diagnostic(span: Span) -> Diagnostic {
     )
 }
 
+#[allow(clippy::too_many_lines)]
 fn match_use_module(
     source: &str,
     tokens: &[Token],
@@ -3956,6 +3959,52 @@ fn module_binding_names(module: BundledModuleId) -> &'static [&'static str] {
             "file_version",
             "파일버전",
         ],
+        BundledModuleId::ZeroKnowledge => &[
+            "영지식비밀난수",
+            "zk_prime",
+            "영지식큰소수",
+            "zk_order",
+            "영지식부분군크기",
+            "zk_generator",
+            "영지식생성원",
+            "zk_challenge_bits",
+            "영지식도전비트",
+            "zk_challenge_limit",
+            "영지식도전범위",
+            "zk_secret",
+            "영지식비밀만들기",
+            "zk_public",
+            "영지식공개값",
+            "zk_nonce",
+            "영지식일회값만들기",
+            "zk_commitment",
+            "영지식약속",
+            "zk_challenge",
+            "영지식도전만들기",
+            "zk_challenge_except",
+            "영지식다른도전",
+            "zk_response",
+            "영지식응답",
+            "zk_verify",
+            "영지식검증",
+            "zk_simulated_response",
+            "영지식모의응답만들기",
+            "zk_simulated_commitment",
+            "영지식모의약속",
+            "zk_group_bytes",
+            "영지식그룹바이트",
+            "_nme_zk_context_bytes",
+            "_nme_zk_int_bytes",
+            "_nme_zk_context_frame",
+            "zk_nizk_challenge",
+            "영지식비대화도전",
+            "zk_nizk_prove",
+            "영지식비대화증명",
+            "zk_nizk_verify",
+            "영지식비대화검증",
+            "zero_knowledge_version",
+            "영지식버전",
+        ],
     }
 }
 
@@ -3994,13 +4043,13 @@ fn module_word_matches(token: &Token, module: BundledModuleId, mode: MatchMode) 
 fn unsupported_module_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
         DiagnosticCode::UnsupportedModule,
-        "NME bundles `use random` and `use file`",
-        "NME에는 쉬운 `랜덤`과 `파일` 모듈만 들어 있어요",
+        "NME bundles `use random`, `use file`, and `use zero_knowledge`",
+        "NME에는 쉬운 `랜덤`, `파일`, `영지식` 모듈이 들어 있어요",
         span,
     )
     .with_bilingual_hint(
-        "write one module line such as `use random latest` or `use file latest`",
-        "`랜덤 사용 최신` 또는 `파일 사용 최신`처럼 모듈 하나를 적어 주세요",
+        "write one module line such as `use random latest`, `use file latest`, or `use zero_knowledge latest`",
+        "`랜덤 사용 최신`, `파일 사용 최신`, `영지식 사용 최신` 중 하나를 적어 주세요",
     )
 }
 
@@ -4066,13 +4115,14 @@ fn module_shape_diagnostic(_spelling: Spelling, span: Span) -> Diagnostic {
         span,
     )
     .with_bilingual_hint(
-        "write `use random latest` or `use file latest`, with an optional version",
-        "`랜덤 사용 최신` 또는 `파일 사용 최신`처럼 쓰고, 원하면 버전을 붙이세요",
+        "write `use random latest`, `use file latest`, or `use zero_knowledge latest`, with an optional version",
+        "`랜덤 사용 최신`, `파일 사용 최신`, `영지식 사용 최신`처럼 쓰고, 원하면 버전을 붙이세요",
     )
 }
 
 // ------------------------------------------------------------ assignment
 
+#[allow(clippy::too_many_lines)]
 fn match_set(
     source: &str,
     tokens: &[Token],
@@ -4296,6 +4346,9 @@ fn parse_value(
             return Ok(Value::Literal(literal));
         }
     }
+    if let Some(value) = parse_zero_knowledge_value(tokens) {
+        return Ok(value);
+    }
     if let Some(value) = parse_random_integer(source, tokens) {
         return Ok(value);
     }
@@ -4337,6 +4390,162 @@ fn parse_value(
         return Ok(Value::Python(Code::Source(span)));
     }
     Ok(Value::Text(make_text_template(source, tokens, known_names)))
+}
+
+fn parse_zero_knowledge_value(tokens: &[Token]) -> Option<Value> {
+    use crate::syntax::ZeroKnowledgeValue as Zk;
+
+    if tokens.len() == 7
+        && token_matches_exact(&tokens[3], &["영지식"])
+        && token_matches_exact(&tokens[4], &["비대화"])
+        && token_matches_exact(&tokens[5], &["도전"])
+        && token_matches_exact(&tokens[6], &["만들기"])
+    {
+        return Some(Value::ZeroKnowledge(Zk::NizkChallenge {
+            public_key: zero_knowledge_code_with_particle(&tokens[0], &["과", "와"])?,
+            commitment: zero_knowledge_code_with_particle(&tokens[1], &["과", "와"])?,
+            context: zero_knowledge_code_with_particle(&tokens[2], &["으로", "로"])?,
+        }));
+    }
+
+    if tokens.len() == 6
+        && token_matches_exact(&tokens[2], &["영지식"])
+        && token_matches_exact(&tokens[3], &["비대화"])
+        && token_matches_exact(&tokens[4], &["증명"])
+        && token_matches_exact(&tokens[5], &["만들기"])
+    {
+        return Some(Value::ZeroKnowledge(Zk::NizkProof {
+            secret: zero_knowledge_code_with_particle(&tokens[0], &["과", "와"])?,
+            context: zero_knowledge_code_with_particle(&tokens[1], &["으로", "로"])?,
+        }));
+    }
+
+    if tokens.len() == 6
+        && token_matches_exact(&tokens[3], &["영지식"])
+        && token_matches_exact(&tokens[4], &["비대화"])
+        && token_matches_exact(&tokens[5], &["검증"])
+    {
+        return Some(Value::ZeroKnowledge(Zk::NizkVerify {
+            public_key: zero_knowledge_code_with_particle(&tokens[0], &["과", "와"])?,
+            proof: zero_knowledge_code_with_particle(&tokens[1], &["과", "와"])?,
+            context: zero_knowledge_code_with_particle(&tokens[2], &["으로", "로"])?,
+        }));
+    }
+
+    if tokens.len() == 3
+        && token_matches_exact(&tokens[0], &["영지식"])
+        && token_matches_exact(&tokens[1], &["비밀"])
+        && token_matches_exact(&tokens[2], &["만들기"])
+    {
+        return Some(Value::ZeroKnowledge(Zk::Secret));
+    }
+
+    if tokens.len() == 4
+        && token_matches_exact(&tokens[1], &["영지식"])
+        && token_matches_exact(&tokens[2], &["공개값"])
+        && token_matches_exact(&tokens[3], &["만들기"])
+    {
+        return Some(Value::ZeroKnowledge(Zk::Public {
+            secret: zero_knowledge_code_with_particle(&tokens[0], &["으로", "로"])?,
+        }));
+    }
+
+    if tokens.len() == 3
+        && token_matches_exact(&tokens[0], &["영지식"])
+        && token_matches_exact(&tokens[1], &["일회값"])
+        && token_matches_exact(&tokens[2], &["만들기"])
+    {
+        return Some(Value::ZeroKnowledge(Zk::Nonce));
+    }
+
+    if tokens.len() == 4
+        && token_matches_exact(&tokens[1], &["영지식"])
+        && token_matches_exact(&tokens[2], &["약속"])
+        && token_matches_exact(&tokens[3], &["만들기"])
+    {
+        return Some(Value::ZeroKnowledge(Zk::Commitment {
+            nonce: zero_knowledge_code_with_particle(&tokens[0], &["으로", "로"])?,
+        }));
+    }
+
+    if tokens.len() == 3
+        && token_matches_exact(&tokens[0], &["영지식"])
+        && token_matches_exact(&tokens[1], &["도전"])
+        && token_matches_exact(&tokens[2], &["만들기"])
+    {
+        return Some(Value::ZeroKnowledge(Zk::Challenge));
+    }
+
+    if tokens.len() == 5
+        && token_matches_exact(&tokens[1], &["다른"])
+        && token_matches_exact(&tokens[2], &["영지식"])
+        && token_matches_exact(&tokens[3], &["도전"])
+        && token_matches_exact(&tokens[4], &["만들기"])
+    {
+        return Some(Value::ZeroKnowledge(Zk::ChallengeExcept {
+            excluded: zero_knowledge_code_with_particle(&tokens[0], &["과", "와"])?,
+        }));
+    }
+
+    if tokens.len() == 6
+        && token_matches_exact(&tokens[3], &["영지식"])
+        && token_matches_exact(&tokens[4], &["응답"])
+        && token_matches_exact(&tokens[5], &["만들기"])
+    {
+        return Some(Value::ZeroKnowledge(Zk::Response {
+            nonce: zero_knowledge_code_with_particle(&tokens[0], &["과", "와"])?,
+            secret: zero_knowledge_code_with_particle(&tokens[1], &["과", "와"])?,
+            challenge: zero_knowledge_code_with_particle(&tokens[2], &["으로", "로"])?,
+        }));
+    }
+
+    if tokens.len() == 6
+        && token_matches_exact(&tokens[4], &["영지식"])
+        && token_matches_exact(&tokens[5], &["검증"])
+    {
+        return Some(Value::ZeroKnowledge(Zk::Verify {
+            public_key: zero_knowledge_code_with_particle(&tokens[0], &["과", "와"])?,
+            commitment: zero_knowledge_code_with_particle(&tokens[1], &["과", "와"])?,
+            challenge: zero_knowledge_code_with_particle(&tokens[2], &["과", "와"])?,
+            response: zero_knowledge_code_with_particle(&tokens[3], &["으로", "로"])?,
+        }));
+    }
+
+    if tokens.len() == 4
+        && token_matches_exact(&tokens[0], &["영지식"])
+        && token_matches_exact(&tokens[1], &["모의"])
+        && token_matches_exact(&tokens[2], &["응답"])
+        && token_matches_exact(&tokens[3], &["만들기"])
+    {
+        return Some(Value::ZeroKnowledge(Zk::SimulatedResponse));
+    }
+
+    if tokens.len() == 7
+        && token_matches_exact(&tokens[3], &["영지식"])
+        && token_matches_exact(&tokens[4], &["모의"])
+        && token_matches_exact(&tokens[5], &["약속"])
+        && token_matches_exact(&tokens[6], &["만들기"])
+    {
+        return Some(Value::ZeroKnowledge(Zk::SimulatedCommitment {
+            public_key: zero_knowledge_code_with_particle(&tokens[0], &["과", "와"])?,
+            challenge: zero_knowledge_code_with_particle(&tokens[1], &["과", "와"])?,
+            response: zero_knowledge_code_with_particle(&tokens[2], &["으로", "로"])?,
+        }));
+    }
+
+    None
+}
+
+fn zero_knowledge_code_with_particle(token: &Token, particles: &[&str]) -> Option<Code> {
+    let word = name_word(token)?;
+    let stripped = particles
+        .iter()
+        .find_map(|particle| word.strip_suffix(particle).filter(|base| !base.is_empty()))?;
+    let removed = word.len() - stripped.len();
+    Some(Code::Source(Span::new(
+        token.span.start,
+        token.span.end - removed,
+    )))
 }
 
 fn parse_random_integer(source: &str, tokens: &[Token]) -> Option<Value> {
@@ -4814,7 +5023,9 @@ fn remember_bindings(stmt: &NmeStmt, names: &mut HashSet<String>) {
         NmeStmt::FileRead { target, .. } => {
             names.insert(target.clone());
         }
-        NmeStmt::ModuleImport { names: imported, .. } => {
+        NmeStmt::ModuleImport {
+            names: imported, ..
+        } => {
             for name in imported {
                 names.insert(name.clone());
             }
@@ -5471,5 +5682,68 @@ mod tests {
         assert!(one_typo_away("물어바", "물어봐"));
         assert!(one_typo_away("repaet", "repeat"));
         assert!(!one_typo_away("completely", "repeat"));
+    }
+}
+
+#[cfg(test)]
+mod zero_knowledge_tests {
+
+    use crate::diagnostics::DiagnosticCode;
+    use crate::transpile;
+
+    #[test]
+    fn zero_knowledge_nizk_sentences_bind_an_explicit_context() {
+        let source = "영지식 사용 최신
+비밀값은 영지식 비밀 만들기
+공개값은 비밀값으로 영지식 공개값 만들기
+문맥값은 결제 승인 요청
+증명값은 비밀값과 문맥값으로 영지식 비대화 증명 만들기
+검증값은 공개값과 증명값과 문맥값으로 영지식 비대화 검증
+일회값은 영지식 일회값 만들기
+약속값은 일회값으로 영지식 약속 만들기
+도전값은 공개값과 약속값과 문맥값으로 영지식 비대화 도전 만들기
+";
+        let python = transpile(source).expect("context-bound NIZK sentences must transpile");
+        assert!(
+            python.contains("증명값 = zk_nizk_prove(비밀값, 문맥값)"),
+            "{python}"
+        );
+        assert!(
+            python.contains("검증값 = zk_nizk_verify(공개값, 증명값, 문맥값)"),
+            "{python}"
+        );
+        assert!(
+            python.contains("도전값 = zk_nizk_challenge(공개값, 약속값, 문맥값)"),
+            "{python}"
+        );
+    }
+
+    #[test]
+    fn zero_knowledge_sentence_values_lower_without_python_punctuation() {
+        let source = "영지식 사용 최신
+비밀값은 영지식 비밀 만들기
+공개값은 비밀값으로 영지식 공개값 만들기
+일회값은 영지식 일회값 만들기
+약속값은 일회값으로 영지식 약속 만들기
+도전값은 영지식 도전 만들기
+응답값은 일회값과 비밀값과 도전값으로 영지식 응답 만들기
+검증값은 공개값과 약속값과 도전값과 응답값으로 영지식 검증
+";
+        let python = transpile(source).expect("zero-knowledge sentences must transpile");
+        assert!(python.contains("import secrets as 영지식비밀난수"));
+        assert!(python.contains(r#"비밀값 = __import__("secrets").randbelow"#));
+        assert!(python.contains("공개값 = pow(2, 비밀값, 0x"));
+        assert!(python.contains("검증값 = (1 < (공개값)"));
+    }
+
+    #[test]
+    fn zero_knowledge_module_protects_helper_names() {
+        let source = "영지식검증 = 1
+영지식 사용 최신
+";
+        let problems = transpile(source).expect_err("helper collision must be rejected");
+        assert!(problems
+            .iter()
+            .any(|problem| problem.code == DiagnosticCode::ModuleNameCollision));
     }
 }

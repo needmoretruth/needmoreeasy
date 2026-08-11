@@ -6,6 +6,37 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.19 — 2026-08-12
+
+- Converge the public beta Git topology with `main`: the final beta.19 release commit keeps beta.18 as its first parent and records the current main tip as its second parent. The beta first-parent release line still advances exactly one version per public commit, while `main` becomes an actual ancestor of the next-generation `beta` branch.
+- Keep the beta.17 release guard, locked Cargo validation, three-OS gate, and CPython 3.10/3.12/3.14 compatibility matrix unchanged.
+
+## 0.0.1-beta.18 — 2026-08-12
+
+- Extend the bundled Schnorr adapter to version `0.0.2` with context-bound Fiat-Shamir non-interactive proofs. The SHA-256 challenge binds the Group 15 generator, commitment, public key, and a length-prefixed explicit context under an NME domain tag.
+- Add `zk_nizk_challenge`, `zk_nizk_prove`, and `zk_nizk_verify` plus Korean sentence forms. Proofs are JSON-friendly `[commitment, response]` values and cross-context reuse is rejected.
+- Add Korean/English executable examples, parser/lowering and CLI end-to-end coverage, and explicit documentation that context binding does not replace same-context freshness/replay controls.
+
+## 0.0.1-beta.17 — 2026-08-12
+
+- Make `beta` the enforced next-generation release line. Every public beta push must advance the workspace beta number by exactly one, name that version in the commit subject, and keep the workspace package versions in `Cargo.lock` synchronized.
+- Upgrade CI to `actions/checkout@v6` and `actions/setup-python@v6`, and run Cargo checks and tests with `--locked`.
+- Add CPython 3.10, 3.12, and 3.14 compatibility jobs for beta and pull requests while retaining the full Ubuntu, Windows, and macOS quality gate.
+
+## 0.0.1-beta.16 — 2026-08-11
+
+- Add the bundled `zero_knowledge` / `영지식` adapter (version `0.0.1`) with a
+  finite-field Schnorr proof-of-knowledge reference implementation: secure
+  randomness from Python `secrets`, RFC 3526 3072-bit MODP Group 15 subgroup
+  parameters, 256-bit verifier challenges, subgroup/range checks, transcript
+  simulation helpers, helper-name collision protection, and Korean
+  sentence-only proof expressions. Add matching Korean/English A→B examples
+  with malicious relay C showing saved-transcript replay failure, transcript
+  simulation, and the separate live-relay case. Document the security scope:
+  mathematically faithful learning/reference code, not a side-channel-hardened
+  production cryptography library.
+
+
 - Extend the NME-native core: integer `%` modulo in arithmetic (float modulo is rejected honestly); conditions using `%` are a frontend follow-up.
 - Fix the native backend so the very first string assignment can be a concatenation (`greeting = "hello" + " world"`): a C array cannot be initialized from a function call, so the emitter declares the buffer first and copies with strcpy.
 - Extend the NME-native core: float literals, float variables, float arithmetic (mixed int/float promotes to double), and float comparisons.

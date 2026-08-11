@@ -36,7 +36,7 @@ fn native_run(source: &str) -> Result<String, String> {
         .output()
         .map_err(|error| format!("could not run the native program: {error}"))?;
     let _ = std::fs::remove_dir_all(&dir);
-    Ok(String::from_utf8_lossy(&output.stdout).into_owned())
+    Ok(String::from_utf8_lossy(&output.stdout).replace("\r\n", "\n"))
 }
 
 fn native_rejects(source: &str) -> bool {
@@ -46,7 +46,8 @@ fn native_rejects(source: &str) -> bool {
 #[test]
 fn a_while_loop_countdown_runs_natively() {
     assert_eq!(
-        native_run("score = 0\nwhile score is less than 3\n    score add 1\nend\nshow score\n").unwrap(),
+        native_run("score = 0\nwhile score is less than 3\n    score add 1\nend\nshow score\n")
+            .unwrap(),
         "3\n"
     );
 }
@@ -58,7 +59,10 @@ fn arithmetic_in_say_lowers_to_c() {
 
 #[test]
 fn a_string_literal_is_printed() {
-    assert_eq!(native_run("show \"hello world\"\n").unwrap(), "hello world\n");
+    assert_eq!(
+        native_run("show \"hello world\"\n").unwrap(),
+        "hello world\n"
+    );
 }
 
 #[test]
@@ -74,8 +78,18 @@ fn functions_over_scalars_compile_natively() {
 }
 
 #[test]
+fn generated_functions_are_file_scope_portable_c() {
+    let source = "def twice(n):\n    return n * 2\n\nshow twice(5)\n";
+    let c = nme_native::native_compile(source).unwrap();
+    let function_at = c.find("int twice(int n) {").expect("generated function");
+    let main_at = c.find("int main(void) {").expect("generated main");
+    assert!(function_at < main_at, "function must be outside main:\n{c}");
+}
+
+#[test]
 fn else_and_else_if_branches_compile_natively() {
-    let small = "score = 3\nif score is greater than 5\n    show \"big\"\n아니면\n    show \"small\"\n끝\n";
+    let small =
+        "score = 3\nif score is greater than 5\n    show \"big\"\n아니면\n    show \"small\"\n끝\n";
     assert_eq!(native_run(small).unwrap(), "small\n");
 
     let medium = "x = 4\nif x is greater than 5\n    show \"big\"\n아니면 만약에 x is greater than 2\n    show \"medium\"\n아니면\n    show \"small\"\n끝\n";
@@ -124,10 +138,7 @@ fn string_variables_and_binary_concat_compile_natively() {
 #[test]
 fn string_comparison_and_len_compile_natively() {
     let source = "name = \"NME\"\nif name == \"NME\"\n    show \"match\"\nend\nif name != \"other\"\n    show \"different\"\nend\nshow len(name)\nshow len(\"hello\")\n";
-    assert_eq!(
-        native_run(source).unwrap(),
-        "match\ndifferent\n3\n5\n"
-    );
+    assert_eq!(native_run(source).unwrap(), "match\ndifferent\n3\n5\n");
 
     let korean = "이름 = \"안녕\"\n만약 이름이 \"안녕\"와 같으면\n    말해 \"같아요\"\n끝\n";
     assert_eq!(native_run(korean).unwrap(), "같아요\n");
@@ -191,13 +202,17 @@ fn string_concat_into_variables_works() {
 
 #[test]
 fn nested_string_concat_is_rejected_not_miscompiled() {
-    assert!(native_rejects("greeting = \"hi\"\nshow greeting + \" \" + \"friend\"\n"));
+    assert!(native_rejects(
+        "greeting = \"hi\"\nshow greeting + \" \" + \"friend\"\n"
+    ));
 }
 
 #[test]
 fn c_keyword_names_are_rejected_not_miscompiled() {
     assert!(native_rejects("double = 3\nshow double\n"));
-    assert!(native_rejects("def double(n):\n    return n\nshow double(2)\n"));
+    assert!(native_rejects(
+        "def double(n):\n    return n\nshow double(2)\n"
+    ));
 }
 
 #[test]
@@ -216,7 +231,9 @@ fn korean_spellings_compile_natively() {
 fn a_python_colon_while_header_is_rejected_not_miscompiled() {
     // `while x < 3:` is valid Python, so it stays Python (Python-wins) and
     // the native core, which lowers the sentence `while` form, rejects it.
-    assert!(native_rejects("x = 0\nwhile x < 3:\n    x = x + 1\nshow x\n"));
+    assert!(native_rejects(
+        "x = 0\nwhile x < 3:\n    x = x + 1\nshow x\n"
+    ));
 }
 
 #[test]
@@ -237,6 +254,8 @@ fn a_rejected_line_reports_its_own_source_position() {
 #[test]
 fn input_and_modules_are_rejected_not_miscompiled() {
     assert!(native_rejects("ask name, \"name? \"\n"));
-    assert!(native_rejects("use random latest\nshow random_number(1, 6)\n"));
+    assert!(native_rejects(
+        "use random latest\nshow random_number(1, 6)\n"
+    ));
     assert!(native_rejects("from \"helper.nme\" import greet\n"));
 }

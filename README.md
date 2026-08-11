@@ -91,7 +91,7 @@ warns that its `bin` directory is not on `PATH`. It does not reinstall NME.
 Windows PowerShell uses the PATH step in the
 [installation guide](docs/install.md#windows-11).
 
-Expected version: `nme 0.0.1-beta.15`.
+Expected version: `nme 0.0.1-beta.19`.
 
 Windows, macOS, and Linux instructions are in the
 [installation guide](docs/install.md). The [five-minute guide](docs/getting-started.md)
@@ -128,6 +128,9 @@ the four educational projects (learning only, never investment advice):
 [`proof-of-work.nme`](examples/proof-of-work.nme) (intermediate),
 [`signatures.nme`](examples/signatures.nme) (advanced), and
 [`consensus.nme`](examples/consensus.nme) (expert), each with a Korean twin.
+For a real proof-of-knowledge example rather than a hash/signature simulation,
+see [`zk-schnorr-relay.ko.nme`](examples/zk-schnorr-relay.ko.nme) and its
+English twin [`zk-schnorr-relay.en.nme`](examples/zk-schnorr-relay.en.nme).
 
 Programs can import named values from other `.nme` files in the same folder — see the [`examples/modules/`](examples/modules/) pair and `from "shapes.nme" import rect, circle` in a main program. The import list is the module interface, so there is no hidden global state.
 
@@ -180,7 +183,7 @@ startup time, distribution size, and performance, so measure the actual
 program; NME does not make a false blanket claim that every Python-compatible
 program becomes faster or smaller.
 
-## Versioned random and file tools
+## Versioned random, file, and zero-knowledge tools
 
 ```text
 랜덤 사용 최신
@@ -205,8 +208,42 @@ show 보관["이름"]
 ```
 
 `file` exposes `file_read`/`파일읽기`, `file_write`/`파일쓰기`,
-`json_load`/`json읽기`, and `json_save`/`json저장` on version `0.0.1`. Run
-`nme modules` to see installed module versions.
+`json_load`/`json읽기`, and `json_save`/`json저장` on version `0.0.1`.
+
+The `zero_knowledge` / `영지식` adapter is also bundled at version `0.0.1`.
+It implements the finite-field Schnorr proof-of-knowledge flow with secure
+randomness from Python's `secrets` module and the 3072-bit MODP Group 15
+subgroup. The Korean example is written entirely in Korean sentence syntax:
+
+```text
+영지식 사용 최신
+비밀값은 영지식 비밀 만들기
+공개값은 비밀값으로 영지식 공개값 만들기
+일회값은 영지식 일회값 만들기
+약속값은 일회값으로 영지식 약속 만들기
+도전값은 영지식 도전 만들기
+응답값은 일회값과 비밀값과 도전값으로 영지식 응답 만들기
+검증값은 공개값과 약속값과 도전값과 응답값으로 영지식 검증
+```
+
+Run [`zk-schnorr-relay.ko.nme`](examples/zk-schnorr-relay.ko.nme) to see
+sender A, receiver B, saved-transcript replay by malicious relay C,
+zero-knowledge transcript simulation, and the separate live-relay case.
+This is a mathematically faithful learning/reference implementation, not an
+audited side-channel-hardened production cryptography library.
+
+Run `nme modules` to see installed module versions.
+
+The zero-knowledge adapter is version `0.0.2` in beta.18 and also provides a
+context-bound Fiat-Shamir non-interactive proof. `zk_nizk_prove(secret, context)`
+returns a JSON-friendly `[commitment, response]` proof, and
+`zk_nizk_verify(public_key, proof, context)` recomputes the SHA-256 challenge
+from the Group 15 generator, commitment, public key, and a length-prefixed UTF-8
+context under an NME-specific domain tag. A proof therefore fails under a
+different context. This does not by itself stop replay in the *same* context;
+put a unique request ID or nonce in the context when freshness matters. See
+[`zk-nizk-context.ko.nme`](examples/zk-nizk-context.ko.nme) and its English twin
+[`zk-nizk-context.en.nme`](examples/zk-nizk-context.en.nme).
 
 Sentence syntax can use random without any punctuation or prior module line:
 

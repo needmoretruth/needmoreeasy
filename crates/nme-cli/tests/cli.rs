@@ -37,11 +37,11 @@ fn example(name: &str) -> String {
 }
 
 fn stdout(output: &Output) -> String {
-    String::from_utf8_lossy(&output.stdout).into_owned()
+    String::from_utf8_lossy(&output.stdout).replace("\r\n", "\n")
 }
 
 fn stderr(output: &Output) -> String {
-    String::from_utf8_lossy(&output.stderr).into_owned()
+    String::from_utf8_lossy(&output.stderr).replace("\r\n", "\n")
 }
 
 fn python_command() -> &'static str {
@@ -74,13 +74,13 @@ fn build_prints_transpiled_python() {
 fn version_reports_the_current_beta() {
     let output = nme(&["--version"]);
     assert!(output.status.success(), "{}", stderr(&output));
-    assert_eq!(stdout(&output), "nme 0.0.1-beta.15\n");
+    assert_eq!(stdout(&output), "nme 0.0.1-beta.19\n");
 
     let korean = nme(&["버전"]);
     assert!(korean.status.success(), "{}", stderr(&korean));
     assert_eq!(
         stdout(&korean),
-        "NME 버전: 0.0.1-beta.15\nnme version: 0.0.1-beta.15\n"
+        "NME 버전: 0.0.1-beta.19\nnme version: 0.0.1-beta.19\n"
     );
 }
 
@@ -90,7 +90,7 @@ fn modules_uses_the_language_of_the_command() {
     assert!(english.status.success(), "{}", stderr(&english));
     assert_eq!(
         stdout(&english),
-        "random  0.0.1  bundled, latest\nfile  0.0.1  bundled, latest\n"
+        "random  0.0.1  bundled, latest\nfile  0.0.1  bundled, latest\nzero_knowledge  0.0.2  bundled, latest\n"
     );
     assert!(!stdout(&english).contains("내장"));
 
@@ -98,7 +98,7 @@ fn modules_uses_the_language_of_the_command() {
     assert!(bilingual.status.success(), "{}", stderr(&bilingual));
     assert_eq!(
         stdout(&bilingual),
-        "랜덤  0.0.1  내장, 최신\nrandom  0.0.1  bundled, latest\n파일  0.0.1  내장, 최신\nfile  0.0.1  bundled, latest\n"
+        "랜덤  0.0.1  내장, 최신\nrandom  0.0.1  bundled, latest\n파일  0.0.1  내장, 최신\nfile  0.0.1  bundled, latest\n영지식  0.0.2  내장, 최신\nzero_knowledge  0.0.2  bundled, latest\n"
     );
 }
 
@@ -155,22 +155,43 @@ fn write_nme(dir: &std::path::Path, name: &str, source: &str) {
 fn command_shortcuts_run_check_build_and_modules() {
     let output = nme(&["r", &example("hello-sentence.nme")]);
     assert!(output.status.success(), "{}", stderr(&output));
-    assert!(stdout(&output).contains("Hello, world!"), "{}", stdout(&output));
+    assert!(
+        stdout(&output).contains("Hello, world!"),
+        "{}",
+        stdout(&output)
+    );
 
     let checked = nme(&["c", &example("three-levels.nme")]);
     assert!(checked.status.success(), "{}", stderr(&checked));
 
-    let built = nme(&["b", &example("hello.nme"), "-o", "/tmp/nme-build-alias-test.py"]);
+    let build_dir = temporary_dir("build-alias");
+    let build_path = build_dir.join("nme-build-alias-test.py");
+    let built = nme(&[
+        "b",
+        &example("hello.nme"),
+        "-o",
+        &build_path.to_string_lossy(),
+    ]);
     assert!(built.status.success(), "{}", stderr(&built));
+    let _ = std::fs::remove_dir_all(&build_dir);
 
     let modules = nme(&["m"]);
     assert!(modules.status.success(), "{}", stderr(&modules));
     assert!(stdout(&modules).contains("random"), "{}", stdout(&modules));
     assert!(stdout(&modules).contains("file"), "{}", stdout(&modules));
+    assert!(
+        stdout(&modules).contains("zero_knowledge"),
+        "{}",
+        stdout(&modules)
+    );
 
     let version = nme(&["v"]);
     assert!(version.status.success(), "{}", stderr(&version));
-    assert!(stdout(&version).contains("nme 0.0.1-beta.15"), "{}", stdout(&version));
+    assert!(
+        stdout(&version).contains("nme 0.0.1-beta.19"),
+        "{}",
+        stdout(&version)
+    );
 
     let help = nme(&["h"]);
     assert!(help.status.success(), "{}", stderr(&help));
@@ -194,7 +215,11 @@ fn run_passes_program_arguments_to_the_program() {
     let text = stdout(&output);
     assert!(text.contains("program: "), "{text}");
     assert!(text.contains("args: ['one', 'two']"), "{text}");
-    assert!(!stderr(&output).contains("unexpected"), "{}", stderr(&output));
+    assert!(
+        !stderr(&output).contains("unexpected"),
+        "{}",
+        stderr(&output)
+    );
 
     let bare = nme(&["run", &program.to_string_lossy(), "-5", "3.5"]);
     assert!(bare.status.success(), "{}", stderr(&bare));
@@ -314,7 +339,11 @@ fn nme_module_imports_run_across_files() {
 
     let built = run_in(&dir, &["b", "main"], None);
     assert!(built.status.success(), "{}", stderr(&built));
-    assert!(stdout(&built).contains("from helper import 인사말, double"), "{}", stdout(&built));
+    assert!(
+        stdout(&built).contains("from helper import 인사말, double"),
+        "{}",
+        stdout(&built)
+    );
 
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -323,7 +352,11 @@ fn nme_module_imports_run_across_files() {
 fn a_missing_module_gets_a_clear_error() {
     let dir = std::env::temp_dir().join(format!("nme-cli-module-missing-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    std::fs::write(dir.join("main.nme"), "from \"nope.nme\" import greet\nshow greet\n").unwrap();
+    std::fs::write(
+        dir.join("main.nme"),
+        "from \"nope.nme\" import greet\nshow greet\n",
+    )
+    .unwrap();
 
     let output = run_in(&dir, &["run", "main"], None);
     assert!(!output.status.success());
@@ -332,11 +365,7 @@ fn a_missing_module_gets_a_clear_error() {
         "{}",
         stderr(&output)
     );
-    assert!(
-        stderr(&output).contains("nope.nme"),
-        "{}",
-        stderr(&output)
-    );
+    assert!(stderr(&output).contains("nope.nme"), "{}", stderr(&output));
 
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -410,7 +439,12 @@ fn the_native_command_compiles_and_runs_a_core_program() {
 
     let built = run_in(&dir, &["native", "build", "count", "-o", "count_out"], None);
     assert!(built.status.success(), "{}", stderr(&built));
-    assert!(dir.join("count_out").exists(), "no executable written");
+    let executable = if cfg!(windows) {
+        dir.join("count_out.exe")
+    } else {
+        dir.join("count_out")
+    };
+    assert!(executable.exists(), "no executable written");
     assert!(dir.join("count_out.c").exists(), "no C source written");
 
     let rejected = run_in(&dir, &["native", "ask.nme"], None);
@@ -436,8 +470,7 @@ fn install_requires_a_package_and_explains_pip_failures() {
     let missing_pip = Command::new(python_command())
         .args(["-m", "pip", "--version"])
         .output()
-        .map(|out| !out.status.success())
-        .unwrap_or(true);
+        .map_or(true, |out| !out.status.success());
     if missing_pip {
         let install = nme(&["install", "requests"]);
         assert!(!install.status.success());
@@ -579,11 +612,19 @@ fn bare_run_asks_which_program_when_several_exist() {
 
     let by_name = run_in(&dir, &["r"], Some("b.nme\n"));
     assert!(by_name.status.success(), "{}", stderr(&by_name));
-    assert!(stdout(&by_name).contains("Program B"), "{}", stdout(&by_name));
+    assert!(
+        stdout(&by_name).contains("Program B"),
+        "{}",
+        stdout(&by_name)
+    );
 
     let invalid = run_in(&dir, &["r"], Some("9\n"));
     assert!(!invalid.status.success());
-    assert!(stderr(&invalid).contains("not one of the programs"), "{}", stderr(&invalid));
+    assert!(
+        stderr(&invalid).contains("not one of the programs"),
+        "{}",
+        stderr(&invalid)
+    );
     std::fs::remove_dir_all(&dir).ok();
 }
 
@@ -593,11 +634,7 @@ fn bare_check_and_build_discover_like_run() {
     write_nme(&dir, "one.nme", "show Hello\n");
     let checked = run_in(&dir, &["c"], None);
     assert!(checked.status.success(), "{}", stderr(&checked));
-    let built = run_in(
-        &dir,
-        &["b", "-o", "one.py"],
-        None,
-    );
+    let built = run_in(&dir, &["b", "-o", "one.py"], None);
     assert!(built.status.success(), "{}", stderr(&built));
     assert!(dir.join("one.py").exists(), "build output must be written");
     std::fs::remove_dir_all(&dir).ok();
@@ -779,7 +816,7 @@ fn compile_refuses_to_overwrite_an_existing_artifact() {
     let dir = std::env::temp_dir().join(format!("nme-cli-native-safe-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let input = dir.join("hello.nme");
-    let output_file = dir.join("already-here");
+    let output_file = dir.join("already-here.exe");
     std::fs::write(&input, "show Hello\n").unwrap();
     std::fs::write(&output_file, "keep me").unwrap();
 
@@ -1278,10 +1315,7 @@ fn a_ko_suffixed_name_resolves_to_the_korean_twin_file() {
     let dir = std::env::temp_dir().join(format!("nme-cli-ko-twin-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let stem = dir.join("game");
-    std::fs::write(
-        stem.with_extension("nme"),
-        "show english game\n",
-    ).unwrap();
+    std::fs::write(stem.with_extension("nme"), "show english game\n").unwrap();
     std::fs::write(
         Path::new(&format!("{}.ko", stem.display())).with_extension("nme"),
         "show korean game\n",
@@ -1308,7 +1342,10 @@ fn a_directory_argument_explains_that_it_is_a_folder() {
     let korean = nme(&["실행", &dir.to_string_lossy()]);
     assert!(!korean.status.success());
     let korean_error = stderr(&korean);
-    assert!(korean_error.contains("폴더이지 프로그램이 아니에요"), "{korean_error}");
+    assert!(
+        korean_error.contains("폴더이지 프로그램이 아니에요"),
+        "{korean_error}"
+    );
 
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -1372,7 +1409,11 @@ fn a_unique_name_prefix_runs_the_matching_program() {
     assert!(checked.status.success(), "{}", stderr(&checked));
 
     let korean_checked = nme(&["검사", &dir.join("a").to_string_lossy()]);
-    assert!(korean_checked.status.success(), "{}", stderr(&korean_checked));
+    assert!(
+        korean_checked.status.success(),
+        "{}",
+        stderr(&korean_checked)
+    );
 
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -1451,11 +1492,19 @@ fn the_numbered_pick_accepts_bare_names_and_unique_prefixes() {
 
     let by_bare_name = run_in(&dir, &["r"], Some("alpha"));
     assert!(by_bare_name.status.success(), "{}", stderr(&by_bare_name));
-    assert!(stdout(&by_bare_name).contains("alpha picked\n"), "{}", stdout(&by_bare_name));
+    assert!(
+        stdout(&by_bare_name).contains("alpha picked\n"),
+        "{}",
+        stdout(&by_bare_name)
+    );
 
     let by_prefix = run_in(&dir, &["r"], Some("b"));
     assert!(by_prefix.status.success(), "{}", stderr(&by_prefix));
-    assert!(stdout(&by_prefix).contains("beta picked\n"), "{}", stdout(&by_prefix));
+    assert!(
+        stdout(&by_prefix).contains("beta picked\n"),
+        "{}",
+        stdout(&by_prefix)
+    );
 
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -1500,15 +1549,31 @@ fn an_empty_pick_answer_gets_a_friendly_message() {
 fn help_and_help_shortcut_ignore_extra_arguments() {
     let output = nme(&["h", "extra"]);
     assert!(output.status.success(), "{}", stderr(&output));
-    assert!(stdout(&output).contains("START HERE:"), "{}", stdout(&output));
+    assert!(
+        stdout(&output).contains("START HERE:"),
+        "{}",
+        stdout(&output)
+    );
 
     let korean = nme(&["도움", "extra"]);
     assert!(korean.status.success(), "{}", stderr(&korean));
-    assert!(stdout(&korean).contains("처음 시작:"), "{}", stdout(&korean));
+    assert!(
+        stdout(&korean).contains("처음 시작:"),
+        "{}",
+        stdout(&korean)
+    );
 
     let english_help = nme(&["h"]);
-    assert!(stdout(&english_help).contains("stay unique"), "{}", stdout(&english_help));
-    assert!(stdout(&english_help).contains("nme ko E0001"), "{}", stdout(&english_help));
+    assert!(
+        stdout(&english_help).contains("stay unique"),
+        "{}",
+        stdout(&english_help)
+    );
+    assert!(
+        stdout(&english_help).contains("nme ko E0001"),
+        "{}",
+        stdout(&english_help)
+    );
     let korean_help = nme(&["도움"]);
     assert!(
         stdout(&korean_help).contains("줄여 쓸 수"),
@@ -1524,26 +1589,43 @@ fn error_lookup_commands_print_the_requested_explanation() {
     let korean_out = stdout(&korean);
     assert!(korean_out.contains("E0101"), "{korean_out}");
     assert!(korean_out.contains("열린 블록이 없는 `끝`"), "{korean_out}");
-    assert!(korean_out.contains("E0101 — an `end` with no open block"), "{korean_out}");
+    assert!(
+        korean_out.contains("E0101 — an `end` with no open block"),
+        "{korean_out}"
+    );
 
     let english = nme(&["en", "E0101"]);
     assert!(english.status.success(), "{}", stderr(&english));
     let english_out = stdout(&english);
-    assert!(english_out.contains("an `end` with no open block"), "{english_out}");
+    assert!(
+        english_out.contains("an `end` with no open block"),
+        "{english_out}"
+    );
     assert!(!english_out.contains("열린 블록"), "{english_out}");
 
     let korean_alias = nme(&["에러", "E0101"]);
     assert!(korean_alias.status.success(), "{}", stderr(&korean_alias));
-    assert!(stdout(&korean_alias).contains("열린 블록이 없는 `끝`"), "{}", stdout(&korean_alias));
+    assert!(
+        stdout(&korean_alias).contains("열린 블록이 없는 `끝`"),
+        "{}",
+        stdout(&korean_alias)
+    );
 
     let english_alias = nme(&["error", "E0101"]);
     assert!(english_alias.status.success(), "{}", stderr(&english_alias));
-    assert!(stdout(&english_alias).contains("an `end` with no open block"), "{}", stdout(&english_alias));
+    assert!(
+        stdout(&english_alias).contains("an `end` with no open block"),
+        "{}",
+        stdout(&english_alias)
+    );
 
     let unknown = nme(&["ko", "E9999"]);
     assert!(!unknown.status.success());
     let unknown_error = stderr(&unknown);
-    assert!(unknown_error.contains("there is no error code `E9999`"), "{unknown_error}");
+    assert!(
+        unknown_error.contains("there is no error code `E9999`"),
+        "{unknown_error}"
+    );
     assert!(unknown_error.contains("`nme ko`"), "{unknown_error}");
 }
 
@@ -1559,7 +1641,10 @@ fn error_lookup_without_a_code_lists_every_code() {
     let korean = nme(&["ko"]);
     assert!(korean.status.success(), "{}", stderr(&korean));
     let korean_out = stdout(&korean);
-    assert!(korean_out.contains("E0102  반복문 밖의 `break`"), "{korean_out}");
+    assert!(
+        korean_out.contains("E0102  반복문 밖의 `break`"),
+        "{korean_out}"
+    );
 }
 
 #[test]
@@ -1610,10 +1695,72 @@ fn cli_errors_carry_lookup_codes() {
     );
 
     let cli_code_korean = nme(&["ko", "E9001"]);
-    assert!(cli_code_korean.status.success(), "{}", stderr(&cli_code_korean));
+    assert!(
+        cli_code_korean.status.success(),
+        "{}",
+        stderr(&cli_code_korean)
+    );
     assert!(
         stdout(&cli_code_korean).contains("알 수 없는 명령"),
         "{}",
         stdout(&cli_code_korean)
     );
+}
+
+#[test]
+fn schnorr_nizk_context_examples_reject_cross_context_reuse() {
+    if !python_available() {
+        eprintln!("Python not available; skipping context-bound NIZK example test");
+        return;
+    }
+
+    let korean = nme(&["run", &example("zk-nizk-context.ko.nme")]);
+    assert!(korean.status.success(), "{}", stderr(&korean));
+    let korean_text = stdout(&korean);
+    assert!(
+        korean_text.contains("문맥에 묶인 비대화 영지식 증명을 검증했습니다"),
+        "{korean_text}"
+    );
+    assert!(
+        korean_text.contains("같은 증명은 다른 문맥으로 재사용할 수 없습니다"),
+        "{korean_text}"
+    );
+
+    let english = nme(&["run", &example("zk-nizk-context.en.nme")]);
+    assert!(english.status.success(), "{}", stderr(&english));
+    let english_text = stdout(&english);
+    assert!(
+        english_text.contains("Context-bound non-interactive proof verified."),
+        "{english_text}"
+    );
+    assert!(
+        english_text.contains("The same proof was rejected under a different context."),
+        "{english_text}"
+    );
+}
+
+#[test]
+fn schnorr_zero_knowledge_examples_run_end_to_end() {
+    if !python_available() {
+        eprintln!("Python not available; skipping zero-knowledge example test");
+        return;
+    }
+
+    let korean = nme(&["run", &example("zk-schnorr-relay.ko.nme")]);
+    assert!(korean.status.success(), "{}", stderr(&korean));
+    let korean_text = stdout(&korean);
+    assert!(korean_text.contains("영지식 증명을 수신자 비가 받아들였습니다"));
+    assert!(korean_text.contains("저장 전사록 재전송은 새 도전에서 실패했습니다"));
+    assert!(korean_text.contains("비밀값 없이도 미리 고른 도전에 맞는 전사록을 모의할 수 있습니다"));
+    assert!(korean_text.contains("모의 전사록은 수신자 비의 다른 도전에 재사용할 수 없습니다"));
+    assert!(korean_text.contains("실시간 중계는 통과하지만 비밀 위조가 아니라"));
+
+    let english = nme(&["run", &example("zk-schnorr-relay.en.nme")]);
+    assert!(english.status.success(), "{}", stderr(&english));
+    let english_text = stdout(&english);
+    assert!(english_text.contains("accepted sender A's zero-knowledge proof"));
+    assert!(english_text.contains("cannot replay the saved transcript"));
+    assert!(english_text.contains("can be simulated without the secret"));
+    assert!(english_text.contains("cannot answer receiver B's different challenge"));
+    assert!(english_text.contains("A live relay can pass"));
 }
