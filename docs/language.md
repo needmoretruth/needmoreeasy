@@ -496,6 +496,21 @@ the generated Python is the same stdlib the `file` module teaches. Weak
 matches such as `read the book` or `write hello` stay plain sentence output
 instead of becoming file operations.
 
+## Running a program with arguments
+
+Words typed after the program name go to the program, exactly like
+`python program.py ...`:
+
+```sh
+nme run greet Mina
+nme r dice 6
+nme 실행 todo add "buy milk"
+```
+
+The program reads them from `sys.argv`: `sys.argv[0]` is the program path,
+`sys.argv[1]` the first argument. Options such as `--python` must come
+before the file name; everything after it belongs to the program.
+
 ## Native backend
 
 A restricted, statically typed core subset can compile straight to native
@@ -503,11 +518,15 @@ machine code, independent of CPython. `nme native run hello` compiles to C
 with the system C compiler and runs the executable; `nme native build hello
 -o hello` keeps the C source and the executable.
 
-The native core covers: integers and `+ - *` arithmetic; string literals and
-string variables with one binary `+` concatenation; `while`/`if`/`else`/
-`else if` over integer comparisons and string `==`/`!=`; `break`; functions
-over integer parameters with `return` (recursion works); `say`/`show`/`말해`
-of integers, strings, and `len`. Everything else — input, modules, files,
+The native core covers: integer and float values with `+ - * %` arithmetic
+(integer modulo; float modulo is rejected); string literals and string
+variables with one binary `+` concatenation, `len`, and `==`/`!=` string
+comparisons; `while`/`if`/`else`/`else if` over integer, float, and string
+comparisons (including `<=`/`>=` and the natural-language "or equal"
+connectors), over integer truthiness (`if ready`, `while turns`), and over
+boolean literals; the beginner `times:` loop; `break`; functions over scalar
+parameters with `return` (recursion works); `say`/`show`/`말해` of
+integers, floats, and strings. Everything else — input, modules, files,
 classes, packages — is rejected with a clear diagnostic and still runs on
 CPython with `nme run`. Identifiers that collide with C keywords are rejected,
 never renamed. See the [native-backend memo](native-backend.md) for the design
