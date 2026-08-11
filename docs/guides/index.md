@@ -79,6 +79,9 @@ tic-tac-toe.
 50. [50 — Strings](50-strings.md)
 51. [51 — Grid](51-grid.md)
 52. [52 — Tic-tac-toe](52-tic-tac-toe.md)
+53. [53 — Sets](53-sets.md)
+54. [54 — Stats](54-stats.md)
+55. [55 — Network](55-net.md)
 
 ## Topic lookup
 
@@ -126,6 +129,9 @@ tic-tac-toe.
 - 문자열 / Strings: [50](50-strings.md)
 - 격자 / Grid: [51](51-grid.md)
 - 게임 / Tic-tac-toe: [52](52-tic-tac-toe.md)
+- 집합 / Sets: [53](53-sets.md)
+- 통계 / Stats: [54](54-stats.md)
+- 네트워크 / Network: [55](55-net.md)
 
 ## All guides
 
