@@ -175,7 +175,7 @@ until the candidate falls below `작업목표`.
 
 The advanced examples show the more conventional layout directly: serialize the
 block payload, hash it with SHA-256, increment an integer work nonce, and stop
-when the hexadecimal hash starts with `00`. Difficulty is intentionally low for
+when the hexadecimal hash starts with `0`. Difficulty is intentionally low for
 learning. Increasing it can make execution much slower.
 
 ## Step 7 — revalidate instead of trusting construction-time variables
