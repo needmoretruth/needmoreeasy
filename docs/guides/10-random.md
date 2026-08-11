@@ -68,5 +68,5 @@ Roll two dice and show both:
 - `use random latest` / `랜덤 사용 최신` loads the bundled random helper.
 - `random number from 1 to 6` / `1부터 6까지 랜덤정수` roll a die.
 - `pick from red or green or blue` / `... 중에서 랜덤선택` pick one choice.
-- Only one `use` line is allowed per program; run `nme modules` to list
-  versions.
+- `use file` may join `use random` in the same program — guide
+  [15](15-high-score.md) saves its best score that way.

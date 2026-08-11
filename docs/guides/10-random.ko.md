@@ -68,5 +68,5 @@ use random latest
 - `랜덤 사용 최신` / `use random latest`가 내장 랜덤 도우미를 불러옵니다.
 - `1부터 6까지 랜덤정수` / `random number from 1 to 6`로 주사위를 굴립니다.
 - `... 중에서 랜덤선택` / `pick from ...`으로 하나를 고릅니다.
-- 프로그램마다 `use` 줄은 하나만 쓸 수 있고, `nme modules`로 버전을
-  볼 수 있습니다.
+- `use file`은 같은 프로그램에서 `use random`과 함께 쓸 수 있습니다 —
+  [15](15-high-score.md)가 그렇게 최고 점수를 저장합니다.

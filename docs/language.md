@@ -407,8 +407,10 @@ NME.
 ## Versioned bundled modules
 
 Two beginner modules ship with NME: `random` (dice and picks) and `file`
-(reading, writing, and JSON). Each has one bundled version, `0.0.1`. Only one
-`use` line is allowed per program, so pick one spelling:
+(reading, writing, and JSON). Each has one bundled version, `0.0.1`. One
+`use` line per module is enough — both modules may be imported in the same
+program (a dice game that saves its best score needs both), but importing
+the same module twice is a collision error:
 
 ```text
 use random
