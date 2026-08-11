@@ -1,0 +1,84 @@
+name: Prepare beta.16 zero-knowledge release candidate
+
+on:
+  push:
+    branches: [release/beta.16-zk]
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    if: ${{ !contains(github.event.head_commit.message, '[beta16-applied]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Apply exact release preparation
+        run: python scripts/prepare_beta16_zk.py
+
+      - name: Format Rust
+        run: cargo fmt --all
+
+      - name: Release-quality validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo fmt --all -- --check
+          cargo check --workspace
+          cargo clippy --workspace --all-targets -- -D warnings
+          cargo test --workspace
+          cargo run --quiet -p nme-cli -- --version | tee /tmp/nme-version
+          grep -Fx 'nme 0.0.1-beta.16' /tmp/nme-version
+          cargo run --quiet -p nme-cli -- modules | tee /tmp/nme-modules
+          grep -F 'zero_knowledge  0.0.1  bundled, latest' /tmp/nme-modules
+          cargo run --quiet -p nme-cli -- check examples/zk-schnorr-relay.ko.nme
+          cargo run --quiet -p nme-cli -- run examples/zk-schnorr-relay.ko.nme | tee /tmp/zk-ko
+          grep -F '영지식 증명을 수신자 비가 받아들였습니다' /tmp/zk-ko
+          grep -F '저장 전사록 재전송은 새 도전에서 실패했습니다' /tmp/zk-ko
+          grep -F '비밀값 없이도 미리 고른 도전에 맞는 전사록을 모의할 수 있습니다' /tmp/zk-ko
+          grep -F '모의 전사록은 수신자 비의 다른 도전에 재사용할 수 없습니다' /tmp/zk-ko
+          grep -F '실시간 중계는 통과하지만 비밀 위조가 아니라' /tmp/zk-ko
+          cargo run --quiet -p nme-cli -- run examples/zk-schnorr-relay.en.nme | tee /tmp/zk-en
+          grep -F "accepted sender A's zero-knowledge proof" /tmp/zk-en
+          grep -F 'cannot replay the saved transcript' /tmp/zk-en
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          text = Path('examples/zk-schnorr-relay.ko.nme').read_text(encoding='utf-8')
+          assert re.search(r'[A-Za-z]', text) is None, 'Korean sentence-only example contains ASCII letters'
+          PY
+          if git grep -n '0.0.1-beta.15' -- ':!CHANGELOG.md' ':!CHANGELOG.ko.md'; then
+            echo 'stale beta.15 version outside changelog' >&2
+            exit 1
+          fi
+          git diff --check
+
+      - name: Commit validated candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -- scripts/prepare_beta16_zk.py .github/workflows/beta16-prepare.yml
+          echo 'Validated diff:'
+          git status --short
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          while IFS= read -r file; do
+            [ -n "$file" ] && git add -- "$file"
+          done < <(git diff --name-only)
+          while IFS= read -r file; do
+            [ -n "$file" ] && git add -- "$file"
+          done < <(git ls-files --others --exclude-standard)
+          git diff --cached --check
+          git commit -m 'Prepare 0.0.1-beta.16 release candidate [beta16-applied]'
+          git push origin HEAD:release/beta.16-zk
