@@ -438,10 +438,10 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
         match run_status {
             Ok(status) => exit_code(status),
             Err(err) => fail(
-                nme_core::diagnostics::DiagnosticCode::CliPythonStartFailed,
+                nme_core::diagnostics::DiagnosticCode::CliNativeRunStartFailed,
                 language,
-                &format!("couldn't run the native program: {err}"),
-                &format!("네이티브 프로그램을 실행할 수 없습니다: {err}"),
+                &format!("couldn't start the native program: {err}"),
+                &format!("네이티브 프로그램을 시작할 수 없습니다: {err}"),
             ),
         }
     }

@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.31 — 2026-08-12
+
+- Give native executable startup failures their own stable diagnostic, E9026,
+  instead of reporting them as Python startup errors.
+- Add a deterministic Unix CLI regression and bilingual public lookup coverage
+  for the native-program startup path.
+
 ## 0.0.1-beta.30 — 2026-08-12
 
 - Clarify E9010 and E9011 in both languages so their recovery guidance covers

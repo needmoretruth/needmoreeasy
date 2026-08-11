@@ -454,6 +454,42 @@ fn the_native_command_compiles_and_runs_a_core_program() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+#[cfg(unix)]
+#[test]
+fn native_run_start_failures_use_a_native_diagnostic() {
+    use std::os::unix::fs::PermissionsExt as _;
+
+    let dir = std::env::temp_dir().join(format!(
+        "nme-cli-native-start-failure-{}",
+        std::process::id()
+    ));
+    let tools = dir.join("tools");
+    std::fs::create_dir_all(&tools).unwrap();
+    std::fs::write(dir.join("hello.nme"), "say 1\n").unwrap();
+
+    let fake_cc = tools.join("cc");
+    std::fs::write(&fake_cc, "#!/bin/sh\nexit 0\n").unwrap();
+    let mut permissions = std::fs::metadata(&fake_cc).unwrap().permissions();
+    permissions.set_mode(0o755);
+    std::fs::set_permissions(&fake_cc, permissions).unwrap();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_nme"))
+        .args(["native", "hello"])
+        .current_dir(&dir)
+        .env("PATH", &tools)
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(
+        error.contains("error[E9026]: couldn't start the native program"),
+        "{error}"
+    );
+    assert!(!error.contains("E9013"), "{error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 #[test]
 fn install_requires_a_package_and_explains_pip_failures() {
     let no_package = nme(&["install"]);
@@ -1722,6 +1758,26 @@ fn error_lookup_commands_print_the_requested_explanation() {
     assert!(
         native_start_out.contains("시스템 C 컴파일러"),
         "{native_start_out}"
+    );
+
+    let native_run = nme(&["en", "E9026"]);
+    assert!(native_run.status.success(), "{}", stderr(&native_run));
+    assert!(
+        stdout(&native_run).contains("the native program could not be started"),
+        "{}",
+        stdout(&native_run)
+    );
+
+    let native_run_korean = nme(&["ko", "E9026"]);
+    assert!(
+        native_run_korean.status.success(),
+        "{}",
+        stderr(&native_run_korean)
+    );
+    assert!(
+        stdout(&native_run_korean).contains("네이티브 프로그램을 시작할 수 없습니다"),
+        "{}",
+        stdout(&native_run_korean)
     );
 
     let unknown = nme(&["ko", "E9999"]);

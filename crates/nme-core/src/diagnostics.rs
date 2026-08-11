@@ -174,6 +174,8 @@ pub enum DiagnosticCode {
     CliErrorLookupUnknownCode,
     /// pip could not install the requested package.
     CliPackageInstallFailed,
+    /// The generated native executable could not be started.
+    CliNativeRunStartFailed,
 }
 
 impl DiagnosticCode {
@@ -243,11 +245,12 @@ impl DiagnosticCode {
             Self::CliErrorLookupInvalidArgs => "E9023",
             Self::CliErrorLookupUnknownCode => "E9024",
             Self::CliPackageInstallFailed => "E9025",
+            Self::CliNativeRunStartFailed => "E9026",
         }
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 64] = [
+    pub const ALL: [DiagnosticCode; 65] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -312,6 +315,7 @@ impl DiagnosticCode {
         Self::CliErrorLookupInvalidArgs,
         Self::CliErrorLookupUnknownCode,
         Self::CliPackageInstallFailed,
+        Self::CliNativeRunStartFailed,
     ];
 
     pub fn from_code(code: &str) -> Option<Self> {
@@ -785,6 +789,13 @@ impl DiagnosticCode {
                 "pip이 패키지를 설치하지 못했습니다",
                 "The `nme install` command asked Python's pip to install a package, but pip exited with an error. Check the package name, your internet connection, and that pip is installed, then try again.",
                 "`nme 설치`가 Python의 pip으로 패키지를 설치하려 했지만 pip이 오류로 끝났습니다. 패키지 이름, 인터넷 연결, pip 설치 여부를 확인한 뒤 다시 시도하세요.",
+            ),
+            Self::CliNativeRunStartFailed => (
+                "E9026",
+                "the native program could not be started",
+                "네이티브 프로그램을 시작할 수 없습니다",
+                "`nme native` built an executable, but the operating system could not start it. Check executable permissions and platform compatibility, or run the program through CPython with `nme run`.",
+                "`nme 네이티브`가 실행 파일을 만들었지만 운영체제가 시작하지 못했습니다. 실행 권한과 운영체제 호환성을 확인하거나 `nme 실행`으로 CPython 경로를 사용하세요.",
             ),
         };
         CodeExplanation {
