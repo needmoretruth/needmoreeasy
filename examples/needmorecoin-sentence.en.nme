@@ -1,0 +1,206 @@
+use zero_knowledge latest
+
+set coin_name to NeedMoreCoin
+set work_target to 452312848583266388373324160190187140051835877600158453279131187530910662656
+set mining_reward to 10
+set transaction_fee to 1
+set total_supply to 100
+
+set alice_secret to zk_secret()
+set alice_address to zk_public(alice_secret)
+set bob_secret to zk_secret()
+set bob_address to zk_public(bob_secret)
+set miner_secret to zk_secret()
+set miner_address to zk_public(miner_secret)
+
+set alice_balance to 100
+set bob_balance to 0
+set miner_balance to 0
+set alice_nonce to 0
+set bob_nonce to 0
+
+show coin_name is starting
+show Alice wallet address is alice_address
+show Bob wallet address is bob_address
+show Miner wallet address is miner_address
+
+set genesis_context to coin_name genesis block gives alice_address 100 coins
+set genesis_mining to 1
+set genesis_attempts to 0
+set genesis_commitment to 0
+set genesis_hash to 0
+while genesis_mining
+set genesis_random to zk_nonce()
+set genesis_candidate_commitment to zk_commitment(genesis_random)
+set genesis_candidate_hash to zk_nizk_challenge(miner_address, genesis_candidate_commitment, genesis_context)
+add 1 to genesis_attempts
+if genesis_candidate_hash is less than work_target
+set genesis_commitment to genesis_candidate_commitment
+set genesis_hash to genesis_candidate_hash
+set genesis_mining to 0
+end
+end
+
+show Genesis block mined after genesis_attempts attempts
+show Genesis block hash is genesis_hash
+
+set amount_one to 25
+set fee_one to transaction_fee
+set nonce_one to 1
+set required_one to amount_one
+add fee_one to required_one
+set context_one to alice_address sends amount_one coins to bob_address fee fee_one nonce nonce_one
+set proof_one to zk_nizk_prove(alice_secret, context_one)
+set signature_one_valid to zk_nizk_verify(alice_address, proof_one, context_one)
+set transaction_one_approved to 0
+if signature_one_valid
+if amount_one is greater than 0
+if alice_balance is greater than or equal to required_one
+if nonce_one is equal to 1
+set transaction_one_approved to 1
+end
+end
+end
+end
+
+if transaction_one_approved
+subtract amount_one from alice_balance
+subtract fee_one from alice_balance
+add amount_one to bob_balance
+set alice_nonce to nonce_one
+end
+
+set block_one_context to coin_name block one previous genesis_hash transaction context_one proof proof_one miner miner_address reward mining_reward
+set block_one_mining to transaction_one_approved
+set block_one_attempts to 0
+set block_one_commitment to 0
+set block_one_hash to 0
+while block_one_mining
+set block_one_random to zk_nonce()
+set block_one_candidate_commitment to zk_commitment(block_one_random)
+set block_one_candidate_hash to zk_nizk_challenge(miner_address, block_one_candidate_commitment, block_one_context)
+add 1 to block_one_attempts
+if block_one_candidate_hash is less than work_target
+set block_one_commitment to block_one_candidate_commitment
+set block_one_hash to block_one_candidate_hash
+set block_one_mining to 0
+end
+end
+
+if transaction_one_approved
+add mining_reward to miner_balance
+add fee_one to miner_balance
+add mining_reward to total_supply
+end
+
+show Block one mined after block_one_attempts attempts
+show Block one hash is block_one_hash
+
+set amount_two to 7
+set fee_two to transaction_fee
+set nonce_two to 1
+set required_two to amount_two
+add fee_two to required_two
+set context_two to bob_address sends amount_two coins to alice_address fee fee_two nonce nonce_two
+set proof_two to zk_nizk_prove(bob_secret, context_two)
+set signature_two_valid to zk_nizk_verify(bob_address, proof_two, context_two)
+set transaction_two_approved to 0
+if signature_two_valid
+if amount_two is greater than 0
+if bob_balance is greater than or equal to required_two
+if nonce_two is equal to 1
+set transaction_two_approved to 1
+end
+end
+end
+end
+
+if transaction_two_approved
+subtract amount_two from bob_balance
+subtract fee_two from bob_balance
+add amount_two to alice_balance
+set bob_nonce to nonce_two
+end
+
+set block_two_context to coin_name block two previous block_one_hash transaction context_two proof proof_two miner miner_address reward mining_reward
+set block_two_mining to transaction_two_approved
+set block_two_attempts to 0
+set block_two_commitment to 0
+set block_two_hash to 0
+while block_two_mining
+set block_two_random to zk_nonce()
+set block_two_candidate_commitment to zk_commitment(block_two_random)
+set block_two_candidate_hash to zk_nizk_challenge(miner_address, block_two_candidate_commitment, block_two_context)
+add 1 to block_two_attempts
+if block_two_candidate_hash is less than work_target
+set block_two_commitment to block_two_candidate_commitment
+set block_two_hash to block_two_candidate_hash
+set block_two_mining to 0
+end
+end
+
+if transaction_two_approved
+add mining_reward to miner_balance
+add fee_two to miner_balance
+add mining_reward to total_supply
+end
+
+show Block two mined after block_two_attempts attempts
+show Block two hash is block_two_hash
+
+set verify_one to zk_nizk_verify(alice_address, proof_one, context_one)
+set verify_two to zk_nizk_verify(bob_address, proof_two, context_two)
+set verify_genesis_hash to zk_nizk_challenge(miner_address, genesis_commitment, genesis_context)
+set verify_block_one_hash to zk_nizk_challenge(miner_address, block_one_commitment, block_one_context)
+set verify_block_two_hash to zk_nizk_challenge(miner_address, block_two_commitment, block_two_context)
+set chain_valid to 0
+if verify_one
+if verify_two
+if verify_genesis_hash is equal to genesis_hash
+if verify_genesis_hash is less than work_target
+if verify_block_one_hash is equal to block_one_hash
+if verify_block_one_hash is less than work_target
+if verify_block_two_hash is equal to block_two_hash
+if verify_block_two_hash is less than work_target
+set chain_valid to 1
+end
+end
+end
+end
+end
+end
+end
+end
+
+if chain_valid
+show Entire blockchain verified successfully
+end
+
+set tampered_context to alice_address sends 250 coins to bob_address fee fee_one nonce nonce_one
+set tampered_signature_valid to zk_nizk_verify(alice_address, proof_one, tampered_context)
+set tampered_block_context to coin_name block one previous genesis_hash transaction tampered_context proof proof_one miner miner_address reward mining_reward
+set tampered_block_hash to zk_nizk_challenge(miner_address, block_one_commitment, tampered_block_context)
+if tampered_signature_valid is equal to false
+show Signature rejected the changed transaction amount
+end
+if tampered_block_hash is not equal to block_one_hash
+show Block hash rejected the changed transaction amount
+end
+
+set replay_expected_nonce to alice_nonce
+add 1 to replay_expected_nonce
+if nonce_one is not equal to replay_expected_nonce
+show Transaction nonce rejected replay of the same transaction
+end
+
+set balance_sum to alice_balance
+add bob_balance to balance_sum
+add miner_balance to balance_sum
+show Alice final balance is alice_balance coins
+show Bob final balance is bob_balance coins
+show Miner final balance is miner_balance coins
+show Total supply is total_supply coins
+show Sum of balances is balance_sum coins
+if balance_sum is equal to total_supply
+show Monetary supply verification succeeded
+end
