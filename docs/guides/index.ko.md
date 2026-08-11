@@ -28,6 +28,8 @@
  다룹니다.
  80–82는 명령 줄 도구, 자기 코드 테스트, 식을 트리로 파싱하기를
  다룹니다.
+ 83–85는 코드 맞히기 게임, 웹 링크 추출, 트리를 바이트코드로
+ 컴파일하기를 다룹니다.
 
 ## 난이도
 
@@ -121,6 +123,9 @@
 80. [80 — 도구](80-argv.ko.md)
 81. [81 — 테스트](81-testing.ko.md)
 82. [82 — 컴파일러](82-ast.ko.md)
+83. [83 — 게임](83-mastermind.ko.md)
+84. [84 — 웹](84-links.ko.md)
+85. [85 — 컴파일러](85-bytecode-compiler.ko.md)
 
 ## 주제별 찾아보기
 
@@ -197,6 +202,9 @@
 - 명령 줄 인자 / Command-line arguments: [80](80-argv.ko.md)
 - 테스트 / Testing: [81](81-testing.ko.md)
 - AST/컴파일러 / Compiler & AST: [82](82-ast.ko.md)
+- 게임/논리 / Game & logic: [83](83-mastermind.ko.md)
+- 웹/링크 / Web & links: [84](84-links.ko.md)
+- 바이트코드/컴파일러 / Compiler & bytecode: [85](85-bytecode-compiler.ko.md)
 
 ## 전체 목록
 
@@ -281,6 +289,9 @@
 | 80 | ★★★★★ | CLI 도구 / Command-line tools | [도구 — 명령 줄에서 말 받기](80-argv.ko.md) | `nme r todo add "buy milk"`처럼 명령 줄에서 명령을 받아 동작하는 할 일 도구 |
 | 81 | ★★★★★ | 테스트 / Testing | [테스트 — 내가 쓴 함수 확인하기](81-testing.ko.md) | 자기 함수를 예상값과 비교해 통과·실패를 보고하는 작은 테스트 실행기 |
 | 82 | ★★★★★ | 컴파일러/AST / Compiler & AST | [컴파일러 — 식을 트리로 만들기](82-ast.ko.md) | 식을 트리로 파싱하고 재귀로 평가해 우선순위를 지키는 계산기 |
+| 83 | ★★★★★ | 게임/논리 / Game & logic | [게임 — 비밀 코드 맞히기](83-mastermind.ko.md) | 4가지 색의 비밀 코드를 맞히고 검정·하양 단서로 좁혀 가는 마스터마인드 |
+| 84 | ★★★★★ | 웹/텍스트 / Web & text | [웹 — 페이지에서 링크 뽑아내기](84-links.ko.md) | 로컬 서버의 HTML 페이지를 받아 그 안의 링크를 모두 찾아 절대 주소로 보여 주기 |
+| 85 | ★★★★★ | 컴파일러/바이트코드 / Compiler & bytecode | [컴파일러 — 트리에서 바이트코드로](85-bytecode-compiler.ko.md) | 식 트리를 납작한 명령 목록으로 컴파일하고 스택 가상 머신으로 실행하기 |
 
 ## 다음 단계
 

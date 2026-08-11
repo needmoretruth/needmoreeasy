@@ -23,7 +23,8 @@ grade book; 68–70 add error handling, regex patterns, and a reaction game;
 compiler; 74–76 merge data, play a strategy game, and poll a server;
 77–79 download files from the web, analyze a dataset, and add functions
 to the mini language; 80–82 build command-line tools, test them, and
-parse expressions into trees.
+parse expressions into trees; 83–85 play a code-breaking game, extract
+web links, and compile trees into bytecode.
 
 ## Difficulty
 
@@ -117,6 +118,9 @@ parse expressions into trees.
 80. [80 — Tools](80-argv.md)
 81. [81 — Testing](81-testing.md)
 82. [82 — Compiler](82-ast.md)
+83. [83 — Game](83-mastermind.md)
+84. [84 — Web](84-links.md)
+85. [85 — Compiler](85-bytecode-compiler.md)
 
 ## Topic lookup
 
@@ -193,6 +197,9 @@ parse expressions into trees.
 - 명령 줄 인자 / Command-line arguments: [80](80-argv.md)
 - 테스트 / Testing: [81](81-testing.md)
 - AST/컴파일러 / Compiler & AST: [82](82-ast.md)
+- 게임/논리 / Game & logic: [83](83-mastermind.md)
+- 웹/링크 / Web & links: [84](84-links.md)
+- 바이트코드/컴파일러 / Compiler & bytecode: [85](85-bytecode-compiler.md)
 
 ## All guides
 
@@ -277,6 +284,9 @@ parse expressions into trees.
 | 80 | ★★★★★ | CLI 도구 / Command-line tools | [Tools — reading command-line arguments](80-argv.md) | A todo tool that takes commands like `nme r todo add "buy milk"` on the command line |
 | 81 | ★★★★★ | 테스트 / Testing | [Testing — checking the functions you wrote](81-testing.md) | A tiny test runner that calls your own functions, compares each result with the expected value, and reports pass or fail |
 | 82 | ★★★★★ | 컴파일러/AST / Compiler & AST | [Compiler tier — expressions as trees](82-ast.md) | A calculator that parses an expression into a tree and evaluates the tree recursively, respecting precedence |
+| 83 | ★★★★★ | 게임/논리 / Game & logic | [Game — Mastermind, guessing a secret code](83-mastermind.md) | A Mastermind-style game that hides a 4-color code and gives black/white feedback for each guess |
+| 84 | ★★★★★ | 웹/텍스트 / Web & text | [Web — extracting links from a page](84-links.md) | Fetch an HTML page from a local server and list every link on it as a full URL |
+| 85 | ★★★★★ | 컴파일러/바이트코드 / Compiler & bytecode | [Compiler tier — from tree to bytecode](85-bytecode-compiler.md) | A compiler that flattens an expression tree into instruction lines and runs them on a stack machine |
 
 ## Where to continue
 
