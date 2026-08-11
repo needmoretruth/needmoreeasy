@@ -6,6 +6,12 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+- Add sentence-level file forms: `read "notes.txt" into memo`,
+  `memo read "notes.txt"`, `memo에 "notes.txt" 읽어서 (저장해)`,
+  `write "hello" to "out.txt"`, and `"out.txt" 파일에 "hello"를 저장해`
+  lower to `pathlib` lines without the `use file` module. Read targets become
+  known names for sentence interpolation, and weak matches like `read the
+  book` or `write hello` stay plain sentence output.
 - Bundle a `use file` / `파일 사용` module (version `0.0.1`) for reading,
   writing, and JSON, next to `use random`. One import exposes both
   vocabularies: `file_read`/`파일읽기`, `file_write`/`파일쓰기`,

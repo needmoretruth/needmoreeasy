@@ -137,6 +137,14 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
                 format!("{BILINGUAL_FILE_TOOLS_PREFIX}\"{FILE_MODULE_VERSION}\"")
             }
         },
+        NmeStmt::FileRead { target, path } => {
+            format!("{target} = __import__(\"pathlib\").Path({}).read_text()", lower_code(path, source))
+        }
+        NmeStmt::FileWrite { path, value } => format!(
+            "__import__(\"pathlib\").Path({}).write_text({})",
+            lower_code(path, source),
+            lower_value(value, source)
+        ),
     }
 }
 

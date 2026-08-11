@@ -231,6 +231,42 @@ fn the_korean_file_module_spelling_works() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+#[test]
+fn sentence_file_forms_read_and_write() {
+    if !python_available() {
+        eprintln!("Python not available; skipping sentence file test");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("nme-cli-sentence-file-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("data.txt"), "sentence hello").unwrap();
+    std::fs::write(
+        dir.join("program.nme"),
+        "read \"data.txt\" into memo\n\
+         show memo\n\
+         write \"sentence saved\" to \"out.txt\"\n\
+         memo에 \"data.txt\" 읽어서 저장해\n\
+         memo 말해줘\n\
+         \"한글.txt\" 파일에 \"저장됨\"를 저장해\n",
+    )
+    .unwrap();
+
+    let output = run_in(&dir, &["run", "program.nme"], None);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert_eq!(stdout(&output), "sentence hello\nsentence hello\n");
+
+    assert_eq!(
+        std::fs::read_to_string(dir.join("out.txt")).unwrap(),
+        "sentence saved"
+    );
+    assert_eq!(
+        std::fs::read_to_string(dir.join("한글.txt")).unwrap(),
+        "저장됨"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 fn run_in(dir: &std::path::Path, args: &[&str], input: Option<&str>) -> Output {
     let mut command = Command::new(env!("CARGO_BIN_EXE_nme"));
     command.args(args).current_dir(dir);

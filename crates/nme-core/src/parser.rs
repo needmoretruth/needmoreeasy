@@ -14,7 +14,8 @@ use crate::lexer::{LogicalLine, Token};
 use crate::syntax::{
     BundledModuleId, Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, Literal,
     LogicalOp, ModuleVersion, NmeLine, NmeStmt, Spelling, TextPart, TextTemplate, UpdateOp, Value,
-    FILE_MODULE, FILE_MODULE_KO, RANDOM_MODULE, RANDOM_MODULE_KO, SAY_KEYWORD, SAY_KEYWORD_KO,
+    FILE_MODULE, FILE_MODULE_KO, FILE_READ_WORDS_EN, FILE_READ_WORDS_KO, FILE_WRITE_WORDS_EN,
+    FILE_WRITE_WORDS_KO, RANDOM_MODULE, RANDOM_MODULE_KO, SAY_KEYWORD, SAY_KEYWORD_KO,
     SAY_WORDS_EN, TIMES_KEYWORD, TIMES_KEYWORD_KO,
 };
 
@@ -771,6 +772,31 @@ fn classify(
         }
         return match_use_module(source, tokens, known_names, MatchMode::Exact);
     }
+    if action_phrase_at(tokens, 0, FILE_READ_WORDS_EN, MatchMode::Exact).is_some()
+        || action_phrase_at(tokens, 0, FILE_WRITE_WORDS_EN, MatchMode::Exact).is_some()
+        || tokens
+            .iter()
+            .any(|token| {
+                action_phrase_at(std::slice::from_ref(token), 0, FILE_READ_WORDS_KO, MatchMode::Exact)
+                    .is_some()
+            })
+        || tokens.iter().any(|token| {
+            action_phrase_at(
+                std::slice::from_ref(token),
+                0,
+                FILE_WRITE_WORDS_KO,
+                MatchMode::Exact,
+            )
+            .is_some()
+        })
+    {
+        exact_match!(match_file_io(
+            source,
+            tokens,
+            known_names,
+            MatchMode::Exact
+        ));
+    }
     exact_match!(match_when(
         source,
         tokens,
@@ -851,6 +877,7 @@ fn classify(
         match_say(source, tokens, known_names, MatchMode::Recover),
         match_set(source, tokens, known_names, MatchMode::Recover),
         match_use_module(source, tokens, known_names, MatchMode::Recover),
+        match_file_io(source, tokens, known_names, MatchMode::Recover),
     ];
     let mut candidates = Vec::new();
     let mut recovery_problems = Vec::new();
@@ -3296,6 +3323,232 @@ fn find_count_marker(tokens: &[Token], mode: MatchMode) -> Option<(usize, Spelli
 
 // --------------------------------------------------------------- modules
 
+/// Sentence-level file and JSON forms, so a beginner can read a file into a
+/// name and write text to a file without the `use file` module or Python
+/// punctuation. Both languages share the same meaning:
+///
+/// - `read "notes.txt" into memo` / `memo read "notes.txt"`
+/// - `memo에 "notes.txt" 읽어서` / `memo에 "notes.txt" 읽어서 저장해`
+/// - `write "hello" to "out.txt"` / `"out.txt" 파일에 "hello"를 저장해`
+///
+/// The path is always a quoted string; the write value is a beginner value.
+/// Weak matches (`read the book`, `write hello`) fall through to plain
+/// sentence output instead of being claimed as file operations.
+fn match_file_io(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+    mode: MatchMode,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    let is_string = |token: &Token| matches!(token.tok, Tok::String { .. });
+    let path_of = |tokens: &[Token]| -> Option<Code> {
+        let token = tokens.first()?;
+        if !is_string(token) {
+            return None;
+        }
+        let span = token.span;
+        is_valid_python_expression(&source[span.start..span.end])
+            .then_some(Code::Source(span))
+    };
+
+    // English action-first read: `read "notes.txt" into memo`.
+    if let Some(consumed) = action_phrase_at(tokens, 0, FILE_READ_WORDS_EN, mode) {
+        let Some(path) = path_of(&tokens[consumed..]) else {
+            return Ok(None);
+        };
+        let mut rest = &tokens[consumed + 1..];
+        if rest
+            .first()
+            .is_some_and(|token| token_matches_exact(token, &["into", "as", "in"]))
+        {
+            rest = &rest[1..];
+        }
+        if let Some(target) = rest.first().and_then(|t| name_word(t)).map(strip_saved_target) {
+            if rest.len() == 1 || (rest.len() == 2 && is_command_ending(&rest[1])) {
+                return Ok(Some(NmeStmt::FileRead {
+                    target: target.to_string(),
+                    path,
+                }));
+            }
+        }
+        return Err(file_read_target_diagnostic(span_of(tokens)));
+    }
+
+    // Korean read and English/Korean target-first read:
+    // `memo에 "notes.txt" 읽어서` / `memo read "notes.txt"`. The path sits
+    // before a Korean read word but after the English `read`.
+    let ko_read_at = tokens
+        .iter()
+        .position(|token| {
+            action_phrase_at(std::slice::from_ref(token), 0, FILE_READ_WORDS_KO, mode).is_some()
+        });
+    let en_read_at = tokens
+        .iter()
+        .position(|token| {
+            action_phrase_at(std::slice::from_ref(token), 0, FILE_READ_WORDS_EN, mode).is_some()
+        });
+    if let Some(action_at) = ko_read_at.or(en_read_at) {
+        let Some(target) = name_word(&tokens[0]).and_then(update_target_name) else {
+            return Ok(None);
+        };
+        let path_tokens = if ko_read_at.is_some() {
+            let mut middle = &tokens[1..action_at];
+            if middle
+                .first()
+                .is_some_and(|token| {
+                    is_update_connector(
+                        token,
+                        &["에", "에서", "에게", "한테", "는", "은", "으로", "로"],
+                    )
+                })
+            {
+                middle = &middle[1..];
+            }
+            middle
+        } else {
+            let mut after = &tokens[action_at + 1..];
+            if after
+                .first()
+                .is_some_and(|token| token_matches_exact(token, &["into", "as", "in"]))
+            {
+                after = &after[1..];
+            }
+            after
+        };
+        let Some(path) = path_of(path_tokens) else {
+            return Ok(None);
+        };
+        let tail_ok = if ko_read_at.is_some() {
+            let after = &tokens[action_at + 1..];
+            after.len() <= 2
+                && after.iter().all(|token| {
+                    token_matches_exact(token, FILE_WRITE_WORDS_KO)
+                        || is_command_ending(token)
+                })
+        } else {
+            let after = &tokens[action_at + 1..];
+            path_of(after).is_some()
+                && (after.len() == 1 || (after.len() == 2 && is_command_ending(&after[1])))
+        };
+        if tail_ok {
+            return Ok(Some(NmeStmt::FileRead { target, path }));
+        }
+        return Err(file_read_target_diagnostic(span_of(tokens)));
+    }
+
+    // English action-first write: `write "hello" to "out.txt"`.
+    if let Some(consumed) = action_phrase_at(tokens, 0, FILE_WRITE_WORDS_EN, mode) {
+        let mut end = tokens.len();
+        if tokens.get(end.saturating_sub(1)).is_some_and(is_command_ending) {
+            end -= 1;
+        }
+        let Some(to_at) = tokens[consumed..end]
+            .iter()
+            .position(|token| token_matches_exact(token, &["to", "into"]))
+            .map(|at| at + consumed)
+        else {
+            return Ok(None);
+        };
+        let value = parse_value(source, &tokens[consumed..to_at], known_names, true)
+            .map_err(|()| file_write_diagnostic(span_of(tokens)))?;
+        let Some(path) = path_of(&tokens[to_at + 1..end]) else {
+            return Err(file_path_diagnostic(span_of(tokens)));
+        };
+        return Ok(Some(NmeStmt::FileWrite { path, value }));
+    }
+
+    // Korean write: `"out.txt" 파일에 "hello"를 저장해`.
+    let write_at = tokens
+        .iter()
+        .rposition(|token| {
+            action_phrase_at(std::slice::from_ref(token), 0, FILE_WRITE_WORDS_KO, mode).is_some()
+        });
+    if let Some(write_at) = write_at {
+        let Some(path) = path_of(&tokens[..1]) else {
+            return Ok(None);
+        };
+        if tokens
+            .get(1)
+            .is_some_and(|token| {
+                is_update_connector(token, &["파일에", "파일을", "에", "로", "으로", "에다"])
+            })
+        {
+            let mut value_tokens = &tokens[2..write_at];
+            while value_tokens
+                .last()
+                .is_some_and(|token| is_update_connector(token, &["을", "를", "만큼"]))
+            {
+                value_tokens = &value_tokens[..value_tokens.len() - 1];
+            }
+            if value_tokens.is_empty() {
+                return Err(file_write_diagnostic(span_of(tokens)));
+            }
+            // A Korean particle may be glued to the final word (`점수를`);
+            // strip it from the source span so the value stays a Python name.
+            let value = if let Some(last) = value_tokens.last() {
+                if let Some(word) = name_word(last) {
+                    if let Some(stripped) = strip_any_suffix(word, &["을", "를", "만큼"]) {
+                        let base = last.span;
+                        let end = base.end - (word.len() - stripped.len());
+                        Value::Python(Code::Source(Span::new(base.start, end)))
+                    } else {
+                        parse_value(source, value_tokens, known_names, true)
+                            .map_err(|()| file_write_diagnostic(span_of(tokens)))?
+                    }
+                } else {
+                    parse_value(source, value_tokens, known_names, true)
+                        .map_err(|()| file_write_diagnostic(span_of(tokens)))?
+                }
+            } else {
+                return Err(file_write_diagnostic(span_of(tokens)));
+            };
+            return Ok(Some(NmeStmt::FileWrite { path, value }));
+        }
+        return Err(file_write_diagnostic(span_of(tokens)));
+    }
+
+    Ok(None)
+}
+
+fn file_read_target_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::MissingAction,
+        "the file read needs a target name",
+        "파일을 읽어 넣을 이름이 필요해요",
+        span,
+    )
+    .with_bilingual_hint(
+        "write `read \"notes.txt\" into memo` or `memo에 \"notes.txt\" 읽어서`",
+        "`read \"notes.txt\" into memo` 또는 `memo에 \"notes.txt\" 읽어서`처럼 쓰세요",
+    )
+}
+
+fn file_write_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::SaveValueUnparseable,
+        "I couldn't understand this file write",
+        "파일에 저장할 내용을 이해하지 못했어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "write `write \"hello\" to \"out.txt\"` or `\"out.txt\" 파일에 \"hello\"를 저장해`",
+        "`write \"hello\" to \"out.txt\"` 또는 `\"out.txt\" 파일에 \"hello\"를 저장해`처럼 쓰세요",
+    )
+}
+
+fn file_path_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::MissingAction,
+        "the file name must be a quoted path",
+        "파일 이름은 따옴표로 감싼 경로여야 해요",
+        span,
+    )
+    .with_bilingual_hint(
+        "write the path in quotes, for example `\"notes.txt\"`",
+        "`\"notes.txt\"`처럼 경로를 따옴표 안에 적어 주세요",
+    )
+}
+
 fn match_use_module(
     source: &str,
     tokens: &[Token],
@@ -4348,6 +4601,9 @@ fn remember_import_bindings(tokens: &[Token], names: &mut HashSet<String>) {
 fn remember_bindings(stmt: &NmeStmt, names: &mut HashSet<String>) {
     match stmt {
         NmeStmt::Ask { target, .. } | NmeStmt::Set { target, .. } => {
+            names.insert(target.clone());
+        }
+        NmeStmt::FileRead { target, .. } => {
             names.insert(target.clone());
         }
         NmeStmt::UseModule { module, .. } => {

@@ -26,6 +26,10 @@ pub const RANDOM_MODULE_KO: &str = "랜덤";
 pub const FILE_MODULE: &str = "file";
 pub const FILE_MODULE_KO: &str = "파일";
 pub const USE_KEYWORD_KO: &str = "사용";
+pub(crate) const FILE_READ_WORDS_EN: &[&str] = &["read"];
+pub(crate) const FILE_WRITE_WORDS_EN: &[&str] = &["write"];
+pub(crate) const FILE_READ_WORDS_KO: &[&str] = &["읽어서", "읽고", "읽어"];
+pub(crate) const FILE_WRITE_WORDS_KO: &[&str] = &["저장해", "저장해줘", "써줘", "적어"];
 
 /// Version of the easy random adapter bundled with this compiler.
 pub const RANDOM_MODULE_VERSION: &str = "0.0.1";
@@ -219,6 +223,14 @@ pub enum NmeStmt {
     UseModule {
         module: BundledModuleId,
         requested: ModuleVersion,
+    },
+    FileRead {
+        target: String,
+        path: Code,
+    },
+    FileWrite {
+        path: Code,
+        value: Value,
     },
 }
 

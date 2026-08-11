@@ -6,6 +6,12 @@ NME의 중요한 변경 사항을 이 문서에 기록합니다.
 
 ## 미출시 (Unreleased)
 
+- 문장형 파일 문법을 추가했습니다: `read "notes.txt" into memo`,
+  `memo read "notes.txt"`, `memo에 "notes.txt" 읽어서 (저장해)`,
+  `write "hello" to "out.txt"`, `"out.txt" 파일에 "hello"를 저장해`가
+  `use file` 모듈 없이 `pathlib` 줄로 내려갑니다. 읽은 대상은 문장 출력에서
+  쓰는 이름이 되며, `read the book`이나 `write hello`처럼 애매한 줄은
+  평범한 문장 출력으로 남습니다.
 - `random` 옆에 파일 읽기·쓰기와 JSON을 위한 `use file`/`파일 사용` 모듈
   (버전 `0.0.1`)을 추가했습니다. 한 번 불러오면 두 언어 이름이 모두
   생깁니다: `file_read`/`파일읽기`, `file_write`/`파일쓰기`,

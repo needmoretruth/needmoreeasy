@@ -887,6 +887,36 @@ fn both_modules_can_be_loaded_in_one_program() {
 }
 
 #[test]
+fn sentence_file_read_and_write_lower_to_pathlib_lines() {
+    let read_line = "memo = __import__(\"pathlib\").Path(\"notes.txt\").read_text()\n";
+    assert_eq!(ok("read \"notes.txt\" into memo\n"), read_line);
+    assert_eq!(ok("memo read \"notes.txt\"\n"), read_line);
+    assert_eq!(ok("memo에 \"notes.txt\" 읽어서\n"), read_line);
+    assert_eq!(ok("memo에 \"notes.txt\" 읽어서 저장해\n"), read_line);
+    assert_eq!(ok("memo는 \"notes.txt\" 읽고\n"), read_line);
+
+    assert_eq!(
+        ok("write \"saved\" to \"out.txt\"\n"),
+        "__import__(\"pathlib\").Path(\"out.txt\").write_text(\"saved\")\n"
+    );
+    assert_eq!(
+        ok("\"out.txt\" 파일에 \"저장\"를 저장해\n"),
+        "__import__(\"pathlib\").Path(\"out.txt\").write_text(\"저장\")\n"
+    );
+    assert_eq!(
+        ok("\"out.txt\" 파일에 점수를 저장해\n"),
+        "__import__(\"pathlib\").Path(\"out.txt\").write_text(점수)\n"
+    );
+}
+
+#[test]
+fn prose_with_read_or_write_words_stays_sentence_output() {
+    assert_eq!(ok("write hello\n"), "print(\"write hello\")\n");
+    assert_eq!(ok("read the book\n"), "print(\"read the book\")\n");
+    assert_eq!(ok("오늘 책을 읽고 싶어\n"), "print(\"오늘 책을 읽고 싶어\")\n");
+}
+
+#[test]
 fn a_program_can_use_korean_vocabulary_and_identifiers() {
     let source = r#"랜덤 사용
 후보 = ["고양이", "강아지"]

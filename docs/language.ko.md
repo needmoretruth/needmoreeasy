@@ -434,6 +434,26 @@ NME에는 초보자용 모듈 두 개가 들어 있습니다: 주사위·선택�
 실행하는 폴더에 만들어지므로 프로젝트 폴더에 저장하세요. 보안 번호나
 비밀번호에는 랜덤 도구를 사용하지 마세요.
 
+문장형에서는 모듈 줄이나 Python 특수문자 없이도 파일을 읽고 쓸 수 있습니다.
+경로는 항상 따옴표로 감싼 문자열입니다.
+
+```text
+read "notes.txt" into memo
+memo read "notes.txt"
+memo에 "notes.txt" 읽어서
+memo에 "notes.txt" 읽어서 저장해
+```
+
+```text
+write "hello" to "out.txt"
+"out.txt" 파일에 "hello"를 저장해
+```
+
+이 문장들은 `pathlib.Path(...).read_text()` / `.write_text(...)` 줄로 내려가므로
+만들어진 Python이 `file` 모듈이 가르치는 것과 같은 표준 라이브러리입니다.
+`read the book`이나 `write hello`처럼 애매한 줄은 파일 동작이 아니라 평범한
+문장 출력으로 남습니다.
+
 ## Python 변환
 
 `nme 변환`은 고른 단계와 언어로 Python을 안전하게 바꿉니다.

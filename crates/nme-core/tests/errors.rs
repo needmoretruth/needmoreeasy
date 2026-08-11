@@ -189,6 +189,18 @@ fn two_modules_on_one_line_are_rejected() {
 }
 
 #[test]
+fn a_file_read_without_a_target_is_reported() {
+    let message = err("read \"notes.txt\"\n");
+    assert!(message.contains("target name"), "{message}");
+}
+
+#[test]
+fn a_file_write_without_a_path_is_reported() {
+    let message = err("write \"hello\" to\n");
+    assert!(message.contains("quoted path"), "{message}");
+}
+
+#[test]
 fn sentence_punctuation_can_be_plain_output_without_an_action() {
     assert_eq!(
         transpile("Hello there!\n").unwrap(),

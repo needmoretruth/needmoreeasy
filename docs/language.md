@@ -445,6 +445,26 @@ Run `nme modules` or `nme 모듈` to list versions and names. Files are written
 next to the program's working folder, so save them in your project folder.
 `random` is not suitable for passwords or other security decisions.
 
+Sentence syntax can read and write files without the module line or Python
+punctuation. The path is always a quoted string:
+
+```text
+read "notes.txt" into memo
+memo read "notes.txt"
+memo에 "notes.txt" 읽어서
+memo에 "notes.txt" 읽어서 저장해
+```
+
+```text
+write "hello" to "out.txt"
+"out.txt" 파일에 "hello"를 저장해
+```
+
+These lower to `pathlib.Path(...).read_text()` / `.write_text(...)` lines, so
+the generated Python is the same stdlib the `file` module teaches. Weak
+matches such as `read the book` or `write hello` stay plain sentence output
+instead of becoming file operations.
+
 ## Python conversion
 
 `nme convert` safely converts Python into a selected level and language:
