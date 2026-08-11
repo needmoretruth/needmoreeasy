@@ -271,6 +271,12 @@ fn lower_expr(
             let Expr::Name(callee) = call.func.as_ref() else {
                 return Err(not_supported("this call", span));
             };
+            if callee.id.as_str() == "len" && call.args.len() == 1 {
+                let (argument, kind) = lower_expr(&call.args[0], span, declared)?;
+                if kind == ExprType::Str {
+                    return Ok((format!("strlen({argument})"), ExprType::Int));
+                }
+            }
             if is_c_keyword(callee.id.as_str()) {
                 return Err(not_supported(
                     &format!("a call to `{}` (C keyword)", callee.id),
@@ -381,14 +387,19 @@ fn check_condition(
             right,
             negated,
         } => {
-            let left = condition_value(left, source, span, declared)?;
-            let right = condition_value(right, source, span, declared)?;
-            let op = match operator {
-                CompareOp::Equal => "==",
-                CompareOp::Greater => ">",
-                CompareOp::Less => "<",
+            let (left, left_kind) = condition_operand(left, source, span, declared)?;
+            let (right, right_kind) = condition_operand(right, source, span, declared)?;
+            let comparison = match (left_kind, right_kind, operator) {
+                (ExprType::Int, ExprType::Int, CompareOp::Equal) => format!("{left} == {right}"),
+                (ExprType::Int, ExprType::Int, CompareOp::Greater) => format!("{left} > {right}"),
+                (ExprType::Int, ExprType::Int, CompareOp::Less) => format!("{left} < {right}"),
+                (ExprType::Str, ExprType::Str, CompareOp::Equal) => {
+                    format!("strcmp({left}, {right}) == 0")
+                }
+                _ => {
+                    return Err(not_supported("this comparison", span));
+                }
             };
-            let comparison = format!("{left} {op} {right}");
             Ok(if *negated {
                 format!("!({comparison})")
             } else {
@@ -399,27 +410,20 @@ fn check_condition(
             let text = code_text(code, source);
             let expr = Expr::parse(text, "<native>")
                 .map_err(|_| not_supported("this condition", span))?;
-            validate_compare(&expr, span, declared)?;
-            Ok(text.to_string())
+            lower_compare(&expr, span, declared)
         }
         _ => Err(not_supported("this condition", span)),
     }
 }
 
-fn condition_value(
+fn condition_operand(
     value: &ConditionValue,
     source: &str,
     span: Span,
     declared: &HashMap<String, VarType>,
-) -> Result<String, Diagnostic> {
+) -> Result<(String, ExprType), Diagnostic> {
     match value {
-        ConditionValue::Python(code) => {
-            let (text, kind) = check_expr(code_text(code, source), span, declared)?;
-            if kind != ExprType::Int {
-                return Err(not_supported("a text value in a condition", span));
-            }
-            Ok(text)
-        }
+        ConditionValue::Python(code) => check_expr(code_text(code, source), span, declared),
         ConditionValue::Name(name) => {
             if is_c_keyword(name) {
                 return Err(not_supported(
@@ -427,36 +431,55 @@ fn condition_value(
                     span,
                 ));
             }
-            if matches!(declared.get(name), Some(VarType::Str)) {
-                return Err(not_supported("a text value in a condition", span));
-            }
-            Ok(name.clone())
+            let kind = match declared.get(name) {
+                Some(VarType::Str) => ExprType::Str,
+                _ => ExprType::Int,
+            };
+            Ok((name.clone(), kind))
         }
-        ConditionValue::Literal(_) | ConditionValue::Text(_) => {
-            Err(not_supported("non-integer condition value", span))
+        ConditionValue::Text(text) => {
+            let escaped = text.replace('\\', "\\\\").replace('"', "\\\"");
+            Ok((format!("\"{escaped}\""), ExprType::Str))
         }
+        ConditionValue::Literal(_) => Err(not_supported("boolean/null in a condition", span)),
     }
 }
 
-fn validate_compare(
+/// Lowers one `a <op> b` comparison to C. Integer comparisons pass through;
+/// string `==`/`!=` comparisons lower through `strcmp`. Anything else is
+/// rejected.
+fn lower_compare(
     expr: &Expr,
     span: Span,
     declared: &HashMap<String, VarType>,
-) -> Result<(), Diagnostic> {
-    match expr {
-        Expr::Compare(compare) if compare.ops.len() == 1 => {
-            if matches!(
-                compare.ops[0],
-                CmpOp::Lt | CmpOp::LtE | CmpOp::Gt | CmpOp::GtE | CmpOp::Eq | CmpOp::NotEq
-            ) {
-                int_operand(&compare.left, span, declared)?;
-                int_operand(&compare.comparators[0], span, declared)?;
-                Ok(())
-            } else {
-                Err(not_supported("this comparison", span))
-            }
+) -> Result<String, Diagnostic> {
+    let Expr::Compare(compare) = expr else {
+        return Err(not_supported("this condition", span));
+    };
+    if compare.ops.len() != 1 || compare.comparators.len() != 1 {
+        return Err(not_supported("this condition", span));
+    }
+    let (left, left_kind) = lower_expr(&compare.left, span, declared)?;
+    let (right, right_kind) = lower_expr(&compare.comparators[0], span, declared)?;
+    match (left_kind, right_kind) {
+        (ExprType::Int, ExprType::Int) => {
+            let op = match compare.ops[0] {
+                CmpOp::Lt => "<",
+                CmpOp::LtE => "<=",
+                CmpOp::Gt => ">",
+                CmpOp::GtE => ">=",
+                CmpOp::Eq => "==",
+                CmpOp::NotEq => "!=",
+                _ => return Err(not_supported("this comparison", span)),
+            };
+            Ok(format!("({left} {op} {right})"))
         }
-        _ => Err(not_supported("this condition", span)),
+        (ExprType::Str, ExprType::Str) => match compare.ops[0] {
+            CmpOp::Eq => Ok(format!("(strcmp({left}, {right}) == 0)")),
+            CmpOp::NotEq => Ok(format!("(strcmp({left}, {right}) != 0)")),
+            _ => Err(not_supported("ordering text in a condition", span)),
+        },
+        _ => Err(not_supported("mixing numbers and text in a condition", span)),
     }
 }
 

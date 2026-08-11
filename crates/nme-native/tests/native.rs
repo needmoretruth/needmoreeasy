@@ -110,6 +110,18 @@ fn string_variables_and_binary_concat_compile_natively() {
 }
 
 #[test]
+fn string_comparison_and_len_compile_natively() {
+    let source = "name = \"NME\"\nif name == \"NME\"\n    show \"match\"\nend\nif name != \"other\"\n    show \"different\"\nend\nshow len(name)\nshow len(\"hello\")\n";
+    assert_eq!(
+        native_run(source).unwrap(),
+        "match\ndifferent\n3\n5\n"
+    );
+
+    let korean = "이름 = \"안녕\"\n만약 이름이 \"안녕\"와 같으면\n    말해 \"같아요\"\n끝\n";
+    assert_eq!(native_run(korean).unwrap(), "같아요\n");
+}
+
+#[test]
 fn nested_string_concat_is_rejected_not_miscompiled() {
     assert!(native_rejects("greeting = \"hi\"\nshow greeting + \" \" + \"friend\"\n"));
     assert!(native_rejects("greeting = \"a\" + \"b\"\nshow greeting\n"));

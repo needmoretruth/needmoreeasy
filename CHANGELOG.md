@@ -6,6 +6,7 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+- Extend the NME-native core: string `==`/`!=` comparisons through `strcmp` (both the Python condition form and the natural Korean form), a `len` builtin mapped to `strlen`, and string equality in sentence conditions.
 - Extend the NME-native core: string variables (literals), string output, and one binary `+` concatenation through a small runtime helper, with nested concatenation honestly rejected; expressions now carry static types (int vs string) through lowering.
 - Extend the NME-native core: functions over scalar parameters with `return` (recursion works), `else`/`else if` branches, calls in `say`, and honest rejection of C-keyword identifiers; the compiler now builds with `-O2`. Measured on this machine: a 50M-iteration integer loop is ~60x faster natively than on CPython (one micro-benchmark, documented in the memo).
 - Implement the first slice of the NME-native AOT backend (`nme-native` crate + `nme native run`/`nme native build`): a restricted, statically typed core subset (integer values, sentence `while`/`if` over comparisons, `break`, `say`) lowers to C and compiles to a native executable with the system C compiler; anything outside the core is rejected with a clear bilingual diagnostic and still runs on CPython. Korean spellings work; end-to-end tests compile, run, and compare output.
