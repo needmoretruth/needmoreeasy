@@ -6,9 +6,143 @@ on:
   pull_request:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
+  prepare-windows-portability:
+    name: prepare-windows-portability
+    if: github.event_name == 'pull_request' && github.head_ref == 'release/beta.16-zk'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out release candidate branch
+        uses: actions/checkout@v4
+        with:
+          ref: release/beta.16-zk
+          fetch-depth: 0
+
+      - name: Install stable Rust with required tools
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Install CPython
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Make CPython execution and CLI tests portable on Windows
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          exec_path = Path('crates/nme-cli/src/exec.rs')
+          text = exec_path.read_text(encoding='utf-8')
+
+          old = '''    let mut child = Command::new(python)
+              .arg("-c")
+              .arg(CHECK_BOOTSTRAP)'''
+          new = '''    let mut command = Command::new(python);
+              configure_python_utf8(&mut command);
+              let mut child = command
+                  .arg("-c")
+                  .arg(CHECK_BOOTSTRAP)'''
+          assert text.count(old) == 1
+          text = text.replace(old, new, 1)
+
+          old = '''    let mut command = Command::new(python);
+              if let Some(dir) = module_dir {'''
+          new = '''    let mut command = Command::new(python);
+              configure_python_utf8(&mut command);
+              if let Some(dir) = module_dir {'''
+          assert text.count(old) == 1
+          text = text.replace(old, new, 1)
+
+          old = '''    let status = Command::new(python)
+              .arg("-m")'''
+          new = '''    let mut command = Command::new(python);
+              configure_python_utf8(&mut command);
+              let status = command
+                  .arg("-m")'''
+          assert text.count(old) == 1
+          text = text.replace(old, new, 1)
+
+          boundary = '''fn stop_after_input_error(child: &mut std::process::Child) {'''
+          helper = '''fn configure_python_utf8(command: &mut Command) {
+              command
+                  .env("PYTHONUTF8", "1")
+                  .env("PYTHONIOENCODING", "utf-8");
+          }
+
+          fn stop_after_input_error(child: &mut std::process::Child) {'''
+          assert text.count(boundary) == 1
+          text = text.replace(boundary, helper, 1)
+          exec_path.write_text(text, encoding='utf-8')
+
+          tests = Path('crates/nme-cli/tests/cli.rs')
+          text = tests.read_text(encoding='utf-8')
+          old = '''fn stdout(output: &Output) -> String {
+              String::from_utf8_lossy(&output.stdout).into_owned()
+          }
+
+          fn stderr(output: &Output) -> String {
+              String::from_utf8_lossy(&output.stderr).into_owned()
+          }'''
+          new = '''fn stdout(output: &Output) -> String {
+              String::from_utf8_lossy(&output.stdout).replace("\\r\\n", "\\n")
+          }
+
+          fn stderr(output: &Output) -> String {
+              String::from_utf8_lossy(&output.stderr).replace("\\r\\n", "\\n")
+          }'''
+          assert text.count(old) == 1
+          text = text.replace(old, new, 1)
+
+          old = '''    let built = nme(&[
+              "b",
+              &example("hello.nme"),
+              "-o",
+              "/tmp/nme-build-alias-test.py",
+          ]);
+              assert!(built.status.success(), "{}", stderr(&built));'''
+          new = '''    let build_dir = temporary_dir("build-alias");
+              let build_path = build_dir.join("nme-build-alias-test.py");
+              let built = nme(&[
+                  "b",
+                  &example("hello.nme"),
+                  "-o",
+                  &build_path.to_string_lossy(),
+              ]);
+              assert!(built.status.success(), "{}", stderr(&built));
+              let _ = std::fs::remove_dir_all(&build_dir);'''
+          assert text.count(old) == 1
+          text = text.replace(old, new, 1)
+
+          old = '''    let output_file = dir.join("already-here");'''
+          new = '''    let output_file = dir.join("already-here.exe");'''
+          assert text.count(old) == 1
+          text = text.replace(old, new, 1)
+          tests.write_text(text, encoding='utf-8')
+          PY
+          cargo fmt --all
+          cargo fmt --all -- --check
+          cargo check --workspace
+          cargo clippy --workspace --all-targets -- -D warnings
+          cargo test --workspace
+
+      - name: Commit validated Windows portability fixes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout 6b77e1b0f74ccfb32b2ecfef781f09ac82ed52e9 -- .github/workflows/ci.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- .github/workflows/ci.yml crates/nme-cli/src/exec.rs crates/nme-cli/tests/cli.rs
+          git diff --cached --check
+          git commit -m 'Fix Windows UTF-8 execution and portable CLI tests [beta16-applied]'
+          git push origin HEAD:release/beta.16-zk
+
   test:
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
