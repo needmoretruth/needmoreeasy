@@ -1,0 +1,14 @@
+# Native factorial — recursion in the NME-native core
+# This program uses functions and recursion inside the native core.
+# Run (Python):   nme r native-factorial
+# Run (native):   nme native native-factorial
+
+def fact(n):
+    if n is less than 2
+        return 1
+    end
+    return n * fact(n - 1)
+
+
+show fact(5)
+show fact(10)

@@ -398,6 +398,7 @@ fn the_blockchain_learning_examples_run() {
         "signatures.ko",
         "consensus",
         "consensus.ko",
+        "native-factorial",
     ] {
         let output = nme(&["run", &example(&format!("{name}.nme"))]);
         assert!(output.status.success(), "{name}: {}", stderr(&output));
