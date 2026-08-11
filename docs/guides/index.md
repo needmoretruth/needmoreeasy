@@ -18,7 +18,9 @@ store, and reading tokens; 50–52 add string tools, a grid board, and
 tic-tac-toe; 56–58 add logging, grouping, and a tiny bytecode runner;
 59–61 add a text editor, catalog search, and a mini bank; 62–64 add
 algorithms and ASCII art; 65–67 process many files, rank records, and build a
-grade book; 68–70 add error handling, regex patterns, and a reaction game.
+grade book; 68–70 add error handling, regex patterns, and a reaction game;
+71–73 add a terminal bar chart, a three-module project, and the capstone
+compiler.
 
 ## Difficulty
 
@@ -100,6 +102,9 @@ grade book; 68–70 add error handling, regex patterns, and a reaction game.
 68. [68 — Errors](68-errors.md)
 69. [69 — Patterns](69-patterns.md)
 70. [70 — Reaction](70-reaction.md)
+71. [71 — Chart](71-chart.md)
+72. [72 — Modules](72-project-files.md)
+73. [73 — Capstone](73-capstone.md)
 
 ## Topic lookup
 
@@ -164,6 +169,9 @@ grade book; 68–70 add error handling, regex patterns, and a reaction game.
 - 예외 / Errors: [68](68-errors.md)
 - 정규식 / Patterns: [69](69-patterns.md)
 - 반응 / Reaction: [70](70-reaction.md)
+- 차트 / Chart: [71](71-chart.md)
+- 프로젝트/모듈 / Project modules: [72](72-project-files.md)
+- 캡스톤 / Capstone: [73](73-capstone.md)
 
 ## All guides
 
@@ -236,6 +244,9 @@ grade book; 68–70 add error handling, regex patterns, and a reaction game.
 | 68 | ★★★★★ | 예외 / Errors | [Errors — handling problems](68-errors.md) | Read a missing file and convert bad input without crashing |
 | 69 | ★★★★★ | 정규식 / Patterns | [Patterns — finding matches with regex](69-patterns.md) | Find phone numbers and email addresses in a text file |
 | 70 | ★★★★★ | 게임/시간 / Game & timing | [Game — a reaction time test](70-reaction.md) | Measure reaction time with time.time() and keep the best round |
+| 71 | ★★★★★ | 시각화/출력 / Visualization | [Chart — a bar chart in the terminal](71-chart.md) | A horizontal bar chart drawn with # blocks from a JSON list, scaled to the largest value |
+| 72 | ★★★★★ | 모듈/구조 / Modules & structure | [Modules — a project across files](72-project-files.md) | A weather-report project split into three .nme modules with clear interfaces, imported by a main program |
+| 73 | ★★★★★ | 컴파일러/캡스톤 / Compiler capstone | [Capstone — a language that compiles to Python](73-capstone.md) | An NME program that compiles a small custom language to Python, writes it to a file, and runs it |
 
 ## Where to continue
 

@@ -21,6 +21,8 @@
  62–64는 알고리즘과 아스키 아트를 다룹니다.
  65–67은 여러 파일 처리, 기록 순위, 성적부 프로젝트를 다룹니다.
  68–70은 오류 처리, 정규식 패턴, 반응 게임을 다룹니다.
+ 71–73은 터미널 막대 그래프, 여러 파일 프로젝트, 캡스톤 컴파일러를
+ 다룹니다.
 
 ## 난이도
 
@@ -102,6 +104,9 @@
 68. [68 — 예외](68-errors.ko.md)
 69. [69 — 정규식](69-patterns.ko.md)
 70. [70 — 반응](70-reaction.ko.md)
+71. [71 — 차트](71-chart.ko.md)
+72. [72 — 모듈](72-project-files.ko.md)
+73. [73 — 캡스톤](73-capstone.ko.md)
 
 ## 주제별 찾아보기
 
@@ -166,6 +171,9 @@
 - 예외 / Errors: [68](68-errors.ko.md)
 - 정규식 / Patterns: [69](69-patterns.ko.md)
 - 반응 / Reaction: [70](70-reaction.ko.md)
+- 차트 / Chart: [71](71-chart.ko.md)
+- 프로젝트/모듈 / Project modules: [72](72-project-files.ko.md)
+- 캡스톤 / Capstone: [73](73-capstone.ko.md)
 
 ## 전체 목록
 
@@ -238,6 +246,9 @@
 | 68 | ★★★★★ | 예외 / Errors | [예외 — 문제 다루기](68-errors.ko.md) | 없는 파일을 읽고 잘못된 입력을 바꿔도 멈추지 않기 |
 | 69 | ★★★★★ | 정규식 / Patterns | [정규식 — 패턴 찾기](69-patterns.ko.md) | 텍스트 파일에서 전화번호와 이메일 찾기 |
 | 70 | ★★★★★ | 게임/시간 / Game & timing | [게임 — 반응 속도 측정](70-reaction.ko.md) | time.time()으로 반응 속도를 재고 최고 기록 남기기 |
+| 71 | ★★★★★ | 시각화/출력 / Visualization | [차트 — 터미널 막대 그래프](71-chart.ko.md) | JSON 목록에서 가장 큰 값에 맞춘 # 블록으로 가로 막대 그래프 그리기 |
+| 72 | ★★★★★ | 모듈/구조 / Modules & structure | [모듈 — 여러 파일 프로젝트](72-project-files.ko.md) | 명확한 인터페이스의 .nme 모듈 세 개로 나누고 주 프로그램이 가져오는 날씨 보고서 프로젝트 |
+| 73 | ★★★★★ | 컴파일러/캡스톤 / Compiler capstone | [캡스톤 — Python으로 컴파일하는 언어](73-capstone.ko.md) | 작은 언어를 Python으로 컴파일해 파일로 저장하고 실행하는 NME 프로그램 |
 
 ## 다음 단계
 
