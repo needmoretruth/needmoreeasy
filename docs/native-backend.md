@@ -47,7 +47,8 @@ Implemented so far:
   rather than miscompiled;
 - control flow: sentence `while`/`if`/`else`/`else if` over integer
   comparisons (`<`, `>`, `<=`, `>=`, `==`, `!=`) and over integer
-  truthiness (`if ready`, `while turns`), `break`;
+  truthiness (`if ready`, `while turns`), the beginner `times:` loop,
+  `break`;
 - functions over scalar parameters with `return` (recursion works);
 - `say`/`show`/`말해` of an integer expression, a string variable, or a
   string literal;

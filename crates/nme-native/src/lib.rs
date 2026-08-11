@@ -25,7 +25,7 @@
 use std::collections::HashMap;
 
 use nme_core::diagnostics::{Diagnostic, DiagnosticCode, Span};
-use nme_core::syntax::{CompareOp, Condition, ConditionValue, NmeStmt, Value};
+use nme_core::syntax::{CompareOp, Condition, ConditionValue, InlineStmt, NmeStmt, Value};
 use nme_core::{lexer, parser};
 
 use rustpython_parser::ast::{CmpOp, Constant, Expr, Operator, UnaryOp};
@@ -136,6 +136,36 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                     Err(diag) => problems.push(diag),
                 },
                 NmeStmt::Break => out.push_str("break;\n"),
+                NmeStmt::Times { count, inline } => {
+                    let count_text = code_text(count, source);
+                    match check_expr(count_text, nme_line.span, &declared) {
+                        Ok((lowered, ExprType::Int)) => {
+                            let header = format!(
+                                "for (int _nme_i = 0; _nme_i < {lowered}; _nme_i++)"
+                            );
+                            match inline {
+                                Some(InlineStmt::Nme(inner)) => {
+                                    match lower_inline(inner, source, &declared) {
+                                        Ok(text) => out.push_str(&format!("{header} {text}\n")),
+                                        Err(diag) => problems.push(diag),
+                                    }
+                                }
+                                Some(InlineStmt::Python(_)) => {
+                                    problems.push(not_supported("this inline body", nme_line.span));
+                                }
+                                None => {
+                                    out.push_str(&format!("{header} {{\n"));
+                                    open_braces += 1;
+                                }
+                            }
+                        }
+                        Err(diag) => problems.push(diag),
+                        Ok(_) => problems.push(not_supported(
+                            "this repeat count",
+                            nme_line.span,
+                        )),
+                    }
+                }
                 NmeStmt::ElseIf {
                     condition,
                     inline: None,
@@ -180,6 +210,23 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
         Ok(out)
     } else {
         Err(problems)
+    }
+}
+
+/// Lowers a one-line inline statement (used by `3 times: say "hi"`) to C
+/// text without a trailing newline.
+fn lower_inline(
+    stmt: &NmeStmt,
+    source: &str,
+    declared: &HashMap<String, VarType>,
+) -> Result<String, Diagnostic> {
+    match stmt {
+        NmeStmt::Say { value } => {
+            let mut out = String::new();
+            emit_say(&mut out, value, source, declared)?;
+            Ok(out.trim_end().to_string())
+        }
+        _ => Err(not_supported("this inline statement", Span::new(0, 0))),
     }
 }
 

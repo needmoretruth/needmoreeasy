@@ -134,6 +134,18 @@ fn string_comparison_and_len_compile_natively() {
 }
 
 #[test]
+fn the_beginner_times_loop_compiles_natively() {
+    let block = "3 times:\n    show \"hi\"\nshow \"done\"\n";
+    assert_eq!(native_run(block).unwrap(), "hi\nhi\nhi\ndone\n");
+
+    let inline = "3 times: show \"x\"\n";
+    assert_eq!(native_run(inline).unwrap(), "x\nx\nx\n");
+
+    let korean = "3번:\n    말해 \"안녕\"\n";
+    assert_eq!(native_run(korean).unwrap(), "안녕\n안녕\n안녕\n");
+}
+
+#[test]
 fn boolean_literals_in_truthy_conditions_compile_natively() {
     let source = "if true\n    show \"always\"\nend\nif false\n    show \"never\"\nend\n";
     assert_eq!(native_run(source).unwrap(), "always\n");
@@ -186,5 +198,4 @@ fn input_and_modules_are_rejected_not_miscompiled() {
     assert!(native_rejects("ask name, \"name? \"\n"));
     assert!(native_rejects("use random latest\nshow random_number(1, 6)\n"));
     assert!(native_rejects("from \"helper.nme\" import greet\n"));
-    assert!(native_rejects("3 times:\n    show \"hi\"\n"));
 }
