@@ -1,0 +1,36 @@
+name: beta22 materialize
+
+on:
+  push:
+    branches: [work/beta22-cryptocurrency-purity]
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out beta22 work branch
+        uses: actions/checkout@v6
+        with:
+          ref: work/beta22-cryptocurrency-purity
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Materialize parser additions
+        run: python scripts/materialize-beta22.py
+      - name: Format
+        run: cargo fmt --all
+      - name: Test core
+        run: cargo test -p nme-core --locked
+      - name: Commit parser result
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -- crates/nme-core/src/parser.rs
+          git commit -m "syntax: add pure English sentence zero knowledge"
+          git push origin HEAD:work/beta22-cryptocurrency-purity
