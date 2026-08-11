@@ -430,9 +430,13 @@ fn check_condition(
                 ConditionValue::Python(code) => {
                     check_expr(code_text(code, source), span, declared)?
                 }
-                ConditionValue::Literal(_) => {
-                    return Err(not_supported("boolean/null truthiness", span));
-                }
+                ConditionValue::Literal(literal) => match literal {
+                    nme_core::syntax::Literal::True => ("(1)".to_string(), ExprType::Int),
+                    nme_core::syntax::Literal::False => ("(0)".to_string(), ExprType::Int),
+                    nme_core::syntax::Literal::None => {
+                        return Err(not_supported("null truthiness", span));
+                    }
+                },
                 ConditionValue::Text(_) => {
                     return Err(not_supported("text in a truthy condition", span));
                 }
