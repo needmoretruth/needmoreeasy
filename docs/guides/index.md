@@ -105,6 +105,9 @@ compiler.
 71. [71 — Chart](71-chart.md)
 72. [72 — Modules](72-project-files.md)
 73. [73 — Capstone](73-capstone.md)
+74. [74 — Merge](74-merge.md)
+75. [75 — Game](75-ai.md)
+76. [76 — Network](76-poll.md)
 
 ## Topic lookup
 

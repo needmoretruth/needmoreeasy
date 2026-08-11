@@ -212,6 +212,8 @@ want a more conversational phrase.
 
 ## Where to continue
 
+- [Learning guides](guides/index.md): 73 small progressive guides, each with
+  difficulty, prerequisites, topic, and result
 - [Learning path](tutorial.md): six projects from Hello World to a compiler
 - [Language reference](language.md): exact rules for all three levels
 - [Editors](editors.md): VS Code, Cursor, and Zed
