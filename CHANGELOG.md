@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.29 — 2026-08-12
+
+- Give failed Python package installs their own appended diagnostic code,
+  E9025, instead of reusing the native-compiler code E9010.
+- Add bilingual lookup and network-independent CLI regression coverage for the
+  package-install failure path.
+
 ## 0.0.1-beta.28 — 2026-08-12
 
 - Route the Korean `네이티브` and `설치` command aliases through the same

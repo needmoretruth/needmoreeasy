@@ -495,7 +495,7 @@ fn command_install(args: &[String], language: MessageLanguage) -> ExitCode {
             ExitCode::SUCCESS
         }
         Ok(status) => fail(
-            nme_core::diagnostics::DiagnosticCode::CliNativeCompileFailed,
+            nme_core::diagnostics::DiagnosticCode::CliPackageInstallFailed,
             language,
             &format!(
                 "pip failed to install {package} (exit {}).\n\

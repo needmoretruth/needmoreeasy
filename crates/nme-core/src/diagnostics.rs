@@ -121,8 +121,9 @@ pub enum DiagnosticCode {
     /// The Python source given to the converter is not valid.
     ConvertInvalidPython,
     // E9xxx codes describe CLI-level problems (bad arguments, missing files,
-    // Python/Nuitka startup). They never appear on a `Diagnostic` span; the
-    // `nme ko`/`nme en` lookup shares one registry for both kinds.
+    // Python/Nuitka startup, package installation). They never appear on a
+    // `Diagnostic` span; the `nme ko`/`nme en` lookup shares one registry for
+    // both kinds.
     /// An unknown command word.
     CliUnknownCommand,
     /// `modules` was given an extra argument.
@@ -171,6 +172,8 @@ pub enum DiagnosticCode {
     CliErrorLookupInvalidArgs,
     /// The error-lookup command got a code that does not exist.
     CliErrorLookupUnknownCode,
+    /// pip could not install the requested package.
+    CliPackageInstallFailed,
 }
 
 impl DiagnosticCode {
@@ -239,11 +242,12 @@ impl DiagnosticCode {
             Self::CliAmbiguousProgramPrefix => "E9022",
             Self::CliErrorLookupInvalidArgs => "E9023",
             Self::CliErrorLookupUnknownCode => "E9024",
+            Self::CliPackageInstallFailed => "E9025",
         }
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 63] = [
+    pub const ALL: [DiagnosticCode; 64] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -307,6 +311,7 @@ impl DiagnosticCode {
         Self::CliAmbiguousProgramPrefix,
         Self::CliErrorLookupInvalidArgs,
         Self::CliErrorLookupUnknownCode,
+        Self::CliPackageInstallFailed,
     ];
 
     pub fn from_code(code: &str) -> Option<Self> {
@@ -773,6 +778,13 @@ impl DiagnosticCode {
                 "알 수 없는 오류 코드",
                 "The code is not one NME uses. Run `nme ko` to see the full list, or copy the code exactly from the error message.",
                 "이 코드는 NME가 쓰는 코드가 아닙니다. `nme ko`로 전체 목록을 보거나, 오류 메시지에서 코드를 정확히 복사하세요.",
+            ),
+            Self::CliPackageInstallFailed => (
+                "E9025",
+                "pip could not install the package",
+                "pip이 패키지를 설치하지 못했습니다",
+                "The `nme install` command asked Python's pip to install a package, but pip exited with an error. Check the package name, your internet connection, and that pip is installed, then try again.",
+                "`nme 설치`가 Python의 pip으로 패키지를 설치하려 했지만 pip이 오류로 끝났습니다. 패키지 이름, 인터넷 연결, pip 설치 여부를 확인한 뒤 다시 시도하세요.",
             ),
         };
         CodeExplanation {

@@ -464,6 +464,28 @@ fn install_requires_a_package_and_explains_pip_failures() {
         stderr(&no_package)
     );
 
+    // An empty requirement is rejected by pip before it can contact a package
+    // index, so this checks the failure code without a network dependency.
+    let invalid_package = nme(&["install", ""]);
+    assert!(!invalid_package.status.success());
+    assert!(
+        stderr(&invalid_package).contains("error[E9025]: pip failed to install"),
+        "{}",
+        stderr(&invalid_package)
+    );
+
+    let invalid_korean_package = nme(&["설치", ""]);
+    assert!(!invalid_korean_package.status.success());
+    let korean_error = stderr(&invalid_korean_package);
+    assert!(
+        korean_error.contains("오류[E9025]: pip이"),
+        "{korean_error}"
+    );
+    assert!(
+        korean_error.contains("error[E9025]: pip failed to install"),
+        "{korean_error}"
+    );
+
     let two = nme(&["install", "a", "b"]);
     assert!(!two.status.success());
 
@@ -1646,6 +1668,30 @@ fn error_lookup_commands_print_the_requested_explanation() {
         stdout(&english_alias)
     );
 
+    let package_english = nme(&["en", "E9025"]);
+    assert!(
+        package_english.status.success(),
+        "{}",
+        stderr(&package_english)
+    );
+    assert!(
+        stdout(&package_english).contains("pip could not install the package"),
+        "{}",
+        stdout(&package_english)
+    );
+
+    let package_korean = nme(&["ko", "E9025"]);
+    assert!(
+        package_korean.status.success(),
+        "{}",
+        stderr(&package_korean)
+    );
+    assert!(
+        stdout(&package_korean).contains("pip이 패키지를 설치하지 못했습니다"),
+        "{}",
+        stdout(&package_korean)
+    );
+
     let unknown = nme(&["ko", "E9999"]);
     assert!(!unknown.status.success());
     let unknown_error = stderr(&unknown);
@@ -1663,6 +1709,7 @@ fn error_lookup_without_a_code_lists_every_code() {
     let out = stdout(&english);
     assert!(out.contains("E0001"), "{out}");
     assert!(out.contains("E0702"), "{out}");
+    assert!(out.contains("E9025"), "{out}");
     assert!(out.contains("E0102  `break` outside a loop"), "{out}");
 
     let korean = nme(&["ko"]);
