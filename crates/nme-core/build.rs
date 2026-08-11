@@ -9,17 +9,22 @@ fn main() {
         .expect("workspace root");
 
     for relative in [
-        "examples/zk-schnorr-relay.ko.nme",
-        "examples/zk-schnorr-relay.en.nme",
+        "crates/nme-core/src/syntax.rs",
+        "crates/nme-core/src/parser.rs",
+        "crates/nme-core/src/lower.rs",
     ] {
         let path = root.join(relative);
-        if path.exists() {
-            let text = fs::read_to_string(&path).expect("read generated ZK example");
-            for (number, line) in text.lines().enumerate() {
-                println!("cargo:warning=ZK-SOURCE {relative}:{}: {line}", number + 1);
+        let text = fs::read_to_string(&path).expect("read generated ZK source");
+        for (number, line) in text.lines().enumerate() {
+            if line.contains("ZeroKnowledge")
+                || line.contains("ZERO_KNOWLEDGE")
+                || line.contains("전사록")
+                || line.contains("\"영지식\"")
+            {
+                println!("cargo:warning=ZK-RUST {relative}:{}: {line}", number + 1);
             }
         }
     }
 
-    panic!("diagnostic-only beta.16 run: inspect generated ZK examples above");
+    panic!("diagnostic-only beta.16 run: inspect generated ZK bindings above");
 }
