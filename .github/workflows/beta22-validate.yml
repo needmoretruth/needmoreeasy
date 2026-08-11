@@ -1,4 +1,4 @@
-name: beta22 cryptocurrency validation
+name: beta22 release builder
 
 on:
   push:
@@ -8,7 +8,7 @@ permissions:
   contents: write
 
 jobs:
-  validate:
+  release:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
@@ -16,41 +16,38 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: work/beta22-cryptocurrency-purity
+          fetch-depth: 2
       - name: Install stable Rust
         uses: dtolnay/rust-toolchain@stable
-      - name: Install CPython
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.14'
-      - name: Tune learning proof of work
-        run: python scripts/materialize-beta22-runtime.py
-      - name: Cryptocurrency regression tests
-        run: cargo test -p nme-core --test cryptocurrency_examples --locked
-      - name: Install CLI
-        run: cargo install --path crates/nme-cli --locked
-      - name: Check six cryptocurrency examples
+      - name: Build beta22 release commit
         shell: bash
         run: |
-          nme check examples/needmorecoin-sentence.ko
-          nme check examples/needmorecoin-sentence.en
-          nme check examples/needmorecoin-beginner.ko
-          nme check examples/needmorecoin-beginner.en
-          nme check examples/needmorecoin-advanced.ko
-          nme check examples/needmorecoin-advanced.en
-      - name: Run six cryptocurrency examples
-        shell: bash
-        run: |
-          nme run examples/needmorecoin-sentence.ko
-          nme run examples/needmorecoin-sentence.en
-          nme run examples/needmorecoin-beginner.ko
-          nme run examples/needmorecoin-beginner.en
-          nme run examples/needmorecoin-advanced.ko
-          nme run examples/needmorecoin-advanced.en
-      - name: Commit validated examples and guides
-        shell: bash
-        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          old = '0.0.1-beta.21'
+          new = '0.0.1-beta.22'
+
+          cargo = Path('Cargo.toml')
+          text = cargo.read_text(encoding='utf-8')
+          if text.count(old) != 1:
+              raise SystemExit(f'Cargo.toml expected one {old}, found {text.count(old)}')
+          cargo.write_text(text.replace(old, new), encoding='utf-8')
+
+          lock = Path('Cargo.lock')
+          text = lock.read_text(encoding='utf-8')
+          if text.count(old) != 3:
+              raise SystemExit(f'Cargo.lock expected three workspace {old} versions, found {text.count(old)}')
+          lock.write_text(text.replace(old, new), encoding='utf-8')
+          PY
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add -- docs/guides/cryptocurrency.md docs/guides/cryptocurrency.ko.md examples/needmorecoin-sentence.ko.nme examples/needmorecoin-sentence.en.nme examples/needmorecoin-beginner.ko.nme examples/needmorecoin-beginner.en.nme examples/needmorecoin-advanced.ko.nme examples/needmorecoin-advanced.en.nme
-          git commit -m "examples: validate fast six way cryptocurrency matrix"
-          git push origin HEAD:work/beta22-cryptocurrency-purity
+          git rm -- .github/workflows/beta22-validate.yml scripts/materialize-beta22-docs.py scripts/materialize-beta22-runtime.py
+          git add -- Cargo.toml Cargo.lock
+          git commit -m "release: 0.0.1-beta.22 pure six-way cryptocurrency examples"
+      - name: Verify beta version step
+        run: python scripts/check-beta-step.py
+      - name: Verify locked workspace
+        run: cargo check --workspace --locked
+      - name: Push beta22 release commit to work branch
+        run: git push origin HEAD:work/beta22-cryptocurrency-purity
