@@ -2142,14 +2142,34 @@ enum ConditionConnector {
     NotEquals,
     Greater,
     Less,
+    GreaterOrEqual,
+    LessOrEqual,
 }
 
 fn find_exact_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionConnector)> {
+    // Spoken Korean splits `<=`/`>=` into two tokens (`10보다 작거나
+    // 같으면`); the lone `같으면` would otherwise match equality.
+    for (index, pair) in tokens.windows(2).enumerate() {
+        if token_word(&pair[0]) == Some("작거나") && token_word(&pair[1]) == Some("같으면") {
+            return Some((index, ConditionConnector::LessOrEqual));
+        }
+        if token_word(&pair[0]) == Some("크거나") && token_word(&pair[1]) == Some("같으면") {
+            return Some((index, ConditionConnector::GreaterOrEqual));
+        }
+    }
     let last_operand = last_logical_operand_start(tokens);
     let exact = tokens
         .iter()
         .enumerate()
         .filter_map(|(index, token)| {
+            if is_or_equal_phrase_at(tokens, index)
+                || tokens.get(index.saturating_sub(1)).is_some_and(|previous| {
+                    token_word(previous) == Some("or")
+                        && is_or_equal_phrase_at(tokens, index - 1)
+                })
+            {
+                return None;
+            }
             let connector = condition_connector_exact(token, index + 1 == tokens.len())?;
             // A `then` body marker may sit before the final `and`/`or`
             // operand because it separates the inline body. Korean
@@ -2197,12 +2217,26 @@ fn last_logical_operand_start(tokens: &[Token]) -> usize {
             if token_word(token) == Some("then") {
                 break;
             }
+            // `or equal` belongs to a `less/greater than or equal to`
+            // comparison, not to logical `or`.
+            if token_word(token) == Some("or") && is_or_equal_phrase_at(tokens, index) {
+                continue;
+            }
             if token_matches_exact(token, &["and", "or", "그리고", "또는"]) {
                 last = index + 1;
             }
         }
     }
     last
+}
+
+/// True when `tokens[index]` is `or` followed by `equal`/`equals`, the
+/// natural-language `<=`/`>=` phrase.
+fn is_or_equal_phrase_at(tokens: &[Token], index: usize) -> bool {
+    token_word(&tokens[index]) == Some("or")
+        && tokens.get(index + 1).is_some_and(|token| {
+            matches!(token_word(token), Some("equal") | Some("equals"))
+        })
 }
 
 fn find_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionConnector)> {
@@ -2218,6 +2252,14 @@ fn find_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionConnect
         .iter()
         .enumerate()
         .filter_map(|(index, token)| {
+            if is_or_equal_phrase_at(tokens, index)
+                || tokens.get(index.saturating_sub(1)).is_some_and(|previous| {
+                    token_word(previous) == Some("or")
+                        && is_or_equal_phrase_at(tokens, index - 1)
+                })
+            {
+                return None;
+            }
             let connector = condition_connector_recovered(token, index + 1 == tokens.len())?;
             (index >= last_operand || token_word(token) == Some("then")).then_some((index, connector))
         })
@@ -2419,6 +2461,16 @@ fn condition_tokens_before(
     {
         body_start = at + 2;
     }
+    // `작거나 같으면` / `크거나 같으면` also spans two tokens.
+    if matches!(
+        connector,
+        ConditionConnector::LessOrEqual | ConditionConnector::GreaterOrEqual
+    ) && tokens
+        .get(at + 1)
+        .is_some_and(|next| token_word(next) == Some("같으면"))
+    {
+        body_start = at + 2;
+    }
     if let Some(token) = tokens.get(at) {
         if let Some((base, attached_connector)) = split_attached_condition_token(token) {
             // `name이면` is a truthy condition when it is the whole subject,
@@ -2526,7 +2578,12 @@ fn logical_operator_at(tokens: &[Token], operator: LogicalOp) -> Option<usize> {
             Tok::Rpar | Tok::Rsqb | Tok::Rbrace => depth = depth.saturating_sub(1),
             _ => {}
         }
-        (depth == 0 && token_matches_exact(token, expected)).then_some(index)
+        // `or equal` is part of a `less/greater than or equal to`
+        // comparison, not a logical `or`.
+        (depth == 0
+            && token_matches_exact(token, expected)
+            && !(expected.contains(&"or") && is_or_equal_phrase_at(tokens, index)))
+        .then_some(index)
     });
     if exact.is_some() {
         return exact;
@@ -2542,13 +2599,10 @@ fn logical_operator_at(tokens: &[Token], operator: LogicalOp) -> Option<usize> {
             Tok::Rpar | Tok::Rsqb | Tok::Rbrace => depth = depth.saturating_sub(1),
             _ => {}
         }
-        let recovered = depth == 0
-            && token_word(token).is_some_and(|actual| {
-                expected.iter().any(|candidate| {
-                    actual.chars().count() >= 2 && one_typo_away(actual, candidate)
-                })
-            });
-        recovered.then_some(index)
+        (depth == 0
+            && !(expected.contains(&"or") && is_or_equal_phrase_at(tokens, index))
+            && word_matches_any(token, expected, MatchMode::Recover))
+        .then_some(index)
     })
 }
 
@@ -2618,18 +2672,24 @@ fn parse_natural_condition_atom(
                 negated: explicit_not,
             });
         }
-        Some(ConditionConnector::Greater | ConditionConnector::Less) => {
-            let operator = if matches!(connector, Some(ConditionConnector::Greater)) {
-                CompareOp::Greater
-            } else {
-                CompareOp::Less
+        Some(
+            ConditionConnector::Greater
+            | ConditionConnector::Less
+            | ConditionConnector::GreaterOrEqual
+            | ConditionConnector::LessOrEqual,
+        ) => {
+            let operator = match connector {
+                Some(ConditionConnector::Greater) => CompareOp::Greater,
+                Some(ConditionConnector::Less) => CompareOp::Less,
+                Some(ConditionConnector::GreaterOrEqual) => CompareOp::GreaterOrEqual,
+                _ => CompareOp::LessOrEqual,
             };
             return parse_korean_comparison(
                 source,
                 &cleaned,
                 known_names,
                 operator,
-                &["보다", "더", "작을", "클"],
+                &["보다", "더", "작을", "클", "작거나", "크거나"],
                 spelling,
                 false,
             );
@@ -2789,6 +2849,41 @@ fn parse_english_condition(
     {
         cursor += 1;
     }
+    // `less than or equal to` / `greater than or equal to` narrow the
+    // comparison to `<=` / `>=`.
+    if tokens.get(cursor).is_some_and(|token| token_word(token) == Some("or"))
+        && tokens
+            .get(cursor + 1)
+            .is_some_and(|token| condition_word_matches(token_word(token).unwrap_or(""), &["equal", "equals"]))
+    {
+        let operator = match operator {
+            CompareOp::Greater => CompareOp::GreaterOrEqual,
+            CompareOp::Less => CompareOp::LessOrEqual,
+            other => other,
+        };
+        cursor += 2;
+        while tokens
+            .get(cursor)
+            .is_some_and(|token| token_matches_exact(token, &["to", "than", "as"]))
+        {
+            cursor += 1;
+        }
+        let right_tokens = tokens.get(cursor..)?;
+        if right_tokens.is_empty() {
+            return None;
+        }
+        let owned = right_tokens
+            .iter()
+            .map(|token| (*token).clone())
+            .collect::<Vec<_>>();
+        let right = condition_rhs(source, &owned, known_names)?;
+        return Some(Condition::Compare {
+            left,
+            operator,
+            right,
+            negated,
+        });
+    }
     let right_tokens = tokens.get(cursor..)?;
     if right_tokens.is_empty() {
         return None;
@@ -2936,6 +3031,8 @@ fn condition_connector_exact(token: &Token, is_last: bool) -> Option<ConditionCo
         ),
         (ConditionConnector::Greater, &["크면", "크다면", "클"][..]),
         (ConditionConnector::Less, &["작으면", "작다면", "작을"][..]),
+        (ConditionConnector::GreaterOrEqual, &["크거나같으면", "크거나같다면"][..]),
+        (ConditionConnector::LessOrEqual, &["작거나같으면", "작거나같다면"][..]),
     ];
     for (kind, words) in candidates {
         if words.contains(&word) {

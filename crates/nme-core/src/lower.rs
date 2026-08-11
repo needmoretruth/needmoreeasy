@@ -188,6 +188,8 @@ fn lower_condition(condition: &Condition, source: &str) -> String {
                 CompareOp::Equal => "==",
                 CompareOp::Greater => ">",
                 CompareOp::Less => "<",
+                CompareOp::LessOrEqual => "<=",
+                CompareOp::GreaterOrEqual => ">=",
             };
             let comparison = format!("{left} {operator} {right}");
             if *negated {

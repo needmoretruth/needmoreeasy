@@ -393,6 +393,10 @@ fn check_condition(
                 (ExprType::Int, ExprType::Int, CompareOp::Equal) => format!("{left} == {right}"),
                 (ExprType::Int, ExprType::Int, CompareOp::Greater) => format!("{left} > {right}"),
                 (ExprType::Int, ExprType::Int, CompareOp::Less) => format!("{left} < {right}"),
+                (ExprType::Int, ExprType::Int, CompareOp::LessOrEqual) => format!("{left} <= {right}"),
+                (ExprType::Int, ExprType::Int, CompareOp::GreaterOrEqual) => {
+                    format!("{left} >= {right}")
+                }
                 (ExprType::Str, ExprType::Str, CompareOp::Equal) => {
                     format!("strcmp({left}, {right}) == 0")
                 }

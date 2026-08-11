@@ -931,6 +931,34 @@ fn module_imports_lower_to_python_and_report_their_interface() {
 }
 
 #[test]
+fn natural_language_or_equal_conditions_lower_to_cmp_operators() {
+    assert_eq!(
+        ok("if x is less than or equal to 3\n    show \"yes\"\nend\n"),
+        "if (x <= 3):\n    print(\"yes\")\n# end\n"
+    );
+    assert_eq!(
+        ok("if x is greater than or equal to 5\n    show \"yes\"\nend\n"),
+        "if (x >= 5):\n    print(\"yes\")\n# end\n"
+    );
+    assert_eq!(
+        ok("if x is less than or equal to 3 and x is greater than or equal to 1\n    show \"in\"\nend\n"),
+        "if ((x <= 3 and x >= 1)):\n    print(\"in\")\n# end\n"
+    );
+}
+
+#[test]
+fn korean_or_equal_conditions_lower_to_cmp_operators() {
+    assert_eq!(
+        ok("만약에 점수가 10보다 작거나 같으면\n    말해 \"작거나 같음\"\n끝\n"),
+        "if (점수 <= 10):\n    print(\"작거나 같음\")\n# end\n"
+    );
+    assert_eq!(
+        ok("만약에 점수가 10보다 크거나 같으면\n    말해 \"크거나 같음\"\n끝\n"),
+        "if (점수 >= 10):\n    print(\"크거나 같음\")\n# end\n"
+    );
+}
+
+#[test]
 fn a_python_from_import_stays_byte_identical() {
     let python = ok("from helper import greet\nshow greet\n");
     assert_eq!(python, "from helper import greet\nprint(greet)\n");

@@ -98,6 +98,18 @@ fn less_equal_and_greater_equal_conditions_work() {
 }
 
 #[test]
+fn natural_language_or_equal_conditions_compile_natively() {
+    let source = "x = 3\nif x is less than or equal to 3\n    show \"lte\"\nend\nif x is greater than or equal to 5\n    show \"gte\"\nend\n";
+    assert_eq!(native_run(source).unwrap(), "lte\n");
+}
+
+#[test]
+fn korean_or_equal_conditions_compile_natively() {
+    let source = "점수 = 3\n만약에 점수가 10보다 작거나 같으면\n    말해 \"작거나 같음\"\n끝\n만약에 점수가 10보다 크거나 같으면\n    말해 \"크거나 같음\"\n끝\n";
+    assert_eq!(native_run(source).unwrap(), "작거나 같음\n");
+}
+
+#[test]
 fn string_variables_and_binary_concat_compile_natively() {
     let source = "greeting = \"hello\"\nshow greeting\nname = \"NME\"\nshow name + \" rocks\"\nshow greeting + \" friend\"\n";
     assert_eq!(

@@ -131,6 +131,8 @@ pub enum CompareOp {
     Equal,
     Greater,
     Less,
+    LessOrEqual,
+    GreaterOrEqual,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

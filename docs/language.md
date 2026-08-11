@@ -269,6 +269,8 @@ Supported sentence comparisons:
 | `if score is not equal to 10` | `만약에 점수가 10과 같지 않으면` | `!=` |
 | `if score is greater than 10` | `만약에 점수가 10보다 크면` | `>` |
 | `if score is less than 10` | `만약에 점수가 10보다 작으면` | `<` |
+| `if score is less than or equal to 10` | `만약에 점수가 10보다 작거나 같으면` | `<=` |
+| `if score is greater than or equal to 10` | `만약에 점수가 10보다 크거나 같으면` | `>=` |
 
 `when condition`, `만약 condition`, `만약에 condition`, and the mixed
 `if 조건` are all valid. Use the beginner form when a condition needs the full
