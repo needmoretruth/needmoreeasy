@@ -8,7 +8,7 @@
 아이디어만 가르치고, 앞 가이드보다 조금씩 어려워지며, `nme check`로
 확인할 수 있습니다. 01–04는 첫날 문장형이고, 05–10은 초급 문법과
 제어 흐름을 더하며, 11–12는 CLI 도구를 다루고, 13–16은 파일·JSON·작은
-프로젝트를 다룹니다.
+프로젝트를, 17–20은 블록체인을 다룹니다.
 
 ## 난이도
 
@@ -36,6 +36,10 @@
 14. [14 — JSON](14-json.ko.md)
 15. [15 — 최고 점수](15-high-score.ko.md)
 16. [16 — 이름 목록](16-name-list.ko.md)
+17. [17 — 블록체인](17-blockchain.ko.md)
+18. [18 — 작업 증명](18-proof-of-work.ko.md)
+19. [19 — 서명](19-signatures.ko.md)
+20. [20 — 합의](20-consensus.ko.md)
 
 ## 주제별 찾아보기
 
@@ -50,6 +54,9 @@
 - 파일 / Files: [13](13-files.ko.md), [16](16-name-list.ko.md)
 - JSON / JSON: [14](14-json.ko.md)
 - 프로젝트 / Project: [15](15-high-score.ko.md)
+- 블록체인 / Blockchain: [17](17-blockchain.ko.md), [18](18-proof-of-work.ko.md)
+- 서명 / Signatures: [19](19-signatures.ko.md)
+- 합의 / Consensus: [20](20-consensus.ko.md)
 
 ## 전체 목록
 
@@ -71,6 +78,10 @@
 | 14 | ★★★★☆ | JSON / JSON | [JSON — 데이터 저장하고 불러오기](14-json.ko.md) | 이름과 점수를 저장하고 불러오기 |
 | 15 | ★★★★★ | 프로젝트 / Project | [최고 점수 — 작은 프로젝트](15-high-score.ko.md) | 최고 점수를 기억하는 주사위 게임 |
 | 16 | ★★★★★ | 파일/목록 / Files & lists | [이름 목록 — 파일에서 줄 읽기](16-name-list.ko.md) | 파일에서 이름 목록을 읽어 고르기 |
+| 17 | ★★★★☆ | 블록체인 / Blockchain | [블록체인 — 해시로 연결된 장부](17-blockchain.ko.md) | 해시로 연결된 블록들의 이해 |
+| 18 | ★★★★★ | 채굴 / Mining | [작업 증명 — 채굴](18-proof-of-work.ko.md) | nonce를 찾아 블록을 채굴하고 사슬을 검증하기 |
+| 19 | ★★★★★ | 서명 / Signatures | [서명 — 신원 증명](19-signatures.ko.md) | hmac으로 메시지 서명하고 검증하기 |
+| 20 | ★★★★★ | 합의 / Consensus | [합의 — 사슬에 동의하기](20-consensus.ko.md) | 가장 긴 사슬 규칙으로 갈라짐을 해결하는 두 노드 |
 
 ## 다음 단계
 

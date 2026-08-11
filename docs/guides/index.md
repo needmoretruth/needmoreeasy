@@ -7,7 +7,7 @@ English | [한국어](index.ko.md)
 Small, progressive guides for the beginner path. Each guide teaches one idea,
 gets harder than the last, and compiles with `nme check`. Guides 01–04 are
 first-day sentences; 05–10 add beginner syntax and control flow; 11–12 use the
-CLI tools; 13–16 add files, JSON, and small projects.
+CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain.
 
 ## Difficulty
 
@@ -35,6 +35,10 @@ CLI tools; 13–16 add files, JSON, and small projects.
 14. [14 — JSON](14-json.md)
 15. [15 — High score](15-high-score.md)
 16. [16 — Name list](16-name-list.md)
+17. [17 — Blockchain](17-blockchain.md)
+18. [18 — Proof of work](18-proof-of-work.md)
+19. [19 — Signatures](19-signatures.md)
+20. [20 — Consensus](20-consensus.md)
 
 ## Topic lookup
 
@@ -49,6 +53,9 @@ CLI tools; 13–16 add files, JSON, and small projects.
 - 파일 / Files: [13](13-files.md), [16](16-name-list.md)
 - JSON / JSON: [14](14-json.md)
 - 프로젝트 / Project: [15](15-high-score.md)
+- 블록체인 / Blockchain: [17](17-blockchain.md), [18](18-proof-of-work.md)
+- 서명 / Signatures: [19](19-signatures.md)
+- 합의 / Consensus: [20](20-consensus.md)
 
 ## All guides
 
@@ -70,6 +77,10 @@ CLI tools; 13–16 add files, JSON, and small projects.
 | 14 | ★★★★☆ | JSON / JSON | [JSON — save and load data](14-json.md) | Save a name and a score and load them back |
 | 15 | ★★★★★ | 프로젝트 / Project | [High score — a tiny project](15-high-score.md) | A dice game that remembers its best score |
 | 16 | ★★★★★ | 파일/목록 / Files & lists | [Name list — read lines from a file](16-name-list.md) | Read a list of names from a file and pick from it |
+| 17 | ★★★★☆ | 블록체인 / Blockchain | [Blockchain — a hash-linked ledger](17-blockchain.md) | Understanding of blocks linked by hashes |
+| 18 | ★★★★★ | 채굴 / Mining | [Proof of work — mining](18-proof-of-work.md) | Mine a block by finding a nonce and verify the chain |
+| 19 | ★★★★★ | 서명 / Signatures | [Signatures — proving identity](19-signatures.md) | Sign and verify a message with hmac |
+| 20 | ★★★★★ | 합의 / Consensus | [Consensus — agreeing on a chain](20-consensus.md) | Two nodes resolving a fork by the longest-chain rule |
 
 ## Where to continue
 
