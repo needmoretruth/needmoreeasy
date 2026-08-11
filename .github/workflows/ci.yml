@@ -83,6 +83,13 @@ jobs:
           PY
           cargo fmt --all
           cargo clippy --fix --workspace --all-targets --allow-dirty --allow-staged
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('crates/nme-native/src/lib.rs')
+          text = path.read_text(encoding='utf-8')
+          text = text.replace('use std::fmt::Write as _;\n', '')
+          path.write_text(text, encoding='utf-8')
+          PY
           cargo fmt --all
 
       - name: Release-quality validation
