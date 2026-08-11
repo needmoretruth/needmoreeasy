@@ -5,6 +5,41 @@ fn assert_transpiles(path: &str, source: &str) -> String {
 }
 
 #[test]
+fn all_six_cryptocurrency_examples_transpile() {
+    let examples = [
+        (
+            "needmorecoin-sentence.ko.nme",
+            include_str!("../../../examples/needmorecoin-sentence.ko.nme"),
+        ),
+        (
+            "needmorecoin-sentence.en.nme",
+            include_str!("../../../examples/needmorecoin-sentence.en.nme"),
+        ),
+        (
+            "needmorecoin-beginner.ko.nme",
+            include_str!("../../../examples/needmorecoin-beginner.ko.nme"),
+        ),
+        (
+            "needmorecoin-beginner.en.nme",
+            include_str!("../../../examples/needmorecoin-beginner.en.nme"),
+        ),
+        (
+            "needmorecoin-advanced.ko.nme",
+            include_str!("../../../examples/needmorecoin-advanced.ko.nme"),
+        ),
+        (
+            "needmorecoin-advanced.en.nme",
+            include_str!("../../../examples/needmorecoin-advanced.en.nme"),
+        ),
+    ];
+
+    for (path, source) in examples {
+        let python = assert_transpiles(path, source);
+        assert_eq!(source.lines().count(), python.lines().count(), "{path}");
+    }
+}
+
+#[test]
 fn korean_sentence_cryptocurrency_is_pure_sentence_source() {
     let source = include_str!("../../../examples/needmorecoin-sentence.ko.nme");
 
@@ -36,4 +71,19 @@ fn korean_sentence_cryptocurrency_is_pure_sentence_source() {
     assert!(python.contains("zk_nizk_verify"));
     assert!(python.contains("zk_nizk_challenge"));
     assert!(python.contains("while ("));
+}
+
+#[test]
+fn advanced_cryptocurrency_examples_are_byte_identical_python() {
+    let korean = include_str!("../../../examples/needmorecoin-advanced.ko.nme");
+    let english = include_str!("../../../examples/needmorecoin-advanced.en.nme");
+
+    assert_eq!(assert_transpiles("needmorecoin-advanced.ko.nme", korean), korean);
+    assert_eq!(assert_transpiles("needmorecoin-advanced.en.nme", english), english);
+
+    for source in [korean, english] {
+        assert!(source.contains("hashlib.sha256"));
+        assert!(source.contains("secrets.randbelow"));
+        assert!(source.contains("work_nonce") || source.contains("작업번호"));
+    }
 }
