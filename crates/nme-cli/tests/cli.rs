@@ -178,6 +178,61 @@ fn command_shortcuts_run_check_build_and_modules() {
 }
 
 #[test]
+fn run_passes_program_arguments_to_the_program() {
+    if !python_available() {
+        return;
+    }
+    let dir = temporary_dir("args");
+    write_nme(
+        &dir,
+        "args.nme",
+        "import sys\nshow f\"program: {sys.argv[0]}\"\nshow f\"args: {sys.argv[1:]}\"\n",
+    );
+    let program = dir.join("args.nme");
+    let output = nme(&["run", &program.to_string_lossy(), "one", "two"]);
+    assert!(output.status.success(), "{}", stderr(&output));
+    let text = stdout(&output);
+    assert!(text.contains("program: "), "{text}");
+    assert!(text.contains("args: ['one', 'two']"), "{text}");
+    assert!(!stderr(&output).contains("unexpected"), "{}", stderr(&output));
+
+    let bare = nme(&["run", &program.to_string_lossy(), "-5", "3.5"]);
+    assert!(bare.status.success(), "{}", stderr(&bare));
+    assert!(
+        stdout(&bare).contains("args: ['-5', '3.5']"),
+        "{}",
+        stdout(&bare)
+    );
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+#[test]
+fn run_with_shortcut_and_korean_command_passes_arguments() {
+    if !python_available() {
+        return;
+    }
+    let dir = temporary_dir("args-ko");
+    write_nme(
+        &dir,
+        "hello.nme",
+        "import sys\nshow f\"hello {sys.argv[1]}\"\n",
+    );
+    let program = dir.join("hello.nme");
+    let via_r = nme(&["r", &program.to_string_lossy(), "Mina"]);
+    assert!(via_r.status.success(), "{}", stderr(&via_r));
+    assert!(stdout(&via_r).contains("hello Mina"), "{}", stdout(&via_r));
+
+    let via_korean = nme(&["실행", &program.to_string_lossy(), "미나"]);
+    assert!(via_korean.status.success(), "{}", stderr(&via_korean));
+    assert!(
+        stdout(&via_korean).contains("hello 미나"),
+        "{}",
+        stdout(&via_korean)
+    );
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+#[test]
 fn the_file_module_reads_and_writes_text_and_json() {
     if !python_available() {
         eprintln!("Python not available; skipping file module test");
@@ -842,7 +897,7 @@ fn python_launch_errors_follow_the_command_language() {
     let file = example("hello.nme");
     let missing_python = "nme-python-command-that-does-not-exist";
 
-    let english = nme(&["run", &file, "--python", missing_python]);
+    let english = nme(&["run", "--python", missing_python, &file]);
     assert!(!english.status.success());
     let english_error = stderr(&english);
     assert!(
@@ -855,7 +910,7 @@ fn python_launch_errors_follow_the_command_language() {
     );
     assert!(!english_error.contains("오류:"), "{english_error}");
 
-    let bilingual = nme(&["실행", &file, "--python", missing_python]);
+    let bilingual = nme(&["실행", "--python", missing_python, &file]);
     assert!(!bilingual.status.success());
     let bilingual_error = stderr(&bilingual);
     assert!(bilingual_error.contains("Python("), "{bilingual_error}");
@@ -873,7 +928,18 @@ fn python_launch_errors_follow_the_command_language() {
 fn run_build_and_check_reject_extra_files_and_unknown_options() {
     let first = example("hello.nme");
     let second = example("pure_python.nme");
-    for command in ["run", "build", "check"] {
+
+    // `run` accepts anything after the program name as program arguments
+    // (they become sys.argv[1:]), but options before it are still checked.
+    let run_unknown = nme(&["run", "--not-an-nme-option", &first]);
+    assert!(!run_unknown.status.success(), "run ignored an option");
+    assert!(
+        stderr(&run_unknown).contains("unknown option"),
+        "{}",
+        stderr(&run_unknown)
+    );
+
+    for command in ["build", "check"] {
         let extra = nme(&[command, &first, &second]);
         assert!(!extra.status.success(), "{command} accepted two files");
         assert!(

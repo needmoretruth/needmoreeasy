@@ -66,7 +66,9 @@ You may mix conversational sentences, beginner syntax, and ordinary Python in
 one file. English and Korean NME spellings may be mixed too. File names work
 with or without .nme: type `nme run hello`, not `nme run hello.nme`. If the
 exact file you type exists, it is used as-is, so Python files such as
-`program.py` run too. `nme check` prints nothing when the program is fine.
+`program.py` run too. Words after the file name go to the program: type
+`nme run hello Mina` and the program reads `sys.argv[1]`. `nme check` prints
+nothing when the program is fine.
 Every error message carries a stable code such as E0001; `nme ko E0001` reads
 its full Korean explanation and `nme en E0001` the English one.
 ";
@@ -118,7 +120,9 @@ const HELP_KOREAN: &str = r"nme — NeedMoreEasy: 더 쉽게 시작해서 Python
 영어와 한국어 NME도 섞어 쓸 수 있습니다. 파일 이름의 .nme는 생략해도
 됩니다(`nme 실행 hello`처럼 쓰면 됩니다). 적은 경로 그대로 파일이 있으면
 그 파일을 사용하므로 `program.py` 같은 Python 파일도 실행할 수 있습니다.
-`nme 검사`는 프로그램이 정상이면 아무것도 출력하지 않습니다.
+파일 이름 뒤의 단어는 프로그램으로 전달됩니다: `nme 실행 hello 미나`라고
+쓰면 프로그램이 `sys.argv[1]`로 읽습니다. `nme 검사`는 프로그램이
+정상이면 아무것도 출력하지 않습니다.
 모든 오류 메시지에는 E0001 같은 안정적인 코드가 붙어 있습니다.
 `nme ko E0001`은 자세한 한국어 설명을, `nme en E0001`은 영어 설명을 보여 줍니다.
 ";
@@ -881,8 +885,15 @@ fn compile_arguments(
 fn command_run(args: &[String], language: MessageLanguage) -> ExitCode {
     let mut python = DEFAULT_PYTHON.to_string();
     let mut file = None;
+    let mut program_args: Vec<String> = Vec::new();
     let mut rest = args.iter();
     while let Some(arg) = rest.next() {
+        if file.is_some() {
+            // Everything after the program name belongs to the program:
+            // it becomes sys.argv[1:], as with `python program.py ...`.
+            program_args.push(arg.clone());
+            continue;
+        }
         match arg.as_str() {
             "--python" => match rest.next() {
                 Some(command) => python.clone_from(command),
@@ -905,15 +916,7 @@ fn command_run(args: &[String], language: MessageLanguage) -> ExitCode {
                     &format!("알 수 없는 옵션입니다: {flag}"),
                 );
             }
-            path if file.is_none() => file = Some(path.to_string()),
-            path => {
-                return fail(
-                    nme_core::diagnostics::DiagnosticCode::CliUnexpectedExtraFile,
-                    language,
-                    &format!("unexpected extra file: {path}"),
-                    &format!("파일은 하나만 적어 주세요. 추가로 적힌 파일: {path}"),
-                );
-            }
+            path => file = Some(path.to_string()),
         }
     }
     let file = match file {
@@ -945,7 +948,13 @@ fn command_run(args: &[String], language: MessageLanguage) -> ExitCode {
             Err(code) => return code,
         }
     };
-    let run_status = exec::run_python(&compiled.source, &compiled.path, &python, module_dir.as_deref());
+    let run_status = exec::run_python(
+        &compiled.source,
+        &compiled.path,
+        &python,
+        module_dir.as_deref(),
+        &program_args,
+    );
     if let Some(dir) = module_dir {
         let _ = std::fs::remove_dir_all(dir);
     }

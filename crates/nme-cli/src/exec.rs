@@ -92,12 +92,15 @@ pub fn check_python(python_source: &str, source_path: &Path, python: &str) -> io
 /// compiles it with the original `.nme` path, and executes it as a normal main
 /// script. After the framed source has been sent, a detached forwarding thread
 /// connects the user's standard input to the program so `input()` remains
-/// interactive without creating a temporary Python file.
+/// interactive without creating a temporary Python file. `program_args`
+/// becomes the program's `sys.argv[1:]`, exactly like arguments after a
+/// `python program.py` command.
 pub fn run_python(
     python_source: &str,
     source_path: &Path,
     python: &str,
     module_dir: Option<&Path>,
+    program_args: &[String],
 ) -> io::Result<ExitStatus> {
     let source_path = absolute_path(source_path)?;
     let mut command = Command::new(python);
@@ -108,6 +111,7 @@ pub fn run_python(
         .arg("-c")
         .arg(RUN_BOOTSTRAP)
         .arg(source_path)
+        .args(program_args)
         .stdin(Stdio::piped())
         .spawn()?;
     let mut child_stdin = child
