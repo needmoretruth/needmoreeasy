@@ -17,6 +17,8 @@ fn needmorecoin_uses_only_korean_sentence_source() {
         .unwrap_or_else(|problems| panic!("needmorecoin should transpile: {problems:?}"));
 
     assert_eq!(source.lines().count(), python.lines().count());
+    assert!(python.contains("sha256"));
+    assert!(python.contains("secrets"));
     assert!(python.contains("영지식비대화증명"));
     assert!(python.contains("영지식비대화도전"));
 }
