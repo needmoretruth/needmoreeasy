@@ -149,22 +149,24 @@ Challenge: write a Python function and use sentence `show` inside it.
 ## Project 5: Move one game toward Python
 
 The time-loop mystery is the same project written at three levels. Start with
-the conversational Korean version, then compare the compact beginner version,
-and finally read the ordinary Python version:
+the conversational English version, then compare the compact beginner
+version, and finally read the ordinary Python version:
 
-- [`time-loop-sentence.ko.nme`](../examples/time-loop-sentence.ko.nme) — easiest
-  sentences, `끝`, and natural Korean conditions;
-- [`time-loop-beginner.ko.nme`](../examples/time-loop-beginner.ko.nme) — compact
-  `저장`, `물어봐`, `만약`, and `N번:` forms. `저장` is the beginner save action
-  (e.g. `저장 점수를 3`);
+- [`time-loop-sentence.nme`](../examples/time-loop-sentence.nme) — easiest
+  sentences, `end`, and natural conditions; the Korean twin is
+  [`time-loop-sentence.ko.nme`](../examples/time-loop-sentence.ko.nme);
+- [`time-loop-beginner.nme`](../examples/time-loop-beginner.nme) — compact
+  `save`, `ask`, `when`, and `N times:` forms. `save` is the beginner store
+  action (e.g. `save score to 3`); the Korean twin is
+  [`time-loop-beginner.ko.nme`](../examples/time-loop-beginner.ko.nme);
 - [`time-loop-python.nme`](../examples/time-loop-python.nme) — lists,
   dictionaries, f-strings, `while`, `break`, and ordinary Python.
 
 All three compile with the same command:
 
 ```sh
-nme check examples/time-loop-sentence.ko
-nme check examples/time-loop-beginner.ko
+nme check examples/time-loop-sentence
+nme check examples/time-loop-beginner
 nme check examples/time-loop-python
 ```
 

@@ -1,0 +1,16 @@
+# 네이티브 팩토리얼 — 네이티브 코어의 재귀
+# 이 프로그램은 네이티브 코어 안에서 함수와 재귀를 사용합니다.
+# 영어판은 native-factorial.nme.
+# 실행 (Python):   nme r native-factorial.ko
+# 실행 (네이티브): nme native native-factorial.ko
+# 빌드 (네이티브): nme native build native-factorial.ko -o native-factorial
+
+def fact(n):
+    만약에 n이 2보다 작으면
+        return 1
+    끝
+    return n * fact(n - 1)
+
+
+show fact(5)
+show fact(10)

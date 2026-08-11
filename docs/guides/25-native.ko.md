@@ -48,15 +48,16 @@
    `nme native build`는 실행 파일 옆에 `count.c`를 씁니다. C를 읽으면
    프로그램이 실제로 무엇이 되는지 볼 수 있습니다.
 
-4. 함수와 재귀는 코어 안에서 동작합니다. `examples/native-factorial.nme`는
+4. 함수와 재귀는 코어 안에서 동작합니다. 한국어판
+   `examples/native-factorial.ko.nme`(영어판 `examples/native-factorial.nme`)는
    두 백엔드에서 모두 팩토리얼을 계산합니다:
 
    ```text
-   # part of examples/native-factorial.nme
+   # part of examples/native-factorial.ko.nme
    def fact(n):
-       if n is less than 2
+       만약에 n이 2보다 작으면
            return 1
-       end
+       끝
        return n * fact(n - 1)
 
 
@@ -64,8 +65,8 @@
    ```
 
    ```sh
-   nme r examples/native-factorial
-   nme native examples/native-factorial
+   nme r examples/native-factorial.ko
+   nme native examples/native-factorial.ko
    ```
 
    둘 다 `120`을 출력합니다.

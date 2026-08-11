@@ -108,12 +108,15 @@ nme modules
 ```
 
 For a larger learning project, compare the same time-loop mystery in
-[`time-loop-sentence.ko.nme`](examples/time-loop-sentence.ko.nme),
-[`time-loop-beginner.ko.nme`](examples/time-loop-beginner.ko.nme), and
-[`time-loop-python.nme`](examples/time-loop-python.nme).
+[`time-loop-sentence.nme`](examples/time-loop-sentence.nme),
+[`time-loop-beginner.nme`](examples/time-loop-beginner.nme), and
+[`time-loop-python.nme`](examples/time-loop-python.nme). The Korean twins
+are [`time-loop-sentence.ko.nme`](examples/time-loop-sentence.ko.nme) and
+[`time-loop-beginner.ko.nme`](examples/time-loop-beginner.ko.nme).
 
 For a larger Korean sentence-only project, try the
-[`roulette.nme`](examples/roulette.nme) simulator. It combines questions,
+[`roulette.nme`](examples/roulette.nme) simulator (English twin:
+[`roulette.en.nme`](examples/roulette.en.nme)). It combines questions,
 conditions, loops, random numbers, and value updates in one beginner-friendly
 program.
 The matching English companion is [`roulette.en.nme`](examples/roulette.en.nme).
@@ -149,7 +152,7 @@ way for checking and building. `nme m`, `nme v`, and `nme h` are short forms of
 with Nuitka, `nme conv app.py` converts Python into NME, and `nme install
 requests` installs a Python package with pip.
 
-A core subset of NME can also compile straight to native machine code with `nme native run hello` (integer values, sentence `while`/`if`/`else`, `break`, functions with recursion, and `say` — try [`native-factorial.nme`](examples/native-factorial.nme); everything else still runs on CPython). See the [native-backend memo](docs/native-backend.md).
+A core subset of NME can also compile straight to native machine code with `nme native run hello` (integer values, sentence `while`/`if`/`else`, `break`, functions with recursion, and `say` — try [`native-factorial.nme`](examples/native-factorial.nme) (Korean twin [`native-factorial.ko.nme`](examples/native-factorial.ko.nme)); everything else still runs on CPython). See the [native-backend memo](docs/native-backend.md).
 
 Program names may also be shortened while they stay unique: `nme r gue` runs
 `guessing-game.nme`. When several programs match, NME lists them and asks you

@@ -1,0 +1,16 @@
+# 네이티브 카운트다운 — NME 네이티브 코어 부분집합
+# 이 프로그램은 네이티브 코어(정수, while, if, say) 안에 머물므로
+# 바로 기계어로 컴파일할 수 있습니다. 영어판은 native-count.nme.
+# 실행 (Python):   nme r native-count.ko
+# 실행 (네이티브): nme native native-count.ko
+# 빌드 (네이티브): nme native build native-count.ko -o native-count
+
+점수 = 0
+동안 점수가 10보다 작을 동안
+    점수에 1 더해
+    만약에 점수가 7보다 크면
+        "거의 다 됐어요" 말해줘
+    끝
+끝
+점수 말해줘
+"네이티브로 열까지 세기" 말해줘
