@@ -1692,6 +1692,38 @@ fn error_lookup_commands_print_the_requested_explanation() {
         stdout(&package_korean)
     );
 
+    let native_failure = nme(&["en", "E9010"]);
+    assert!(
+        native_failure.status.success(),
+        "{}",
+        stderr(&native_failure)
+    );
+    let native_failure_out = stdout(&native_failure);
+    assert!(
+        native_failure_out.contains("nme compile"),
+        "{native_failure_out}"
+    );
+    assert!(
+        native_failure_out.contains("nme native"),
+        "{native_failure_out}"
+    );
+
+    let native_start = nme(&["ko", "E9011"]);
+    assert!(
+        native_start.status.success(),
+        "{}",
+        stderr(&native_start)
+    );
+    let native_start_out = stdout(&native_start);
+    assert!(
+        native_start_out.contains("nme 컴파일"),
+        "{native_start_out}"
+    );
+    assert!(
+        native_start_out.contains("시스템 C 컴파일러"),
+        "{native_start_out}"
+    );
+
     let unknown = nme(&["ko", "E9999"]);
     assert!(!unknown.status.success());
     let unknown_error = stderr(&unknown);

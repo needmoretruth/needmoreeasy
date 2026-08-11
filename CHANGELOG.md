@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.30 — 2026-08-12
+
+- Clarify E9010 and E9011 in both languages so their recovery guidance covers
+  the Nuitka `compile` path and the system-C-compiler `native` path.
+- Add public lookup regressions that keep the two backend toolchains visible to
+  beginners.
+
 ## 0.0.1-beta.29 — 2026-08-12
 
 - Give failed Python package installs their own appended diagnostic code,
