@@ -182,6 +182,8 @@ pub enum DiagnosticCode {
     CliImportedModuleNameCollision,
     /// `nme compile` does not yet support imported `.nme` modules.
     CliCompileModuleImportsUnsupported,
+    /// `install` was given no package name.
+    CliInstallPackageMissing,
 }
 
 impl DiagnosticCode {
@@ -255,11 +257,12 @@ impl DiagnosticCode {
             Self::CliFolderCreateFailed => "E9027",
             Self::CliImportedModuleNameCollision => "E9028",
             Self::CliCompileModuleImportsUnsupported => "E9029",
+            Self::CliInstallPackageMissing => "E9030",
         }
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 68] = [
+    pub const ALL: [DiagnosticCode; 69] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -328,6 +331,7 @@ impl DiagnosticCode {
         Self::CliFolderCreateFailed,
         Self::CliImportedModuleNameCollision,
         Self::CliCompileModuleImportsUnsupported,
+        Self::CliInstallPackageMissing,
     ];
 
     pub fn from_code(code: &str) -> Option<Self> {
@@ -829,6 +833,13 @@ impl DiagnosticCode {
                 "`nme compile`은 모듈 가져오기를 지원하지 않습니다",
                 "`nme compile` currently compiles one transpiled program and does not bundle imported `.nme` modules. Use `nme run`, `nme check`, or `nme build` for a program that imports another `.nme` file.",
                 "`nme compile`은 현재 변환한 프로그램 하나만 컴파일하며 가져온 `.nme` 모듈을 함께 묶지 않습니다. 다른 `.nme` 파일을 가져오는 프로그램은 `nme 실행`, `nme 검사`, 또는 `nme 빌드`를 사용하세요.",
+            ),
+            Self::CliInstallPackageMissing => (
+                "E9030",
+                "the package name is missing",
+                "패키지 이름이 없습니다",
+                "`nme install` needs one package name, for example `nme install requests`. Add the package name, or use `nme 설치 <패키지>` in the Korean command form.",
+                "`nme install`에는 패키지 이름 하나가 필요합니다. 예: `nme install requests`. 패키지 이름을 추가하거나 한국어 명령인 `nme 설치 <패키지>`를 사용하세요.",
             ),
         };
         CodeExplanation {

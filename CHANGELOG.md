@@ -6,6 +6,12 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.34 — 2026-08-12
+
+- Give `nme install` without a package name its own stable diagnostic, E9030,
+  instead of reusing the option-value code E9003.
+- Add English/Korean lookup coverage for the missing-package argument path.
+
 ## 0.0.1-beta.33 — 2026-08-12
 
 - Give imported module-name collisions their own stable diagnostic, E9028,

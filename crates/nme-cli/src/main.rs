@@ -454,7 +454,7 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
 fn command_install(args: &[String], language: MessageLanguage) -> ExitCode {
     if args.is_empty() {
         return fail(
-            nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
+            nme_core::diagnostics::DiagnosticCode::CliInstallPackageMissing,
             language,
             "which package should I install? e.g. nme install requests",
             "어떤 패키지를 설치할까요? 예: nme 설치 requests",

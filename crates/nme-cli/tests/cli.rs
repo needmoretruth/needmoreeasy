@@ -831,10 +831,10 @@ fn command_errors_follow_the_command_language() {
     assert!(!install.status.success());
     let install_error = stderr(&install);
     let install_korean_position = install_error
-        .find("오류[E9003]: 어떤 패키지를 설치할까요?")
+        .find("오류[E9030]: 어떤 패키지를 설치할까요?")
         .unwrap();
     let install_english_position = install_error
-        .find("error[E9003]: which package should I install?")
+        .find("error[E9030]: which package should I install?")
         .unwrap();
     assert!(
         install_korean_position < install_english_position,
@@ -1904,6 +1904,30 @@ fn error_lookup_commands_print_the_requested_explanation() {
         stdout(&compile_imports)
     );
 
+    let install_package = nme(&["en", "E9030"]);
+    assert!(
+        install_package.status.success(),
+        "{}",
+        stderr(&install_package)
+    );
+    assert!(
+        stdout(&install_package).contains("the package name is missing"),
+        "{}",
+        stdout(&install_package)
+    );
+
+    let install_package_korean = nme(&["ko", "E9030"]);
+    assert!(
+        install_package_korean.status.success(),
+        "{}",
+        stderr(&install_package_korean)
+    );
+    assert!(
+        stdout(&install_package_korean).contains("패키지 이름이 없습니다"),
+        "{}",
+        stdout(&install_package_korean)
+    );
+
     let unknown = nme(&["ko", "E9999"]);
     assert!(!unknown.status.success());
     let unknown_error = stderr(&unknown);
@@ -1923,6 +1947,7 @@ fn error_lookup_without_a_code_lists_every_code() {
     assert!(out.contains("E0702"), "{out}");
     assert!(out.contains("E9025"), "{out}");
     assert!(out.contains("E9029"), "{out}");
+    assert!(out.contains("E9030"), "{out}");
     assert!(out.contains("E0102  `break` outside a loop"), "{out}");
 
     let korean = nme(&["ko"]);
