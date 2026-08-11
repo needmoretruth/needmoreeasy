@@ -147,7 +147,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                             );
                             match inline {
                                 Some(InlineStmt::Nme(inner)) => {
-                                    match lower_inline(inner, source, &declared) {
+                                    match lower_inline(inner, source, &declared, nme_line.span) {
                                         Ok(text) => out.push_str(&format!("{header} {text}\n")),
                                         Err(diag) => problems.push(diag),
                                     }
@@ -199,6 +199,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                 &line.tokens,
                 text,
                 source,
+                line.span,
             ) {
                 problems.push(diag);
             }
@@ -221,6 +222,7 @@ fn lower_inline(
     stmt: &NmeStmt,
     source: &str,
     declared: &HashMap<String, VarType>,
+    span: Span,
 ) -> Result<String, Diagnostic> {
     match stmt {
         NmeStmt::Say { value } => {
@@ -228,7 +230,7 @@ fn lower_inline(
             emit_say(&mut out, value, source, declared)?;
             Ok(out.trim_end().to_string())
         }
-        _ => Err(not_supported("this inline statement", Span::new(0, 0))),
+        _ => Err(not_supported("this inline statement", span)),
     }
 }
 
@@ -425,18 +427,6 @@ fn numeric_operand(
         return Err(not_supported("a text value in a numeric expression", span));
     }
     Ok((text, kind))
-}
-
-fn int_operand(
-    expr: &Expr,
-    span: Span,
-    declared: &HashMap<String, VarType>,
-) -> Result<String, Diagnostic> {
-    let (text, kind) = numeric_operand(expr, span, declared)?;
-    if kind != ExprType::Int {
-        return Err(not_supported("a float value where an integer is needed", span));
-    }
-    Ok(text)
 }
 
 fn operator_text(operator: &Operator) -> &'static str {
@@ -772,8 +762,9 @@ fn emit_python_line(
     tokens: &[lexer::Token],
     text: &str,
     _source: &str,
+    line_span: Span,
 ) -> Option<Diagnostic> {
-    let span = Span::new(0, text.len());
+    let span = Span::new(line_span.start, line_span.start + text.len());
     match tokens.first().map(|token| &token.tok) {
         Some(rustpython_parser::Tok::Def) => {
             let name = match tokens.get(1).map(|token| &token.tok) {

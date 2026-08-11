@@ -212,6 +212,21 @@ fn a_python_colon_while_header_is_rejected_not_miscompiled() {
 }
 
 #[test]
+fn a_rejected_line_reports_its_own_source_position() {
+    // The diagnostic must point at the offending line, not at the first
+    // line of the file (a real bug fixed after the native core shipped).
+    let source = "x = 1\nprint(\"hi\")\n";
+    let problems = nme_native::native_compile(source).unwrap_err();
+    assert_eq!(problems.len(), 1);
+    let span = problems[0].span;
+    assert_eq!(
+        &source[span.start..span.end],
+        "print(\"hi\")",
+        "the diagnostic must span the offending Python line"
+    );
+}
+
+#[test]
 fn input_and_modules_are_rejected_not_miscompiled() {
     assert!(native_rejects("ask name, \"name? \"\n"));
     assert!(native_rejects("use random latest\nshow random_number(1, 6)\n"));
