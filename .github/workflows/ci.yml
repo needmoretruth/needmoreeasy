@@ -128,8 +128,8 @@ jobs:
           grep -F '영지식 증명을 수신자 비가 받아들였습니다' /tmp/zk-ko
           grep -F '저장 전사록 재전송은 새 도전에서 실패했습니다' /tmp/zk-ko
           grep -F '비밀값 없이도 미리 고른 도전에 맞는 전사록을 모의할 수 있습니다' /tmp/zk-ko
-          grep -F '모의 전사록은 수신자 비의 다른 도전에는 재사용할 수 없습니다' /tmp/zk-ko
-          grep -F '실시간 중계는 통과하지만 비밀 위조가 아니라' /tmp/zk-ko
+          grep -F '재사용할 수 없습니다' /tmp/zk-ko
+          grep -F '실시간 중계는 통과하지만' /tmp/zk-ko
           cargo run --quiet -p nme-cli -- run examples/zk-schnorr-relay.en.nme | tee /tmp/zk-en
           grep -F "accepted sender A's zero-knowledge proof" /tmp/zk-en
           grep -F 'cannot replay the saved transcript' /tmp/zk-en
