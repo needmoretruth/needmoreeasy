@@ -8,7 +8,8 @@ Small, progressive guides for the beginner path. Each guide teaches one idea,
 gets harder than the last, and compiles with `nme check`. Guides 01–04 are
 first-day sentences; 05–10 add beginner syntax and control flow; 11–12 use the
 CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
-21–22 add HTTP and terminal menus; 30–31 add data and records.
+21–22 add HTTP and terminal menus; 30–31 add data and records; 32–34 add web
+data, a growing project, and self-hosting.
 
 ## Difficulty
 
@@ -51,6 +52,9 @@ CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
 29. [29 — Bootstrap](29-bootstrap.md)
 30. [30 — Data](30-data.md)
 31. [31 — Records](31-address-book.md)
+32. [32 — Weather](32-weather.md)
+33. [33 — Todo](33-todo.md)
+34. [34 — Self-host](34-selfhost.md)
 
 ## Topic lookup
 
@@ -64,11 +68,12 @@ CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
 - 도구 사용 / Using the tools: [11](11-check-build.md), [12](12-convert.md)
 - 파일 / Files: [13](13-files.md), [16](16-name-list.md)
 - JSON / JSON: [14](14-json.md)
-- 프로젝트 / Project: [15](15-high-score.md)
+- 프로젝트 / Project: [15](15-high-score.md), [33](33-todo.md)
 - 블록체인 / Blockchain: [17](17-blockchain.md), [18](18-proof-of-work.md)
 - 서명 / Signatures: [19](19-signatures.md)
 - 합의 / Consensus: [20](20-consensus.md)
 - 네트워크/HTTP / Network & HTTP: [21](21-http.md)
+- 네트워크/데이터 / Web data: [32](32-weather.md)
 - TUI/메뉴 / TUI & menus: [22](22-terminal-menu.md)
 - 모듈 / Modules: [23](23-modules.md)
 - Python 패키지 / Python packages: [24](24-python-packages.md)
@@ -78,6 +83,7 @@ CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
 - 컴파일러 / Compiler: [28](28-compiler.md)
 - 부트스트랩 / Bootstrap: [29](29-bootstrap.md)
 - 데이터/Data: [30](30-data.md), [31](31-address-book.md)
+- 셀프호스팅 / Self-host: [34](34-selfhost.md)
 
 ## All guides
 
@@ -114,6 +120,9 @@ CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
 | 29 | ★★★★★ | 부트스트랩 / Bootstrap | [Bootstrap — NME compiling a tiny language](29-bootstrap.md) | A tiny compiler written in NME |
 | 30 | ★★★★★ | 데이터/Data | [Data — statistics on a list](30-data.md) | Load numbers from a JSON file and compute mean, median, and max |
 | 31 | ★★★★★ | 데이터/기록 / Records | [Records — a small address book](31-address-book.md) | A JSON-file address book that adds, lists, and searches contacts |
+| 32 | ★★★★★ | 네트워크/데이터 / Web data | [Weather — reading JSON from the web](32-weather.md) | Fetch a local HTTP server's JSON and print a mini weather report |
+| 33 | ★★★★★ | 프로젝트 / Project | [Todo — a growing project](33-todo.md) | A JSON-persisted todo list with add, done, list, and a storage module |
+| 34 | ★★★★★ | 셀프호스팅 / Self-host | [Self-host — NME running NME](34-selfhost.md) | An NME program that compiles a tiny NME-like subset to Python |
 
 ## Where to continue
 

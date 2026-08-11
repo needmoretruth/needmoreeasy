@@ -9,7 +9,8 @@
 확인할 수 있습니다. 01–04는 첫날 문장형이고, 05–10은 초급 문법과
 제어 흐름을 더하며, 11–12는 CLI 도구를 다루고, 13–16은 파일·JSON·작은
 프로젝트를, 17–20은 블록체인을, 21–22는 HTTP와 터미널 메뉴를 다룹니다.
-30–31은 데이터와 기록을 다룹니다.
+30–31은 데이터와 기록을, 32–34는 웹 데이터, 커지는 프로젝트, 셀프호스팅을
+다룹니다.
 
 ## 난이도
 
@@ -52,6 +53,9 @@
 29. [29 — 부트스트랩](29-bootstrap.ko.md)
 30. [30 — 데이터](30-data.ko.md)
 31. [31 — 기록](31-address-book.ko.md)
+32. [32 — 날씨](32-weather.ko.md)
+33. [33 — 할 일](33-todo.ko.md)
+34. [34 — 셀프호스트](34-selfhost.ko.md)
 
 ## 주제별 찾아보기
 
@@ -65,11 +69,12 @@
 - 도구 사용 / Using the tools: [11](11-check-build.ko.md), [12](12-convert.ko.md)
 - 파일 / Files: [13](13-files.ko.md), [16](16-name-list.ko.md)
 - JSON / JSON: [14](14-json.ko.md)
-- 프로젝트 / Project: [15](15-high-score.ko.md)
+- 프로젝트 / Project: [15](15-high-score.ko.md), [33](33-todo.ko.md)
 - 블록체인 / Blockchain: [17](17-blockchain.ko.md), [18](18-proof-of-work.ko.md)
 - 서명 / Signatures: [19](19-signatures.ko.md)
 - 합의 / Consensus: [20](20-consensus.ko.md)
 - 네트워크/HTTP / Network & HTTP: [21](21-http.ko.md)
+- 네트워크/데이터 / Web data: [32](32-weather.ko.md)
 - TUI/메뉴 / TUI & menus: [22](22-terminal-menu.ko.md)
 - 모듈 / Modules: [23](23-modules.ko.md)
 - Python 패키지 / Python packages: [24](24-python-packages.ko.md)
@@ -79,6 +84,7 @@
 - 컴파일러 / Compiler: [28](28-compiler.ko.md)
 - 부트스트랩 / Bootstrap: [29](29-bootstrap.ko.md)
 - 데이터/Data: [30](30-data.ko.md), [31](31-address-book.ko.md)
+- 셀프호스팅 / Self-host: [34](34-selfhost.ko.md)
 
 ## 전체 목록
 
@@ -115,6 +121,9 @@
 | 29 | ★★★★★ | 부트스트랩 / Bootstrap | [부트스트랩 — NME가 아주 작은 언어를 컴파일](29-bootstrap.ko.md) | NME로 쓴 아주 작은 컴파일러 |
 | 30 | ★★★★★ | 데이터/Data | [데이터 — 목록 통계](30-data.ko.md) | JSON 파일에서 숫자를 불러와 평균·중앙값·최댓값 구하기 |
 | 31 | ★★★★★ | 데이터/기록 / Records | [기록 — 작은 주소록](31-address-book.ko.md) | 연락처를 추가·목록·검색하는 JSON 파일 주소록 |
+| 32 | ★★★★★ | 네트워크/데이터 / Web data | [날씨 — 웹에서 JSON 읽기](32-weather.ko.md) | 로컬 HTTP 서버의 JSON을 가져와 미니 날씨 보고서 출력하기 |
+| 33 | ★★★★★ | 프로젝트 / Project | [할 일 — 커지는 프로젝트](33-todo.ko.md) | add, done, list를 지원하고 저장 모듈을 둔 JSON 저장 할 일 목록 |
+| 34 | ★★★★★ | 셀프호스팅 / Self-host | [셀프호스트 — NME가 NME를 실행](34-selfhost.ko.md) | 아주 작은 NME형 부분집합을 Python으로 컴파일하는 NME 프로그램 |
 
 ## 다음 단계
 
