@@ -125,6 +125,8 @@ the four educational projects (learning only, never investment advice):
 [`signatures.nme`](examples/signatures.nme) (advanced), and
 [`consensus.nme`](examples/consensus.nme) (expert), each with a Korean twin.
 
+Programs can import named values from other `.nme` files in the same folder — see the [`examples/modules/`](examples/modules/) pair and `from "shapes.nme" import rect, circle` in a main program. The import list is the module interface, so there is no hidden global state.
+
 Networking and terminal programs are ordinary Python inside NME:
 [`http-client.nme`](examples/http-client.nme) fetches a page from a local
 server, and [`terminal-menu.nme`](examples/terminal-menu.nme) is a small

@@ -42,6 +42,7 @@ CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
 20. [20 — Consensus](20-consensus.md)
 21. [21 — HTTP](21-http.md)
 22. [22 — Terminal menu](22-terminal-menu.md)
+23. [23 — Modules](23-modules.md)
 
 ## Topic lookup
 
@@ -61,6 +62,7 @@ CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
 - 합의 / Consensus: [20](20-consensus.md)
 - 네트워크/HTTP / Network & HTTP: [21](21-http.md)
 - TUI/메뉴 / TUI & menus: [22](22-terminal-menu.md)
+- 모듈 / Modules: [23](23-modules.md)
 
 ## All guides
 
@@ -88,6 +90,7 @@ CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
 | 20 | ★★★★★ | 합의 / Consensus | [Consensus — agreeing on a chain](20-consensus.md) | Two nodes resolving a fork by the longest-chain rule |
 | 21 | ★★★★★ | 네트워크/HTTP / Network & HTTP | [HTTP — asking a web server](21-http.md) | Fetch a page from a local server |
 | 22 | ★★★★★ | TUI/메뉴 / TUI & menus | [Terminal menu — a small TUI](22-terminal-menu.md) | A loop-driven terminal menu |
+| 23 | ★★★★★ | 모듈 / Modules | [Modules — split your program into files](23-modules.md) | Import named values from another .nme file |
 
 ## Where to continue
 
