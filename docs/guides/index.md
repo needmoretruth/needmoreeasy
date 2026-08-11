@@ -14,7 +14,8 @@ counting, and a hidden-word game; 38–40 add a file-based quiz, list sorting,
 and a summary report; 41–43 add a text-stats report, a two-group comparison,
 and a habit-tracker project; 44–46 add a random music player, CSV rows of
 data, and an expression language; 47–49 add a terminal progress bar, an inventory
-store, and reading tokens.
+store, and reading tokens; 50–52 add string tools, a grid board, and
+tic-tac-toe.
 
 ## Difficulty
 
@@ -75,6 +76,9 @@ store, and reading tokens.
 47. [47 — Progress](47-progress.md)
 48. [48 — Shop](48-shop.md)
 49. [49 — Tokens](49-tokens.md)
+50. [50 — Strings](50-strings.md)
+51. [51 — Grid](51-grid.md)
+52. [52 — Tic-tac-toe](52-tic-tac-toe.md)
 
 ## Topic lookup
 
@@ -119,6 +123,9 @@ store, and reading tokens.
 - 진행 / Progress: [47](47-progress.md)
 - 상점 / Shop: [48](48-shop.md)
 - 토큰 / Tokens: [49](49-tokens.md)
+- 문자열 / Strings: [50](50-strings.md)
+- 격자 / Grid: [51](51-grid.md)
+- 게임 / Tic-tac-toe: [52](52-tic-tac-toe.md)
 
 ## All guides
 
@@ -173,6 +180,9 @@ store, and reading tokens.
 | 47 | ★★★★★ | 진행/출력 / Progress & output | [Progress — a bar in the terminal](47-progress.md) | A terminal progress bar that fills a row as a loop runs |
 | 48 | ★★★★★ | 프로젝트 / Project | [Shop — an inventory store](48-shop.md) | A JSON-persisted store with buy, sell, stock, list, and a money balance |
 | 49 | ★★★★★ | 컴파일러 / Compiler | [Compiler tier — reading tokens](49-tokens.md) | Split a command line into tokens and dispatch them, a step toward a real tokenizer |
+| 50 | ★★★★☆ | 문자열 / Strings | [Strings — slicing and changing text](50-strings.md) | Slice `text[start:end]` and change a sentence with `.upper()`, `.replace()`, and `.strip()` |
+| 51 | ★★★★★ | 격자 / Grid | [Grid — a board of lists](51-grid.md) | A 3x3 board of lists, reading and writing cells with `board[row][col]` |
+| 52 | ★★★★★ | 게임 / Tic-tac-toe | [Game — tic-tac-toe](52-tic-tac-toe.md) | A playable two-player tic-tac-toe with a win check |
 
 ## Where to continue
 
