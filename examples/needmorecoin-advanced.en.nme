@@ -1,0 +1,217 @@
+# NeedMoreCoin advanced English example
+# Advanced NME is ordinary Python. This file uses only the standard library.
+# It implements Schnorr-style signatures, SHA-256 proof of work, and full chain validation.
+
+from dataclasses import dataclass
+from typing import Optional
+import hashlib
+import secrets
+
+
+PRIME = int(
+    "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F83655D23DCA3AD961C62F356208552BB9ED529077096966D670C354E4ABC9804F1746C08CA18217C32905E462E36CE3BE39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9DE2BCBF6955817183995497CEA956AE515D2261898FA051015728E5A8AAAC42DAD33170D04507A33A85521ABDF1CBA64ECFB850458DBEF0A8AEA71575D060C7DB3970F85A6E1E4C7ABF5AE8CDB0933D71E8C94E04A25619DCEE3D2261AD2EE6BF12FFA06D98A0864D87602733EC86A64521F2B18177B200CBBE117577A615D6C770988C0BAD946E208E24FA074E5AB3143DB5BFCE0FD108E4B82D120A93AD2CAFFFFFFFFFFFFFFFF",
+    16,
+)
+ORDER = (PRIME - 1) // 2
+GENERATOR = 2
+GROUP_BYTES = (PRIME.bit_length() + 7) // 8
+MINING_PREFIX = "00"
+MINING_REWARD = 10
+TRANSACTION_FEE = 1
+INITIAL_SUPPLY = 100
+
+
+def int_bytes(value: int) -> bytes:
+    return value.to_bytes(GROUP_BYTES, "big")
+
+
+def context_challenge(public_key: int, commitment: int, context: str) -> int:
+    context_bytes = context.encode("utf-8")
+    payload = (
+        b"NME-NEEDMORECOIN-SCHNORR-v1\0"
+        + int_bytes(GENERATOR)
+        + int_bytes(commitment)
+        + int_bytes(public_key)
+        + len(context_bytes).to_bytes(8, "big")
+        + context_bytes
+    )
+    return int.from_bytes(hashlib.sha256(payload).digest(), "big")
+
+
+def make_wallet() -> tuple[int, int]:
+    secret = secrets.randbelow(ORDER - 1) + 1
+    public_key = pow(GENERATOR, secret, PRIME)
+    return secret, public_key
+
+
+def sign(secret: int, context: str) -> tuple[int, int]:
+    nonce = secrets.randbelow(ORDER)
+    commitment = pow(GENERATOR, nonce, PRIME)
+    public_key = pow(GENERATOR, secret, PRIME)
+    challenge = context_challenge(public_key, commitment, context)
+    response = (nonce - secret * challenge) % ORDER
+    return commitment, response
+
+
+def verify_signature(public_key: int, signature: tuple[int, int], context: str) -> bool:
+    commitment, response = signature
+    if not (1 < public_key < PRIME and pow(public_key, ORDER, PRIME) == 1):
+        return False
+    if not (1 <= commitment < PRIME and pow(commitment, ORDER, PRIME) == 1):
+        return False
+    if not (0 <= response < ORDER):
+        return False
+    challenge = context_challenge(public_key, commitment, context)
+    rebuilt = (pow(GENERATOR, response, PRIME) * pow(public_key, challenge, PRIME)) % PRIME
+    return secrets.compare_digest(int_bytes(commitment), int_bytes(rebuilt))
+
+
+@dataclass(frozen=True)
+class Transaction:
+    sender: int
+    receiver: int
+    amount: int
+    fee: int
+    nonce: int
+    signature: tuple[int, int]
+
+    def context(self) -> str:
+        return f"{self.sender}|{self.receiver}|{self.amount}|{self.fee}|{self.nonce}"
+
+
+@dataclass
+class Block:
+    height: int
+    previous_hash: str
+    transaction: Optional[Transaction]
+    miner: int
+    reward: int
+    genesis_context: str = ""
+    work_nonce: int = 0
+    hash: str = ""
+
+
+def block_payload(block: Block) -> bytes:
+    if block.transaction is None:
+        transaction_part = block.genesis_context
+        signature_part = "genesis"
+    else:
+        transaction_part = block.transaction.context()
+        signature_part = f"{block.transaction.signature[0]}|{block.transaction.signature[1]}"
+    return (
+        f"{block.height}|{block.previous_hash}|{transaction_part}|{signature_part}|"
+        f"{block.miner}|{block.reward}|{block.work_nonce}"
+    ).encode("utf-8")
+
+
+def calculate_block_hash(block: Block) -> str:
+    return hashlib.sha256(block_payload(block)).hexdigest()
+
+
+def mine(block: Block) -> None:
+    while True:
+        candidate = calculate_block_hash(block)
+        if candidate.startswith(MINING_PREFIX):
+            block.hash = candidate
+            return
+        block.work_nonce += 1
+
+
+def make_transaction(
+    secret: int,
+    sender: int,
+    receiver: int,
+    amount: int,
+    nonce: int,
+    fee: int = TRANSACTION_FEE,
+) -> Transaction:
+    context = f"{sender}|{receiver}|{amount}|{fee}|{nonce}"
+    return Transaction(sender, receiver, amount, fee, nonce, sign(secret, context))
+
+
+def validate_chain(
+    chain: list[Block], initial_owner: int
+) -> tuple[bool, dict[int, int], int, dict[int, int]]:
+    balances = {initial_owner: INITIAL_SUPPLY}
+    used_nonces: dict[int, int] = {}
+    supply = INITIAL_SUPPLY
+    previous_hash = "0"
+
+    for position, current in enumerate(chain):
+        if current.height != position or current.previous_hash != previous_hash:
+            return False, balances, supply, used_nonces
+        if calculate_block_hash(current) != current.hash or not current.hash.startswith(MINING_PREFIX):
+            return False, balances, supply, used_nonces
+
+        if position == 0:
+            if current.transaction is not None or current.genesis_context != f"genesis|{initial_owner}|{INITIAL_SUPPLY}":
+                return False, balances, supply, used_nonces
+        else:
+            transaction = current.transaction
+            if transaction is None or not verify_signature(transaction.sender, transaction.signature, transaction.context()):
+                return False, balances, supply, used_nonces
+            expected_nonce = used_nonces.get(transaction.sender, 0) + 1
+            required = transaction.amount + transaction.fee
+            if transaction.nonce != expected_nonce or transaction.amount <= 0:
+                return False, balances, supply, used_nonces
+            if balances.get(transaction.sender, 0) < required:
+                return False, balances, supply, used_nonces
+
+            balances[transaction.sender] -= required
+            balances[transaction.receiver] = balances.get(transaction.receiver, 0) + transaction.amount
+            balances[current.miner] = balances.get(current.miner, 0) + current.reward + transaction.fee
+            used_nonces[transaction.sender] = transaction.nonce
+            supply += current.reward
+
+        previous_hash = current.hash
+
+    return sum(balances.values()) == supply, balances, supply, used_nonces
+
+
+alice_secret, alice_address = make_wallet()
+bob_secret, bob_address = make_wallet()
+miner_secret, miner_address = make_wallet()
+
+genesis = Block(0, "0", None, miner_address, 0, f"genesis|{alice_address}|{INITIAL_SUPPLY}")
+mine(genesis)
+
+transaction_one = make_transaction(alice_secret, alice_address, bob_address, 25, 1)
+block_one = Block(1, genesis.hash, transaction_one, miner_address, MINING_REWARD)
+mine(block_one)
+
+transaction_two = make_transaction(bob_secret, bob_address, alice_address, 7, 1)
+block_two = Block(2, block_one.hash, transaction_two, miner_address, MINING_REWARD)
+mine(block_two)
+
+chain = [genesis, block_one, block_two]
+valid, balances, supply, nonces = validate_chain(chain, alice_address)
+assert valid
+assert sum(balances.values()) == supply
+
+tampered_transaction = Transaction(
+    alice_address,
+    bob_address,
+    250,
+    transaction_one.fee,
+    transaction_one.nonce,
+    transaction_one.signature,
+)
+assert not verify_signature(alice_address, tampered_transaction.signature, tampered_transaction.context())
+tampered_block = Block(
+    1,
+    genesis.hash,
+    tampered_transaction,
+    miner_address,
+    MINING_REWARD,
+    work_nonce=block_one.work_nonce,
+    hash=block_one.hash,
+)
+assert calculate_block_hash(tampered_block) != block_one.hash
+assert transaction_one.nonce != nonces[alice_address] + 1
+
+print("NeedMoreCoin blockchain verification succeeded")
+print(f"Alice balance {balances[alice_address]}")
+print(f"Bob balance {balances[bob_address]}")
+print(f"Miner balance {balances[miner_address]}")
+print(f"Total supply {supply}")
+print("Transaction tampering and replay were rejected")
