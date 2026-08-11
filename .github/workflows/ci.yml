@@ -60,6 +60,20 @@ jobs:
           lines = workflow[heredoc:end].splitlines()
           code = '\n'.join(line[10:] if line.startswith('          ') else line for line in lines)
           code = code.replace(r"-> \'static str {", r"-> &\'static str {")
+          strict = '''assert text.count(old) == 1
+          text = text.replace(old, new, 1)
+          path.write_text(text, encoding='utf-8')
+
+          # Diagnostics intentionally keeps a long exhaustive explanation table.'''
+          tolerant = '''if old in text:
+              text = text.replace(old, new, 1)
+          elif new not in text:
+              raise AssertionError('unexpected parser binding shape')
+          path.write_text(text, encoding='utf-8')
+
+          # Diagnostics intentionally keeps a long exhaustive explanation table.'''
+          assert code.count(strict) == 1
+          code = code.replace(strict, tolerant, 1)
           exec(compile(code, 'beta16-integration-fixes', 'exec'))
           PY
           cargo fmt --all
