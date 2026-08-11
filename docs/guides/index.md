@@ -18,7 +18,7 @@ store, and reading tokens; 50–52 add string tools, a grid board, and
 tic-tac-toe; 56–58 add logging, grouping, and a tiny bytecode runner;
 59–61 add a text editor, catalog search, and a mini bank; 62–64 add
 algorithms and ASCII art; 65–67 process many files, rank records, and build a
-grade book.
+grade book; 68–70 add error handling, regex patterns, and a reaction game.
 
 ## Difficulty
 
@@ -97,6 +97,9 @@ grade book.
 65. [65 — Files: many files](65-files-folder.md)
 66. [66 — Top ten](66-top-ten.md)
 67. [67 — Grade book](67-grade-book.md)
+68. [68 — Errors](68-errors.md)
+69. [69 — Patterns](69-patterns.md)
+70. [70 — Reaction](70-reaction.md)
 
 ## Topic lookup
 
@@ -158,6 +161,9 @@ grade book.
 - 파일/폴더 / Files & folders: [65](65-files-folder.md)
 - 순위/Top ten: [66](66-top-ten.md)
 - 성적부/Grade book: [67](67-grade-book.md)
+- 예외 / Errors: [68](68-errors.md)
+- 정규식 / Patterns: [69](69-patterns.md)
+- 반응 / Reaction: [70](70-reaction.md)
 
 ## All guides
 
@@ -227,6 +233,9 @@ grade book.
 | 65 | ★★★★★ | 파일/폴더 / Files & folders | [Files — processing many files](65-files-folder.md) | List the files in a folder with os.listdir, read each with file_read, and report total words and letters |
 | 66 | ★★★★★ | 데이터/순위 / Data & ranking | [Top ten — ranking records](66-top-ten.md) | Load JSON records, sort by a numeric score with sorted(..., key=...), and show the top ten |
 | 67 | ★★★★★ | 프로젝트 / Project | [Project — a grade book](67-grade-book.md) | A JSON-persisted grade book with add-student, add-grade, report-averages, and a storage module |
+| 68 | ★★★★★ | 예외 / Errors | [Errors — handling problems](68-errors.md) | Read a missing file and convert bad input without crashing |
+| 69 | ★★★★★ | 정규식 / Patterns | [Patterns — finding matches with regex](69-patterns.md) | Find phone numbers and email addresses in a text file |
+| 70 | ★★★★★ | 게임/시간 / Game & timing | [Game — a reaction time test](70-reaction.md) | Measure reaction time with time.time() and keep the best round |
 
 ## Where to continue
 

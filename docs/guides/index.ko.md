@@ -20,6 +20,7 @@
  59–61은 텍스트 에디터, 목록 검색, 미니 은행을 다룹니다.
  62–64는 알고리즘과 아스키 아트를 다룹니다.
  65–67은 여러 파일 처리, 기록 순위, 성적부 프로젝트를 다룹니다.
+ 68–70은 오류 처리, 정규식 패턴, 반응 게임을 다룹니다.
 
 ## 난이도
 
@@ -98,6 +99,9 @@
 65. [65 — 여러 파일 처리](65-files-folder.ko.md)
 66. [66 — 상위 열](66-top-ten.ko.md)
 67. [67 — 성적부](67-grade-book.ko.md)
+68. [68 — 예외](68-errors.ko.md)
+69. [69 — 정규식](69-patterns.ko.md)
+70. [70 — 반응](70-reaction.ko.md)
 
 ## 주제별 찾아보기
 
@@ -159,6 +163,9 @@
 - 파일/폴더 / Files & folders: [65](65-files-folder.ko.md)
 - 순위/Top ten: [66](66-top-ten.ko.md)
 - 성적부/Grade book: [67](67-grade-book.ko.md)
+- 예외 / Errors: [68](68-errors.ko.md)
+- 정규식 / Patterns: [69](69-patterns.ko.md)
+- 반응 / Reaction: [70](70-reaction.ko.md)
 
 ## 전체 목록
 
@@ -228,6 +235,9 @@
 | 65 | ★★★★★ | 파일/폴더 / Files & folders | [파일 — 여러 파일 처리](65-files-folder.ko.md) | os.listdir로 폴더의 파일을 나열하고 file_read로 각각 읽어 전체 단어·글자 수를 보고하기 |
 | 66 | ★★★★★ | 데이터/순위 / Data & ranking | [상위 열 — 기록 순위](66-top-ten.ko.md) | JSON 기록을 불러와 sorted(..., key=...)로 숫자 점수 기준 정렬하고 상위 열 개 보여 주기 |
 | 67 | ★★★★★ | 프로젝트 / Project | [프로젝트 — 성적부](67-grade-book.ko.md) | 학생 추가·성적 추가·평균 보고를 저장 모듈과 함께 두는 JSON 성적부 |
+| 68 | ★★★★★ | 예외 / Errors | [예외 — 문제 다루기](68-errors.ko.md) | 없는 파일을 읽고 잘못된 입력을 바꿔도 멈추지 않기 |
+| 69 | ★★★★★ | 정규식 / Patterns | [정규식 — 패턴 찾기](69-patterns.ko.md) | 텍스트 파일에서 전화번호와 이메일 찾기 |
+| 70 | ★★★★★ | 게임/시간 / Game & timing | [게임 — 반응 속도 측정](70-reaction.ko.md) | time.time()으로 반응 속도를 재고 최고 기록 남기기 |
 
 ## 다음 단계
 
