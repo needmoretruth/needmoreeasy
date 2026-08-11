@@ -1,0 +1,8 @@
+# area — uses the shapes module
+# A program can import named values from another .nme file.
+# Run: nme r area
+
+from "shapes.nme" import rect, circle
+
+show rect(4, 5)
+show circle(2)

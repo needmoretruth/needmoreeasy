@@ -9,12 +9,13 @@ use std::collections::HashSet;
 
 use rustpython_parser::{parse as parse_python, Mode, Tok};
 
-use crate::diagnostics::{Diagnostic, Span};
+use crate::diagnostics::{Diagnostic, DiagnosticCode, Span};
 use crate::lexer::{LogicalLine, Token};
 use crate::syntax::{
-    Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, Literal, LogicalOp,
-    ModuleVersion, NmeLine, NmeStmt, Spelling, TextPart, TextTemplate, UpdateOp, Value,
-    RANDOM_MODULE, RANDOM_MODULE_KO, RANDOM_MODULE_VERSION, SAY_KEYWORD, SAY_KEYWORD_KO,
+    BundledModuleId, Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, Literal,
+    LogicalOp, ModuleVersion, NmeLine, NmeStmt, Spelling, TextPart, TextTemplate, UpdateOp, Value,
+    FILE_MODULE, FILE_MODULE_KO, FILE_READ_WORDS_EN, FILE_READ_WORDS_KO, FILE_WRITE_WORDS_EN,
+    FILE_WRITE_WORDS_KO, RANDOM_MODULE, RANDOM_MODULE_KO, SAY_KEYWORD, SAY_KEYWORD_KO,
     SAY_WORDS_EN, TIMES_KEYWORD, TIMES_KEYWORD_KO,
 };
 
@@ -186,14 +187,49 @@ pub fn parse_program(
     let mut python_header_indents = Vec::<usize>::new();
 
     for (index, line) in lines.iter().enumerate() {
-        let depth = blocks.len();
-        if depth == 0 {
-            python_header_indents.clear();
-        }
         let is_end = exact_end(line.tokens.as_slice());
         let is_break = exact_break(line.tokens.as_slice());
         let branch_shape = branch_shape(line.tokens.as_slice());
 
+        // An indented-suite sentence block (whose first body line was
+        // physically indented) may end at the physical dedent, like ordinary
+        // Python, but only when the remaining `end`/`끝` lines cannot close
+        // the nested reading anyway. That keeps every previously valid
+        // program unchanged: a nested header with enough closing `end`s stays
+        // nested, while an ambiguous indented block followed by a flat block
+        // with too few `end`s becomes a sibling instead of a missing-end
+        // error. A flat statement at the block's own level keeps the suite
+        // flat from there on (only `end` closes it), so mixed indented+flat
+        // bodies keep working. Explicit closers (`end`, `break`, branches)
+        // are handled by their own paths below.
+        if !(is_end.is_some() || is_break || branch_shape.is_some()) {
+            let line_is_header = is_header_shape(&line.tokens);
+            let remaining_ends = count_remaining_ends(lines, index);
+            loop {
+                let open = blocks.len();
+                let Some(close_on_dedent) = blocks
+                    .last()
+                    .and_then(|block| block.close_on_dedent())
+                else {
+                    break;
+                };
+                if line.indent == close_on_dedent && line_is_header && open >= remaining_ends {
+                    blocks.pop();
+                } else if line.indent == close_on_dedent {
+                    if let Some(top) = blocks.last_mut() {
+                        top.clear_close_on_dedent();
+                    }
+                    break;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        let depth = blocks.len();
+        if depth == 0 {
+            python_header_indents.clear();
+        }
         let closes_flat_python_suite = is_end.is_some() || is_break || branch_shape.is_some();
         while python_header_indents.last().is_some_and(|header_indent| {
             line.indent < *header_indent
@@ -324,7 +360,7 @@ pub fn parse_program(
                     && line.indent == 0
                     && !blocks
                         .iter()
-                        .any(|block| matches!(block, ExplicitBlock::Loop))
+                        .any(|block| matches!(block, ExplicitBlock::Loop { .. }))
                 {
                     problems.push(break_outside_loop_diagnostic(line.span));
                     continue;
@@ -360,10 +396,14 @@ pub fn parse_program(
                             Some(NmeStmt::While { .. } | NmeStmt::Times { .. })
                         );
                         bindings.push_explicit_scope(parse_line.indent + 1);
+                        let close_on_dedent = (!flat_body_follows).then_some(line.indent);
                         blocks.push(if is_loop {
-                            ExplicitBlock::Loop
+                            ExplicitBlock::Loop { close_on_dedent }
                         } else {
-                            ExplicitBlock::Conditional { else_seen: false }
+                            ExplicitBlock::Conditional {
+                                else_seen: false,
+                                close_on_dedent,
+                            }
                         });
                     }
                 }
@@ -396,8 +436,37 @@ pub fn parse_program(
 
 #[derive(Debug, Clone, Copy)]
 enum ExplicitBlock {
-    Loop,
-    Conditional { else_seen: bool },
+    Loop {
+        /// When the block's body started physically indented, the suite
+        /// follows ordinary Python dedent rules: a later line at or above
+        /// the header level closes it. Flat bodies only close on `end`.
+        close_on_dedent: Option<usize>,
+    },
+    Conditional {
+        else_seen: bool,
+        close_on_dedent: Option<usize>,
+    },
+}
+
+impl ExplicitBlock {
+    fn close_on_dedent(self) -> Option<usize> {
+        match self {
+            ExplicitBlock::Loop { close_on_dedent } | ExplicitBlock::Conditional { close_on_dedent, .. } => {
+                close_on_dedent
+            }
+        }
+    }
+
+    /// A flat statement at the block's own level means the suite is flat from
+    /// there on, so only an explicit `end` can close it again.
+    fn clear_close_on_dedent(&mut self) {
+        match self {
+            ExplicitBlock::Loop { close_on_dedent }
+            | ExplicitBlock::Conditional { close_on_dedent, .. } => {
+                *close_on_dedent = None;
+            }
+        }
+    }
 }
 
 enum BlockCtx<'a> {
@@ -502,6 +571,16 @@ fn has_future_end(lines: &[LogicalLine], index: usize) -> bool {
         .any(|line| exact_end(&line.tokens).is_some())
 }
 
+/// Number of whole-statement `end`/`끝` lines after `index`. Used to decide
+/// whether a dedented header can only be a sibling block (when the remaining
+/// `end`s are not enough to close the nested reading anyway).
+fn count_remaining_ends(lines: &[LogicalLine], index: usize) -> usize {
+    lines[index + 1..]
+        .iter()
+        .filter(|line| exact_end(&line.tokens).is_some())
+        .count()
+}
+
 fn validate_branch(
     branch: &BranchShape,
     blocks: &mut [ExplicitBlock],
@@ -512,7 +591,7 @@ fn validate_branch(
         problems.push(branch_without_condition_diagnostic(span));
         return false;
     };
-    let ExplicitBlock::Conditional { else_seen } = top else {
+    let ExplicitBlock::Conditional { else_seen, .. } = top else {
         problems.push(branch_without_condition_diagnostic(span));
         return false;
     };
@@ -536,6 +615,7 @@ fn validate_branch(
 
 fn unmatched_end_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::StrayEnd,
         "there is no open NME block for this `end`",
         "이 `끝`을 닫을 열린 NME 블록이 없어요",
         span,
@@ -548,6 +628,7 @@ fn unmatched_end_diagnostic(span: Span) -> Diagnostic {
 
 fn break_outside_loop_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::BreakOutsideLoop,
         "`break` can only be used inside a loop",
         "`멈춰`는 반복문 안에서만 쓸 수 있어요",
         span,
@@ -560,6 +641,7 @@ fn break_outside_loop_diagnostic(span: Span) -> Diagnostic {
 
 fn branch_without_condition_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::BranchWithoutCondition,
         "`else` or `elif` needs an open condition block",
         "`아니면`이나 `elif` 앞에 열린 조건 블록이 필요해요",
         span,
@@ -572,6 +654,7 @@ fn branch_without_condition_diagnostic(span: Span) -> Diagnostic {
 
 fn duplicate_else_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::DuplicateElse,
         "this condition already has an `else` branch",
         "이 조건에는 이미 `아니면` 가지가 있어요",
         span,
@@ -584,7 +667,7 @@ fn duplicate_else_diagnostic(span: Span) -> Diagnostic {
 
 fn missing_end_diagnostic(block: &ExplicitBlock, offset: usize) -> Diagnostic {
     let (english, korean) = match block {
-        ExplicitBlock::Loop => (
+        ExplicitBlock::Loop { .. } => (
             "this loop is missing its closing `end`",
             "이 반복문에는 닫는 `끝`이 필요해요",
         ),
@@ -593,7 +676,7 @@ fn missing_end_diagnostic(block: &ExplicitBlock, offset: usize) -> Diagnostic {
             "이 조건문에는 닫는 `끝`이 필요해요",
         ),
     };
-    Diagnostic::bilingual(english, korean, Span::new(offset, offset)).with_bilingual_hint(
+    Diagnostic::bilingual(DiagnosticCode::MissingEnd, english, korean, Span::new(offset, offset)).with_bilingual_hint(
         "add `end`/`끝` on a line by itself",
         "줄 하나에 `end` 또는 `끝`만 적어 주세요",
     )
@@ -655,6 +738,18 @@ fn classify(
         return Ok(Some(stmt));
     }
 
+    // `from "module.nme" import names` is not valid Python, so the keyword
+    // gate below must not swallow it.
+    if matches!(tokens.first().map(|token| &token.tok), Some(Tok::From))
+        && tokens
+            .get(1)
+            .is_some_and(|token| matches!(token.tok, Tok::String { .. }))
+    {
+        if let Some(stmt) = match_module_import(source, tokens, known_names, MatchMode::Exact)? {
+            return Ok(Some(stmt));
+        }
+    }
+
     if is_python_keyword(&tokens[0].tok) && !matches!(tokens[0].tok, Tok::If) {
         return Ok(None);
     }
@@ -685,9 +780,34 @@ fn classify(
         || action_phrase_at(tokens, 0, USE_WORDS_KO, MatchMode::Exact).is_some()
     {
         if recoverable_module_shape(tokens) {
-            return match_use_random(source, tokens, known_names, MatchMode::Recover);
+            return match_use_module(source, tokens, known_names, MatchMode::Recover);
         }
-        return match_use_random(source, tokens, known_names, MatchMode::Exact);
+        return match_use_module(source, tokens, known_names, MatchMode::Exact);
+    }
+    if action_phrase_at(tokens, 0, FILE_READ_WORDS_EN, MatchMode::Exact).is_some()
+        || action_phrase_at(tokens, 0, FILE_WRITE_WORDS_EN, MatchMode::Exact).is_some()
+        || tokens
+            .iter()
+            .any(|token| {
+                action_phrase_at(std::slice::from_ref(token), 0, FILE_READ_WORDS_KO, MatchMode::Exact)
+                    .is_some()
+            })
+        || tokens.iter().any(|token| {
+            action_phrase_at(
+                std::slice::from_ref(token),
+                0,
+                FILE_WRITE_WORDS_KO,
+                MatchMode::Exact,
+            )
+            .is_some()
+        })
+    {
+        exact_match!(match_file_io(
+            source,
+            tokens,
+            known_names,
+            MatchMode::Exact
+        ));
     }
     exact_match!(match_when(
         source,
@@ -743,7 +863,7 @@ fn classify(
     }
 
     exact_match!(match_set(source, tokens, known_names, MatchMode::Exact));
-    exact_match!(match_use_random(
+    exact_match!(match_use_module(
         source,
         tokens,
         known_names,
@@ -768,7 +888,8 @@ fn classify(
         match_ask(source, tokens, known_names, MatchMode::Recover),
         match_say(source, tokens, known_names, MatchMode::Recover),
         match_set(source, tokens, known_names, MatchMode::Recover),
-        match_use_random(source, tokens, known_names, MatchMode::Recover),
+        match_use_module(source, tokens, known_names, MatchMode::Recover),
+        match_file_io(source, tokens, known_names, MatchMode::Recover),
     ];
     let mut candidates = Vec::new();
     let mut recovery_problems = Vec::new();
@@ -839,6 +960,7 @@ fn match_say(
             let text = &source[span.start..span.end];
             if looks_like_broken_expression(body) && !is_valid_python_expression(text) {
                 return Err(Diagnostic::bilingual(
+                    DiagnosticCode::SayValueBroken,
                     "I couldn't understand what you want to `say`",
                     "`말해` 뒤의 값을 이해하지 못했어요",
                     span,
@@ -851,6 +973,7 @@ fn match_say(
         }
         let value = parse_value(source, body, known_names, prefer_text).map_err(|()| {
             Diagnostic::bilingual(
+                DiagnosticCode::SayValueUnparseable,
                 "I couldn't understand what to show",
                 "무엇을 말할지 이해하지 못했어요",
                 span_of(body),
@@ -882,6 +1005,7 @@ fn match_say(
     }
     let value = parse_value(source, &value_tokens, known_names, true).map_err(|()| {
         Diagnostic::bilingual(
+            DiagnosticCode::SaySentenceUnparseable,
             "I couldn't understand the sentence to show",
             "말할 문장을 이해하지 못했어요",
             span_of(&value_tokens),
@@ -895,7 +1019,11 @@ fn match_say(
 }
 
 fn say_missing(_spelling: Spelling, span: Span) -> Diagnostic {
-    Diagnostic::bilingual("there is nothing to show", "말할 내용이 비어 있어요", span)
+    Diagnostic::bilingual(
+        DiagnosticCode::SayMissing,
+        "there is nothing to show",
+        "말할 내용이 비어 있어요",
+        span)
         .with_bilingual_hint(
             "write `show Hello world`",
             "`안녕하세요 말해줘`처럼 내용을 함께 적어 주세요",
@@ -961,6 +1089,7 @@ fn match_ask(
         let expression_tokens = &tokens[shape.prompt_start + 1..prompt_end];
         if expression_tokens.is_empty() {
             return Err(Diagnostic::bilingual(
+                DiagnosticCode::AskQuestionMissing,
                 "the question after the comma is missing",
                 "쉼표 뒤의 질문이 비어 있어요",
                 tokens[shape.prompt_start].span,
@@ -984,6 +1113,7 @@ fn match_ask(
             )))
         } else {
             return Err(Diagnostic::bilingual(
+                DiagnosticCode::AskQuestionUnparseable,
                 "I couldn't understand the question",
                 "질문 내용을 이해하지 못했어요",
                 span,
@@ -1290,6 +1420,7 @@ fn is_ask_modifier(token: &Token) -> bool {
 
 fn ask_target_diagnostic(_spelling: Spelling, span: Span) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::AskTargetInvalid,
         "write the name that should hold the answer",
         "대답을 담을 이름이 필요해요",
         span,
@@ -1478,6 +1609,7 @@ fn is_update_connector(token: &Token, words: &[&str]) -> bool {
 
 fn update_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::UpdateUnparseable,
         "I couldn't understand this value change",
         "값을 어떻게 바꿀지 이해하지 못했어요",
         span,
@@ -1504,6 +1636,7 @@ fn match_break(
         .any(|token| !is_command_ending(token))
     {
         return Err(Diagnostic::bilingual(
+            DiagnosticCode::BreakCommandUnparseable,
             "I couldn't understand this break command",
             "이 반복 중단 명령을 이해하지 못했어요",
             span_of(tokens),
@@ -2009,14 +2142,34 @@ enum ConditionConnector {
     NotEquals,
     Greater,
     Less,
+    GreaterOrEqual,
+    LessOrEqual,
 }
 
 fn find_exact_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionConnector)> {
+    // Spoken Korean splits `<=`/`>=` into two tokens (`10보다 작거나
+    // 같으면`); the lone `같으면` would otherwise match equality.
+    for (index, pair) in tokens.windows(2).enumerate() {
+        if token_word(&pair[0]) == Some("작거나") && token_word(&pair[1]) == Some("같으면") {
+            return Some((index, ConditionConnector::LessOrEqual));
+        }
+        if token_word(&pair[0]) == Some("크거나") && token_word(&pair[1]) == Some("같으면") {
+            return Some((index, ConditionConnector::GreaterOrEqual));
+        }
+    }
     let last_operand = last_logical_operand_start(tokens);
     let exact = tokens
         .iter()
         .enumerate()
         .filter_map(|(index, token)| {
+            if is_or_equal_phrase_at(tokens, index)
+                || tokens.get(index.saturating_sub(1)).is_some_and(|previous| {
+                    token_word(previous) == Some("or")
+                        && is_or_equal_phrase_at(tokens, index - 1)
+                })
+            {
+                return None;
+            }
             let connector = condition_connector_exact(token, index + 1 == tokens.len())?;
             // A `then` body marker may sit before the final `and`/`or`
             // operand because it separates the inline body. Korean
@@ -2064,12 +2217,26 @@ fn last_logical_operand_start(tokens: &[Token]) -> usize {
             if token_word(token) == Some("then") {
                 break;
             }
+            // `or equal` belongs to a `less/greater than or equal to`
+            // comparison, not to logical `or`.
+            if token_word(token) == Some("or") && is_or_equal_phrase_at(tokens, index) {
+                continue;
+            }
             if token_matches_exact(token, &["and", "or", "그리고", "또는"]) {
                 last = index + 1;
             }
         }
     }
     last
+}
+
+/// True when `tokens[index]` is `or` followed by `equal`/`equals`, the
+/// natural-language `<=`/`>=` phrase.
+fn is_or_equal_phrase_at(tokens: &[Token], index: usize) -> bool {
+    token_word(&tokens[index]) == Some("or")
+        && tokens.get(index + 1).is_some_and(|token| {
+            matches!(token_word(token), Some("equal") | Some("equals"))
+        })
 }
 
 fn find_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionConnector)> {
@@ -2085,6 +2252,14 @@ fn find_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionConnect
         .iter()
         .enumerate()
         .filter_map(|(index, token)| {
+            if is_or_equal_phrase_at(tokens, index)
+                || tokens.get(index.saturating_sub(1)).is_some_and(|previous| {
+                    token_word(previous) == Some("or")
+                        && is_or_equal_phrase_at(tokens, index - 1)
+                })
+            {
+                return None;
+            }
             let connector = condition_connector_recovered(token, index + 1 == tokens.len())?;
             (index >= last_operand || token_word(token) == Some("then")).then_some((index, connector))
         })
@@ -2286,6 +2461,16 @@ fn condition_tokens_before(
     {
         body_start = at + 2;
     }
+    // `작거나 같으면` / `크거나 같으면` also spans two tokens.
+    if matches!(
+        connector,
+        ConditionConnector::LessOrEqual | ConditionConnector::GreaterOrEqual
+    ) && tokens
+        .get(at + 1)
+        .is_some_and(|next| token_word(next) == Some("같으면"))
+    {
+        body_start = at + 2;
+    }
     if let Some(token) = tokens.get(at) {
         if let Some((base, attached_connector)) = split_attached_condition_token(token) {
             // `name이면` is a truthy condition when it is the whole subject,
@@ -2393,7 +2578,12 @@ fn logical_operator_at(tokens: &[Token], operator: LogicalOp) -> Option<usize> {
             Tok::Rpar | Tok::Rsqb | Tok::Rbrace => depth = depth.saturating_sub(1),
             _ => {}
         }
-        (depth == 0 && token_matches_exact(token, expected)).then_some(index)
+        // `or equal` is part of a `less/greater than or equal to`
+        // comparison, not a logical `or`.
+        (depth == 0
+            && token_matches_exact(token, expected)
+            && !(expected.contains(&"or") && is_or_equal_phrase_at(tokens, index)))
+        .then_some(index)
     });
     if exact.is_some() {
         return exact;
@@ -2409,13 +2599,10 @@ fn logical_operator_at(tokens: &[Token], operator: LogicalOp) -> Option<usize> {
             Tok::Rpar | Tok::Rsqb | Tok::Rbrace => depth = depth.saturating_sub(1),
             _ => {}
         }
-        let recovered = depth == 0
-            && token_word(token).is_some_and(|actual| {
-                expected.iter().any(|candidate| {
-                    actual.chars().count() >= 2 && one_typo_away(actual, candidate)
-                })
-            });
-        recovered.then_some(index)
+        (depth == 0
+            && !(expected.contains(&"or") && is_or_equal_phrase_at(tokens, index))
+            && word_matches_any(token, expected, MatchMode::Recover))
+        .then_some(index)
     })
 }
 
@@ -2485,18 +2672,24 @@ fn parse_natural_condition_atom(
                 negated: explicit_not,
             });
         }
-        Some(ConditionConnector::Greater | ConditionConnector::Less) => {
-            let operator = if matches!(connector, Some(ConditionConnector::Greater)) {
-                CompareOp::Greater
-            } else {
-                CompareOp::Less
+        Some(
+            ConditionConnector::Greater
+            | ConditionConnector::Less
+            | ConditionConnector::GreaterOrEqual
+            | ConditionConnector::LessOrEqual,
+        ) => {
+            let operator = match connector {
+                Some(ConditionConnector::Greater) => CompareOp::Greater,
+                Some(ConditionConnector::Less) => CompareOp::Less,
+                Some(ConditionConnector::GreaterOrEqual) => CompareOp::GreaterOrEqual,
+                _ => CompareOp::LessOrEqual,
             };
             return parse_korean_comparison(
                 source,
                 &cleaned,
                 known_names,
                 operator,
-                &["보다", "더", "작을", "클"],
+                &["보다", "더", "작을", "클", "작거나", "크거나"],
                 spelling,
                 false,
             );
@@ -2656,6 +2849,41 @@ fn parse_english_condition(
     {
         cursor += 1;
     }
+    // `less than or equal to` / `greater than or equal to` narrow the
+    // comparison to `<=` / `>=`.
+    if tokens.get(cursor).is_some_and(|token| token_word(token) == Some("or"))
+        && tokens
+            .get(cursor + 1)
+            .is_some_and(|token| condition_word_matches(token_word(token).unwrap_or(""), &["equal", "equals"]))
+    {
+        let operator = match operator {
+            CompareOp::Greater => CompareOp::GreaterOrEqual,
+            CompareOp::Less => CompareOp::LessOrEqual,
+            other => other,
+        };
+        cursor += 2;
+        while tokens
+            .get(cursor)
+            .is_some_and(|token| token_matches_exact(token, &["to", "than", "as"]))
+        {
+            cursor += 1;
+        }
+        let right_tokens = tokens.get(cursor..)?;
+        if right_tokens.is_empty() {
+            return None;
+        }
+        let owned = right_tokens
+            .iter()
+            .map(|token| (*token).clone())
+            .collect::<Vec<_>>();
+        let right = condition_rhs(source, &owned, known_names)?;
+        return Some(Condition::Compare {
+            left,
+            operator,
+            right,
+            negated,
+        });
+    }
     let right_tokens = tokens.get(cursor..)?;
     if right_tokens.is_empty() {
         return None;
@@ -2803,6 +3031,8 @@ fn condition_connector_exact(token: &Token, is_last: bool) -> Option<ConditionCo
         ),
         (ConditionConnector::Greater, &["크면", "크다면", "클"][..]),
         (ConditionConnector::Less, &["작으면", "작다면", "작을"][..]),
+        (ConditionConnector::GreaterOrEqual, &["크거나같으면", "크거나같다면"][..]),
+        (ConditionConnector::LessOrEqual, &["작거나같으면", "작거나같다면"][..]),
     ];
     for (kind, words) in candidates {
         if words.contains(&word) {
@@ -2912,7 +3142,11 @@ fn condition_connector_recovered(token: &Token, is_last: bool) -> Option<Conditi
 }
 
 fn condition_missing(_spelling: Spelling, span: Span) -> Diagnostic {
-    Diagnostic::bilingual("the condition is missing", "조건이 비어 있어요", span)
+    Diagnostic::bilingual(
+        DiagnosticCode::ConditionMissing,
+        "the condition is missing",
+        "조건이 비어 있어요",
+        span)
         .with_bilingual_hint(
             "write `if ready` or `if score > 10` and indent the next line",
             "`만약에 준비됐으면`처럼 적고 다음 줄을 들여쓰세요",
@@ -2921,6 +3155,7 @@ fn condition_missing(_spelling: Spelling, span: Span) -> Diagnostic {
 
 fn condition_invalid(_spelling: Spelling, span: Span) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::ConditionInvalid,
         "I couldn't understand this condition",
         "이 조건을 확실하게 이해하지 못했어요",
         span,
@@ -3105,6 +3340,7 @@ fn parse_sentence_repeat_body(
     if plain_words {
         let value = parse_value(source, body, known_names, true).map_err(|()| {
             Diagnostic::bilingual(
+                DiagnosticCode::RepeatBodyUnparseable,
                 "I couldn't understand what to repeat",
                 "무엇을 반복할지 이해하지 못했어요",
                 span_of(body),
@@ -3156,6 +3392,7 @@ fn parse_count(source: &str, tokens: &[Token], spelling: Spelling) -> Result<Cod
     let span = span_of(tokens);
     if !is_valid_python_expression(&source[span.start..span.end]) {
         return Err(Diagnostic::bilingual(
+            DiagnosticCode::RepeatCountUnparseable,
             "I couldn't understand how many times to repeat",
             "몇 번 반복할지 이해하지 못했어요",
             span,
@@ -3170,6 +3407,7 @@ fn parse_count(source: &str, tokens: &[Token], spelling: Spelling) -> Result<Cod
 
 fn repeat_count_missing(_spelling: Spelling, span: Span) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::RepeatCountMissing,
         "the repeat count is missing",
         "반복 횟수가 비어 있어요",
         span,
@@ -3194,7 +3432,332 @@ fn find_count_marker(tokens: &[Token], mode: MatchMode) -> Option<(usize, Spelli
 
 // --------------------------------------------------------------- modules
 
-fn match_use_random(
+/// Sentence-level file and JSON forms, so a beginner can read a file into a
+/// name and write text to a file without the `use file` module or Python
+/// punctuation. Both languages share the same meaning:
+///
+/// - `read "notes.txt" into memo` / `memo read "notes.txt"`
+/// - `memo에 "notes.txt" 읽어서` / `memo에 "notes.txt" 읽어서 저장해`
+/// - `write "hello" to "out.txt"` / `"out.txt" 파일에 "hello"를 저장해`
+///
+/// The path is always a quoted string; the write value is a beginner value.
+/// Weak matches (`read the book`, `write hello`) fall through to plain
+/// sentence output instead of being claimed as file operations.
+fn match_file_io(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+    mode: MatchMode,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    let is_string = |token: &Token| matches!(token.tok, Tok::String { .. });
+    let path_of = |tokens: &[Token]| -> Option<Code> {
+        let token = tokens.first()?;
+        if !is_string(token) {
+            return None;
+        }
+        let span = token.span;
+        is_valid_python_expression(&source[span.start..span.end])
+            .then_some(Code::Source(span))
+    };
+
+    // English action-first read: `read "notes.txt" into memo`.
+    if let Some(consumed) = action_phrase_at(tokens, 0, FILE_READ_WORDS_EN, mode) {
+        let Some(path) = path_of(&tokens[consumed..]) else {
+            return Ok(None);
+        };
+        let mut rest = &tokens[consumed + 1..];
+        if rest
+            .first()
+            .is_some_and(|token| token_matches_exact(token, &["into", "as", "in"]))
+        {
+            rest = &rest[1..];
+        }
+        if let Some(target) = rest.first().and_then(|t| name_word(t)).map(strip_saved_target) {
+            if rest.len() == 1 || (rest.len() == 2 && is_command_ending(&rest[1])) {
+                return Ok(Some(NmeStmt::FileRead {
+                    target: target.to_string(),
+                    path,
+                }));
+            }
+        }
+        return Err(file_read_target_diagnostic(span_of(tokens)));
+    }
+
+    // Korean read and English/Korean target-first read:
+    // `memo에 "notes.txt" 읽어서` / `memo read "notes.txt"`. The path sits
+    // before a Korean read word but after the English `read`.
+    let ko_read_at = tokens
+        .iter()
+        .position(|token| {
+            action_phrase_at(std::slice::from_ref(token), 0, FILE_READ_WORDS_KO, mode).is_some()
+        });
+    let en_read_at = tokens
+        .iter()
+        .position(|token| {
+            action_phrase_at(std::slice::from_ref(token), 0, FILE_READ_WORDS_EN, mode).is_some()
+        });
+    if let Some(action_at) = ko_read_at.or(en_read_at) {
+        let Some(target) = name_word(&tokens[0]).and_then(update_target_name) else {
+            return Ok(None);
+        };
+        let path_tokens = if ko_read_at.is_some() {
+            let mut middle = &tokens[1..action_at];
+            if middle
+                .first()
+                .is_some_and(|token| {
+                    is_update_connector(
+                        token,
+                        &["에", "에서", "에게", "한테", "는", "은", "으로", "로"],
+                    )
+                })
+            {
+                middle = &middle[1..];
+            }
+            middle
+        } else {
+            let mut after = &tokens[action_at + 1..];
+            if after
+                .first()
+                .is_some_and(|token| token_matches_exact(token, &["into", "as", "in"]))
+            {
+                after = &after[1..];
+            }
+            after
+        };
+        let Some(path) = path_of(path_tokens) else {
+            return Ok(None);
+        };
+        let tail_ok = if ko_read_at.is_some() {
+            let after = &tokens[action_at + 1..];
+            after.len() <= 2
+                && after.iter().all(|token| {
+                    token_matches_exact(token, FILE_WRITE_WORDS_KO)
+                        || is_command_ending(token)
+                })
+        } else {
+            let after = &tokens[action_at + 1..];
+            path_of(after).is_some()
+                && (after.len() == 1 || (after.len() == 2 && is_command_ending(&after[1])))
+        };
+        if tail_ok {
+            return Ok(Some(NmeStmt::FileRead { target, path }));
+        }
+        return Err(file_read_target_diagnostic(span_of(tokens)));
+    }
+
+    // English action-first write: `write "hello" to "out.txt"`.
+    if let Some(consumed) = action_phrase_at(tokens, 0, FILE_WRITE_WORDS_EN, mode) {
+        let mut end = tokens.len();
+        if tokens.get(end.saturating_sub(1)).is_some_and(is_command_ending) {
+            end -= 1;
+        }
+        let Some(to_at) = tokens[consumed..end]
+            .iter()
+            .position(|token| token_matches_exact(token, &["to", "into"]))
+            .map(|at| at + consumed)
+        else {
+            return Ok(None);
+        };
+        let value = parse_value(source, &tokens[consumed..to_at], known_names, true)
+            .map_err(|()| file_write_diagnostic(span_of(tokens)))?;
+        let Some(path) = path_of(&tokens[to_at + 1..end]) else {
+            return Err(file_path_diagnostic(span_of(tokens)));
+        };
+        return Ok(Some(NmeStmt::FileWrite { path, value }));
+    }
+
+    // Korean write: `"out.txt" 파일에 "hello"를 저장해`.
+    let write_at = tokens
+        .iter()
+        .rposition(|token| {
+            action_phrase_at(std::slice::from_ref(token), 0, FILE_WRITE_WORDS_KO, mode).is_some()
+        });
+    if let Some(write_at) = write_at {
+        let Some(path) = path_of(&tokens[..1]) else {
+            return Ok(None);
+        };
+        if tokens
+            .get(1)
+            .is_some_and(|token| {
+                is_update_connector(token, &["파일에", "파일을", "에", "로", "으로", "에다"])
+            })
+        {
+            let mut value_tokens = &tokens[2..write_at];
+            while value_tokens
+                .last()
+                .is_some_and(|token| is_update_connector(token, &["을", "를", "만큼"]))
+            {
+                value_tokens = &value_tokens[..value_tokens.len() - 1];
+            }
+            if value_tokens.is_empty() {
+                return Err(file_write_diagnostic(span_of(tokens)));
+            }
+            // A Korean particle may be glued to the final word (`점수를`);
+            // strip it from the source span so the value stays a Python name.
+            let value = if let Some(last) = value_tokens.last() {
+                if let Some(word) = name_word(last) {
+                    if let Some(stripped) = strip_any_suffix(word, &["을", "를", "만큼"]) {
+                        let base = last.span;
+                        let end = base.end - (word.len() - stripped.len());
+                        Value::Python(Code::Source(Span::new(base.start, end)))
+                    } else {
+                        parse_value(source, value_tokens, known_names, true)
+                            .map_err(|()| file_write_diagnostic(span_of(tokens)))?
+                    }
+                } else {
+                    parse_value(source, value_tokens, known_names, true)
+                        .map_err(|()| file_write_diagnostic(span_of(tokens)))?
+                }
+            } else {
+                return Err(file_write_diagnostic(span_of(tokens)));
+            };
+            return Ok(Some(NmeStmt::FileWrite { path, value }));
+        }
+        return Err(file_write_diagnostic(span_of(tokens)));
+    }
+
+    Ok(None)
+}
+
+fn file_read_target_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::MissingAction,
+        "the file read needs a target name",
+        "파일을 읽어 넣을 이름이 필요해요",
+        span,
+    )
+    .with_bilingual_hint(
+        "write `read \"notes.txt\" into memo` or `memo에 \"notes.txt\" 읽어서`",
+        "`read \"notes.txt\" into memo` 또는 `memo에 \"notes.txt\" 읽어서`처럼 쓰세요",
+    )
+}
+
+fn file_write_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::SaveValueUnparseable,
+        "I couldn't understand this file write",
+        "파일에 저장할 내용을 이해하지 못했어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "write `write \"hello\" to \"out.txt\"` or `\"out.txt\" 파일에 \"hello\"를 저장해`",
+        "`write \"hello\" to \"out.txt\"` 또는 `\"out.txt\" 파일에 \"hello\"를 저장해`처럼 쓰세요",
+    )
+}
+
+fn file_path_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::MissingAction,
+        "the file name must be a quoted path",
+        "파일 이름은 따옴표로 감싼 경로여야 해요",
+        span,
+    )
+    .with_bilingual_hint(
+        "write the path in quotes, for example `\"notes.txt\"`",
+        "`\"notes.txt\"`처럼 경로를 따옴표 안에 적어 주세요",
+    )
+}
+
+/// `from "helper.nme" import greet, score` — a beginner module import. The
+/// quoted path is not valid Python (`from <string>` is a syntax error), so
+/// NME can claim it. The explicit name list is the module interface: only
+/// those names cross the file boundary.
+fn match_module_import(
+    source: &str,
+    tokens: &[Token],
+    _known_names: &HashSet<String>,
+    mode: MatchMode,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    if !matches!(tokens.first().map(|token| &token.tok), Some(Tok::From))
+        || !matches!(tokens.get(1).map(|token| &token.tok), Some(Tok::String { .. }))
+        || !matches!(tokens.get(2).map(|token| &token.tok), Some(Tok::Import))
+        || mode != MatchMode::Exact
+    {
+        return Ok(None);
+    }
+    let path_span = tokens[1].span;
+    let path_text = &source[path_span.start..path_span.end];
+    let path_stripped = path_text.trim_matches(['\'', '"']);
+    if !path_stripped.ends_with(".nme") {
+        return Err(Diagnostic::bilingual(
+            DiagnosticCode::MissingAction,
+            "a module import path must end in .nme",
+            "모듈 경로는 .nme로 끝나야 해요",
+            path_span,
+        )
+        .with_bilingual_hint(
+            "write the other program's name in quotes, e.g. `from \"helper.nme\" import greet`",
+            "다른 프로그램의 이름을 따옴표로 적으세요. 예: `from \"helper.nme\" import greet`",
+        ));
+    }
+    let stem = path_stripped
+        .rsplit(['/', '\\'])
+        .next()
+        .unwrap_or(path_stripped)
+        .strip_suffix(".nme")
+        .unwrap_or(path_stripped);
+    let valid_identifier = !stem.is_empty()
+        && stem
+            .chars()
+            .enumerate()
+            .all(|(index, character)| {
+                character == '_' || character.is_alphanumeric()
+                    && (index > 0 || character.is_alphabetic() || character == '_')
+            });
+    if !valid_identifier {
+        return Err(Diagnostic::bilingual(
+            DiagnosticCode::MissingAction,
+            "the module file name must be a Python identifier",
+            "모듈 파일 이름은 Python 식별자여야 해요",
+            path_span,
+        )
+        .with_bilingual_hint(
+            "rename the module with letters, numbers, and underscores only, e.g. `shape_math.nme`",
+            "모듈 이름은 문자·숫자·밑줄만 사용하세요. 예: `shape_math.nme`",
+        ));
+    }
+    let mut names = Vec::new();
+    let mut index = 3;
+    let mut expected = true;
+    while index < tokens.len() {
+        match &tokens[index].tok {
+            Tok::Comma => {
+                if expected {
+                    return Err(module_import_shape_diagnostic(span_of(tokens)));
+                }
+                expected = true;
+            }
+            Tok::Name { name } if expected => {
+                names.push(name.clone());
+                expected = false;
+            }
+            _ => return Err(module_import_shape_diagnostic(span_of(tokens))),
+        }
+        index += 1;
+    }
+    if expected || names.is_empty() {
+        return Err(module_import_shape_diagnostic(span_of(tokens)));
+    }
+    Ok(Some(NmeStmt::ModuleImport {
+        path: Code::Source(path_span),
+        names,
+    }))
+}
+
+fn module_import_shape_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::MissingAction,
+        "I couldn't understand this module import",
+        "모듈 가져오기 문장을 이해하지 못했어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "write `from \"helper.nme\" import greet` with simple names after `import`",
+        "`from \"helper.nme\" import greet`처럼 import 뒤에 간단한 이름을 적으세요",
+    )
+}
+
+fn match_use_module(
     source: &str,
     tokens: &[Token],
     known_names: &HashSet<String>,
@@ -3204,23 +3767,29 @@ fn match_use_random(
         return Ok(None);
     };
 
-    let random_positions = tokens
-        .iter()
-        .enumerate()
-        .filter_map(|(index, token)| random_word_matches(token, mode).then_some(index))
-        .collect::<Vec<_>>();
-    if random_positions.len() != 1 {
-        return Err(Diagnostic::bilingual(
-            "NME only bundles `use random` for now",
-            "NME에는 아직 쉬운 `랜덤` 모듈만 들어 있어요",
-            span_of(tokens),
-        )
-        .with_bilingual_hint(
-            "write one module line such as `use random latest`",
-            "`랜덤 사용 최신`처럼 모듈 하나를 적어 주세요",
-        ));
+    let mut module = None;
+    for candidate in BundledModuleId::ALL {
+        let positions = tokens
+            .iter()
+            .enumerate()
+            .filter_map(|(index, token)| {
+                module_word_matches(token, candidate, mode).then_some(index)
+            })
+            .collect::<Vec<_>>();
+        match positions.as_slice() {
+            [] => {}
+            [single] => {
+                if module.is_some() {
+                    return Err(unsupported_module_diagnostic(span_of(tokens)));
+                }
+                module = Some((candidate, *single));
+            }
+            _ => return Err(unsupported_module_diagnostic(span_of(tokens))),
+        }
     }
-    let random_at = random_positions[0];
+    let Some((module, module_at)) = module else {
+        return Err(unsupported_module_diagnostic(span_of(tokens)));
+    };
 
     let latest_positions = tokens
         .iter()
@@ -3236,13 +3805,24 @@ fn match_use_random(
         .collect::<Vec<_>>();
     if !latest_positions.is_empty() && !version_positions.is_empty() {
         return Err(Diagnostic::bilingual(
+            DiagnosticCode::LatestAndVersion,
             "choose either latest or one exact module version",
             "최신 버전과 특정 버전 중 하나만 골라 주세요",
             span_of(tokens),
         )
         .with_bilingual_hint(
-            "write `use random latest` or `use random version 0.0.1`",
-            "`랜덤 사용 최신` 또는 `랜덤 사용 버전 0.0.1`처럼 쓰세요",
+            format!(
+                "write `use {} latest` or `use {} version {}`",
+                module.name_en(),
+                module.name_en(),
+                module.version()
+            ),
+            format!(
+                "`{} 사용 최신` 또는 `{} 사용 버전 {}`처럼 쓰세요",
+                module.name_ko(),
+                module.name_ko(),
+                module.version()
+            ),
         ));
     }
     if latest_positions.len() > 1 || version_positions.len() > 1 {
@@ -3253,7 +3833,7 @@ fn match_use_random(
     for slot in &mut used[action_start..action_end] {
         *slot = true;
     }
-    used[random_at] = true;
+    used[module_at] = true;
     for &index in &latest_positions {
         used[index] = true;
     }
@@ -3261,7 +3841,7 @@ fn match_use_random(
     let requested = if !latest_positions.is_empty() {
         ModuleVersion::Latest
     } else if let Some(&version_at) = version_positions.first() {
-        if version_at < action_end.max(random_at + 1) {
+        if version_at < action_end.max(module_at + 1) {
             return Err(module_shape_diagnostic(spelling, tokens[version_at].span));
         }
         used[version_at] = true;
@@ -3272,24 +3852,26 @@ fn match_use_random(
         }
         let value_tokens = tokens.get(version_at + 1..value_end).ok_or_else(|| {
             Diagnostic::bilingual(
+                DiagnosticCode::ModuleVersionMissing,
                 "the module version is missing",
                 "모듈 버전이 비어 있어요",
                 tokens[version_at].span,
             )
             .with_bilingual_hint(
-                format!("use `latest`, or version {RANDOM_MODULE_VERSION}"),
-                format!("`최신` 또는 버전 {RANDOM_MODULE_VERSION}을 사용하세요"),
+                format!("use `latest`, or version {}", module.version()),
+                format!("`최신` 또는 버전 {}을 사용하세요", module.version()),
             )
         })?;
         if value_tokens.is_empty() {
             return Err(Diagnostic::bilingual(
+                DiagnosticCode::ModuleVersionMissing,
                 "the module version is missing",
                 "모듈 버전이 비어 있어요",
                 tokens[version_at].span,
             )
             .with_bilingual_hint(
-                format!("use `latest`, or version {RANDOM_MODULE_VERSION}"),
-                format!("`최신` 또는 버전 {RANDOM_MODULE_VERSION}을 사용하세요"),
+                format!("use `latest`, or version {}", module.version()),
+                format!("`최신` 또는 버전 {}을 사용하세요", module.version()),
             ));
         }
         for slot in &mut used[version_at + 1..value_end] {
@@ -3298,16 +3880,18 @@ fn match_use_random(
         let value_span = span_of(value_tokens);
         let raw = &source[value_span.start..value_span.end];
         let version = raw.trim_matches(['\'', '"']).to_string();
-        if version != RANDOM_MODULE_VERSION {
+        if version != module.version() {
             return Err(Diagnostic::bilingual(
-                format!("random version {version} is not bundled"),
-                format!("랜덤 버전 {version}은 내장되어 있지 않아요"),
+                DiagnosticCode::UnbundledVersion,
+                format!("{} version {version} is not bundled", module.name_en()),
+                format!("{} 버전 {version}은 내장되어 있지 않아요", module.name_ko()),
                 value_span,
             )
             .with_bilingual_hint(
-                format!("use `latest`; this compiler bundles {RANDOM_MODULE_VERSION}"),
+                format!("use `latest`; this compiler bundles {}", module.version()),
                 format!(
-                    "`최신`을 사용하세요. 이 컴파일러에는 {RANDOM_MODULE_VERSION}이 들어 있어요"
+                    "`최신`을 사용하세요. 이 컴파일러에는 {}이 들어 있어요",
+                    module.version()
                 ),
             ));
         }
@@ -3326,55 +3910,98 @@ fn match_use_random(
         return Err(module_shape_diagnostic(spelling, token.span));
     }
 
-    let collisions = random_binding_names()
+    let collisions = module_binding_names(module)
         .iter()
         .filter(|name| known_names.contains(**name))
         .copied()
         .collect::<Vec<_>>();
     if !collisions.is_empty() {
-        return Err(random_name_collision_diagnostic(
+        return Err(module_name_collision_diagnostic(
+            module,
             span_of(tokens),
             &collisions,
         ));
     }
 
-    Ok(Some(NmeStmt::UseRandom { requested }))
+    Ok(Some(NmeStmt::UseModule { module, requested }))
 }
 
-fn random_binding_names() -> &'static [&'static str] {
-    &[
-        RANDOM_MODULE,
-        RANDOM_MODULE_KO,
-        "random_number",
-        "random_pick",
-        "shuffle",
-        "랜덤정수",
-        "랜덤선택",
-        "섞기",
-        "random_version",
-        "랜덤버전",
-    ]
+/// Names a bundled module would bind, so a later `use` can refuse to
+/// overwrite an existing value.
+fn module_binding_names(module: BundledModuleId) -> &'static [&'static str] {
+    match module {
+        BundledModuleId::Random => &[
+            RANDOM_MODULE,
+            RANDOM_MODULE_KO,
+            "random_number",
+            "random_pick",
+            "shuffle",
+            "랜덤정수",
+            "랜덤선택",
+            "섞기",
+            "random_version",
+            "랜덤버전",
+        ],
+        BundledModuleId::File => &[
+            FILE_MODULE,
+            FILE_MODULE_KO,
+            "file_read",
+            "file_write",
+            "json_load",
+            "json_save",
+            "파일읽기",
+            "파일쓰기",
+            "json읽기",
+            "json저장",
+            "file_version",
+            "파일버전",
+        ],
+    }
 }
 
-fn random_name_collision_diagnostic(span: Span, collisions: &[&str]) -> Diagnostic {
+fn module_name_collision_diagnostic(
+    module: BundledModuleId,
+    span: Span,
+    collisions: &[&str],
+) -> Diagnostic {
     let names = collisions.join(", ");
     Diagnostic::bilingual(
-        format!("the random module would overwrite existing name(s): {names}"),
-        format!("랜덤 모듈이 이미 있는 이름을 덮어쓸 수 있어요: {names}"),
+        DiagnosticCode::ModuleNameCollision,
+        format!(
+            "the {} module would overwrite existing name(s): {names}",
+            module.name_en()
+        ),
+        format!(
+            "{} 모듈이 이미 있는 이름을 덮어쓸 수 있어요: {names}",
+            module.name_ko()
+        ),
         span,
     )
     .with_bilingual_hint(
-        "rename the existing value, or load random before assigning that name",
-        "기존 값을 다른 이름으로 바꾸거나, 그 이름을 쓰기 전에 랜덤 모듈을 불러오세요",
+        "rename the existing value, or load the module before assigning that name",
+        "기존 값을 다른 이름으로 바꾸거나, 그 이름을 쓰기 전에 모듈을 불러오세요",
     )
 }
 
-fn random_word_matches(token: &Token, mode: MatchMode) -> bool {
+fn module_word_matches(token: &Token, module: BundledModuleId, mode: MatchMode) -> bool {
     name_word(token).is_some_and(|word| {
-        word_matches(word, RANDOM_MODULE, mode)
-            || word == RANDOM_MODULE_KO
-            || strip_target_particle(word) == RANDOM_MODULE_KO
+        word_matches(word, module.name_en(), mode)
+            || word == module.name_ko()
+            || strip_target_particle(word) == module.name_ko()
     })
+}
+
+fn unsupported_module_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::UnsupportedModule,
+        "NME bundles `use random` and `use file`",
+        "NME에는 쉬운 `랜덤`과 `파일` 모듈만 들어 있어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "write one module line such as `use random latest` or `use file latest`",
+        "`랜덤 사용 최신` 또는 `파일 사용 최신`처럼 모듈 하나를 적어 주세요",
+    )
 }
 
 fn find_use_action(tokens: &[Token], mode: MatchMode) -> Option<(usize, usize, Spelling)> {
@@ -3392,13 +4019,21 @@ fn find_use_action(tokens: &[Token], mode: MatchMode) -> Option<(usize, usize, S
 fn recoverable_module_shape(tokens: &[Token]) -> bool {
     let action_recovered = find_use_action(tokens, MatchMode::Exact).is_none()
         && find_use_action(tokens, MatchMode::Recover).is_some();
-    let exact_random = tokens
+    let module_exact = tokens
         .iter()
-        .filter(|token| random_word_matches(token, MatchMode::Exact))
+        .filter(|token| {
+            BundledModuleId::ALL
+                .iter()
+                .any(|module| module_word_matches(token, *module, MatchMode::Exact))
+        })
         .count();
-    let recovered_random = tokens
+    let module_recovered = tokens
         .iter()
-        .filter(|token| random_word_matches(token, MatchMode::Recover))
+        .filter(|token| {
+            BundledModuleId::ALL
+                .iter()
+                .any(|module| module_word_matches(token, *module, MatchMode::Recover))
+        })
         .count();
     let exact_latest = tokens
         .iter()
@@ -3418,20 +4053,21 @@ fn recoverable_module_shape(tokens: &[Token]) -> bool {
         .count();
 
     action_recovered
-        || (exact_random == 0 && recovered_random == 1)
+        || (module_exact == 0 && module_recovered == 1)
         || (exact_latest == 0 && recovered_latest == 1)
         || (exact_version == 0 && recovered_version == 1)
 }
 
 fn module_shape_diagnostic(_spelling: Spelling, span: Span) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::ModuleShapeInvalid,
         "I couldn't understand this module line",
         "이 모듈 문장을 확실하게 이해하지 못했어요",
         span,
     )
     .with_bilingual_hint(
-        "write `use random latest` or `use random version 0.0.1`",
-        "`랜덤 사용 최신` 또는 `랜덤 사용 버전 0.0.1`처럼 쓰세요",
+        "write `use random latest` or `use file latest`, with an optional version",
+        "`랜덤 사용 최신` 또는 `파일 사용 최신`처럼 쓰고, 원하면 버전을 붙이세요",
     )
 }
 
@@ -3467,6 +4103,7 @@ fn match_set(
         }
         if value_start >= tokens.len() {
             return Err(Diagnostic::bilingual(
+                DiagnosticCode::SaveValueMissing,
                 "the value to save is missing",
                 "저장할 값이 비어 있어요",
                 target_token.span,
@@ -3479,6 +4116,7 @@ fn match_set(
         let value =
             parse_value(source, &tokens[value_start..], known_names, true).map_err(|()| {
                 Diagnostic::bilingual(
+                    DiagnosticCode::SaveValueUnparseable,
                     "I couldn't understand the value to save",
                     "저장할 값을 이해하지 못했어요",
                     span_of(&tokens[value_start..]),
@@ -3498,6 +4136,7 @@ fn match_set(
         if let Some(target) = strip_assignment_particle(first) {
             if tokens.len() == 1 {
                 return Err(Diagnostic::bilingual(
+                    DiagnosticCode::SaveValueMissing,
                     "the value to save is missing",
                     "저장할 값이 비어 있어요",
                     tokens[0].span,
@@ -3509,6 +4148,7 @@ fn match_set(
             }
             let value = parse_value(source, &tokens[1..], known_names, true).map_err(|()| {
                 Diagnostic::bilingual(
+                    DiagnosticCode::SaveValueUnparseable,
                     "I couldn't understand the value to save",
                     "저장할 값을 이해하지 못했어요",
                     span_of(&tokens[1..]),
@@ -3532,6 +4172,7 @@ fn match_set(
         let target = name_word(&tokens[0]).expect("checked name token");
         let value = parse_value(source, &tokens[2..], known_names, true).map_err(|()| {
             Diagnostic::bilingual(
+                DiagnosticCode::SaveValueUnparseable,
                 "I couldn't understand the value to save",
                 "저장할 값을 이해하지 못했어요",
                 span_of(&tokens[2..]),
@@ -3550,6 +4191,7 @@ fn match_set(
     if let Some((spelling, consumed)) = set_action_at(tokens, 0, mode) {
         let Some(target_token) = tokens.get(consumed) else {
             return Err(Diagnostic::bilingual(
+                DiagnosticCode::SaveNameMissing,
                 "the name to save is missing",
                 "값을 저장할 이름이 비어 있어요",
                 tokens[0].span,
@@ -3561,6 +4203,7 @@ fn match_set(
         };
         let Some(target_word) = name_word(target_token) else {
             return Err(Diagnostic::bilingual(
+                DiagnosticCode::SaveNameNotSimple,
                 "use a simple name here",
                 "여기에는 간단한 이름을 써 주세요",
                 target_token.span,
@@ -3586,6 +4229,7 @@ fn match_set(
         }
         if value_start >= tokens.len() {
             return Err(Diagnostic::bilingual(
+                DiagnosticCode::SaveValueMissing,
                 "the value to save is missing",
                 "저장할 값이 비어 있어요",
                 target_token.span,
@@ -3598,6 +4242,7 @@ fn match_set(
         let value =
             parse_value(source, &tokens[value_start..], known_names, true).map_err(|()| {
                 Diagnostic::bilingual(
+                    DiagnosticCode::SaveValueUnparseable,
                     "I couldn't understand the value to save",
                     "저장할 값을 이해하지 못했어요",
                     span_of(&tokens[value_start..]),
@@ -3909,6 +4554,7 @@ fn parse_suite_body(
 fn indentation_diagnostic(kind: SuiteKind, span: Span) -> Diagnostic {
     match kind {
         SuiteKind::Repeat => Diagnostic::bilingual(
+            DiagnosticCode::IndentationRequired,
             "the lines that should repeat must be indented",
             "반복할 다음 줄은 들여써야 해요",
             span,
@@ -3918,6 +4564,7 @@ fn indentation_diagnostic(kind: SuiteKind, span: Span) -> Diagnostic {
             "한 줄로 `3번 반복해서 안녕 말해줘`라고 써도 돼요",
         ),
         SuiteKind::Condition => Diagnostic::bilingual(
+            DiagnosticCode::ColonRequired,
             "this condition needs `:` or an indented next line",
             "조건 다음에는 실행할 줄이나 `:`이 필요해요",
             span,
@@ -3931,6 +4578,7 @@ fn indentation_diagnostic(kind: SuiteKind, span: Span) -> Diagnostic {
 
 fn inline_block_diagnostic(_kind: SuiteKind, span: Span) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::BlockWithoutStatement,
         "a block can't start here without a statement",
         "이 한 줄 블록에 실행할 문장이 없어요",
         span,
@@ -3943,6 +4591,7 @@ fn inline_block_diagnostic(_kind: SuiteKind, span: Span) -> Diagnostic {
 
 fn one_statement_diagnostic(_kind: SuiteKind, span: Span) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::OneStatementPerLine,
         "only one statement fits on this line",
         "한 줄에는 문장 하나만 넣을 수 있어요",
         span,
@@ -3955,6 +4604,7 @@ fn one_statement_diagnostic(_kind: SuiteKind, span: Span) -> Diagnostic {
 
 fn body_diagnostic(_kind: SuiteKind, span: Span) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::BodyUnparseable,
         "I couldn't understand the statement here",
         "여기 있는 문장을 이해하지 못했어요",
         span,
@@ -4161,9 +4811,17 @@ fn remember_bindings(stmt: &NmeStmt, names: &mut HashSet<String>) {
         NmeStmt::Ask { target, .. } | NmeStmt::Set { target, .. } => {
             names.insert(target.clone());
         }
-        NmeStmt::UseRandom { .. } => {
+        NmeStmt::FileRead { target, .. } => {
+            names.insert(target.clone());
+        }
+        NmeStmt::ModuleImport { names: imported, .. } => {
+            for name in imported {
+                names.insert(name.clone());
+            }
+        }
+        NmeStmt::UseModule { module, .. } => {
             names.extend(
-                random_binding_names()
+                module_binding_names(*module)
                     .iter()
                     .map(|name| (*name).to_string()),
             );
@@ -4599,6 +5257,7 @@ fn has_recoverable_sentence_shape(tokens: &[Token]) -> bool {
 
 fn ambiguous_action_diagnostic(tokens: &[Token]) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::AmbiguousAction,
         "this sentence could mean more than one action",
         "이 문장은 두 가지 동작으로 읽힐 수 있어요",
         span_of(tokens),
@@ -4611,6 +5270,7 @@ fn ambiguous_action_diagnostic(tokens: &[Token]) -> Diagnostic {
 
 fn missing_action_diagnostic(tokens: &[Token]) -> Diagnostic {
     Diagnostic::bilingual(
+        DiagnosticCode::MissingAction,
         "I couldn't find one clear action on this line",
         "이 줄에서 무엇을 할지 찾지 못했어요",
         span_of(tokens),

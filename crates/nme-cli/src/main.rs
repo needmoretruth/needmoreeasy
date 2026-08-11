@@ -14,6 +14,7 @@
 
 mod exec;
 
+use std::fmt::Write as _;
 use std::io::Write as _;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -39,6 +40,10 @@ With no file name, `nme r` runs the single .nme program in the current
 folder; with several, it asks which one to run. `nme c` and `nme b` do the
 same for checking and building.
 
+Program names may be shortened while they stay unique: `nme r gue` runs
+`guessing-game.nme`. If several programs match, nme lists them and asks you
+to type more of the name.
+
 MORE COMMANDS:
     nme compile hello -o hello    Build an executable with Nuitka
     nme convert app.py [options]  Convert safe Python patterns to NME
@@ -46,6 +51,11 @@ MORE COMMANDS:
         --language en|ko
         -o <output.nme>
     nme modules                   Show bundled modules and versions
+    nme native run hello          Compile a core-subset program to native code
+    nme native build hello -o h   and run it / keep the executable and C
+    nme install requests          Install a Python package with pip
+    nme ko E0001                  Korean explanation of error code E0001
+    nme en E0001                  English explanation of error code E0001
     nme help                      Show this help
     nme --version                 Show the version
 
@@ -57,6 +67,8 @@ one file. English and Korean NME spellings may be mixed too. File names work
 with or without .nme: type `nme run hello`, not `nme run hello.nme`. If the
 exact file you type exists, it is used as-is, so Python files such as
 `program.py` run too. `nme check` prints nothing when the program is fine.
+Every error message carries a stable code such as E0001; `nme ko E0001` reads
+its full Korean explanation and `nme en E0001` the English one.
 ";
 
 const HELP_KOREAN: &str = r"nme — NeedMoreEasy: 더 쉽게 시작해서 Python으로 성장하세요.
@@ -80,6 +92,10 @@ const HELP_KOREAN: &str = r"nme — NeedMoreEasy: 더 쉽게 시작해서 Python
 그것을 실행하고, 여러 개일 때는 어느 것을 실행할지 물어봅니다.
 `nme c`와 `nme b`도 검사·빌드에서 같은 방식으로 동작합니다.
 
+프로그램 이름은 겹치지 않는 범위에서 줄여 쓸 수 있습니다: `nme r gue`는
+`guessing-game.nme`를 실행합니다. 여러 프로그램이 일치하면 목록을 보여 주고
+이름을 더 입력하라고 안내합니다.
+
 더 많은 명령:
     nme 컴파일 hello -o hello    Nuitka로 실행 파일 만들기
     nme 변환 app.py [옵션]       안전한 Python 형태를 NME로 변환
@@ -87,6 +103,11 @@ const HELP_KOREAN: &str = r"nme — NeedMoreEasy: 더 쉽게 시작해서 Python
         --language en|ko
         -o <출력.nme>
     nme 모듈                       내장 모듈과 버전 보기
+    nme 네이티브 실행 hello        코어 부분집합 프로그램을 네이티브 코드로 컴파일해 실행
+    nme 네이티브 빌드 hello -o h   실행 파일과 C 소스를 저장
+    nme 설치 requests             Python 패키지를 pip으로 설치
+    nme ko E0001                   오류 코드 E0001의 한국어 설명 보기
+    nme en E0001                   오류 코드 E0001의 영어 설명 보기
     nme 도움                       이 도움말 보기
     nme 버전                       버전 보기
 
@@ -98,6 +119,8 @@ const HELP_KOREAN: &str = r"nme — NeedMoreEasy: 더 쉽게 시작해서 Python
 됩니다(`nme 실행 hello`처럼 쓰면 됩니다). 적은 경로 그대로 파일이 있으면
 그 파일을 사용하므로 `program.py` 같은 Python 파일도 실행할 수 있습니다.
 `nme 검사`는 프로그램이 정상이면 아무것도 출력하지 않습니다.
+모든 오류 메시지에는 E0001 같은 안정적인 코드가 붙어 있습니다.
+`nme ko E0001`은 자세한 한국어 설명을, `nme en E0001`은 영어 설명을 보여 줍니다.
 ";
 
 const DEFAULT_PYTHON: &str = if cfg!(windows) { "py" } else { "python3" };
@@ -123,45 +146,70 @@ fn main() -> ExitCode {
         Some("변환") => command_convert(&args[1..], MessageLanguage::KoreanAndEnglish),
         Some("modules" | "module" | "m") => command_modules(&args[1..], MessageLanguage::English),
         Some("모듈") => command_modules(&args[1..], MessageLanguage::KoreanAndEnglish),
+        Some("native" | "네이티브") => {
+            command_native(&args[1..], MessageLanguage::English)
+        }
+        Some("install" | "설치") => command_install(&args[1..], MessageLanguage::English),
+        Some("ko" | "error" | "에러") => {
+            command_error_lookup(&args[1..], MessageLanguage::KoreanAndEnglish)
+        }
+        Some("en") => command_error_lookup(&args[1..], MessageLanguage::English),
         Some("버전") if args.len() == 1 => {
-            println!(
-                "NME 버전: {}\nnme version: {}",
+            print_out(&format!(
+                "NME 버전: {}\nnme version: {}\n",
                 env!("CARGO_PKG_VERSION"),
                 env!("CARGO_PKG_VERSION")
-            );
+            ));
             ExitCode::SUCCESS
         }
         Some("--version" | "-V" | "version" | "v") if args.len() == 1 => {
-            println!("nme {}", env!("CARGO_PKG_VERSION"));
+            print_out(&format!("nme {}\n", env!("CARGO_PKG_VERSION")));
             ExitCode::SUCCESS
         }
         Some("--help" | "-h" | "help" | "h") => {
-            print!("{HELP_ENGLISH}");
+            print_out(HELP_ENGLISH);
             ExitCode::SUCCESS
         }
         Some("도움" | "도움말") => {
             print_bilingual_help();
             ExitCode::SUCCESS
         }
-        Some(path) if is_direct_program(path) => command_run(&args, MessageLanguage::English),
-        Some(command) => {
-            let language = if contains_korean(command) {
-                MessageLanguage::KoreanAndEnglish
-            } else {
-                MessageLanguage::English
-            };
-            fail(
-                language,
-                &format!(
-                    "I don't know the command `{command}`. Run `nme help` to see the commands.\n\
-                     Tip: `nme r` runs the single .nme program in the current folder."
-                ),
-                &format!(
-                    "`{command}` 명령을 알 수 없습니다. `nme 도움`으로 명령을 확인하세요.\n\
-                     팁: 현재 폴더에 .nme 파일이 하나뿐이면 `nme r`만으로 실행할 수 있어요."
-                ),
-            )
-        }
+        Some(path) => match resolve_program(Path::new(path)) {
+            NameResolution::Found(_) => command_run(&args, MessageLanguage::English),
+            NameResolution::Ambiguous(names) => {
+                let language = if contains_korean(path) {
+                    MessageLanguage::KoreanAndEnglish
+                } else {
+                    MessageLanguage::English
+                };
+                let (english, korean) = ambiguous_program_message(path, &names, "run", "실행");
+                fail(
+                    nme_core::diagnostics::DiagnosticCode::CliAmbiguousProgramPrefix,
+                    language,
+                    &english,
+                    &korean,
+                )
+            }
+            NameResolution::None => {
+                let language = if contains_korean(path) {
+                    MessageLanguage::KoreanAndEnglish
+                } else {
+                    MessageLanguage::English
+                };
+                fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnknownCommand,
+                    language,
+                    &format!(
+                        "I don't know the command `{path}`. Run `nme help` to see the commands.\n\
+                         Tip: `nme r` runs the single .nme program in the current folder."
+                    ),
+                    &format!(
+                        "`{path}` 명령을 알 수 없습니다. `nme 도움`으로 명령을 확인하세요.\n\
+                         팁: 현재 폴더에 .nme 파일이 하나뿐이면 `nme r`만으로 실행할 수 있어요."
+                    ),
+                )
+            }
+        },
         _ => {
             eprint!("{HELP_ENGLISH}");
             ExitCode::FAILURE
@@ -170,27 +218,353 @@ fn main() -> ExitCode {
 }
 
 fn print_bilingual_help() {
-    print!("{HELP_KOREAN}\nENGLISH / 영어\n\n{HELP_ENGLISH}");
+    print_out(&format!("{HELP_KOREAN}\nENGLISH / 영어\n\n{HELP_ENGLISH}"));
 }
 
 fn command_modules(args: &[String], language: MessageLanguage) -> ExitCode {
     if let Some(extra) = args.first() {
         return fail(
+            nme_core::diagnostics::DiagnosticCode::CliModulesExtraArgument,
             language,
             &format!("`modules` does not take `{extra}`. Try `nme modules`."),
             &format!("`모듈` 명령에는 `{extra}`을(를) 적지 않습니다. `nme 모듈`을 사용하세요."),
         );
     }
+    let mut list = String::new();
+    for module in nme_core::syntax::BundledModuleId::ALL {
+        match language {
+            MessageLanguage::English => {
+                let _ = writeln!(
+                    list,
+                    "{}  {}  bundled, latest",
+                    module.name_en(),
+                    module.version()
+                );
+            }
+            MessageLanguage::KoreanAndEnglish => {
+                let _ = writeln!(
+                    list,
+                    "{}  {}  내장, 최신\n{}  {}  bundled, latest",
+                    module.name_ko(),
+                    module.version(),
+                    module.name_en(),
+                    module.version()
+                );
+            }
+        }
+    }
+    print_out(&list);
+    ExitCode::SUCCESS
+}
+
+/// `nme native run <file>` (or just `nme native <file>`) compiles the native
+/// core subset of a program to C, builds it with the system C compiler, and
+/// runs the executable. `nme native build <file> [-o out]` keeps the C source
+/// and the executable. Programs outside the documented core subset are
+/// rejected; they still run with `nme run` on CPython.
+fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
+    let mut action = "run";
+    let mut file = None;
+    let mut output = None;
+    let mut rest = args.iter();
+    while let Some(arg) = rest.next() {
+        match arg.as_str() {
+            "run" | "실행" => action = "run",
+            "build" | "빌드" => action = "build",
+            "-o" | "--output" => match rest.next() {
+                Some(path) => output = Some(path.clone()),
+                None => {
+                    return fail(
+                        nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
+                        language,
+                        "-o needs an output path, e.g. -o hello",
+                        "-o 뒤에 출력 경로가 필요합니다. 예: -o hello",
+                    );
+                }
+            },
+            flag if flag.starts_with('-') => {
+                return fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnknownOption,
+                    language,
+                    &format!("unknown option: {flag}"),
+                    &format!("알 수 없는 옵션입니다: {flag}"),
+                );
+            }
+            path if file.is_none() => file = Some(path.to_string()),
+            path => {
+                return fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnexpectedExtraFile,
+                    language,
+                    &format!("unexpected extra file: {path}"),
+                    &format!("파일은 하나만 적어 주세요. 추가로 적힌 파일: {path}"),
+                );
+            }
+        }
+    }
+    let file = match file {
+        Some(file) => file,
+        None => match discover_current_program(language, "native run", "네이티브 실행") {
+            Ok(found) => found,
+            Err(code) => return code,
+        },
+    };
+    let path = match resolve_program(Path::new(&file)) {
+        NameResolution::Found(path) => path,
+        NameResolution::Ambiguous(names) => {
+            let (english, korean) =
+                ambiguous_program_message(&file, &names, "native run", "네이티브 실행");
+            return fail(
+                nme_core::diagnostics::DiagnosticCode::CliAmbiguousProgramPrefix,
+                language,
+                &english,
+                &korean,
+            );
+        }
+        NameResolution::None => resolve_nme_path(Path::new(&file)),
+    };
+    let shown_path = path.to_string_lossy();
+    let source = match std::fs::read_to_string(&path) {
+        Ok(source) => source,
+        Err(err) => {
+            return fail(
+                nme_core::diagnostics::DiagnosticCode::CliMissingProgram,
+                language,
+                &format!("couldn't read {shown_path}: {err}"),
+                &format!("{shown_path} 파일을 읽을 수 없습니다: {err}"),
+            );
+        }
+    };
+    let c_source = match nme_native::native_compile(&source) {
+        Ok(c) => c,
+        Err(problems) => {
+            eprint!(
+                "{}",
+                render_diagnostics(&problems, &source, &shown_path, language)
+            );
+            return ExitCode::FAILURE;
+        }
+    };
+    let stem = path
+        .file_stem()
+        .and_then(|name| name.to_str())
+        .unwrap_or("program");
+    let dir = std::env::temp_dir().join(format!("nme-native-run-{}", std::process::id()));
+    if let Err(err) = std::fs::create_dir_all(&dir) {
+        return fail(
+            nme_core::diagnostics::DiagnosticCode::CliFolderReadFailed,
+            language,
+            &format!("couldn't create the native build folder: {err}"),
+            &format!("네이티브 빌드 폴더를 만들 수 없습니다: {err}"),
+        );
+    }
+    let c_path = dir.join(format!("{stem}.c"));
+    if let Err(err) = std::fs::write(&c_path, c_source) {
+        return fail(
+            nme_core::diagnostics::DiagnosticCode::CliFileWriteFailed,
+            language,
+            &format!("couldn't write the C source: {err}"),
+            &format!("C 소스를 저장할 수 없습니다: {err}"),
+        );
+    }
+    let exe = dir.join(stem);
+    let compile_status = std::process::Command::new("cc")
+        .arg("-O2")
+        .arg(&c_path)
+        .arg("-o")
+        .arg(&exe)
+        .status();
+    match compile_status {
+        Ok(status) if status.success() => {}
+        Ok(status) => {
+            let _ = std::fs::remove_dir_all(&dir);
+            return fail(
+                nme_core::diagnostics::DiagnosticCode::CliNativeCompileFailed,
+                language,
+                &format!("the native compiler (cc) failed with {status}\n\
+                          hint: install a C compiler, or run this program with `nme run`"),
+                &format!("네이티브 컴파일러(cc)가 실패했습니다: {status}\n\
+                          도움말: C 컴파일러를 설치하거나 `nme run`으로 실행하세요"),
+            );
+        }
+        Err(error) => {
+            let _ = std::fs::remove_dir_all(&dir);
+            return fail(
+                nme_core::diagnostics::DiagnosticCode::CliNativeCompileStartFailed,
+                language,
+                &format!("couldn't start the C compiler: {error}\n\
+                          hint: install a C compiler, or run this program with `nme run`"),
+                &format!("C 컴파일러를 시작할 수 없습니다: {error}\n\
+                          도움말: C 컴파일러를 설치하거나 `nme run`으로 실행하세요"),
+            );
+        }
+    }
+    if action == "build" {
+        let out = output
+            .map(PathBuf::from)
+            .unwrap_or_else(|| PathBuf::from(stem));
+        let copy_exe = std::fs::copy(&exe, &out).is_ok();
+        let copy_c = std::fs::copy(&c_path, out.with_extension("c")).is_ok();
+        let _ = std::fs::remove_dir_all(&dir);
+        if copy_exe && copy_c {
+            ExitCode::SUCCESS
+        } else {
+            fail(
+                nme_core::diagnostics::DiagnosticCode::CliFileWriteFailed,
+                language,
+                "couldn't write the native artifact",
+                "네이티브 결과물을 저장할 수 없습니다",
+            )
+        }
+    } else {
+        let run_status = std::process::Command::new(&exe).status();
+        let _ = std::fs::remove_dir_all(&dir);
+        match run_status {
+            Ok(status) => exit_code(status),
+            Err(err) => fail(
+                nme_core::diagnostics::DiagnosticCode::CliPythonStartFailed,
+                language,
+                &format!("couldn't run the native program: {err}"),
+                &format!("네이티브 프로그램을 실행할 수 없습니다: {err}"),
+            ),
+        }
+    }
+}
+
+/// `nme install <package>` / `nme 설치 <패키지>` installs a Python package
+/// with pip and tells the beginner how to use it in an `.nme` file. It is a
+/// friendly wrapper around the ordinary Python package manager, not a
+/// separate registry.
+fn command_install(args: &[String], language: MessageLanguage) -> ExitCode {
+    if args.is_empty() {
+        return fail(
+            nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
+            language,
+            "which package should I install? e.g. nme install requests",
+            "어떤 패키지를 설치할까요? 예: nme 설치 requests",
+        );
+    }
+    if args.len() > 1 {
+        return fail(
+            nme_core::diagnostics::DiagnosticCode::CliUnexpectedExtraFile,
+            language,
+            &format!("one package at a time: `{}` and the rest are separate", args[0]),
+            &format!("패키지는 한 번에 하나씩입니다: `{}`와 나머지는 별개입니다", args[0]),
+        );
+    }
+    let package = &args[0];
+    let python = DEFAULT_PYTHON;
+    let status = std::process::Command::new(python)
+        .arg("-m")
+        .arg("pip")
+        .arg("install")
+        .arg(package)
+        .status();
+    match status {
+        Ok(status) if status.success() => {
+            match language {
+                MessageLanguage::English => print_out(&format!(
+                    "Installed {package}.\nUse it in any .nme file with:\n    import {package}\n\n",
+                )),
+                MessageLanguage::KoreanAndEnglish => print_out(&format!(
+                    "{package} 패키지를 설치했습니다.\n아무 .nme 파일에서 이렇게 사용하세요:\n    import {package}\n\n"
+                )),
+            }
+            ExitCode::SUCCESS
+        }
+        Ok(status) => fail(
+            nme_core::diagnostics::DiagnosticCode::CliNativeCompileFailed,
+            language,
+            &format!(
+                "pip failed to install {package} (exit {}).\n\
+                 hint: check the package name, your internet connection, and that pip is installed",
+                status.code().unwrap_or(1),
+            ),
+            &format!(
+                "pip이 {package} 설치에 실패했습니다(종료 {}).\n\
+                 도움말: 패키지 이름, 인터넷 연결, pip 설치 여부를 확인하세요",
+                status.code().unwrap_or(1),
+            ),
+        ),
+        Err(error) => fail(
+            nme_core::diagnostics::DiagnosticCode::CliPythonStartFailed,
+            language,
+            &format!(
+                "couldn't start pip ({python} -m pip): {error}\n\
+                 hint: install Python 3, then run this command again",
+            ),
+            &format!(
+                "pip을 시작할 수 없습니다({python} -m pip): {error}\n\
+                 도움말: Python 3를 설치한 뒤 이 명령을 다시 실행하세요",
+            ),
+        ),
+    }
+}
+
+/// `nme ko E0001` prints the long Korean explanation of one error code, with
+/// the English explanation after it; `nme en E0001` prints English only.
+/// With no code, every code is listed so a beginner can browse.
+fn command_error_lookup(args: &[String], language: MessageLanguage) -> ExitCode {
+    let Some(code) = args.first() else {
+        let mut list = String::new();
+        for code in nme_core::diagnostics::DiagnosticCode::ALL {
+            let explanation = code.explanation();
+            match language {
+                MessageLanguage::English => {
+                    let _ = writeln!(list, "{}  {}", explanation.code, explanation.title_en);
+                }
+                MessageLanguage::KoreanAndEnglish => {
+                    let _ = writeln!(
+                        list,
+                        "{}  {} / {}",
+                        explanation.code, explanation.title_ko, explanation.title_en
+                    );
+                }
+            }
+        }
+        print_out(&list);
+        return ExitCode::SUCCESS;
+    };
+    if args.len() > 1 {
+        return fail(
+            nme_core::diagnostics::DiagnosticCode::CliErrorLookupInvalidArgs,
+            language,
+            &format!(
+                "`{code}`: one error code at a time. Try `nme ko {code}` or `nme ko` for the list."
+            ),
+            &format!(
+                "`{code}`: 오류 코드는 한 번에 하나씩 확인할 수 있어요. `nme ko {code}` 또는 목록을 보려면 `nme ko`를 사용하세요."
+            ),
+        );
+    }
+    let Some(code) = nme_core::diagnostics::DiagnosticCode::from_code(code) else {
+        return fail(
+            nme_core::diagnostics::DiagnosticCode::CliErrorLookupUnknownCode,
+            language,
+            &format!(
+                "there is no error code `{code}`. Run `nme ko` to list every code."
+            ),
+            &format!("`{code}` 오류 코드는 없어요. `nme ko`를 실행하면 모든 코드를 볼 수 있습니다."),
+        );
+    };
+    let explanation = code.explanation();
     match language {
-        MessageLanguage::English => println!(
-            "random  {}  bundled, latest",
-            nme_core::syntax::RANDOM_MODULE_VERSION
-        ),
-        MessageLanguage::KoreanAndEnglish => println!(
-            "랜덤  {}  내장, 최신\nrandom  {}  bundled, latest",
-            nme_core::syntax::RANDOM_MODULE_VERSION,
-            nme_core::syntax::RANDOM_MODULE_VERSION
-        ),
+        MessageLanguage::English => print_out(&format!(
+            "{} — {}\n\n{}\n\nSee it in your program: the compiler prints this code\nnext to the error, for example `error[{0}]`. You can also run\n`nme ko {0}` anytime to read this page again.\n",
+            explanation.code, explanation.title_en, explanation.detail_en
+        )),
+        MessageLanguage::KoreanAndEnglish => print_out(&format!(
+            "{} — {}\n\n{}\n\n{}\n\n{} — {}\n\n{}\n",
+            explanation.code,
+            explanation.title_ko,
+            explanation.detail_ko,
+            format!(
+                "프로그램에서 이 코드를 보면 오류 옆에 `error[{}]`처럼 표시됩니다. 궁금할 때 `nme ko {}`를 다시 실행하면 이 설명을 볼 수 있습니다.",
+                explanation.code, explanation.code
+            ),
+            explanation.code,
+            explanation.title_en,
+            explanation.detail_en
+        )),
     }
     ExitCode::SUCCESS
 }
@@ -206,6 +580,7 @@ fn command_convert(args: &[String], language: MessageLanguage) -> ExitCode {
             "--level" => {
                 let Some(value) = rest.next() else {
                     return fail(
+                        nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
                         language,
                         "--level needs advanced, beginner, or sentence",
                         "--level 뒤에 advanced, beginner, sentence 중 하나를 적어 주세요",
@@ -217,6 +592,7 @@ fn command_convert(args: &[String], language: MessageLanguage) -> ExitCode {
                     "sentence" | "문장" | "문장형" => nme_core::SyntaxLevel::Sentence,
                     _ => {
                         return fail(
+                            nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
                             language,
                             "--level needs advanced, beginner, or sentence",
                             "--level 뒤에 advanced, beginner, sentence 중 하나를 적어 주세요",
@@ -227,6 +603,7 @@ fn command_convert(args: &[String], language: MessageLanguage) -> ExitCode {
             "--language" | "--lang" => {
                 let Some(value) = rest.next() else {
                     return fail(
+                        nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
                         language,
                         "--language needs en or ko",
                         "--language 뒤에 en(영어) 또는 ko(한국어)를 적어 주세요",
@@ -237,6 +614,7 @@ fn command_convert(args: &[String], language: MessageLanguage) -> ExitCode {
                     "ko" | "korean" | "한국어" => nme_core::Language::Korean,
                     _ => {
                         return fail(
+                            nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
                             language,
                             "--language needs en or ko",
                             "--language 뒤에 en(영어) 또는 ko(한국어)를 적어 주세요",
@@ -248,6 +626,7 @@ fn command_convert(args: &[String], language: MessageLanguage) -> ExitCode {
                 Some(path) => output = Some(path.clone()),
                 None => {
                     return fail(
+                        nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
                         language,
                         "-o needs a path, e.g. -o program.nme",
                         "-o 뒤에 저장할 경로가 필요합니다. 예: -o program.nme",
@@ -256,6 +635,7 @@ fn command_convert(args: &[String], language: MessageLanguage) -> ExitCode {
             },
             flag if flag.starts_with('-') => {
                 return fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnknownOption,
                     language,
                     &format!("unknown option: {flag}"),
                     &format!("알 수 없는 옵션입니다: {flag}"),
@@ -264,6 +644,7 @@ fn command_convert(args: &[String], language: MessageLanguage) -> ExitCode {
             path if file.is_none() => file = Some(path.to_string()),
             path => {
                 return fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnexpectedExtraFile,
                     language,
                     &format!("unexpected extra file: {path}"),
                     &format!("파일은 하나만 적어 주세요. 추가로 적힌 파일: {path}"),
@@ -273,6 +654,7 @@ fn command_convert(args: &[String], language: MessageLanguage) -> ExitCode {
     }
     let Some(file) = file else {
         return fail(
+            nme_core::diagnostics::DiagnosticCode::CliConvertNeedsFile,
             language,
             "which Python file should I convert? e.g. nme convert app.py",
             "변환할 Python 파일을 적어 주세요. 예: nme 변환 app.py",
@@ -292,6 +674,7 @@ fn convert_file(
         Ok(source) => source,
         Err(error) => {
             return fail(
+                nme_core::diagnostics::DiagnosticCode::CliFileReadFailed,
                 message_language,
                 &format!("couldn't read {file}: {error}"),
                 &format!("{file} 파일을 읽을 수 없습니다: {error}"),
@@ -312,6 +695,7 @@ fn convert_file(
         match std::fs::write(&path, conversion.source) {
             Ok(()) => ExitCode::SUCCESS,
             Err(error) => fail(
+                nme_core::diagnostics::DiagnosticCode::CliFileWriteFailed,
                 message_language,
                 &format!("couldn't write {path}: {error}"),
                 &format!("{path} 파일을 저장할 수 없습니다: {error}"),
@@ -328,7 +712,19 @@ fn command_compile(args: &[String], language: MessageLanguage) -> ExitCode {
         Ok(arguments) => arguments,
         Err(code) => return code,
     };
-    let source_path = resolve_nme_path(Path::new(&file));
+    let source_path = match resolve_program(Path::new(&file)) {
+        NameResolution::Found(path) => path,
+        NameResolution::Ambiguous(names) => {
+            let (english, korean) = ambiguous_program_message(&file, &names, "compile", "컴파일");
+            return fail(
+                nme_core::diagnostics::DiagnosticCode::CliAmbiguousProgramPrefix,
+                language,
+                &english,
+                &korean,
+            );
+        }
+        NameResolution::None => resolve_nme_path(Path::new(&file)),
+    };
     let stem = source_path
         .file_stem()
         .and_then(|name| name.to_str())
@@ -346,6 +742,7 @@ fn command_compile(args: &[String], language: MessageLanguage) -> ExitCode {
     }
     if output.exists() {
         return fail(
+            nme_core::diagnostics::DiagnosticCode::CliRefuseOverwrite,
             language,
             &format!(
                 "refusing to overwrite existing output: {}",
@@ -357,16 +754,25 @@ fn command_compile(args: &[String], language: MessageLanguage) -> ExitCode {
             ),
         );
     }
-    let (_, python_source) = match transpile_file(&file, language) {
+    let compiled = match transpile_file(&file, language, "compile", "컴파일") {
         Ok(ok) => ok,
         Err(code) => return code,
     };
-    match exec::compile_native(&python_source, stem, &python, &output) {
+    if !compiled.imports.is_empty() {
+        return fail(
+            nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
+            language,
+            "module imports are not supported by `nme compile` yet; run the program with `nme run`",
+            "`nme compile`은 아직 모듈 가져오기를 지원하지 않습니다. `nme run`으로 실행하세요",
+        );
+    }
+    match exec::compile_native(&compiled.source, stem, &python, &output) {
         Ok(status) if status.success() => {
             if output.exists() {
                 ExitCode::SUCCESS
             } else {
                 fail(
+                    nme_core::diagnostics::DiagnosticCode::CliNativeCompileFailed,
                     language,
                     &format!(
                         "native compiler succeeded but did not create {}",
@@ -380,6 +786,7 @@ fn command_compile(args: &[String], language: MessageLanguage) -> ExitCode {
             }
         }
         Ok(status) => fail(
+            nme_core::diagnostics::DiagnosticCode::CliNativeCompileFailed,
             language,
             &format!(
                 "native compilation failed with {status}\n\
@@ -391,6 +798,7 @@ fn command_compile(args: &[String], language: MessageLanguage) -> ExitCode {
             ),
         ),
         Err(error) => fail(
+            nme_core::diagnostics::DiagnosticCode::CliNativeCompileStartFailed,
             language,
             &format!(
                 "couldn't start native compilation: {error}\n\
@@ -420,6 +828,7 @@ fn compile_arguments(
                 Some(command) => python.clone_from(command),
                 None => {
                     return Err(fail(
+                        nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
                         language,
                         &format!("--python needs a command, e.g. --python {DEFAULT_PYTHON}"),
                         &format!(
@@ -432,6 +841,7 @@ fn compile_arguments(
                 Some(path) => output = Some(std::path::PathBuf::from(path)),
                 None => {
                     return Err(fail(
+                        nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
                         language,
                         "-o needs an executable path, e.g. -o hello",
                         "-o 뒤에 만들 실행 파일 경로가 필요합니다. 예: -o hello",
@@ -440,6 +850,7 @@ fn compile_arguments(
             },
             flag if flag.starts_with('-') => {
                 return Err(fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnknownOption,
                     language,
                     &format!("unknown option: {flag}"),
                     &format!("알 수 없는 옵션입니다: {flag}"),
@@ -448,6 +859,7 @@ fn compile_arguments(
             path if file.is_none() => file = Some(path.to_string()),
             path => {
                 return Err(fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnexpectedExtraFile,
                     language,
                     &format!("unexpected extra file: {path}"),
                     &format!("파일은 하나만 적어 주세요. 추가로 적힌 파일: {path}"),
@@ -476,6 +888,7 @@ fn command_run(args: &[String], language: MessageLanguage) -> ExitCode {
                 Some(command) => python.clone_from(command),
                 None => {
                     return fail(
+                        nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
                         language,
                         &format!("--python needs a command, e.g. --python {DEFAULT_PYTHON}"),
                         &format!(
@@ -486,6 +899,7 @@ fn command_run(args: &[String], language: MessageLanguage) -> ExitCode {
             },
             flag if flag.starts_with('-') => {
                 return fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnknownOption,
                     language,
                     &format!("unknown option: {flag}"),
                     &format!("알 수 없는 옵션입니다: {flag}"),
@@ -494,6 +908,7 @@ fn command_run(args: &[String], language: MessageLanguage) -> ExitCode {
             path if file.is_none() => file = Some(path.to_string()),
             path => {
                 return fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnexpectedExtraFile,
                     language,
                     &format!("unexpected extra file: {path}"),
                     &format!("파일은 하나만 적어 주세요. 추가로 적힌 파일: {path}"),
@@ -509,13 +924,35 @@ fn command_run(args: &[String], language: MessageLanguage) -> ExitCode {
         },
     };
 
-    let (path, python_source) = match transpile_file(&file, language) {
+    let compiled = match transpile_file(&file, language, "run", "실행") {
         Ok(ok) => ok,
         Err(code) => return code,
     };
-    match exec::run_python(&python_source, &path, &python) {
+    let main_dir = compiled
+        .path
+        .parent()
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| PathBuf::from("."));
+    let modules = match transpile_modules(&main_dir, &compiled.imports, language) {
+        Ok(modules) => modules,
+        Err(code) => return code,
+    };
+    let module_dir = if modules.is_empty() {
+        None
+    } else {
+        match write_modules_to_temp(&modules) {
+            Ok(dir) => Some(dir),
+            Err(code) => return code,
+        }
+    };
+    let run_status = exec::run_python(&compiled.source, &compiled.path, &python, module_dir.as_deref());
+    if let Some(dir) = module_dir {
+        let _ = std::fs::remove_dir_all(dir);
+    }
+    match run_status {
         Ok(status) => exit_code(status),
         Err(err) => fail(
+            nme_core::diagnostics::DiagnosticCode::CliPythonStartFailed,
             language,
             &format!(
                 "couldn't start Python ({python}): {err}\n\
@@ -543,6 +980,7 @@ fn command_build(args: &[String], language: MessageLanguage) -> ExitCode {
                 Some(command) => python.clone_from(command),
                 None => {
                     return fail(
+                        nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
                         language,
                         &format!("--python needs a command, e.g. --python {DEFAULT_PYTHON}"),
                         &format!(
@@ -555,6 +993,7 @@ fn command_build(args: &[String], language: MessageLanguage) -> ExitCode {
                 Some(path) => output = Some(path.clone()),
                 None => {
                     return fail(
+                        nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
                         language,
                         "-o needs a path, e.g. -o hello.py",
                         "-o 뒤에 저장할 경로가 필요합니다. 예: -o hello.py",
@@ -563,6 +1002,7 @@ fn command_build(args: &[String], language: MessageLanguage) -> ExitCode {
             },
             flag if flag.starts_with('-') => {
                 return fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnknownOption,
                     language,
                     &format!("unknown option: {flag}"),
                     &format!("알 수 없는 옵션입니다: {flag}"),
@@ -571,6 +1011,7 @@ fn command_build(args: &[String], language: MessageLanguage) -> ExitCode {
             path if file.is_none() => file = Some(path.to_string()),
             path => {
                 return fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnexpectedExtraFile,
                     language,
                     &format!("unexpected extra file: {path}"),
                     &format!("파일은 하나만 적어 주세요. 추가로 적힌 파일: {path}"),
@@ -586,14 +1027,27 @@ fn command_build(args: &[String], language: MessageLanguage) -> ExitCode {
         },
     };
 
-    let (path, python_source) = match transpile_file(&file, language) {
+    let compiled = match transpile_file(&file, language, "build", "빌드") {
         Ok(ok) => ok,
         Err(code) => return code,
     };
-    match exec::check_python(&python_source, &path, &python) {
+    let main_dir = compiled
+        .path
+        .parent()
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| PathBuf::from("."));
+    let modules = match transpile_modules(&main_dir, &compiled.imports, language) {
+        Ok(modules) => modules,
+        Err(code) => return code,
+    };
+    if let Err(code) = check_modules(&modules, language, "build") {
+        return code;
+    }
+    match exec::check_python(&compiled.source, &compiled.path, &python) {
         Ok(output) if output.status.success() => write_stderr(&output.stderr),
         Ok(output) => {
             return fail_with_details(
+                nme_core::diagnostics::DiagnosticCode::CliCpythonValidationFailed,
                 language,
                 "the generated Python did not pass CPython's syntax check\n\
                  hint: fix the Python syntax or indentation shown below, then build again",
@@ -604,6 +1058,7 @@ fn command_build(args: &[String], language: MessageLanguage) -> ExitCode {
         }
         Err(error) => {
             return fail(
+                nme_core::diagnostics::DiagnosticCode::CliPythonStartFailed,
                 language,
                 &format!(
                     "couldn't start Python ({python}) to check the build: {error}\n\
@@ -619,16 +1074,17 @@ fn command_build(args: &[String], language: MessageLanguage) -> ExitCode {
         }
     }
     if let Some(path) = output {
-        match std::fs::write(&path, &python_source) {
+        match std::fs::write(&path, &compiled.source) {
             Ok(()) => ExitCode::SUCCESS,
             Err(err) => fail(
+                nme_core::diagnostics::DiagnosticCode::CliFileWriteFailed,
                 language,
                 &format!("couldn't write {path}: {err}"),
                 &format!("{path} 파일을 저장할 수 없습니다: {err}"),
             ),
         }
     } else {
-        print!("{python_source}");
+        print!("{}", compiled.source);
         ExitCode::SUCCESS
     }
 }
@@ -644,6 +1100,7 @@ fn command_check(args: &[String], language: MessageLanguage) -> ExitCode {
                 Some(command) => python.clone_from(command),
                 None => {
                     return fail(
+                        nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
                         language,
                         &format!("--python needs a command, e.g. --python {DEFAULT_PYTHON}"),
                         &format!(
@@ -654,6 +1111,7 @@ fn command_check(args: &[String], language: MessageLanguage) -> ExitCode {
             },
             flag if flag.starts_with('-') => {
                 return fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnknownOption,
                     language,
                     &format!("unknown option: {flag}"),
                     &format!("알 수 없는 옵션입니다: {flag}"),
@@ -662,6 +1120,7 @@ fn command_check(args: &[String], language: MessageLanguage) -> ExitCode {
             path if file.is_none() => file = Some(path.to_string()),
             path => {
                 return fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnexpectedExtraFile,
                     language,
                     &format!("unexpected extra file: {path}"),
                     &format!("파일은 하나만 적어 주세요. 추가로 적힌 파일: {path}"),
@@ -676,16 +1135,29 @@ fn command_check(args: &[String], language: MessageLanguage) -> ExitCode {
             Err(code) => return code,
         },
     };
-    let (path, python_source) = match transpile_file(&file, language) {
+    let compiled = match transpile_file(&file, language, "check", "검사") {
         Ok(ok) => ok,
         Err(code) => return code,
     };
-    match exec::check_python(&python_source, &path, &python) {
+    let main_dir = compiled
+        .path
+        .parent()
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| PathBuf::from("."));
+    let modules = match transpile_modules(&main_dir, &compiled.imports, language) {
+        Ok(modules) => modules,
+        Err(code) => return code,
+    };
+    if let Err(code) = check_modules(&modules, language, "check") {
+        return code;
+    }
+    match exec::check_python(&compiled.source, &compiled.path, &python) {
         Ok(output) if output.status.success() => {
             write_stderr(&output.stderr);
             ExitCode::SUCCESS
         }
         Ok(output) => fail_with_details(
+            nme_core::diagnostics::DiagnosticCode::CliCpythonValidationFailed,
             language,
             "CPython found a syntax or indentation problem in the generated program\n\
              hint: fix the problem shown below, then check again",
@@ -694,6 +1166,7 @@ fn command_check(args: &[String], language: MessageLanguage) -> ExitCode {
             &output.stderr,
         ),
         Err(error) => fail(
+            nme_core::diagnostics::DiagnosticCode::CliPythonStartFailed,
             language,
             &format!(
                 "couldn't start Python ({python}): {error}\n\
@@ -716,12 +1189,6 @@ fn is_nme_path(path: &str) -> bool {
         .is_some_and(|extension| extension.eq_ignore_ascii_case("nme"))
 }
 
-fn is_direct_program(path: &str) -> bool {
-    candidate_paths(Path::new(path))
-        .iter()
-        .any(|candidate| candidate.exists())
-}
-
 /// Possible real files for a typed name. The exact path wins, then the name
 /// with `.nme` appended (`hello.ko` → `hello.ko.nme`), then the name with its
 /// extension replaced (`hello` → `hello.nme`, `app.py` → `app.nme`).
@@ -739,15 +1206,18 @@ fn resolve_nme_path(path: &Path) -> std::path::PathBuf {
         .unwrap_or_else(|| path.to_path_buf())
 }
 
-/// Finds a nearby `.nme` program that the typed name almost matches, so a
-/// beginner who misspells a file name gets a "did you mean" hint instead of a
-/// bare read error.
-fn suggest_program(typed: &Path) -> Option<String> {
-    let folder = typed
-        .parent()
-        .filter(|parent| !parent.as_os_str().is_empty())
-        .unwrap_or(Path::new("."));
-    let wanted = typed.file_name()?.to_string_lossy().to_lowercase();
+/// How a typed program name resolved to a real file. A unique name may be
+/// shortened while it still names exactly one `.nme` program; when several
+/// programs match, they are reported instead of guessing.
+enum NameResolution {
+    Found(std::path::PathBuf),
+    None,
+    Ambiguous(Vec<String>),
+}
+
+/// Sorted `.nme` file names in a folder (hidden files excluded). Returns
+/// `None` when the folder cannot be read.
+fn sibling_nme_names(folder: &Path) -> Option<Vec<String>> {
     let mut names: Vec<String> = std::fs::read_dir(folder)
         .ok()?
         .filter_map(|entry| entry.ok())
@@ -757,29 +1227,109 @@ fn suggest_program(typed: &Path) -> Option<String> {
             (is_nme_path(&name) && !name.starts_with('.')).then_some(name)
         })
         .collect();
-    if names.is_empty() {
-        return None;
-    }
     names.sort();
+    Some(names)
+}
+
+fn file_stem_lower(name: &str) -> String {
+    Path::new(name)
+        .file_stem()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .to_lowercase()
+}
+
+/// Resolves a typed program name. Exact candidate paths win first; then a
+/// case-insensitive exact stem match; then a unique case-insensitive prefix
+/// of a sibling `.nme` stem. Several prefix matches are `Ambiguous`.
+fn resolve_program(typed: &Path) -> NameResolution {
+    if let Some(found) = candidate_paths(typed)
+        .iter()
+        .find(|candidate| candidate.exists())
+    {
+        return NameResolution::Found(found.clone());
+    }
+    let Some(wanted) = typed
+        .file_name()
+        .map(|name| name.to_string_lossy().to_lowercase())
+    else {
+        return NameResolution::None;
+    };
+    if wanted.is_empty() {
+        return NameResolution::None;
+    }
+    let folder = typed
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .unwrap_or(Path::new("."));
+    let Some(names) = sibling_nme_names(folder) else {
+        return NameResolution::None;
+    };
+    let exact: Vec<String> = names
+        .iter()
+        .filter(|name| file_stem_lower(name) == wanted)
+        .cloned()
+        .collect();
+    match exact.len() {
+        1 => return NameResolution::Found(folder.join(&exact[0])),
+        _ if exact.len() > 1 => return NameResolution::Ambiguous(exact),
+        _ => {}
+    }
+    let prefixes: Vec<String> = names
+        .iter()
+        .filter(|name| file_stem_lower(name).starts_with(&wanted))
+        .cloned()
+        .collect();
+    match prefixes.len() {
+        1 => NameResolution::Found(folder.join(&prefixes[0])),
+        0 => NameResolution::None,
+        _ => NameResolution::Ambiguous(prefixes),
+    }
+}
+
+fn ambiguous_program_message(
+    wanted: &str,
+    names: &[String],
+    action_en: &str,
+    action_ko: &str,
+) -> (String, String) {
+    let listed = names.join(", ");
+    let stem = names
+        .first()
+        .map(|name| name.trim_end_matches(".nme"))
+        .unwrap_or(wanted);
+    let english = format!(
+        "several programs match `{wanted}`: {listed}\n\
+         hint: type more of the name, e.g. `nme {action_en} {stem}`"
+    );
+    let korean = format!(
+        "`{wanted}`(와)과 일치하는 프로그램이 여러 개예요: {listed}\n\
+         도움말: 이름을 더 길게 적어 주세요. 예: `nme {action_ko} {stem}`"
+    );
+    (english, korean)
+}
+
+/// Finds a nearby `.nme` program that the typed name almost matches, so a
+/// beginner who misspells a file name gets a "did you mean" hint instead of a
+/// bare read error.
+fn suggest_program(typed: &Path) -> Option<String> {
+    let folder = typed
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .unwrap_or(Path::new("."));
+    let wanted = typed.file_name()?.to_string_lossy().to_lowercase();
+    let names = sibling_nme_names(folder)?;
     let mut matches: Vec<&String> = names
         .iter()
         .filter(|name| {
             let lower = name.to_lowercase();
-            let stem = Path::new(name.as_str())
-                .file_stem()
-                .unwrap_or_default()
-                .to_string_lossy()
-                .to_lowercase();
+            let stem = file_stem_lower(name);
             lower == wanted || stem == wanted || lower.contains(&wanted)
         })
         .collect();
     matches.sort_by_key(|name| {
         let lower = name.to_lowercase();
-        let stem = Path::new(name.as_str())
-            .file_stem()
-            .unwrap_or_default()
-            .to_string_lossy()
-            .to_lowercase();
+        let stem = file_stem_lower(name);
         if lower == wanted {
             0
         } else if stem == wanted {
@@ -810,6 +1360,7 @@ fn discover_current_program(
             .collect(),
         Err(err) => {
             return Err(fail(
+                nme_core::diagnostics::DiagnosticCode::CliFolderReadFailed,
                 language,
                 &format!("couldn't read the current folder: {err}"),
                 &format!("현재 폴더를 읽을 수 없습니다: {err}"),
@@ -819,6 +1370,7 @@ fn discover_current_program(
     found.sort();
     match found.as_slice() {
         [] => Err(fail(
+            nme_core::diagnostics::DiagnosticCode::CliNoProgramHere,
             language,
             &format!(
                 "no .nme program here. Create one (e.g. hello.nme), or name the file:\n\
@@ -848,6 +1400,7 @@ fn discover_current_program(
             let mut answer = String::new();
             if std::io::stdin().read_line(&mut answer).is_err() {
                 return Err(fail(
+                    nme_core::diagnostics::DiagnosticCode::CliPickAnswerUnreadable,
                     language,
                     "couldn't read your answer",
                     "대답을 읽을 수 없습니다",
@@ -856,6 +1409,7 @@ fn discover_current_program(
             let answer = answer.trim();
             if answer.is_empty() {
                 return Err(fail(
+                    nme_core::diagnostics::DiagnosticCode::CliEmptyPickAnswer,
                     language,
                     "no answer given — type a number or a program name, then press Enter",
                     "대답이 입력되지 않았어요 — 숫자나 프로그램 이름을 적고 Enter를 누르세요",
@@ -869,7 +1423,42 @@ fn discover_current_program(
             if let Some(name) = many.iter().find(|name| name.eq_ignore_ascii_case(answer)) {
                 return Ok(name.clone());
             }
+            if let Some(name) = many
+                .iter()
+                .find(|name| file_stem_lower(name).eq_ignore_ascii_case(answer))
+            {
+                return Ok(name.clone());
+            }
+            let lower_answer = answer.to_lowercase();
+            let prefixes: Vec<&String> = many
+                .iter()
+                .filter(|name| file_stem_lower(name).starts_with(&lower_answer))
+                .collect();
+            match prefixes.len() {
+                1 => return Ok(prefixes[0].clone()),
+                0 => {}
+                _ => {
+                    let listed = prefixes
+                        .iter()
+                        .map(|name| (*name).clone())
+                        .collect::<Vec<String>>()
+                        .join(", ");
+                    return Err(fail(
+                        nme_core::diagnostics::DiagnosticCode::CliAmbiguousPickAnswer,
+                        language,
+                        &format!(
+                            "`{answer}` matches several programs: {listed}\n\
+                             Tip: pick a number from the list above, or type more of the name"
+                        ),
+                        &format!(
+                            "`{answer}`(와)과 일치하는 프로그램이 여러 개예요: {listed}\n\
+                             팁: 위 목록에서 숫자를 고르거나 이름을 더 길게 입력하세요"
+                        ),
+                    ));
+                }
+            }
             Err(fail(
+                nme_core::diagnostics::DiagnosticCode::CliInvalidPickAnswer,
                 language,
                 &format!(
                     "`{answer}` is not one of the programs above.\n\
@@ -898,17 +1487,41 @@ fn exit_code(status: std::process::ExitStatus) -> ExitCode {
 }
 
 /// Reads and transpiles one `.nme` file, reporting all problems nicely.
+/// A transpiled program plus its `.nme` module imports, ready for the CLI to
+/// transpile those modules too and make them importable at runtime.
+struct Compiled {
+    path: std::path::PathBuf,
+    source: String,
+    imports: Vec<nme_core::ModuleImport>,
+}
+
 fn transpile_file(
     file: &str,
     language: MessageLanguage,
-) -> Result<(std::path::PathBuf, String), ExitCode> {
-    let path = resolve_nme_path(Path::new(file));
+    action_en: &str,
+    action_ko: &str,
+) -> Result<Compiled, ExitCode> {
+    let path = match resolve_program(Path::new(file)) {
+        NameResolution::Found(path) => path,
+        NameResolution::Ambiguous(names) => {
+            let (english, korean) =
+                ambiguous_program_message(file, &names, action_en, action_ko);
+            return Err(fail(
+                nme_core::diagnostics::DiagnosticCode::CliAmbiguousProgramPrefix,
+                language,
+                &english,
+                &korean,
+            ));
+        }
+        NameResolution::None => resolve_nme_path(Path::new(file)),
+    };
     let shown_path = path.to_string_lossy();
     let source = match std::fs::read_to_string(&path) {
         Ok(source) => source,
         Err(err) => {
             if path.is_dir() {
                 return Err(fail(
+                    nme_core::diagnostics::DiagnosticCode::CliFolderNotProgram,
                     language,
                     &format!(
                         "`{}` is a folder, not a program.\n\
@@ -947,14 +1560,19 @@ fn transpile_file(
                 ),
             };
             return Err(fail(
+                nme_core::diagnostics::DiagnosticCode::CliMissingProgram,
                 language,
                 &format!("couldn't read {shown_path}: {err}\n{english_hint}"),
                 &format!("{shown_path} 파일을 읽을 수 없습니다: {err}\n{korean_hint}"),
             ));
         }
     };
-    match nme_core::transpile(&source) {
-        Ok(python) => Ok((path, python)),
+    match nme_core::transpile_with_modules(&source) {
+        Ok((python, imports)) => Ok(Compiled {
+            path,
+            source: python,
+            imports,
+        }),
         Err(problems) => {
             eprint!(
                 "{}",
@@ -963,6 +1581,134 @@ fn transpile_file(
             Err(ExitCode::FAILURE)
         }
     }
+}
+
+/// Transpiles every `.nme` module the main program imports (transitively),
+/// returning `(stem, python_source)` pairs. Duplicate stems are rejected
+/// because the generated Python imports modules by their file stem.
+fn transpile_modules(
+    main_dir: &Path,
+    imports: &[nme_core::ModuleImport],
+    language: MessageLanguage,
+) -> Result<Vec<(String, String)>, ExitCode> {
+    let mut modules = Vec::<(String, String)>::new();
+    let mut seen = std::collections::HashSet::new();
+    let mut pending: Vec<nme_core::ModuleImport> = imports.to_vec();
+    while let Some(import) = pending.pop() {
+        if !seen.insert(import.file.clone()) {
+            continue;
+        }
+        let module_path = main_dir.join(&import.file);
+        let stem = module_path
+            .file_stem()
+            .and_then(|name| name.to_str())
+            .unwrap_or("module")
+            .to_string();
+        if let Some((existing, _)) = modules.iter().find(|(name, _)| name == &stem) {
+            return Err(fail(
+                nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
+                language,
+                &format!(
+                    "two imported modules are both named `{existing}`; rename one of them"
+                ),
+                &format!("가져온 모듈 두 개가 모두 `{existing}`라는 이름입니다. 하나를 바꾸세요"),
+            ));
+        }
+        let source = match std::fs::read_to_string(&module_path) {
+            Ok(source) => source,
+            Err(err) => {
+                return Err(fail(
+                    nme_core::diagnostics::DiagnosticCode::CliMissingProgram,
+                    language,
+                    &format!(
+                        "couldn't read module {}: {err}\n\
+                         hint: the module must sit next to the main program",
+                        module_path.display()
+                    ),
+                    &format!(
+                        "{} 모듈을 읽을 수 없습니다: {err}\n\
+                         도움말: 모듈은 주 프로그램 옆에 있어야 합니다",
+                        module_path.display()
+                    ),
+                ));
+            }
+        };
+        let (python, sub_imports) = match nme_core::transpile_with_modules(&source) {
+            Ok(ok) => ok,
+            Err(problems) => {
+                eprint!(
+                    "{}",
+                    render_diagnostics(
+                        &problems,
+                        &source,
+                        &module_path.to_string_lossy(),
+                        language
+                    )
+                );
+                return Err(ExitCode::FAILURE);
+            }
+        };
+        modules.push((stem, python));
+        pending.extend(sub_imports);
+    }
+    Ok(modules)
+}
+
+/// Asks CPython to validate each transpiled module's Python, reporting the
+/// module file in any failure.
+fn check_modules(modules: &[(String, String)], language: MessageLanguage, action: &str) -> Result<(), ExitCode> {
+    for (stem, python) in modules {
+        let module_path = PathBuf::from(format!("{stem}.nme"));
+        match exec::check_python(python, &module_path, DEFAULT_PYTHON) {
+            Ok(output) if output.status.success() => {}
+            Ok(output) => {
+                return Err(fail_with_details(
+                    nme_core::diagnostics::DiagnosticCode::CliCpythonValidationFailed,
+                    language,
+                    &format!(
+                        "the module {stem} did not pass CPython's syntax check during `nme {action}`"
+                    ),
+                    &format!(
+                        "{stem} 모듈이 `nme {action}` 중 CPython 문법 검사를 통과하지 못했습니다"
+                    ),
+                    &output.stderr,
+                ));
+            }
+            Err(error) => {
+                return Err(fail(
+                    nme_core::diagnostics::DiagnosticCode::CliPythonStartFailed,
+                    language,
+                    &format!("couldn't start Python to check the module {stem}: {error}"),
+                    &format!("{stem} 모듈을 검사할 Python을 시작할 수 없습니다: {error}"),
+                ));
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Writes transpiled modules to a fresh temporary folder and returns it.
+fn write_modules_to_temp(modules: &[(String, String)]) -> Result<PathBuf, ExitCode> {
+    let dir = std::env::temp_dir().join(format!("nme-modules-{}", std::process::id()));
+    if let Err(err) = std::fs::create_dir_all(&dir) {
+        return Err(fail(
+            nme_core::diagnostics::DiagnosticCode::CliFolderReadFailed,
+            MessageLanguage::English,
+            &format!("couldn't create the module folder: {err}"),
+            &format!("모듈 폴더를 만들 수 없습니다: {err}"),
+        ));
+    }
+    for (stem, python) in modules {
+        if let Err(err) = std::fs::write(dir.join(format!("{stem}.py")), python) {
+            return Err(fail(
+                nme_core::diagnostics::DiagnosticCode::CliFileWriteFailed,
+                MessageLanguage::English,
+                &format!("couldn't write the module {stem}.py: {err}"),
+                &format!("{stem}.py 모듈을 저장할 수 없습니다: {err}"),
+            ));
+        }
+    }
+    Ok(dir)
 }
 
 fn render_diagnostics(
@@ -979,23 +1725,37 @@ fn render_diagnostics(
     }
 }
 
-fn fail(language: MessageLanguage, english: &str, korean: &str) -> ExitCode {
+fn fail(
+    code: nme_core::diagnostics::DiagnosticCode,
+    language: MessageLanguage,
+    english: &str,
+    korean: &str,
+) -> ExitCode {
     if language == MessageLanguage::KoreanAndEnglish {
-        eprintln!("오류: {korean}");
+        eprintln!("오류[{}]: {korean}", code.code());
     }
-    eprintln!("error: {english}");
+    eprintln!("error[{}]: {english}", code.code());
     ExitCode::FAILURE
 }
 
 fn fail_with_details(
+    code: nme_core::diagnostics::DiagnosticCode,
     language: MessageLanguage,
     english: &str,
     korean: &str,
     details: &[u8],
 ) -> ExitCode {
-    let code = fail(language, english, korean);
+    let exit = fail(code, language, english, korean);
     write_stderr(details);
-    code
+    exit
+}
+
+/// Prints without panicking when the reader closes the pipe early
+/// (for example `nme help | head`). Rust's std ignores SIGPIPE, so a broken
+/// pipe surfaces as a write error; we treat it like a normal exit.
+fn print_out(text: &str) {
+    let mut stdout = std::io::stdout();
+    let _ = stdout.write_all(text.as_bytes());
 }
 
 fn write_stderr(details: &[u8]) {

@@ -11,7 +11,8 @@
 
 use crate::syntax::{
     Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, Literal, LogicalOp, NmeLine,
-    NmeStmt, TextPart, TextTemplate, UpdateOp, Value, RANDOM_MODULE_VERSION,
+    NmeStmt, TextPart, TextTemplate, UpdateOp, Value, BundledModuleId, FILE_MODULE_VERSION,
+    RANDOM_MODULE_VERSION,
 };
 
 const BILINGUAL_RANDOM_TOOLS_PREFIX: &str = concat!(
@@ -24,6 +25,19 @@ const BILINGUAL_RANDOM_TOOLS_PREFIX: &str = concat!(
     "랜덤선택 = 랜덤.choice; ",
     "섞기 = 랜덤.shuffle; ",
     "random_version = 랜덤버전 = ",
+);
+
+const BILINGUAL_FILE_TOOLS_PREFIX: &str = concat!(
+    "import pathlib as 파일경로; ",
+    "file_read = lambda 경로: 파일경로.Path(경로).read_text(); ",
+    "file_write = lambda 경로, 내용: 파일경로.Path(경로).write_text(내용); ",
+    "json_load = lambda 경로: __import__(\"json\").loads(파일경로.Path(경로).read_text()); ",
+    "json_save = lambda 경로, 값: 파일경로.Path(경로).write_text(__import__(\"json\").dumps(값, ensure_ascii=False)); ",
+    "파일읽기 = file_read; ",
+    "파일쓰기 = file_write; ",
+    "json읽기 = json_load; ",
+    "json저장 = json_save; ",
+    "file_version = 파일버전 = ",
 );
 
 /// A single source replacement: overwrite `span` with `replacement`.
@@ -115,8 +129,32 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
         NmeStmt::Else { inline } => lower_suite("else:".to_string(), inline.as_ref(), source),
         NmeStmt::Break => "break".to_string(),
         NmeStmt::End => "# end".to_string(),
-        NmeStmt::UseRandom { .. } => {
-            format!("{BILINGUAL_RANDOM_TOOLS_PREFIX}\"{RANDOM_MODULE_VERSION}\"")
+        NmeStmt::UseModule { module, .. } => match module {
+            BundledModuleId::Random => {
+                format!("{BILINGUAL_RANDOM_TOOLS_PREFIX}\"{RANDOM_MODULE_VERSION}\"")
+            }
+            BundledModuleId::File => {
+                format!("{BILINGUAL_FILE_TOOLS_PREFIX}\"{FILE_MODULE_VERSION}\"")
+            }
+        },
+        NmeStmt::FileRead { target, path } => {
+            format!("{target} = __import__(\"pathlib\").Path({}).read_text()", lower_code(path, source))
+        }
+        NmeStmt::FileWrite { path, value } => format!(
+            "__import__(\"pathlib\").Path({}).write_text({})",
+            lower_code(path, source),
+            lower_value(value, source)
+        ),
+        NmeStmt::ModuleImport { path, names } => {
+            let path_text = lower_code(path, source);
+            let stripped = path_text.trim_matches(['\'', '"']);
+            let stem = stripped
+                .rsplit(['/', '\\'])
+                .next()
+                .unwrap_or(stripped)
+                .strip_suffix(".nme")
+                .unwrap_or(stripped);
+            format!("from {stem} import {}", names.join(", "))
         }
     }
 }
@@ -150,6 +188,8 @@ fn lower_condition(condition: &Condition, source: &str) -> String {
                 CompareOp::Equal => "==",
                 CompareOp::Greater => ">",
                 CompareOp::Less => "<",
+                CompareOp::LessOrEqual => "<=",
+                CompareOp::GreaterOrEqual => ">=",
             };
             let comparison = format!("{left} {operator} {right}");
             if *negated {

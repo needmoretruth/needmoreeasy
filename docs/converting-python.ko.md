@@ -33,10 +33,15 @@ nme 변환 app.py --level 문장형 --language 한국어 -o app.nme
 | `for _ in range(n):` | `n번:` | `n번 반복해` |
 | `if condition:` | `만약 condition:` | `만약에 condition` |
 | `import random` | Python 유지 | Python 유지 |
+| `x = open("f").read()` | Python 유지 | `x에 "f" 읽어서` |
+| `open("f", "w").write(v)` | Python 유지 | `"f" 파일에 "v"를 저장해` |
+| `x = Path("f").read_text()` | Python 유지 | `x에 "f" 읽어서` |
 | 간단한 대입 | Python 유지 | `name은 value` |
 
 영어 출력은 `say`, `ask`, `times`, `when`, `use random`과 자연스러운 영어
-문장형을 사용합니다.
+문장형을 사용합니다. 파일 읽기·쓰기는 문장형에서 `x에 "f" 읽어서` /
+`"f" 파일에 "v"를 저장해`로 변환되며, 초급 변환은 `use file` 모듈이
+초급 파일 도구이므로 Python을 유지합니다.
 
 평범한 `import random`을 바꾸면 사용자가 만든 `random`, `random_number`, 한국어
 도구 이름을 덮어쓸 수 있으므로 Python으로 유지합니다. 자동 변환이 글자를 변수로

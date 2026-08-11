@@ -88,14 +88,17 @@ fn version_reports_the_current_beta() {
 fn modules_uses_the_language_of_the_command() {
     let english = nme(&["modules"]);
     assert!(english.status.success(), "{}", stderr(&english));
-    assert_eq!(stdout(&english), "random  0.0.1  bundled, latest\n");
+    assert_eq!(
+        stdout(&english),
+        "random  0.0.1  bundled, latest\nfile  0.0.1  bundled, latest\n"
+    );
     assert!(!stdout(&english).contains("내장"));
 
     let bilingual = nme(&["모듈"]);
     assert!(bilingual.status.success(), "{}", stderr(&bilingual));
     assert_eq!(
         stdout(&bilingual),
-        "랜덤  0.0.1  내장, 최신\nrandom  0.0.1  bundled, latest\n"
+        "랜덤  0.0.1  내장, 최신\nrandom  0.0.1  bundled, latest\n파일  0.0.1  내장, 최신\nfile  0.0.1  bundled, latest\n"
     );
 }
 
@@ -163,6 +166,7 @@ fn command_shortcuts_run_check_build_and_modules() {
     let modules = nme(&["m"]);
     assert!(modules.status.success(), "{}", stderr(&modules));
     assert!(stdout(&modules).contains("random"), "{}", stdout(&modules));
+    assert!(stdout(&modules).contains("file"), "{}", stdout(&modules));
 
     let version = nme(&["v"]);
     assert!(version.status.success(), "{}", stderr(&version));
@@ -171,6 +175,303 @@ fn command_shortcuts_run_check_build_and_modules() {
     let help = nme(&["h"]);
     assert!(help.status.success(), "{}", stderr(&help));
     assert!(stdout(&help).contains("SHORTCUTS:"), "{}", stdout(&help));
+}
+
+#[test]
+fn the_file_module_reads_and_writes_text_and_json() {
+    if !python_available() {
+        eprintln!("Python not available; skipping file module test");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("nme-cli-file-module-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join("roundtrip.nme"),
+        "use file\n\
+         file_write(\"out.txt\", \"hello 파일\")\n\
+         show file_read(\"out.txt\")\n\
+         점수 = {\"이름\": \"민수\", \"점수\": 3}\n\
+         json_save(\"save.json\", 점수)\n\
+         보관 = json_load(\"save.json\")\n\
+         show 보관[\"이름\"]\n\
+         show file_version\n",
+    )
+    .unwrap();
+
+    let output = run_in(&dir, &["run", "roundtrip.nme"], None);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert_eq!(stdout(&output), "hello 파일\n민수\n0.0.1\n");
+
+    let saved = std::fs::read_to_string(dir.join("save.json")).unwrap();
+    assert!(saved.contains("민수"), "{saved}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn the_korean_file_module_spelling_works() {
+    if !python_available() {
+        eprintln!("Python not available; skipping Korean file module test");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("nme-cli-file-ko-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join("roundtrip.ko.nme"),
+        "파일 사용 최신\n\
+         파일쓰기(\"out.txt\", \"안녕\")\n\
+         말해 파일읽기(\"out.txt\")\n",
+    )
+    .unwrap();
+
+    let output = run_in(&dir, &["run", "roundtrip.ko.nme"], None);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert_eq!(stdout(&output), "안녕\n");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn nme_module_imports_run_across_files() {
+    if !python_available() {
+        eprintln!("Python not available; skipping module import test");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("nme-cli-module-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join("helper.nme"),
+        "인사말 = \"안녕하세요\"\ndef double(n):\n    return n * 2\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("main.nme"),
+        "from \"helper.nme\" import 인사말, double\nshow 인사말\nshow double(21)\n",
+    )
+    .unwrap();
+
+    let output = run_in(&dir, &["run", "main"], None);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert_eq!(stdout(&output), "안녕하세요\n42\n");
+
+    let checked = run_in(&dir, &["check", "main"], None);
+    assert!(checked.status.success(), "{}", stderr(&checked));
+
+    let built = run_in(&dir, &["b", "main"], None);
+    assert!(built.status.success(), "{}", stderr(&built));
+    assert!(stdout(&built).contains("from helper import 인사말, double"), "{}", stdout(&built));
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn a_missing_module_gets_a_clear_error() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-module-missing-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("main.nme"), "from \"nope.nme\" import greet\nshow greet\n").unwrap();
+
+    let output = run_in(&dir, &["run", "main"], None);
+    assert!(!output.status.success());
+    assert!(
+        stderr(&output).contains("couldn't read module"),
+        "{}",
+        stderr(&output)
+    );
+    assert!(
+        stderr(&output).contains("nope.nme"),
+        "{}",
+        stderr(&output)
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn module_imports_reach_nested_imports() {
+    if !python_available() {
+        eprintln!("Python not available; skipping nested module test");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("nme-cli-module-nested-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("base.nme"), "기본값 = 100\n").unwrap();
+    std::fs::write(
+        dir.join("helper.nme"),
+        "from \"base.nme\" import 기본값\n값 = 기본값 + 1\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("main.nme"),
+        "from \"helper.nme\" import 값\nshow 값\n",
+    )
+    .unwrap();
+
+    let output = run_in(&dir, &["run", "main"], None);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert_eq!(stdout(&output), "101\n");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn the_native_example_matches_the_python_path_output() {
+    if Command::new("cc").arg("--version").output().is_err() || !python_available() {
+        eprintln!("cc or Python not available; skipping native parity test");
+        return;
+    }
+    let python_output = nme(&["run", &example("native-count.nme")]);
+    assert!(python_output.status.success(), "{}", stderr(&python_output));
+
+    let dir = std::env::temp_dir().join(format!("nme-cli-native-parity-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::copy(
+        Path::new(&example("native-count.nme")),
+        dir.join("native-count.nme"),
+    )
+    .unwrap();
+    let native_output = run_in(&dir, &["native", "native-count"], None);
+    assert!(native_output.status.success(), "{}", stderr(&native_output));
+    assert_eq!(stdout(&native_output), stdout(&python_output));
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn the_native_command_compiles_and_runs_a_core_program() {
+    if Command::new("cc").arg("--version").output().is_err() {
+        eprintln!("cc not available; skipping native test");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("nme-cli-native-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join("count.nme"),
+        "score = 0\nwhile score is less than 3\n    score add 1\nend\nshow score\nshow \"done\"\n",
+    )
+    .unwrap();
+
+    let run = run_in(&dir, &["native", "count"], None);
+    assert!(run.status.success(), "{}", stderr(&run));
+    assert_eq!(stdout(&run), "3\ndone\n");
+
+    let built = run_in(&dir, &["native", "build", "count", "-o", "count_out"], None);
+    assert!(built.status.success(), "{}", stderr(&built));
+    assert!(dir.join("count_out").exists(), "no executable written");
+    assert!(dir.join("count_out.c").exists(), "no C source written");
+
+    let rejected = run_in(&dir, &["native", "ask.nme"], None);
+    assert!(!rejected.status.success());
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn install_requires_a_package_and_explains_pip_failures() {
+    let no_package = nme(&["install"]);
+    assert!(!no_package.status.success());
+    assert!(
+        stderr(&no_package).contains("which package should I install"),
+        "{}",
+        stderr(&no_package)
+    );
+
+    let two = nme(&["install", "a", "b"]);
+    assert!(!two.status.success());
+
+    // pip is not installed in this environment; the error must be friendly.
+    let missing_pip = Command::new(python_command())
+        .args(["-m", "pip", "--version"])
+        .output()
+        .map(|out| !out.status.success())
+        .unwrap_or(true);
+    if missing_pip {
+        let install = nme(&["install", "requests"]);
+        assert!(!install.status.success());
+        assert!(
+            stderr(&install).contains("pip failed to install"),
+            "{}",
+            stderr(&install)
+        );
+    }
+}
+
+#[test]
+fn the_terminal_menu_example_runs_with_scripted_input() {
+    if !python_available() {
+        eprintln!("Python not available; skipping terminal menu test");
+        return;
+    }
+    for (file, expected) in [
+        ("terminal-menu.nme", ["hello!", "bye"]),
+        ("terminal-menu.ko.nme", ["안녕하세요!", "안녕히 가세요"]),
+    ] {
+        let output = nme_with_input(&["run", &example(file)], "1\n3\n");
+        assert!(output.status.success(), "{file}: {}", stderr(&output));
+        let out = stdout(&output);
+        for fragment in expected {
+            assert!(out.contains(fragment), "{file}: {out}");
+        }
+    }
+}
+
+#[test]
+fn the_blockchain_learning_examples_run() {
+    if !python_available() {
+        eprintln!("Python not available; skipping blockchain example test");
+        return;
+    }
+    for name in [
+        "blockchain-ledger",
+        "blockchain-ledger.ko",
+        "proof-of-work",
+        "proof-of-work.ko",
+        "signatures",
+        "signatures.ko",
+        "consensus",
+        "consensus.ko",
+        "native-factorial",
+        "bootstrap",
+        "bootstrap.ko",
+    ] {
+        let output = nme(&["run", &example(&format!("{name}.nme"))]);
+        assert!(output.status.success(), "{name}: {}", stderr(&output));
+        assert!(!stdout(&output).is_empty(), "{name}: no output");
+    }
+}
+
+#[test]
+fn sentence_file_forms_read_and_write() {
+    if !python_available() {
+        eprintln!("Python not available; skipping sentence file test");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("nme-cli-sentence-file-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(dir.join("data.txt"), "sentence hello").unwrap();
+    std::fs::write(
+        dir.join("program.nme"),
+        "read \"data.txt\" into memo\n\
+         show memo\n\
+         write \"sentence saved\" to \"out.txt\"\n\
+         memo에 \"data.txt\" 읽어서 저장해\n\
+         memo 말해줘\n\
+         \"한글.txt\" 파일에 \"저장됨\"를 저장해\n",
+    )
+    .unwrap();
+
+    let output = run_in(&dir, &["run", "program.nme"], None);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert_eq!(stdout(&output), "sentence hello\nsentence hello\n");
+
+    assert_eq!(
+        std::fs::read_to_string(dir.join("out.txt")).unwrap(),
+        "sentence saved"
+    );
+    assert_eq!(
+        std::fs::read_to_string(dir.join("한글.txt")).unwrap(),
+        "저장됨"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
 }
 
 fn run_in(dir: &std::path::Path, args: &[&str], input: Option<&str>) -> Output {
@@ -277,7 +578,7 @@ fn command_errors_follow_the_command_language() {
     assert!(!english.status.success());
     let english_error = stderr(&english);
     assert!(
-        english_error.contains("error: unknown option"),
+        english_error.contains("error[E9004]: unknown option"),
         "{english_error}"
     );
     assert!(!english_error.contains("오류:"), "{english_error}");
@@ -289,8 +590,12 @@ fn command_errors_follow_the_command_language() {
     let bilingual = nme(&["실행", "--not-an-option"]);
     assert!(!bilingual.status.success());
     let bilingual_error = stderr(&bilingual);
-    let korean_position = bilingual_error.find("오류: 알 수 없는 옵션").unwrap();
-    let english_position = bilingual_error.find("error: unknown option").unwrap();
+    let korean_position = bilingual_error
+        .find("오류[E9004]: 알 수 없는 옵션")
+        .unwrap();
+    let english_position = bilingual_error
+        .find("error[E9004]: unknown option")
+        .unwrap();
     assert!(korean_position < english_position, "{bilingual_error}");
 }
 
@@ -617,7 +922,7 @@ fn check_rejects_broken_nme_with_a_friendly_error() {
     let output = nme(&["check", &file.to_string_lossy()]);
     assert!(!output.status.success());
     let error = stderr(&output);
-    assert!(error.contains("error:"), "{error}");
+    assert!(error.contains("error[E0501]:"), "{error}");
     assert!(error.contains("indented"), "{error}");
     assert!(error.contains("hint:"), "{error}");
 
@@ -943,31 +1248,166 @@ fn a_directory_argument_explains_that_it_is_a_folder() {
 }
 
 #[test]
-fn a_misspelled_or_miscased_name_suggests_the_nearby_program() {
+fn a_miscased_or_shortened_name_runs_and_a_misspelled_name_suggests() {
+    if !python_available() {
+        eprintln!("Python not available; skipping name resolution test");
+        return;
+    }
     let dir = std::env::temp_dir().join(format!("nme-cli-suggest-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let stem = dir.join("guessing-game");
     std::fs::write(stem.with_extension("nme"), "show guessing\n").unwrap();
 
     let miscased = nme(&["run", &dir.join("GUESSING-GAME").to_string_lossy()]);
-    assert!(!miscased.status.success());
-    let miscased_error = stderr(&miscased);
-    assert!(
-        miscased_error.contains("did you mean `guessing-game.nme`"),
-        "{miscased_error}"
-    );
+    assert!(miscased.status.success(), "{}", stderr(&miscased));
+    assert_eq!(stdout(&miscased), "guessing\n");
 
     let truncated = nme(&["run", &dir.join("guessing-gam").to_string_lossy()]);
-    assert!(!truncated.status.success());
-    let truncated_error = stderr(&truncated);
+    assert!(truncated.status.success(), "{}", stderr(&truncated));
+    assert_eq!(stdout(&truncated), "guessing\n");
+
+    let misspelled = nme(&["run", &dir.join("game").to_string_lossy()]);
+    assert!(!misspelled.status.success());
+    let misspelled_error = stderr(&misspelled);
     assert!(
-        truncated_error.contains("did you mean `guessing-game.nme`"),
-        "{truncated_error}"
+        misspelled_error.contains("did you mean `guessing-game.nme`"),
+        "{misspelled_error}"
     );
     assert!(
-        truncated_error.contains("Try `nme run guessing-game`"),
-        "{truncated_error}"
+        misspelled_error.contains("Try `nme run guessing-game`"),
+        "{misspelled_error}"
     );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn a_unique_name_prefix_runs_the_matching_program() {
+    if !python_available() {
+        eprintln!("Python not available; skipping prefix run test");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("nme-cli-prefix-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    write_nme(&dir, "alpha.nme", "show alpha program\n");
+    write_nme(&dir, "beta.nme", "show beta program\n");
+
+    for (command, expected) in [("run", "alpha program"), ("실행", "alpha program")] {
+        let output = nme(&[command, &dir.join("a").to_string_lossy()]);
+        assert!(output.status.success(), "{command}: {}", stderr(&output));
+        assert_eq!(stdout(&output), format!("{expected}\n"));
+    }
+
+    let built = nme(&["b", &dir.join("bet").to_string_lossy()]);
+    assert!(built.status.success(), "{}", stderr(&built));
+    assert_eq!(stdout(&built), "print(\"beta program\")\n");
+
+    let checked = nme(&["c", &dir.join("b").to_string_lossy()]);
+    assert!(checked.status.success(), "{}", stderr(&checked));
+
+    let korean_checked = nme(&["검사", &dir.join("a").to_string_lossy()]);
+    assert!(korean_checked.status.success(), "{}", stderr(&korean_checked));
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn an_ambiguous_name_prefix_lists_candidates_instead_of_guessing() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-ambiguous-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    write_nme(&dir, "same-a.nme", "show first\n");
+    write_nme(&dir, "same-b.nme", "show second\n");
+
+    let output = nme(&["run", &dir.join("same").to_string_lossy()]);
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(error.contains("several programs match"), "{error}");
+    assert!(error.contains("same-a.nme"), "{error}");
+    assert!(error.contains("same-b.nme"), "{error}");
+    assert!(error.contains("type more of the name"), "{error}");
+
+    let korean = nme(&["실행", &dir.join("same").to_string_lossy()]);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(
+        korean_error.contains("일치하는 프로그램이 여러 개예요"),
+        "{korean_error}"
+    );
+    assert!(
+        korean_error.contains("이름을 더 길게 적어 주세요"),
+        "{korean_error}"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn a_bare_path_prefix_is_a_run_shortcut() {
+    if !python_available() {
+        eprintln!("Python not available; skipping bare prefix test");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("nme-cli-bare-prefix-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    write_nme(&dir, "alpha.nme", "show bare prefix\n");
+    write_nme(&dir, "beta.nme", "show other\n");
+
+    let output = nme(&[&dir.join("al").to_string_lossy()]);
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert_eq!(stdout(&output), "bare prefix\n");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn an_ambiguous_bare_prefix_lists_candidates() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-bare-ambig-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    write_nme(&dir, "same-a.nme", "show first\n");
+    write_nme(&dir, "same-b.nme", "show second\n");
+
+    let output = nme(&[&dir.join("same").to_string_lossy()]);
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(error.contains("several programs match"), "{error}");
+    assert!(error.contains("same-a.nme"), "{error}");
+    assert!(error.contains("same-b.nme"), "{error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn the_numbered_pick_accepts_bare_names_and_unique_prefixes() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-pick-prefix-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    write_nme(&dir, "alpha.nme", "show alpha picked\n");
+    write_nme(&dir, "beta.nme", "show beta picked\n");
+
+    let by_bare_name = run_in(&dir, &["r"], Some("alpha"));
+    assert!(by_bare_name.status.success(), "{}", stderr(&by_bare_name));
+    assert!(stdout(&by_bare_name).contains("alpha picked\n"), "{}", stdout(&by_bare_name));
+
+    let by_prefix = run_in(&dir, &["r"], Some("b"));
+    assert!(by_prefix.status.success(), "{}", stderr(&by_prefix));
+    assert!(stdout(&by_prefix).contains("beta picked\n"), "{}", stdout(&by_prefix));
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn an_ambiguous_pick_answer_lists_the_matching_programs() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-pick-ambig-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    write_nme(&dir, "same-a.nme", "show first\n");
+    write_nme(&dir, "same-b.nme", "show second\n");
+
+    let output = run_in(&dir, &["r"], Some("same"));
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(error.contains("matches several programs"), "{error}");
+    assert!(error.contains("same-a.nme"), "{error}");
+    assert!(error.contains("same-b.nme"), "{error}");
+    assert!(error.contains("pick a number"), "{error}");
 
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -999,4 +1439,115 @@ fn help_and_help_shortcut_ignore_extra_arguments() {
     let korean = nme(&["도움", "extra"]);
     assert!(korean.status.success(), "{}", stderr(&korean));
     assert!(stdout(&korean).contains("처음 시작:"), "{}", stdout(&korean));
+
+    let english_help = nme(&["h"]);
+    assert!(stdout(&english_help).contains("stay unique"), "{}", stdout(&english_help));
+    assert!(stdout(&english_help).contains("nme ko E0001"), "{}", stdout(&english_help));
+    let korean_help = nme(&["도움"]);
+    assert!(
+        stdout(&korean_help).contains("줄여 쓸 수"),
+        "{}",
+        stdout(&korean_help)
+    );
+}
+
+#[test]
+fn error_lookup_commands_print_the_requested_explanation() {
+    let korean = nme(&["ko", "E0101"]);
+    assert!(korean.status.success(), "{}", stderr(&korean));
+    let korean_out = stdout(&korean);
+    assert!(korean_out.contains("E0101"), "{korean_out}");
+    assert!(korean_out.contains("열린 블록이 없는 `끝`"), "{korean_out}");
+    assert!(korean_out.contains("E0101 — an `end` with no open block"), "{korean_out}");
+
+    let english = nme(&["en", "E0101"]);
+    assert!(english.status.success(), "{}", stderr(&english));
+    let english_out = stdout(&english);
+    assert!(english_out.contains("an `end` with no open block"), "{english_out}");
+    assert!(!english_out.contains("열린 블록"), "{english_out}");
+
+    let korean_alias = nme(&["에러", "E0101"]);
+    assert!(korean_alias.status.success(), "{}", stderr(&korean_alias));
+    assert!(stdout(&korean_alias).contains("열린 블록이 없는 `끝`"), "{}", stdout(&korean_alias));
+
+    let english_alias = nme(&["error", "E0101"]);
+    assert!(english_alias.status.success(), "{}", stderr(&english_alias));
+    assert!(stdout(&english_alias).contains("an `end` with no open block"), "{}", stdout(&english_alias));
+
+    let unknown = nme(&["ko", "E9999"]);
+    assert!(!unknown.status.success());
+    let unknown_error = stderr(&unknown);
+    assert!(unknown_error.contains("there is no error code `E9999`"), "{unknown_error}");
+    assert!(unknown_error.contains("`nme ko`"), "{unknown_error}");
+}
+
+#[test]
+fn error_lookup_without_a_code_lists_every_code() {
+    let english = nme(&["en"]);
+    assert!(english.status.success(), "{}", stderr(&english));
+    let out = stdout(&english);
+    assert!(out.contains("E0001"), "{out}");
+    assert!(out.contains("E0702"), "{out}");
+    assert!(out.contains("E0102  `break` outside a loop"), "{out}");
+
+    let korean = nme(&["ko"]);
+    assert!(korean.status.success(), "{}", stderr(&korean));
+    let korean_out = stdout(&korean);
+    assert!(korean_out.contains("E0102  반복문 밖의 `break`"), "{korean_out}");
+}
+
+#[test]
+fn a_real_error_reports_its_lookup_code() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-code-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("loop.nme");
+    std::fs::write(&file, "break here\n").unwrap();
+
+    let output = nme(&["check", &file.to_string_lossy()]);
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(error.contains("error[E0102]:"), "{error}");
+    assert!(error.contains("inside a loop"), "{error}");
+
+    let korean = nme(&["검사", &file.to_string_lossy()]);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(korean_error.contains("오류[E0102]:"), "{korean_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn cli_errors_carry_lookup_codes() {
+    let unknown_command = nme(&["this-command-does-not-exist"]);
+    assert!(!unknown_command.status.success());
+    assert!(
+        stderr(&unknown_command).contains("error[E9001]:"),
+        "{}",
+        stderr(&unknown_command)
+    );
+
+    let missing_file = nme(&["run", "definitely-not-a-program.nme"]);
+    assert!(!missing_file.status.success());
+    assert!(
+        stderr(&missing_file).contains("error[E9015]:"),
+        "{}",
+        stderr(&missing_file)
+    );
+
+    let cli_code_page = nme(&["en", "E9004"]);
+    assert!(cli_code_page.status.success(), "{}", stderr(&cli_code_page));
+    assert!(
+        stdout(&cli_code_page).contains("E9004 — unknown option"),
+        "{}",
+        stdout(&cli_code_page)
+    );
+
+    let cli_code_korean = nme(&["ko", "E9001"]);
+    assert!(cli_code_korean.status.success(), "{}", stderr(&cli_code_korean));
+    assert!(
+        stdout(&cli_code_korean).contains("알 수 없는 명령"),
+        "{}",
+        stdout(&cli_code_korean)
+    );
 }

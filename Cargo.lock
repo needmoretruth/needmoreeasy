@@ -214,6 +214,7 @@ name = "nme-cli"
 version = "0.0.1-beta.15"
 dependencies = [
  "nme-core",
+ "nme-native",
 ]
 
 [[package]]
@@ -222,6 +223,14 @@ version = "0.0.1-beta.15"
 dependencies = [
  "rustpython-parser",
  "unicode-width",
+]
+
+[[package]]
+name = "nme-native"
+version = "0.0.1-beta.15"
+dependencies = [
+ "nme-core",
+ "rustpython-parser",
 ]
 
 [[package]]

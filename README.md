@@ -89,7 +89,7 @@ nme --version
 The `export` line is required in the current macOS/Linux terminal when Cargo
 warns that its `bin` directory is not on `PATH`. It does not reinstall NME.
 Windows PowerShell uses the PATH step in the
-[installation guide](docs/install.md#windows-10-or-11).
+[installation guide](docs/install.md#windows-11).
 
 Expected version: `nme 0.0.1-beta.15`.
 
@@ -118,6 +118,24 @@ conditions, loops, random numbers, and value updates in one beginner-friendly
 program.
 The matching English companion is [`roulette.en.nme`](examples/roulette.en.nme).
 
+To see how a blockchain stores data, secure it, and reach agreement, follow
+the four educational projects (learning only, never investment advice):
+[`blockchain-ledger.nme`](examples/blockchain-ledger.nme) (beginner),
+[`proof-of-work.nme`](examples/proof-of-work.nme) (intermediate),
+[`signatures.nme`](examples/signatures.nme) (advanced), and
+[`consensus.nme`](examples/consensus.nme) (expert), each with a Korean twin.
+
+Programs can import named values from other `.nme` files in the same folder — see the [`examples/modules/`](examples/modules/) pair and `from "shapes.nme" import rect, circle` in a main program. The import list is the module interface, so there is no hidden global state.
+
+NME can even write a compiler: [`bootstrap.nme`](examples/bootstrap.nme) transpiles a tiny language to Python and runs it — the seed of self-hosting.
+
+Python packages are ordinary imports inside NME — see the [`birthday.nme`](examples/birthday.nme) countdown that uses the `datetime` package.
+
+Networking and terminal programs are ordinary Python inside NME:
+[`http-client.nme`](examples/http-client.nme) fetches a page from a local
+server, and [`terminal-menu.nme`](examples/terminal-menu.nme) is a small
+menu loop in the terminal.
+
 The `.nme` ending is optional. `nme run program` and even `nme program` both
 run `program.nme`. NME chooses the normal Python command for your operating
 system; `--python` is only an advanced override for unusual setups.
@@ -128,7 +146,19 @@ single `.nme` program in the current folder; when several programs are there,
 NME lists them and asks which one to run. `nme c` and `nme b` behave the same
 way for checking and building. `nme m`, `nme v`, and `nme h` are short forms of
 `nme modules`, `nme --version`, and `nme help`. `nme comp program` compiles
-with Nuitka, and `nme conv app.py` converts Python into NME.
+with Nuitka, `nme conv app.py` converts Python into NME, and `nme install
+requests` installs a Python package with pip.
+
+A core subset of NME can also compile straight to native machine code with `nme native run hello` (integer values, sentence `while`/`if`/`else`, `break`, functions with recursion, and `say` — try [`native-factorial.nme`](examples/native-factorial.nme); everything else still runs on CPython). See the [native-backend memo](docs/native-backend.md).
+
+Program names may also be shortened while they stay unique: `nme r gue` runs
+`guessing-game.nme`. When several programs match, NME lists them and asks you
+to type more of the name instead of guessing.
+
+Every error message carries a stable code such as `E0102` next to it. When a
+message is hard to understand, `nme ko E0102` reads the long Korean
+explanation (with an English translation) and `nme en E0102` the English one;
+`nme ko` alone lists every code.
 
 `run` is a development shortcut: NME compiles the file to Python and invokes
 CPython. `build` emits the compiled Python source. For a standalone native
@@ -146,7 +176,7 @@ startup time, distribution size, and performance, so measure the actual
 program; NME does not make a false blanket claim that every Python-compatible
 program becomes faster or smaller.
 
-## Versioned random tools
+## Versioned random and file tools
 
 ```text
 랜덤 사용 최신
@@ -156,7 +186,22 @@ show 랜덤선택(["red", "blue"])
 
 `random` / `랜덤` adapter version `0.0.1` is bundled, so `latest` / `최신`
 resolves locally without a network download. Loading it exposes both Korean
-and English helper names, allowing them to mix on the same line. Run
+and English helper names, allowing them to mix on the same line.
+
+Reading and writing files works the same way with `file` / `파일`:
+
+```text
+파일 사용 최신
+파일쓰기("note.txt", "안녕")
+show 파일읽기("note.txt")
+점수 = {"이름": "민수", "점수": 3}
+json저장("save.json", 점수)
+보관 = json_load("save.json")
+show 보관["이름"]
+```
+
+`file` exposes `file_read`/`파일읽기`, `file_write`/`파일쓰기`,
+`json_load`/`json읽기`, and `json_save`/`json저장` on version `0.0.1`. Run
 `nme modules` to see installed module versions.
 
 Sentence syntax can use random without any punctuation or prior module line:
@@ -185,12 +230,16 @@ See [Python conversion](docs/converting-python.md).
 
 - [Language reference](docs/language.md) — all three levels, exact meanings,
   typo recovery, mixing, modules, and limitations
+- [Learning guides](docs/guides/index.md) — small progressive guides with
+  difficulty, prerequisites, topic, and result labels; learn in order or look
+  up a topic
 - [Learning path](docs/tutorial.md) — six projects: Hello World, conversation,
   number guessing, mixed Python, the time-loop game, and a tiny compiler
 - [VS Code, Cursor, and Zed](docs/editors.md) — ready tasks and file setup
 - [AI coding assistants](docs/ai-assistants.md) — one link that Claude Code,
   Codex, Cursor Agent, or OpenCode can read before writing NME
 - [Compiler architecture](docs/architecture.md) — contributor design rules
+- [Native backend research](docs/native-backend.md) — the honest plan for a real NME-native AOT compiler, separate from Python compatibility
 - [Version policy](docs/versioning.md) and [changelog](CHANGELOG.md)
 
 ## Compiler model

@@ -23,10 +23,51 @@ pub const WHEN_KEYWORD_KO: &str = "만약";
 pub const USE_KEYWORD: &str = "use";
 pub const RANDOM_MODULE: &str = "random";
 pub const RANDOM_MODULE_KO: &str = "랜덤";
+pub const FILE_MODULE: &str = "file";
+pub const FILE_MODULE_KO: &str = "파일";
 pub const USE_KEYWORD_KO: &str = "사용";
+pub(crate) const FILE_READ_WORDS_EN: &[&str] = &["read"];
+pub(crate) const FILE_WRITE_WORDS_EN: &[&str] = &["write"];
+pub(crate) const FILE_READ_WORDS_KO: &[&str] = &["읽어서", "읽고", "읽어"];
+pub(crate) const FILE_WRITE_WORDS_KO: &[&str] = &["저장해", "저장해줘", "써줘", "적어"];
 
 /// Version of the easy random adapter bundled with this compiler.
 pub const RANDOM_MODULE_VERSION: &str = "0.0.1";
+/// Version of the easy file adapter bundled with this compiler.
+pub const FILE_MODULE_VERSION: &str = "0.0.1";
+
+/// One bundled beginner module. Both languages are always exposed after one
+/// import, and each module has one explicit local version.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BundledModuleId {
+    Random,
+    File,
+}
+
+impl BundledModuleId {
+    pub const ALL: [BundledModuleId; 2] = [Self::Random, Self::File];
+
+    pub fn name_en(self) -> &'static str {
+        match self {
+            Self::Random => RANDOM_MODULE,
+            Self::File => FILE_MODULE,
+        }
+    }
+
+    pub fn name_ko(self) -> &'static str {
+        match self {
+            Self::Random => RANDOM_MODULE_KO,
+            Self::File => FILE_MODULE_KO,
+        }
+    }
+
+    pub fn version(self) -> &'static str {
+        match self {
+            Self::Random => RANDOM_MODULE_VERSION,
+            Self::File => FILE_MODULE_VERSION,
+        }
+    }
+}
 
 /// Which beginner-facing vocabulary led the parser to a statement.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -90,6 +131,8 @@ pub enum CompareOp {
     Equal,
     Greater,
     Less,
+    LessOrEqual,
+    GreaterOrEqual,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -179,8 +222,24 @@ pub enum NmeStmt {
     },
     Break,
     End,
-    UseRandom {
+    UseModule {
+        module: BundledModuleId,
         requested: ModuleVersion,
+    },
+    FileRead {
+        target: String,
+        path: Code,
+    },
+    FileWrite {
+        path: Code,
+        value: Value,
+    },
+    /// `from "helper.nme" import greet, score` — imports named values from
+    /// another `.nme` module. The explicit name list is the module interface;
+    /// nothing else leaks between files.
+    ModuleImport {
+        path: Code,
+        names: Vec<String>,
     },
 }
 

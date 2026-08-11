@@ -1,0 +1,72 @@
+# 05 — 반복: 여러 번 반복하기
+
+[English](05-repeat.md) | 한국어
+
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
+
+- 난이도 (Difficulty): ★★☆☆☆ (2/5)
+- 선수 지식 (Prerequisites): [04 — 변경](04-update.ko.md)
+- 주제 (Topic): 반복 / loops
+- 결과물 (Result): 줄을 여러 번 실행하는 프로그램 / a program that runs lines several times
+
+컴퓨터는 같은 일을 여러 번 하는 데 아주 능숙합니다. `반복`은 한 줄이나
+블록을 계속 실행합니다.
+
+## 단계
+
+1. `repeat.nme` 파일을 만듭니다:
+
+   ```text
+   3번 반복해서 다시 말해줘
+   ```
+
+   `다시`가 세 번 출력됩니다. 영어도 똑같습니다:
+
+   ```text
+   repeat 3 times and show Again
+   ```
+
+2. 횟수가 앞에 오면 나머지 줄이 반복 출력됩니다:
+
+   ```text
+   3번 안녕하세요
+   3 times Welcome to NME
+   ```
+
+3. 여러 줄은 들여쓰기만으로 묶습니다:
+
+   ```text
+   repeat 3 times
+       show First sentence
+       둘째 문장 말해줘
+   ```
+
+4. 들여쓰기는 선택 사항입니다. 블록을 닫는 줄에 `끝`(또는 `end`)을
+   쓰면 됩니다:
+
+   ```text
+   3번:
+   한 줄 말해줘
+   다른 줄 말해줘
+   끝
+   ```
+
+   영어 쌍둥이는 `3 times:`와 `end`를 씁니다.
+
+## 직접 해보기
+
+두 언어를 섞은 인사를 다섯 번 반복해 보세요:
+
+```text
+5번:
+안녕하세요! 말해줘
+show Hello!
+끝
+```
+
+## 배운 것
+
+- `3번 반복해서 다시 말해줘`는 한 줄을 세 번 출력합니다.
+- `3번 안녕하세요` / `3 times Welcome to NME`는 나머지 줄을 반복합니다.
+- 들여쓴 블록은 들여쓴 줄 전체를 반복합니다.
+- `3번:` ... `끝`은 들여쓰기 없이 블록을 닫습니다.

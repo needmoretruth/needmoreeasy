@@ -15,6 +15,53 @@ fn ok(source: &str) -> String {
         .unwrap_or_else(|problems| panic!("expected successful transpile, got: {problems:?}"))
 }
 
+// --------------------------------------------------------- explicit end blocks
+
+#[test]
+fn an_indented_sentence_block_closes_before_the_next_flat_block() {
+    let python = ok("만약 True라면\n    say \"a\"\n점수가 5와 같으면\n점수 말해줘\n끝\n");
+    assert_eq!(
+        python,
+        "if (True):\n    print(\"a\")\nif (점수 == 5):\n    print(\"점수\")\n# end\n"
+    );
+}
+
+#[test]
+fn an_indented_body_line_keeps_flat_continuations_in_the_same_flat_block() {
+    let python = ok("if score is equal to 5\n    say \"x\"\nshow keep going\nend\n");
+    assert_eq!(
+        python,
+        "if (score == 5):\n    print(\"x\")\n    print(\"keep going\")\n# end\n"
+    );
+}
+
+#[test]
+fn a_flat_block_after_an_indented_block_closes_with_one_end() {
+    let python = ok("if ready\n    say \"a\"\nif score is equal to 5\nshow keep going\nend\n");
+    assert_eq!(
+        python,
+        "if (ready):\n    print(\"a\")\nif (score == 5):\n    print(\"keep going\")\n# end\n"
+    );
+}
+
+#[test]
+fn an_indented_suite_loop_followed_by_a_flat_block() {
+    let python = ok("while score is less than 3\n    score add 1\nif score is equal to 5\nshow done\nend\n");
+    assert_eq!(
+        python,
+        "while (score < 3):\n    score = score + 1\nif (score == 5):\n    print(\"done\")\n# end\n"
+    );
+}
+
+#[test]
+fn a_flat_header_after_an_indented_body_stays_nested_with_enough_ends() {
+    let python = ok("while score is less than 3\n    score add 1\n만약 score == 2\nshow two\n끝\n끝\n");
+    assert_eq!(
+        python,
+        "while (score < 3):\n    score = score + 1\n    if (score == 2):\n        print(\"two\")\n    # end\n# end\n"
+    );
+}
+
 // ---------------------------------------------------------------- pure Python
 
 #[test]
@@ -802,6 +849,126 @@ fn random_tools_are_ready_after_one_easy_line() {
     assert_eq!(ok("use latest random\n"), tools);
     assert_eq!(ok("use random version \"0.0.1\"\n"), tools);
     assert_eq!(ok("랜덤 사용 버전 \"0.0.1\"\n"), tools);
+}
+
+#[test]
+fn file_tools_are_ready_after_one_easy_line() {
+    let tools = concat!(
+        "import pathlib as 파일경로; ",
+        "file_read = lambda 경로: 파일경로.Path(경로).read_text(); ",
+        "file_write = lambda 경로, 내용: 파일경로.Path(경로).write_text(내용); ",
+        "json_load = lambda 경로: __import__(\"json\").loads(파일경로.Path(경로).read_text()); ",
+        "json_save = lambda 경로, 값: 파일경로.Path(경로).write_text(__import__(\"json\").dumps(값, ensure_ascii=False)); ",
+        "파일읽기 = file_read; ",
+        "파일쓰기 = file_write; ",
+        "json읽기 = json_load; ",
+        "json저장 = json_save; ",
+        "file_version = 파일버전 = \"0.0.1\"\n",
+    );
+    assert_eq!(ok("use file\nshow file_read(\"notes.txt\")\n"), format!("{tools}print(file_read(\"notes.txt\"))\n"));
+    assert_eq!(
+        ok("파일 사용\n말해 파일쓰기(\"out.txt\", \"안녕\")\n"),
+        format!("{tools}print(파일쓰기(\"out.txt\", \"안녕\"))\n")
+    );
+    assert_eq!(ok("파일 사용 최신\n"), tools);
+    assert_eq!(ok("use latest file\n"), tools);
+    assert_eq!(ok("use file version \"0.0.1\"\n"), tools);
+    assert_eq!(ok("파일 사용 버전 \"0.0.1\"\n"), tools);
+}
+
+#[test]
+fn both_modules_can_be_loaded_in_one_program() {
+    let source = "use random\nuse file\nshow random_number(1, 6)\nshow file_read(\"x.txt\")\n";
+    let python = ok(source);
+    assert!(python.contains("random_number = 랜덤.randint"), "{python}");
+    assert!(python.contains("file_read = lambda 경로"), "{python}");
+    assert!(python.contains("print(random_number(1, 6))"), "{python}");
+    assert!(python.contains("print(file_read(\"x.txt\"))"), "{python}");
+}
+
+#[test]
+fn sentence_file_read_and_write_lower_to_pathlib_lines() {
+    let read_line = "memo = __import__(\"pathlib\").Path(\"notes.txt\").read_text()\n";
+    assert_eq!(ok("read \"notes.txt\" into memo\n"), read_line);
+    assert_eq!(ok("memo read \"notes.txt\"\n"), read_line);
+    assert_eq!(ok("memo에 \"notes.txt\" 읽어서\n"), read_line);
+    assert_eq!(ok("memo에 \"notes.txt\" 읽어서 저장해\n"), read_line);
+    assert_eq!(ok("memo는 \"notes.txt\" 읽고\n"), read_line);
+
+    assert_eq!(
+        ok("write \"saved\" to \"out.txt\"\n"),
+        "__import__(\"pathlib\").Path(\"out.txt\").write_text(\"saved\")\n"
+    );
+    assert_eq!(
+        ok("\"out.txt\" 파일에 \"저장\"를 저장해\n"),
+        "__import__(\"pathlib\").Path(\"out.txt\").write_text(\"저장\")\n"
+    );
+    assert_eq!(
+        ok("\"out.txt\" 파일에 점수를 저장해\n"),
+        "__import__(\"pathlib\").Path(\"out.txt\").write_text(점수)\n"
+    );
+}
+
+#[test]
+fn module_imports_lower_to_python_and_report_their_interface() {
+    let python = ok("from \"helper.nme\" import greet, score\nshow greet\n");
+    assert_eq!(
+        python,
+        "from helper import greet, score\nprint(greet)\n"
+    );
+
+    let (source, imports) = nme_core::transpile_with_modules(
+        "from \"helper.nme\" import greet, score\n",
+    )
+    .unwrap();
+    assert_eq!(source, "from helper import greet, score\n");
+    assert_eq!(imports.len(), 1);
+    assert_eq!(imports[0].file, "helper.nme");
+    assert_eq!(imports[0].names, vec!["greet".to_string(), "score".to_string()]);
+
+    let korean = ok("from \"util.nme\" import 안녕\nshow 안녕\n");
+    assert_eq!(korean, "from util import 안녕\nprint(안녕)\n");
+}
+
+#[test]
+fn natural_language_or_equal_conditions_lower_to_cmp_operators() {
+    assert_eq!(
+        ok("if x is less than or equal to 3\n    show \"yes\"\nend\n"),
+        "if (x <= 3):\n    print(\"yes\")\n# end\n"
+    );
+    assert_eq!(
+        ok("if x is greater than or equal to 5\n    show \"yes\"\nend\n"),
+        "if (x >= 5):\n    print(\"yes\")\n# end\n"
+    );
+    assert_eq!(
+        ok("if x is less than or equal to 3 and x is greater than or equal to 1\n    show \"in\"\nend\n"),
+        "if ((x <= 3 and x >= 1)):\n    print(\"in\")\n# end\n"
+    );
+}
+
+#[test]
+fn korean_or_equal_conditions_lower_to_cmp_operators() {
+    assert_eq!(
+        ok("만약에 점수가 10보다 작거나 같으면\n    말해 \"작거나 같음\"\n끝\n"),
+        "if (점수 <= 10):\n    print(\"작거나 같음\")\n# end\n"
+    );
+    assert_eq!(
+        ok("만약에 점수가 10보다 크거나 같으면\n    말해 \"크거나 같음\"\n끝\n"),
+        "if (점수 >= 10):\n    print(\"크거나 같음\")\n# end\n"
+    );
+}
+
+#[test]
+fn a_python_from_import_stays_byte_identical() {
+    let python = ok("from helper import greet\nshow greet\n");
+    assert_eq!(python, "from helper import greet\nprint(greet)\n");
+}
+
+#[test]
+fn prose_with_read_or_write_words_stays_sentence_output() {
+    assert_eq!(ok("write hello\n"), "print(\"write hello\")\n");
+    assert_eq!(ok("read the book\n"), "print(\"read the book\")\n");
+    assert_eq!(ok("오늘 책을 읽고 싶어\n"), "print(\"오늘 책을 읽고 싶어\")\n");
 }
 
 #[test]

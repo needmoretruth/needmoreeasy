@@ -33,10 +33,15 @@ standard output. Without `-o`, it never modifies the input file.
 | `for _ in range(n):` | `n times:` | `repeat n times` |
 | `if condition:` | `when condition:` | `if condition` |
 | `import random` | kept as Python | kept as Python |
+| `x = open("f").read()` | kept as Python | `read "f" into x` |
+| `open("f", "w").write(v)` | kept as Python | `write v to "f"` |
+| `x = Path("f").read_text()` | kept as Python | `read "f" into x` |
 | simple assignment | kept as Python | `set name to value` |
 
 Korean output uses `말해`, `물어봐`, `번`, `만약`, `랜덤 사용`, and natural
-Korean sentence forms.
+Korean sentence forms. File reads and writes convert at the sentence level to
+`x에 "f" 읽어서` / `"f" 파일에 "v"를 저장해`; beginner conversion keeps them
+as Python because the beginner file surface is the bundled `use file` module.
 
 Ordinary `import random` stays Python because rewriting it could overwrite a
 user's `random`, `random_number`, or Korean helper name. The converter retains

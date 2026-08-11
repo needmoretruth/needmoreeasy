@@ -29,7 +29,8 @@ Expected output: `Hello world!` You just wrote a complete program. There are
 no quotes or parentheses.
 
 Shortcuts work from the start: `nme r hello` runs, and if `hello.nme` is the
-only program in the folder, plain `nme r` finds it for you. `nme c hello`
+only program in the folder, plain `nme r` finds it for you. Later, `nme install
+<package>` installs a Python package (guide [24](guides/24-python-packages.md)). `nme c hello`
 checks a program without running it, and `nme b hello` shows the readable
 Python it turns into — add `-o hello.py` to save it as a file.
 

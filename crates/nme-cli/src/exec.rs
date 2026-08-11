@@ -35,6 +35,10 @@ const RUN_BOOTSTRAP: &str = r#"def _nme_main():
         sys.path[0] = source_dir
     else:
         sys.path.insert(0, source_dir)
+    module_path = os.environ.get("NME_MODULE_PATH")
+    if module_path:
+        for entry in reversed(module_path.split(os.pathsep)):
+            sys.path.insert(0, entry)
     scope = sys.modules["__main__"].__dict__
     scope.update({
         "__name__": "__main__",
@@ -89,9 +93,18 @@ pub fn check_python(python_source: &str, source_path: &Path, python: &str) -> io
 /// script. After the framed source has been sent, a detached forwarding thread
 /// connects the user's standard input to the program so `input()` remains
 /// interactive without creating a temporary Python file.
-pub fn run_python(python_source: &str, source_path: &Path, python: &str) -> io::Result<ExitStatus> {
+pub fn run_python(
+    python_source: &str,
+    source_path: &Path,
+    python: &str,
+    module_dir: Option<&Path>,
+) -> io::Result<ExitStatus> {
     let source_path = absolute_path(source_path)?;
-    let mut child = Command::new(python)
+    let mut command = Command::new(python);
+    if let Some(dir) = module_dir {
+        command.env("NME_MODULE_PATH", dir);
+    }
+    let mut child = command
         .arg("-c")
         .arg(RUN_BOOTSTRAP)
         .arg(source_path)

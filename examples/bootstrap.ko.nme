@@ -1,0 +1,40 @@
+# 부트스트랩 — NME가 아주 작은 언어를 컴파일
+# BML(초보자 미니 언어)에는 다섯 명령이 있습니다: set, add, show, while,
+# end. 이 프로그램은 BML 소스를 읽어 Python으로 변환한 뒤 실행합니다.
+# NME로 쓴 컴파일러는 셀프호스팅의 씨앗입니다.
+# 학습용입니다. 이 프로젝트는 투자 조언이 아닙니다.
+# 실행: nme r bootstrap.ko
+
+program = [
+    "set count 0",
+    "while count 3",
+    "  show 안녕",
+    "  add count 1",
+    "end",
+    "show 끝",
+]
+
+lines = []
+indent = 0
+for raw in program:
+    parts = raw.split()
+    verb = parts[0]
+    if verb == "set":
+        lines.append(" " * indent + f"{parts[1]} = {parts[2]}")
+    elif verb == "add":
+        lines.append(" " * indent + f"{parts[1]} += {parts[2]}")
+    elif verb == "show":
+        lines.append(" " * indent + f'print("{parts[1]}")')
+    elif verb == "while":
+        lines.append(" " * indent + f"while {parts[1]} < {parts[2]}:")
+        indent = indent + 4
+    elif verb == "end":
+        indent = indent - 4
+    else:
+        lines.append(" " * indent + "# 알 수 없는 명령: " + raw)
+
+source = "\n".join(lines)
+말해 "만들어진 Python:"
+말해 source
+말해 "실행 결과:"
+exec(source)

@@ -17,6 +17,84 @@ clearer, and verify it with nme check.
 
 No assistant-specific file is required in the user's project.
 
+## Pick a purpose for your starter prompt
+
+The one prompt at the top writes a new program. For other goals, paste the
+matching short prompt with the same link. Each prompt is complete on its own
+and always starts by sending the AI to the handoff page.
+
+### Write NME code
+
+Use this when you know what the program should do and want a .nme file you can
+keep improving.
+
+```text
+Read and follow this NME handoff, then write the program I ask for as a .nme file and verify it with nme check:
+https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
+```
+
+```text
+이 NME 문서를 읽고 따르세요. 제가 요청하는 프로그램을 .nme 파일로 작성하고 nme 검사로 확인해 주세요.
+https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.ko.md
+```
+
+### Learn NME
+
+Use this to study NME step by step, starting from sentence syntax.
+
+```text
+Read this NME handoff, then teach me NME step by step starting with sentence syntax, and use the language reference for keyword questions:
+https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
+```
+
+```text
+이 NME 문서를 읽고, 문장형부터 시작해서 NME를 단계별로 가르쳐 주세요. 키워드 질문에는 문법 레퍼런스를 사용하세요.
+https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.ko.md
+```
+
+### NME teacher role
+
+Use this to get line-by-line explanations of your code and one small next step.
+
+```text
+You are my NME teacher. Read this handoff and the language reference, then explain my code line by line and suggest one small next step:
+https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
+```
+
+```text
+당신은 나의 NME 선생님입니다. 이 문서와 문법 레퍼런스를 읽고, 제 코드를 줄마다 설명하고 작은 다음 단계 하나를 제안해 주세요.
+https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.ko.md
+```
+
+### Explain or convert existing code
+
+Use this when you paste Python or NME code and want it explained, or converted
+with the same meaning.
+
+```text
+Read this NME handoff, then explain the code I paste line by line, or convert it to easier NME with the same meaning when I ask:
+https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
+```
+
+```text
+이 NME 문서를 읽고, 제가 붙여 넣는 코드를 줄마다 설명하거나, 제가 요청하면 뜻이 같게 더 쉬운 NME로 변환해 주세요.
+https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.ko.md
+```
+
+### Debug a project
+
+Use this when a program fails or behaves wrongly.
+
+```text
+Read this NME handoff, then find the bug in my .nme program: explain the cause, suggest the smallest fix, and ask me to run nme check to verify:
+https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
+```
+
+```text
+이 NME 문서를 읽고, 제 .nme 프로그램의 버그를 찾아 주세요: 원인을 설명하고 가장 작은 수정을 제안하며 nme 검사로 확인하라고 알려 주세요.
+https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.ko.md
+```
+
 ## Instructions for the assistant reading this page
 
 NME has three levels that may be mixed line by line:
@@ -174,6 +252,28 @@ If a requested phrase is not described here, read the full
 or [Korean reference](https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/language.ko.md).
 Do not invent unsupported NME keywords. Fall back to valid Python, which is
 always valid advanced NME.
+
+## Use a general chat AI with NME
+
+ChatGPT, Claude (chat), Gemini, and Grok read web pages from a link, so the
+same short-prompt + one-link design works: no file is needed in your project.
+Paste the prompt at the top of this page, or one of the purpose prompts above,
+into a new chat, then keep asking follow-up questions in the same chat so the
+handoff stays in context.
+
+- ChatGPT: paste the prompt with the link into a chat and ask for a .nme file.
+- Claude (chat, claude.ai): paste the same prompt with the link; Claude reads
+  the page before answering.
+- Gemini: paste the prompt with the link and refine the result with follow-up
+  questions.
+- Grok: paste the prompt with the link in one message and continue the
+  conversation from there.
+
+When a phrase is not in the handoff, any of them can also read the
+[language reference](https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/language.md).
+These chat AIs usually cannot run the nme CLI themselves, so after they write a
+program, run `nme check` (or `nme c`) yourself and paste the error back into
+the chat.
 
 ## Product-specific ways to provide the link
 

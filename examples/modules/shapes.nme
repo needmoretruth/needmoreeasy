@@ -1,0 +1,13 @@
+# shapes — a reusable module of area functions
+# This file defines values for other programs to import.
+# Run: nme r area (this module is not run directly)
+
+def rect(width, height):
+    return width * height
+
+
+def circle(radius):
+    return 3.14 * radius * radius
+
+
+원주율 = "pi is about 3.14"

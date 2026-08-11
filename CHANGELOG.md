@@ -4,6 +4,99 @@ English | [한국어](CHANGELOG.ko.md)
 
 All notable changes to NME are recorded here.
 
+## Unreleased
+
+- Extend the NME-native core: float literals, float variables, float arithmetic (mixed int/float promotes to double), and float comparisons.
+- Extend the NME-native core: the beginner `times:` loop (block and inline forms) lowers to a C for-loop.
+- Extend the NME-native core: boolean literals in truthy conditions (`if true`/`if false` lower to 1/0), alongside integer truthiness.
+- Extend the NME-native core: truthy conditions (`if ready`, `while turns`) over integer values, so counters and flags work natively without comparisons.
+- Add the natural-language `<=`/`>=` connectors: `if x is less than or equal to 3` and Korean `만약에 점수가 10보다 작거나 같으면` lower to `<=`/`>=` on both backends. The `or equal` phrase is kept out of logical-`or` splitting and typo recovery.
+- Extend the NME-native core: `+` concatenation into string variables (fixed buffers via `strcpy`), so strings can be built up step by step; nested concatenation stays rejected.
+- Extend the NME-native core: string `==`/`!=` comparisons through `strcmp` (both the Python condition form and the natural Korean form), a `len` builtin mapped to `strlen`, and string equality in sentence conditions.
+- Extend the NME-native core: string variables (literals), string output, and one binary `+` concatenation through a small runtime helper, with nested concatenation honestly rejected; expressions now carry static types (int vs string) through lowering.
+- Extend the NME-native core: functions over scalar parameters with `return` (recursion works), `else`/`else if` branches, calls in `say`, and honest rejection of C-keyword identifiers; the compiler now builds with `-O2`. Measured on this machine: a 50M-iteration integer loop is ~60x faster natively than on CPython (one micro-benchmark, documented in the memo).
+- Implement the first slice of the NME-native AOT backend (`nme-native` crate + `nme native run`/`nme native build`): a restricted, statically typed core subset (integer values, sentence `while`/`if` over comparisons, `break`, `say`) lowers to C and compiles to a native executable with the system C compiler; anything outside the core is rejected with a clear bilingual diagnostic and still runs on CPython. Korean spellings work; end-to-end tests compile, run, and compare output.
+- Add the bootstrap example (an NME program that transpiles a tiny language to Python and runs it) with a Korean twin, guide 29 on bootstrapping/self-hosting, and a CLI test that runs both.
+- Add guide 25 (native compilation): teaches `nme native run`/`nme native build`, the documented core subset, functions and recursion, the C artifact, and the honest measured benchmark.
+- Teach `nme install` in the READMEs and getting-started (guide 24).
+- Add `nme install` / `nme 설치` as a friendly pip wrapper: it installs a Python package and tells the beginner the `import` line to use in an `.nme` file, with clear bilingual messages when pip is missing.
+- Add the native-backend research memo (`docs/native-backend.md`): an honest evaluation of a C backend vs LLVM vs Cranelift vs direct codegen, recommending C for the first NME-native AOT compiler targeting a restricted statically-typed core subset, explicitly separated from the Python compatibility backend and from Nuitka.
+- Add a `birthday.nme` countdown example that uses the `datetime` standard package from inside NME (with a Korean twin) and guide 24 on the standard library and pip-installed packages.
+- Add `.nme` module imports: `from "helper.nme" import greet, score` imports
+  only the listed names from a sibling `.nme` file, so a project can split
+  into several files with an explicit interface and no shared global state.
+  `nme run`/`check`/`build` transpile imported modules transitively and make
+  them importable at runtime (via a temporary module folder on `sys.path`);
+  module errors report the module's file name. File names must be Python
+  identifiers, two modules may not share a name, and `nme compile` defers
+  module support. Includes a two-file example pair (`examples/modules/`).
+- Add an `http-client.nme` example that fetches a page from a local server
+  with `urllib`, and a `terminal-menu.nme` TUI menu loop (both with Korean
+  twins); a CLI test runs the menu with scripted input.
+- Teach `nme convert` the file sentence forms: `x = open("f").read()` and
+  `x = Path("f").read_text()` convert to `read "f" into x`, and
+  `open("f", "w").write(v)` / `Path("f").write_text(v)` to
+  `write v to "f"` (Korean spellings for Korean output). Beginner conversion
+  keeps file IO as Python since the beginner file surface is `use file`; the
+  converted sentence source round-trips through the compiler.
+- Add four educational blockchain learning projects (learning only, never
+  investment advice), each with a Korean twin: `blockchain-ledger.nme`
+  (beginner, blocks linked by hashes), `proof-of-work.nme` (intermediate,
+  mining with difficulty and a chain-integrity check), `signatures.nme`
+  (advanced, HMAC signing and verification), and `consensus.nme` (expert, a
+  two-node fork and longest-chain rule simulation).
+- Add sentence-level file forms: `read "notes.txt" into memo`,
+  `memo read "notes.txt"`, `memo에 "notes.txt" 읽어서 (저장해)`,
+  `write "hello" to "out.txt"`, and `"out.txt" 파일에 "hello"를 저장해`
+  lower to `pathlib` lines without the `use file` module. Read targets become
+  known names for sentence interpolation, and weak matches like `read the
+  book` or `write hello` stay plain sentence output.
+- Bundle a `use file` / `파일 사용` module (version `0.0.1`) for reading,
+  writing, and JSON, next to `use random`. One import exposes both
+  vocabularies: `file_read`/`파일읽기`, `file_write`/`파일쓰기`,
+  `json_load`/`json읽기`, `json_save`/`json저장`, plus version names. The
+  `use` line parser is now shared by both modules (same latest/version forms,
+  same collision protection, same diagnostics), and `nme modules` lists both.
+  Sentence-level file wrappers are the next step.
+- Extend stable error codes to command-line diagnostics: `nme ko <CODE>` and
+  `nme en <CODE>` now also explain CLI errors (`E9001` unknown command,
+  `E9015` missing program, `E9013` Python startup, ...). Compiler codes stay
+  `E0001`+; CLI codes use the `E9xxx` range and render the same way
+  (`error[E9015]:`). Every `fail()` path in the CLI now carries a code.
+- Fix explicit `end`/`끝` block parsing when an indented sentence block is
+  followed by a flat block: an indented body that cannot be closed by the
+  remaining `end` lines now closes at the dedent, so `만약 ...` with an
+  indented body followed by a flat `if ... end` block no longer reports a
+  missing `end`. Every previously valid program keeps its exact output;
+  nested headers with enough closing `end`s still stay nested, and a flat
+  block still requires its own `end`.
+- Give every compiler diagnostic a stable error code printed next to the
+  message, e.g. `error[E0102]:`. `nme ko <CODE>` reads the long Korean
+  explanation with an English translation, `nme en <CODE>` the English one,
+  and `nme ko` (or `nme 에러` / `nme error`) with no code lists every code.
+  Each code documents what went wrong, why, and the recovery steps; the code
+  list and lookup pages are also taught in the help text, both READMEs, and
+  both language references.
+- Split the installation guide into independent per-OS sections (Windows 11,
+  Windows 10, older Windows, macOS, Debian/Ubuntu, Fedora, Arch Linux), each
+  with copy-paste install commands, PATH, version check, first run, and common
+  errors.
+- Start the 100-guide curriculum: `docs/guides/` now has an index (difficulty
+  legend, learn-in-order path, topic lookup, full table) and the first twelve
+  beginner guides (hello → ask → set → update → repeat → if → while → break →
+  and/or → random → check/build → convert), each labeled with difficulty,
+  prerequisites, topic, and result in both languages; every code block is
+  verified with `nme check`.
+- Accept shortened unique program names everywhere: `nme r gue` runs
+  `guessing-game.nme`, and the same prefix rule works for `run`/`실행`,
+  `check`/`검사`, `build`/`빌드`, `compile`, `convert`, the bare run shortcut
+  (`nme gue`), and the numbered pick (bare names and prefixes answer the
+  "Which one?" question). Case-insensitive exact stems win, then a unique
+  prefix; when several programs match, NME lists the candidates and asks for
+  more of the name instead of guessing.
+- Long outputs (help, error-code lists) no longer panic when the reader
+  closes the pipe early, e.g. `nme ko | head`.
+
 ## 0.0.1-beta.15 — 2026-08-11
 
 - Accept the Korean `!=` sentence comparison `같지 않으면`, `같지 않다면`,

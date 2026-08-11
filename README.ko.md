@@ -89,7 +89,7 @@ nme --version
 Cargo가 설치한 `bin` 폴더가 `PATH`에 없다고 경고하면 macOS/Linux의 현재
 터미널에서는 `export` 줄을 반드시 먼저 실행해야 합니다. NME를 다시 설치하는
 명령이 아닙니다. Windows PowerShell은
-[설치 안내](docs/install.ko.md#windows-10-또는-11)의 PATH 단계를 사용하세요.
+[설치 안내](docs/install.ko.md#windows-11)의 PATH 단계를 사용하세요.
 
 표시될 버전은 `nme 0.0.1-beta.15`입니다.
 
@@ -117,6 +117,23 @@ nme 모듈
 랜덤 숫자, 값 변경을 하나의 초보자용 프로그램에서 함께 연습할 수 있습니다.
 같은 내용을 영어로 쓴 [`roulette.en.nme`](examples/roulette.en.nme)도 있습니다.
 
+블록체인이 데이터를 저장하고, 보호하고, 합의에 이르는 방법을 배우려면 교육용
+프로젝트 네 개를 따라가 보세요(학습용이며 투자 조언이 아닙니다):
+[`blockchain-ledger.nme`](examples/blockchain-ledger.nme)(초급),
+[`proof-of-work.nme`](examples/proof-of-work.nme)(중급),
+[`signatures.nme`](examples/signatures.nme)(고급),
+[`consensus.nme`](examples/consensus.nme)(초고급). 각각 한국어 버전도
+있습니다.
+
+NME는 컴파일러도 쓸 수 있습니다: [`bootstrap.nme`](examples/bootstrap.nme)가 아주 작은 언어를 Python으로 변환해 실행합니다 — 셀프호스팅의 씨앗.
+
+Python 패키지는 NME 안에서 일반 import로 씁니다 — `datetime` 패키지로 만든 [`birthday.nme`](examples/birthday.nme) 카운트다운을 보세요.
+
+네트워크와 터미널 프로그램은 NME 안에서 일반 Python으로 씁니다:
+[`http-client.nme`](examples/http-client.nme)는 로컬 서버에서 페이지를
+받아 오고, [`terminal-menu.nme`](examples/terminal-menu.nme)는 터미널에서
+작동하는 작은 메뉴 반복문입니다.
+
 `.nme`는 생략할 수 있습니다. `program.nme`는 `nme 실행 program`과 `nme
 program` 모두 실행됩니다. NME가 운영체제에 맞는 Python 명령을 자동으로 고르므로
 보통 `--python`을 쓸 필요가 없습니다.
@@ -127,8 +144,19 @@ program` 모두 실행됩니다. NME가 운영체제에 맞는 Python 명령을 
 목록을 보여 주고 어느 것을 실행할지 물어봅니다. `nme c`와 `nme b`도 검사와
 빌드에서 같은 방식으로 동작합니다. `nme m`, `nme v`, `nme h`는 각각
 `nme 모듈`, `nme --version`, `nme 도움`의 짧은 형태입니다. `nme comp
-program`은 Nuitka로 컴파일, `nme conv app.py`는 Python을 NME로 변환하는
-짧은 형태입니다.
+program`은 Nuitka로 컴파일, `nme conv app.py`는 Python을 NME로 변환하며,
+`nme 설치 requests`는 Python 패키지를 pip으로 설치합니다.
+
+NME의 코어 부분집합은 `nme 네이티브 실행 hello`로 바로 네이티브 기계어로 컴파일할 수 있습니다(정수 값, 문장형 `while`/`if`/`else`, `break`, 재귀 함수, `say` — [`native-factorial.nme`](examples/native-factorial.nme) 시도; 그 외에는 CPython으로 실행). [네이티브 백엔드 조사](docs/native-backend.ko.md)를 보세요.
+
+프로그램 이름도 겹치지 않는 범위에서 줄여 쓸 수 있습니다: `nme r gue`는
+`guessing-game.nme`를 실행합니다. 여러 프로그램이 일치하면 추측하지 않고
+목록을 보여 준 뒤 이름을 더 입력하라고 안내합니다.
+
+모든 오류 메시지에는 `E0102` 같은 안정적인 코드가 함께 표시됩니다. 메시지가
+이해되지 않으면 `nme ko E0102`로 자세한 한국어 설명(영어 설명 포함)을,
+`nme en E0102`로 영어 설명을 볼 수 있습니다. `nme ko`만 실행하면 모든
+코드를 나열해 줍니다.
 
 `실행`은 개발할 때 쓰는 지름길입니다. NME를 Python으로 컴파일한 뒤 CPython을
 시작합니다. `빌드`는 컴파일된 Python 파일을 만듭니다. 독립 실행 파일이
@@ -146,7 +174,7 @@ nme 컴파일 examples/hello-sentence.nme -o hello
 완전히 호환되는 모든 프로그램이 무조건 더 빠르고 작아진다는 거짓 보장은 하지
 않습니다.
 
-## 버전이 붙은 랜덤 도구
+## 버전이 붙은 랜덤·파일 도구
 
 ```text
 랜덤 사용 최신
@@ -157,7 +185,22 @@ nme 컴파일 examples/hello-sentence.nme -o hello
 `random` / `랜덤` 어댑터 `0.0.1`이 NME 안에 들어 있습니다. 따라서 `최신`은
 인터넷에서 받을 필요 없이 들어 있는 최신 버전을 고릅니다. 한 번 불러오면
 한국어와 영어 도구 이름이 모두 생기므로 같은 줄에서도 섞어 쓸 수 있습니다.
-`nme 모듈`로 설치된 버전을 확인합니다.
+
+파일 읽기와 쓰기도 `file` / `파일`로 같은 방식으로 쓸 수 있습니다.
+
+```text
+파일 사용 최신
+파일쓰기("note.txt", "안녕")
+말해 파일읽기("note.txt")
+점수 = {"이름": "민수", "점수": 3}
+json저장("save.json", 점수)
+보관 = json_load("save.json")
+말해 보관["이름"]
+```
+
+`file`은 버전 `0.0.1`로 `파일읽기`/`file_read`, `파일쓰기`/`file_write`,
+`json읽기`/`json_load`, `json저장`/`json_save`를 제공합니다.
+`nme 모듈`로 설치된 버전과 이름을 확인합니다.
 
 문장형에서는 모듈 선언이나 특수문자 없이도 랜덤을 바로 쓸 수 있습니다.
 
@@ -185,12 +228,15 @@ nme 변환 app.py --level 문장형 --language 한국어 -o app.nme
 
 - [문법 레퍼런스](docs/language.ko.md) — 세 단계, 정확한 뜻, 오타 복구,
   혼용, 모듈, 제한
+- [학습 가이드](docs/guides/index.ko.md) — 난이도, 선수 지식, 주제, 결과물을
+  표시한 작은 점진적 가이드. 순서대로 배우거나 주제로 찾아볼 수 있습니다
 - [학습 과정](docs/tutorial.ko.md) — 여섯 프로젝트: Hello World, 대화,
   숫자 맞히기, Python 혼용, 타임루프 게임, NME로 작은 컴파일러 만들기
 - [VS Code, Cursor, Zed](docs/editors.ko.md) — 준비된 작업과 파일 설정
 - [AI 코딩 도우미](docs/ai-assistants.ko.md) — Claude Code, Codex,
   Cursor Agent, OpenCode에 링크 하나만 전달하는 방법
 - [컴파일러 구조](docs/architecture.md) — 기여자용 설계 규칙 (영어 문서)
+- [네이티브 백엔드 조사](docs/native-backend.ko.md) — Python 호환과 분리된 진짜 NME 네이티브 AOT 컴파일러를 위한 정직한 계획
 - [버전 정책](docs/versioning.ko.md), [변경 기록](CHANGELOG.ko.md)
 
 ## 컴파일 방식

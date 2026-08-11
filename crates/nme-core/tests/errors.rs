@@ -81,11 +81,11 @@ fn all_problems_are_reported_at_once() {
 }
 
 #[test]
-fn diagnostics_render_with_location_and_hint() {
+fn diagnostics_render_with_location_code_and_hint() {
     let source = "say \"ok\"\nsay 1 +\n";
     let problems = transpile(source).unwrap_err();
     let rendered = render_all(&problems, source, "hello.nme");
-    assert!(rendered.contains("error:"), "{rendered}");
+    assert!(rendered.contains("error[E0201]:"), "{rendered}");
     // The caret points at the offending expression on line 2.
     assert!(rendered.contains("hello.nme:2:5"), "{rendered}");
     assert!(rendered.contains("say 1 +"), "{rendered}");
@@ -143,9 +143,12 @@ fn korean_forms_return_korean_guidance() {
 }
 
 #[test]
-fn only_random_is_bundled() {
+fn only_the_bundled_modules_are_available() {
     let message = err("use math\n");
-    assert!(message.contains("only bundles `use random`"), "{message}");
+    assert!(
+        message.contains("bundles `use random` and `use file`"),
+        "{message}"
+    );
 }
 
 #[test]
@@ -164,6 +167,58 @@ fn random_module_does_not_overwrite_existing_names() {
     let imported = err("import random_number\nuse random\n");
     assert!(imported.contains("overwrite existing name"), "{imported}");
     assert!(imported.contains("random_number"), "{imported}");
+}
+
+#[test]
+fn file_module_does_not_overwrite_existing_names() {
+    let message = err("file_read = \"mine\"\nuse file\n");
+    assert!(message.contains("overwrite existing name"), "{message}");
+    assert!(message.contains("file_read"), "{message}");
+
+    let korean = bilingual_err("파일버전 = 1\n파일 사용\n");
+    assert!(korean.contains("덮어쓸 수 있어요"), "{korean}");
+}
+
+#[test]
+fn two_modules_on_one_line_are_rejected() {
+    let message = err("use random and file\n");
+    assert!(
+        message.contains("bundles `use random` and `use file`"),
+        "{message}"
+    );
+}
+
+#[test]
+fn a_file_read_without_a_target_is_reported() {
+    let message = err("read \"notes.txt\"\n");
+    assert!(message.contains("target name"), "{message}");
+}
+
+#[test]
+fn a_module_import_needs_a_nme_path_and_names() {
+    let not_nme = err("from \"helper.py\" import greet\n");
+    assert!(not_nme.contains(".nme"), "{not_nme}");
+
+    let no_names = err("from \"helper.nme\" import\n");
+    assert!(no_names.contains("module import"), "{no_names}");
+
+    let bad_shape = err("from \"helper.nme\" import greet 1\n");
+    assert!(bad_shape.contains("module import"), "{bad_shape}");
+}
+
+#[test]
+fn a_module_import_needs_a_python_identifier_file_name() {
+    let dashed = err("from \"my-helper.nme\" import greet\n");
+    assert!(dashed.contains("Python identifier"), "{dashed}");
+
+    let dotted = err("from \"shapes.ko.nme\" import rect\n");
+    assert!(dotted.contains("Python identifier"), "{dotted}");
+}
+
+#[test]
+fn a_file_write_without_a_path_is_reported() {
+    let message = err("write \"hello\" to\n");
+    assert!(message.contains("quoted path"), "{message}");
 }
 
 #[test]
@@ -291,4 +346,13 @@ fn a_stray_end_after_nme_code_is_reported() {
 fn an_extra_end_after_a_closed_block_is_reported() {
     let message = err("if true\n    say \"hi\"\nend\nend\n");
     assert!(message.contains("no open NME block"), "{message}");
+}
+
+#[test]
+fn a_flat_block_still_requires_its_own_end() {
+    let message = err("점수가 5와 같으면\n만약 true라면\n    say \"a\"\n끝\n");
+    assert!(
+        message.contains("missing its closing `end`"),
+        "{message}"
+    );
 }

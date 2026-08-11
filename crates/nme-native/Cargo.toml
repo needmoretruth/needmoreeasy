@@ -1,0 +1,15 @@
+[package]
+name = "nme-native"
+description = "NME-native AOT backend: compiles a restricted, statically typed core subset to C and native machine code."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+nme-core = { path = "../nme-core" }
+rustpython-parser = "0.4"

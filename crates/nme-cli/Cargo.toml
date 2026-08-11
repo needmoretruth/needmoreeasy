@@ -16,3 +16,4 @@ path = "src/main.rs"
 
 [dependencies]
 nme-core = { path = "../nme-core" }
+nme-native = { path = "../nme-native" }

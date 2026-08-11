@@ -1,0 +1,17 @@
+# Python 패키지 — 표준 라이브러리 사용하기
+# Python에 딸려 오는 datetime 패키지로 만든 생일 카운트다운.
+# 학습용입니다. 투자 조언이 아닙니다.
+# 실행: nme r birthday.ko
+
+from datetime import date
+
+물어봐 월, "생일 월(1-12): "
+물어봐 일, "생일 일(1-31): "
+
+today = date.today()
+this_year = date(today.year, int(월), int(일))
+
+if this_year < today:
+    this_year = date(today.year + 1, int(월), int(일))
+
+말해 "다음 생일까지 " + str((this_year - today).days) + "일 남았어요"

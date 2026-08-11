@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/nme-core", "crates/nme-cli"]
+members = ["crates/nme-core", "crates/nme-cli", "crates/nme-native"]
 
 [workspace.package]
 version = "0.0.1-beta.15"

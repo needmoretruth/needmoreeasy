@@ -1,0 +1,14 @@
+# HTTP — asking a web server for a page
+# Educational only. This is a learning project, not advice.
+# Run: nme r http-client
+# The program reads http://localhost:8000/hello.txt, so serve that folder first:
+#   python3 -m http.server 8000
+
+import urllib.request
+
+url = "http://localhost:8000/hello.txt"
+
+with urllib.request.urlopen(url) as response:
+    body = response.read().decode("utf-8")
+
+show "the server answered: " + body.strip()

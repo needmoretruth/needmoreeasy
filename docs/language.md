@@ -269,6 +269,8 @@ Supported sentence comparisons:
 | `if score is not equal to 10` | `만약에 점수가 10과 같지 않으면` | `!=` |
 | `if score is greater than 10` | `만약에 점수가 10보다 크면` | `>` |
 | `if score is less than 10` | `만약에 점수가 10보다 작으면` | `<` |
+| `if score is less than or equal to 10` | `만약에 점수가 10보다 작거나 같으면` | `<=` |
+| `if score is greater than or equal to 10` | `만약에 점수가 10보다 크거나 같으면` | `>=` |
 
 `when condition`, `만약 condition`, `만약에 condition`, and the mixed
 `if 조건` are all valid. Use the beginner form when a condition needs the full
@@ -317,6 +319,9 @@ typo or every human sentence.
 Beginner syntax is compact and exact. It accepts every Python expression and
 is useful when sentence interpretation would be ambiguous. Every documented
 beginner action has a Korean spelling, and both languages may be mixed.
+
+The `<...>` parts below are placeholders that stand for real values — copy a
+line and replace them, rather than running the template itself:
 
 ```text
 say <Python expression>
@@ -401,16 +406,20 @@ NME.
 
 ## Versioned bundled modules
 
-The easy random adapter has version `0.0.1`. Only one `use` line is allowed
-per program, so pick one spelling:
+Two beginner modules ship with NME: `random` (dice and picks) and `file`
+(reading, writing, and JSON). Each has one bundled version, `0.0.1`. Only one
+`use` line is allowed per program, so pick one spelling:
 
 ```text
 use random
+use file
 ```
 
 `use random latest`, `use latest random`, and `use random version "0.0.1"` are
 equivalents, and so are the Korean spellings `랜덤 사용`, `랜덤 사용 최신`,
-`최신 랜덤 사용`, and `랜덤 사용 버전 "0.0.1"`.
+`최신 랜덤 사용`, and `랜덤 사용 버전 "0.0.1"`. The `file` module accepts the
+same forms with `file` / `파일`: `파일 사용`, `파일 사용 최신`, `파일 사용
+버전 "0.0.1"`.
 
 `latest` / `최신` selects the newest adapter bundled with the installed NME
 compiler. It is local and deterministic, not an uncontrolled network update.
@@ -426,11 +435,83 @@ Every spelling exposes both vocabularies:
 | `shuffle(values)` | `섞기(values)` | `random.shuffle(values)` |
 | `random_version` | `랜덤버전` | adapter version string |
 
-The adapter reserves these helper names. If one already exists, NME stops and
+| English | Korean | Python meaning |
+| --- | --- | --- |
+| `file_read(path)` | `파일읽기(path)` | `pathlib.Path(path).read_text()` |
+| `file_write(path, text)` | `파일쓰기(path, text)` | `pathlib.Path(path).write_text(text)` |
+| `json_load(path)` | `json읽기(path)` | `json.loads(pathlib.Path(path).read_text())` |
+| `json_save(path, value)` | `json저장(path, value)` | `pathlib.Path(path).write_text(json.dumps(value))` |
+| `file_version` | `파일버전` | adapter version string |
+
+Both adapters reserve their helper names. If one already exists, NME stops and
 asks you to rename it instead of silently overwriting your value.
 
-Run `nme modules` or `nme 모듈` to list versions. Random is not suitable for
-passwords or other security decisions.
+Run `nme modules` or `nme 모듈` to list versions and names. Files are written
+next to the program's working folder, so save them in your project folder.
+`random` is not suitable for passwords or other security decisions.
+
+## Modules: importing another `.nme` program
+
+A program can import named values from another `.nme` file in the same folder.
+The explicit name list is the module's interface — only those names cross the
+file boundary, so there is no hidden global state:
+
+```text
+from "helper.nme" import greet, score
+show greet
+```
+
+The module file defines the values with ordinary NME or Python:
+
+```text
+# helper.nme
+greet = "hello"
+score = 0
+```
+
+`nme run` (and `nme check` / `nme build`) finds `helper.nme` next to the main
+program, transpiles it, and makes it importable; module errors surface with
+the module's file name. Imports may chain (`helper.nme` can import another
+module), the file name must be a Python identifier (`helper.nme`, not
+`my-helper.nme` or `shapes.ko.nme`), and two imported modules must not share a
+name. `nme compile` does not support module imports yet.
+
+Sentence syntax can read and write files without the module line or Python
+punctuation. The path is always a quoted string:
+
+```text
+read "notes.txt" into memo
+memo read "notes.txt"
+memo에 "notes.txt" 읽어서
+memo에 "notes.txt" 읽어서 저장해
+```
+
+```text
+write "hello" to "out.txt"
+"out.txt" 파일에 "hello"를 저장해
+```
+
+These lower to `pathlib.Path(...).read_text()` / `.write_text(...)` lines, so
+the generated Python is the same stdlib the `file` module teaches. Weak
+matches such as `read the book` or `write hello` stay plain sentence output
+instead of becoming file operations.
+
+## Native backend
+
+A restricted, statically typed core subset can compile straight to native
+machine code, independent of CPython. `nme native run hello` compiles to C
+with the system C compiler and runs the executable; `nme native build hello
+-o hello` keeps the C source and the executable.
+
+The native core covers: integers and `+ - *` arithmetic; string literals and
+string variables with one binary `+` concatenation; `while`/`if`/`else`/
+`else if` over integer comparisons and string `==`/`!=`; `break`; functions
+over integer parameters with `return` (recursion works); `say`/`show`/`말해`
+of integers, strings, and `len`. Everything else — input, modules, files,
+classes, packages — is rejected with a clear diagnostic and still runs on
+CPython with `nme run`. Identifiers that collide with C keywords are rejected,
+never renamed. See the [native-backend memo](native-backend.md) for the design
+and the honest measured benchmark.
 
 ## Python conversion
 
@@ -454,6 +535,11 @@ See [the conversion guide](converting-python.md).
 - Indentation, blank lines, comments, line endings, and physical line counts
   are preserved.
 - NME diagnostics include a plain message, exact caret span, and repair hint.
+- Every diagnostic carries a stable error code such as `E0102`, printed next
+  to the message as `error[E0102]:`. Read the long Korean explanation with
+  `nme ko <CODE>` (English: `nme en <CODE>`); `nme ko` alone lists every code.
+  Compiler codes run from `E0001`; command-line errors (missing file, unknown
+  command, Python startup) use `E9xxx` and are explained the same way.
 - Independent problems are collected when possible.
 - Korean-led forms receive Korean guidance.
 
@@ -465,7 +551,8 @@ See [the conversion guide](converting-python.md).
   ambiguous literal words.
 - Sentence comparison vocabulary is intentionally small; arbitrary expressions
   and `and`/`or` logic can use the explicit block form or advanced Python.
-- Only the bundled random adapter has easy module syntax in this beta.
+- The bundled `random` and `file` modules have easy module syntax in this
+  beta; other Python libraries are used with ordinary `import`.
 - `check` and `build` ask the selected CPython to compile the lowered output;
   they do not run it. Runtime errors still belong to Python.
 - `run`, `build`, and `check` require CPython. Optional `compile` requires
