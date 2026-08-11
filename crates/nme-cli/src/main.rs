@@ -377,6 +377,50 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
         .file_stem()
         .and_then(|name| name.to_str())
         .unwrap_or("program");
+    let build_output = if action == "build" {
+        let mut out = output.map_or_else(|| PathBuf::from(stem), PathBuf::from);
+        if cfg!(windows) && out.extension().is_none() {
+            out.set_extension("exe");
+        }
+        if out
+            .extension()
+            .and_then(|extension| extension.to_str())
+            .is_some_and(|extension| extension.eq_ignore_ascii_case("c"))
+        {
+            return fail(
+                nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
+                language,
+                "-o cannot use the generated C source path; choose an executable path",
+                "-o에는 생성되는 C 소스 경로를 사용할 수 없습니다. 실행 파일 경로를 적어 주세요",
+            );
+        }
+        let c_output = out.with_extension("c");
+        if out.exists() {
+            return fail(
+                nme_core::diagnostics::DiagnosticCode::CliRefuseOverwrite,
+                language,
+                &format!("refusing to overwrite existing output: {}", out.display()),
+                &format!("이미 있는 결과 파일을 덮어쓰지 않습니다: {}", out.display()),
+            );
+        }
+        if c_output.exists() {
+            return fail(
+                nme_core::diagnostics::DiagnosticCode::CliRefuseOverwrite,
+                language,
+                &format!(
+                    "refusing to overwrite existing native source: {}",
+                    c_output.display()
+                ),
+                &format!(
+                    "이미 있는 네이티브 소스 파일을 덮어쓰지 않습니다: {}",
+                    c_output.display()
+                ),
+            );
+        }
+        Some((out, c_output))
+    } else {
+        None
+    };
     let dir = std::env::temp_dir().join(format!("nme-native-run-{}", std::process::id()));
     if let Err(err) = std::fs::create_dir_all(&dir) {
         return fail(
@@ -438,13 +482,9 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
             );
         }
     }
-    if action == "build" {
-        let mut out = output.map_or_else(|| PathBuf::from(stem), PathBuf::from);
-        if cfg!(windows) && out.extension().is_none() {
-            out.set_extension("exe");
-        }
+    if let Some((out, c_output)) = build_output {
         let copy_exe = std::fs::copy(&exe, &out).is_ok();
-        let copy_c = std::fs::copy(&c_path, out.with_extension("c")).is_ok();
+        let copy_c = std::fs::copy(&c_path, &c_output).is_ok();
         let _ = std::fs::remove_dir_all(&dir);
         if copy_exe && copy_c {
             ExitCode::SUCCESS

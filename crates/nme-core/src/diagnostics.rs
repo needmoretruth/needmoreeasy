@@ -691,8 +691,8 @@ impl DiagnosticCode {
                 "E9009",
                 "refusing to overwrite the output",
                 "결과 파일을 덮어쓰지 않습니다",
-                "`nme build -o` and `nme compile -o` never overwrite an existing file by accident. Delete or rename the existing file, or choose another output name.",
-                "`nme build -o`와 `nme compile -o`는 실수로 기존 파일을 덮어쓰지 않습니다. 기존 파일을 삭제하거나 이름을 바꾸거나 다른 출력 이름을 고르세요.",
+                "`nme build -o`, `nme compile -o`, and `nme native build -o` never overwrite an existing file by accident. Delete or rename the existing file, or choose another output name.",
+                "`nme build -o`, `nme compile -o`, `nme native build -o`는 실수로 기존 파일을 덮어쓰지 않습니다. 기존 파일을 삭제하거나 이름을 바꾸거나 다른 출력 이름을 고르세요.",
             ),
             Self::CliNativeCompileFailed => (
                 "E9010",

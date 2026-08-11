@@ -561,6 +561,98 @@ fn the_native_command_compiles_and_runs_a_core_program() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+#[test]
+fn native_build_refuses_to_overwrite_existing_artifacts() {
+    if Command::new("cc").arg("--version").output().is_err() {
+        eprintln!("cc not available; skipping native overwrite test");
+        return;
+    }
+    let dir = temporary_dir("native-overwrite");
+    write_nme(&dir, "count.nme", "say 1\n");
+    let executable = if cfg!(windows) {
+        dir.join("count_out.exe")
+    } else {
+        dir.join("count_out")
+    };
+    let c_source = dir.join("count_out.c");
+    std::fs::write(&executable, "keep executable").unwrap();
+    std::fs::write(&c_source, "keep C source").unwrap();
+
+    let output = run_in(&dir, &["native", "build", "count", "-o", "count_out"], None);
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(
+        error.contains("error[E9009]: refusing to overwrite"),
+        "{error}"
+    );
+    assert_eq!(std::fs::read_to_string(&executable).unwrap(), "keep executable");
+    assert_eq!(std::fs::read_to_string(&c_source).unwrap(), "keep C source");
+
+    let korean = run_in(&dir, &["네이티브", "빌드", "count", "-o", "count_out"], None);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(
+        korean_error.contains("오류[E9009]: 이미 있는 결과 파일을 덮어쓰지 않습니다"),
+        "{korean_error}"
+    );
+    assert!(
+        korean_error.contains("error[E9009]: refusing to overwrite"),
+        "{korean_error}"
+    );
+    assert_eq!(std::fs::read_to_string(&executable).unwrap(), "keep executable");
+    assert_eq!(std::fs::read_to_string(&c_source).unwrap(), "keep C source");
+
+    let source_only = dir.join("source-only.c");
+    std::fs::write(&source_only, "keep source-only C").unwrap();
+    let source_only_build = run_in(
+        &dir,
+        &["native", "build", "count", "-o", "source-only"],
+        None,
+    );
+    assert!(!source_only_build.status.success());
+    let source_only_error = stderr(&source_only_build);
+    assert!(
+        source_only_error.contains("error[E9009]: refusing to overwrite existing native source"),
+        "{source_only_error}"
+    );
+    assert_eq!(
+        std::fs::read_to_string(&source_only).unwrap(),
+        "keep source-only C"
+    );
+
+    let collision = run_in(
+        &dir,
+        &["native", "build", "count", "-o", "collision.c"],
+        None,
+    );
+    assert!(!collision.status.success());
+    let collision_error = stderr(&collision);
+    assert!(
+        collision_error.contains("error[E9003]: -o cannot use the generated C source path"),
+        "{collision_error}"
+    );
+    assert!(!dir.join("collision.c").exists(), "{collision_error}");
+
+    let korean_collision = run_in(
+        &dir,
+        &["네이티브", "빌드", "count", "-o", "kollision.c"],
+        None,
+    );
+    assert!(!korean_collision.status.success());
+    let korean_collision_error = stderr(&korean_collision);
+    assert!(
+        korean_collision_error.contains("오류[E9003]: -o에는 생성되는 C 소스 경로를 사용할 수 없습니다"),
+        "{korean_collision_error}"
+    );
+    assert!(
+        korean_collision_error.contains("error[E9003]: -o cannot use the generated C source path"),
+        "{korean_collision_error}"
+    );
+    assert!(!dir.join("kollision.c").exists(), "{korean_collision_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 #[cfg(unix)]
 #[test]
 fn native_run_start_failures_use_a_native_diagnostic() {

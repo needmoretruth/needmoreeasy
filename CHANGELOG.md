@@ -6,6 +6,14 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.39 — 2026-08-12
+
+- Make `nme native build` refuse to overwrite an existing executable or
+  companion C source with E9009, matching the other build commands.
+- Reject `.c` output paths with E9003 so the executable and generated C source
+  cannot target the same file.
+- Extend the E9009 English/Korean lookup explanation to cover native artifacts.
+
 ## 0.0.1-beta.38 — 2026-08-12
 
 - Make `nme native` classify directory arguments as E9014 instead of reporting
