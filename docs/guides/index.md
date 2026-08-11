@@ -7,7 +7,7 @@ English | [한국어](index.ko.md)
 Small, progressive guides for the beginner path. Each guide teaches one idea,
 gets harder than the last, and compiles with `nme check`. Guides 01–04 are
 first-day sentences; 05–10 add beginner syntax and control flow; 11–12 use the
-CLI tools.
+CLI tools; 13–16 add files, JSON, and small projects.
 
 ## Difficulty
 
@@ -31,6 +31,10 @@ CLI tools.
 10. [10 — Random](10-random.md)
 11. [11 — Check & Build](11-check-build.md)
 12. [12 — Convert](12-convert.md)
+13. [13 — Files](13-files.md)
+14. [14 — JSON](14-json.md)
+15. [15 — High score](15-high-score.md)
+16. [16 — Name list](16-name-list.md)
 
 ## Topic lookup
 
@@ -42,6 +46,9 @@ CLI tools.
 - 조건 / Conditions: [06](06-if.md), [07](07-while.md), [09](09-and-or.md)
 - 랜덤 / Random: [10](10-random.md)
 - 도구 사용 / Using the tools: [11](11-check-build.md), [12](12-convert.md)
+- 파일 / Files: [13](13-files.md), [16](16-name-list.md)
+- JSON / JSON: [14](14-json.md)
+- 프로젝트 / Project: [15](15-high-score.md)
 
 ## All guides
 
@@ -59,6 +66,10 @@ CLI tools.
 | 10 | ★★★☆☆ | 랜덤 / Random | [Random — dice and picks](10-random.md) | Roll a die and pick a color with `use random` |
 | 11 | ★★★★☆ | 도구 사용 / Using the tools | [Check & Build — see the Python](11-check-build.md) | Verify programs and read generated Python |
 | 12 | ★★★★★ | 도구 사용 / Using the tools | [Convert — turn Python into NME](12-convert.md) | Convert a small Python file into NME |
+| 13 | ★★★★☆ | 파일 / Files | [Files — save and read text](13-files.md) | Save text to a file and read it back |
+| 14 | ★★★★☆ | JSON / JSON | [JSON — save and load data](14-json.md) | Save a name and a score and load them back |
+| 15 | ★★★★★ | 프로젝트 / Project | [High score — a tiny project](15-high-score.md) | A dice game that remembers its best score |
+| 16 | ★★★★★ | 파일/목록 / Files & lists | [Name list — read lines from a file](16-name-list.md) | Read a list of names from a file and pick from it |
 
 ## Where to continue
 

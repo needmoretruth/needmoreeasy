@@ -7,7 +7,8 @@
 초보자 길을 따라가는 작고 점진적인 가이드입니다. 각 가이드는 하나의
 아이디어만 가르치고, 앞 가이드보다 조금씩 어려워지며, `nme check`로
 확인할 수 있습니다. 01–04는 첫날 문장형이고, 05–10은 초급 문법과
-제어 흐름을 더하며, 11–12는 CLI 도구를 다룹니다.
+제어 흐름을 더하며, 11–12는 CLI 도구를 다루고, 13–16은 파일·JSON·작은
+프로젝트를 다룹니다.
 
 ## 난이도
 
@@ -31,6 +32,10 @@
 10. [10 — 랜덤](10-random.ko.md)
 11. [11 — 확인과 빌드](11-check-build.ko.md)
 12. [12 — 변환](12-convert.ko.md)
+13. [13 — 파일](13-files.ko.md)
+14. [14 — JSON](14-json.ko.md)
+15. [15 — 최고 점수](15-high-score.ko.md)
+16. [16 — 이름 목록](16-name-list.ko.md)
 
 ## 주제별 찾아보기
 
@@ -42,6 +47,9 @@
 - 조건 / Conditions: [06](06-if.ko.md), [07](07-while.ko.md), [09](09-and-or.ko.md)
 - 랜덤 / Random: [10](10-random.ko.md)
 - 도구 사용 / Using the tools: [11](11-check-build.ko.md), [12](12-convert.ko.md)
+- 파일 / Files: [13](13-files.ko.md), [16](16-name-list.ko.md)
+- JSON / JSON: [14](14-json.ko.md)
+- 프로젝트 / Project: [15](15-high-score.ko.md)
 
 ## 전체 목록
 
@@ -59,6 +67,10 @@
 | 10 | ★★★☆☆ | 랜덤 / Random | [랜덤 — 주사위와 선택](10-random.ko.md) | `랜덤 사용`으로 주사위 굴리고 색 고르기 |
 | 11 | ★★★★☆ | 도구 사용 / Using the tools | [확인과 빌드 — Python 보기](11-check-build.ko.md) | 프로그램 확인하고 Python 결과 읽기 |
 | 12 | ★★★★★ | 도구 사용 / Using the tools | [변환 — Python을 NME로](12-convert.ko.md) | 작은 Python 파일을 NME로 변환하기 |
+| 13 | ★★★★☆ | 파일 / Files | [파일 — 글 저장하고 읽기](13-files.ko.md) | 글을 파일에 저장하고 다시 읽기 |
+| 14 | ★★★★☆ | JSON / JSON | [JSON — 데이터 저장하고 불러오기](14-json.ko.md) | 이름과 점수를 저장하고 불러오기 |
+| 15 | ★★★★★ | 프로젝트 / Project | [최고 점수 — 작은 프로젝트](15-high-score.ko.md) | 최고 점수를 기억하는 주사위 게임 |
+| 16 | ★★★★★ | 파일/목록 / Files & lists | [이름 목록 — 파일에서 줄 읽기](16-name-list.ko.md) | 파일에서 이름 목록을 읽어 고르기 |
 
 ## 다음 단계
 
