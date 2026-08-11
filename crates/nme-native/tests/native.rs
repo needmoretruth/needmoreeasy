@@ -140,6 +140,14 @@ fn modulo_arithmetic_compiles_natively() {
 }
 
 #[test]
+fn modulo_in_conditions_compiles_natively() {
+    // `%` inside a sentence `while`/`if` condition is a Python condition
+    // and lowers to the same C operator as the arithmetic forms.
+    let source = "count = 1\nwhile count % 4 != 0\n    count = count + 1\nend\nshow count\nif 7 % 2 == 1\n    show \"odd\"\nend\n";
+    assert_eq!(native_run(source).unwrap(), "4\nodd\n");
+}
+
+#[test]
 fn float_literals_arithmetic_and_conditions_compile_natively() {
     let source = "pi = 3.14\nshow pi\nshow 1 + 0.5\nr = 2\nshow 3.14 * r * r\nif pi is greater than 3\n    show \"pi big\"\nend\n";
     assert_eq!(native_run(source).unwrap(), "3.14\n1.5\n12.56\npi big\n");

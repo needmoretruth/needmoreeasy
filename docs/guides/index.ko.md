@@ -23,6 +23,9 @@
  68–70은 오류 처리, 정규식 패턴, 반응 게임을 다룹니다.
  71–73은 터미널 막대 그래프, 여러 파일 프로젝트, 캡스톤 컴파일러를
  다룹니다.
+ 74–76은 데이터 병합, 전략 게임, 서버 폴링을 다룹니다.
+ 77–79는 웹에서 파일 받기, 데이터 분석, 미니 언어에 함수 넣기를
+ 다룹니다.
 
 ## 난이도
 
@@ -107,6 +110,12 @@
 71. [71 — 차트](71-chart.ko.md)
 72. [72 — 모듈](72-project-files.ko.md)
 73. [73 — 캡스톤](73-capstone.ko.md)
+74. [74 — 병합](74-merge.ko.md)
+75. [75 — 게임](75-ai.ko.md)
+76. [76 — 네트워크](76-poll.ko.md)
+77. [77 — 네트워크](77-download.ko.md)
+78. [78 — 데이터](78-analysis.ko.md)
+79. [79 — 컴파일러](79-functions.ko.md)
 
 ## 주제별 찾아보기
 
@@ -174,6 +183,12 @@
 - 차트 / Chart: [71](71-chart.ko.md)
 - 프로젝트/모듈 / Project modules: [72](72-project-files.ko.md)
 - 캡스톤 / Capstone: [73](73-capstone.ko.md)
+- 병합 / Merge: [74](74-merge.ko.md)
+- 게임/전략 / Game & strategy: [75](75-ai.ko.md)
+- 네트워크/폴링 / Network & polling: [76](76-poll.ko.md)
+- 다운로드 / Download: [77](77-download.ko.md)
+- 데이터 분석 / Analysis: [78](78-analysis.ko.md)
+- 컴파일러/함수 / Compiler & functions: [79](79-functions.ko.md)
 
 ## 전체 목록
 
@@ -249,6 +264,12 @@
 | 71 | ★★★★★ | 시각화/출력 / Visualization | [차트 — 터미널 막대 그래프](71-chart.ko.md) | JSON 목록에서 가장 큰 값에 맞춘 # 블록으로 가로 막대 그래프 그리기 |
 | 72 | ★★★★★ | 모듈/구조 / Modules & structure | [모듈 — 여러 파일 프로젝트](72-project-files.ko.md) | 명확한 인터페이스의 .nme 모듈 세 개로 나누고 주 프로그램이 가져오는 날씨 보고서 프로젝트 |
 | 73 | ★★★★★ | 컴파일러/캡스톤 / Compiler capstone | [캡스톤 — Python으로 컴파일하는 언어](73-capstone.ko.md) | 작은 언어를 Python으로 컴파일해 파일로 저장하고 실행하는 NME 프로그램 |
+| 74 | ★★★★★ | 데이터/병합 / Data & merging | [병합 — 두 목록 합치기](74-merge.ko.md) | 두 JSON 목록을 이름 키로 합쳐 결합 보고서 만들기 |
+| 75 | ★★★★★ | 게임/전략 / Game & strategy | [게임 — 단순한 상대](75-ai.ko.md) | 컴퓨터가 승리 전략을 따르는 돌 가져가기 게임 |
+| 76 | ★★★★★ | 네트워크/시간 / Network & timing | [네트워크 — 서버 폴링](76-poll.ko.md) | 로컬 서버의 status.json을 몇 초마다 다시 받아 변화를 보고하기 |
+| 77 | ★★★★★ | 네트워크/파일 / Network & files | [다운로드 — 웹에서 파일 받아 저장하기](77-download.ko.md) | 로컬 HTTP 서버에서 파일을 받아 진행 상황을 보여 주며 저장하기 |
+| 78 | ★★★★★ | 데이터 분석 / Data analysis | [분석 — 한 달 온도 분석하기](78-analysis.ko.md) | 한 달치 온도를 읽어 통계와 히스토그램을 계산하고 보고서 파일로 저장하기 |
+| 79 | ★★★★★ | 컴파일러/함수 / Compiler & functions | [컴파일러 — 미니 언어에 함수 넣기](79-functions.ko.md) | def·return·호출이 있는 미니 언어를 Python으로 컴파일하고 실행하기 |
 
 ## 다음 단계
 

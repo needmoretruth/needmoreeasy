@@ -20,7 +20,9 @@ tic-tac-toe; 56–58 add logging, grouping, and a tiny bytecode runner;
 algorithms and ASCII art; 65–67 process many files, rank records, and build a
 grade book; 68–70 add error handling, regex patterns, and a reaction game;
 71–73 add a terminal bar chart, a three-module project, and the capstone
-compiler.
+compiler; 74–76 merge data, play a strategy game, and poll a server;
+77–79 download files from the web, analyze a dataset, and add functions
+to the mini language.
 
 ## Difficulty
 
@@ -108,6 +110,9 @@ compiler.
 74. [74 — Merge](74-merge.md)
 75. [75 — Game](75-ai.md)
 76. [76 — Network](76-poll.md)
+77. [77 — Network](77-download.md)
+78. [78 — Data](78-analysis.md)
+79. [79 — Compiler](79-functions.md)
 
 ## Topic lookup
 
@@ -175,6 +180,12 @@ compiler.
 - 차트 / Chart: [71](71-chart.md)
 - 프로젝트/모듈 / Project modules: [72](72-project-files.md)
 - 캡스톤 / Capstone: [73](73-capstone.md)
+- 병합 / Merge: [74](74-merge.md)
+- 게임/전략 / Game & strategy: [75](75-ai.md)
+- 네트워크/폴링 / Network & polling: [76](76-poll.md)
+- 다운로드 / Download: [77](77-download.md)
+- 데이터 분석 / Analysis: [78](78-analysis.md)
+- 컴파일러/함수 / Compiler & functions: [79](79-functions.md)
 
 ## All guides
 
@@ -250,6 +261,12 @@ compiler.
 | 71 | ★★★★★ | 시각화/출력 / Visualization | [Chart — a bar chart in the terminal](71-chart.md) | A horizontal bar chart drawn with # blocks from a JSON list, scaled to the largest value |
 | 72 | ★★★★★ | 모듈/구조 / Modules & structure | [Modules — a project across files](72-project-files.md) | A weather-report project split into three .nme modules with clear interfaces, imported by a main program |
 | 73 | ★★★★★ | 컴파일러/캡스톤 / Compiler capstone | [Capstone — a language that compiles to Python](73-capstone.md) | An NME program that compiles a small custom language to Python, writes it to a file, and runs it |
+| 74 | ★★★★★ | 데이터/병합 / Data & merging | [Merge — joining two lists](74-merge.md) | Load two JSON lists and join records by name key into one report |
+| 75 | ★★★★★ | 게임/전략 / Game & strategy | [Game — a simple opponent](75-ai.md) | A take-away game where the computer follows a winning strategy |
+| 76 | ★★★★★ | 네트워크/시간 / Network & timing | [Network — polling a server](76-poll.md) | Repeatedly fetch a status.json from a local server every few seconds and report changes |
+| 77 | ★★★★★ | 네트워크/파일 / Network & files | [Download — saving files from the web](77-download.md) | Download a file from a local HTTP server and save it while showing progress |
+| 78 | ★★★★★ | 데이터 분석 / Data analysis | [Analysis — a month of temperatures](78-analysis.md) | Load a month of temperatures, compute statistics and a histogram, and save a report file |
+| 79 | ★★★★★ | 컴파일러/함수 / Compiler & functions | [Compiler tier — functions](79-functions.md) | Compile a mini language with def, return, and calls into Python and run it |
 
 ## Where to continue
 
