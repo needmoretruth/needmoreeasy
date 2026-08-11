@@ -7,7 +7,8 @@ English | [한국어](index.ko.md)
 Small, progressive guides for the beginner path. Each guide teaches one idea,
 gets harder than the last, and compiles with `nme check`. Guides 01–04 are
 first-day sentences; 05–10 add beginner syntax and control flow; 11–12 use the
-CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain.
+CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
+21–22 add HTTP and terminal menus.
 
 ## Difficulty
 
@@ -39,6 +40,8 @@ CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain.
 18. [18 — Proof of work](18-proof-of-work.md)
 19. [19 — Signatures](19-signatures.md)
 20. [20 — Consensus](20-consensus.md)
+21. [21 — HTTP](21-http.md)
+22. [22 — Terminal menu](22-terminal-menu.md)
 
 ## Topic lookup
 
@@ -56,6 +59,8 @@ CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain.
 - 블록체인 / Blockchain: [17](17-blockchain.md), [18](18-proof-of-work.md)
 - 서명 / Signatures: [19](19-signatures.md)
 - 합의 / Consensus: [20](20-consensus.md)
+- 네트워크/HTTP / Network & HTTP: [21](21-http.md)
+- TUI/메뉴 / TUI & menus: [22](22-terminal-menu.md)
 
 ## All guides
 
@@ -81,6 +86,8 @@ CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain.
 | 18 | ★★★★★ | 채굴 / Mining | [Proof of work — mining](18-proof-of-work.md) | Mine a block by finding a nonce and verify the chain |
 | 19 | ★★★★★ | 서명 / Signatures | [Signatures — proving identity](19-signatures.md) | Sign and verify a message with hmac |
 | 20 | ★★★★★ | 합의 / Consensus | [Consensus — agreeing on a chain](20-consensus.md) | Two nodes resolving a fork by the longest-chain rule |
+| 21 | ★★★★★ | 네트워크/HTTP / Network & HTTP | [HTTP — asking a web server](21-http.md) | Fetch a page from a local server |
+| 22 | ★★★★★ | TUI/메뉴 / TUI & menus | [Terminal menu — a small TUI](22-terminal-menu.md) | A loop-driven terminal menu |
 
 ## Where to continue
 

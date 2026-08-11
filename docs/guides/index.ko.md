@@ -8,7 +8,7 @@
 아이디어만 가르치고, 앞 가이드보다 조금씩 어려워지며, `nme check`로
 확인할 수 있습니다. 01–04는 첫날 문장형이고, 05–10은 초급 문법과
 제어 흐름을 더하며, 11–12는 CLI 도구를 다루고, 13–16은 파일·JSON·작은
-프로젝트를, 17–20은 블록체인을 다룹니다.
+프로젝트를, 17–20은 블록체인을, 21–22는 HTTP와 터미널 메뉴를 다룹니다.
 
 ## 난이도
 
@@ -40,6 +40,8 @@
 18. [18 — 작업 증명](18-proof-of-work.ko.md)
 19. [19 — 서명](19-signatures.ko.md)
 20. [20 — 합의](20-consensus.ko.md)
+21. [21 — HTTP](21-http.ko.md)
+22. [22 — 터미널 메뉴](22-terminal-menu.ko.md)
 
 ## 주제별 찾아보기
 
@@ -57,6 +59,8 @@
 - 블록체인 / Blockchain: [17](17-blockchain.ko.md), [18](18-proof-of-work.ko.md)
 - 서명 / Signatures: [19](19-signatures.ko.md)
 - 합의 / Consensus: [20](20-consensus.ko.md)
+- 네트워크/HTTP / Network & HTTP: [21](21-http.ko.md)
+- TUI/메뉴 / TUI & menus: [22](22-terminal-menu.ko.md)
 
 ## 전체 목록
 
@@ -82,6 +86,8 @@
 | 18 | ★★★★★ | 채굴 / Mining | [작업 증명 — 채굴](18-proof-of-work.ko.md) | nonce를 찾아 블록을 채굴하고 사슬을 검증하기 |
 | 19 | ★★★★★ | 서명 / Signatures | [서명 — 신원 증명](19-signatures.ko.md) | hmac으로 메시지 서명하고 검증하기 |
 | 20 | ★★★★★ | 합의 / Consensus | [합의 — 사슬에 동의하기](20-consensus.ko.md) | 가장 긴 사슬 규칙으로 갈라짐을 해결하는 두 노드 |
+| 21 | ★★★★★ | 네트워크/HTTP / Network & HTTP | [HTTP — 웹 서버에 물어보기](21-http.ko.md) | 로컬 서버에서 페이지를 가져오기 |
+| 22 | ★★★★★ | TUI/메뉴 / TUI & menus | [터미널 메뉴 — 작은 TUI](22-terminal-menu.ko.md) | 반복으로 움직이는 터미널 메뉴 |
 
 ## 다음 단계
 
