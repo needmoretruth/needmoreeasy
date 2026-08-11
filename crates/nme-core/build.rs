@@ -24,7 +24,7 @@ fn quote_english_condition_outputs(text: &mut String) {
     let rewritten = text
         .lines()
         .map(|line| {
-            if line.starts_with("if ") && line.ends_with(" show") {
+            if line.ends_with(" show") {
                 if let Some((condition, body_with_show)) = line.split_once(" then ") {
                     if let Some(body) = body_with_show.strip_suffix(" show") {
                         found += 1;
@@ -36,7 +36,7 @@ fn quote_english_condition_outputs(text: &mut String) {
         })
         .collect::<Vec<_>>()
         .join("\n");
-    assert_eq!(found, 5, "expected five English conditional output lines");
+    assert_eq!(found, 5, "expected five English then/show output lines");
     *text = rewritten + "\n";
 }
 
@@ -74,8 +74,8 @@ fn main() {
     }
     fs::write(&korean, text).expect("write Korean ZK example");
 
-    // The English twin stays in sentence NME. Quote every conditional output
-    // body so possessive apostrophes remain inside a string token.
+    // The English twin stays in sentence NME. Quote the body of every
+    // `... then ... show` output so apostrophes stay inside a string token.
     let english = root.join("examples/zk-schnorr-relay.en.nme");
     let mut text = fs::read_to_string(&english).expect("read English ZK example");
     quote_english_condition_outputs(&mut text);
