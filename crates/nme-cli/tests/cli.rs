@@ -477,6 +477,34 @@ fn korean_module_staging_failures_are_bilingual_and_precise() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+#[cfg(unix)]
+#[test]
+fn korean_compile_staging_failures_are_bilingual_and_precise() {
+    let dir = temporary_dir("compile-staging-failure");
+    write_nme(&dir, "main.nme", "show 1\n");
+    let blocked_temp = dir.join("temp-file");
+    std::fs::write(&blocked_temp, "not a folder").unwrap();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_nme"))
+        .args(["컴파일", "main"])
+        .current_dir(&dir)
+        .env("TMPDIR", &blocked_temp)
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    let korean_position = error
+        .find("오류[E9027]: 네이티브 컴파일용 임시 작업 폴더를 만들 수 없습니다")
+        .unwrap_or_else(|| panic!("{error}"));
+    let english_position = error
+        .find("error[E9027]: couldn't create the temporary working folder for native compilation")
+        .unwrap_or_else(|| panic!("{error}"));
+    assert!(korean_position < english_position, "{error}");
+    assert!(!error.contains("E9011"), "{error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 #[test]
 fn the_native_example_matches_the_python_path_output() {
     if Command::new("cc").arg("--version").output().is_err() || !python_available() {

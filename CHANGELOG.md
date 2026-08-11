@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.36 — 2026-08-12
+
+- Keep `nme compile` temporary-folder failures on E9027 instead of reporting
+  them as native compiler startup failures E9011.
+- Classify temporary Python-source write failures as E9008 while preserving
+  E9011 for failures to start the external compiler process.
+
 ## 0.0.1-beta.35 — 2026-08-12
 
 - Report unreadable imported `.nme` modules with the existing file-read

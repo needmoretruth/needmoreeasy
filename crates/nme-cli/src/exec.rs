@@ -154,28 +154,36 @@ fn stop_after_input_error(child: &mut std::process::Child) {
 ///
 /// Nuitka and a platform C compiler are intentionally external tools: the NME
 /// binary stays small, while users who want a standalone artifact can opt in.
+#[derive(Debug)]
+pub enum CompileNativeError {
+    TemporaryFolder(io::Error),
+    TemporarySource(io::Error),
+    Other(io::Error),
+}
+
 pub fn compile_native(
     python_source: &str,
     stem: &str,
     python: &str,
     output: &Path,
-) -> io::Result<ExitStatus> {
-    let output = absolute_path(output)?;
+) -> Result<ExitStatus, CompileNativeError> {
+    let output = absolute_path(output).map_err(CompileNativeError::Other)?;
     let output_dir = output.parent().unwrap_or_else(|| Path::new("."));
     if !output_dir.is_dir() {
-        return Err(io::Error::new(
+        return Err(CompileNativeError::Other(io::Error::new(
             io::ErrorKind::NotFound,
             format!("output directory does not exist: {}", output_dir.display()),
-        ));
+        )));
     }
     let output_name = output
         .file_name()
-        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "output needs a file name"))?;
+        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "output needs a file name"))
+        .map_err(CompileNativeError::Other)?;
 
     let dir = std::env::temp_dir().join(format!("nme-compile-{}", std::process::id()));
-    std::fs::create_dir_all(&dir)?;
+    std::fs::create_dir_all(&dir).map_err(CompileNativeError::TemporaryFolder)?;
     let program = dir.join(format!("{stem}.py"));
-    std::fs::write(&program, python_source)?;
+    std::fs::write(&program, python_source).map_err(CompileNativeError::TemporarySource)?;
 
     let mut command = Command::new(python);
     configure_python_utf8(&mut command);
@@ -194,7 +202,7 @@ pub fn compile_native(
 
     let _ = std::fs::remove_file(&program);
     let _ = std::fs::remove_dir(&dir);
-    status
+    status.map_err(CompileNativeError::Other)
 }
 
 fn absolute_path(path: &Path) -> io::Result<PathBuf> {

@@ -822,7 +822,23 @@ fn command_compile(args: &[String], language: MessageLanguage) -> ExitCode {
                  도움말: `{python} -m pip install nuitka`로 Nuitka를 설치하고 C 컴파일러가 있는지 확인하세요"
             ),
         ),
-        Err(error) => fail(
+        Err(exec::CompileNativeError::TemporaryFolder(error)) => fail(
+            nme_core::diagnostics::DiagnosticCode::CliFolderCreateFailed,
+            language,
+            &format!(
+                "couldn't create the temporary working folder for native compilation: {error}"
+            ),
+            &format!(
+                "네이티브 컴파일용 임시 작업 폴더를 만들 수 없습니다: {error}"
+            ),
+        ),
+        Err(exec::CompileNativeError::TemporarySource(error)) => fail(
+            nme_core::diagnostics::DiagnosticCode::CliFileWriteFailed,
+            language,
+            &format!("couldn't write the temporary Python source: {error}"),
+            &format!("임시 Python 소스를 저장할 수 없습니다: {error}"),
+        ),
+        Err(exec::CompileNativeError::Other(error)) => fail(
             nme_core::diagnostics::DiagnosticCode::CliNativeCompileStartFailed,
             language,
             &format!(
