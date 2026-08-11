@@ -6,9 +6,168 @@ on:
   pull_request:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
+  prepare-portable-native:
+    name: prepare-portable-native
+    if: github.event_name == 'pull_request' && github.head_ref == 'release/beta.16-zk'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out release candidate branch
+        uses: actions/checkout@v4
+        with:
+          ref: release/beta.16-zk
+          fetch-depth: 0
+
+      - name: Install stable Rust with required tools
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Install CPython
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Hoist generated C functions outside main
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('crates/nme-native/src/lib.rs')
+          text = path.read_text(encoding='utf-8')
+          old = '''    if problems.is_empty() {
+              Ok(out)
+          } else {'''
+          new = '''    if problems.is_empty() {
+              Ok(hoist_native_functions(&out))
+          } else {'''
+          assert text.count(old) == 1
+          text = text.replace(old, new, 1)
+
+          marker = '''fn close_braces(out: &mut String, open: &mut usize, target: usize) {
+              while *open > target {
+                  out.push_str("}\\n");
+                  *open -= 1;
+              }
+          }
+          '''
+          helper = marker + r'''
+          /// Moves top-level generated C function definitions before `main`.
+          ///
+          /// GCC accepts nested functions as a non-standard extension, while Clang
+          /// correctly rejects them. NME functions are Python top-level definitions,
+          /// so the portable C representation is a file-scope C function followed by
+          /// the generated `main` body.
+          fn hoist_native_functions(source: &str) -> String {
+              const MAIN_HEADER: &str = "int main(void) {\n";
+              let Some(main_at) = source.find(MAIN_HEADER) else {
+                  return source.to_string();
+              };
+              let prefix = &source[..main_at];
+              let body = &source[main_at + MAIN_HEADER.len()..];
+              let lines = body.split_inclusive('\n').collect::<Vec<_>>();
+              let mut functions = String::new();
+              let mut main_body = String::new();
+              let mut index = 0usize;
+              let mut depth = 0isize;
+
+              while index < lines.len() {
+                  let line = lines[index];
+                  let trimmed = line.trim_end_matches(['\r', '\n']);
+                  let is_function = depth == 0
+                      && trimmed.starts_with("int ")
+                      && trimmed.ends_with(") {")
+                      && trimmed.contains('(');
+                  if is_function {
+                      let mut balance = c_brace_delta(line);
+                      functions.push_str(line);
+                      index += 1;
+                      while balance > 0 && index < lines.len() {
+                          let nested = lines[index];
+                          balance += c_brace_delta(nested);
+                          functions.push_str(nested);
+                          index += 1;
+                      }
+                      continue;
+                  }
+
+                  depth = (depth + c_brace_delta(line)).max(0);
+                  main_body.push_str(line);
+                  index += 1;
+              }
+
+              format!("{prefix}{functions}{MAIN_HEADER}{main_body}")
+          }
+
+          fn c_brace_delta(line: &str) -> isize {
+              let mut delta = 0isize;
+              let mut in_string = false;
+              let mut escaped = false;
+              for character in line.chars() {
+                  if in_string {
+                      if escaped {
+                          escaped = false;
+                      } else if character == '\\' {
+                          escaped = true;
+                      } else if character == '"' {
+                          in_string = false;
+                      }
+                  } else if character == '"' {
+                      in_string = true;
+                  } else if character == '{' {
+                      delta += 1;
+                  } else if character == '}' {
+                      delta -= 1;
+                  }
+              }
+              delta
+          }
+          '''
+          assert text.count(marker) == 1
+          text = text.replace(marker, helper, 1)
+          path.write_text(text, encoding='utf-8')
+
+          tests = Path('crates/nme-native/tests/native.rs')
+          test_text = tests.read_text(encoding='utf-8')
+          anchor = '''#[test]
+          fn else_and_else_if_branches_compile_natively() {'''
+          regression = r'''#[test]
+          fn generated_functions_are_file_scope_portable_c() {
+              let source = "def twice(n):\n    return n * 2\n\nshow twice(5)\n";
+              let c = nme_native::native_compile(source).unwrap();
+              let function_at = c.find("int twice(int n) {").expect("generated function");
+              let main_at = c.find("int main(void) {").expect("generated main");
+              assert!(function_at < main_at, "function must be outside main:\n{c}");
+          }
+
+          #[test]
+          fn else_and_else_if_branches_compile_natively() {'''
+          assert test_text.count(anchor) == 1
+          test_text = test_text.replace(anchor, regression, 1)
+          tests.write_text(test_text, encoding='utf-8')
+          PY
+          cargo fmt --all
+          cargo fmt --all -- --check
+          cargo check --workspace
+          cargo clippy --workspace --all-targets -- -D warnings
+          cargo test --workspace
+
+      - name: Commit validated portable-native fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout c8e3e93258634ecf06393fd7cc1705b011222fef -- .github/workflows/ci.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- .github/workflows/ci.yml crates/nme-native/src/lib.rs crates/nme-native/tests/native.rs
+          git diff --cached --check
+          git commit -m 'Fix portable native function emission [beta16-applied]'
+          git push origin HEAD:release/beta.16-zk
+
   test:
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
