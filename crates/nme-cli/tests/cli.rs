@@ -314,6 +314,35 @@ fn module_imports_reach_nested_imports() {
 }
 
 #[test]
+fn the_native_command_compiles_and_runs_a_core_program() {
+    if Command::new("cc").arg("--version").output().is_err() {
+        eprintln!("cc not available; skipping native test");
+        return;
+    }
+    let dir = std::env::temp_dir().join(format!("nme-cli-native-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join("count.nme"),
+        "score = 0\nwhile score is less than 3\n    score add 1\nend\nshow score\nshow \"done\"\n",
+    )
+    .unwrap();
+
+    let run = run_in(&dir, &["native", "count"], None);
+    assert!(run.status.success(), "{}", stderr(&run));
+    assert_eq!(stdout(&run), "3\ndone\n");
+
+    let built = run_in(&dir, &["native", "build", "count", "-o", "count_out"], None);
+    assert!(built.status.success(), "{}", stderr(&built));
+    assert!(dir.join("count_out").exists(), "no executable written");
+    assert!(dir.join("count_out.c").exists(), "no C source written");
+
+    let rejected = run_in(&dir, &["native", "ask.nme"], None);
+    assert!(!rejected.status.success());
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn the_terminal_menu_example_runs_with_scripted_input() {
     if !python_available() {
         eprintln!("Python not available; skipping terminal menu test");

@@ -51,6 +51,8 @@ MORE COMMANDS:
         --language en|ko
         -o <output.nme>
     nme modules                   Show bundled modules and versions
+    nme native run hello          Compile a core-subset program to native code
+    nme native build hello -o h   and run it / keep the executable and C
     nme ko E0001                  Korean explanation of error code E0001
     nme en E0001                  English explanation of error code E0001
     nme help                      Show this help
@@ -100,6 +102,8 @@ const HELP_KOREAN: &str = r"nme — NeedMoreEasy: 더 쉽게 시작해서 Python
         --language en|ko
         -o <출력.nme>
     nme 모듈                       내장 모듈과 버전 보기
+    nme 네이티브 실행 hello        코어 부분집합 프로그램을 네이티브 코드로 컴파일해 실행
+    nme 네이티브 빌드 hello -o h   실행 파일과 C 소스를 저장
     nme ko E0001                   오류 코드 E0001의 한국어 설명 보기
     nme en E0001                   오류 코드 E0001의 영어 설명 보기
     nme 도움                       이 도움말 보기
@@ -140,6 +144,9 @@ fn main() -> ExitCode {
         Some("변환") => command_convert(&args[1..], MessageLanguage::KoreanAndEnglish),
         Some("modules" | "module" | "m") => command_modules(&args[1..], MessageLanguage::English),
         Some("모듈") => command_modules(&args[1..], MessageLanguage::KoreanAndEnglish),
+        Some("native" | "네이티브") => {
+            command_native(&args[1..], MessageLanguage::English)
+        }
         Some("ko" | "error" | "에러") => {
             command_error_lookup(&args[1..], MessageLanguage::KoreanAndEnglish)
         }
@@ -245,6 +252,178 @@ fn command_modules(args: &[String], language: MessageLanguage) -> ExitCode {
     }
     print_out(&list);
     ExitCode::SUCCESS
+}
+
+/// `nme native run <file>` (or just `nme native <file>`) compiles the native
+/// core subset of a program to C, builds it with the system C compiler, and
+/// runs the executable. `nme native build <file> [-o out]` keeps the C source
+/// and the executable. Programs outside the documented core subset are
+/// rejected; they still run with `nme run` on CPython.
+fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
+    let mut action = "run";
+    let mut file = None;
+    let mut output = None;
+    let mut rest = args.iter();
+    while let Some(arg) = rest.next() {
+        match arg.as_str() {
+            "run" | "실행" => action = "run",
+            "build" | "빌드" => action = "build",
+            "-o" | "--output" => match rest.next() {
+                Some(path) => output = Some(path.clone()),
+                None => {
+                    return fail(
+                        nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
+                        language,
+                        "-o needs an output path, e.g. -o hello",
+                        "-o 뒤에 출력 경로가 필요합니다. 예: -o hello",
+                    );
+                }
+            },
+            flag if flag.starts_with('-') => {
+                return fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnknownOption,
+                    language,
+                    &format!("unknown option: {flag}"),
+                    &format!("알 수 없는 옵션입니다: {flag}"),
+                );
+            }
+            path if file.is_none() => file = Some(path.to_string()),
+            path => {
+                return fail(
+                    nme_core::diagnostics::DiagnosticCode::CliUnexpectedExtraFile,
+                    language,
+                    &format!("unexpected extra file: {path}"),
+                    &format!("파일은 하나만 적어 주세요. 추가로 적힌 파일: {path}"),
+                );
+            }
+        }
+    }
+    let file = match file {
+        Some(file) => file,
+        None => match discover_current_program(language, "native run", "네이티브 실행") {
+            Ok(found) => found,
+            Err(code) => return code,
+        },
+    };
+    let path = match resolve_program(Path::new(&file)) {
+        NameResolution::Found(path) => path,
+        NameResolution::Ambiguous(names) => {
+            let (english, korean) =
+                ambiguous_program_message(&file, &names, "native run", "네이티브 실행");
+            return fail(
+                nme_core::diagnostics::DiagnosticCode::CliAmbiguousProgramPrefix,
+                language,
+                &english,
+                &korean,
+            );
+        }
+        NameResolution::None => resolve_nme_path(Path::new(&file)),
+    };
+    let shown_path = path.to_string_lossy();
+    let source = match std::fs::read_to_string(&path) {
+        Ok(source) => source,
+        Err(err) => {
+            return fail(
+                nme_core::diagnostics::DiagnosticCode::CliMissingProgram,
+                language,
+                &format!("couldn't read {shown_path}: {err}"),
+                &format!("{shown_path} 파일을 읽을 수 없습니다: {err}"),
+            );
+        }
+    };
+    let c_source = match nme_native::native_compile(&source) {
+        Ok(c) => c,
+        Err(problems) => {
+            eprint!(
+                "{}",
+                render_diagnostics(&problems, &source, &shown_path, language)
+            );
+            return ExitCode::FAILURE;
+        }
+    };
+    let stem = path
+        .file_stem()
+        .and_then(|name| name.to_str())
+        .unwrap_or("program");
+    let dir = std::env::temp_dir().join(format!("nme-native-run-{}", std::process::id()));
+    if let Err(err) = std::fs::create_dir_all(&dir) {
+        return fail(
+            nme_core::diagnostics::DiagnosticCode::CliFolderReadFailed,
+            language,
+            &format!("couldn't create the native build folder: {err}"),
+            &format!("네이티브 빌드 폴더를 만들 수 없습니다: {err}"),
+        );
+    }
+    let c_path = dir.join(format!("{stem}.c"));
+    if let Err(err) = std::fs::write(&c_path, c_source) {
+        return fail(
+            nme_core::diagnostics::DiagnosticCode::CliFileWriteFailed,
+            language,
+            &format!("couldn't write the C source: {err}"),
+            &format!("C 소스를 저장할 수 없습니다: {err}"),
+        );
+    }
+    let exe = dir.join(stem);
+    let compile_status = std::process::Command::new("cc")
+        .arg(&c_path)
+        .arg("-o")
+        .arg(&exe)
+        .status();
+    match compile_status {
+        Ok(status) if status.success() => {}
+        Ok(status) => {
+            let _ = std::fs::remove_dir_all(&dir);
+            return fail(
+                nme_core::diagnostics::DiagnosticCode::CliNativeCompileFailed,
+                language,
+                &format!("the native compiler (cc) failed with {status}\n\
+                          hint: install a C compiler, or run this program with `nme run`"),
+                &format!("네이티브 컴파일러(cc)가 실패했습니다: {status}\n\
+                          도움말: C 컴파일러를 설치하거나 `nme run`으로 실행하세요"),
+            );
+        }
+        Err(error) => {
+            let _ = std::fs::remove_dir_all(&dir);
+            return fail(
+                nme_core::diagnostics::DiagnosticCode::CliNativeCompileStartFailed,
+                language,
+                &format!("couldn't start the C compiler: {error}\n\
+                          hint: install a C compiler, or run this program with `nme run`"),
+                &format!("C 컴파일러를 시작할 수 없습니다: {error}\n\
+                          도움말: C 컴파일러를 설치하거나 `nme run`으로 실행하세요"),
+            );
+        }
+    }
+    if action == "build" {
+        let out = output
+            .map(PathBuf::from)
+            .unwrap_or_else(|| PathBuf::from(stem));
+        let copy_exe = std::fs::copy(&exe, &out).is_ok();
+        let copy_c = std::fs::copy(&c_path, out.with_extension("c")).is_ok();
+        let _ = std::fs::remove_dir_all(&dir);
+        if copy_exe && copy_c {
+            ExitCode::SUCCESS
+        } else {
+            fail(
+                nme_core::diagnostics::DiagnosticCode::CliFileWriteFailed,
+                language,
+                "couldn't write the native artifact",
+                "네이티브 결과물을 저장할 수 없습니다",
+            )
+        }
+    } else {
+        let run_status = std::process::Command::new(&exe).status();
+        let _ = std::fs::remove_dir_all(&dir);
+        match run_status {
+            Ok(status) => exit_code(status),
+            Err(err) => fail(
+                nme_core::diagnostics::DiagnosticCode::CliPythonStartFailed,
+                language,
+                &format!("couldn't run the native program: {err}"),
+                &format!("네이티브 프로그램을 실행할 수 없습니다: {err}"),
+            ),
+        }
+    }
 }
 
 /// `nme ko E0001` prints the long Korean explanation of one error code, with

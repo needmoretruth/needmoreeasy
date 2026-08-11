@@ -146,6 +146,8 @@ way for checking and building. `nme m`, `nme v`, and `nme h` are short forms of
 `nme modules`, `nme --version`, and `nme help`. `nme comp program` compiles
 with Nuitka, and `nme conv app.py` converts Python into NME.
 
+A core subset of NME can also compile straight to native machine code with `nme native run hello` (integer values, sentence `while`/`if`, `break`, and `say`; everything else still runs on CPython). See the [native-backend memo](docs/native-backend.md).
+
 Program names may also be shortened while they stay unique: `nme r gue` runs
 `guessing-game.nme`. When several programs match, NME lists them and asks you
 to type more of the name instead of guessing.

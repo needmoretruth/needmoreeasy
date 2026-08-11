@@ -145,6 +145,8 @@ program` 모두 실행됩니다. NME가 운영체제에 맞는 Python 명령을 
 program`은 Nuitka로 컴파일, `nme conv app.py`는 Python을 NME로 변환하는
 짧은 형태입니다.
 
+NME의 코어 부분집합은 `nme 네이티브 실행 hello`로 바로 네이티브 기계어로 컴파일할 수 있습니다(정수 값, 문장형 `while`/`if`, `break`, `say`; 그 외에는 CPython으로 실행). [네이티브 백엔드 조사](docs/native-backend.ko.md)를 보세요.
+
 프로그램 이름도 겹치지 않는 범위에서 줄여 쓸 수 있습니다: `nme r gue`는
 `guessing-game.nme`를 실행합니다. 여러 프로그램이 일치하면 추측하지 않고
 목록을 보여 준 뒤 이름을 더 입력하라고 안내합니다.

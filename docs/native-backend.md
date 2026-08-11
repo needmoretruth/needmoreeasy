@@ -4,9 +4,13 @@ English | [한국어](native-backend.ko.md)
 
 [Home](../README.md) | [Install](install.md) | [Getting started](getting-started.md) | [Tutorial](tutorial.md) | [Language reference](language.md) | [Guides](guides/index.md)
 
-> Status: research and design. Nothing here is implemented yet. This document
-> is the honest technical plan for a real NME-native AOT compiler; it does not
-> call the current Python pipeline or Nuitka an "NME native compiler".
+> Status: v0 is implemented (`nme native run`/`nme native build`). A small
+> statically typed core subset — integer values, `while`/`if` over
+> comparisons, `break`, and `say` — compiles to C and then to a native
+> executable through the system C compiler. Everything outside the core is
+> rejected with a clear diagnostic and still runs on CPython. This document
+> is the honest technical plan for the full backend; it does not call the
+> current Python pipeline or Nuitka an "NME native compiler".
 
 ## What NME compiles to today
 

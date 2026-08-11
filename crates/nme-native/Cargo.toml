@@ -1,6 +1,6 @@
 [package]
-name = "nme-cli"
-description = "Command line toolchain for the NeedMoreEasy (NME) language: run, build and check .nme files."
+name = "nme-native"
+description = "NME-native AOT backend: compiles a restricted, statically typed core subset to C and native machine code."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -10,10 +10,6 @@ homepage.workspace = true
 [lints]
 workspace = true
 
-[[bin]]
-name = "nme"
-path = "src/main.rs"
-
 [dependencies]
 nme-core = { path = "../nme-core" }
-nme-native = { path = "../nme-native" }
+rustpython-parser = "0.4"

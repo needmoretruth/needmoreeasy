@@ -1,0 +1,94 @@
+//! End-to-end tests for the NME-native backend: compile the core subset to
+//! C, build it with the system C compiler, run the native executable, and
+//! compare its output with the expected text. Programs outside the core
+//! subset must be rejected with a clear diagnostic, never miscompiled.
+
+use std::process::Command;
+use std::sync::atomic::{AtomicUsize, Ordering};
+
+static COUNTER: AtomicUsize = AtomicUsize::new(0);
+
+fn native_run(source: &str) -> Result<String, String> {
+    let c_source = nme_native::native_compile(source).map_err(|problems| {
+        problems
+            .iter()
+            .map(|problem| problem.message.clone())
+            .collect::<Vec<_>>()
+            .join("; ")
+    })?;
+    let id = COUNTER.fetch_add(1, Ordering::SeqCst);
+    let dir = std::env::temp_dir().join(format!("nme-native-test-{}-{id}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let c_path = dir.join("program.c");
+    std::fs::write(&c_path, c_source).unwrap();
+    let exe = dir.join("program");
+    let status = Command::new("cc")
+        .arg(&c_path)
+        .arg("-o")
+        .arg(&exe)
+        .status()
+        .map_err(|error| format!("could not start cc: {error}"))?;
+    if !status.success() {
+        return Err("the generated C did not compile".to_string());
+    }
+    let output = Command::new(&exe)
+        .output()
+        .map_err(|error| format!("could not run the native program: {error}"))?;
+    let _ = std::fs::remove_dir_all(&dir);
+    Ok(String::from_utf8_lossy(&output.stdout).into_owned())
+}
+
+fn native_rejects(source: &str) -> bool {
+    nme_native::native_compile(source).is_err()
+}
+
+#[test]
+fn a_while_loop_countdown_runs_natively() {
+    assert_eq!(
+        native_run("score = 0\nwhile score is less than 3\n    score add 1\nend\nshow score\n").unwrap(),
+        "3\n"
+    );
+}
+
+#[test]
+fn arithmetic_in_say_lowers_to_c() {
+    assert_eq!(native_run("x = 2\nshow x * 3 + 1\n").unwrap(), "7\n");
+}
+
+#[test]
+fn a_string_literal_is_printed() {
+    assert_eq!(native_run("show \"hello world\"\n").unwrap(), "hello world\n");
+}
+
+#[test]
+fn an_if_break_loop_works() {
+    let source = "x = 0\nwhile x is less than 5\n    x add 1\n    if x is greater than 2\n        break\n    end\nend\nshow x\n";
+    assert_eq!(native_run(source).unwrap(), "3\n");
+}
+
+#[test]
+fn a_flat_block_body_gets_virtual_indentation() {
+    let source = "x = 0\nwhile x is less than 2\nx add 1\nend\nshow x\n";
+    assert_eq!(native_run(source).unwrap(), "2\n");
+}
+
+#[test]
+fn korean_spellings_compile_natively() {
+    let source = "점수 = 0\n동안 점수가 3보다 작을 동안\n    점수에 1 더해\n끝\n점수 말해줘\n";
+    assert_eq!(native_run(source).unwrap(), "3\n");
+}
+
+#[test]
+fn a_python_colon_while_header_is_rejected_not_miscompiled() {
+    // `while x < 3:` is valid Python, so it stays Python (Python-wins) and
+    // the native core, which lowers the sentence `while` form, rejects it.
+    assert!(native_rejects("x = 0\nwhile x < 3:\n    x = x + 1\nshow x\n"));
+}
+
+#[test]
+fn input_and_modules_are_rejected_not_miscompiled() {
+    assert!(native_rejects("ask name, \"name? \"\n"));
+    assert!(native_rejects("use random latest\nshow random_number(1, 6)\n"));
+    assert!(native_rejects("from \"helper.nme\" import greet\n"));
+    assert!(native_rejects("3 times:\n    show \"hi\"\n"));
+}

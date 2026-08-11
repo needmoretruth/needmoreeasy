@@ -191,6 +191,12 @@ Add no dependency or abstraction without a current, demonstrated need.
   a standalone executable, but it does not change NME semantics and does not
   make universal speed or size guarantees. Results depend on the program,
   platform, compiler, and packaging mode.
+- `nme native run`/`nme native build` is the NME-native AOT backend
+  (`nme-native` crate): it compiles a restricted, statically typed core
+  subset to C and then to a native executable with the system C compiler.
+  Everything outside the documented core is rejected with a clear bilingual
+  diagnostic and remains runnable on CPython. See
+  [the native-backend memo](native-backend.md).
 
 Traceback line numbers and displayed file names both point to the original
 `.nme` source.
@@ -201,7 +207,9 @@ Traceback line numbers and displayed file names both point to the original
 - silently rewriting ambiguous prose or every possible typo;
 - a network package registry or floating remote dependency resolution;
 - claims that every native build is faster or smaller;
-- LLVM/JIT, a new garbage collector, or an NME-specific runtime.
+- a JIT, a new garbage collector, or an NME-specific general runtime. The
+  native backend targets only its documented core subset; it is not a
+  Python reimplementation.
 
 NME can still be used to *write* compilers, including a small NME-to-Python
 translator, because advanced Python and all installed Python libraries remain
