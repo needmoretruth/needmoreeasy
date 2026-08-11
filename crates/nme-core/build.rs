@@ -8,23 +8,19 @@ fn main() {
         .and_then(|path| path.parent())
         .expect("workspace root");
 
-    for relative in [
-        "crates/nme-core/src/syntax.rs",
-        "crates/nme-core/src/parser.rs",
-        "crates/nme-core/src/lower.rs",
+    for (relative, start, end) in [
+        ("crates/nme-core/src/parser.rs", 3965usize, 4015usize),
+        ("crates/nme-core/src/lower.rs", 40usize, 85usize),
     ] {
         let path = root.join(relative);
         let text = fs::read_to_string(&path).expect("read generated ZK source");
         for (number, line) in text.lines().enumerate() {
-            if line.contains("ZeroKnowledge")
-                || line.contains("ZERO_KNOWLEDGE")
-                || line.contains("전사록")
-                || line.contains("\"영지식\"")
-            {
-                println!("cargo:warning=ZK-RUST {relative}:{}: {line}", number + 1);
+            let one_based = number + 1;
+            if one_based >= start && one_based <= end {
+                println!("cargo:warning=ZK-RANGE {relative}:{one_based}: {line}");
             }
         }
     }
 
-    panic!("diagnostic-only beta.16 run: inspect generated ZK bindings above");
+    panic!("diagnostic-only beta.16 run: inspect generated ZK binding ranges above");
 }
