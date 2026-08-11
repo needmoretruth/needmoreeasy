@@ -314,6 +314,28 @@ fn module_imports_reach_nested_imports() {
 }
 
 #[test]
+fn the_native_example_matches_the_python_path_output() {
+    if Command::new("cc").arg("--version").output().is_err() || !python_available() {
+        eprintln!("cc or Python not available; skipping native parity test");
+        return;
+    }
+    let python_output = nme(&["run", &example("native-count.nme")]);
+    assert!(python_output.status.success(), "{}", stderr(&python_output));
+
+    let dir = std::env::temp_dir().join(format!("nme-cli-native-parity-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::copy(
+        Path::new(&example("native-count.nme")),
+        dir.join("native-count.nme"),
+    )
+    .unwrap();
+    let native_output = run_in(&dir, &["native", "native-count"], None);
+    assert!(native_output.status.success(), "{}", stderr(&native_output));
+    assert_eq!(stdout(&native_output), stdout(&python_output));
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn the_native_command_compiles_and_runs_a_core_program() {
     if Command::new("cc").arg("--version").output().is_err() {
         eprintln!("cc not available; skipping native test");

@@ -1,0 +1,16 @@
+# Native countdown — the NME-native core subset
+# This program stays inside the native core (integers, while, if, say),
+# so it can compile straight to machine code.
+# Run (Python):   nme r native-count
+# Run (native):   nme native native-count
+# Build (native): nme native build native-count -o native-count
+
+score = 0
+while score is less than 10
+    score add 1
+    if score is greater than 7
+        show "almost there"
+    end
+end
+show score
+show "counted to ten natively"
