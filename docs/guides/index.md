@@ -8,7 +8,7 @@ Small, progressive guides for the beginner path. Each guide teaches one idea,
 gets harder than the last, and compiles with `nme check`. Guides 01–04 are
 first-day sentences; 05–10 add beginner syntax and control flow; 11–12 use the
 CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
-21–22 add HTTP and terminal menus.
+21–22 add HTTP and terminal menus; 30–31 add data and records.
 
 ## Difficulty
 
@@ -49,6 +49,8 @@ CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
 27. [27 — Calculator](27-calculator.md)
 28. [28 — Compiler](28-compiler.md)
 29. [29 — Bootstrap](29-bootstrap.md)
+30. [30 — Data](30-data.md)
+31. [31 — Records](31-address-book.md)
 
 ## Topic lookup
 
@@ -75,6 +77,7 @@ CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
 - 계산기 / Calculator: [27](27-calculator.md)
 - 컴파일러 / Compiler: [28](28-compiler.md)
 - 부트스트랩 / Bootstrap: [29](29-bootstrap.md)
+- 데이터/Data: [30](30-data.md), [31](31-address-book.md)
 
 ## All guides
 
@@ -109,6 +112,8 @@ CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
 | 27 | ★★★★★ | 계산기 / Calculator | [Calculator — a command-line project](27-calculator.md) | A repeat-until-quit calculator with a module |
 | 28 | ★★★★★ | 컴파일러 / Compiler | [Your first compiler — a tiny language](28-compiler.md) | A tiny calculator language that interprets lines |
 | 29 | ★★★★★ | 부트스트랩 / Bootstrap | [Bootstrap — NME compiling a tiny language](29-bootstrap.md) | A tiny compiler written in NME |
+| 30 | ★★★★★ | 데이터/Data | [Data — statistics on a list](30-data.md) | Load numbers from a JSON file and compute mean, median, and max |
+| 31 | ★★★★★ | 데이터/기록 / Records | [Records — a small address book](31-address-book.md) | A JSON-file address book that adds, lists, and searches contacts |
 
 ## Where to continue
 

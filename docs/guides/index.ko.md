@@ -9,6 +9,7 @@
 확인할 수 있습니다. 01–04는 첫날 문장형이고, 05–10은 초급 문법과
 제어 흐름을 더하며, 11–12는 CLI 도구를 다루고, 13–16은 파일·JSON·작은
 프로젝트를, 17–20은 블록체인을, 21–22는 HTTP와 터미널 메뉴를 다룹니다.
+30–31은 데이터와 기록을 다룹니다.
 
 ## 난이도
 
@@ -42,6 +43,15 @@
 20. [20 — 합의](20-consensus.ko.md)
 21. [21 — HTTP](21-http.ko.md)
 22. [22 — 터미널 메뉴](22-terminal-menu.ko.md)
+23. [23 — 모듈](23-modules.ko.md)
+24. [24 — Python 패키지](24-python-packages.ko.md)
+25. [25 — 네이티브](25-native.ko.md)
+26. [26 — 모험](26-adventure.ko.md)
+27. [27 — 계산기](27-calculator.ko.md)
+28. [28 — 첫 컴파일러](28-compiler.ko.md)
+29. [29 — 부트스트랩](29-bootstrap.ko.md)
+30. [30 — 데이터](30-data.ko.md)
+31. [31 — 기록](31-address-book.ko.md)
 
 ## 주제별 찾아보기
 
@@ -61,6 +71,14 @@
 - 합의 / Consensus: [20](20-consensus.ko.md)
 - 네트워크/HTTP / Network & HTTP: [21](21-http.ko.md)
 - TUI/메뉴 / TUI & menus: [22](22-terminal-menu.ko.md)
+- 모듈 / Modules: [23](23-modules.ko.md)
+- Python 패키지 / Python packages: [24](24-python-packages.ko.md)
+- 네이티브 / Native: [25](25-native.ko.md)
+- 게임 / Game: [26](26-adventure.ko.md)
+- 계산기 / Calculator: [27](27-calculator.ko.md)
+- 컴파일러 / Compiler: [28](28-compiler.ko.md)
+- 부트스트랩 / Bootstrap: [29](29-bootstrap.ko.md)
+- 데이터/Data: [30](30-data.ko.md), [31](31-address-book.ko.md)
 
 ## 전체 목록
 
@@ -88,6 +106,15 @@
 | 20 | ★★★★★ | 합의 / Consensus | [합의 — 사슬에 동의하기](20-consensus.ko.md) | 가장 긴 사슬 규칙으로 갈라짐을 해결하는 두 노드 |
 | 21 | ★★★★★ | 네트워크/HTTP / Network & HTTP | [HTTP — 웹 서버에 물어보기](21-http.ko.md) | 로컬 서버에서 페이지를 가져오기 |
 | 22 | ★★★★★ | TUI/메뉴 / TUI & menus | [터미널 메뉴 — 작은 TUI](22-terminal-menu.ko.md) | 반복으로 움직이는 터미널 메뉴 |
+| 23 | ★★★★★ | 모듈 / Modules | [모듈 — 프로그램을 여러 파일로 나누기](23-modules.ko.md) | 다른 .nme 파일에서 이름 있는 값 가져오기 |
+| 24 | ★★★★★ | Python 패키지 / Python packages | [Python 패키지 — 표준 라이브러리와 설치된 라이브러리](24-python-packages.ko.md) | NME에서 datetime과 다른 Python 패키지 사용하기 |
+| 25 | ★★★★★ | 네이티브 / Native | [네이티브 — 기계어로 컴파일하기](25-native.ko.md) | CPython 없이 핵심 부분 프로그램 실행하기 |
+| 26 | ★★★★★ | 게임 / Game | [모험 — 작은 텍스트 게임](26-adventure.ko.md) | 선택지가 있는 방마다 텍스트 모험 |
+| 27 | ★★★★★ | 계산기 / Calculator | [계산기 — 명령줄 프로젝트](27-calculator.ko.md) | 모듈 파일이 있는 계속 물어보는 계산기 |
+| 28 | ★★★★★ | 컴파일러 / Compiler | [첫 컴파일러 — 아주 작은 언어](28-compiler.ko.md) | 줄을 해석하는 아주 작은 계산기 언어 |
+| 29 | ★★★★★ | 부트스트랩 / Bootstrap | [부트스트랩 — NME가 아주 작은 언어를 컴파일](29-bootstrap.ko.md) | NME로 쓴 아주 작은 컴파일러 |
+| 30 | ★★★★★ | 데이터/Data | [데이터 — 목록 통계](30-data.ko.md) | JSON 파일에서 숫자를 불러와 평균·중앙값·최댓값 구하기 |
+| 31 | ★★★★★ | 데이터/기록 / Records | [기록 — 작은 주소록](31-address-book.ko.md) | 연락처를 추가·목록·검색하는 JSON 파일 주소록 |
 
 ## 다음 단계
 
