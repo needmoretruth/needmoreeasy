@@ -1,0 +1,44 @@
+name: beta23 proof of work validation
+
+on:
+  push:
+    branches: [work/beta23-pow-consistency]
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out beta23 work branch
+        uses: actions/checkout@v6
+        with:
+          ref: work/beta23-pow-consistency
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install CPython
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+      - name: Materialize consistency fix
+        run: python scripts/materialize-beta23-pow.py
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Cryptocurrency regression tests
+        run: cargo test -p nme-core --test cryptocurrency_examples --locked
+      - name: Install CLI
+        run: cargo install --path crates/nme-cli --locked
+      - name: Check Korean sentence coin
+        run: nme check examples/needmorecoin-sentence.ko
+      - name: Run Korean sentence coin
+        run: nme run examples/needmorecoin-sentence.ko
+      - name: Commit validated fix
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -- examples/needmorecoin-sentence.ko.nme crates/nme-core/tests/cryptocurrency_examples.rs
+          git commit -m "test: keep cryptocurrency proof of work difficulty consistent"
+          git push origin HEAD:work/beta23-pow-consistency
