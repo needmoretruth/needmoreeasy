@@ -6,6 +6,12 @@ NME의 중요한 변경 사항을 이 문서에 기록합니다.
 
 ## 미출시 (Unreleased)
 
+## 0.0.1-beta.17 — 2026-08-12
+
+- `beta`를 규칙으로 강제되는 차세대 릴리스 선으로 만들었습니다. 공개 beta push마다 workspace beta 번호가 부모보다 정확히 1 증가하고, 커밋 제목과 `Cargo.lock`의 workspace 패키지 버전이 모두 일치해야 합니다.
+- CI를 `actions/checkout@v6`, `actions/setup-python@v6`로 올리고 Cargo 검사와 테스트에 `--locked`를 적용했습니다.
+- beta와 PR에 CPython 3.10, 3.12, 3.14 호환성 검증을 추가하면서 Ubuntu, Windows, macOS 전체 품질 게이트도 유지합니다.
+
 ## 0.0.1-beta.16 — 2026-08-11
 
 - 내장 `zero_knowledge` / `영지식` 어댑터(버전 `0.0.1`)를 추가했습니다.

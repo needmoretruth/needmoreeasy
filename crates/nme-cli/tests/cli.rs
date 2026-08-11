@@ -74,13 +74,13 @@ fn build_prints_transpiled_python() {
 fn version_reports_the_current_beta() {
     let output = nme(&["--version"]);
     assert!(output.status.success(), "{}", stderr(&output));
-    assert_eq!(stdout(&output), "nme 0.0.1-beta.16\n");
+    assert_eq!(stdout(&output), "nme 0.0.1-beta.17\n");
 
     let korean = nme(&["버전"]);
     assert!(korean.status.success(), "{}", stderr(&korean));
     assert_eq!(
         stdout(&korean),
-        "NME 버전: 0.0.1-beta.16\nnme version: 0.0.1-beta.16\n"
+        "NME 버전: 0.0.1-beta.17\nnme version: 0.0.1-beta.17\n"
     );
 }
 
@@ -188,7 +188,7 @@ fn command_shortcuts_run_check_build_and_modules() {
     let version = nme(&["v"]);
     assert!(version.status.success(), "{}", stderr(&version));
     assert!(
-        stdout(&version).contains("nme 0.0.1-beta.16"),
+        stdout(&version).contains("nme 0.0.1-beta.17"),
         "{}",
         stdout(&version)
     );
