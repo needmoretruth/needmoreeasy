@@ -15,7 +15,7 @@ and a summary report; 41–43 add a text-stats report, a two-group comparison,
 and a habit-tracker project; 44–46 add a random music player, CSV rows of
 data, and an expression language; 47–49 add a terminal progress bar, an inventory
 store, and reading tokens; 50–52 add string tools, a grid board, and
-tic-tac-toe.
+tic-tac-toe; 56–58 add logging, grouping, and a tiny bytecode runner.
 
 ## Difficulty
 
@@ -82,6 +82,9 @@ tic-tac-toe.
 53. [53 — Sets](53-sets.md)
 54. [54 — Stats](54-stats.md)
 55. [55 — Network](55-net.md)
+56. [56 — Log](56-log.md)
+57. [57 — Group](57-group.md)
+58. [58 — Bytecode](58-bytecode.md)
 
 ## Topic lookup
 
@@ -132,6 +135,9 @@ tic-tac-toe.
 - 집합 / Sets: [53](53-sets.md)
 - 통계 / Stats: [54](54-stats.md)
 - 네트워크 / Network: [55](55-net.md)
+- 기록 / Log: [56](56-log.md)
+- 묶기 / Group: [57](57-group.md)
+- 바이트코드 / Bytecode: [58](58-bytecode.md)
 
 ## All guides
 
@@ -189,6 +195,9 @@ tic-tac-toe.
 | 50 | ★★★★☆ | 문자열 / Strings | [Strings — slicing and changing text](50-strings.md) | Slice `text[start:end]` and change a sentence with `.upper()`, `.replace()`, and `.strip()` |
 | 51 | ★★★★★ | 격자 / Grid | [Grid — a board of lists](51-grid.md) | A 3x3 board of lists, reading and writing cells with `board[row][col]` |
 | 52 | ★★★★★ | 게임 / Tic-tac-toe | [Game — tic-tac-toe](52-tic-tac-toe.md) | A playable two-player tic-tac-toe with a win check |
+| 56 | ★★★★★ | 파일/기록 / Files & logging | [Log — an event record](56-log.md) | Append a dated line to a log file every run with datetime and file_write |
+| 57 | ★★★★★ | 데이터 / Data | [Group — data by category](57-group.md) | Group a list of dicts by a category key into a dict of lists and report counts |
+| 58 | ★★★★★ | 컴파일러 / Compiler | [Compiler tier — a tiny bytecode runner](58-bytecode.md) | Compile instructions into a list of steps and run them one by one like a virtual machine |
 
 ## Where to continue
 
