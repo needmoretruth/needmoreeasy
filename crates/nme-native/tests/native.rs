@@ -140,6 +140,14 @@ fn modulo_arithmetic_compiles_natively() {
 }
 
 #[test]
+fn modulo_in_conditions_compiles_natively() {
+    // `%` inside a sentence `while`/`if` condition is a Python condition
+    // and lowers to the same C operator as the arithmetic forms.
+    let source = "count = 1\nwhile count % 4 != 0\n    count = count + 1\nend\nshow count\nif 7 % 2 == 1\n    show \"odd\"\nend\n";
+    assert_eq!(native_run(source).unwrap(), "4\nodd\n");
+}
+
+#[test]
 fn float_literals_arithmetic_and_conditions_compile_natively() {
     let source = "pi = 3.14\nshow pi\nshow 1 + 0.5\nr = 2\nshow 3.14 * r * r\nif pi is greater than 3\n    show \"pi big\"\nend\n";
     assert_eq!(native_run(source).unwrap(), "3.14\n1.5\n12.56\npi big\n");
@@ -209,6 +217,21 @@ fn a_python_colon_while_header_is_rejected_not_miscompiled() {
     // `while x < 3:` is valid Python, so it stays Python (Python-wins) and
     // the native core, which lowers the sentence `while` form, rejects it.
     assert!(native_rejects("x = 0\nwhile x < 3:\n    x = x + 1\nshow x\n"));
+}
+
+#[test]
+fn a_rejected_line_reports_its_own_source_position() {
+    // The diagnostic must point at the offending line, not at the first
+    // line of the file (a real bug fixed after the native core shipped).
+    let source = "x = 1\nprint(\"hi\")\n";
+    let problems = nme_native::native_compile(source).unwrap_err();
+    assert_eq!(problems.len(), 1);
+    let span = problems[0].span;
+    assert_eq!(
+        &source[span.start..span.end],
+        "print(\"hi\")",
+        "the diagnostic must span the offending Python line"
+    );
 }
 
 #[test]

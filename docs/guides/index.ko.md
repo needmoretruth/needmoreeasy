@@ -23,6 +23,13 @@
  68–70은 오류 처리, 정규식 패턴, 반응 게임을 다룹니다.
  71–73은 터미널 막대 그래프, 여러 파일 프로젝트, 캡스톤 컴파일러를
  다룹니다.
+ 74–76은 데이터 병합, 전략 게임, 서버 폴링을 다룹니다.
+ 77–79는 웹에서 파일 받기, 데이터 분석, 미니 언어에 함수 넣기를
+ 다룹니다.
+ 80–82는 명령 줄 도구, 자기 코드 테스트, 식을 트리로 파싱하기를
+ 다룹니다.
+ 83–85는 코드 맞히기 게임, 웹 링크 추출, 트리를 바이트코드로
+ 컴파일하기를 다룹니다.
 
 ## 난이도
 
@@ -107,6 +114,18 @@
 71. [71 — 차트](71-chart.ko.md)
 72. [72 — 모듈](72-project-files.ko.md)
 73. [73 — 캡스톤](73-capstone.ko.md)
+74. [74 — 병합](74-merge.ko.md)
+75. [75 — 게임](75-ai.ko.md)
+76. [76 — 네트워크](76-poll.ko.md)
+77. [77 — 네트워크](77-download.ko.md)
+78. [78 — 데이터](78-analysis.ko.md)
+79. [79 — 컴파일러](79-functions.ko.md)
+80. [80 — 도구](80-argv.ko.md)
+81. [81 — 테스트](81-testing.ko.md)
+82. [82 — 컴파일러](82-ast.ko.md)
+83. [83 — 게임](83-mastermind.ko.md)
+84. [84 — 웹](84-links.ko.md)
+85. [85 — 컴파일러](85-bytecode-compiler.ko.md)
 
 ## 주제별 찾아보기
 
@@ -174,6 +193,18 @@
 - 차트 / Chart: [71](71-chart.ko.md)
 - 프로젝트/모듈 / Project modules: [72](72-project-files.ko.md)
 - 캡스톤 / Capstone: [73](73-capstone.ko.md)
+- 병합 / Merge: [74](74-merge.ko.md)
+- 게임/전략 / Game & strategy: [75](75-ai.ko.md)
+- 네트워크/폴링 / Network & polling: [76](76-poll.ko.md)
+- 다운로드 / Download: [77](77-download.ko.md)
+- 데이터 분석 / Analysis: [78](78-analysis.ko.md)
+- 컴파일러/함수 / Compiler & functions: [79](79-functions.ko.md)
+- 명령 줄 인자 / Command-line arguments: [80](80-argv.ko.md)
+- 테스트 / Testing: [81](81-testing.ko.md)
+- AST/컴파일러 / Compiler & AST: [82](82-ast.ko.md)
+- 게임/논리 / Game & logic: [83](83-mastermind.ko.md)
+- 웹/링크 / Web & links: [84](84-links.ko.md)
+- 바이트코드/컴파일러 / Compiler & bytecode: [85](85-bytecode-compiler.ko.md)
 
 ## 전체 목록
 
@@ -249,6 +280,18 @@
 | 71 | ★★★★★ | 시각화/출력 / Visualization | [차트 — 터미널 막대 그래프](71-chart.ko.md) | JSON 목록에서 가장 큰 값에 맞춘 # 블록으로 가로 막대 그래프 그리기 |
 | 72 | ★★★★★ | 모듈/구조 / Modules & structure | [모듈 — 여러 파일 프로젝트](72-project-files.ko.md) | 명확한 인터페이스의 .nme 모듈 세 개로 나누고 주 프로그램이 가져오는 날씨 보고서 프로젝트 |
 | 73 | ★★★★★ | 컴파일러/캡스톤 / Compiler capstone | [캡스톤 — Python으로 컴파일하는 언어](73-capstone.ko.md) | 작은 언어를 Python으로 컴파일해 파일로 저장하고 실행하는 NME 프로그램 |
+| 74 | ★★★★★ | 데이터/병합 / Data & merging | [병합 — 두 목록 합치기](74-merge.ko.md) | 두 JSON 목록을 이름 키로 합쳐 결합 보고서 만들기 |
+| 75 | ★★★★★ | 게임/전략 / Game & strategy | [게임 — 단순한 상대](75-ai.ko.md) | 컴퓨터가 승리 전략을 따르는 돌 가져가기 게임 |
+| 76 | ★★★★★ | 네트워크/시간 / Network & timing | [네트워크 — 서버 폴링](76-poll.ko.md) | 로컬 서버의 status.json을 몇 초마다 다시 받아 변화를 보고하기 |
+| 77 | ★★★★★ | 네트워크/파일 / Network & files | [다운로드 — 웹에서 파일 받아 저장하기](77-download.ko.md) | 로컬 HTTP 서버에서 파일을 받아 진행 상황을 보여 주며 저장하기 |
+| 78 | ★★★★★ | 데이터 분석 / Data analysis | [분석 — 한 달 온도 분석하기](78-analysis.ko.md) | 한 달치 온도를 읽어 통계와 히스토그램을 계산하고 보고서 파일로 저장하기 |
+| 79 | ★★★★★ | 컴파일러/함수 / Compiler & functions | [컴파일러 — 미니 언어에 함수 넣기](79-functions.ko.md) | def·return·호출이 있는 미니 언어를 Python으로 컴파일하고 실행하기 |
+| 80 | ★★★★★ | CLI 도구 / Command-line tools | [도구 — 명령 줄에서 말 받기](80-argv.ko.md) | `nme r todo add "buy milk"`처럼 명령 줄에서 명령을 받아 동작하는 할 일 도구 |
+| 81 | ★★★★★ | 테스트 / Testing | [테스트 — 내가 쓴 함수 확인하기](81-testing.ko.md) | 자기 함수를 예상값과 비교해 통과·실패를 보고하는 작은 테스트 실행기 |
+| 82 | ★★★★★ | 컴파일러/AST / Compiler & AST | [컴파일러 — 식을 트리로 만들기](82-ast.ko.md) | 식을 트리로 파싱하고 재귀로 평가해 우선순위를 지키는 계산기 |
+| 83 | ★★★★★ | 게임/논리 / Game & logic | [게임 — 비밀 코드 맞히기](83-mastermind.ko.md) | 4가지 색의 비밀 코드를 맞히고 검정·하양 단서로 좁혀 가는 마스터마인드 |
+| 84 | ★★★★★ | 웹/텍스트 / Web & text | [웹 — 페이지에서 링크 뽑아내기](84-links.ko.md) | 로컬 서버의 HTML 페이지를 받아 그 안의 링크를 모두 찾아 절대 주소로 보여 주기 |
+| 85 | ★★★★★ | 컴파일러/바이트코드 / Compiler & bytecode | [컴파일러 — 트리에서 바이트코드로](85-bytecode-compiler.ko.md) | 식 트리를 납작한 명령 목록으로 컴파일하고 스택 가상 머신으로 실행하기 |
 
 ## 다음 단계
 

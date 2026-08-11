@@ -884,6 +884,15 @@ fn both_modules_can_be_loaded_in_one_program() {
     assert!(python.contains("file_read = lambda 경로"), "{python}");
     assert!(python.contains("print(random_number(1, 6))"), "{python}");
     assert!(python.contains("print(file_read(\"x.txt\"))"), "{python}");
+
+    // Order and language may mix: file first, then the Korean random
+    // spelling, both still ready in one program.
+    let mixed = "파일 사용 최신\nuse random latest\nshow 랜덤정수(1, 6)\nshow json읽기(\"x.json\")\n";
+    let python = ok(mixed);
+    assert!(python.contains("랜덤정수 = 랜덤.randint"), "{python}");
+    assert!(python.contains("json읽기 = json_load"), "{python}");
+    assert!(python.contains("print(랜덤정수(1, 6))"), "{python}");
+    assert!(python.contains("print(json읽기(\"x.json\"))"), "{python}");
 }
 
 #[test]

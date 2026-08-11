@@ -20,7 +20,11 @@ tic-tac-toe; 56–58 add logging, grouping, and a tiny bytecode runner;
 algorithms and ASCII art; 65–67 process many files, rank records, and build a
 grade book; 68–70 add error handling, regex patterns, and a reaction game;
 71–73 add a terminal bar chart, a three-module project, and the capstone
-compiler.
+compiler; 74–76 merge data, play a strategy game, and poll a server;
+77–79 download files from the web, analyze a dataset, and add functions
+to the mini language; 80–82 build command-line tools, test them, and
+parse expressions into trees; 83–85 play a code-breaking game, extract
+web links, and compile trees into bytecode.
 
 ## Difficulty
 
@@ -108,6 +112,15 @@ compiler.
 74. [74 — Merge](74-merge.md)
 75. [75 — Game](75-ai.md)
 76. [76 — Network](76-poll.md)
+77. [77 — Network](77-download.md)
+78. [78 — Data](78-analysis.md)
+79. [79 — Compiler](79-functions.md)
+80. [80 — Tools](80-argv.md)
+81. [81 — Testing](81-testing.md)
+82. [82 — Compiler](82-ast.md)
+83. [83 — Game](83-mastermind.md)
+84. [84 — Web](84-links.md)
+85. [85 — Compiler](85-bytecode-compiler.md)
 
 ## Topic lookup
 
@@ -175,6 +188,18 @@ compiler.
 - 차트 / Chart: [71](71-chart.md)
 - 프로젝트/모듈 / Project modules: [72](72-project-files.md)
 - 캡스톤 / Capstone: [73](73-capstone.md)
+- 병합 / Merge: [74](74-merge.md)
+- 게임/전략 / Game & strategy: [75](75-ai.md)
+- 네트워크/폴링 / Network & polling: [76](76-poll.md)
+- 다운로드 / Download: [77](77-download.md)
+- 데이터 분석 / Analysis: [78](78-analysis.md)
+- 컴파일러/함수 / Compiler & functions: [79](79-functions.md)
+- 명령 줄 인자 / Command-line arguments: [80](80-argv.md)
+- 테스트 / Testing: [81](81-testing.md)
+- AST/컴파일러 / Compiler & AST: [82](82-ast.md)
+- 게임/논리 / Game & logic: [83](83-mastermind.md)
+- 웹/링크 / Web & links: [84](84-links.md)
+- 바이트코드/컴파일러 / Compiler & bytecode: [85](85-bytecode-compiler.md)
 
 ## All guides
 
@@ -250,6 +275,18 @@ compiler.
 | 71 | ★★★★★ | 시각화/출력 / Visualization | [Chart — a bar chart in the terminal](71-chart.md) | A horizontal bar chart drawn with # blocks from a JSON list, scaled to the largest value |
 | 72 | ★★★★★ | 모듈/구조 / Modules & structure | [Modules — a project across files](72-project-files.md) | A weather-report project split into three .nme modules with clear interfaces, imported by a main program |
 | 73 | ★★★★★ | 컴파일러/캡스톤 / Compiler capstone | [Capstone — a language that compiles to Python](73-capstone.md) | An NME program that compiles a small custom language to Python, writes it to a file, and runs it |
+| 74 | ★★★★★ | 데이터/병합 / Data & merging | [Merge — joining two lists](74-merge.md) | Load two JSON lists and join records by name key into one report |
+| 75 | ★★★★★ | 게임/전략 / Game & strategy | [Game — a simple opponent](75-ai.md) | A take-away game where the computer follows a winning strategy |
+| 76 | ★★★★★ | 네트워크/시간 / Network & timing | [Network — polling a server](76-poll.md) | Repeatedly fetch a status.json from a local server every few seconds and report changes |
+| 77 | ★★★★★ | 네트워크/파일 / Network & files | [Download — saving files from the web](77-download.md) | Download a file from a local HTTP server and save it while showing progress |
+| 78 | ★★★★★ | 데이터 분석 / Data analysis | [Analysis — a month of temperatures](78-analysis.md) | Load a month of temperatures, compute statistics and a histogram, and save a report file |
+| 79 | ★★★★★ | 컴파일러/함수 / Compiler & functions | [Compiler tier — functions](79-functions.md) | Compile a mini language with def, return, and calls into Python and run it |
+| 80 | ★★★★★ | CLI 도구 / Command-line tools | [Tools — reading command-line arguments](80-argv.md) | A todo tool that takes commands like `nme r todo add "buy milk"` on the command line |
+| 81 | ★★★★★ | 테스트 / Testing | [Testing — checking the functions you wrote](81-testing.md) | A tiny test runner that calls your own functions, compares each result with the expected value, and reports pass or fail |
+| 82 | ★★★★★ | 컴파일러/AST / Compiler & AST | [Compiler tier — expressions as trees](82-ast.md) | A calculator that parses an expression into a tree and evaluates the tree recursively, respecting precedence |
+| 83 | ★★★★★ | 게임/논리 / Game & logic | [Game — Mastermind, guessing a secret code](83-mastermind.md) | A Mastermind-style game that hides a 4-color code and gives black/white feedback for each guess |
+| 84 | ★★★★★ | 웹/텍스트 / Web & text | [Web — extracting links from a page](84-links.md) | Fetch an HTML page from a local server and list every link on it as a full URL |
+| 85 | ★★★★★ | 컴파일러/바이트코드 / Compiler & bytecode | [Compiler tier — from tree to bytecode](85-bytecode-compiler.md) | A compiler that flattens an expression tree into instruction lines and runs them on a stack machine |
 
 ## Where to continue
 
