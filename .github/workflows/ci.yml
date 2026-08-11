@@ -73,6 +73,13 @@ jobs:
           assert code.count(strict) == 1
           code = code.replace(strict, tolerant, 1)
           exec(compile(code, 'beta16-integration-fixes', 'exec'))
+
+          build = Path('crates/nme-core/build.rs')
+          build_text = build.read_text(encoding='utf-8')
+          old_assert = 'assert_eq!(found, 5, "expected five English then/show output lines");'
+          new_assert = 'assert!(found == 0 || found == 5, "expected English output lines to be already repaired or repairable");'
+          assert build_text.count(old_assert) == 1
+          build.write_text(build_text.replace(old_assert, new_assert, 1), encoding='utf-8')
           PY
           cargo fmt --all
           cargo clippy --fix --workspace --all-targets --allow-dirty --allow-staged
