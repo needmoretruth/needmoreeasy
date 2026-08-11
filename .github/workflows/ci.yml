@@ -59,6 +59,7 @@ jobs:
           end = workflow.index('          PY\n', heredoc)
           lines = workflow[heredoc:end].splitlines()
           code = '\n'.join(line[10:] if line.startswith('          ') else line for line in lines)
+          code = code.replace(r"-> \'static str {", r"-> &\'static str {")
           exec(compile(code, 'beta16-integration-fixes', 'exec'))
           PY
           cargo fmt --all
