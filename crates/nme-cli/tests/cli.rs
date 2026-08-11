@@ -74,13 +74,13 @@ fn build_prints_transpiled_python() {
 fn version_reports_the_current_beta() {
     let output = nme(&["--version"]);
     assert!(output.status.success(), "{}", stderr(&output));
-    assert_eq!(stdout(&output), "nme 0.0.1-beta.17\n");
+    assert_eq!(stdout(&output), "nme 0.0.1-beta.18\n");
 
     let korean = nme(&["버전"]);
     assert!(korean.status.success(), "{}", stderr(&korean));
     assert_eq!(
         stdout(&korean),
-        "NME 버전: 0.0.1-beta.17\nnme version: 0.0.1-beta.17\n"
+        "NME 버전: 0.0.1-beta.18\nnme version: 0.0.1-beta.18\n"
     );
 }
 
@@ -90,7 +90,7 @@ fn modules_uses_the_language_of_the_command() {
     assert!(english.status.success(), "{}", stderr(&english));
     assert_eq!(
         stdout(&english),
-        "random  0.0.1  bundled, latest\nfile  0.0.1  bundled, latest\nzero_knowledge  0.0.1  bundled, latest\n"
+        "random  0.0.1  bundled, latest\nfile  0.0.1  bundled, latest\nzero_knowledge  0.0.2  bundled, latest\n"
     );
     assert!(!stdout(&english).contains("내장"));
 
@@ -98,7 +98,7 @@ fn modules_uses_the_language_of_the_command() {
     assert!(bilingual.status.success(), "{}", stderr(&bilingual));
     assert_eq!(
         stdout(&bilingual),
-        "랜덤  0.0.1  내장, 최신\nrandom  0.0.1  bundled, latest\n파일  0.0.1  내장, 최신\nfile  0.0.1  bundled, latest\n영지식  0.0.1  내장, 최신\nzero_knowledge  0.0.1  bundled, latest\n"
+        "랜덤  0.0.1  내장, 최신\nrandom  0.0.1  bundled, latest\n파일  0.0.1  내장, 최신\nfile  0.0.1  bundled, latest\n영지식  0.0.2  내장, 최신\nzero_knowledge  0.0.2  bundled, latest\n"
     );
 }
 
@@ -188,7 +188,7 @@ fn command_shortcuts_run_check_build_and_modules() {
     let version = nme(&["v"]);
     assert!(version.status.success(), "{}", stderr(&version));
     assert!(
-        stdout(&version).contains("nme 0.0.1-beta.17"),
+        stdout(&version).contains("nme 0.0.1-beta.18"),
         "{}",
         stdout(&version)
     );
@@ -1704,6 +1704,38 @@ fn cli_errors_carry_lookup_codes() {
         stdout(&cli_code_korean).contains("알 수 없는 명령"),
         "{}",
         stdout(&cli_code_korean)
+    );
+}
+
+#[test]
+fn schnorr_nizk_context_examples_reject_cross_context_reuse() {
+    if !python_available() {
+        eprintln!("Python not available; skipping context-bound NIZK example test");
+        return;
+    }
+
+    let korean = nme(&["run", &example("zk-nizk-context.ko.nme")]);
+    assert!(korean.status.success(), "{}", stderr(&korean));
+    let korean_text = stdout(&korean);
+    assert!(
+        korean_text.contains("문맥에 묶인 비대화 영지식 증명을 검증했습니다"),
+        "{korean_text}"
+    );
+    assert!(
+        korean_text.contains("같은 증명은 다른 문맥으로 재사용할 수 없습니다"),
+        "{korean_text}"
+    );
+
+    let english = nme(&["run", &example("zk-nizk-context.en.nme")]);
+    assert!(english.status.success(), "{}", stderr(&english));
+    let english_text = stdout(&english);
+    assert!(
+        english_text.contains("Context-bound non-interactive proof verified."),
+        "{english_text}"
+    );
+    assert!(
+        english_text.contains("The same proof was rejected under a different context."),
+        "{english_text}"
     );
 }
 

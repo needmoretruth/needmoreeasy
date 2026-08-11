@@ -91,7 +91,7 @@ Cargo가 설치한 `bin` 폴더가 `PATH`에 없다고 경고하면 macOS/Linux�
 명령이 아닙니다. Windows PowerShell은
 [설치 안내](docs/install.ko.md#windows-11)의 PATH 단계를 사용하세요.
 
-표시될 버전은 `nme 0.0.1-beta.17`입니다.
+표시될 버전은 `nme 0.0.1-beta.18`입니다.
 
 Windows, macOS, Linux별 과정은 [설치 안내](docs/install.ko.md)에 있습니다.
 프로그래밍을 전혀 모른다면 [5분 시작 안내](docs/getting-started.ko.md)부터
@@ -227,6 +227,16 @@ json저장("save.json", 점수)
 감사된 실서비스 암호 라이브러리를 대신하는 용도는 아닙니다.
 
 `nme 모듈`로 설치된 버전과 이름을 확인합니다.
+
+beta.18의 영지식 어댑터 버전은 `0.0.2`이며 문맥에 묶인 Fiat-Shamir
+비대화형 증명도 제공합니다. `zk_nizk_prove` / `영지식비대화증명`은
+JSON에 저장하기 쉬운 `[약속값, 응답값]` 증명을 만들고, 검증은 Group 15
+생성원·약속·공개값·길이 구분된 UTF-8 문맥을 NME 전용 도메인 태그 아래
+SHA-256으로 다시 해시합니다. 따라서 다른 문맥으로 복사한 증명은 실패합니다.
+단, 같은 문맥 안의 재전송까지 자동으로 막는 것은 아니므로 freshness가 필요하면
+문맥에 고유 요청 ID나 nonce를 넣으세요. 한국어 문장형 예제
+[`zk-nizk-context.ko.nme`](examples/zk-nizk-context.ko.nme)와 영어판
+[`zk-nizk-context.en.nme`](examples/zk-nizk-context.en.nme)을 참고하세요.
 
 문장형에서는 모듈 선언이나 특수문자 없이도 랜덤을 바로 쓸 수 있습니다.
 

@@ -3991,6 +3991,17 @@ fn module_binding_names(module: BundledModuleId) -> &'static [&'static str] {
             "영지식모의응답만들기",
             "zk_simulated_commitment",
             "영지식모의약속",
+            "zk_group_bytes",
+            "영지식그룹바이트",
+            "_nme_zk_context_bytes",
+            "_nme_zk_int_bytes",
+            "_nme_zk_context_frame",
+            "zk_nizk_challenge",
+            "영지식비대화도전",
+            "zk_nizk_prove",
+            "영지식비대화증명",
+            "zk_nizk_verify",
+            "영지식비대화검증",
             "zero_knowledge_version",
             "영지식버전",
         ],
@@ -4383,6 +4394,43 @@ fn parse_value(
 
 fn parse_zero_knowledge_value(tokens: &[Token]) -> Option<Value> {
     use crate::syntax::ZeroKnowledgeValue as Zk;
+
+    if tokens.len() == 7
+        && token_matches_exact(&tokens[3], &["영지식"])
+        && token_matches_exact(&tokens[4], &["비대화"])
+        && token_matches_exact(&tokens[5], &["도전"])
+        && token_matches_exact(&tokens[6], &["만들기"])
+    {
+        return Some(Value::ZeroKnowledge(Zk::NizkChallenge {
+            public_key: zero_knowledge_code_with_particle(&tokens[0], &["과", "와"])?,
+            commitment: zero_knowledge_code_with_particle(&tokens[1], &["과", "와"])?,
+            context: zero_knowledge_code_with_particle(&tokens[2], &["으로", "로"])?,
+        }));
+    }
+
+    if tokens.len() == 6
+        && token_matches_exact(&tokens[2], &["영지식"])
+        && token_matches_exact(&tokens[3], &["비대화"])
+        && token_matches_exact(&tokens[4], &["증명"])
+        && token_matches_exact(&tokens[5], &["만들기"])
+    {
+        return Some(Value::ZeroKnowledge(Zk::NizkProof {
+            secret: zero_knowledge_code_with_particle(&tokens[0], &["과", "와"])?,
+            context: zero_knowledge_code_with_particle(&tokens[1], &["으로", "로"])?,
+        }));
+    }
+
+    if tokens.len() == 6
+        && token_matches_exact(&tokens[3], &["영지식"])
+        && token_matches_exact(&tokens[4], &["비대화"])
+        && token_matches_exact(&tokens[5], &["검증"])
+    {
+        return Some(Value::ZeroKnowledge(Zk::NizkVerify {
+            public_key: zero_knowledge_code_with_particle(&tokens[0], &["과", "와"])?,
+            proof: zero_knowledge_code_with_particle(&tokens[1], &["과", "와"])?,
+            context: zero_knowledge_code_with_particle(&tokens[2], &["으로", "로"])?,
+        }));
+    }
 
     if tokens.len() == 3
         && token_matches_exact(&tokens[0], &["영지식"])
@@ -5642,6 +5690,33 @@ mod zero_knowledge_tests {
 
     use crate::diagnostics::DiagnosticCode;
     use crate::transpile;
+
+    #[test]
+    fn zero_knowledge_nizk_sentences_bind_an_explicit_context() {
+        let source = "영지식 사용 최신
+비밀값은 영지식 비밀 만들기
+공개값은 비밀값으로 영지식 공개값 만들기
+문맥값은 결제 승인 요청
+증명값은 비밀값과 문맥값으로 영지식 비대화 증명 만들기
+검증값은 공개값과 증명값과 문맥값으로 영지식 비대화 검증
+일회값은 영지식 일회값 만들기
+약속값은 일회값으로 영지식 약속 만들기
+도전값은 공개값과 약속값과 문맥값으로 영지식 비대화 도전 만들기
+";
+        let python = transpile(source).expect("context-bound NIZK sentences must transpile");
+        assert!(
+            python.contains("증명값 = zk_nizk_prove(비밀값, 문맥값)"),
+            "{python}"
+        );
+        assert!(
+            python.contains("검증값 = zk_nizk_verify(공개값, 증명값, 문맥값)"),
+            "{python}"
+        );
+        assert!(
+            python.contains("도전값 = zk_nizk_challenge(공개값, 약속값, 문맥값)"),
+            "{python}"
+        );
+    }
 
     #[test]
     fn zero_knowledge_sentence_values_lower_without_python_punctuation() {

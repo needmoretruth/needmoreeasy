@@ -91,7 +91,7 @@ warns that its `bin` directory is not on `PATH`. It does not reinstall NME.
 Windows PowerShell uses the PATH step in the
 [installation guide](docs/install.md#windows-11).
 
-Expected version: `nme 0.0.1-beta.17`.
+Expected version: `nme 0.0.1-beta.18`.
 
 Windows, macOS, and Linux instructions are in the
 [installation guide](docs/install.md). The [five-minute guide](docs/getting-started.md)
@@ -233,6 +233,17 @@ This is a mathematically faithful learning/reference implementation, not an
 audited side-channel-hardened production cryptography library.
 
 Run `nme modules` to see installed module versions.
+
+The zero-knowledge adapter is version `0.0.2` in beta.18 and also provides a
+context-bound Fiat-Shamir non-interactive proof. `zk_nizk_prove(secret, context)`
+returns a JSON-friendly `[commitment, response]` proof, and
+`zk_nizk_verify(public_key, proof, context)` recomputes the SHA-256 challenge
+from the Group 15 generator, commitment, public key, and a length-prefixed UTF-8
+context under an NME-specific domain tag. A proof therefore fails under a
+different context. This does not by itself stop replay in the *same* context;
+put a unique request ID or nonce in the context when freshness matters. See
+[`zk-nizk-context.ko.nme`](examples/zk-nizk-context.ko.nme) and its English twin
+[`zk-nizk-context.en.nme`](examples/zk-nizk-context.en.nme).
 
 Sentence syntax can use random without any punctuation or prior module line:
 

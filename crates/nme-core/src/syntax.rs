@@ -38,7 +38,7 @@ pub const RANDOM_MODULE_VERSION: &str = "0.0.1";
 /// Version of the easy file adapter bundled with this compiler.
 pub const FILE_MODULE_VERSION: &str = "0.0.1";
 /// Version of the Schnorr zero-knowledge adapter bundled with this compiler.
-pub const ZERO_KNOWLEDGE_MODULE_VERSION: &str = "0.0.1";
+pub const ZERO_KNOWLEDGE_MODULE_VERSION: &str = "0.0.2";
 
 /// One bundled beginner module. Both languages are always exposed after one
 /// import, and each module has one explicit local version.
@@ -150,6 +150,23 @@ pub enum ZeroKnowledgeValue {
         commitment: Code,
         challenge: Code,
         response: Code,
+    },
+    /// Fiat-Shamir challenge bound to the public key, commitment, and explicit context.
+    NizkChallenge {
+        public_key: Code,
+        commitment: Code,
+        context: Code,
+    },
+    /// JSON-friendly non-interactive Schnorr proof `[commitment, response]`.
+    NizkProof {
+        secret: Code,
+        context: Code,
+    },
+    /// Verify a context-bound non-interactive Schnorr proof.
+    NizkVerify {
+        public_key: Code,
+        proof: Code,
+        context: Code,
     },
     SimulatedResponse,
     SimulatedCommitment {
