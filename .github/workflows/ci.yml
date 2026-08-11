@@ -36,39 +36,43 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
+          import re
 
           exec_path = Path('crates/nme-cli/src/exec.rs')
           text = exec_path.read_text(encoding='utf-8')
 
-          old = '''    let mut child = Command::new(python)
-              .arg("-c")
-              .arg(CHECK_BOOTSTRAP)'''
-          new = '''    let mut command = Command::new(python);
-              configure_python_utf8(&mut command);
-              let mut child = command
-                  .arg("-c")
-                  .arg(CHECK_BOOTSTRAP)'''
-          assert text.count(old) == 1
-          text = text.replace(old, new, 1)
+          text, changed = re.subn(
+              r'(?m)^    let mut child = Command::new\(python\)\n        \.arg\("-c"\)\n        \.arg\(CHECK_BOOTSTRAP\)',
+              '    let mut command = Command::new(python);\n'
+              '    configure_python_utf8(&mut command);\n'
+              '    let mut child = command\n'
+              '        .arg("-c")\n'
+              '        .arg(CHECK_BOOTSTRAP)',
+              text,
+              count=1,
+          )
+          assert changed == 1, 'check_python command shape'
 
-          old = '''    let mut command = Command::new(python);
-              if let Some(dir) = module_dir {'''
-          new = '''    let mut command = Command::new(python);
-              configure_python_utf8(&mut command);
-              if let Some(dir) = module_dir {'''
-          assert text.count(old) == 1
-          text = text.replace(old, new, 1)
+          text, changed = re.subn(
+              r'(?m)^(    let mut command = Command::new\(python\);\n)(    if let Some\(dir\) = module_dir \{)',
+              r'\1    configure_python_utf8(&mut command);\n\2',
+              text,
+              count=1,
+          )
+          assert changed == 1, 'run_python command shape'
 
-          old = '''    let status = Command::new(python)
-              .arg("-m")'''
-          new = '''    let mut command = Command::new(python);
-              configure_python_utf8(&mut command);
-              let status = command
-                  .arg("-m")'''
-          assert text.count(old) == 1
-          text = text.replace(old, new, 1)
+          text, changed = re.subn(
+              r'(?m)^    let status = Command::new\(python\)\n        \.arg\("-m"\)',
+              '    let mut command = Command::new(python);\n'
+              '    configure_python_utf8(&mut command);\n'
+              '    let status = command\n'
+              '        .arg("-m")',
+              text,
+              count=1,
+          )
+          assert changed == 1, 'compile_native command shape'
 
-          boundary = '''fn stop_after_input_error(child: &mut std::process::Child) {'''
+          boundary = 'fn stop_after_input_error(child: &mut std::process::Child) {'
           helper = '''fn configure_python_utf8(command: &mut Command) {
               command
                   .env("PYTHONUTF8", "1")
@@ -82,47 +86,46 @@ jobs:
 
           tests = Path('crates/nme-cli/tests/cli.rs')
           text = tests.read_text(encoding='utf-8')
-          old = '''fn stdout(output: &Output) -> String {
-              String::from_utf8_lossy(&output.stdout).into_owned()
-          }
+          assert text.count('String::from_utf8_lossy(&output.stdout).into_owned()') == 1
+          assert text.count('String::from_utf8_lossy(&output.stderr).into_owned()') == 1
+          text = text.replace(
+              'String::from_utf8_lossy(&output.stdout).into_owned()',
+              'String::from_utf8_lossy(&output.stdout).replace("\\r\\n", "\\n")',
+              1,
+          )
+          text = text.replace(
+              'String::from_utf8_lossy(&output.stderr).into_owned()',
+              'String::from_utf8_lossy(&output.stderr).replace("\\r\\n", "\\n")',
+              1,
+          )
 
-          fn stderr(output: &Output) -> String {
-              String::from_utf8_lossy(&output.stderr).into_owned()
-          }'''
-          new = '''fn stdout(output: &Output) -> String {
-              String::from_utf8_lossy(&output.stdout).replace("\\r\\n", "\\n")
-          }
+          marker = '    let built = nme(&[\n        "b",\n'
+          assert text.count(marker) == 1
+          text = text.replace(
+              marker,
+              '    let build_dir = temporary_dir("build-alias");\n'
+              '    let build_path = build_dir.join("nme-build-alias-test.py");\n'
+              + marker,
+              1,
+          )
+          assert text.count('        "/tmp/nme-build-alias-test.py",') == 1
+          text = text.replace(
+              '        "/tmp/nme-build-alias-test.py",',
+              '        &build_path.to_string_lossy(),',
+              1,
+          )
+          built_assert = '    assert!(built.status.success(), "{}", stderr(&built));'
+          assert text.count(built_assert) >= 1
+          built_at = text.index(built_assert, text.index('let build_path'))
+          insert_at = built_at + len(built_assert)
+          text = text[:insert_at] + '\n    let _ = std::fs::remove_dir_all(&build_dir);' + text[insert_at:]
 
-          fn stderr(output: &Output) -> String {
-              String::from_utf8_lossy(&output.stderr).replace("\\r\\n", "\\n")
-          }'''
-          assert text.count(old) == 1
-          text = text.replace(old, new, 1)
-
-          old = '''    let built = nme(&[
-              "b",
-              &example("hello.nme"),
-              "-o",
-              "/tmp/nme-build-alias-test.py",
-          ]);
-              assert!(built.status.success(), "{}", stderr(&built));'''
-          new = '''    let build_dir = temporary_dir("build-alias");
-              let build_path = build_dir.join("nme-build-alias-test.py");
-              let built = nme(&[
-                  "b",
-                  &example("hello.nme"),
-                  "-o",
-                  &build_path.to_string_lossy(),
-              ]);
-              assert!(built.status.success(), "{}", stderr(&built));
-              let _ = std::fs::remove_dir_all(&build_dir);'''
-          assert text.count(old) == 1
-          text = text.replace(old, new, 1)
-
-          old = '''    let output_file = dir.join("already-here");'''
-          new = '''    let output_file = dir.join("already-here.exe");'''
-          assert text.count(old) == 1
-          text = text.replace(old, new, 1)
+          assert text.count('    let output_file = dir.join("already-here");') == 1
+          text = text.replace(
+              '    let output_file = dir.join("already-here");',
+              '    let output_file = dir.join("already-here.exe");',
+              1,
+          )
           tests.write_text(text, encoding='utf-8')
           PY
           cargo fmt --all
