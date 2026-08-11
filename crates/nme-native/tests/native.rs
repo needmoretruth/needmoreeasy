@@ -89,6 +89,15 @@ fn recursive_functions_compile_natively() {
 }
 
 #[test]
+fn less_equal_and_greater_equal_conditions_work() {
+    let source = "x = 0\nwhile x <= 3\n    x add 1\nend\nshow x\n";
+    assert_eq!(native_run(source).unwrap(), "4\n");
+
+    let greater = "x = 5\nif x >= 5\n    show \"yes\"\nend\n";
+    assert_eq!(native_run(greater).unwrap(), "yes\n");
+}
+
+#[test]
 fn string_variables_and_binary_concat_compile_natively() {
     let source = "greeting = \"hello\"\nshow greeting\nname = \"NME\"\nshow name + \" rocks\"\nshow greeting + \" friend\"\n";
     assert_eq!(

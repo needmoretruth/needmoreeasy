@@ -45,7 +45,8 @@ Implemented so far:
   concatenation through a tiny runtime helper (`nme_cat`); nested
   concatenation is rejected rather than miscompiled;
 - control flow: sentence `while`/`if`/`else`/`else if` over integer
-  comparisons (`<`, `>`, `==`; `<=`/`>=` and booleans are next), `break`;
+  comparisons (`<`, `>`, `<=`, `>=`, `==`, `!=`), `break`; the
+  natural-language connectors for `<=`/`>=` are a frontend follow-up;
 - functions over scalar parameters with `return` (recursion works);
 - `say`/`show`/`말해` of an integer expression, a string variable, or a
   string literal;
@@ -54,8 +55,8 @@ Implemented so far:
   renamed.
 
 Still planned: floats, booleans, a fuller string runtime (`len`,
-concatenation into variables), `<=`/`>=`, and the `native.nme` surface
-document.
+concatenation into variables), the natural-language `<=`/`>=` connectors,
+and the `native.nme` surface document.
 
 Everything outside the core — dynamic Python, classes, imports, packages,
 `use random`/`use file` adapters — stays on the **Python compatibility
