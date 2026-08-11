@@ -6,6 +6,7 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+- Extend the NME-native core: float literals, float variables, float arithmetic (mixed int/float promotes to double), and float comparisons.
 - Extend the NME-native core: the beginner `times:` loop (block and inline forms) lowers to a C for-loop.
 - Extend the NME-native core: boolean literals in truthy conditions (`if true`/`if false` lower to 1/0), alongside integer truthiness.
 - Extend the NME-native core: truthy conditions (`if ready`, `while turns`) over integer values, so counters and flags work natively without comparisons.

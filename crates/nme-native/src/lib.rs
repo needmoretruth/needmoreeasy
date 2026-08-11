@@ -35,6 +35,7 @@ use rustpython_parser::Parse as _;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum VarType {
     Int,
+    Float,
     Str,
 }
 
@@ -42,6 +43,7 @@ enum VarType {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ExprType {
     Int,
+    Float,
     Str,
 }
 
@@ -259,6 +261,7 @@ fn lower_expr(
     match expr {
         Expr::Constant(constant) => match &constant.value {
             Constant::Int(value) => Ok((format!("{value}"), ExprType::Int)),
+            Constant::Float(value) => Ok((format!("{value}"), ExprType::Float)),
             Constant::Str(string) => {
                 let escaped = string.replace('\\', "\\\\").replace('"', "\\\"");
                 Ok((format!("\"{escaped}\""), ExprType::Str))
@@ -275,6 +278,7 @@ fn lower_expr(
             }
             match declared.get(id) {
                 Some(VarType::Str) => Ok((id.to_string(), ExprType::Str)),
+                Some(VarType::Float) => Ok((id.to_string(), ExprType::Float)),
                 Some(VarType::Int) | None => Ok((id.to_string(), ExprType::Int)),
             }
         }
@@ -287,18 +291,25 @@ fn lower_expr(
                 Ok((format!("nme_cat({left}, {right})"), ExprType::Str))
             }
             Operator::Add | Operator::Sub | Operator::Mult => {
-                let left = int_operand(&binop.left, span, declared)?;
-                let right = int_operand(&binop.right, span, declared)?;
+                let (left, left_kind) = numeric_operand(&binop.left, span, declared)?;
+                let (right, right_kind) = numeric_operand(&binop.right, span, declared)?;
+                let kind = if matches!(left_kind, ExprType::Float)
+                    || matches!(right_kind, ExprType::Float)
+                {
+                    ExprType::Float
+                } else {
+                    ExprType::Int
+                };
                 Ok((
                     format!("({left} {} {right})", operator_text(&binop.op)),
-                    ExprType::Int,
+                    kind,
                 ))
             }
             _ => Err(not_supported("this operator", span)),
         },
         Expr::UnaryOp(unary) => {
             if matches!(unary.op, UnaryOp::USub | UnaryOp::UAdd) {
-                let operand = int_operand(&unary.operand, span, declared)?;
+                let (operand, kind) = numeric_operand(&unary.operand, span, declared)?;
                 Ok((
                     format!(
                         "({}{operand})",
@@ -308,7 +319,7 @@ fn lower_expr(
                             ""
                         }
                     ),
-                    ExprType::Int,
+                    kind,
                 ))
             } else {
                 Err(not_supported("this operator", span))
@@ -333,7 +344,7 @@ fn lower_expr(
             let mut args = Vec::new();
             for argument in &call.args {
                 let (text, kind) = lower_expr(argument, span, declared)?;
-                if kind != ExprType::Int {
+                if kind == ExprType::Str {
                     return Err(not_supported("a string argument to a function", span));
                 }
                 args.push(text);
@@ -353,7 +364,7 @@ fn binop_operands_are_string(
     let right_kind = operand_kind(&binop.right, span, declared)?;
     match (left_kind, right_kind) {
         (ExprType::Str, ExprType::Str) => Ok(true),
-        (ExprType::Int, ExprType::Int) => Ok(false),
+        (ExprType::Int | ExprType::Float, ExprType::Int | ExprType::Float) => Ok(false),
         _ => Err(not_supported("mixing numbers and text", span)),
     }
 }
@@ -398,14 +409,26 @@ fn string_operand(
     }
 }
 
+fn numeric_operand(
+    expr: &Expr,
+    span: Span,
+    declared: &HashMap<String, VarType>,
+) -> Result<(String, ExprType), Diagnostic> {
+    let (text, kind) = lower_expr(expr, span, declared)?;
+    if matches!(kind, ExprType::Str) {
+        return Err(not_supported("a text value in a numeric expression", span));
+    }
+    Ok((text, kind))
+}
+
 fn int_operand(
     expr: &Expr,
     span: Span,
     declared: &HashMap<String, VarType>,
 ) -> Result<String, Diagnostic> {
-    let (text, kind) = lower_expr(expr, span, declared)?;
+    let (text, kind) = numeric_operand(expr, span, declared)?;
     if kind != ExprType::Int {
-        return Err(not_supported("a text value in an integer expression", span));
+        return Err(not_supported("a float value where an integer is needed", span));
     }
     Ok(text)
 }
@@ -437,13 +460,31 @@ fn check_condition(
             let (left, left_kind) = condition_operand(left, source, span, declared)?;
             let (right, right_kind) = condition_operand(right, source, span, declared)?;
             let comparison = match (left_kind, right_kind, operator) {
-                (ExprType::Int, ExprType::Int, CompareOp::Equal) => format!("{left} == {right}"),
-                (ExprType::Int, ExprType::Int, CompareOp::Greater) => format!("{left} > {right}"),
-                (ExprType::Int, ExprType::Int, CompareOp::Less) => format!("{left} < {right}"),
-                (ExprType::Int, ExprType::Int, CompareOp::LessOrEqual) => format!("{left} <= {right}"),
-                (ExprType::Int, ExprType::Int, CompareOp::GreaterOrEqual) => {
-                    format!("{left} >= {right}")
-                }
+                (
+                    ExprType::Int | ExprType::Float,
+                    ExprType::Int | ExprType::Float,
+                    CompareOp::Equal,
+                ) => format!("{left} == {right}"),
+                (
+                    ExprType::Int | ExprType::Float,
+                    ExprType::Int | ExprType::Float,
+                    CompareOp::Greater,
+                ) => format!("{left} > {right}"),
+                (
+                    ExprType::Int | ExprType::Float,
+                    ExprType::Int | ExprType::Float,
+                    CompareOp::Less,
+                ) => format!("{left} < {right}"),
+                (
+                    ExprType::Int | ExprType::Float,
+                    ExprType::Int | ExprType::Float,
+                    CompareOp::LessOrEqual,
+                ) => format!("{left} <= {right}"),
+                (
+                    ExprType::Int | ExprType::Float,
+                    ExprType::Int | ExprType::Float,
+                    CompareOp::GreaterOrEqual,
+                ) => format!("{left} >= {right}"),
                 (ExprType::Str, ExprType::Str, CompareOp::Equal) => {
                     format!("strcmp({left}, {right}) == 0")
                 }
@@ -472,7 +513,13 @@ fn check_condition(
                             span,
                         ));
                     }
-                    (name.clone(), ExprType::Int)
+                    (
+                        name.clone(),
+                        match declared.get(name) {
+                            Some(VarType::Float) => ExprType::Float,
+                            _ => ExprType::Int,
+                        },
+                    )
                 }
                 ConditionValue::Python(code) => {
                     check_expr(code_text(code, source), span, declared)?
@@ -488,7 +535,7 @@ fn check_condition(
                     return Err(not_supported("text in a truthy condition", span));
                 }
             };
-            if kind != ExprType::Int {
+            if kind == ExprType::Str {
                 return Err(not_supported("a text value in a truthy condition", span));
             }
             Ok(if *negated {
@@ -518,6 +565,7 @@ fn condition_operand(
             }
             let kind = match declared.get(name) {
                 Some(VarType::Str) => ExprType::Str,
+                Some(VarType::Float) => ExprType::Float,
                 _ => ExprType::Int,
             };
             Ok((name.clone(), kind))
@@ -547,7 +595,7 @@ fn lower_compare(
     let (left, left_kind) = lower_expr(&compare.left, span, declared)?;
     let (right, right_kind) = lower_expr(&compare.comparators[0], span, declared)?;
     match (left_kind, right_kind) {
-        (ExprType::Int, ExprType::Int) => {
+        (ExprType::Int | ExprType::Float, ExprType::Int | ExprType::Float) => {
             let op = match compare.ops[0] {
                 CmpOp::Lt => "<",
                 CmpOp::LtE => "<=",
@@ -588,6 +636,10 @@ fn emit_say(
             match kind {
                 ExprType::Int => {
                     out.push_str(&format!("printf(\"%d\\n\", {lowered});\n"));
+                    Ok(())
+                }
+                ExprType::Float => {
+                    out.push_str(&format!("printf(\"%g\\n\", {lowered});\n"));
                     Ok(())
                 }
                 ExprType::Str => {
@@ -640,6 +692,12 @@ fn emit_set(
                 ExprType::Int => {
                     let prefix = if is_new { "int " } else { "" };
                     declared.insert(target.to_string(), VarType::Int);
+                    out.push_str(&format!("{prefix}{target} = {lowered};\n"));
+                    Ok(())
+                }
+                ExprType::Float => {
+                    let prefix = if is_new { "double " } else { "" };
+                    declared.insert(target.to_string(), VarType::Float);
                     out.push_str(&format!("{prefix}{target} = {lowered};\n"));
                     Ok(())
                 }
@@ -746,7 +804,7 @@ fn emit_python_line(
                 .map(str::trim)
                 .unwrap_or_default();
             match check_expr(expression, span, declared) {
-                Ok((lowered, ExprType::Int)) => {
+                Ok((lowered, ExprType::Int | ExprType::Float)) => {
                     out.push_str(&format!("return {lowered};\n"));
                     None
                 }
@@ -783,6 +841,15 @@ fn emit_python_line(
                         declared.insert(name.clone(), VarType::Int);
                     }
                     let prefix = if is_new { "int " } else { "" };
+                    out.push_str(&format!("{prefix}{name} = {lowered};\n"));
+                    None
+                }
+                Ok((lowered, ExprType::Float)) => {
+                    let is_new = !declared.contains_key(&name);
+                    if is_new {
+                        declared.insert(name.clone(), VarType::Float);
+                    }
+                    let prefix = if is_new { "double " } else { "" };
                     out.push_str(&format!("{prefix}{name} = {lowered};\n"));
                     None
                 }

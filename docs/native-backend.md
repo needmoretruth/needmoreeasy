@@ -39,8 +39,10 @@ The proposed NME-native backend therefore targets a **restricted, statically
 typed core subset** with semantics defined independently of CPython.
 Implemented so far:
 
-- integers and `+ - *` arithmetic (C `int`; explicit overflow behavior is
-  C's, documented as a later `i64`/bignum decision);
+- integers and floats with `+ - *` arithmetic (C `int`/`double`; integer
+  overflow behavior is C's, documented as a later `i64`/bignum decision;
+  whole floats print with C's `%g`, which may differ cosmetically from
+  Python's `5.0`);
 - string variables with `+` concatenation into variables (fixed buffers,
   `strcpy`), string output, string `==`/`!=` comparisons through `strcmp`,
   and a `len` builtin; nested concatenation and ordering text are rejected
@@ -56,8 +58,8 @@ Implemented so far:
 - identifiers that collide with C keywords are rejected, never silently
   renamed.
 
-Still planned: floats, real booleans (as distinct from integer
-truthiness), and the `native.nme` surface document.
+Still planned: real booleans as distinct from integer truthiness, and the
+`native.nme` surface document.
 
 Everything outside the core — dynamic Python, classes, imports, packages,
 `use random`/`use file` adapters — stays on the **Python compatibility

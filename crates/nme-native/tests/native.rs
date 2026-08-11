@@ -134,6 +134,12 @@ fn string_comparison_and_len_compile_natively() {
 }
 
 #[test]
+fn float_literals_arithmetic_and_conditions_compile_natively() {
+    let source = "pi = 3.14\nshow pi\nshow 1 + 0.5\nr = 2\nshow 3.14 * r * r\nif pi is greater than 3\n    show \"pi big\"\nend\n";
+    assert_eq!(native_run(source).unwrap(), "3.14\n1.5\n12.56\npi big\n");
+}
+
+#[test]
 fn the_beginner_times_loop_compiles_natively() {
     let block = "3 times:\n    show \"hi\"\nshow \"done\"\n";
     assert_eq!(native_run(block).unwrap(), "hi\nhi\nhi\ndone\n");
