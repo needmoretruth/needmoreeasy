@@ -197,7 +197,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
     close_braces(&mut out, &mut open_braces, 0);
 
     if problems.is_empty() {
-        Ok(out)
+        Ok(hoist_native_functions(&out))
     } else {
         Err(problems)
     }
@@ -226,6 +226,77 @@ fn close_braces(out: &mut String, open: &mut usize, target: usize) {
         out.push_str("}\n");
         *open -= 1;
     }
+}
+
+/// Moves top-level generated C function definitions before `main`.
+///
+/// GCC accepts nested functions as a non-standard extension, while Clang
+/// correctly rejects them. NME functions are Python top-level definitions,
+/// so the portable C representation is a file-scope C function followed by
+/// the generated `main` body.
+fn hoist_native_functions(source: &str) -> String {
+    const MAIN_HEADER: &str = "int main(void) {\n";
+    let Some(main_at) = source.find(MAIN_HEADER) else {
+        return source.to_string();
+    };
+    let prefix = &source[..main_at];
+    let body = &source[main_at + MAIN_HEADER.len()..];
+    let lines = body.split_inclusive('\n').collect::<Vec<_>>();
+    let mut functions = String::new();
+    let mut main_body = String::new();
+    let mut index = 0usize;
+    let mut depth = 0isize;
+
+    while index < lines.len() {
+        let line = lines[index];
+        let trimmed = line.trim_end_matches(['\r', '\n']);
+        let is_function = depth == 0
+            && trimmed.starts_with("int ")
+            && trimmed.ends_with(") {")
+            && trimmed.contains('(');
+        if is_function {
+            let mut balance = c_brace_delta(line);
+            functions.push_str(line);
+            index += 1;
+            while balance > 0 && index < lines.len() {
+                let nested = lines[index];
+                balance += c_brace_delta(nested);
+                functions.push_str(nested);
+                index += 1;
+            }
+            continue;
+        }
+
+        depth = (depth + c_brace_delta(line)).max(0);
+        main_body.push_str(line);
+        index += 1;
+    }
+
+    format!("{prefix}{functions}{MAIN_HEADER}{main_body}")
+}
+
+fn c_brace_delta(line: &str) -> isize {
+    let mut delta = 0isize;
+    let mut in_string = false;
+    let mut escaped = false;
+    for character in line.chars() {
+        if in_string {
+            if escaped {
+                escaped = false;
+            } else if character == '\\' {
+                escaped = true;
+            } else if character == '"' {
+                in_string = false;
+            }
+        } else if character == '"' {
+            in_string = true;
+        } else if character == '{' {
+            delta += 1;
+        } else if character == '}' {
+            delta -= 1;
+        }
+    }
+    delta
 }
 
 /// Validates and lowers a Python expression to C for the native core,

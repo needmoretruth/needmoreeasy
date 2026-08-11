@@ -78,6 +78,15 @@ fn functions_over_scalars_compile_natively() {
 }
 
 #[test]
+fn generated_functions_are_file_scope_portable_c() {
+    let source = "def twice(n):\n    return n * 2\n\nshow twice(5)\n";
+    let c = nme_native::native_compile(source).unwrap();
+    let function_at = c.find("int twice(int n) {").expect("generated function");
+    let main_at = c.find("int main(void) {").expect("generated main");
+    assert!(function_at < main_at, "function must be outside main:\n{c}");
+}
+
+#[test]
 fn else_and_else_if_branches_compile_natively() {
     let small =
         "score = 3\nif score is greater than 5\n    show \"big\"\n아니면\n    show \"small\"\n끝\n";
