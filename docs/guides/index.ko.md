@@ -12,6 +12,7 @@
 30–31은 데이터와 기록을, 32–34는 웹 데이터, 커지는 프로젝트, 셀프호스팅을
 다룹니다. 35–37은 날짜별 일기, 단어 세기, 숨은 단어 게임을 다룹니다.
 38–40은 파일 기반 퀴즈, 목록 정렬, 요약 보고서를 다룹니다.
+41–43은 텍스트 통계 보고서, 두 묶음 비교, 습관 추적기 프로젝트를 다룹니다.
 
 ## 난이도
 
@@ -63,6 +64,9 @@
 38. [38 — 퀴즈](38-quiz.ko.md)
 39. [39 — 정렬](39-sorting.ko.md)
 40. [40 — 보고서](40-report.ko.md)
+41. [41 — 텍스트 통계](41-text-stats.ko.md)
+42. [42 — 비교](42-compare.ko.md)
+43. [43 — 습관 체크](43-habit.ko.md)
 
 ## 주제별 찾아보기
 
@@ -78,7 +82,10 @@
 - 보고서 / Report: [40](40-report.ko.md)
 - 일기 / Diary: [35](35-diary.ko.md)
 - JSON / JSON: [14](14-json.ko.md)
-- 프로젝트 / Project: [15](15-high-score.ko.md), [33](33-todo.ko.md)
+- 프로젝트 / Project: [15](15-high-score.ko.md), [33](33-todo.ko.md), [43](43-habit.ko.md)
+- 프로젝트 / Habit: [43](43-habit.ko.md)
+- 텍스트/데이터 / Text & data: [41](41-text-stats.ko.md)
+- 비교 / Compare: [42](42-compare.ko.md)
 - 블록체인 / Blockchain: [17](17-blockchain.ko.md), [18](18-proof-of-work.ko.md)
 - 서명 / Signatures: [19](19-signatures.ko.md)
 - 합의 / Consensus: [20](20-consensus.ko.md)
@@ -143,6 +150,9 @@
 | 38 | ★★★★★ | 퀴즈 / Quiz | [퀴즈 — 파일의 문제](38-quiz.ko.md) | JSON 파일에서 문제를 불러와 객관식 퀴즈를 채점하고 결과를 알려 주기 |
 | 39 | ★★★★★ | 정렬 / Sorting | [정렬 — 목록 순서 정하기](39-sorting.ko.md) | JSON에서 숫자를 불러와 Python sort로 오름차순·내림차순 순서 보여 주기 |
 | 40 | ★★★★★ | 보고서 / Report | [보고서 — 요약 파일 쓰기](40-report.ko.md) | JSON 데이터 파일 몇 개를 읽어 file_write로 요약 보고서 하나 쓰기 |
+| 41 | ★★★★★ | 텍스트/데이터 / Text & data | [텍스트 통계 — 글자와 단어](41-text-stats.ko.md) | 텍스트 파일을 읽어 글자 수, 단어 수, 가장 긴 단어, 가장 흔한 단어를 보고하기 |
+| 42 | ★★★★★ | 데이터/비교 / Data & comparison | [비교 — 두 숫자 묶음](42-compare.ko.md) | 두 JSON 숫자 목록을 불러와 평균과 최댓값을 비교하기 |
+| 43 | ★★★★★ | 프로젝트 / Project | [습관 체크 — 습관 추적기](43-habit.ko.md) | add, check, streak, list, quit를 지원하고 저장 모듈을 둔 JSON 저장 습관 추적기 |
 
 ## 다음 단계
 

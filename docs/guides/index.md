@@ -11,7 +11,8 @@ CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
 21–22 add HTTP and terminal menus; 30–31 add data and records; 32–34 add web
 data, a growing project, and self-hosting; 35–37 add a dated diary, word
 counting, and a hidden-word game; 38–40 add a file-based quiz, list sorting,
-and a summary report.
+and a summary report; 41–43 add a text-stats report, a two-group comparison,
+and a habit-tracker project.
 
 ## Difficulty
 
@@ -63,6 +64,9 @@ and a summary report.
 38. [38 — Quiz](38-quiz.md)
 39. [39 — Sorting](39-sorting.md)
 40. [40 — Report](40-report.md)
+41. [41 — Text stats](41-text-stats.md)
+42. [42 — Compare](42-compare.md)
+43. [43 — Habit](43-habit.md)
 
 ## Topic lookup
 
@@ -78,7 +82,10 @@ and a summary report.
 - 보고서 / Report: [40](40-report.md)
 - 일기 / Diary: [35](35-diary.md)
 - JSON / JSON: [14](14-json.md)
-- 프로젝트 / Project: [15](15-high-score.md), [33](33-todo.md)
+- 프로젝트 / Project: [15](15-high-score.md), [33](33-todo.md), [43](43-habit.md)
+- 프로젝트 / Habit: [43](43-habit.md)
+- 텍스트/데이터 / Text & data: [41](41-text-stats.md)
+- 비교 / Compare: [42](42-compare.md)
 - 블록체인 / Blockchain: [17](17-blockchain.md), [18](18-proof-of-work.md)
 - 서명 / Signatures: [19](19-signatures.md)
 - 합의 / Consensus: [20](20-consensus.md)
@@ -143,6 +150,9 @@ and a summary report.
 | 38 | ★★★★★ | 퀴즈 / Quiz | [Quiz — questions from a file](38-quiz.md) | A multiple-choice quiz that loads questions from a JSON file, scores answers, and reports the result |
 | 39 | ★★★★★ | 정렬 / Sorting | [Sorting — putting a list in order](39-sorting.md) | Load numbers from a JSON file and show ascending and descending orders with Python sort |
 | 40 | ★★★★★ | 보고서 / Report | [Report — writing a summary file](40-report.md) | Read a few JSON data files and write one text report with file_write |
+| 41 | ★★★★★ | 텍스트/데이터 / Text & data | [Text stats — letters and words](41-text-stats.md) | Read a text file and report character count, word count, longest word, and most common word |
+| 42 | ★★★★★ | 데이터/비교 / Data & comparison | [Compare — two groups of numbers](42-compare.md) | Load two JSON number lists and compare their means and maxima |
+| 43 | ★★★★★ | 프로젝트 / Project | [Habit — a habit tracker](43-habit.md) | A JSON-persisted habit tracker with add, check, streak, list, and a storage module |
 
 ## Where to continue
 
