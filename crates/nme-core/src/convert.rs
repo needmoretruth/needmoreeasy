@@ -178,11 +178,160 @@ fn convert_line(
         .or_else(|| convert_input(source, &line.tokens, level, language))
         .or_else(|| convert_range_loop(source, &line.tokens, level, language))
         .or_else(|| convert_condition(source, &line.tokens, level, language))
+        .or_else(|| convert_file_io(source, &line.tokens, level, language))
         .or_else(|| convert_assignment(source, &line.tokens, level, language))?;
     Some(Edit {
         span: line.span,
         replacement,
     })
+}
+
+/// Sentence-level file conversions. `x = open("f").read()` becomes
+/// `read "f" into x`; `open("f", "w").write(v)` becomes `write v to "f"`,
+/// with Korean spellings for Korean output. `pathlib.Path(...).read_text()`
+/// / `.write_text(...)` convert the same way. Only the sentence level has
+/// these natural forms, so beginner conversion keeps the Python unchanged.
+fn convert_file_io(
+    source: &str,
+    tokens: &[Token],
+    level: SyntaxLevel,
+    language: Language,
+) -> Option<String> {
+    if level != SyntaxLevel::Sentence {
+        return None;
+    }
+    if let Some((target, path)) = read_assignment(source, tokens) {
+        if is_ambiguous_target(target) {
+            return None;
+        }
+        let path_text = text_of(source, std::slice::from_ref(path));
+        return Some(match language {
+            Language::English => format!("read {path_text} into {target}"),
+            Language::Korean => format!("{target}에 {path_text} 읽어서"),
+        });
+    }
+    if let Some((path, value)) = write_statement(source, tokens) {
+        if !is_safe_scalar_expression(value) {
+            return None;
+        }
+        let path_text = text_of(source, std::slice::from_ref(path));
+        let value_text = sentence_value(source, value);
+        return Some(match language {
+            Language::English => format!("write {value_text} to {path_text}"),
+            Language::Korean => format!("{path_text} 파일에 {value_text}를 저장해"),
+        });
+    }
+    None
+}
+
+/// `x = open("f").read()` / `x = Path("f").read_text()`.
+fn read_assignment<'a>(source: &str, tokens: &'a [Token]) -> Option<(&'a str, &'a Token)> {
+    if tokens.len() < 10 || !matches!(tokens[1].tok, Tok::Equal) {
+        return None;
+    }
+    let target = match &tokens[0].tok {
+        Tok::Name { name } => name.as_str(),
+        _ => return None,
+    };
+    let (path, method) = call_shape(source, &tokens[2..])?;
+    if method != "read" && method != "read_text" {
+        return None;
+    }
+    Some((target, path))
+}
+
+/// Detects `open(path)` / `open(path, "r")` / `Path(path)` followed by
+/// `.method()` with empty arguments.
+fn call_shape<'a>(source: &str, tokens: &'a [Token]) -> Option<(&'a Token, &'a str)> {
+    let dot_at = tokens.iter().position(|token| matches!(token.tok, Tok::Dot))?;
+    let base = &tokens[..dot_at];
+    if base.len() < 4
+        || !matches!(base[0].tok, Tok::Name { .. })
+        || !matches!(base[1].tok, Tok::Lpar)
+        || !matches!(base[base.len() - 1].tok, Tok::Rpar)
+    {
+        return None;
+    }
+    let base_name = match &base[0].tok {
+        Tok::Name { name } => name.as_str(),
+        _ => return None,
+    };
+    if base_name != "open" && base_name != "Path" {
+        return None;
+    }
+    let path = match base.get(2) {
+        Some(token) if matches!(token.tok, Tok::String { .. }) => token,
+        _ => return None,
+    };
+    if base.len() > 4 {
+        // `open(path, mode)`: only accept an explicit read mode `"r"`.
+        if base.len() != 6
+            || !matches!(base[3].tok, Tok::Comma)
+            || text_of(source, std::slice::from_ref(&base[4])) != "\"r\""
+        {
+            return None;
+        }
+    }
+    let method_tokens = &tokens[dot_at + 1..];
+    if method_tokens.len() != 3
+        || !matches!(method_tokens[0].tok, Tok::Name { .. })
+        || !matches!(method_tokens[1].tok, Tok::Lpar)
+        || !matches!(method_tokens[2].tok, Tok::Rpar)
+    {
+        return None;
+    }
+    let method = match &method_tokens[0].tok {
+        Tok::Name { name } => name.as_str(),
+        _ => return None,
+    };
+    Some((path, method))
+}
+
+/// `open("f", "w").write(value)` / `Path("f").write_text(value)`.
+fn write_statement<'a>(source: &str, tokens: &'a [Token]) -> Option<(&'a Token, &'a [Token])> {
+    let dot_at = tokens.iter().position(|token| matches!(token.tok, Tok::Dot))?;
+    let base = &tokens[..dot_at];
+    if base.len() < 4
+        || !matches!(base[0].tok, Tok::Name { .. })
+        || !matches!(base[1].tok, Tok::Lpar)
+        || !matches!(base[base.len() - 1].tok, Tok::Rpar)
+    {
+        return None;
+    }
+    let base_name = match &base[0].tok {
+        Tok::Name { name } => name.as_str(),
+        _ => return None,
+    };
+    let path = match base.get(2) {
+        Some(token) if matches!(token.tok, Tok::String { .. }) => token,
+        _ => return None,
+    };
+    let method_tokens = &tokens[dot_at + 1..];
+    if method_tokens.len() < 4
+        || !matches!(method_tokens[0].tok, Tok::Name { .. })
+        || !matches!(method_tokens[1].tok, Tok::Lpar)
+        || !matches!(method_tokens[method_tokens.len() - 1].tok, Tok::Rpar)
+    {
+        return None;
+    }
+    let method = match &method_tokens[0].tok {
+        Tok::Name { name } => name.as_str(),
+        _ => return None,
+    };
+    let value = &method_tokens[2..method_tokens.len() - 1];
+    if value.is_empty() {
+        return None;
+    }
+    match (base_name, method, base.len()) {
+        ("open", "write", 6)
+            if matches!(base[3].tok, Tok::Comma)
+                && text_of(source, std::slice::from_ref(&base[4])) == "\"w\"" =>
+        {
+            Some((path, value))
+        }
+        ("Path", "write_text", 4) => Some((path, value)),
+        _ => None,
+    }
 }
 
 fn convert_print(
@@ -596,6 +745,61 @@ mod tests {
                 source: source.to_string(),
                 changed_lines: 0,
             }
+        );
+    }
+
+    #[test]
+    fn converts_sentence_file_reads_and_writes_and_round_trips() {
+        let source = concat!(
+            "x = open(\"notes.txt\").read()\n",
+            "open(\"out.txt\", \"w\").write(\"hello\")\n",
+            "memo = Path(\"data.json\").read_text()\n",
+            "Path(\"out2.txt\").write_text(점수)\n",
+            "y = open(\"x.txt\").readlines()\n",
+        );
+        assert_eq!(
+            converted(source, SyntaxLevel::Sentence, Language::English).source,
+            concat!(
+                "read \"notes.txt\" into x\n",
+                "write \"hello\" to \"out.txt\"\n",
+                "read \"data.json\" into memo\n",
+                "write 점수 to \"out2.txt\"\n",
+                "y = open(\"x.txt\").readlines()\n",
+            )
+        );
+        assert_eq!(
+            converted(source, SyntaxLevel::Sentence, Language::Korean).source,
+            concat!(
+                "x에 \"notes.txt\" 읽어서\n",
+                "\"out.txt\" 파일에 \"hello\"를 저장해\n",
+                "memo에 \"data.json\" 읽어서\n",
+                "\"out2.txt\" 파일에 점수를 저장해\n",
+                "y = open(\"x.txt\").readlines()\n",
+            )
+        );
+        // The converted sentence source is valid NME. An undefined name like
+        // `점수` in a one-line snippet interpolates as literal text, which is
+        // the documented sentence behavior; defined names round-trip exactly.
+        let converted_en =
+            converted(source, SyntaxLevel::Sentence, Language::English).source;
+        assert_eq!(
+            transpile(&converted_en).unwrap(),
+            concat!(
+                "x = __import__(\"pathlib\").Path(\"notes.txt\").read_text()\n",
+                "__import__(\"pathlib\").Path(\"out.txt\").write_text(\"hello\")\n",
+                "memo = __import__(\"pathlib\").Path(\"data.json\").read_text()\n",
+                "__import__(\"pathlib\").Path(\"out2.txt\").write_text(\"점수\")\n",
+                "y = open(\"x.txt\").readlines()\n",
+            )
+        );
+    }
+
+    #[test]
+    fn beginner_conversion_keeps_file_io_as_python() {
+        let source = "x = open(\"notes.txt\").read()\n";
+        assert_eq!(
+            converted(source, SyntaxLevel::Beginner, Language::English).source,
+            source
         );
     }
 

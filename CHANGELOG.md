@@ -6,6 +6,12 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+- Teach `nme convert` the file sentence forms: `x = open("f").read()` and
+  `x = Path("f").read_text()` convert to `read "f" into x`, and
+  `open("f", "w").write(v)` / `Path("f").write_text(v)` to
+  `write v to "f"` (Korean spellings for Korean output). Beginner conversion
+  keeps file IO as Python since the beginner file surface is `use file`; the
+  converted sentence source round-trips through the compiler.
 - Add four educational blockchain learning projects (learning only, never
   investment advice), each with a Korean twin: `blockchain-ledger.nme`
   (beginner, blocks linked by hashes), `proof-of-work.nme` (intermediate,
