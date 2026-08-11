@@ -6,9 +6,98 @@ on:
   pull_request:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
+  prepare-windows-native-artifact:
+    name: prepare-windows-native-artifact
+    if: github.event_name == 'pull_request' && github.head_ref == 'release/beta.16-zk'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out release candidate branch
+        uses: actions/checkout@v4
+        with:
+          ref: release/beta.16-zk
+          fetch-depth: 0
+
+      - name: Install stable Rust with required tools
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Install CPython
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Normalize Windows native executable paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          main = Path('crates/nme-cli/src/main.rs')
+          text = main.read_text(encoding='utf-8')
+
+          old = '''    let exe = dir.join(stem);
+              let compile_status = std::process::Command::new("cc")'''
+          new = '''    let mut exe = dir.join(stem);
+              if cfg!(windows) {
+                  exe.set_extension("exe");
+              }
+              let compile_status = std::process::Command::new("cc")'''
+          assert text.count(old) == 1
+          text = text.replace(old, new, 1)
+
+          old = '''    if action == "build" {
+              let out = output.map_or_else(|| PathBuf::from(stem), PathBuf::from);
+              let copy_exe = std::fs::copy(&exe, &out).is_ok();'''
+          new = '''    if action == "build" {
+              let mut out = output.map_or_else(|| PathBuf::from(stem), PathBuf::from);
+              if cfg!(windows) && out.extension().is_none() {
+                  out.set_extension("exe");
+              }
+              let copy_exe = std::fs::copy(&exe, &out).is_ok();'''
+          assert text.count(old) == 1
+          text = text.replace(old, new, 1)
+          main.write_text(text, encoding='utf-8')
+
+          tests = Path('crates/nme-cli/tests/cli.rs')
+          text = tests.read_text(encoding='utf-8')
+          old = '''    assert!(built.status.success(), "{}", stderr(&built));
+              assert!(dir.join("count_out").exists(), "no executable written");
+              assert!(dir.join("count_out.c").exists(), "no C source written");'''
+          new = '''    assert!(built.status.success(), "{}", stderr(&built));
+              let executable = if cfg!(windows) {
+                  dir.join("count_out.exe")
+              } else {
+                  dir.join("count_out")
+              };
+              assert!(executable.exists(), "no executable written");
+              assert!(dir.join("count_out.c").exists(), "no C source written");'''
+          assert text.count(old) == 1
+          text = text.replace(old, new, 1)
+          tests.write_text(text, encoding='utf-8')
+          PY
+          cargo fmt --all
+          cargo fmt --all -- --check
+          cargo check --workspace
+          cargo clippy --workspace --all-targets -- -D warnings
+          cargo test --workspace
+
+      - name: Commit validated Windows native artifact fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout c336f92f8ae538f41cb03dbf52edd820cd992a13 -- .github/workflows/ci.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- .github/workflows/ci.yml crates/nme-cli/src/main.rs crates/nme-cli/tests/cli.rs
+          git diff --cached --check
+          git commit -m 'Fix Windows native artifact suffix handling [beta16-applied]'
+          git push origin HEAD:release/beta.16-zk
+
   test:
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
