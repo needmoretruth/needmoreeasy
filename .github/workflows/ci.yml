@@ -9,6 +9,22 @@ permissions:
   contents: read
 
 jobs:
+  beta-step:
+    name: beta-version-step
+    if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out NME with its parent
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+      - name: Install CPython
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+      - name: Enforce one beta version per beta commit
+        run: python scripts/check-beta-step.py
+
   test:
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -16,33 +32,25 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-
     steps:
       - name: Check out NME
-        uses: actions/checkout@v4
-
+        uses: actions/checkout@v6
       - name: Install stable Rust with required tools
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
-
       - name: Install CPython
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
-          python-version: "3.x"
-
+          python-version: '3.14'
       - name: Format
         run: cargo fmt --all -- --check
-
       - name: Check
-        run: cargo check --workspace
-
+        run: cargo check --workspace --locked
       - name: Clippy
-        run: cargo clippy --workspace --all-targets -- -D warnings
-
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - name: Test
-        run: cargo test --workspace
-
+        run: cargo test --workspace --locked
       - name: Install the CLI and smoke test it
         shell: bash
         run: |
@@ -50,3 +58,23 @@ jobs:
           nme --version
           nme check examples/three-levels
           nme run examples/hello-sentence
+
+  python-compat:
+    name: python-${{ matrix.python-version }}
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/beta'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.12', '3.14']
+    steps:
+      - name: Check out NME
+        uses: actions/checkout@v6
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install CPython ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Test the workspace on this CPython
+        run: cargo test --workspace --locked
