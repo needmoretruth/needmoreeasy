@@ -80,10 +80,26 @@ jobs:
           new_assert = 'assert!(found == 0 || found == 5, "expected English output lines to be already repaired or repairable");'
           assert build_text.count(old_assert) == 1
           build.write_text(build_text.replace(old_assert, new_assert, 1), encoding='utf-8')
+
+          english = Path('examples/zk-schnorr-relay.en.nme')
+          english_text = english.read_text(encoding='utf-8')
+          replacements = {
+              "if normal: show Receiver B accepted sender A's zero-knowledge proof.":
+                  "if normal: print(\"Receiver B accepted sender A's zero-knowledge proof.\")",
+              "if not replay: show Malicious relay C cannot replay the saved transcript against a fresh challenge.":
+                  "if not replay: print(\"Malicious relay C cannot replay the saved transcript against a fresh challenge.\")",
+              "if simulated: show A transcript for a preselected challenge can be simulated without the secret.":
+                  "if simulated: print(\"A transcript for a preselected challenge can be simulated without the secret.\")",
+              "if not sim_reuse: show The simulated transcript cannot answer receiver B's different challenge.":
+                  "if not sim_reuse: print(\"The simulated transcript cannot answer receiver B's different challenge.\")",
+              "if relay: show A live relay can pass by forwarding sender A's real response; it did not learn the secret.":
+                  "if relay: print(\"A live relay can pass by forwarding sender A's real response; it did not learn the secret.\")",
+          }
+          for old, new in replacements.items():
+              assert english_text.count(old) == 1, old
+              english_text = english_text.replace(old, new, 1)
+          english.write_text(english_text, encoding='utf-8')
           PY
-          echo '--- generated English Schnorr example ---'
-          nl -ba examples/zk-schnorr-relay.en.nme
-          echo '--- end generated English Schnorr example ---'
           cargo fmt --all
           cargo clippy --fix --workspace --all-targets --allow-dirty --allow-staged
           python - <<'PY'
