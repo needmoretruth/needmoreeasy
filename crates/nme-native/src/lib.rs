@@ -559,15 +559,12 @@ fn emit_set(
                     Ok(())
                 }
                 ExprType::Str => {
-                    if !lowered.starts_with('"') {
-                        return Err(not_supported(
-                            "storing a concatenated string (store a literal instead)",
-                            span,
-                        ));
-                    }
-                    let prefix = if is_new { "char *" } else { "" };
                     declared.insert(target.to_string(), VarType::Str);
-                    out.push_str(&format!("{prefix}{target} = {lowered};\n"));
+                    if is_new {
+                        out.push_str(&format!("char {target}[8192] = {lowered};\n"));
+                    } else {
+                        out.push_str(&format!("strcpy({target}, {lowered});\n"));
+                    }
                     Ok(())
                 }
             }
@@ -705,18 +702,13 @@ fn emit_python_line(
                     None
                 }
                 Ok((lowered, ExprType::Str)) => {
-                    if !lowered.starts_with('"') {
-                        return Some(not_supported(
-                            "storing a concatenated string (store a literal instead)",
-                            span,
-                        ));
-                    }
                     let is_new = !declared.contains_key(&name);
+                    declared.insert(name.clone(), VarType::Str);
                     if is_new {
-                        declared.insert(name.clone(), VarType::Str);
+                        out.push_str(&format!("char {name}[8192] = {lowered};\n"));
+                    } else {
+                        out.push_str(&format!("strcpy({name}, {lowered});\n"));
                     }
-                    let prefix = if is_new { "char *" } else { "" };
-                    out.push_str(&format!("{prefix}{name} = {lowered};\n"));
                     None
                 }
                 Err(diag) => Some(diag),

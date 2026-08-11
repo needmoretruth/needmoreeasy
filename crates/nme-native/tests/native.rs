@@ -122,9 +122,14 @@ fn string_comparison_and_len_compile_natively() {
 }
 
 #[test]
+fn string_concat_into_variables_works() {
+    let source = "greeting = \"hello\"\ngreeting = greeting + \" world\"\nshow greeting\nname = \"NME\"\nname = \"great \" + name\nshow name\n";
+    assert_eq!(native_run(source).unwrap(), "hello world\ngreat NME\n");
+}
+
+#[test]
 fn nested_string_concat_is_rejected_not_miscompiled() {
     assert!(native_rejects("greeting = \"hi\"\nshow greeting + \" \" + \"friend\"\n"));
-    assert!(native_rejects("greeting = \"a\" + \"b\"\nshow greeting\n"));
 }
 
 #[test]

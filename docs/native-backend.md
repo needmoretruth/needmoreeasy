@@ -41,10 +41,10 @@ Implemented so far:
 
 - integers and `+ - *` arithmetic (C `int`; explicit overflow behavior is
   C's, documented as a later `i64`/bignum decision);
-- string variables (literals), string output, one binary `+` concatenation
-  through a tiny runtime helper (`nme_cat`), string `==`/`!=` comparisons
-  through `strcmp`, and a `len` builtin; nested concatenation and ordering
-  text are rejected rather than miscompiled;
+- string variables with `+` concatenation into variables (fixed buffers,
+  `strcpy`), string output, string `==`/`!=` comparisons through `strcmp`,
+  and a `len` builtin; nested concatenation and ordering text are rejected
+  rather than miscompiled;
 - control flow: sentence `while`/`if`/`else`/`else if` over integer
   comparisons (`<`, `>`, `<=`, `>=`, `==`, `!=`), `break`; the
   natural-language connectors for `<=`/`>=` are a frontend follow-up;
@@ -55,9 +55,8 @@ Implemented so far:
 - identifiers that collide with C keywords are rejected, never silently
   renamed.
 
-Still planned: floats, booleans, concatenation into variables, the
-natural-language `<=`/`>=` connectors, and the `native.nme` surface
-document.
+Still planned: floats, booleans, the natural-language `<=`/`>=`
+connectors, and the `native.nme` surface document.
 
 Everything outside the core — dynamic Python, classes, imports, packages,
 `use random`/`use file` adapters — stays on the **Python compatibility
