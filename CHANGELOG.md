@@ -6,6 +6,12 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.35 — 2026-08-12
+
+- Report unreadable imported `.nme` modules with the existing file-read
+  diagnostic E9007 instead of the top-level program-resolution code E9015.
+- Expand E9007’s bilingual explanation to cover imported module files.
+
 ## 0.0.1-beta.34 — 2026-08-12
 
 - Give `nme install` without a package name its own stable diagnostic, E9030,

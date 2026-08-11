@@ -1640,7 +1640,7 @@ fn transpile_modules(
             Ok(source) => source,
             Err(err) => {
                 return Err(fail(
-                    nme_core::diagnostics::DiagnosticCode::CliMissingProgram,
+                    nme_core::diagnostics::DiagnosticCode::CliFileReadFailed,
                     language,
                     &format!(
                         "couldn't read module {}: {err}\n\

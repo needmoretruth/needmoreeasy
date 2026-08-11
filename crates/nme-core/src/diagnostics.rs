@@ -677,8 +677,8 @@ impl DiagnosticCode {
                 "E9007",
                 "a file could not be read",
                 "파일을 읽을 수 없습니다",
-                "NME could not open the file. Check the path, the file name, and the folder permissions, then run the command again.",
-                "NME가 파일을 열 수 없습니다. 경로, 파일 이름, 폴더 권한을 확인한 뒤 다시 실행하세요.",
+                "NME could not open the program, converted input, or imported module file. Check the path, the file name, and the folder permissions, then run the command again.",
+                "NME가 프로그램, 변환할 입력, 또는 가져온 모듈 파일을 열 수 없습니다. 경로, 파일 이름, 폴더 권한을 확인한 뒤 다시 실행하세요.",
             ),
             Self::CliFileWriteFailed => (
                 "E9008",

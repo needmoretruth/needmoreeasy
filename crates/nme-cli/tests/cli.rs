@@ -361,12 +361,25 @@ fn a_missing_module_gets_a_clear_error() {
 
     let output = run_in(&dir, &["run", "main"], None);
     assert!(!output.status.success());
+    let error = stderr(&output);
     assert!(
-        stderr(&output).contains("couldn't read module"),
-        "{}",
-        stderr(&output)
+        error.contains("error[E9007]: couldn't read module"),
+        "{error}"
     );
-    assert!(stderr(&output).contains("nope.nme"), "{}", stderr(&output));
+    assert!(error.contains("nope.nme"), "{error}");
+    assert!(!error.contains("E9015"), "{error}");
+
+    let korean = run_in(&dir, &["실행", "main"], None);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(
+        korean_error.contains("오류[E9007]: nope.nme 모듈을 읽을 수 없습니다"),
+        "{korean_error}"
+    );
+    assert!(
+        korean_error.contains("error[E9007]: couldn't read module"),
+        "{korean_error}"
+    );
 
     let _ = std::fs::remove_dir_all(&dir);
 }
