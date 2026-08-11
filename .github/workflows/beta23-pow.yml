@@ -1,4 +1,4 @@
-name: beta23 proof of work validation
+name: beta23 release builder
 
 on:
   push:
@@ -8,7 +8,7 @@ permissions:
   contents: write
 
 jobs:
-  validate:
+  release:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
@@ -16,29 +16,45 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: work/beta23-pow-consistency
+          fetch-depth: 2
       - name: Install stable Rust
         uses: dtolnay/rust-toolchain@stable
-      - name: Install CPython
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.14'
-      - name: Materialize consistency fix
-        run: python scripts/materialize-beta23-pow.py
-      - name: Format
-        run: cargo fmt --all
-      - name: Cryptocurrency regression tests
-        run: cargo test -p nme-core --test cryptocurrency_examples --locked
-      - name: Install CLI
-        run: cargo install --path crates/nme-cli --locked
-      - name: Check Korean sentence coin
-        run: nme check examples/needmorecoin-sentence.ko
-      - name: Run Korean sentence coin
-        run: nme run examples/needmorecoin-sentence.ko
-      - name: Commit validated fix
+      - name: Build beta23 release commit
         shell: bash
         run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          old = '0.0.1-beta.22'
+          new = '0.0.1-beta.23'
+
+          cargo = Path('Cargo.toml')
+          text = cargo.read_text(encoding='utf-8')
+          if text.count(old) != 1:
+              raise SystemExit(f'Cargo.toml expected one {old}, found {text.count(old)}')
+          cargo.write_text(text.replace(old, new), encoding='utf-8')
+
+          lock = Path('Cargo.lock')
+          text = lock.read_text(encoding='utf-8')
+          if text.count(old) != 3:
+              raise SystemExit(f'Cargo.lock expected three workspace {old} versions, found {text.count(old)}')
+          lock.write_text(text.replace(old, new), encoding='utf-8')
+
+          for name in ['README.md', 'README.ko.md']:
+              path = Path(name)
+              text = path.read_text(encoding='utf-8')
+              if old not in text:
+                  raise SystemExit(f'{name} does not mention {old}')
+              path.write_text(text.replace(old, new), encoding='utf-8')
+          PY
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add -- examples/needmorecoin-sentence.ko.nme crates/nme-core/tests/cryptocurrency_examples.rs
-          git commit -m "test: keep cryptocurrency proof of work difficulty consistent"
-          git push origin HEAD:work/beta23-pow-consistency
+          git rm -- .github/workflows/beta23-pow.yml scripts/materialize-beta23-pow.py
+          git add -- Cargo.toml Cargo.lock README.md README.ko.md
+          git commit -m "release: 0.0.1-beta.23 keep proof-of-work difficulty labels consistent"
+      - name: Verify beta version step
+        run: python scripts/check-beta-step.py
+      - name: Verify locked workspace
+        run: cargo check --workspace --locked
+      - name: Push beta23 release commit to work branch
+        run: git push origin HEAD:work/beta23-pow-consistency
