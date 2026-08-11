@@ -6,6 +6,7 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+- Add a `birthday.nme` countdown example that uses the `datetime` standard package from inside NME (with a Korean twin) and guide 24 on the standard library and pip-installed packages.
 - Add `.nme` module imports: `from "helper.nme" import greet, score` imports
   only the listed names from a sibling `.nme` file, so a project can split
   into several files with an explicit interface and no shared global state.

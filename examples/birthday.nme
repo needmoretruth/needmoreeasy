@@ -1,0 +1,17 @@
+# Python packages — using the standard library
+# A birthday countdown using the datetime package that ships with Python.
+# Educational only. This is a learning project, not advice.
+# Run: nme r birthday
+
+from datetime import date
+
+ask month, "your birth month (1-12): "
+ask day, "your birth day (1-31): "
+
+today = date.today()
+this_year = date(today.year, int(month), int(day))
+
+if this_year < today:
+    this_year = date(today.year + 1, int(month), int(day))
+
+show "your next birthday is in " + str((this_year - today).days) + " days"

@@ -127,6 +127,8 @@ the four educational projects (learning only, never investment advice):
 
 Programs can import named values from other `.nme` files in the same folder — see the [`examples/modules/`](examples/modules/) pair and `from "shapes.nme" import rect, circle` in a main program. The import list is the module interface, so there is no hidden global state.
 
+Python packages are ordinary imports inside NME — see the [`birthday.nme`](examples/birthday.nme) countdown that uses the `datetime` package.
+
 Networking and terminal programs are ordinary Python inside NME:
 [`http-client.nme`](examples/http-client.nme) fetches a page from a local
 server, and [`terminal-menu.nme`](examples/terminal-menu.nme) is a small

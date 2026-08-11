@@ -43,6 +43,7 @@ CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
 21. [21 — HTTP](21-http.md)
 22. [22 — Terminal menu](22-terminal-menu.md)
 23. [23 — Modules](23-modules.md)
+24. [24 — Python packages](24-python-packages.md)
 
 ## Topic lookup
 
@@ -63,6 +64,7 @@ CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
 - 네트워크/HTTP / Network & HTTP: [21](21-http.md)
 - TUI/메뉴 / TUI & menus: [22](22-terminal-menu.md)
 - 모듈 / Modules: [23](23-modules.md)
+- Python 패키지 / Python packages: [24](24-python-packages.md)
 
 ## All guides
 
@@ -91,6 +93,7 @@ CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
 | 21 | ★★★★★ | 네트워크/HTTP / Network & HTTP | [HTTP — asking a web server](21-http.md) | Fetch a page from a local server |
 | 22 | ★★★★★ | TUI/메뉴 / TUI & menus | [Terminal menu — a small TUI](22-terminal-menu.md) | A loop-driven terminal menu |
 | 23 | ★★★★★ | 모듈 / Modules | [Modules — split your program into files](23-modules.md) | Import named values from another .nme file |
+| 24 | ★★★★★ | Python 패키지 / Python packages | [Python packages — the standard library and installed libraries](24-python-packages.md) | Use datetime and other Python packages from NME |
 
 ## Where to continue
 
