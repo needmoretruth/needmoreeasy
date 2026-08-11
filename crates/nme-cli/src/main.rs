@@ -331,8 +331,16 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
     let source = match std::fs::read_to_string(&path) {
         Ok(source) => source,
         Err(err) => {
+            if err.kind() == std::io::ErrorKind::NotFound {
+                return fail(
+                    nme_core::diagnostics::DiagnosticCode::CliMissingProgram,
+                    language,
+                    &format!("couldn't read {shown_path}: {err}"),
+                    &format!("{shown_path} 파일을 읽을 수 없습니다: {err}"),
+                );
+            }
             return fail(
-                nme_core::diagnostics::DiagnosticCode::CliMissingProgram,
+                nme_core::diagnostics::DiagnosticCode::CliFileReadFailed,
                 language,
                 &format!("couldn't read {shown_path}: {err}"),
                 &format!("{shown_path} 파일을 읽을 수 없습니다: {err}"),
@@ -1573,6 +1581,14 @@ fn transpile_file(
                          도움말: .nme 프로그램이 있는 폴더에서 `nme r`을 실행하거나, 프로그램 이름을 적어 주세요",
                         path.display()
                     ),
+                ));
+            }
+            if err.kind() != std::io::ErrorKind::NotFound {
+                return Err(fail(
+                    nme_core::diagnostics::DiagnosticCode::CliFileReadFailed,
+                    language,
+                    &format!("couldn't read {shown_path}: {err}"),
+                    &format!("{shown_path} 파일을 읽을 수 없습니다: {err}"),
                 ));
             }
             let suggestion = suggest_program(&path);

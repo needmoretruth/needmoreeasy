@@ -6,6 +6,12 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.37 — 2026-08-12
+
+- Keep existing but unreadable program files on E9007 instead of reporting them
+  as missing programs E9015 for `nme run` and `nme native`.
+- Preserve E9015 for paths that actually cannot be found.
+
 ## 0.0.1-beta.36 — 2026-08-12
 
 - Keep `nme compile` temporary-folder failures on E9027 instead of reporting

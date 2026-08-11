@@ -597,6 +597,51 @@ fn native_run_start_failures_use_a_native_diagnostic() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+#[cfg(unix)]
+#[test]
+fn native_unreadable_program_uses_a_file_read_diagnostic() {
+    use std::os::unix::fs::PermissionsExt as _;
+
+    let dir = temporary_dir("native-unreadable-program");
+    let file = dir.join("main.nme");
+    write_nme(&dir, "main.nme", "say 1\n");
+    let mut permissions = std::fs::metadata(&file).unwrap().permissions();
+    permissions.set_mode(0o000);
+    std::fs::set_permissions(&file, permissions).unwrap();
+
+    let output = run_in(&dir, &["네이티브", "실행", "main"], None);
+    let run = run_in(&dir, &["실행", "main"], None);
+    let mut restored = std::fs::metadata(&file).unwrap().permissions();
+    restored.set_mode(0o644);
+    std::fs::set_permissions(&file, restored).unwrap();
+
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(
+        error.contains("오류[E9007]: main.nme 파일을 읽을 수 없습니다"),
+        "{error}"
+    );
+    assert!(
+        error.contains("error[E9007]: couldn't read main.nme"),
+        "{error}"
+    );
+    assert!(!error.contains("E9015"), "{error}");
+
+    assert!(!run.status.success());
+    let run_error = stderr(&run);
+    assert!(
+        run_error.contains("오류[E9007]: main.nme 파일을 읽을 수 없습니다"),
+        "{run_error}"
+    );
+    assert!(
+        run_error.contains("error[E9007]: couldn't read main.nme"),
+        "{run_error}"
+    );
+    assert!(!run_error.contains("E9015"), "{run_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 #[test]
 fn install_requires_a_package_and_explains_pip_failures() {
     let no_package = nme(&["install"]);
