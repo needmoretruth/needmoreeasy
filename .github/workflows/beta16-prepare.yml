@@ -50,49 +50,41 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
 
           prime = 'FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F83655D23DCA3AD961C62F356208552BB9ED529077096966D670C354E4ABC9804F1746C08CA18217C32905E462E36CE3BE39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9DE2BCBF6955817183995497CEA956AE515D2261898FA051015728E5A8AAAC42DAD33170D04507A33A85521ABDF1CBA64ECFB850458DBEF0A8AEA71575D060C7DB3970F85A6E1E4C7ABF5AE8CDB0933D71E8C94E04A25619DCEE3D2261AD2EE6BF12FFA06D98A0864D87602733EC86A64521F2B18177B200CBBE117577A615D6C770988C0BAD946E208E24FA074E5AB3143DB5BFCE0FD108E4B82D120A93AD2CAFFFFFFFFFFFFFFFF'
           path = Path('crates/nme-core/src/lower.rs')
           text = path.read_text(encoding='utf-8')
-          old = '''    "zk_prime = 영지식큰소수 = 0x",
-              SCHNORR_GROUP15_PRIME,
-              "; ",'''
-          if text.count(old) != 1:
-              old = '''    "zk_prime = 영지식큰소수 = 0x",
-              SCHNORR_GROUP15_PRIME,
-              "; ",'''.replace('              ', '    ')
-          assert text.count(old) == 1, text[text.find('zk_prime')-80:text.find('zk_prime')+180]
-          path.write_text(text.replace(old, f'    "zk_prime = 영지식큰소수 = 0x{prime}; ",', 1), encoding='utf-8')
+          pattern = r'(?m)^\s*"zk_prime = 영지식큰소수 = 0x",\n\s*SCHNORR_GROUP15_PRIME,\n\s*"; ",'
+          text, count = re.subn(pattern, f'    "zk_prime = 영지식큰소수 = 0x{prime}; ",', text, count=1)
+          assert count == 1
+          path.write_text(text, encoding='utf-8')
 
           path = Path('crates/nme-native/src/lib.rs')
           text = path.read_text(encoding='utf-8')
-          old = '''        Value::RandomInteger { .. } | Value::RandomChoice { .. } => {
-              Err(not_supported("random values", span_of_value(value)))
-          }'''
-          if text.count(old) != 1:
-              old = '''        Value::RandomInteger { .. } | Value::RandomChoice { .. } => {
-              Err(not_supported("random values", span_of_value(value)))
-          }'''.replace('              ', '            ')
-          assert text.count(old) == 1
-          new = old + '''
-          Value::ZeroKnowledge(_) => {
-              Err(not_supported("zero-knowledge values", span_of_value(value)))
-          }'''.replace('          ', '        ', 1).replace('              ', '            ')
-          text = text.replace(old, new, 1)
-          old = '''        Value::Text(_) | Value::Literal(_) | Value::RandomInteger { .. } | Value::RandomChoice { .. } => {
-              Err(not_supported("this value", span_of_value(value)))
-          }'''
-          if text.count(old) != 1:
-              old = '''        Value::Text(_) | Value::Literal(_) | Value::RandomInteger { .. } | Value::RandomChoice { .. } => {
-              Err(not_supported("this value", span_of_value(value)))
-          }'''.replace('              ', '            ')
-          assert text.count(old) == 1
-          new = '''        Value::Text(_)
-          | Value::Literal(_)
-          | Value::RandomInteger { .. }
-          | Value::RandomChoice { .. }
-          | Value::ZeroKnowledge(_) => Err(not_supported("this value", span_of_value(value)))'''
-          text = text.replace(old, new, 1)
+          pattern = r'(?ms)^(\s*)Value::RandomInteger \{ \.\. \} \| Value::RandomChoice \{ \.\. \} => \{\s*Err\(not_supported\("random values", span_of_value\(value\)\)\)\s*\}'
+          match = re.search(pattern, text)
+          assert match is not None
+          indent = match.group(1)
+          replacement = match.group(0) + '\n' + indent + 'Value::ZeroKnowledge(_) => {\n' + indent + '    Err(not_supported("zero-knowledge values", span_of_value(value)))\n' + indent + '}'
+          text, count = re.subn(pattern, lambda _: replacement, text, count=1)
+          assert count == 1
+
+          pattern = r'(?ms)^(\s*)Value::Text\(_\) \| Value::Literal\(_\) \| Value::RandomInteger \{ \.\. \} \| Value::RandomChoice \{ \.\. \} => \{\s*Err\(not_supported\("this value", span_of_value\(value\)\)\)\s*\}'
+          match = re.search(pattern, text)
+          assert match is not None
+          indent = match.group(1)
+          replacement = (
+              indent + 'Value::Text(_)\n'
+              + indent + '| Value::Literal(_)\n'
+              + indent + '| Value::RandomInteger { .. }\n'
+              + indent + '| Value::RandomChoice { .. }\n'
+              + indent + '| Value::ZeroKnowledge(_) => {\n'
+              + indent + '    Err(not_supported("this value", span_of_value(value)))\n'
+              + indent + '}'
+          )
+          text, count = re.subn(pattern, lambda _: replacement, text, count=1)
+          assert count == 1
           path.write_text(text, encoding='utf-8')
           PY
 
@@ -116,7 +108,7 @@ jobs:
           grep -F '영지식 증명을 수신자 비가 받아들였습니다' /tmp/zk-ko
           grep -F '저장 전사록 재전송은 새 도전에서 실패했습니다' /tmp/zk-ko
           grep -F '비밀값 없이도 미리 고른 도전에 맞는 전사록을 모의할 수 있습니다' /tmp/zk-ko
-          grep -F '모의 전사록은 수신자 비의 다른 도전에 재사용할 수 없습니다' /tmp/zk-ko
+          grep -F '모의 전사록은 수신자 비의 다른 도전에는 재사용할 수 없습니다' /tmp/zk-ko
           grep -F '실시간 중계는 통과하지만 비밀 위조가 아니라' /tmp/zk-ko
           cargo run --quiet -p nme-cli -- run examples/zk-schnorr-relay.en.nme | tee /tmp/zk-en
           grep -F "accepted sender A's zero-knowledge proof" /tmp/zk-en
