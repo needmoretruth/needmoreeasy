@@ -146,7 +146,7 @@ fn korean_forms_return_korean_guidance() {
 fn only_the_bundled_modules_are_available() {
     let message = err("use math\n");
     assert!(
-        message.contains("bundles `use random` and `use file`"),
+        message.contains("bundles `use random`, `use file`, and `use zero_knowledge`"),
         "{message}"
     );
 }
@@ -183,7 +183,7 @@ fn file_module_does_not_overwrite_existing_names() {
 fn two_modules_on_one_line_are_rejected() {
     let message = err("use random and file\n");
     assert!(
-        message.contains("bundles `use random` and `use file`"),
+        message.contains("bundles `use random`, `use file`, and `use zero_knowledge`"),
         "{message}"
     );
 }
