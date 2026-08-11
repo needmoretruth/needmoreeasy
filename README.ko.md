@@ -144,8 +144,8 @@ program` 모두 실행됩니다. NME가 운영체제에 맞는 Python 명령을 
 목록을 보여 주고 어느 것을 실행할지 물어봅니다. `nme c`와 `nme b`도 검사와
 빌드에서 같은 방식으로 동작합니다. `nme m`, `nme v`, `nme h`는 각각
 `nme 모듈`, `nme --version`, `nme 도움`의 짧은 형태입니다. `nme comp
-program`은 Nuitka로 컴파일, `nme conv app.py`는 Python을 NME로 변환하는
-짧은 형태입니다.
+program`은 Nuitka로 컴파일, `nme conv app.py`는 Python을 NME로 변환하며,
+`nme 설치 requests`는 Python 패키지를 pip으로 설치합니다.
 
 NME의 코어 부분집합은 `nme 네이티브 실행 hello`로 바로 네이티브 기계어로 컴파일할 수 있습니다(정수 값, 문장형 `while`/`if`/`else`, `break`, 재귀 함수, `say` — [`native-factorial.nme`](examples/native-factorial.nme) 시도; 그 외에는 CPython으로 실행). [네이티브 백엔드 조사](docs/native-backend.ko.md)를 보세요.
 

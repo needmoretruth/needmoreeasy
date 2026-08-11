@@ -146,7 +146,8 @@ single `.nme` program in the current folder; when several programs are there,
 NME lists them and asks which one to run. `nme c` and `nme b` behave the same
 way for checking and building. `nme m`, `nme v`, and `nme h` are short forms of
 `nme modules`, `nme --version`, and `nme help`. `nme comp program` compiles
-with Nuitka, and `nme conv app.py` converts Python into NME.
+with Nuitka, `nme conv app.py` converts Python into NME, and `nme install
+requests` installs a Python package with pip.
 
 A core subset of NME can also compile straight to native machine code with `nme native run hello` (integer values, sentence `while`/`if`/`else`, `break`, functions with recursion, and `say` — try [`native-factorial.nme`](examples/native-factorial.nme); everything else still runs on CPython). See the [native-backend memo](docs/native-backend.md).
 
