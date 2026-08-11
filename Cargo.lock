@@ -211,7 +211,7 @@ checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
 
 [[package]]
 name = "nme-cli"
-version = "0.0.1-beta.19"
+version = "0.0.1-beta.20"
 dependencies = [
  "nme-core",
  "nme-native",
@@ -219,7 +219,7 @@ dependencies = [
 
 [[package]]
 name = "nme-core"
-version = "0.0.1-beta.19"
+version = "0.0.1-beta.20"
 dependencies = [
  "rustpython-parser",
  "unicode-width",
@@ -227,7 +227,7 @@ dependencies = [
 
 [[package]]
 name = "nme-native"
-version = "0.0.1-beta.19"
+version = "0.0.1-beta.20"
 dependencies = [
  "nme-core",
  "rustpython-parser",
@@ -425,7 +425,7 @@ dependencies = [
 name = "ryu"
 version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9774ba4a74de5f7b1c1451ed6cd5285a32eddb5cccb8cc655a4e50009e06477f"
+checksum = "9774ba4a74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 
 [[package]]
 name = "siphasher"
