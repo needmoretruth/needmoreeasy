@@ -43,7 +43,6 @@ show Genesis block mined
 show Genesis work attempts genesistries
 
 transactionamount save 25
-transactionfeev alue save transactionfee
 transactionnonce save 1
 expectednonce save alicenonce
 expectednonce add 1
