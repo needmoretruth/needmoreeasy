@@ -125,6 +125,8 @@ nme 모듈
 [`consensus.nme`](examples/consensus.nme)(초고급). 각각 한국어 버전도
 있습니다.
 
+NME는 컴파일러도 쓸 수 있습니다: [`bootstrap.nme`](examples/bootstrap.nme)가 아주 작은 언어를 Python으로 변환해 실행합니다 — 셀프호스팅의 씨앗.
+
 Python 패키지는 NME 안에서 일반 import로 씁니다 — `datetime` 패키지로 만든 [`birthday.nme`](examples/birthday.nme) 카운트다운을 보세요.
 
 네트워크와 터미널 프로그램은 NME 안에서 일반 Python으로 씁니다:

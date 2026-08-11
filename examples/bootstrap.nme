@@ -1,0 +1,40 @@
+# bootstrap — NME compiling a tiny language
+# BML (beginner mini language) has five instructions: set, add, show,
+# while, end. This program reads BML source and transpiles it to Python,
+# then runs it. A compiler written in NME is the seed of self-hosting.
+# Educational only. This is a learning project, not advice.
+# Run: nme r bootstrap
+
+program = [
+    "set count 0",
+    "while count 3",
+    "  show hello",
+    "  add count 1",
+    "end",
+    "show done",
+]
+
+lines = []
+indent = 0
+for raw in program:
+    parts = raw.split()
+    verb = parts[0]
+    if verb == "set":
+        lines.append(" " * indent + f"{parts[1]} = {parts[2]}")
+    elif verb == "add":
+        lines.append(" " * indent + f"{parts[1]} += {parts[2]}")
+    elif verb == "show":
+        lines.append(" " * indent + f'print("{parts[1]}")')
+    elif verb == "while":
+        lines.append(" " * indent + f"while {parts[1]} < {parts[2]}:")
+        indent = indent + 4
+    elif verb == "end":
+        indent = indent - 4
+    else:
+        lines.append(" " * indent + "# unknown instruction: " + raw)
+
+source = "\n".join(lines)
+show "generated Python:"
+show source
+show "running it:"
+exec(source)
