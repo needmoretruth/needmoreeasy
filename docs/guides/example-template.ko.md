@@ -62,8 +62,8 @@ examples/프로젝트-advanced.en.nme
 ## 4. 문장형 영어 뼈대
 
 ```text
-set name to Example
-set value to 0
+name save Example
+value save 0
 
 show name is starting
 
@@ -77,8 +77,9 @@ show The result is valid
 end
 ```
 
-필요한 내장 기능이 구두점 없는 영어 문구를 제공하지 않는다면 정확한 helper
-표현식이 들어가는 경계를 가이드에 적으세요.
+순수 영어 문장형을 주장한다면 영문자·숫자·공백만 허용하는 것처럼 규칙을 먼저
+정하고 테스트로 강제하세요. 내장 영지식 기능도 `use zeroknowledge latest`,
+`zero knowledge secret make` 같은 구두점 없는 문장형을 사용할 수 있습니다.
 
 ## 5. 초급 한국어 뼈대
 

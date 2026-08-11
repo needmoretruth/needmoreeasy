@@ -410,9 +410,9 @@ NME.
 
 Three beginner modules ship with NME: `random` (dice and picks), `file`
 (reading, writing, and JSON), and `zero_knowledge` / `영지식` (a Schnorr
-proof-of-knowledge reference implementation). Each has one bundled version,
-`0.0.1`. One `use` line per module is enough; importing the same module twice
-is a collision error:
+proof-of-knowledge reference implementation). Random and file are bundled at
+`0.0.1`; zero knowledge is bundled at `0.0.2`. One `use` line per module is
+enough; importing the same module twice is a collision error:
 
 ```text
 use random
@@ -425,7 +425,8 @@ equivalents, and so are the Korean spellings `랜덤 사용`, `랜덤 사용 최
 `최신 랜덤 사용`, and `랜덤 사용 버전 "0.0.1"`. The `file` module accepts the
 same forms with `file` / `파일`: `파일 사용`, `파일 사용 최신`, `파일 사용
 버전 "0.0.1"`. The zero-knowledge adapter uses `zero_knowledge` / `영지식`
-with the same forms, including `영지식 사용 최신`.
+with the same forms, including `영지식 사용 최신`. Strict punctuation-free
+English sentence source may use the alias `use zeroknowledge latest`.
 
 `latest` / `최신` selects the newest adapter bundled with the installed NME
 compiler. It is local and deterministic, not an uncontrolled network update.
@@ -472,9 +473,15 @@ from Python's `secrets` module.
 | `zk_simulated_response()` | `영지식모의응답만들기()` | choose a simulator response |
 | `zk_simulated_commitment(A,c,r)` | `영지식모의약속(공개값,도전값,응답값)` | simulate a transcript for a preselected challenge |
 
-The Korean sentence surface removes function punctuation for the complete
-proof flow; see `examples/zk-schnorr-relay.ko.nme`. The verifier validates
-subgroup membership and all scalar/challenge ranges before checking the
+Both Korean and English sentence surfaces can remove function punctuation
+for the complete proof flow. English forms include `zero knowledge secret
+make`, `secret zero knowledge public make`, `zero knowledge nonce make`, `nonce
+zero knowledge commitment make`, `secret context zero knowledge proof make`,
+`public proof context zero knowledge verify`, and `public commitment context
+zero knowledge challenge make`. See `examples/needmorecoin-sentence.en.nme` for
+a strict ASCII-letters/digits/whitespace example and
+`examples/zk-schnorr-relay.ko.nme` for the Korean proof flow. The verifier
+validates subgroup membership and scalar/challenge ranges before checking the
 Schnorr equation.
 
 A stored transcript cannot answer a different fresh challenge. A transcript

@@ -24,21 +24,21 @@ it to hold real money or present it as an investment product.
 The files teach the same model but are not forced to be line-for-line
 translations. Each level uses the clearest spelling available at that level.
 
-### Strong purity rule for the Korean sentence file
+### Strong purity rules for both sentence files
 
 `needmorecoin-sentence.ko.nme` contains only Hangul, decimal digits, and
 whitespace in executable source. It has no ASCII identifiers, underscores,
 quotes, parentheses, commas, colons, operators, Python `import`, or even source
-comments. A regression test checks both the character set and that every
-non-empty source line is actually lowered by NME, so a Python statement cannot
-be hidden behind Korean identifiers and pass the test unchanged.
+comments.
 
-The English sentence example currently uses exact helper expressions such as
-`zk_secret()` when it reaches the cryptographic adapter. Its storage, control
-flow, updates, and output use English sentence forms. The compiler currently
-has punctuation-free Korean phrases for the zero-knowledge primitives but no
-matching punctuation-free English phrases, and the example documents rather
-than hides that boundary.
+`needmorecoin-sentence.en.nme` is equally strict: executable source contains
+only ASCII letters, decimal digits, and whitespace. It has no underscores,
+quotes, parentheses, commas, colons, operators, Python calls, or source
+comments. Phrases such as `zero knowledge secret make` and `secret zero
+knowledge public make` lower to the real bundled zero-knowledge operations.
+Regression tests check both character sets and verify that every non-empty line
+in both sentence files is actually lowered by NME, so Python cannot be hidden
+inside a file that claims to be pure sentence syntax.
 
 ## What is really computed
 

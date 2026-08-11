@@ -91,7 +91,7 @@ Cargo가 설치한 `bin` 폴더가 `PATH`에 없다고 경고하면 macOS/Linux�
 명령이 아닙니다. Windows PowerShell은
 [설치 안내](docs/install.ko.md#windows-11)의 PATH 단계를 사용하세요.
 
-표시될 버전은 `nme 0.0.1-beta.20`입니다.
+표시될 버전은 `nme 0.0.1-beta.22`입니다.
 
 Windows, macOS, Linux별 과정은 [설치 안내](docs/install.ko.md)에 있습니다.
 프로그래밍을 전혀 모른다면 [5분 시작 안내](docs/getting-started.ko.md)부터
@@ -125,8 +125,10 @@ nme 모듈
 [`needmorecoin-beginner.en.nme`](examples/needmorecoin-beginner.en.nme), 고급 한국어
 [`needmorecoin-advanced.ko.nme`](examples/needmorecoin-advanced.ko.nme), 고급 영어
 [`needmorecoin-advanced.en.nme`](examples/needmorecoin-advanced.en.nme)입니다. 한국어
-문장형 파일은 한글·숫자·공백만 사용하도록 자동 검사합니다. 지갑, 문맥에 묶인
-거래 증명, 수수료, 거래번호 재전송 방지, SHA-256 작업증명, 이전 해시 연결,
+문장형 한국어 파일은 한글·숫자·공백만, 문장형 영어 파일은 영문자·숫자·공백만
+사용하도록 자동 검사합니다. 두 파일 모두 모든 비어 있지 않은 줄이 실제 NME로
+변환되는지도 검사합니다. 지갑, 문맥에 묶인 거래 증명, 수수료, 거래번호 재전송
+방지, SHA-256 작업증명, 이전 해시 연결,
 변조 검출, 전체 상태 재검증, 발행량 보존을 따라가는 자세한 설명은
 [니드모어코인 만들기](docs/guides/cryptocurrency.ko.md)를 보세요. 이 예제는
 학습용 단일 프로세스 블록체인 핵심이며 P2P 네트워크나 프로덕션 코인은 아닙니다.

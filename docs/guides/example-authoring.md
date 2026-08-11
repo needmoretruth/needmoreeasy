@@ -32,9 +32,12 @@ still have a clear primary level so comparisons remain useful.
 - If one feature requires an exact Python expression, document that boundary.
 - If the example claims to be *pure* sentence syntax, enforce the claim in a test.
 
-A deliberately strict file such as `needmorecoin-sentence.ko.nme` can go
-further and allow only Hangul, decimal digits, and whitespace. Constraints like
-that should be enforced by tests, not by comments alone.
+A deliberately strict Korean file such as `needmorecoin-sentence.ko.nme`
+can allow only Hangul, decimal digits, and whitespace. A strict English twin
+such as `needmorecoin-sentence.en.nme` can allow only ASCII letters, decimal
+digits, and whitespace. Enforce these claims in tests and also verify that every
+non-empty line is actually lowered by NME instead of escaping unchanged as
+Python.
 
 ### Beginner
 

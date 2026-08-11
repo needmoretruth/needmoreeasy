@@ -91,7 +91,7 @@ warns that its `bin` directory is not on `PATH`. It does not reinstall NME.
 Windows PowerShell uses the PATH step in the
 [installation guide](docs/install.md#windows-11).
 
-Expected version: `nme 0.0.1-beta.20`.
+Expected version: `nme 0.0.1-beta.22`.
 
 Windows, macOS, and Linux instructions are in the
 [installation guide](docs/install.md). The [five-minute guide](docs/getting-started.md)
@@ -130,8 +130,11 @@ Korean beginner [`needmorecoin-beginner.ko.nme`](examples/needmorecoin-beginner.
 English beginner [`needmorecoin-beginner.en.nme`](examples/needmorecoin-beginner.en.nme),
 Korean advanced [`needmorecoin-advanced.ko.nme`](examples/needmorecoin-advanced.ko.nme),
 and English advanced [`needmorecoin-advanced.en.nme`](examples/needmorecoin-advanced.en.nme).
-The Korean sentence source is regression-tested to contain only Hangul, decimal
-digits, and whitespace. The [NeedMoreCoin guide](docs/guides/cryptocurrency.md)
+The Korean sentence source is regression-tested to contain only Hangul,
+decimal digits, and whitespace; the English sentence source is tested to
+contain only ASCII letters, decimal digits, and whitespace. Both tests also
+require every non-empty line to be lowered by NME. The
+[NeedMoreCoin guide](docs/guides/cryptocurrency.md)
 walks through wallets, context-bound transaction proofs, fees, replay-resistant
 transaction nonces, SHA-256 proof of work, previous-hash linkage, tamper
 detection, full state replay, and supply conservation. This remains a learning

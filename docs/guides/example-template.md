@@ -62,8 +62,8 @@ token set and enforce it in a regression test.
 ## 4. English sentence skeleton
 
 ```text
-set name to Example
-set value to 0
+name save Example
+value save 0
 
 show name is starting
 
@@ -77,8 +77,10 @@ show The result is valid
 end
 ```
 
-If a bundled feature has no punctuation-free English phrase, document the exact
-helper-expression boundary instead of describing a mixed file as fully pure.
+For a strict English sentence example, define an allowed source alphabet such
+as ASCII letters, decimal digits, and whitespace, then enforce it in tests. The
+bundled zero-knowledge adapter also has punctuation-free forms such as `use
+zeroknowledge latest` and `zero knowledge secret make`.
 
 ## 5. Korean beginner skeleton
 

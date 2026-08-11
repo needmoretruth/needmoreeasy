@@ -396,9 +396,9 @@ for 단어 in 단어들("notes.txt"):
 
 NME에는 초보자용 모듈 세 개가 들어 있습니다: 주사위·선택용
 `random`(`랜덤`), 읽기·쓰기·JSON용 `file`(`파일`), 실제 슈노르 지식 증명
-계산을 제공하는 `zero_knowledge`(`영지식`)입니다. 각 모듈의 내장 버전은
-`0.0.1`입니다. 모듈마다 `사용` 줄 하나면 충분하며 같은 모듈을 두 번
-가져오면 충돌 오류가 납니다.
+계산을 제공하는 `zero_knowledge`(`영지식`)입니다. 랜덤과 파일 어댑터는
+`0.0.1`, 영지식 어댑터는 `0.0.2`가 내장됩니다. 모듈마다 `사용` 줄 하나면
+충분하며 같은 모듈을 두 번 가져오면 충돌 오류가 납니다.
 
 ```text
 랜덤 사용
@@ -411,7 +411,9 @@ NME에는 초보자용 모듈 세 개가 들어 있습니다: 주사위·선택�
 `use random version "0.0.1"`도 같습니다. `file` 모듈도 같은 형태를
 `file`/`파일`로 받습니다: `파일 사용`, `파일 사용 최신`,
 `파일 사용 버전 "0.0.1"`. 영지식 어댑터는 `zero_knowledge`/`영지식`을
-같은 방식으로 받으며 `영지식 사용 최신`도 사용할 수 있습니다.
+같은 방식으로 받으며 `영지식 사용 최신`도 사용할 수 있습니다. 구두점 없는 영어
+문장형 소스에서는 밑줄 없는 별칭 `use zeroknowledge latest`도 같은 모듈을
+불러옵니다.
 
 `최신` / `latest`는 설치한 NME 컴파일러에 들어 있는 가장 새 어댑터를
 고릅니다. 제어되지 않은 네트워크 업데이트가 아니라 로컬에서 항상 같은 결과를
@@ -459,10 +461,14 @@ RFC 3526 MODP 그룹 15, 생성원 2, 소수 차수 부분군 `q = (p - 1) / 2`,
 | `영지식모의응답만들기()` | `zk_simulated_response()` | 모의 응답 고르기 |
 | `영지식모의약속(공개값,도전값,응답값)` | `zk_simulated_commitment(A,c,r)` | 미리 고른 도전용 전사록 모의하기 |
 
-완전한 증명 흐름은 괄호 없이 한국어 문장형으로도 쓸 수 있습니다.
-`examples/zk-schnorr-relay.ko.nme`를 보세요. 검증 함수는 슈노르 등식을
-확인하기 전에 공개값과 약속값의 부분군 소속, 응답 범위, 도전 범위를
-검사합니다.
+완전한 증명 흐름은 괄호 없이 한국어와 영어 문장형으로도 쓸 수 있습니다.
+영어에서는 `zero knowledge secret make`, `secret zero knowledge public make`,
+`zero knowledge nonce make`, `nonce zero knowledge commitment make`,
+`secret context zero knowledge proof make`, `public proof context zero knowledge verify`,
+`public commitment context zero knowledge challenge make`를 사용합니다. 순수 영어
+문장형 예시는 `examples/needmorecoin-sentence.en.nme`, 한국어 증명 흐름은
+`examples/zk-schnorr-relay.ko.nme`를 보세요. 검증 함수는 슈노르 등식을 확인하기
+전에 공개값과 약속값의 부분군 소속, 응답 범위, 도전 범위를 검사합니다.
 
 저장된 전사록은 다른 새 도전에 답할 수 없습니다. 반면 도전을 미리 고르면
 비밀값 없이도 그 도전용 전사록을 모의할 수 있어 영지식 성질을 보여 줍니다.
