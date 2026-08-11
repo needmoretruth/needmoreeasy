@@ -1,96 +1,49 @@
-# 20 — 합의 — 사슬에 동의하기
+# 20 — 전체 사슬 검증 — 처음부터 다시 계산하기
 
 [English](20-consensus.md) | 한국어
 
-[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
+[19 — 거래 증명](19-signatures.ko.md) | [전체 니드모어코인 가이드](cryptocurrency.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [18 — 작업 증명](18-proof-of-work.ko.md)
-- 주제 (Topic): 합의 / consensus
-- 결과물 (Result): 가장 긴 사슬 규칙으로 갈라짐을 해결하는 두 노드 / two nodes resolving a fork by the longest-chain rule
+- 난이도: ★★★★★
+- 선수 지식: [18 — 작업증명](18-proof-of-work.ko.md), [19 — 거래 증명](19-signatures.ko.md)
+- 결과물: 창세 상태부터 모든 거래와 블록을 재실행하는 단일 노드 검증기
 
-두 채굴자가 동시에 블록을 찾을 수 있으므로 네트워크가 갈라질 수 있습니다.
-그래도 모두가 어떻게 같은 사슬에 도달할까요? 프로그램
-`examples/consensus.ko.nme`는 두 노드, 갈라짐, 가장 긴 사슬 규칙을
-시뮬레이션합니다. 실제 네트워크에는 서명과 많은 노드, 시간 개념이
-추가됩니다. 이 프로젝트는 학습용이며 투자 조언이 아닙니다.
+이 단계의 핵심은 **블록을 만든 프로그램의 기억을 믿지 않는 것**입니다. 검증기는
+사슬 데이터만 받아 창세 상태에서 시작하고, 같은 규칙을 독립적으로 다시 실행해야
+합니다.
+
+니드모어코인 검증기는 다음을 다시 확인합니다.
+
+1. 블록 높이가 순서와 맞는가?
+2. `이전 해시`가 직전 블록의 실제 해시와 같은가?
+3. 저장된 블록 해시를 다시 계산했을 때 같은가?
+4. 해시가 작업증명 목표를 만족하는가?
+5. 거래 증명이 정확한 거래 문맥에 맞는가?
+6. 거래 금액, 잔액, 수수료, 거래번호 규칙을 만족하는가?
+7. 검증된 거래만 상태에 적용했는가?
+8. 채굴 보상만큼만 총 발행량이 증가했는가?
+9. 마지막에 모든 잔액 합이 총 발행량과 같은가?
+
+고급 한국어 예제의 `사슬검증` 함수와 고급 영어 예제의 `validate_chain` 함수가 이
+과정을 자료구조와 함수로 명확하게 보여 줍니다.
 
 ```sh
-nme run examples/consensus.ko
+nme 실행 examples/needmorecoin-advanced.ko
+nme 실행 examples/needmorecoin-advanced.en
 ```
 
-```text
-두 채굴자가 genesis 블록에서 시작합니다
-A가 첫 블록을 채굴했습니다: 2 대 1
-B가 A의 블록을 듣고 복사합니다
-두 노드 모두 2개 블록 보유
-B가 위에 경쟁 블록을 채굴해 사슬을 갈라지게 합니다
-B는 3개, A는 2개
-A가 더 긴 사슬을 듣고 채택합니다 (가장 긴 사슬 규칙)
-양쪽 합의: True 그리고 True
-```
+문장형 한국어 버전은 Python 자료구조를 쓰지 않고 별도의 `검증...` 변수들에 같은
+상태를 다시 구성해 원리를 보여 줍니다.
 
-## 단계
+## 합의와 검증은 같은 말이 아니다
 
-1. 모든 사슬은 `genesis` 블록에서 시작하고, [18](18-proof-of-work.ko.md)
-   가이드의 `mine` 함수가 이제 사슬 전체를 받습니다. 마지막 블록
-   `chain[-1]` 위에 만듭니다:
+이 예제는 **단일 노드 사슬 검증 핵심**을 구현합니다. 여러 노드가 경쟁하는 사슬 중
+하나를 선택하는 네트워크 합의까지 구현했다고 주장하지 않습니다. 실제 네트워크로
+확장하려면 P2P 전파, 포크 선택 규칙, 재구성, 난이도 조정, 영구 저장, 자원 제한,
+테스트넷과 보안 감사가 별도로 필요합니다.
 
-   ```text
-   # examples/consensus.ko.nme의 일부
-   import hashlib
-   difficulty = 2
-   target = "0" * difficulty
+그 구분이 중요한 이유는 “내 체인이 유효하다”와 “분산된 여러 노드가 같은 체인을
+선택한다”가 서로 다른 문제이기 때문입니다.
 
-   def mine(chain, data):
-       previous = chain[-1]["hash"]
-       nonce = 0
-       while True:
-           text = previous + data + str(nonce)
-           block_hash = hashlib.sha256(text.encode()).hexdigest()
-           if block_hash.startswith(target):
-               return {"data": data, "nonce": nonce, "hash": block_hash, "prev": previous}
-           nonce = nonce + 1
-   ```
-
-   `chain[-1]`이 가장 새로운 블록이므로 새 블록은 항상 사슬의 끝을
-   가리킵니다.
-
-2. `node_a`와 `node_b` 두 노드가 같은 genesis 블록에서 시작합니다. A가 첫
-   블록을 채굴하면 B가 그것을 복사합니다. 그러고 나서 B가 위에 경쟁 블록을
-   채굴합니다 — 사슬이 갈라집니다:
-
-   ```text
-   # examples/consensus.ko.nme의 일부
-   genesis = {"data": "genesis", "nonce": 0, "hash": "0", "prev": ""}
-   node_a = [genesis]
-   node_b = [genesis]
-   a_block = mine(node_a, "A: 블록 1")
-   node_a.append(a_block)
-   node_b.append(a_block)
-   b_block = mine(node_b, "B: 경쟁")
-   node_b.append(b_block)
-   말해 "B는 " + str(len(node_b)) + "개, A는 " + str(len(node_a)) + "개"
-   ```
-
-   이제 두 사슬이 서로 다릅니다: B는 3개, A는 2개입니다.
-
-3. 갈라짐은 규칙 하나로 해결됩니다: 가장 긴 유효한 사슬을 유지합니다. A는
-   B의 더 긴 사슬을 듣고 `node_a = list(node_b)`로 복사합니다. 예제는
-   [18](18-proof-of-work.ko.md) 가이드의 `is_valid`로 다시 확인해
-   `True 그리고 True`를 출력합니다 — 양쪽이 합의합니다.
-
-4. 영어 쌍둥이 `examples/consensus.nme`는 같은 두 채굴자를 `show`로
-   출력합니다 — 실행하면 같은 이야기를 영어로 볼 수 있습니다.
-
-## 직접 해보기
-
-예제를 내 폴더에 복사하고 A가 위에 블록을 하나 더 채굴해 더 긴 사슬을
-가지게 한 다음, `node_a = list(node_b)`로 B가 그것을 채택하게 해 보세요.
-
-## 배운 것
-
-- 채굴자가 동시에 블록을 찾으면 사슬이 갈라져 포크가 됩니다.
-- `mine`은 새 블록을 사슬 끝 `chain[-1]` 위에 만듭니다.
-- 가장 긴 사슬 규칙은 노드들이 더 긴 유효한 사슬을 복사하게 합니다.
-- `is_valid`는 양쪽이 모든 검사를 통과하는 사슬에 도달했는지 확인합니다.
+여섯 문법 버전을 한 번에 비교하고 직접 코인을 확장하려면
+[니드모어코인 전체 가이드](cryptocurrency.ko.md)를 이어서 보세요.

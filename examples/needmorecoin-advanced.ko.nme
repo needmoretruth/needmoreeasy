@@ -1,0 +1,200 @@
+# 니드모어코인 고급 한국어 예제
+# 고급 NME는 Python 문법과 완전히 같습니다. 식별자와 설명은 한국어로 씁니다.
+# 표준 라이브러리만으로 슈노르 서명형 증명, SHA-256 작업증명, 체인 검증을 구현합니다.
+
+from dataclasses import dataclass
+from typing import Optional
+import hashlib
+import secrets
+
+
+소수 = int(
+    "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F83655D23DCA3AD961C62F356208552BB9ED529077096966D670C354E4ABC9804F1746C08CA18217C32905E462E36CE3BE39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9DE2BCBF6955817183995497CEA956AE515D2261898FA051015728E5A8AAAC42DAD33170D04507A33A85521ABDF1CBA64ECFB850458DBEF0A8AEA71575D060C7DB3970F85A6E1E4C7ABF5AE8CDB0933D71E8C94E04A25619DCEE3D2261AD2EE6BF12FFA06D98A0864D87602733EC86A64521F2B18177B200CBBE117577A615D6C770988C0BAD946E208E24FA074E5AB3143DB5BFCE0FD108E4B82D120A93AD2CAFFFFFFFFFFFFFFFF",
+    16,
+)
+부분군크기 = (소수 - 1) // 2
+생성원 = 2
+그룹바이트 = (소수.bit_length() + 7) // 8
+채굴접두사 = "0"
+채굴보상 = 10
+거래수수료 = 1
+초기발행량 = 100
+
+
+def 정수바이트(값: int) -> bytes:
+    return 값.to_bytes(그룹바이트, "big")
+
+
+def 문맥도전(공개값: int, 약속값: int, 문맥: str) -> int:
+    문맥바이트 = 문맥.encode("utf-8")
+    자료 = (
+        b"NME-NEEDMORECOIN-SCHNORR-v1\0"
+        + 정수바이트(생성원)
+        + 정수바이트(약속값)
+        + 정수바이트(공개값)
+        + len(문맥바이트).to_bytes(8, "big")
+        + 문맥바이트
+    )
+    return int.from_bytes(hashlib.sha256(자료).digest(), "big")
+
+
+def 지갑만들기() -> tuple[int, int]:
+    비밀값 = secrets.randbelow(부분군크기 - 1) + 1
+    공개값 = pow(생성원, 비밀값, 소수)
+    return 비밀값, 공개값
+
+
+def 서명하기(비밀값: int, 문맥: str) -> tuple[int, int]:
+    일회값 = secrets.randbelow(부분군크기)
+    약속값 = pow(생성원, 일회값, 소수)
+    공개값 = pow(생성원, 비밀값, 소수)
+    도전값 = 문맥도전(공개값, 약속값, 문맥)
+    응답값 = (일회값 - 비밀값 * 도전값) % 부분군크기
+    return 약속값, 응답값
+
+
+def 서명검증(공개값: int, 서명: tuple[int, int], 문맥: str) -> bool:
+    약속값, 응답값 = 서명
+    if not (1 < 공개값 < 소수 and pow(공개값, 부분군크기, 소수) == 1):
+        return False
+    if not (1 <= 약속값 < 소수 and pow(약속값, 부분군크기, 소수) == 1):
+        return False
+    if not (0 <= 응답값 < 부분군크기):
+        return False
+    도전값 = 문맥도전(공개값, 약속값, 문맥)
+    복원약속 = (pow(생성원, 응답값, 소수) * pow(공개값, 도전값, 소수)) % 소수
+    return secrets.compare_digest(정수바이트(약속값), 정수바이트(복원약속))
+
+
+@dataclass(frozen=True)
+class 거래:
+    보내는주소: int
+    받는주소: int
+    금액: int
+    수수료: int
+    번호: int
+    서명: tuple[int, int]
+
+    def 문맥(self) -> str:
+        return f"{self.보내는주소}|{self.받는주소}|{self.금액}|{self.수수료}|{self.번호}"
+
+
+@dataclass
+class 블록:
+    높이: int
+    이전해시: str
+    거래값: Optional[거래]
+    채굴자주소: int
+    보상: int
+    창세문맥: str = ""
+    작업번호: int = 0
+    해시: str = ""
+
+
+def 블록자료(값: 블록) -> bytes:
+    if 값.거래값 is None:
+        거래부분 = 값.창세문맥
+        서명부분 = "창세"
+    else:
+        거래부분 = 값.거래값.문맥()
+        서명부분 = f"{값.거래값.서명[0]}|{값.거래값.서명[1]}"
+    return (
+        f"{값.높이}|{값.이전해시}|{거래부분}|{서명부분}|"
+        f"{값.채굴자주소}|{값.보상}|{값.작업번호}"
+    ).encode("utf-8")
+
+
+def 블록해시(값: 블록) -> str:
+    return hashlib.sha256(블록자료(값)).hexdigest()
+
+
+def 채굴(값: 블록) -> None:
+    while True:
+        후보 = 블록해시(값)
+        if 후보.startswith(채굴접두사):
+            값.해시 = 후보
+            return
+        값.작업번호 += 1
+
+
+def 거래만들기(
+    비밀값: int,
+    보내는주소: int,
+    받는주소: int,
+    금액: int,
+    번호: int,
+    수수료: int = 거래수수료,
+) -> 거래:
+    문맥 = f"{보내는주소}|{받는주소}|{금액}|{수수료}|{번호}"
+    return 거래(보내는주소, 받는주소, 금액, 수수료, 번호, 서명하기(비밀값, 문맥))
+
+
+def 사슬검증(사슬: list[블록], 초기주소: int) -> tuple[bool, dict[int, int], int, dict[int, int]]:
+    잔액 = {초기주소: 초기발행량}
+    사용번호: dict[int, int] = {}
+    발행량 = 초기발행량
+    이전해시 = "0"
+
+    for 위치, 현재 in enumerate(사슬):
+        if 현재.높이 != 위치 or 현재.이전해시 != 이전해시:
+            return False, 잔액, 발행량, 사용번호
+        if 블록해시(현재) != 현재.해시 or not 현재.해시.startswith(채굴접두사):
+            return False, 잔액, 발행량, 사용번호
+
+        if 위치 == 0:
+            if 현재.거래값 is not None or 현재.창세문맥 != f"창세|{초기주소}|{초기발행량}":
+                return False, 잔액, 발행량, 사용번호
+        else:
+            현재거래 = 현재.거래값
+            if 현재거래 is None or not 서명검증(현재거래.보내는주소, 현재거래.서명, 현재거래.문맥()):
+                return False, 잔액, 발행량, 사용번호
+            예상번호 = 사용번호.get(현재거래.보내는주소, 0) + 1
+            필요금액 = 현재거래.금액 + 현재거래.수수료
+            if 현재거래.번호 != 예상번호 or 현재거래.금액 <= 0:
+                return False, 잔액, 발행량, 사용번호
+            if 잔액.get(현재거래.보내는주소, 0) < 필요금액:
+                return False, 잔액, 발행량, 사용번호
+
+            잔액[현재거래.보내는주소] -= 필요금액
+            잔액[현재거래.받는주소] = 잔액.get(현재거래.받는주소, 0) + 현재거래.금액
+            잔액[현재.채굴자주소] = 잔액.get(현재.채굴자주소, 0) + 현재.보상 + 현재거래.수수료
+            사용번호[현재거래.보내는주소] = 현재거래.번호
+            발행량 += 현재.보상
+
+        이전해시 = 현재.해시
+
+    return sum(잔액.values()) == 발행량, 잔액, 발행량, 사용번호
+
+
+민수비밀, 민수주소 = 지갑만들기()
+지수비밀, 지수주소 = 지갑만들기()
+채굴자비밀, 채굴자주소 = 지갑만들기()
+
+창세 = 블록(0, "0", None, 채굴자주소, 0, f"창세|{민수주소}|{초기발행량}")
+채굴(창세)
+
+거래하나 = 거래만들기(민수비밀, 민수주소, 지수주소, 25, 1)
+블록하나 = 블록(1, 창세.해시, 거래하나, 채굴자주소, 채굴보상)
+채굴(블록하나)
+
+거래둘 = 거래만들기(지수비밀, 지수주소, 민수주소, 7, 1)
+블록둘 = 블록(2, 블록하나.해시, 거래둘, 채굴자주소, 채굴보상)
+채굴(블록둘)
+
+사슬 = [창세, 블록하나, 블록둘]
+정상, 잔액, 발행량, 번호 = 사슬검증(사슬, 민수주소)
+assert 정상
+assert sum(잔액.values()) == 발행량
+
+변조거래 = 거래(민수주소, 지수주소, 250, 거래하나.수수료, 거래하나.번호, 거래하나.서명)
+assert not 서명검증(민수주소, 변조거래.서명, 변조거래.문맥())
+변조블록 = 블록(1, 창세.해시, 변조거래, 채굴자주소, 채굴보상, 작업번호=블록하나.작업번호, 해시=블록하나.해시)
+assert 블록해시(변조블록) != 블록하나.해시
+assert 거래하나.번호 != 번호[민수주소] + 1
+
+print("니드모어코인 블록체인 검증 성공")
+print(f"민수 잔액 {잔액[민수주소]}")
+print(f"지수 잔액 {잔액[지수주소]}")
+print(f"채굴자 잔액 {잔액[채굴자주소]}")
+print(f"총 발행량 {발행량}")
+print("거래 변조와 재전송 거부 성공")

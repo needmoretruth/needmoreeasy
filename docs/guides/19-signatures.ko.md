@@ -1,82 +1,56 @@
-# 19 — 서명 — 신원 증명
+# 19 — 거래 증명 — 지갑 소유와 재전송 방지
 
 [English](19-signatures.md) | 한국어
 
-[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
+[18 — 작업증명](18-proof-of-work.ko.md) | [전체 니드모어코인 가이드](cryptocurrency.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [17 — 블록체인](17-blockchain.ko.md)
-- 주제 (Topic): 서명 / signatures
-- 결과물 (Result): hmac으로 메시지 서명하고 검증하기 / sign and verify a message with hmac
+- 난이도: ★★★★★
+- 선수 지식: [17 — 암호화폐 장부](17-blockchain.ko.md)
+- 결과물: 공개값으로 거래 승인자를 검증하고 같은 거래의 재사용을 거부하기
 
-해시는 메시지가 바뀌지 않았음을 증명합니다. 서명은 누가 썼는지를
-증명합니다. 프로그램 `examples/signatures.ko.nme`는 Python 표준 라이브러리
-`hmac`을 써서 공유 비밀로 메시지를 서명하고 검증합니다. 실제 코인은
-cryptography 라이브러리의 공개키 서명을 사용합니다. 이 프로젝트는 학습용이며
-투자 조언이 아닙니다.
+예전 학습 예제의 공유 비밀 HMAC 대신 니드모어코인은 공개값으로 검증할 수 있는
+슈노르 계열 증명을 거래의 서명 역할로 사용합니다. 비밀값은 지갑 소유자만 알고,
+공개값은 다른 검증자가 사용할 수 있습니다.
 
-```sh
-nme run examples/signatures.ko
-```
+## 거래에 무엇을 묶는가
+
+거래 증명은 최소한 다음 문맥에 묶입니다.
+
+- 보내는 주소
+- 받는 주소
+- 금액
+- 수수료
+- 거래번호
+
+한국어 문장형에서는 다음처럼 작성합니다.
 
 ```text
-메시지: 민수에게 10 지불
-서명: c67631d90b5381a8...
-올바른 서명 검증: True
-바뀐 메시지 검증: False
-틀린 키로는 위조 불가: False
+거래하나내용은 민수주소 에서 지수주소 에게 거래하나금액 코인 전송 수수료 거래하나수수료 거래번호 거래하나번호
+거래하나서명은 민수비밀과 거래하나내용으로 영지식 비대화 증명 만들기
+거래하나서명검증은 민수주소와 거래하나서명과 거래하나내용으로 영지식 비대화 검증
 ```
 
-## 단계
+내장 어댑터는 보안 난수와 3072비트 MODP Group 15 부분군 계산, SHA-256
+Fiat-Shamir 도전을 실제로 수행합니다. 이 예제에서는 그 비대화형 지식 증명을
+거래 승인 서명 역할로 사용합니다.
 
-1. 서명하려면 보내는 사람과 받는 사람만 아는 비밀이 필요합니다. `sign`
-   함수는 그 비밀을 메시지 해시에 섞어 넣습니다:
+## 변조를 시험하기
 
-   ```text
-   # examples/signatures.ko.nme의 일부
-   import hmac
-   import hashlib
-   secret = "공유-비밀-키"
-   message = "민수에게 10 지불"
+정상 거래는 25코인을 보냅니다. 프로그램 마지막에서는 금액만 250으로 바꾼 새
+문맥에 기존 증명을 붙여 봅니다. 증명은 원래 문맥에 묶여 있으므로 검증이 실패하고,
+그 거래를 담은 블록 해시도 원래 블록과 달라집니다.
 
-   def sign(text):
-       return hmac.new(secret.encode(), text.encode(), hashlib.sha256).hexdigest()
+## 재전송을 시험하기
 
-   signature = sign(message)
-   말해 "메시지: " + message
-   말해 "서명: " + signature[:16] + "..."
-   ```
+서명 자체가 올바르더라도 이미 처리한 거래를 다시 적용하면 이중 지출이 생길 수
+있습니다. 그래서 주소마다 마지막 거래번호를 상태에 저장합니다. 민수가 번호 1을
+사용한 뒤 다음 정상 번호는 2입니다. 번호 1인 기존 거래를 다시 제출하면 거부합니다.
 
-   `hmac`은 [17](17-blockchain.ko.md) 가이드의 같은 `sha256` 해시를 쓰지만
-   비밀이 섞이므로 비밀 없이는 서명을 위조할 수 없습니다.
+```sh
+nme 실행 examples/needmorecoin-sentence.ko
+```
 
-2. 검증할 때 받는 사람은 같은 비밀로 메시지를 다시 서명해 비교합니다.
-   `compare_digest`는 시간 정보가 새지 않게 비교합니다:
+정상 실행에서는 거래 변조와 재전송이 모두 거부되었다는 결과를 확인할 수 있습니다.
 
-   ```text
-   # examples/signatures.ko.nme의 일부
-   signature = sign(message)
-   말해 "올바른 서명 검증: " + str(hmac.compare_digest(sign(message), signature))
-   tampered = "민수에게 100 지불"
-   말해 "바뀐 메시지 검증: " + str(hmac.compare_digest(sign(tampered), signature))
-   ```
-
-   같은 메시지는 `True`로 검증되고, 메시지의 숫자를 한 글자만 바꿔도
-   `False`가 됩니다. 예제의 마지막 줄은 다른 비밀로 서명해 비교합니다 —
-   틀린 키로도 서명을 위조할 수 없습니다.
-
-3. 영어 쌍둥이 `examples/signatures.nme`는 `"pay Mina 10"`을 서명하고
-   `show`로 출력합니다 — 실행하면 같은 다섯 줄을 영어로 볼 수 있습니다.
-
-## 직접 해보기
-
-예제를 내 폴더에 복사하고 `secret`을 나만의 키로 바꿔 보세요. 다른 비밀은
-다른 서명을 만들고, 옛 비밀로 서명한 메시지는 검증을 통과하지 못합니다.
-
-## 배운 것
-
-- 서명은 메시지를 쓴 사람을 증명합니다. 해시만으로는 바뀌지 않았음을 증명할
-  뿐입니다.
-- `hmac.new(키, 메시지, hashlib.sha256)`은 공유 비밀로 서명합니다.
-- `hmac.compare_digest(...)`는 서명을 안전하게 검증합니다.
-- 틀린 키나 바뀐 메시지는 모두 검증에 실패합니다.
+다음 [20 — 전체 사슬 검증](20-consensus.ko.md)에서는 생성할 때 저장한 값을 믿지
+않고 창세 상태부터 모든 거래와 블록을 다시 계산합니다.

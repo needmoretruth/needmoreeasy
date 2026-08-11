@@ -72,15 +72,16 @@ fn build_prints_transpiled_python() {
 
 #[test]
 fn version_reports_the_current_beta() {
+    let version = env!("CARGO_PKG_VERSION");
     let output = nme(&["--version"]);
     assert!(output.status.success(), "{}", stderr(&output));
-    assert_eq!(stdout(&output), "nme 0.0.1-beta.19\n");
+    assert_eq!(stdout(&output), format!("nme {version}\n"));
 
     let korean = nme(&["버전"]);
     assert!(korean.status.success(), "{}", stderr(&korean));
     assert_eq!(
         stdout(&korean),
-        "NME 버전: 0.0.1-beta.19\nnme version: 0.0.1-beta.19\n"
+        format!("NME 버전: {version}\nnme version: {version}\n")
     );
 }
 
@@ -188,7 +189,7 @@ fn command_shortcuts_run_check_build_and_modules() {
     let version = nme(&["v"]);
     assert!(version.status.success(), "{}", stderr(&version));
     assert!(
-        stdout(&version).contains("nme 0.0.1-beta.19"),
+        stdout(&version).contains(&format!("nme {}", env!("CARGO_PKG_VERSION"))),
         "{}",
         stdout(&version)
     );
@@ -502,20 +503,18 @@ fn the_terminal_menu_example_runs_with_scripted_input() {
 }
 
 #[test]
-fn the_blockchain_learning_examples_run() {
+fn the_cryptocurrency_learning_examples_run() {
     if !python_available() {
-        eprintln!("Python not available; skipping blockchain example test");
+        eprintln!("Python not available; skipping cryptocurrency example test");
         return;
     }
     for name in [
-        "blockchain-ledger",
-        "blockchain-ledger.ko",
-        "proof-of-work",
-        "proof-of-work.ko",
-        "signatures",
-        "signatures.ko",
-        "consensus",
-        "consensus.ko",
+        "needmorecoin-sentence.ko",
+        "needmorecoin-sentence.en",
+        "needmorecoin-beginner.ko",
+        "needmorecoin-beginner.en",
+        "needmorecoin-advanced.ko",
+        "needmorecoin-advanced.en",
         "native-factorial",
         "bootstrap",
         "bootstrap.ko",

@@ -91,7 +91,7 @@ warns that its `bin` directory is not on `PATH`. It does not reinstall NME.
 Windows PowerShell uses the PATH step in the
 [installation guide](docs/install.md#windows-11).
 
-Expected version: `nme 0.0.1-beta.19`.
+Expected version: `nme 0.0.1-beta.23`.
 
 Windows, macOS, and Linux instructions are in the
 [installation guide](docs/install.md). The [five-minute guide](docs/getting-started.md)
@@ -122,15 +122,27 @@ conditions, loops, random numbers, and value updates in one beginner-friendly
 program.
 The matching English companion is [`roulette.en.nme`](examples/roulette.en.nme).
 
-To see how a blockchain stores data, secure it, and reach agreement, follow
-the four educational projects (learning only, never investment advice):
-[`blockchain-ledger.nme`](examples/blockchain-ledger.nme) (beginner),
-[`proof-of-work.nme`](examples/proof-of-work.nme) (intermediate),
-[`signatures.nme`](examples/signatures.nme) (advanced), and
-[`consensus.nme`](examples/consensus.nme) (expert), each with a Korean twin.
-For a real proof-of-knowledge example rather than a hash/signature simulation,
-see [`zk-schnorr-relay.ko.nme`](examples/zk-schnorr-relay.ko.nme) and its
-English twin [`zk-schnorr-relay.en.nme`](examples/zk-schnorr-relay.en.nme).
+To build a small cryptocurrency with real cryptographic calculations and proof
+of work, compare the six `NeedMoreCoin` examples: Korean sentence
+[`needmorecoin-sentence.ko.nme`](examples/needmorecoin-sentence.ko.nme), English
+sentence [`needmorecoin-sentence.en.nme`](examples/needmorecoin-sentence.en.nme),
+Korean beginner [`needmorecoin-beginner.ko.nme`](examples/needmorecoin-beginner.ko.nme),
+English beginner [`needmorecoin-beginner.en.nme`](examples/needmorecoin-beginner.en.nme),
+Korean advanced [`needmorecoin-advanced.ko.nme`](examples/needmorecoin-advanced.ko.nme),
+and English advanced [`needmorecoin-advanced.en.nme`](examples/needmorecoin-advanced.en.nme).
+The Korean sentence source is regression-tested to contain only Hangul,
+decimal digits, and whitespace; the English sentence source is tested to
+contain only ASCII letters, decimal digits, and whitespace. Both tests also
+require every non-empty line to be lowered by NME. The
+[NeedMoreCoin guide](docs/guides/cryptocurrency.md)
+walks through wallets, context-bound transaction proofs, fees, replay-resistant
+transaction nonces, SHA-256 proof of work, previous-hash linkage, tamper
+detection, full state replay, and supply conservation. This remains a learning
+single-process blockchain core, not a P2P network or production cryptocurrency.
+
+For a separate real proof-of-knowledge example rather than a hash/signature
+simulation, see [`zk-schnorr-relay.ko.nme`](examples/zk-schnorr-relay.ko.nme)
+and its English twin [`zk-schnorr-relay.en.nme`](examples/zk-schnorr-relay.en.nme).
 
 Programs can import named values from other `.nme` files in the same folder — see the [`examples/modules/`](examples/modules/) pair and `from "shapes.nme" import rect, circle` in a main program. The import list is the module interface, so there is no hidden global state.
 
@@ -274,6 +286,13 @@ See [Python conversion](docs/converting-python.md).
 - [Learning guides](docs/guides/index.md) — small progressive guides with
   difficulty, prerequisites, topic, and result labels; learn in order or look
   up a topic
+- [Build NeedMoreCoin](docs/guides/cryptocurrency.md) — compare one cryptocurrency
+  across six syntax/language variants and follow wallets, transaction proofs,
+  proof of work, and full-chain validation
+- [How to write strong NME examples](docs/guides/example-authoring.md) — repository
+  rules for learning goals, syntax levels, failure cases, regression tests, and review
+- [Example template](docs/guides/example-template.md) — design card, six-file
+  skeleton, guide outline, and regression-test starter
 - [Learning path](docs/tutorial.md) — six projects: Hello World, conversation,
   number guessing, mixed Python, the time-loop game, and a tiny compiler
 - [VS Code, Cursor, and Zed](docs/editors.md) — ready tasks and file setup

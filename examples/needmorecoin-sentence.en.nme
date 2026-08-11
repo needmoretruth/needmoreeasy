@@ -1,0 +1,206 @@
+use zeroknowledge latest
+
+coinname save NeedMoreCoin
+worktarget save 7237005577332262213973186563042994240829374041602535252466099000494570602496
+miningreward save 10
+transactionfee save 1
+totalsupply save 100
+
+alicesecret save zero knowledge secret make
+aliceaddress save alicesecret zero knowledge public make
+bobsecret save zero knowledge secret make
+bobaddress save bobsecret zero knowledge public make
+minersecret save zero knowledge secret make
+mineraddress save minersecret zero knowledge public make
+
+alicebalance save 100
+bobbalance save 0
+minerbalance save 0
+alicenonce save 0
+bobnonce save 0
+
+show coinname is starting
+show Alice wallet address is aliceaddress
+show Bob wallet address is bobaddress
+show Miner wallet address is mineraddress
+
+genesiscontext save coinname genesis block gives aliceaddress 100 coins
+genesismining save 1
+genesisattempts save 0
+genesiscommitment save 0
+genesishash save 0
+while genesismining
+genesisrandom save zero knowledge nonce make
+genesiscandidatecommitment save genesisrandom zero knowledge commitment make
+genesiscandidatehash save mineraddress genesiscandidatecommitment genesiscontext zero knowledge challenge make
+add 1 to genesisattempts
+if genesiscandidatehash is less than worktarget
+genesiscommitment save genesiscandidatecommitment
+genesishash save genesiscandidatehash
+genesismining save 0
+end
+end
+
+show Genesis block mined after genesisattempts attempts
+show Genesis block hash is genesishash
+
+amountone save 25
+feeone save transactionfee
+nonceone save 1
+requiredone save amountone
+add feeone to requiredone
+contextone save aliceaddress sends amountone coins to bobaddress fee feeone nonce nonceone
+proofone save alicesecret contextone zero knowledge proof make
+signatureonevalid save aliceaddress proofone contextone zero knowledge verify
+transactiononeapproved save 0
+if signatureonevalid
+if amountone is greater than 0
+if alicebalance is greater than or equal to requiredone
+if nonceone is equal to 1
+transactiononeapproved save 1
+end
+end
+end
+end
+
+if transactiononeapproved
+subtract amountone from alicebalance
+subtract feeone from alicebalance
+add amountone to bobbalance
+alicenonce save nonceone
+end
+
+blockonecontext save coinname block one previous genesishash transaction contextone proof proofone miner mineraddress reward miningreward
+blockonemining save transactiononeapproved
+blockoneattempts save 0
+blockonecommitment save 0
+blockonehash save 0
+while blockonemining
+blockonerandom save zero knowledge nonce make
+blockonecandidatecommitment save blockonerandom zero knowledge commitment make
+blockonecandidatehash save mineraddress blockonecandidatecommitment blockonecontext zero knowledge challenge make
+add 1 to blockoneattempts
+if blockonecandidatehash is less than worktarget
+blockonecommitment save blockonecandidatecommitment
+blockonehash save blockonecandidatehash
+blockonemining save 0
+end
+end
+
+if transactiononeapproved
+add miningreward to minerbalance
+add feeone to minerbalance
+add miningreward to totalsupply
+end
+
+show Block one mined after blockoneattempts attempts
+show Block one hash is blockonehash
+
+amounttwo save 7
+feetwo save transactionfee
+noncetwo save 1
+requiredtwo save amounttwo
+add feetwo to requiredtwo
+contexttwo save bobaddress sends amounttwo coins to aliceaddress fee feetwo nonce noncetwo
+prooftwo save bobsecret contexttwo zero knowledge proof make
+signaturetwovalid save bobaddress prooftwo contexttwo zero knowledge verify
+transactiontwoapproved save 0
+if signaturetwovalid
+if amounttwo is greater than 0
+if bobbalance is greater than or equal to requiredtwo
+if noncetwo is equal to 1
+transactiontwoapproved save 1
+end
+end
+end
+end
+
+if transactiontwoapproved
+subtract amounttwo from bobbalance
+subtract feetwo from bobbalance
+add amounttwo to alicebalance
+bobnonce save noncetwo
+end
+
+blocktwocontext save coinname block two previous blockonehash transaction contexttwo proof prooftwo miner mineraddress reward miningreward
+blocktwomining save transactiontwoapproved
+blocktwoattempts save 0
+blocktwocommitment save 0
+blocktwohash save 0
+while blocktwomining
+blocktworandom save zero knowledge nonce make
+blocktwocandidatecommitment save blocktworandom zero knowledge commitment make
+blocktwocandidatehash save mineraddress blocktwocandidatecommitment blocktwocontext zero knowledge challenge make
+add 1 to blocktwoattempts
+if blocktwocandidatehash is less than worktarget
+blocktwocommitment save blocktwocandidatecommitment
+blocktwohash save blocktwocandidatehash
+blocktwomining save 0
+end
+end
+
+if transactiontwoapproved
+add miningreward to minerbalance
+add feetwo to minerbalance
+add miningreward to totalsupply
+end
+
+show Block two mined after blocktwoattempts attempts
+show Block two hash is blocktwohash
+
+verifyone save aliceaddress proofone contextone zero knowledge verify
+verifytwo save bobaddress prooftwo contexttwo zero knowledge verify
+verifygenesishash save mineraddress genesiscommitment genesiscontext zero knowledge challenge make
+verifyblockonehash save mineraddress blockonecommitment blockonecontext zero knowledge challenge make
+verifyblocktwohash save mineraddress blocktwocommitment blocktwocontext zero knowledge challenge make
+chainvalid save 0
+if verifyone
+if verifytwo
+if verifygenesishash is equal to genesishash
+if verifygenesishash is less than worktarget
+if verifyblockonehash is equal to blockonehash
+if verifyblockonehash is less than worktarget
+if verifyblocktwohash is equal to blocktwohash
+if verifyblocktwohash is less than worktarget
+chainvalid save 1
+end
+end
+end
+end
+end
+end
+end
+end
+
+if chainvalid
+show Entire blockchain verified successfully
+end
+
+tamperedcontext save aliceaddress sends 250 coins to bobaddress fee feeone nonce nonceone
+tamperedsignaturevalid save aliceaddress proofone tamperedcontext zero knowledge verify
+tamperedblockcontext save coinname block one previous genesishash transaction tamperedcontext proof proofone miner mineraddress reward miningreward
+tamperedblockhash save mineraddress blockonecommitment tamperedblockcontext zero knowledge challenge make
+if tamperedsignaturevalid is equal to false
+show Signature rejected the changed transaction amount
+end
+if tamperedblockhash is not equal to blockonehash
+show Block hash rejected the changed transaction amount
+end
+
+replayexpectednonce save alicenonce
+add 1 to replayexpectednonce
+if nonceone is not equal to replayexpectednonce
+show Transaction nonce rejected replay of the same transaction
+end
+
+balancesum save alicebalance
+add bobbalance to balancesum
+add minerbalance to balancesum
+show Alice final balance is alicebalance coins
+show Bob final balance is bobbalance coins
+show Miner final balance is minerbalance coins
+show Total supply is totalsupply coins
+show Sum of balances is balancesum coins
+if balancesum is equal to totalsupply
+show Monetary supply verification succeeded
+end

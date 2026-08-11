@@ -91,7 +91,7 @@ Cargo가 설치한 `bin` 폴더가 `PATH`에 없다고 경고하면 macOS/Linux�
 명령이 아닙니다. Windows PowerShell은
 [설치 안내](docs/install.ko.md#windows-11)의 PATH 단계를 사용하세요.
 
-표시될 버전은 `nme 0.0.1-beta.19`입니다.
+표시될 버전은 `nme 0.0.1-beta.23`입니다.
 
 Windows, macOS, Linux별 과정은 [설치 안내](docs/install.ko.md)에 있습니다.
 프로그래밍을 전혀 모른다면 [5분 시작 안내](docs/getting-started.ko.md)부터
@@ -117,14 +117,23 @@ nme 모듈
 랜덤 숫자, 값 변경을 하나의 초보자용 프로그램에서 함께 연습할 수 있습니다.
 같은 내용을 영어로 쓴 [`roulette.en.nme`](examples/roulette.en.nme)도 있습니다.
 
-블록체인이 데이터를 저장하고, 보호하고, 합의에 이르는 방법을 배우려면 교육용
-프로젝트 네 개를 따라가 보세요(학습용이며 투자 조언이 아닙니다):
-[`blockchain-ledger.ko.nme`](examples/blockchain-ledger.ko.nme)(초급),
-[`proof-of-work.ko.nme`](examples/proof-of-work.ko.nme)(중급),
-[`signatures.ko.nme`](examples/signatures.ko.nme)(고급),
-[`consensus.ko.nme`](examples/consensus.ko.nme)(초고급). 영어판은
-blockchain-ledger.nme, proof-of-work.nme, signatures.nme, consensus.nme입니다.
-해시나 서명 모의가 아니라 실제 지식 증명 계산을 보고 싶다면
+실제 암호 계산과 작업증명을 포함한 작은 암호화폐를 만들고 싶다면 `NeedMoreCoin`
+예제 여섯 개를 비교해 보세요. 문장형 한국어
+[`needmorecoin-sentence.ko.nme`](examples/needmorecoin-sentence.ko.nme), 문장형 영어
+[`needmorecoin-sentence.en.nme`](examples/needmorecoin-sentence.en.nme), 초급 한국어
+[`needmorecoin-beginner.ko.nme`](examples/needmorecoin-beginner.ko.nme), 초급 영어
+[`needmorecoin-beginner.en.nme`](examples/needmorecoin-beginner.en.nme), 고급 한국어
+[`needmorecoin-advanced.ko.nme`](examples/needmorecoin-advanced.ko.nme), 고급 영어
+[`needmorecoin-advanced.en.nme`](examples/needmorecoin-advanced.en.nme)입니다. 한국어
+문장형 한국어 파일은 한글·숫자·공백만, 문장형 영어 파일은 영문자·숫자·공백만
+사용하도록 자동 검사합니다. 두 파일 모두 모든 비어 있지 않은 줄이 실제 NME로
+변환되는지도 검사합니다. 지갑, 문맥에 묶인 거래 증명, 수수료, 거래번호 재전송
+방지, SHA-256 작업증명, 이전 해시 연결,
+변조 검출, 전체 상태 재검증, 발행량 보존을 따라가는 자세한 설명은
+[니드모어코인 만들기](docs/guides/cryptocurrency.ko.md)를 보세요. 이 예제는
+학습용 단일 프로세스 블록체인 핵심이며 P2P 네트워크나 프로덕션 코인은 아닙니다.
+
+해시나 서명 모의가 아니라 실제 지식 증명 계산을 별도로 보고 싶다면
 [`zk-schnorr-relay.ko.nme`](examples/zk-schnorr-relay.ko.nme)와 영어판
 [`zk-schnorr-relay.en.nme`](examples/zk-schnorr-relay.en.nme)를 보세요.
 
@@ -266,6 +275,12 @@ nme 변환 app.py --level 문장형 --language 한국어 -o app.nme
   혼용, 모듈, 제한
 - [학습 가이드](docs/guides/index.ko.md) — 난이도, 선수 지식, 주제, 결과물을
   표시한 작은 점진적 가이드. 순서대로 배우거나 주제로 찾아볼 수 있습니다
+- [니드모어코인 만들기](docs/guides/cryptocurrency.ko.md) — 같은 암호화폐를 여섯
+  문법·언어 버전으로 비교하며 지갑, 거래 증명, 작업증명, 전체 사슬 검증을 따라갑니다
+- [좋은 NME 예제 만드는 법](docs/guides/example-authoring.ko.md) — 학습 목표,
+  문법 단계, 실패 사례, 자동 검사, 리뷰 기준을 정하는 저장소 예제 규칙
+- [예제 템플릿](docs/guides/example-template.ko.md) — 새 예제를 바로 시작할 수 있는
+  설계 카드, 6종 파일 뼈대, 가이드와 테스트 틀
 - [학습 과정](docs/tutorial.ko.md) — 여섯 프로젝트: Hello World, 대화,
   숫자 맞히기, Python 혼용, 타임루프 게임, NME로 작은 컴파일러 만들기
 - [VS Code, Cursor, Zed](docs/editors.ko.md) — 준비된 작업과 파일 설정
