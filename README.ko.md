@@ -91,7 +91,7 @@ Cargo가 설치한 `bin` 폴더가 `PATH`에 없다고 경고하면 macOS/Linux�
 명령이 아닙니다. Windows PowerShell은
 [설치 안내](docs/install.ko.md#windows-11)의 PATH 단계를 사용하세요.
 
-표시될 버전은 `nme 0.0.1-beta.15`입니다.
+표시될 버전은 `nme 0.0.1-beta.16`입니다.
 
 Windows, macOS, Linux별 과정은 [설치 안내](docs/install.ko.md)에 있습니다.
 프로그래밍을 전혀 모른다면 [5분 시작 안내](docs/getting-started.ko.md)부터
@@ -124,6 +124,9 @@ nme 모듈
 [`signatures.ko.nme`](examples/signatures.ko.nme)(고급),
 [`consensus.ko.nme`](examples/consensus.ko.nme)(초고급). 영어판은
 blockchain-ledger.nme, proof-of-work.nme, signatures.nme, consensus.nme입니다.
+해시나 서명 모의가 아니라 실제 지식 증명 계산을 보고 싶다면
+[`zk-schnorr-relay.ko.nme`](examples/zk-schnorr-relay.ko.nme)와 영어판
+[`zk-schnorr-relay.en.nme`](examples/zk-schnorr-relay.en.nme)를 보세요.
 
 NME는 컴파일러도 쓸 수 있습니다: [`bootstrap.ko.nme`](examples/bootstrap.ko.nme)가 아주 작은 언어를 Python으로 변환해 실행합니다 — 셀프호스팅의 씨앗(영어판 `bootstrap.nme`).
 
@@ -174,7 +177,7 @@ nme 컴파일 examples/hello-sentence.nme -o hello
 완전히 호환되는 모든 프로그램이 무조건 더 빠르고 작아진다는 거짓 보장은 하지
 않습니다.
 
-## 버전이 붙은 랜덤·파일 도구
+## 버전이 붙은 랜덤·파일·영지식 도구
 
 ```text
 랜덤 사용 최신
@@ -200,6 +203,29 @@ json저장("save.json", 점수)
 
 `file`은 버전 `0.0.1`로 `파일읽기`/`file_read`, `파일쓰기`/`file_write`,
 `json읽기`/`json_load`, `json저장`/`json_save`를 제공합니다.
+
+`zero_knowledge` / `영지식` 어댑터도 버전 `0.0.1`로 내장됩니다. Python의
+`secrets` 보안 난수와 3072비트 MODP 그룹 15의 부분군을 사용해 유한체
+슈노르 지식 증명의 세 단계 계산을 실제로 수행합니다. 한국어 예제의 사용자
+코드는 한국어 문장형으로만 적습니다.
+
+```text
+영지식 사용 최신
+비밀값은 영지식 비밀 만들기
+공개값은 비밀값으로 영지식 공개값 만들기
+일회값은 영지식 일회값 만들기
+약속값은 일회값으로 영지식 약속 만들기
+도전값은 영지식 도전 만들기
+응답값은 일회값과 비밀값과 도전값으로 영지식 응답 만들기
+검증값은 공개값과 약속값과 도전값과 응답값으로 영지식 검증
+```
+
+[`zk-schnorr-relay.ko.nme`](examples/zk-schnorr-relay.ko.nme)를 실행하면
+송신자 에이, 수신자 비, 악성 중계자 씨의 저장 전사록 재전송, 영지식
+전사록 모의, 별개의 실시간 중계 상황을 한 번에 확인할 수 있습니다.
+수학적으로 실제 슈노르 계산을 쓰는 학습·기준 구현이지만, 부채널 방어까지
+감사된 실서비스 암호 라이브러리를 대신하는 용도는 아닙니다.
+
 `nme 모듈`로 설치된 버전과 이름을 확인합니다.
 
 문장형에서는 모듈 선언이나 특수문자 없이도 랜덤을 바로 쓸 수 있습니다.

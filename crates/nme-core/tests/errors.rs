@@ -339,7 +339,10 @@ fn a_stray_end_after_nme_code_is_reported() {
     assert!(message.contains("hint"), "{message}");
 
     let korean = bilingual_err("안녕 말해줘\n끝\n");
-    assert!(korean.contains("이 `끝`을 닫을 열린 NME 블록이 없어요"), "{korean}");
+    assert!(
+        korean.contains("이 `끝`을 닫을 열린 NME 블록이 없어요"),
+        "{korean}"
+    );
 }
 
 #[test]
@@ -351,8 +354,5 @@ fn an_extra_end_after_a_closed_block_is_reported() {
 #[test]
 fn a_flat_block_still_requires_its_own_end() {
     let message = err("점수가 5와 같으면\n만약 true라면\n    say \"a\"\n끝\n");
-    assert!(
-        message.contains("missing its closing `end`"),
-        "{message}"
-    );
+    assert!(message.contains("missing its closing `end`"), "{message}");
 }
