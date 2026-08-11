@@ -1,0 +1,152 @@
+use zeroknowledge latest
+
+coinname save NeedMoreCoin
+difficulty save 4
+target save 7237005577332262213973186563042994240829374041602535252466099000494570602496
+miningreward save 10
+transactionfee save 1
+totalsupply save 100
+
+alicesecret save zero knowledge secret make
+aliceaddress save alicesecret zero knowledge public make
+bobsecret save zero knowledge secret make
+bobaddress save bobsecret zero knowledge public make
+minersecret save zero knowledge secret make
+mineraddress save minersecret zero knowledge public make
+
+alicebalance save 100
+bobbalance save 0
+minerbalance save 0
+alicenonce save 0
+
+show coinname starts now
+show Proof of work difficulty is difficulty bits
+
+genesiscontext save coinname genesis block gives aliceaddress 100 coins
+genesismining save true
+genesistries save 0
+genesiscommitment save 0
+genesishash save 0
+while genesismining
+genesisnonce save zero knowledge nonce make
+genesiscandidatecommitment save genesisnonce zero knowledge commitment make
+genesishashcandidate save mineraddress genesiscandidatecommitment genesiscontext zero knowledge challenge make
+genesistries add 1
+if genesishashcandidate is less than target
+genesiscommitment save genesiscandidatecommitment
+genesishash save genesishashcandidate
+genesismining save false
+end
+end
+
+show Genesis block mined
+show Genesis work attempts genesistries
+
+transactionamount save 25
+transactionfeev alue save transactionfee
+transactionnonce save 1
+expectednonce save alicenonce
+expectednonce add 1
+neededbalance save transactionamount
+neededbalance add transactionfee
+transactioncontext save aliceaddress sends transactionamount coins to bobaddress fee transactionfee nonce transactionnonce
+transactionproof save alicesecret transactioncontext zero knowledge proof make
+signaturevalid save aliceaddress transactionproof transactioncontext zero knowledge verify
+transactionaccepted save false
+if signaturevalid
+if transactionamount is greater than 0
+if alicebalance is greater than or equal to neededbalance
+if transactionnonce equals expectednonce
+transactionaccepted save true
+end
+end
+end
+end
+
+if transactionaccepted
+subtract transactionamount from alicebalance
+subtract transactionfee from alicebalance
+add transactionamount to bobbalance
+alicenonce save transactionnonce
+end
+
+blockcontext save coinname block one previous genesishash transaction transactioncontext proof transactionproof miner mineraddress reward miningreward
+blockmining save transactionaccepted
+blocktries save 0
+blockcommitment save 0
+blockhash save 0
+while blockmining
+blocknonce save zero knowledge nonce make
+blockcandidatecommitment save blocknonce zero knowledge commitment make
+blockhashcandidate save mineraddress blockcandidatecommitment blockcontext zero knowledge challenge make
+blocktries add 1
+if blockhashcandidate is less than target
+blockcommitment save blockcandidatecommitment
+blockhash save blockhashcandidate
+blockmining save false
+end
+end
+
+if transactionaccepted
+add miningreward to minerbalance
+add transactionfee to minerbalance
+add miningreward to totalsupply
+end
+
+show Block one mined
+show Block one work attempts blocktries
+
+checktransactioncontext save aliceaddress sends transactionamount coins to bobaddress fee transactionfee nonce transactionnonce
+checksignature save aliceaddress transactionproof checktransactioncontext zero knowledge verify
+checkgenesiscontext save coinname genesis block gives aliceaddress 100 coins
+checkgenesishash save mineraddress genesiscommitment checkgenesiscontext zero knowledge challenge make
+checkblockcontext save coinname block one previous genesishash transaction checktransactioncontext proof transactionproof miner mineraddress reward miningreward
+checkblockhash save mineraddress blockcommitment checkblockcontext zero knowledge challenge make
+balancesum save alicebalance
+balancesum add bobbalance
+balancesum add minerbalance
+
+chainvalid save false
+if checksignature
+if checkgenesishash equals genesishash
+if checkgenesishash is less than target
+if checkblockhash equals blockhash
+if checkblockhash is less than target
+if balancesum equals totalsupply
+chainvalid save true
+end
+end
+end
+end
+end
+end
+
+if chainvalid
+show Full blockchain verification succeeded
+end
+
+tamperedamount save 250
+tamperedcontext save aliceaddress sends tamperedamount coins to bobaddress fee transactionfee nonce transactionnonce
+tamperedsignaturevalid save aliceaddress transactionproof tamperedcontext zero knowledge verify
+tamperedblockcontext save coinname block one previous genesishash transaction tamperedcontext proof transactionproof miner mineraddress reward miningreward
+tamperedblockhash save mineraddress blockcommitment tamperedblockcontext zero knowledge challenge make
+if tamperedsignaturevalid equals false
+show Signature rejected the changed transaction amount
+end
+if tamperedblockhash is not equal to blockhash
+show Block hash rejected the changed transaction amount
+end
+
+replayexpectednonce save alicenonce
+replayexpectednonce add 1
+if transactionnonce is not equal to replayexpectednonce
+show Transaction nonce rejected replay of the old transaction
+end
+
+show Alice final balance alicebalance
+show Bob final balance bobbalance
+show Miner final balance minerbalance
+show Total supply totalsupply
+if balancesum equals totalsupply
+show Monetary supply conservation verified
+end
