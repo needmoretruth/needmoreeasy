@@ -178,6 +178,10 @@ pub enum DiagnosticCode {
     CliNativeRunStartFailed,
     /// A temporary working folder could not be created.
     CliFolderCreateFailed,
+    /// Two imported `.nme` files would get the same Python module name.
+    CliImportedModuleNameCollision,
+    /// `nme compile` does not yet support imported `.nme` modules.
+    CliCompileModuleImportsUnsupported,
 }
 
 impl DiagnosticCode {
@@ -249,11 +253,13 @@ impl DiagnosticCode {
             Self::CliPackageInstallFailed => "E9025",
             Self::CliNativeRunStartFailed => "E9026",
             Self::CliFolderCreateFailed => "E9027",
+            Self::CliImportedModuleNameCollision => "E9028",
+            Self::CliCompileModuleImportsUnsupported => "E9029",
         }
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 66] = [
+    pub const ALL: [DiagnosticCode; 68] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -320,6 +326,8 @@ impl DiagnosticCode {
         Self::CliPackageInstallFailed,
         Self::CliNativeRunStartFailed,
         Self::CliFolderCreateFailed,
+        Self::CliImportedModuleNameCollision,
+        Self::CliCompileModuleImportsUnsupported,
     ];
 
     pub fn from_code(code: &str) -> Option<Self> {
@@ -807,6 +815,20 @@ impl DiagnosticCode {
                 "임시 작업 폴더를 만들 수 없습니다",
                 "NME could not create the temporary working folder needed for a native build or imported modules. Check the temporary-directory setting and folder permissions, then try again.",
                 "NME가 네이티브 빌드나 가져온 모듈에 필요한 임시 작업 폴더를 만들 수 없습니다. 임시 폴더 설정과 폴더 권한을 확인한 뒤 다시 시도하세요.",
+            ),
+            Self::CliImportedModuleNameCollision => (
+                "E9028",
+                "two imported modules have the same name",
+                "가져온 모듈 두 개의 이름이 같습니다",
+                "NME found two imported `.nme` files with the same name without `.nme`, so they would become the same Python module. Rename one file or import only one of them.",
+                "NME가 `.nme`를 뺀 이름이 같은 가져온 모듈을 두 개 찾았습니다. 두 모듈이 같은 Python 모듈이 되므로 파일 하나의 이름을 바꾸거나 하나만 가져오세요.",
+            ),
+            Self::CliCompileModuleImportsUnsupported => (
+                "E9029",
+                "module imports are not supported by `nme compile`",
+                "`nme compile`은 모듈 가져오기를 지원하지 않습니다",
+                "`nme compile` currently compiles one transpiled program and does not bundle imported `.nme` modules. Use `nme run`, `nme check`, or `nme build` for a program that imports another `.nme` file.",
+                "`nme compile`은 현재 변환한 프로그램 하나만 컴파일하며 가져온 `.nme` 모듈을 함께 묶지 않습니다. 다른 `.nme` 파일을 가져오는 프로그램은 `nme 실행`, `nme 검사`, 또는 `nme 빌드`를 사용하세요.",
             ),
         };
         CodeExplanation {

@@ -524,7 +524,9 @@ program, transpiles it, and makes it importable; module errors surface with
 the module's file name. Imports may chain (`helper.nme` can import another
 module), the file name must be a Python identifier (`helper.nme`, not
 `my-helper.nme` or `shapes.ko.nme`), and two imported modules must not share a
-name. `nme compile` does not support module imports yet.
+name; that collision is reported as E9028 with a repair suggestion. `nme compile`
+does not support module imports yet and reports E9029; use `nme run`, `nme check`,
+or `nme build` for a program that imports another `.nme` file.
 
 Sentence syntax can read and write files without the module line or Python
 punctuation. The path is always a quoted string:

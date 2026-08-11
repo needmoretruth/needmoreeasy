@@ -398,6 +398,35 @@ fn module_imports_reach_nested_imports() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+#[test]
+fn imported_module_stem_collisions_are_bilingual_and_precise() {
+    let dir = temporary_dir("module-stem-collision");
+    std::fs::create_dir_all(dir.join("one")).unwrap();
+    std::fs::create_dir_all(dir.join("two")).unwrap();
+    write_nme(&dir.join("one"), "helper.nme", "first = 1\n");
+    write_nme(&dir.join("two"), "helper.nme", "second = 2\n");
+    write_nme(
+        &dir,
+        "main.nme",
+        "from \"one/helper.nme\" import first\nfrom \"two/helper.nme\" import second\n",
+    );
+
+    let output = run_in(&dir, &["실행", "main"], None);
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(
+        error.contains("오류[E9028]: 가져온 모듈 두 개가 모두 `helper`라는 이름입니다"),
+        "{error}"
+    );
+    assert!(
+        error.contains("error[E9028]: two imported modules are both named `helper`"),
+        "{error}"
+    );
+    assert!(!error.contains("E9003"), "{error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 #[cfg(unix)]
 #[test]
 fn korean_module_staging_failures_are_bilingual_and_precise() {
@@ -929,6 +958,32 @@ fn compile_invokes_the_native_backend_and_creates_the_requested_artifact() {
     let invoked = std::fs::read_to_string(arguments).unwrap();
     assert!(invoked.contains("-m\nnuitka\n"), "{invoked}");
     assert!(invoked.contains("--onefile"), "{invoked}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn compile_module_imports_have_a_precise_bilingual_diagnostic() {
+    let dir = temporary_dir("compile-module-import");
+    write_nme(&dir, "helper.nme", "value = 1\n");
+    write_nme(
+        &dir,
+        "main.nme",
+        "from \"helper.nme\" import value\nshow value\n",
+    );
+
+    let output = run_in(&dir, &["컴파일", "main"], None);
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(
+        error.contains("오류[E9029]: `nme compile`은 아직 모듈 가져오기를 지원하지 않습니다"),
+        "{error}"
+    );
+    assert!(
+        error.contains("error[E9029]: module imports are not supported by `nme compile` yet"),
+        "{error}"
+    );
+    assert!(!error.contains("E9003"), "{error}");
 
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -1825,6 +1880,30 @@ fn error_lookup_commands_print_the_requested_explanation() {
         stdout(&folder_create)
     );
 
+    let module_collision = nme(&["en", "E9028"]);
+    assert!(
+        module_collision.status.success(),
+        "{}",
+        stderr(&module_collision)
+    );
+    assert!(
+        stdout(&module_collision).contains("two imported modules have the same name"),
+        "{}",
+        stdout(&module_collision)
+    );
+
+    let compile_imports = nme(&["ko", "E9029"]);
+    assert!(
+        compile_imports.status.success(),
+        "{}",
+        stderr(&compile_imports)
+    );
+    assert!(
+        stdout(&compile_imports).contains("`nme compile`은 모듈 가져오기를 지원하지 않습니다"),
+        "{}",
+        stdout(&compile_imports)
+    );
+
     let unknown = nme(&["ko", "E9999"]);
     assert!(!unknown.status.success());
     let unknown_error = stderr(&unknown);
@@ -1843,6 +1922,7 @@ fn error_lookup_without_a_code_lists_every_code() {
     assert!(out.contains("E0001"), "{out}");
     assert!(out.contains("E0702"), "{out}");
     assert!(out.contains("E9025"), "{out}");
+    assert!(out.contains("E9029"), "{out}");
     assert!(out.contains("E0102  `break` outside a loop"), "{out}");
 
     let korean = nme(&["ko"]);

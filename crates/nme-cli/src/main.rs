@@ -785,7 +785,7 @@ fn command_compile(args: &[String], language: MessageLanguage) -> ExitCode {
     };
     if !compiled.imports.is_empty() {
         return fail(
-            nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
+            nme_core::diagnostics::DiagnosticCode::CliCompileModuleImportsUnsupported,
             language,
             "module imports are not supported by `nme compile` yet; run the program with `nme run`",
             "`nme compile`은 아직 모듈 가져오기를 지원하지 않습니다. `nme run`으로 실행하세요",
@@ -1630,7 +1630,7 @@ fn transpile_modules(
             .to_string();
         if let Some((existing, _)) = modules.iter().find(|(name, _)| name == &stem) {
             return Err(fail(
-                nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
+                nme_core::diagnostics::DiagnosticCode::CliImportedModuleNameCollision,
                 language,
                 &format!("two imported modules are both named `{existing}`; rename one of them"),
                 &format!("가져온 모듈 두 개가 모두 `{existing}`라는 이름입니다. 하나를 바꾸세요"),

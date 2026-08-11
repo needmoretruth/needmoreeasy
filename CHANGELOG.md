@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.33 — 2026-08-12
+
+- Give imported module-name collisions their own stable diagnostic, E9028,
+  instead of reporting them as invalid option values.
+- Give the current `nme compile` module-import limitation its own stable
+  diagnostic, E9029, with bilingual lookup and CLI regression coverage.
+
 ## 0.0.1-beta.32 — 2026-08-12
 
 - Add E9027 for temporary working-folder creation failures instead of labeling
