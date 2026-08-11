@@ -2,7 +2,9 @@
 
 [English](17-blockchain.md) | 한국어
 
-[README](../../README.ko.md) | [가이드](index.ko.md) | [전체 니드모어코인 가이드](cryptocurrency.ko.md)
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
+
+[전체 니드모어코인 가이드](cryptocurrency.ko.md)
 
 - 난이도: ★★★★☆
 - 선수 지식: [03 — 저장](03-set.ko.md), [06 — 조건](06-if.ko.md), [07 — 동안](07-while.ko.md)

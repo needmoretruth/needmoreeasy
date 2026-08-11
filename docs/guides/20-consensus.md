@@ -2,6 +2,8 @@
 
 English | [한국어](20-consensus.ko.md)
 
+[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+
 [19 — Transaction proofs](19-signatures.md) | [Full NeedMoreCoin guide](cryptocurrency.md)
 
 - Difficulty: ★★★★★

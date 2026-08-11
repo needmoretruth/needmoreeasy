@@ -2,7 +2,9 @@
 
 English | [한국어](17-blockchain.ko.md)
 
-[README](../../README.md) | [Guides](index.md) | [Full NeedMoreCoin guide](cryptocurrency.md)
+[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+
+[Full NeedMoreCoin guide](cryptocurrency.md)
 
 - Difficulty: ★★★★☆
 - Prerequisites: [03 — Set](03-set.md), [06 — If](06-if.md), [07 — While](07-while.md)

@@ -2,7 +2,7 @@
 
 [English](native-backend.md) | 한국어
 
-[Home](../README.md) | [Install](install.md) | [Getting started](getting-started.md) | [Tutorial](tutorial.md) | [Language reference](language.md) | [Guides](guides/index.md)
+[README](../README.ko.md) | [설치](install.ko.md) | [시작하기](getting-started.ko.md) | [학습 과정](tutorial.ko.md) | [문법 안내](language.ko.md) | [가이드](guides/index.ko.md)
 
 > 상태: v0이 구현되었습니다(`nme native 실행`/`nme native 빌드`). 정적 타입
 > 코어 부분집합 — 정수 값과 산술, 비교 조건의 문장형 `while`/`if`/`else`/

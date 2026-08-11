@@ -2,10 +2,10 @@
 
 [English](80-argv.md) | 한국어
 
-[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
 - 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [14 — JSON](14-json.md), [61 — Mini bank](61-bank.md)
+- 선수 지식 (Prerequisites): [14 — JSON](14-json.ko.md), [61 — Mini bank](61-bank.ko.md)
 - 주제 (Topic): CLI 도구 / command-line tools
 - 결과물 (Result): `nme r todo add "buy milk"`처럼 명령 줄에서 말을 받아 동작하는 할 일 도구 / a todo tool that takes commands like `nme r todo add "buy milk"` on the command line
 
@@ -67,13 +67,13 @@ Python은 이것들을 `sys.argv` 목록에 넣습니다.
    3
    ```
 
-   `int(sys.argv[1])`이 단어 `"6"`을 숫자 6으로 바꿉니다([02](02-ask.md)의
+   `int(sys.argv[1])`이 단어 `"6"`을 숫자 6으로 바꿉니다([02](02-ask.ko.md)의
    변환과 같음). 확인이 없으면 `nme r dice`는 빈 목록에서 오류로
    무너집니다. 올바른 명령을 보여 주는 "usage:" 줄이 인자 누락에
    친절하게 답하는 방법입니다.
 
 3. 인자는 명령 줄 도구를 만듭니다: 프로그램 하나, 명령 여러 개. 할 일
-   목록은 항목을 `todo.json`에 저장하고([14](14-json.md)) `add`, `done`,
+   목록은 항목을 `todo.json`에 저장하고([14](14-json.ko.md)) `add`, `done`,
    `list` 명령을 받습니다. `todo.nme`로 저장하세요:
 
    ```text
@@ -120,7 +120,7 @@ Python은 이것들을 `sys.argv` 목록에 넣습니다.
    ```
 
    `load_todos`는 파일이 아직 없으면 빈 목록을 돌려줍니다
-   ([68](68-errors.md)의 `try`/`except` 참고), `enumerate`는 목록에 1부터
+   ([68](68-errors.ko.md)의 `try`/`except` 참고), `enumerate`는 목록에 1부터
    번호를 붙입니다. 항목마다 `text`와 `done` 깃발이 있는 dict이고 —
    `json_save`가 쓰고 `json_load`가 다시 읽는 바로 그 모양입니다.
 
@@ -160,6 +160,6 @@ Python은 이것들을 `sys.argv` 목록에 넣습니다.
   알려 줍니다.
 - `int(sys.argv[1])`이 인자 단어를 숫자로 바꿉니다.
 - 명령 단어(`add`, `done`)와 데이터로 프로그램 하나가 여러 도구가
-  됩니다 — [61](61-bank.md) 미니 은행의 메뉴 루프를 시작 전에 미리
+  됩니다 — [61](61-bank.ko.md) 미니 은행의 메뉴 루프를 시작 전에 미리
   받은 버전입니다.
 - 따옴표가 여러 단어를 한 인자로 묶어 줍니다.

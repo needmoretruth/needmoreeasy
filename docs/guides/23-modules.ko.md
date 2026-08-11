@@ -2,10 +2,10 @@
 
 [English](23-modules.md) | 한국어
 
-[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
 - 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [15 — High score](15-high-score.md), [13 — Files](13-files.md)
+- 선수 지식 (Prerequisites): [15 — High score](15-high-score.ko.md), [13 — Files](13-files.ko.md)
 - 주제 (Topic): 모듈 / modules
 - 결과물 (Result): 프로그램을 여러 .nme 파일로 나누기 / splitting a program across .nme files
 

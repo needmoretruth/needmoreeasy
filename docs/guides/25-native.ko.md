@@ -2,10 +2,10 @@
 
 [English](25-native.md) | 한국어
 
-[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
 - 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [23 — Modules](23-modules.md), [07 — While](07-while.md)
+- 선수 지식 (Prerequisites): [23 — Modules](23-modules.ko.md), [07 — While](07-while.ko.md)
 - 주제 (Topic): 네이티브 컴파일 / native compilation
 - 결과물 (Result): CPython 없이 기계어로 실행하기 / running a program as machine code without CPython
 
@@ -84,7 +84,7 @@
 `nme-native`(Rust 크레이트)는 Python 경로와 같은 프론트엔드 AST를 받아
 모든 문장을 문서화된 코어와 대조한 뒤 C를 만듭니다. 시스템 C 컴파일러
 (`cc`)가 그것을 `-O2`로 기계어로 만듭니다.
-[구조 메모](../native-backend.md)는 이 C 백엔드를 LLVM·Cranelift와 비교하고
+[구조 메모](../native-backend.ko.md)는 이 C 백엔드를 LLVM·Cranelift와 비교하고
 왜 C가 첫 백엔드인지 설명합니다.
 
 성능은 정직하게 측정됩니다: 이 머신에서 정수 5,000만 회 반복문이

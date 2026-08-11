@@ -2,14 +2,14 @@
 
 [English](53-sets.md) | 한국어
 
-[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
 - 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [36 — Word count](36-word-count.md), [39 — Sorting](39-sorting.md)
+- 선수 지식 (Prerequisites): [36 — Word count](36-word-count.ko.md), [39 — Sorting](39-sorting.ko.md)
 - 주제 (Topic): 집합/데이터 / sets & data
 - 결과물 (Result): Python 집합으로 텍스트 파일의 고유 단어와 문장의 고유 글자 찾기 / using a Python set to find unique words in a text file, then unique letters in a sentence
 
-가이드 [36](36-word-count.md)은 반복까지 포함해 모든 단어를 셌습니다. 집합은
+가이드 [36](36-word-count.ko.md)은 반복까지 포함해 모든 단어를 셌습니다. 집합은
 고유한 값만 남기므로 `set(words)`는 다른 질문에 답합니다: 서로 *다른* 단어가
 몇 개인가?
 
@@ -23,7 +23,7 @@
    quick and lazy are fun words to say
    ```
 
-2. 읽고 나누세요([36](36-word-count.md) 참고). `set(words)`가 반복을
+2. 읽고 나누세요([36](36-word-count.ko.md) 참고). `set(words)`가 반복을
    제거하므로 `len(set(words))`가 서로 다른 단어 수를 셉니다:
 
    ```text
@@ -38,7 +38,7 @@
    중복이 없으므로 같은 단어가 두 번 들어갈 수 없습니다.
 
 3. 집합은 위치가 없어 `my_set[0]`은 실패합니다. `sorted(...)`(가이드
-   [39](39-sorting.md))는 집합을 순서 있는 목록으로 되돌려 주고, `in`은
+   [39](39-sorting.ko.md))는 집합을 순서 있는 목록으로 되돌려 주고, `in`은
    포함 여부를 확인합니다:
 
    ```text

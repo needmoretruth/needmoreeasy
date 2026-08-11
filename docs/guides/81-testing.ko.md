@@ -2,10 +2,10 @@
 
 [English](81-testing.md) | 한국어
 
-[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
 - 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [23 — Modules](23-modules.md), [46 — Expressions](46-expressions.md)
+- 선수 지식 (Prerequisites): [23 — Modules](23-modules.ko.md), [46 — Expressions](46-expressions.ko.md)
 - 주제 (Topic): 테스트 / testing
 - 결과물 (Result): 자기 함수를 예상값과 비교해 통과·실패를 보고하는 작은 테스트 실행기 / a tiny test runner that calls your own functions, compares each result with the expected value, and reports pass or fail
 
@@ -25,7 +25,7 @@
    ```
 
 2. 실행기는 줄을 돌며 함수를 호출하고 비교합니다. 함수가 값으로 줄에
-   들어갑니다 — [10](10-random.md)에서 `random_number`가 값이었던 것과
+   들어갑니다 — [10](10-random.ko.md)에서 `random_number`가 값이었던 것과
    같은 방식입니다. `testcalc.nme`로 저장하세요:
 
    ```text
@@ -95,7 +95,7 @@
    되돌리세요.
 
 5. 테스트 실행기는 커지는 프로젝트를 보호합니다. 함수는 모듈에
-   ([23](23-modules.md)), 테스트는 주 파일에 두고, 바꿀 때마다 테스트를
+   ([23](23-modules.ko.md)), 테스트는 주 파일에 두고, 바꿀 때마다 테스트를
    실행하세요:
 
    ```text

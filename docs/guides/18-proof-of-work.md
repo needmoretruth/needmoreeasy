@@ -2,6 +2,8 @@
 
 English | [한국어](18-proof-of-work.ko.md)
 
+[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+
 [17 — Cryptocurrency ledger](17-blockchain.md) | [Full NeedMoreCoin guide](cryptocurrency.md)
 
 - Difficulty: ★★★★★

@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.24 — 2026-08-12
+
+- Repair Korean documentation links so local pages lead to their Korean twins,
+  while deliberate English comparison links remain available.
+- Complete consistent bilingual navigation for the guide sequence and add a CI
+  parity check that catches wrong-language links and missing navigation rows.
+
 ## 0.0.1-beta.23 — 2026-08-12
 
 - Keep the proof-of-work difficulty labels consistent across the six

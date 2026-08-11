@@ -1,0 +1,113 @@
+#!/usr/bin/env python3
+"""Check bilingual Markdown navigation and local link parity."""
+
+from __future__ import annotations
+
+import re
+import sys
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+
+EXPECTED_GUIDE_NAVIGATION = {
+    ".md": (
+        "../../README.md",
+        "../install.md",
+        "../getting-started.md",
+        "../tutorial.md",
+        "../language.md",
+        "index.md",
+    ),
+    ".ko.md": (
+        "../../README.ko.md",
+        "../install.ko.md",
+        "../getting-started.ko.md",
+        "../tutorial.ko.md",
+        "../language.ko.md",
+        "index.ko.md",
+    ),
+}
+
+EXPECTED_GUIDE_NAVIGATION_LINES = {
+    ".md": "[Home](../../README.md) | [Install](../install.md) | "
+    "[Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | "
+    "[Language reference](../language.md) | [Guides](index.md)",
+    ".ko.md": "[README](../../README.ko.md) | [설치](../install.ko.md) | "
+    "[시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | "
+    "[문법 안내](../language.ko.md) | [가이드](index.ko.md)",
+}
+
+
+def local_markdown_target(path: Path, raw_target: str) -> Path | None:
+    target = raw_target.split("#", 1)[0].strip().strip("<>")
+    if not target or target.startswith(("http:", "https:", "mailto:")):
+        return None
+    candidate = (path.parent / target).resolve()
+    return candidate if candidate.suffix == ".md" else None
+
+
+def is_explicit_english_reference(
+    line: str, previous_line: str, line_number: int
+) -> bool:
+    # A Korean page must retain its language switch and may deliberately point
+    # readers to the English twin when it explicitly says that it is doing so.
+    return (
+        (line_number <= 4 and "English" in line)
+        or "영어" in line
+        or "영어" in previous_line
+    )
+
+
+def check_korean_links(problems: list[str]) -> None:
+    for path in ROOT.rglob("*.ko.md"):
+        if any(part in {".git", "target"} for part in path.parts):
+            continue
+        lines = path.read_text(encoding="utf-8").splitlines()
+        for line_number, line in enumerate(lines, start=1):
+            previous_line = lines[line_number - 2] if line_number > 1 else ""
+            if is_explicit_english_reference(line, previous_line, line_number):
+                continue
+            for _label, raw_target in LINK_RE.findall(line):
+                candidate = local_markdown_target(path, raw_target)
+                if candidate is None or candidate.name.endswith(".ko.md"):
+                    continue
+                korean_twin = candidate.with_name(f"{candidate.stem}.ko.md")
+                if korean_twin.is_file():
+                    relative = Path(raw_target.split("#", 1)[0].strip())
+                    problems.append(
+                        f"{path.relative_to(ROOT)}:{line_number}: "
+                        f"link to English page {relative}; use {korean_twin.name}"
+                    )
+
+
+def check_guide_navigation(problems: list[str]) -> None:
+    guides = ROOT / "docs" / "guides"
+    for path in guides.iterdir():
+        if not path.is_file() or not re.match(r"\d+-", path.name):
+            continue
+        suffix = ".ko.md" if path.name.endswith(".ko.md") else ".md"
+        expected = EXPECTED_GUIDE_NAVIGATION[suffix]
+        head = "\n".join(path.read_text(encoding="utf-8").splitlines()[:8])
+        expected_line = EXPECTED_GUIDE_NAVIGATION_LINES[suffix]
+        if expected_line not in head:
+            problems.append(
+                f"{path.relative_to(ROOT)}: missing standard navigation row"
+            )
+        for target in expected:
+            if target not in head:
+                problems.append(
+                    f"{path.relative_to(ROOT)}: missing navigation target {target}"
+                )
+
+
+problems: list[str] = []
+check_korean_links(problems)
+check_guide_navigation(problems)
+if problems:
+    print(f"doc-parity: {len(problems)} problem(s)", file=sys.stderr)
+    for problem in problems:
+        print(f"doc-parity: {problem}", file=sys.stderr)
+    raise SystemExit(1)
+print("doc-parity: ok")

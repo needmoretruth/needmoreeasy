@@ -2,14 +2,14 @@
 
 [English](84-links.md) | 한국어
 
-[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
 - 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [55 — Network](55-net.md), [69 — Patterns](69-patterns.md)
+- 선수 지식 (Prerequisites): [55 — Network](55-net.ko.md), [69 — Patterns](69-patterns.ko.md)
 - 주제 (Topic): 웹/텍스트 / web & text
 - 결과물 (Result): 로컬 서버의 HTML 페이지를 받아 그 안의 링크를 모두 찾아 절대 주소로 보여 주기 / fetching an HTML page from a local server and listing every link on it as a full URL
 
-[55](55-net.md)가 JSON을 가져왔고, [69](69-patterns.md)가 정규식으로
+[55](55-net.ko.md)가 JSON을 가져왔고, [69](69-patterns.ko.md)가 정규식으로
 텍스트를 찾았습니다. 웹 페이지도 그냥 텍스트입니다 — 내용을 태그로
 감싼 HTML일 뿐입니다. 링크를 뽑는 것은 원시 페이지에 정규식 하나이고,
 서버 주소를 이어 붙이면 브라우저가 쓰는 완전한 주소가 됩니다.
@@ -30,7 +30,7 @@
    </html>
    ```
 
-2. [55](55-net.md)에서처럼 폴더를 서빙하세요:
+2. [55](55-net.ko.md)에서처럼 폴더를 서빙하세요:
 
    ```sh
    python3 -m http.server 8000
@@ -49,7 +49,7 @@
 
 4. 링크는 `href="`와 다음 `"` 사이에 있습니다. 정규식
    `r'href="([^"]+)"'`이 전부 찾습니다 — `[^"]+`는 "따옴표가 아닌 문자
-   하나 이상"이고, `findall`은 [69](69-patterns.md)에서처럼 잡힌 부분만
+   하나 이상"이고, `findall`은 [69](69-patterns.ko.md)에서처럼 잡힌 부분만
    돌려줍니다. `links.nme`로 저장하세요:
 
    ```text
@@ -94,7 +94,7 @@
 
 링크가 있는 다른 페이지로 가는 링크를 하나 추가하고, 프로그램이 찾은
 각 링크를 받아 존재하는지 세어 보세요 (`404 Not Found` 응답은 링크가
-깨졌다는 뜻 — HTTP 오류는 예외로 나타나고, [68](68-errors.md)이
+깨졌다는 뜻 — HTTP 오류는 예외로 나타나고, [68](68-errors.ko.md)이
 잡는 법을 보여 줍니다). 또는 같은 패턴으로 페이지의 `src="..."`
 이미지 소스를 뽑아 보세요.
 

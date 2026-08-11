@@ -2,6 +2,8 @@
 
 [English](19-signatures.md) | 한국어
 
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
+
 [18 — 작업증명](18-proof-of-work.ko.md) | [전체 니드모어코인 가이드](cryptocurrency.ko.md)
 
 - 난이도: ★★★★★

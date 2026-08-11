@@ -2,14 +2,14 @@
 
 [English](79-functions.md) | 한국어
 
-[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
 - 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [73 — Capstone](73-capstone.md), [23 — Modules](23-modules.md)
+- 선수 지식 (Prerequisites): [73 — Capstone](73-capstone.ko.md), [23 — Modules](23-modules.ko.md)
 - 주제 (Topic): 컴파일러/함수 / compiler & functions
 - 결과물 (Result): `def`/`return`/호출을 가진 미니 언어를 Python으로 컴파일하고 실행하는 컴파일러 / a compiler that translates a mini language with `def`, `return`, and calls into Python and runs it
 
-[73](73-capstone.md)은 다섯 동사를 Python으로 컴파일했습니다. 진짜 언어에는
+[73](73-capstone.ko.md)은 다섯 동사를 Python으로 컴파일했습니다. 진짜 언어에는
 함수가 있으므로, 이번 컴파일러에는 함수가 생깁니다: `def 이름 매개변수`가
 함수를 열고, `return 식`이 함수를 끝내고, `say 이름(인자)`가 함수를
 호출합니다. 새로 나오는 것은 **시그니처 표** — 컴파일러가 함수마다
@@ -33,11 +33,11 @@
    ```
 
    `double(21)`은 "double 함수를 21로 호출한다"는 뜻입니다. 들여쓴
-   `return`은 몸통을 표시합니다 — [73](73-capstone.md)의 `while` 몸통과
+   `return`은 몸통을 표시합니다 — [73](73-capstone.ko.md)의 `while` 몸통과
    똑같습니다.
 
 2. 컴파일러는 표를 두 개 유지합니다. `known`은 여전히 변수를 나열하고
-   ([73](73-capstone.md)), 새 dict `functions`는 함수 이름마다 매개변수
+   ([73](73-capstone.ko.md)), 새 dict `functions`는 함수 이름마다 매개변수
    목록을 담습니다:
 
    ```text
@@ -61,7 +61,7 @@
    ```
 
    `', '.join(params)`는 `["a", "b"]`를 텍스트 `a, b`로 바꿉니다 —
-   [45](45-csv.md)에서 CSV 줄을 만들 때 쓴 것과 같은 join입니다.
+   [45](45-csv.ko.md)에서 CSV 줄을 만들 때 쓴 것과 같은 join입니다.
 
 3. `say`는 이제 호출을 알아봐야 합니다. `(` 앞의 단어가 함수 이름이고,
    `functions`에 있으면 호출 전체가 식이므로 `print`가 따옴표 없이

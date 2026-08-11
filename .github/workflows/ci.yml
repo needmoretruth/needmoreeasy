@@ -25,6 +25,19 @@ jobs:
       - name: Enforce one beta version per beta commit
         run: python scripts/check-beta-step.py
 
+  docs:
+    name: documentation-parity
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out NME
+        uses: actions/checkout@v6
+      - name: Install CPython
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+      - name: Check Korean and English documentation parity
+        run: python scripts/check-doc-parity.py
+
   test:
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}

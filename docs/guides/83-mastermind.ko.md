@@ -2,10 +2,10 @@
 
 [English](83-mastermind.md) | 한국어
 
-[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
 - 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [10 — Random](10-random.md), [44 — Playlist](44-playlist.md)
+- 선수 지식 (Prerequisites): [10 — Random](10-random.ko.md), [44 — Playlist](44-playlist.ko.md)
 - 주제 (Topic): 게임/논리 / game & logic
 - 결과물 (Result): 4가지 색의 비밀 코드를 맞히고 검정·하양 단서로 좁혀 가는 마스터마인드 / a Mastermind-style game that hides a 4-color code and gives black/white feedback for each guess
 
@@ -16,7 +16,7 @@
 
 ## 단계
 
-1. 비밀 코드는 색 목록에서 네 번 고른 것입니다 — [10](10-random.md)의
+1. 비밀 코드는 색 목록에서 네 번 고른 것입니다 — [10](10-random.ko.md)의
    `random_pick`을 네 번 부릅니다:
 
    ```text
@@ -29,7 +29,7 @@
        secret.append(random_pick(colors))
    ```
 
-   `append`가 목록을 색 하나씩 키웁니다 — [44](44-playlist.md)에서
+   `append`가 목록을 색 하나씩 키웁니다 — [44](44-playlist.ko.md)에서
    플레이리스트를 만든 것과 같은 목록 쌓기 루프입니다.
 
 2. 검정은 정확히 일치하는 자리를 셉니다 — 같은 색, 같은 위치. 추측

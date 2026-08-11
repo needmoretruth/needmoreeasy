@@ -2,21 +2,21 @@
 
 [English](56-log.md) | 한국어
 
-[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
 - 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [13 — Files](13-files.md), [35 — Diary](35-diary.md)
+- 선수 지식 (Prerequisites): [13 — Files](13-files.ko.md), [35 — Diary](35-diary.ko.md)
 - 주제 (Topic): 파일/기록 / files & logging
 - 결과물 (Result): 프로그램이 실행될 때마다 datetime과 file_write로 로그 파일에 날짜 줄을 덧붙이기 / appending a dated line to a log file each time the program runs, using datetime and file_write
 
-가이드 [35](35-diary.md)의 일기는 날마다 파일 하나를 씁니다. **로그**는
+가이드 [35](35-diary.ko.md)의 일기는 날마다 파일 하나를 씁니다. **로그**는
 반대입니다: 사건마다 줄 하나가 쌓이는, 커지는 파일 하나. 언제 무슨 일이
 있었는지 보여 줍니다.
 
 ## 단계
 
 1. `datetime`에게 지금을 물어보고 텍스트로 만드세요. `datetime.now()`는 바로
-   이 순간이고, `strftime`(가이드 [24](24-python-packages.md))이 형식을
+   이 순간이고, `strftime`(가이드 [24](24-python-packages.ko.md))이 형식을
    정합니다 — `%Y` 연도, `%m` 달, `%d` 날짜, `%H` 시, `%M` 분:
 
    ```text
@@ -26,7 +26,7 @@
    말해 stamp
    ```
 
-2. 가이드 [13](13-files.md)의 `file_write`는 파일 전체를 덮어씁니다. 그래서
+2. 가이드 [13](13-files.ko.md)의 `file_write`는 파일 전체를 덮어씁니다. 그래서
    덧붙이기는 예전 로그를 읽고, 줄 하나를 더하고, 전부 다시 씁니다:
 
    ```text
@@ -98,7 +98,7 @@
 ## 직접 해보기
 
 날짜별 사건 수를 세어 보세요: 시간표시를 `strftime("%Y-%m-%d")`로 바꾸고,
-가이드 [36](36-word-count.md)의 dict 세기로 같은 날짜 줄이 몇 개인지 세세요.
+가이드 [36](36-word-count.ko.md)의 dict 세기로 같은 날짜 줄이 몇 개인지 세세요.
 
 ## 배운 것
 

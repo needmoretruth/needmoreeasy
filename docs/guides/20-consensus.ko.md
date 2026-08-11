@@ -2,6 +2,8 @@
 
 [English](20-consensus.md) | 한국어
 
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
+
 [19 — 거래 증명](19-signatures.ko.md) | [전체 니드모어코인 가이드](cryptocurrency.ko.md)
 
 - 난이도: ★★★★★

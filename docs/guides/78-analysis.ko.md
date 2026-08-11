@@ -2,10 +2,10 @@
 
 [English](78-analysis.md) | 한국어
 
-[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
 - 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [54 — Stats](54-stats.md), [45 — CSV](45-csv.md)
+- 선수 지식 (Prerequisites): [54 — Stats](54-stats.ko.md), [45 — CSV](45-csv.ko.md)
 - 주제 (Topic): 데이터 분석 / data analysis
 - 결과물 (Result): 한 달치 온도를 읽어 통계와 히스토그램을 계산하고 보고서 파일로 저장하기 / loading a month of temperatures, computing statistics and a histogram, and saving a report file
 
@@ -24,7 +24,7 @@
     28, 31, 32, 29, 26, 24, 23, 21, 20, 25]
    ```
 
-2. `json_load`로 불러오고([14](14-json.md)) [54](54-stats.md)의 통계를
+2. `json_load`로 불러오고([14](14-json.ko.md)) [54](54-stats.ko.md)의 통계를
    계산합니다:
 
    ```text
@@ -44,7 +44,7 @@
 
 3. 히스토그램은 데이터의 모양을 보여 줍니다. 날짜마다 어느 구간에
    들어가는지 세고, 구간마다 막대 하나를 문자열 곱셈으로 그립니다
-   ([71](71-chart.md)):
+   ([71](71-chart.ko.md)):
 
    ```text
    ranges = ["under 20", "20-24", "25-29", "30+"]

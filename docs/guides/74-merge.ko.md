@@ -2,10 +2,10 @@
 
 [English](74-merge.md) | 한국어
 
-[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
 - 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [66 — Top ten](66-top-ten.md), [31 — Records](31-address-book.md)
+- 선수 지식 (Prerequisites): [66 — Top ten](66-top-ten.ko.md), [31 — Records](31-address-book.ko.md)
 - 주제 (Topic): 데이터/병합 / data & merging
 - 결과물 (Result): 두 JSON 목록을 이름 키로 합쳐 결합 보고서 만들기 / loading two JSON lists and joining records by name key into one report
 

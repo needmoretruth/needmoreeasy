@@ -2,10 +2,10 @@
 
 [English](24-python-packages.md) | 한국어
 
-[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
 - 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [23 — Modules](23-modules.md), [13 — Files](13-files.md)
+- 선수 지식 (Prerequisites): [23 — Modules](23-modules.ko.md), [13 — Files](13-files.ko.md)
 - 주제 (Topic): Python 패키지 / Python packages
 - 결과물 (Result): 표준 라이브러리와 설치된 라이브러리 사용하기 / using the standard library and installed libraries
 
@@ -60,7 +60,7 @@ Python에는 준비된 패키지가 많이 들어 있습니다. 고급 NME는 �
    데이터를 읽고 씁니다.
 
 4. 써드파티 라이브러리는 먼저 pip로 설치한 뒤 똑같이 가져옵니다. 명령은
-   운영체제마다 다르지만([설치 안내](../install.md) 참고) NME 코드는 언제나
+   운영체제마다 다르지만([설치 안내](../install.ko.md) 참고) NME 코드는 언제나
    같습니다:
 
    ```sh
