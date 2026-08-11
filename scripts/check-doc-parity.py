@@ -127,7 +127,6 @@ def check_guide_code_block_parity(problems: list[str]) -> None:
         if (
             not english.is_file()
             or english.name.endswith(".ko.md")
-            or not re.match(r"\d+-", english.name)
         ):
             continue
         korean = english.with_name(f"{english.stem}.ko.md")

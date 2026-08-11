@@ -104,12 +104,12 @@ result from the same chain.
 
 ## Step 2 — create wallets
 
-The Korean sentence version shows the smallest punctuation-free form:
+The English sentence version shows the smallest punctuation-free form:
 
 ```text
-영지식 사용 최신
-민수비밀은 영지식 비밀 만들기
-민수주소는 민수비밀로 영지식 공개값 만들기
+use zeroknowledge latest
+alicesecret save zero knowledge secret make
+aliceaddress save alicesecret zero knowledge public make
 ```
 
 The private value must remain secret. The public value can be used by other
@@ -128,12 +128,12 @@ The examples bind at least:
 - fee
 - transaction nonce
 
-The Korean sentence version constructs the context and proof like this:
+The English sentence version constructs the context and proof like this:
 
 ```text
-거래하나내용은 민수주소 에서 지수주소 에게 거래하나금액 코인 전송 수수료 거래하나수수료 거래번호 거래하나번호
-거래하나서명은 민수비밀과 거래하나내용으로 영지식 비대화 증명 만들기
-거래하나서명검증은 민수주소와 거래하나서명과 거래하나내용으로 영지식 비대화 검증
+contextone save aliceaddress sends amountone coins to bobaddress fee feeone nonce nonceone
+proofone save alicesecret contextone zero knowledge proof make
+signatureonevalid save aliceaddress proofone contextone zero knowledge verify
 ```
 
 If the amount changes, the context changes, so the old proof no longer verifies.
@@ -177,6 +177,22 @@ The advanced examples show the more conventional layout directly: serialize the
 block payload, hash it with SHA-256, increment an integer work nonce, and stop
 when the hexadecimal hash starts with `0`. Difficulty is intentionally low for
 learning. Increasing it can make execution much slower.
+
+The English sentence version expresses the same mining loop without punctuation:
+
+```text
+while blockonemining
+blockonerandom save zero knowledge nonce make
+blockonecandidatecommitment save blockonerandom zero knowledge commitment make
+blockonecandidatehash save mineraddress blockonecandidatecommitment blockonecontext zero knowledge challenge make
+add 1 to blockoneattempts
+if blockonecandidatehash is less than worktarget
+blockonecommitment save blockonecandidatecommitment
+blockonehash save blockonecandidatehash
+blockonemining save 0
+end
+end
+```
 
 ## Step 7 — revalidate instead of trusting construction-time variables
 

@@ -6,6 +6,14 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.26 — 2026-08-12
+
+- Fill the remaining English code examples in the main NeedMoreCoin guide and
+  the example-authoring guide so paired guides expose equivalent teaching
+  material.
+- Extend the documentation parity check to every guide pair, not only numbered
+  guides, and require matching code-block coverage.
+
 ## 0.0.1-beta.25 — 2026-08-12
 
 - Complete the missing Topic metadata in the four NeedMoreCoin sequence guides
