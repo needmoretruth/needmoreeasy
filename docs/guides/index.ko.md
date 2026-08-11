@@ -11,6 +11,7 @@
 프로젝트를, 17–20은 블록체인을, 21–22는 HTTP와 터미널 메뉴를 다룹니다.
 30–31은 데이터와 기록을, 32–34는 웹 데이터, 커지는 프로젝트, 셀프호스팅을
 다룹니다. 35–37은 날짜별 일기, 단어 세기, 숨은 단어 게임을 다룹니다.
+38–40은 파일 기반 퀴즈, 목록 정렬, 요약 보고서를 다룹니다.
 
 ## 난이도
 
@@ -59,6 +60,9 @@
 35. [35 — 일기](35-diary.ko.md)
 36. [36 — 단어 세기](36-word-count.ko.md)
 37. [37 — 단어 맞히기](37-word-guess.ko.md)
+38. [38 — 퀴즈](38-quiz.ko.md)
+39. [39 — 정렬](39-sorting.ko.md)
+40. [40 — 보고서](40-report.ko.md)
 
 ## 주제별 찾아보기
 
@@ -71,6 +75,7 @@
 - 랜덤 / Random: [10](10-random.ko.md)
 - 도구 사용 / Using the tools: [11](11-check-build.ko.md), [12](12-convert.ko.md)
 - 파일 / Files: [13](13-files.ko.md), [16](16-name-list.ko.md)
+- 보고서 / Report: [40](40-report.ko.md)
 - 일기 / Diary: [35](35-diary.ko.md)
 - JSON / JSON: [14](14-json.ko.md)
 - 프로젝트 / Project: [15](15-high-score.ko.md), [33](33-todo.ko.md)
@@ -85,10 +90,12 @@
 - 네이티브 / Native: [25](25-native.ko.md)
 - 게임 / Game: [26](26-adventure.ko.md)
 - 게임 / Word guess: [37](37-word-guess.ko.md)
+- 퀴즈 / Quiz: [38](38-quiz.ko.md)
 - 계산기 / Calculator: [27](27-calculator.ko.md)
 - 컴파일러 / Compiler: [28](28-compiler.ko.md)
 - 부트스트랩 / Bootstrap: [29](29-bootstrap.ko.md)
 - 데이터/Data: [30](30-data.ko.md), [31](31-address-book.ko.md)
+- 정렬 / Sorting: [39](39-sorting.ko.md)
 - 단어 / Word count: [36](36-word-count.ko.md)
 - 셀프호스팅 / Self-host: [34](34-selfhost.ko.md)
 
@@ -133,6 +140,9 @@
 | 35 | ★★★★★ | 파일 / Files | [일기 — 날짜별 메모](35-diary.ko.md) | 각 날의 메모를 날짜별 파일에 저장하고 다시 읽는 일기 |
 | 36 | ★★★★★ | 데이터/Data | [단어 세기 — 단어 빈도](36-word-count.ko.md) | dict와 Counter로 텍스트 파일의 단어 빈도 세기 |
 | 37 | ★★★★★ | 게임 / Game | [단어 맞히기 — 숨은 단어 게임](37-word-guess.ko.md) | 제한된 기회 안에 숨은 단어의 글자를 맞히는 행맨형 게임 |
+| 38 | ★★★★★ | 퀴즈 / Quiz | [퀴즈 — 파일의 문제](38-quiz.ko.md) | JSON 파일에서 문제를 불러와 객관식 퀴즈를 채점하고 결과를 알려 주기 |
+| 39 | ★★★★★ | 정렬 / Sorting | [정렬 — 목록 순서 정하기](39-sorting.ko.md) | JSON에서 숫자를 불러와 Python sort로 오름차순·내림차순 순서 보여 주기 |
+| 40 | ★★★★★ | 보고서 / Report | [보고서 — 요약 파일 쓰기](40-report.ko.md) | JSON 데이터 파일 몇 개를 읽어 file_write로 요약 보고서 하나 쓰기 |
 
 ## 다음 단계
 

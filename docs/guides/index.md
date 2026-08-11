@@ -10,7 +10,8 @@ first-day sentences; 05–10 add beginner syntax and control flow; 11–12 use t
 CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
 21–22 add HTTP and terminal menus; 30–31 add data and records; 32–34 add web
 data, a growing project, and self-hosting; 35–37 add a dated diary, word
-counting, and a hidden-word game.
+counting, and a hidden-word game; 38–40 add a file-based quiz, list sorting,
+and a summary report.
 
 ## Difficulty
 
@@ -59,6 +60,9 @@ counting, and a hidden-word game.
 35. [35 — Diary](35-diary.md)
 36. [36 — Word count](36-word-count.md)
 37. [37 — Word guess](37-word-guess.md)
+38. [38 — Quiz](38-quiz.md)
+39. [39 — Sorting](39-sorting.md)
+40. [40 — Report](40-report.md)
 
 ## Topic lookup
 
@@ -71,6 +75,7 @@ counting, and a hidden-word game.
 - 랜덤 / Random: [10](10-random.md)
 - 도구 사용 / Using the tools: [11](11-check-build.md), [12](12-convert.md)
 - 파일 / Files: [13](13-files.md), [16](16-name-list.md)
+- 보고서 / Report: [40](40-report.md)
 - 일기 / Diary: [35](35-diary.md)
 - JSON / JSON: [14](14-json.md)
 - 프로젝트 / Project: [15](15-high-score.md), [33](33-todo.md)
@@ -85,10 +90,12 @@ counting, and a hidden-word game.
 - 네이티브 / Native: [25](25-native.md)
 - 게임 / Game: [26](26-adventure.md)
 - 게임 / Word guess: [37](37-word-guess.md)
+- 퀴즈 / Quiz: [38](38-quiz.md)
 - 계산기 / Calculator: [27](27-calculator.md)
 - 컴파일러 / Compiler: [28](28-compiler.md)
 - 부트스트랩 / Bootstrap: [29](29-bootstrap.md)
 - 데이터/Data: [30](30-data.md), [31](31-address-book.md)
+- 정렬 / Sorting: [39](39-sorting.md)
 - 단어 / Word count: [36](36-word-count.md)
 - 셀프호스팅 / Self-host: [34](34-selfhost.md)
 
@@ -133,6 +140,9 @@ counting, and a hidden-word game.
 | 35 | ★★★★★ | 파일 / Files | [Diary — notes saved by date](35-diary.md) | A diary that saves each day's note to a dated file and can read it back |
 | 36 | ★★★★★ | 데이터/Data | [Word count — how often each word appears](36-word-count.md) | Read a text file and count how often each word appears with a dict and Counter |
 | 37 | ★★★★★ | 게임 / Game | [Word guess — a hidden-word game](37-word-guess.md) | A hangman-style game that guesses the letters of a hidden word with limited tries |
+| 38 | ★★★★★ | 퀴즈 / Quiz | [Quiz — questions from a file](38-quiz.md) | A multiple-choice quiz that loads questions from a JSON file, scores answers, and reports the result |
+| 39 | ★★★★★ | 정렬 / Sorting | [Sorting — putting a list in order](39-sorting.md) | Load numbers from a JSON file and show ascending and descending orders with Python sort |
+| 40 | ★★★★★ | 보고서 / Report | [Report — writing a summary file](40-report.md) | Read a few JSON data files and write one text report with file_write |
 
 ## Where to continue
 
