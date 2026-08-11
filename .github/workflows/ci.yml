@@ -81,6 +81,9 @@ jobs:
           assert build_text.count(old_assert) == 1
           build.write_text(build_text.replace(old_assert, new_assert, 1), encoding='utf-8')
           PY
+          echo '--- generated English Schnorr example ---'
+          nl -ba examples/zk-schnorr-relay.en.nme
+          echo '--- end generated English Schnorr example ---'
           cargo fmt --all
           cargo clippy --fix --workspace --all-targets --allow-dirty --allow-staged
           python - <<'PY'
