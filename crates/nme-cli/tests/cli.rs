@@ -37,11 +37,11 @@ fn example(name: &str) -> String {
 }
 
 fn stdout(output: &Output) -> String {
-    String::from_utf8_lossy(&output.stdout).into_owned()
+    String::from_utf8_lossy(&output.stdout).replace("\r\n", "\n")
 }
 
 fn stderr(output: &Output) -> String {
-    String::from_utf8_lossy(&output.stderr).into_owned()
+    String::from_utf8_lossy(&output.stderr).replace("\r\n", "\n")
 }
 
 fn python_command() -> &'static str {
@@ -164,13 +164,16 @@ fn command_shortcuts_run_check_build_and_modules() {
     let checked = nme(&["c", &example("three-levels.nme")]);
     assert!(checked.status.success(), "{}", stderr(&checked));
 
+    let build_dir = temporary_dir("build-alias");
+    let build_path = build_dir.join("nme-build-alias-test.py");
     let built = nme(&[
         "b",
         &example("hello.nme"),
         "-o",
-        "/tmp/nme-build-alias-test.py",
+        &build_path.to_string_lossy(),
     ]);
     assert!(built.status.success(), "{}", stderr(&built));
+    let _ = std::fs::remove_dir_all(&build_dir);
 
     let modules = nme(&["m"]);
     assert!(modules.status.success(), "{}", stderr(&modules));
@@ -808,7 +811,7 @@ fn compile_refuses_to_overwrite_an_existing_artifact() {
     let dir = std::env::temp_dir().join(format!("nme-cli-native-safe-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let input = dir.join("hello.nme");
-    let output_file = dir.join("already-here");
+    let output_file = dir.join("already-here.exe");
     std::fs::write(&input, "show Hello\n").unwrap();
     std::fs::write(&output_file, "keep me").unwrap();
 
