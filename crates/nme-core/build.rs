@@ -1,9 +1,40 @@
 use std::fs;
 use std::path::PathBuf;
 
-fn replace_once(text: &mut String, old: &str, new: &str) {
-    assert_eq!(text.matches(old).count(), 1, "expected one exact beta.16 repair target: {old}");
-    *text = text.replacen(old, new, 1);
+fn quote_korean_output(text: &mut String, prefix: &str) {
+    let mut found = 0usize;
+    let rewritten = text
+        .lines()
+        .map(|line| {
+            if let Some(body) = line.strip_prefix(prefix).and_then(|rest| rest.strip_suffix(" 말해줘")) {
+                found += 1;
+                format!("{prefix}\"{body}\" 말해줘")
+            } else {
+                line.to_string()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert_eq!(found, 1, "expected one Korean output line starting with {prefix}");
+    *text = rewritten + "\n";
+}
+
+fn quote_english_output(text: &mut String, prefix: &str) {
+    let mut found = 0usize;
+    let rewritten = text
+        .lines()
+        .map(|line| {
+            if let Some(body) = line.strip_prefix(prefix).and_then(|rest| rest.strip_suffix(" show")) {
+                found += 1;
+                format!("{prefix}\"{body}\" show")
+            } else {
+                line.to_string()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert_eq!(found, 1, "expected one English output line starting with {prefix}");
+    *text = rewritten + "\n";
 }
 
 fn main() {
@@ -20,67 +51,38 @@ fn main() {
     let mut text = fs::read_to_string(&parser).expect("read parser");
     let old = "        BundledModuleId::ZeroKnowledge => &[\n            ZERO_KNOWLEDGE_MODULE,\n            ZERO_KNOWLEDGE_MODULE_KO,\n            \"영지식비밀난수\",";
     let new = "        BundledModuleId::ZeroKnowledge => &[\n            \"영지식비밀난수\",";
-    replace_once(&mut text, old, new);
+    assert_eq!(text.matches(old).count(), 1, "expected exact ZeroKnowledge binding list");
+    text = text.replacen(old, new, 1);
     fs::write(&parser, text).expect("write parser");
 
     // Keep the Korean program sentence-oriented and Korean-only, while making
     // explanatory output unambiguously literal rather than eligible for name
-    // interpolation. Quotes are normal sentence punctuation in NME values.
+    // interpolation.
     let korean = root.join("examples/zk-schnorr-relay.ko.nme");
     let mut text = fs::read_to_string(&korean).expect("read Korean ZK example");
-    for (old, new) in [
-        (
-            "정상검증이 참이면 송신자 에이의 영지식 증명을 수신자 비가 받아들였습니다 말해줘",
-            "정상검증이 참이면 \"송신자 에이의 영지식 증명을 수신자 비가 받아들였습니다\" 말해줘",
-        ),
-        (
-            "재전송검증이 거짓이면 악성 중계자 씨의 저장 전사록 재전송은 새 도전에서 실패했습니다 말해줘",
-            "재전송검증이 거짓이면 \"악성 중계자 씨의 저장 전사록 재전송은 새 도전에서 실패했습니다\" 말해줘",
-        ),
-        (
-            "모의검증이 참이면 비밀값 없이도 미리 고른 도전에 맞는 전사록을 모의할 수 있습니다 말해줘",
-            "모의검증이 참이면 \"비밀값 없이도 미리 고른 도전에 맞는 전사록을 모의할 수 있습니다\" 말해줘",
-        ),
-        (
-            "모의재사용검증이 거짓이면 모의 전사록은 수신자 비의 다른 도전에는 재사용할 수 없습니다 말해줘",
-            "모의재사용검증이 거짓이면 \"모의 전사록은 수신자 비의 다른 도전에는 재사용할 수 없습니다\" 말해줘",
-        ),
-        (
-            "중계검증이 참이면 실시간 중계는 통과하지만 비밀 위조가 아니라 송신자 에이의 실제 응답을 전달한 것입니다 말해줘",
-            "중계검증이 참이면 \"실시간 중계는 통과하지만 비밀 위조가 아니라 송신자 에이의 실제 응답을 전달한 것입니다\" 말해줘",
-        ),
+    for prefix in [
+        "정상검증이 참이면 ",
+        "재전송검증이 거짓이면 ",
+        "모의검증이 참이면 ",
+        "모의재사용검증이 거짓이면 ",
+        "중계검증이 참이면 ",
     ] {
-        replace_once(&mut text, old, new);
+        quote_korean_output(&mut text, prefix);
     }
     fs::write(&korean, text).expect("write Korean ZK example");
 
-    // The English twin stays in NME sentence syntax too. Double-quoted output
-    // keeps English possessive apostrophes inside a string token.
+    // The English twin stays in sentence NME. Quoted output keeps possessive
+    // apostrophes inside a string token instead of the sentence lexer.
     let english = root.join("examples/zk-schnorr-relay.en.nme");
     let mut text = fs::read_to_string(&english).expect("read English ZK example");
-    for (old, new) in [
-        (
-            "if normal then Receiver B accepted sender A's zero-knowledge proof. show",
-            "if normal then \"Receiver B accepted sender A's zero-knowledge proof.\" show",
-        ),
-        (
-            "if replay_ok is false then Intermediary C cannot replay the saved transcript against a fresh challenge. show",
-            "if replay_ok is false then \"Intermediary C cannot replay the saved transcript against a fresh challenge.\" show",
-        ),
-        (
-            "if sim_ok then A transcript can exist for one chosen challenge without sender A's secret. show",
-            "if sim_ok then \"A transcript can exist for one chosen challenge without sender A's secret.\" show",
-        ),
-        (
-            "if sim_reuse_ok is false then The simulated transcript cannot answer a different verifier challenge. show",
-            "if sim_reuse_ok is false then \"The simulated transcript cannot answer a different verifier challenge.\" show",
-        ),
-        (
-            "if relay_ok then Live relay passes because intermediary C forwarded sender A's real response. show",
-            "if relay_ok then \"Live relay passes because intermediary C forwarded sender A's real response.\" show",
-        ),
+    for prefix in [
+        "if normal then ",
+        "if replay_ok is false then ",
+        "if sim_ok then ",
+        "if sim_reuse_ok is false then ",
+        "if relay_ok then ",
     ] {
-        replace_once(&mut text, old, new);
+        quote_english_output(&mut text, prefix);
     }
     fs::write(&english, text).expect("write English ZK example");
 
