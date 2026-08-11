@@ -178,6 +178,46 @@ pub fn fresh_temp_dir(prefix: &str) -> io::Result<PathBuf> {
     ))
 }
 
+/// Owns one staging directory and removes it when the operation finishes.
+pub struct TemporaryDirectory {
+    path: PathBuf,
+}
+
+impl TemporaryDirectory {
+    pub fn new(prefix: &str) -> io::Result<Self> {
+        Ok(Self {
+            path: fresh_temp_dir(prefix)?,
+        })
+    }
+
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+}
+
+impl Drop for TemporaryDirectory {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.path);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::TemporaryDirectory;
+
+    #[test]
+    fn temporary_directory_is_removed_when_guard_drops() {
+        let directory = TemporaryDirectory::new("nme-cleanup-test").expect("directory");
+        let path = directory.path().to_path_buf();
+        std::fs::write(path.join("partial.py"), "partial = True\n").expect("partial file");
+        assert!(path.is_dir());
+
+        drop(directory);
+
+        assert!(!path.exists());
+    }
+}
+
 /// Compiles transpiled Python to a native executable through Nuitka.
 ///
 /// Nuitka and a platform C compiler are intentionally external tools: the NME
@@ -208,8 +248,9 @@ pub fn compile_native(
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "output needs a file name"))
         .map_err(CompileNativeError::Other)?;
 
-    let dir = fresh_temp_dir("nme-compile").map_err(CompileNativeError::TemporaryFolder)?;
-    let program = dir.join(format!("{stem}.py"));
+    let dir = TemporaryDirectory::new("nme-compile")
+        .map_err(CompileNativeError::TemporaryFolder)?;
+    let program = dir.path().join(format!("{stem}.py"));
     std::fs::write(&program, python_source).map_err(CompileNativeError::TemporarySource)?;
 
     let mut command = Command::new(python);
@@ -227,8 +268,6 @@ pub fn compile_native(
         .arg(&program)
         .status();
 
-    let _ = std::fs::remove_file(&program);
-    let _ = std::fs::remove_dir(&dir);
     status.map_err(CompileNativeError::Other)
 }
 

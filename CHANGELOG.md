@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.41 — 2026-08-12
+
+- Own imported-module, native, and Nuitka staging directories for the whole
+  operation and remove them on both success and early failure.
+- Prevent partial Python or C staging files from being left behind when a write
+  fails.
+
 ## 0.0.1-beta.40 — 2026-08-12
 
 - Use fresh per-invocation temporary directories for imported-module, native,

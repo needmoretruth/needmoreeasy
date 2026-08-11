@@ -157,10 +157,11 @@ both language aliases, diagnostics, tests, and bilingual documentation.
 sibling `.nme` file. The CLI transpiles imported modules (transitively) into a
 temporary folder and adds that folder to `sys.path` through an environment
 variable, so the transpiled `from helper import name1` is ordinary Python
-importing an ordinary Python module. The explicit name list is the module
-boundary: nothing else leaks between files, and there is no shared global
-state. Module file names must be valid Python identifiers because the
-generated import uses the file stem.
+importing an ordinary Python module. Each invocation owns its staging folder;
+the folder is removed after execution and also when a module write fails. The
+explicit name list is the module boundary: nothing else leaks between files,
+and there is no shared global state. Module file names must be valid Python
+identifiers because the generated import uses the file stem.
 
 ### 8. Small and safe Rust
 

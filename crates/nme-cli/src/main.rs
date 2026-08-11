@@ -421,7 +421,7 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
     } else {
         None
     };
-    let dir = match exec::fresh_temp_dir("nme-native-run") {
+    let dir = match exec::TemporaryDirectory::new("nme-native-run") {
         Ok(dir) => dir,
         Err(err) => {
             return fail(
@@ -432,7 +432,7 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
             );
         }
     };
-    let c_path = dir.join(format!("{stem}.c"));
+    let c_path = dir.path().join(format!("{stem}.c"));
     if let Err(err) = std::fs::write(&c_path, c_source) {
         return fail(
             nme_core::diagnostics::DiagnosticCode::CliFileWriteFailed,
@@ -441,7 +441,7 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
             &format!("C 소스를 저장할 수 없습니다: {err}"),
         );
     }
-    let mut exe = dir.join(stem);
+    let mut exe = dir.path().join(stem);
     if cfg!(windows) {
         exe.set_extension("exe");
     }
@@ -454,7 +454,6 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
     match compile_status {
         Ok(status) if status.success() => {}
         Ok(status) => {
-            let _ = std::fs::remove_dir_all(&dir);
             return fail(
                 nme_core::diagnostics::DiagnosticCode::CliNativeCompileFailed,
                 language,
@@ -469,7 +468,6 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
             );
         }
         Err(error) => {
-            let _ = std::fs::remove_dir_all(&dir);
             return fail(
                 nme_core::diagnostics::DiagnosticCode::CliNativeCompileStartFailed,
                 language,
@@ -487,7 +485,6 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
     if let Some((out, c_output)) = build_output {
         let copy_exe = std::fs::copy(&exe, &out).is_ok();
         let copy_c = std::fs::copy(&c_path, &c_output).is_ok();
-        let _ = std::fs::remove_dir_all(&dir);
         if copy_exe && copy_c {
             ExitCode::SUCCESS
         } else {
@@ -500,7 +497,6 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
         }
     } else {
         let run_status = std::process::Command::new(&exe).status();
-        let _ = std::fs::remove_dir_all(&dir);
         match run_status {
             Ok(status) => exit_code(status),
             Err(err) => fail(
@@ -1051,12 +1047,9 @@ fn command_run(args: &[String], language: MessageLanguage) -> ExitCode {
         &compiled.source,
         &compiled.path,
         &python,
-        module_dir.as_deref(),
+        module_dir.as_ref().map(exec::TemporaryDirectory::path),
         &program_args,
     );
-    if let Some(dir) = module_dir {
-        let _ = std::fs::remove_dir_all(dir);
-    }
     match run_status {
         Ok(status) => exit_code(status),
         Err(err) => fail(
@@ -1807,8 +1800,8 @@ fn check_modules(
 fn write_modules_to_temp(
     modules: &[(String, String)],
     language: MessageLanguage,
-) -> Result<PathBuf, ExitCode> {
-    let dir = exec::fresh_temp_dir("nme-modules").map_err(|err| {
+) -> Result<exec::TemporaryDirectory, ExitCode> {
+    let dir = exec::TemporaryDirectory::new("nme-modules").map_err(|err| {
         fail(
             nme_core::diagnostics::DiagnosticCode::CliFolderCreateFailed,
             language,
@@ -1817,7 +1810,7 @@ fn write_modules_to_temp(
         )
     })?;
     for (stem, python) in modules {
-        if let Err(err) = std::fs::write(dir.join(format!("{stem}.py")), python) {
+        if let Err(err) = std::fs::write(dir.path().join(format!("{stem}.py")), python) {
             return Err(fail(
                 nme_core::diagnostics::DiagnosticCode::CliFileWriteFailed,
                 language,
