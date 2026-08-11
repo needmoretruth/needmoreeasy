@@ -150,8 +150,10 @@ fn main() -> ExitCode {
         Some("변환") => command_convert(&args[1..], MessageLanguage::KoreanAndEnglish),
         Some("modules" | "module" | "m") => command_modules(&args[1..], MessageLanguage::English),
         Some("모듈") => command_modules(&args[1..], MessageLanguage::KoreanAndEnglish),
-        Some("native" | "네이티브") => command_native(&args[1..], MessageLanguage::English),
-        Some("install" | "설치") => command_install(&args[1..], MessageLanguage::English),
+        Some("native") => command_native(&args[1..], MessageLanguage::English),
+        Some("네이티브") => command_native(&args[1..], MessageLanguage::KoreanAndEnglish),
+        Some("install") => command_install(&args[1..], MessageLanguage::English),
+        Some("설치") => command_install(&args[1..], MessageLanguage::KoreanAndEnglish),
         Some("ko" | "error" | "에러") => {
             command_error_lookup(&args[1..], MessageLanguage::KoreanAndEnglish)
         }

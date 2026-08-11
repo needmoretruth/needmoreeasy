@@ -10,7 +10,7 @@ Give an AI coding assistant this one prompt:
 Read and follow this NME language handoff before writing code:
 https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
 
-Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.27`), then write the requested program as a .nme file, prefer sentence syntax for a
+Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.28`), then write the requested program as a .nme file, prefer sentence syntax for a
 beginner, mix beginner or advanced Python only where it makes the result
 clearer, and verify it with nme check.
 ```
@@ -236,8 +236,8 @@ nme build program -o program.py
 
 `check` and `build` ask the selected CPython to compile the generated source;
 they do not execute it. `nme help` and English commands print English only.
-Korean commands such as `nme 도움`, `nme 검사`, and `nme 실행` print Korean
-guidance followed by the equivalent English guidance.
+Korean commands such as `nme 도움`, `nme 검사`, `nme 실행`, `nme 네이티브`, and
+`nme 설치` use Korean-first bilingual diagnostics or guidance.
 
 Use `nme run program` when execution is safe and desired. Use
 `nme compile program -o program` only when the user wants a native artifact

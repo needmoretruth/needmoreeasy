@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.28 — 2026-08-12
+
+- Route the Korean `네이티브` and `설치` command aliases through the same
+  Korean-first bilingual diagnostics as the other Korean CLI commands.
+- Add regression coverage for both failure paths while preserving English-only
+  output for the English commands.
+
 ## 0.0.1-beta.27 — 2026-08-12
 
 - Fix the English beginner skeleton in both example-template twins so its loop

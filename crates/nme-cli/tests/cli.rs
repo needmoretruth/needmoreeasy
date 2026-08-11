@@ -688,6 +688,34 @@ fn command_errors_follow_the_command_language() {
         .find("error[E9004]: unknown option")
         .unwrap();
     assert!(korean_position < english_position, "{bilingual_error}");
+
+    let native = nme(&["네이티브", "--not-an-option"]);
+    assert!(!native.status.success());
+    let native_error = stderr(&native);
+    let native_korean_position = native_error
+        .find("오류[E9004]: 알 수 없는 옵션입니다")
+        .unwrap();
+    let native_english_position = native_error
+        .find("error[E9004]: unknown option")
+        .unwrap();
+    assert!(
+        native_korean_position < native_english_position,
+        "{native_error}"
+    );
+
+    let install = nme(&["설치"]);
+    assert!(!install.status.success());
+    let install_error = stderr(&install);
+    let install_korean_position = install_error
+        .find("오류[E9003]: 어떤 패키지를 설치할까요?")
+        .unwrap();
+    let install_english_position = install_error
+        .find("error[E9003]: which package should I install?")
+        .unwrap();
+    assert!(
+        install_korean_position < install_english_position,
+        "{install_error}"
+    );
 }
 
 #[test]
