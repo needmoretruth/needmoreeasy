@@ -203,6 +203,7 @@ nme 컴파일 examples/hello-sentence.nme -o hello
 파일쓰기("note.txt", "안녕")
 말해 파일읽기("note.txt")
 점수 = {"이름": "민수", "점수": 3}
+json저장("save.json", 점수)
 보관 = json_load("save.json")
 말해 보관["이름"]
 ```
