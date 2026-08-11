@@ -6,6 +6,9 @@ NME의 중요한 변경 사항을 이 문서에 기록합니다.
 
 ## 미출시 (Unreleased)
 
+- 로컬 서버에서 페이지를 받아 오는 `http-client.nme` 예제와 터미널 메뉴
+  반복문 `terminal-menu.nme` 예제를 추가했습니다(각각 한국어 버전 포함).
+  CLI 테스트가 스크립트 입력으로 메뉴를 실행해 확인합니다.
 - `nme 변환`이 파일 문장형을 배웠습니다: `x = open("f").read()`와
   `x = Path("f").read_text()`는 `x에 "f" 읽어서`로,
   `open("f", "w").write(v)` / `Path("f").write_text(v)`는

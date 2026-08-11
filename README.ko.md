@@ -125,6 +125,11 @@ nme 모듈
 [`consensus.nme`](examples/consensus.nme)(초고급). 각각 한국어 버전도
 있습니다.
 
+네트워크와 터미널 프로그램은 NME 안에서 일반 Python으로 씁니다:
+[`http-client.nme`](examples/http-client.nme)는 로컬 서버에서 페이지를
+받아 오고, [`terminal-menu.nme`](examples/terminal-menu.nme)는 터미널에서
+작동하는 작은 메뉴 반복문입니다.
+
 `.nme`는 생략할 수 있습니다. `program.nme`는 `nme 실행 program`과 `nme
 program` 모두 실행됩니다. NME가 운영체제에 맞는 Python 명령을 자동으로 고르므로
 보통 `--python`을 쓸 필요가 없습니다.

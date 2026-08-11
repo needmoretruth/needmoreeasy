@@ -232,6 +232,25 @@ fn the_korean_file_module_spelling_works() {
 }
 
 #[test]
+fn the_terminal_menu_example_runs_with_scripted_input() {
+    if !python_available() {
+        eprintln!("Python not available; skipping terminal menu test");
+        return;
+    }
+    for (file, expected) in [
+        ("terminal-menu.nme", ["hello!", "bye"]),
+        ("terminal-menu.ko.nme", ["안녕하세요!", "안녕히 가세요"]),
+    ] {
+        let output = nme_with_input(&["run", &example(file)], "1\n3\n");
+        assert!(output.status.success(), "{file}: {}", stderr(&output));
+        let out = stdout(&output);
+        for fragment in expected {
+            assert!(out.contains(fragment), "{file}: {out}");
+        }
+    }
+}
+
+#[test]
 fn the_blockchain_learning_examples_run() {
     if !python_available() {
         eprintln!("Python not available; skipping blockchain example test");

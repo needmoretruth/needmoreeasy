@@ -6,6 +6,9 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+- Add an `http-client.nme` example that fetches a page from a local server
+  with `urllib`, and a `terminal-menu.nme` TUI menu loop (both with Korean
+  twins); a CLI test runs the menu with scripted input.
 - Teach `nme convert` the file sentence forms: `x = open("f").read()` and
   `x = Path("f").read_text()` convert to `read "f" into x`, and
   `open("f", "w").write(v)` / `Path("f").write_text(v)` to

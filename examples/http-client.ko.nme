@@ -1,0 +1,15 @@
+# HTTP — 웹 서버에 페이지 요청하기
+# 학습용입니다. 투자 조언이 아닙니다.
+# 실행: nme r http-client.ko
+# 이 프로그램은 http://localhost:8000/hello.txt를 읽습니다.
+# 먼저 그 폴더를 서비스하세요:
+#   python3 -m http.server 8000
+
+import urllib.request
+
+url = "http://localhost:8000/hello.txt"
+
+with urllib.request.urlopen(url) as response:
+    body = response.read().decode("utf-8")
+
+말해 "서버 응답: " + body.strip()

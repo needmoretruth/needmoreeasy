@@ -125,6 +125,11 @@ the four educational projects (learning only, never investment advice):
 [`signatures.nme`](examples/signatures.nme) (advanced), and
 [`consensus.nme`](examples/consensus.nme) (expert), each with a Korean twin.
 
+Networking and terminal programs are ordinary Python inside NME:
+[`http-client.nme`](examples/http-client.nme) fetches a page from a local
+server, and [`terminal-menu.nme`](examples/terminal-menu.nme) is a small
+menu loop in the terminal.
+
 The `.nme` ending is optional. `nme run program` and even `nme program` both
 run `program.nme`. NME chooses the normal Python command for your operating
 system; `--python` is only an advanced override for unusual setups.

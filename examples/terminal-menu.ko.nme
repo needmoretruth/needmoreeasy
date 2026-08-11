@@ -1,0 +1,19 @@
+# TUI — 터미널에서 작은 메뉴
+# 학습용입니다. 투자 조언이 아닙니다.
+# 실행: nme r terminal-menu.ko
+# "3"을 입력하면 종료합니다.
+
+use random latest
+
+menu = "1) 인사\n2) 주사위\n3) 종료"
+
+while True:
+    show menu
+    ask 선택, "고르세요: "
+    if 선택 == "1":
+        show "안녕하세요!"
+    elif 선택 == "2":
+        show random_number(1, 6)
+    else:
+        show "안녕히 가세요"
+        break
