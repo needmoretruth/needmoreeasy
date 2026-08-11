@@ -6,61 +6,9 @@ on:
   pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  prepare-native-test-newlines:
-    name: prepare-native-test-newlines
-    if: github.event_name == 'pull_request' && github.head_ref == 'release/beta.16-zk'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out release candidate branch
-        uses: actions/checkout@v4
-        with:
-          ref: release/beta.16-zk
-          fetch-depth: 0
-
-      - name: Install stable Rust with required tools
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt, clippy
-
-      - name: Install CPython
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
-
-      - name: Normalize native-test stdout across operating systems
-        shell: bash
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          from pathlib import Path
-          path = Path('crates/nme-native/tests/native.rs')
-          text = path.read_text(encoding='utf-8')
-          old = '    Ok(String::from_utf8_lossy(&output.stdout).into_owned())'
-          new = '    Ok(String::from_utf8_lossy(&output.stdout).replace("\\r\\n", "\\n"))'
-          assert text.count(old) == 1
-          path.write_text(text.replace(old, new, 1), encoding='utf-8')
-          PY
-          cargo fmt --all
-          cargo fmt --all -- --check
-          cargo check --workspace
-          cargo clippy --workspace --all-targets -- -D warnings
-          cargo test --workspace
-
-      - name: Commit validated native-test portability fix
-        shell: bash
-        run: |
-          set -euo pipefail
-          git checkout 34342099c56b54789580700a81292d75c100462a -- .github/workflows/ci.yml
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- .github/workflows/ci.yml crates/nme-native/tests/native.rs
-          git diff --cached --check
-          git commit -m 'Normalize native test output across platforms [beta16-applied]'
-          git push origin HEAD:release/beta.16-zk
-
   test:
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}

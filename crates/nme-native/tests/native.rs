@@ -36,7 +36,7 @@ fn native_run(source: &str) -> Result<String, String> {
         .output()
         .map_err(|error| format!("could not run the native program: {error}"))?;
     let _ = std::fs::remove_dir_all(&dir);
-    Ok(String::from_utf8_lossy(&output.stdout).into_owned())
+    Ok(String::from_utf8_lossy(&output.stdout).replace("\r\n", "\n"))
 }
 
 fn native_rejects(source: &str) -> bool {
