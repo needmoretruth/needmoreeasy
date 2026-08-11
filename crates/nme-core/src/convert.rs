@@ -243,7 +243,9 @@ fn read_assignment<'a>(source: &str, tokens: &'a [Token]) -> Option<(&'a str, &'
 /// Detects `open(path)` / `open(path, "r")` / `Path(path)` followed by
 /// `.method()` with empty arguments.
 fn call_shape<'a>(source: &str, tokens: &'a [Token]) -> Option<(&'a Token, &'a str)> {
-    let dot_at = tokens.iter().position(|token| matches!(token.tok, Tok::Dot))?;
+    let dot_at = tokens
+        .iter()
+        .position(|token| matches!(token.tok, Tok::Dot))?;
     let base = &tokens[..dot_at];
     if base.len() < 4
         || !matches!(base[0].tok, Tok::Name { .. })
@@ -289,7 +291,9 @@ fn call_shape<'a>(source: &str, tokens: &'a [Token]) -> Option<(&'a Token, &'a s
 
 /// `open("f", "w").write(value)` / `Path("f").write_text(value)`.
 fn write_statement<'a>(source: &str, tokens: &'a [Token]) -> Option<(&'a Token, &'a [Token])> {
-    let dot_at = tokens.iter().position(|token| matches!(token.tok, Tok::Dot))?;
+    let dot_at = tokens
+        .iter()
+        .position(|token| matches!(token.tok, Tok::Dot))?;
     let base = &tokens[..dot_at];
     if base.len() < 4
         || !matches!(base[0].tok, Tok::Name { .. })
@@ -780,8 +784,7 @@ mod tests {
         // The converted sentence source is valid NME. An undefined name like
         // `점수` in a one-line snippet interpolates as literal text, which is
         // the documented sentence behavior; defined names round-trip exactly.
-        let converted_en =
-            converted(source, SyntaxLevel::Sentence, Language::English).source;
+        let converted_en = converted(source, SyntaxLevel::Sentence, Language::English).source;
         assert_eq!(
             transpile(&converted_en).unwrap(),
             concat!(

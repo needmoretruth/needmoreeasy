@@ -6,6 +6,20 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.16 — 2026-08-11
+
+- Add the bundled `zero_knowledge` / `영지식` adapter (version `0.0.1`) with a
+  finite-field Schnorr proof-of-knowledge reference implementation: secure
+  randomness from Python `secrets`, RFC 3526 3072-bit MODP Group 15 subgroup
+  parameters, 256-bit verifier challenges, subgroup/range checks, transcript
+  simulation helpers, helper-name collision protection, and Korean
+  sentence-only proof expressions. Add matching Korean/English A→B examples
+  with malicious relay C showing saved-transcript replay failure, transcript
+  simulation, and the separate live-relay case. Document the security scope:
+  mathematically faithful learning/reference code, not a side-channel-hardened
+  production cryptography library.
+
+
 - Extend the NME-native core: integer `%` modulo in arithmetic (float modulo is rejected honestly); conditions using `%` are a frontend follow-up.
 - Fix the native backend so the very first string assignment can be a concatenation (`greeting = "hello" + " world"`): a C array cannot be initialized from a function call, so the emitter declares the buffer first and copies with strcpy.
 - Extend the NME-native core: float literals, float variables, float arithmetic (mixed int/float promotes to double), and float comparisons.

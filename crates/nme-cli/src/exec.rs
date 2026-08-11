@@ -67,7 +67,9 @@ _nme_main()
 /// filename, so its syntax diagnostics point to the user's file.
 pub fn check_python(python_source: &str, source_path: &Path, python: &str) -> io::Result<Output> {
     let source_path = absolute_path(source_path)?;
-    let mut child = Command::new(python)
+    let mut command = Command::new(python);
+    configure_python_utf8(&mut command);
+    let mut child = command
         .arg("-c")
         .arg(CHECK_BOOTSTRAP)
         .arg(source_path)
@@ -104,6 +106,7 @@ pub fn run_python(
 ) -> io::Result<ExitStatus> {
     let source_path = absolute_path(source_path)?;
     let mut command = Command::new(python);
+    configure_python_utf8(&mut command);
     if let Some(dir) = module_dir {
         command.env("NME_MODULE_PATH", dir);
     }
@@ -134,6 +137,12 @@ pub fn run_python(
         let _ = io::copy(&mut input, &mut child_stdin);
     });
     child.wait()
+}
+
+fn configure_python_utf8(command: &mut Command) {
+    command
+        .env("PYTHONUTF8", "1")
+        .env("PYTHONIOENCODING", "utf-8");
 }
 
 fn stop_after_input_error(child: &mut std::process::Child) {
@@ -168,7 +177,9 @@ pub fn compile_native(
     let program = dir.join(format!("{stem}.py"));
     std::fs::write(&program, python_source)?;
 
-    let status = Command::new(python)
+    let mut command = Command::new(python);
+    configure_python_utf8(&mut command);
+    let status = command
         .arg("-m")
         .arg("nuitka")
         .arg("--onefile")
