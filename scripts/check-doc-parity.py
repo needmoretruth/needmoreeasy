@@ -147,11 +147,26 @@ def check_guide_code_block_parity(problems: list[str]) -> None:
             )
 
 
+def check_example_template_loop(problems: list[str]) -> None:
+    loops = ("while value < 3:", "동안 값 < 3:")
+    for path in (
+        ROOT / "docs" / "guides" / "example-template.md",
+        ROOT / "docs" / "guides" / "example-template.ko.md",
+    ):
+        text = path.read_text(encoding="utf-8")
+        for loop in loops:
+            if loop not in text:
+                problems.append(
+                    f"{path.relative_to(ROOT)}: beginner skeleton needs bounded loop {loop}"
+                )
+
+
 problems: list[str] = []
 check_korean_links(problems)
 check_guide_navigation(problems)
 check_guide_metadata(problems)
 check_guide_code_block_parity(problems)
+check_example_template_loop(problems)
 if problems:
     print(f"doc-parity: {len(problems)} problem(s)", file=sys.stderr)
     for problem in problems:

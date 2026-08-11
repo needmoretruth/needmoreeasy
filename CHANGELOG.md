@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.27 — 2026-08-12
+
+- Fix the English beginner skeleton in both example-template twins so its loop
+  stops at three instead of becoming an accidental infinite loop.
+- Add a parity regression guard for the bounded English and Korean template
+  loops.
+
 ## 0.0.1-beta.26 — 2026-08-12
 
 - Fill the remaining English code examples in the main NeedMoreCoin guide and

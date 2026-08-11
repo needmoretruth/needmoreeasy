@@ -107,7 +107,7 @@ set value to 0
 
 say f"{name} starts"
 
-while value
+while value < 3:
     set value to value + 1
 end
 
