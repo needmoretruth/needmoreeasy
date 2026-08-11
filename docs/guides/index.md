@@ -12,7 +12,8 @@ CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
 data, a growing project, and self-hosting; 35–37 add a dated diary, word
 counting, and a hidden-word game; 38–40 add a file-based quiz, list sorting,
 and a summary report; 41–43 add a text-stats report, a two-group comparison,
-and a habit-tracker project.
+and a habit-tracker project; 44–46 add a random music player, CSV rows of
+data, and an expression language.
 
 ## Difficulty
 
@@ -67,6 +68,9 @@ and a habit-tracker project.
 41. [41 — Text stats](41-text-stats.md)
 42. [42 — Compare](42-compare.md)
 43. [43 — Habit](43-habit.md)
+44. [44 — Playlist](44-playlist.md)
+45. [45 — CSV](45-csv.md)
+46. [46 — Expressions](46-expressions.md)
 
 ## Topic lookup
 
@@ -105,6 +109,9 @@ and a habit-tracker project.
 - 정렬 / Sorting: [39](39-sorting.md)
 - 단어 / Word count: [36](36-word-count.md)
 - 셀프호스팅 / Self-host: [34](34-selfhost.md)
+- 플레이리스트 / Playlist: [44](44-playlist.md)
+- CSV / 데이터: [45](45-csv.md)
+- 표현식 / Expressions: [46](46-expressions.md)
 
 ## All guides
 
@@ -153,6 +160,9 @@ and a habit-tracker project.
 | 41 | ★★★★★ | 텍스트/데이터 / Text & data | [Text stats — letters and words](41-text-stats.md) | Read a text file and report character count, word count, longest word, and most common word |
 | 42 | ★★★★★ | 데이터/비교 / Data & comparison | [Compare — two groups of numbers](42-compare.md) | Load two JSON number lists and compare their means and maxima |
 | 43 | ★★★★★ | 프로젝트 / Project | [Habit — a habit tracker](43-habit.md) | A JSON-persisted habit tracker with add, check, streak, list, and a storage module |
+| 44 | ★★★★★ | 게임/랜덤 / Game & random | [Playlist — a random music player](44-playlist.md) | A playlist loaded from JSON with shuffle, next, and a loop of songs |
+| 45 | ★★★★★ | 데이터 / Data | [CSV — rows of data](45-csv.md) | Read a comma-separated file, compute a column's average, and write a summary CSV |
+| 46 | ★★★★★ | 컴파일러 / Compiler | [Compiler tier — a small expression language](46-expressions.md) | A tiny calculator that evaluates `2 + 3 * 4` respecting precedence |
 
 ## Where to continue
 
