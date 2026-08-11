@@ -290,9 +290,15 @@ fn lower_expr(
                 let right = string_operand(&binop.right, span, declared)?;
                 Ok((format!("nme_cat({left}, {right})"), ExprType::Str))
             }
-            Operator::Add | Operator::Sub | Operator::Mult => {
+            Operator::Add | Operator::Sub | Operator::Mult | Operator::Mod => {
                 let (left, left_kind) = numeric_operand(&binop.left, span, declared)?;
                 let (right, right_kind) = numeric_operand(&binop.right, span, declared)?;
+                if matches!(binop.op, Operator::Mod)
+                    && (matches!(left_kind, ExprType::Float)
+                        || matches!(right_kind, ExprType::Float))
+                {
+                    return Err(not_supported("modulo on floats", span));
+                }
                 let kind = if matches!(left_kind, ExprType::Float)
                     || matches!(right_kind, ExprType::Float)
                 {
@@ -438,6 +444,7 @@ fn operator_text(operator: &Operator) -> &'static str {
         Operator::Add => "+",
         Operator::Sub => "-",
         Operator::Mult => "*",
+        Operator::Mod => "%",
         _ => unreachable!("checked by the caller"),
     }
 }

@@ -134,6 +134,12 @@ fn string_comparison_and_len_compile_natively() {
 }
 
 #[test]
+fn modulo_arithmetic_compiles_natively() {
+    let source = "x = 7\nshow x % 3\nshow 10 % 4\nshow 2 + 10 % 4\n";
+    assert_eq!(native_run(source).unwrap(), "1\n2\n4\n");
+}
+
+#[test]
 fn float_literals_arithmetic_and_conditions_compile_natively() {
     let source = "pi = 3.14\nshow pi\nshow 1 + 0.5\nr = 2\nshow 3.14 * r * r\nif pi is greater than 3\n    show \"pi big\"\nend\n";
     assert_eq!(native_run(source).unwrap(), "3.14\n1.5\n12.56\npi big\n");
