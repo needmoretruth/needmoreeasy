@@ -19,21 +19,24 @@ fn quote_korean_output(text: &mut String, prefix: &str) {
     *text = rewritten + "\n";
 }
 
-fn quote_english_output(text: &mut String, prefix: &str) {
+fn quote_english_condition_outputs(text: &mut String) {
     let mut found = 0usize;
     let rewritten = text
         .lines()
         .map(|line| {
-            if let Some(body) = line.strip_prefix(prefix).and_then(|rest| rest.strip_suffix(" show")) {
-                found += 1;
-                format!("{prefix}\"{body}\" show")
-            } else {
-                line.to_string()
+            if line.starts_with("if ") && line.ends_with(" show") {
+                if let Some((condition, body_with_show)) = line.split_once(" then ") {
+                    if let Some(body) = body_with_show.strip_suffix(" show") {
+                        found += 1;
+                        return format!("{condition} then \"{body}\" show");
+                    }
+                }
             }
+            line.to_string()
         })
         .collect::<Vec<_>>()
         .join("\n");
-    assert_eq!(found, 1, "expected one English output line starting with {prefix}");
+    assert_eq!(found, 5, "expected five English conditional output lines");
     *text = rewritten + "\n";
 }
 
@@ -71,19 +74,11 @@ fn main() {
     }
     fs::write(&korean, text).expect("write Korean ZK example");
 
-    // The English twin stays in sentence NME. Quoted output keeps possessive
-    // apostrophes inside a string token instead of the sentence lexer.
+    // The English twin stays in sentence NME. Quote every conditional output
+    // body so possessive apostrophes remain inside a string token.
     let english = root.join("examples/zk-schnorr-relay.en.nme");
     let mut text = fs::read_to_string(&english).expect("read English ZK example");
-    for prefix in [
-        "if normal then ",
-        "if replay_ok is false then ",
-        "if sim_ok then ",
-        "if sim_reuse_ok is false then ",
-        "if relay_ok then ",
-    ] {
-        quote_english_output(&mut text, prefix);
-    }
+    quote_english_condition_outputs(&mut text);
     fs::write(&english, text).expect("write English ZK example");
 
     // One-shot release-preparation helper only. The validated candidate must
