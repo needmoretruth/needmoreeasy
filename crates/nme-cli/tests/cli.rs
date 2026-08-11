@@ -365,6 +365,36 @@ fn the_native_command_compiles_and_runs_a_core_program() {
 }
 
 #[test]
+fn install_requires_a_package_and_explains_pip_failures() {
+    let no_package = nme(&["install"]);
+    assert!(!no_package.status.success());
+    assert!(
+        stderr(&no_package).contains("which package should I install"),
+        "{}",
+        stderr(&no_package)
+    );
+
+    let two = nme(&["install", "a", "b"]);
+    assert!(!two.status.success());
+
+    // pip is not installed in this environment; the error must be friendly.
+    let missing_pip = Command::new(python_command())
+        .args(["-m", "pip", "--version"])
+        .output()
+        .map(|out| !out.status.success())
+        .unwrap_or(true);
+    if missing_pip {
+        let install = nme(&["install", "requests"]);
+        assert!(!install.status.success());
+        assert!(
+            stderr(&install).contains("pip failed to install"),
+            "{}",
+            stderr(&install)
+        );
+    }
+}
+
+#[test]
 fn the_terminal_menu_example_runs_with_scripted_input() {
     if !python_available() {
         eprintln!("Python not available; skipping terminal menu test");

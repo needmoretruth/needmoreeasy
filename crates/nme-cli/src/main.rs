@@ -53,6 +53,7 @@ MORE COMMANDS:
     nme modules                   Show bundled modules and versions
     nme native run hello          Compile a core-subset program to native code
     nme native build hello -o h   and run it / keep the executable and C
+    nme install requests          Install a Python package with pip
     nme ko E0001                  Korean explanation of error code E0001
     nme en E0001                  English explanation of error code E0001
     nme help                      Show this help
@@ -104,6 +105,7 @@ const HELP_KOREAN: &str = r"nme — NeedMoreEasy: 더 쉽게 시작해서 Python
     nme 모듈                       내장 모듈과 버전 보기
     nme 네이티브 실행 hello        코어 부분집합 프로그램을 네이티브 코드로 컴파일해 실행
     nme 네이티브 빌드 hello -o h   실행 파일과 C 소스를 저장
+    nme 설치 requests             Python 패키지를 pip으로 설치
     nme ko E0001                   오류 코드 E0001의 한국어 설명 보기
     nme en E0001                   오류 코드 E0001의 영어 설명 보기
     nme 도움                       이 도움말 보기
@@ -147,6 +149,7 @@ fn main() -> ExitCode {
         Some("native" | "네이티브") => {
             command_native(&args[1..], MessageLanguage::English)
         }
+        Some("install" | "설치") => command_install(&args[1..], MessageLanguage::English),
         Some("ko" | "error" | "에러") => {
             command_error_lookup(&args[1..], MessageLanguage::KoreanAndEnglish)
         }
@@ -424,6 +427,76 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
                 &format!("네이티브 프로그램을 실행할 수 없습니다: {err}"),
             ),
         }
+    }
+}
+
+/// `nme install <package>` / `nme 설치 <패키지>` installs a Python package
+/// with pip and tells the beginner how to use it in an `.nme` file. It is a
+/// friendly wrapper around the ordinary Python package manager, not a
+/// separate registry.
+fn command_install(args: &[String], language: MessageLanguage) -> ExitCode {
+    if args.is_empty() {
+        return fail(
+            nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
+            language,
+            "which package should I install? e.g. nme install requests",
+            "어떤 패키지를 설치할까요? 예: nme 설치 requests",
+        );
+    }
+    if args.len() > 1 {
+        return fail(
+            nme_core::diagnostics::DiagnosticCode::CliUnexpectedExtraFile,
+            language,
+            &format!("one package at a time: `{}` and the rest are separate", args[0]),
+            &format!("패키지는 한 번에 하나씩입니다: `{}`와 나머지는 별개입니다", args[0]),
+        );
+    }
+    let package = &args[0];
+    let python = DEFAULT_PYTHON;
+    let status = std::process::Command::new(python)
+        .arg("-m")
+        .arg("pip")
+        .arg("install")
+        .arg(package)
+        .status();
+    match status {
+        Ok(status) if status.success() => {
+            match language {
+                MessageLanguage::English => print_out(&format!(
+                    "Installed {package}.\nUse it in any .nme file with:\n    import {package}\n\n",
+                )),
+                MessageLanguage::KoreanAndEnglish => print_out(&format!(
+                    "{package} 패키지를 설치했습니다.\n아무 .nme 파일에서 이렇게 사용하세요:\n    import {package}\n\n"
+                )),
+            }
+            ExitCode::SUCCESS
+        }
+        Ok(status) => fail(
+            nme_core::diagnostics::DiagnosticCode::CliNativeCompileFailed,
+            language,
+            &format!(
+                "pip failed to install {package} (exit {}).\n\
+                 hint: check the package name, your internet connection, and that pip is installed",
+                status.code().unwrap_or(1),
+            ),
+            &format!(
+                "pip이 {package} 설치에 실패했습니다(종료 {}).\n\
+                 도움말: 패키지 이름, 인터넷 연결, pip 설치 여부를 확인하세요",
+                status.code().unwrap_or(1),
+            ),
+        ),
+        Err(error) => fail(
+            nme_core::diagnostics::DiagnosticCode::CliPythonStartFailed,
+            language,
+            &format!(
+                "couldn't start pip ({python} -m pip): {error}\n\
+                 hint: install Python 3, then run this command again",
+            ),
+            &format!(
+                "pip을 시작할 수 없습니다({python} -m pip): {error}\n\
+                 도움말: Python 3를 설치한 뒤 이 명령을 다시 실행하세요",
+            ),
+        ),
     }
 }
 
