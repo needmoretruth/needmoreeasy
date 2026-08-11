@@ -328,6 +328,22 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
         NameResolution::None => resolve_nme_path(Path::new(&file)),
     };
     let shown_path = path.to_string_lossy();
+    if path.is_dir() {
+        return fail(
+            nme_core::diagnostics::DiagnosticCode::CliFolderNotProgram,
+            language,
+            &format!(
+                "`{}` is a folder, not a program.\n\
+                 hint: run `nme r` inside a folder that contains a .nme program, or type the program name",
+                path.display()
+            ),
+            &format!(
+                "`{}`은(는) 폴더이지 프로그램이 아니에요.\n\
+                 도움말: .nme 프로그램이 있는 폴더에서 `nme r`을 실행하거나, 프로그램 이름을 적어 주세요",
+                path.display()
+            ),
+        );
+    }
     let source = match std::fs::read_to_string(&path) {
         Ok(source) => source,
         Err(err) => {

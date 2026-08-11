@@ -6,6 +6,12 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.38 — 2026-08-12
+
+- Make `nme native` classify directory arguments as E9014 instead of reporting
+  them as unreadable files E9007, matching the CPython-backed commands.
+- Add English/Korean native-command coverage for the shared folder diagnostic.
+
 ## 0.0.1-beta.37 — 2026-08-12
 
 - Keep existing but unreadable program files on E9007 instead of reporting them

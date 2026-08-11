@@ -1610,6 +1610,41 @@ fn a_directory_argument_explains_that_it_is_a_folder() {
         "{korean_error}"
     );
 
+    let native = nme(&["native", &dir.to_string_lossy()]);
+    assert!(!native.status.success());
+    let native_error = stderr(&native);
+    assert!(
+        native_error.contains("error[E9014]:"),
+        "{native_error}"
+    );
+    assert!(
+        native_error.contains("is a folder, not a program"),
+        "{native_error}"
+    );
+    assert!(!native_error.contains("E9007"), "{native_error}");
+    assert!(!native_error.contains("오류["), "{native_error}");
+
+    let korean_native = nme(&["네이티브", &dir.to_string_lossy()]);
+    assert!(!korean_native.status.success());
+    let korean_native_error = stderr(&korean_native);
+    assert!(
+        korean_native_error.contains("오류[E9014]:"),
+        "{korean_native_error}"
+    );
+    assert!(
+        korean_native_error.contains("폴더이지 프로그램이 아니에요"),
+        "{korean_native_error}"
+    );
+    assert!(
+        korean_native_error.contains("error[E9014]:"),
+        "{korean_native_error}"
+    );
+    assert!(
+        korean_native_error.contains("is a folder, not a program"),
+        "{korean_native_error}"
+    );
+    assert!(!korean_native_error.contains("E9007"), "{korean_native_error}");
+
     let _ = std::fs::remove_dir_all(&dir);
 }
 
