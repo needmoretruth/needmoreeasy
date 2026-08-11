@@ -134,6 +134,12 @@ fn string_comparison_and_len_compile_natively() {
 }
 
 #[test]
+fn truthy_conditions_compile_natively() {
+    let source = "ready = 1\nif ready\n    show \"ready yes\"\nend\nready = 0\nif ready\n    show \"no\"\nend\nturns = 3\nwhile turns\n    show turns\n    turns add -1\nend\n";
+    assert_eq!(native_run(source).unwrap(), "ready yes\n3\n2\n1\n");
+}
+
+#[test]
 fn string_concat_into_variables_works() {
     let source = "greeting = \"hello\"\ngreeting = greeting + \" world\"\nshow greeting\nname = \"NME\"\nname = \"great \" + name\nshow name\n";
     assert_eq!(native_run(source).unwrap(), "hello world\ngreat NME\n");

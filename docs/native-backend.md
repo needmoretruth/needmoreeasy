@@ -46,8 +46,8 @@ Implemented so far:
   and a `len` builtin; nested concatenation and ordering text are rejected
   rather than miscompiled;
 - control flow: sentence `while`/`if`/`else`/`else if` over integer
-  comparisons (`<`, `>`, `<=`, `>=`, `==`, `!=`), `break`; the
-  natural-language connectors for `<=`/`>=` are a frontend follow-up;
+  comparisons (`<`, `>`, `<=`, `>=`, `==`, `!=`) and over integer
+  truthiness (`if ready`, `while turns`), `break`;
 - functions over scalar parameters with `return` (recursion works);
 - `say`/`show`/`말해` of an integer expression, a string variable, or a
   string literal;
@@ -55,8 +55,8 @@ Implemented so far:
 - identifiers that collide with C keywords are rejected, never silently
   renamed.
 
-Still planned: floats, booleans, the natural-language `<=`/`>=`
-connectors, and the `native.nme` surface document.
+Still planned: floats, real booleans (as distinct from integer
+truthiness), and the `native.nme` surface document.
 
 Everything outside the core — dynamic Python, classes, imports, packages,
 `use random`/`use file` adapters — stays on the **Python compatibility

@@ -416,6 +416,36 @@ fn check_condition(
                 .map_err(|_| not_supported("this condition", span))?;
             lower_compare(&expr, span, declared)
         }
+        Condition::Truthy { value, negated } => {
+            let (text, kind) = match value {
+                ConditionValue::Name(name) => {
+                    if is_c_keyword(name) {
+                        return Err(not_supported(
+                            &format!("a variable named `{name}` (C keyword)"),
+                            span,
+                        ));
+                    }
+                    (name.clone(), ExprType::Int)
+                }
+                ConditionValue::Python(code) => {
+                    check_expr(code_text(code, source), span, declared)?
+                }
+                ConditionValue::Literal(_) => {
+                    return Err(not_supported("boolean/null truthiness", span));
+                }
+                ConditionValue::Text(_) => {
+                    return Err(not_supported("text in a truthy condition", span));
+                }
+            };
+            if kind != ExprType::Int {
+                return Err(not_supported("a text value in a truthy condition", span));
+            }
+            Ok(if *negated {
+                format!("!({text})")
+            } else {
+                format!("({text})")
+            })
+        }
         _ => Err(not_supported("this condition", span)),
     }
 }
