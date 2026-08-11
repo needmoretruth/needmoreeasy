@@ -89,6 +89,24 @@ fn recursive_functions_compile_natively() {
 }
 
 #[test]
+fn string_variables_and_binary_concat_compile_natively() {
+    let source = "greeting = \"hello\"\nshow greeting\nname = \"NME\"\nshow name + \" rocks\"\nshow greeting + \" friend\"\n";
+    assert_eq!(
+        native_run(source).unwrap(),
+        "hello\nNME rocks\nhello friend\n"
+    );
+
+    let korean = "인사 = \"안녕\"\n말해 인사\n말해 인사 + \"하세요\"\n";
+    assert_eq!(native_run(korean).unwrap(), "안녕\n안녕하세요\n");
+}
+
+#[test]
+fn nested_string_concat_is_rejected_not_miscompiled() {
+    assert!(native_rejects("greeting = \"hi\"\nshow greeting + \" \" + \"friend\"\n"));
+    assert!(native_rejects("greeting = \"a\" + \"b\"\nshow greeting\n"));
+}
+
+#[test]
 fn c_keyword_names_are_rejected_not_miscompiled() {
     assert!(native_rejects("double = 3\nshow double\n"));
     assert!(native_rejects("def double(n):\n    return n\nshow double(2)\n"));

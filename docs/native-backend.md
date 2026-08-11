@@ -41,17 +41,21 @@ Implemented so far:
 
 - integers and `+ - *` arithmetic (C `int`; explicit overflow behavior is
   C's, documented as a later `i64`/bignum decision);
+- string variables (literals), string output, and one binary `+`
+  concatenation through a tiny runtime helper (`nme_cat`); nested
+  concatenation is rejected rather than miscompiled;
 - control flow: sentence `while`/`if`/`else`/`else if` over integer
-  comparisons (`<`, `>`, `==`; more operators and booleans are next),
-  `break`;
+  comparisons (`<`, `>`, `==`; `<=`/`>=` and booleans are next), `break`;
 - functions over scalar parameters with `return` (recursion works);
-- `say`/`show`/`말해` of an integer expression or a plain string literal;
+- `say`/`show`/`말해` of an integer expression, a string variable, or a
+  string literal;
 - Korean and English spellings both lower to the same C;
 - identifiers that collide with C keywords are rejected, never silently
   renamed.
 
-Still planned: floats, booleans, a UTF-8 string runtime (`len`,
-concatenation), `<=`/`>=`, and the `native.nme` surface document.
+Still planned: floats, booleans, a fuller string runtime (`len`,
+concatenation into variables), `<=`/`>=`, and the `native.nme` surface
+document.
 
 Everything outside the core — dynamic Python, classes, imports, packages,
 `use random`/`use file` adapters — stays on the **Python compatibility

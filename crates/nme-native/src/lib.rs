@@ -8,17 +8,21 @@
 //!
 //! The core subset in this version is small and documented:
 //!
-//! - `say`/`show`/`말해` of an integer expression or a plain string literal;
-//! - `set x to <int>` / `x은 <int>` / `x = <int>` integer assignments
-//!   (including the Python-looking `x = <int>` form);
+//! - `say`/`show`/`말해` of an integer expression, a string variable, or a
+//!   string literal (one binary `+` concatenation);
+//! - `set x to ...` / `x은 ...` / `x = ...` assignments of integers and
+//!   string literals (including the Python-looking form);
 //! - value changes `x add N` / `x = x + N` / `점수에 N 더해`;
-//! - `while`/`if` blocks over integer comparisons, closed by `end`/`끝`;
-//! - `break` inside a loop.
+//! - `while`/`if`/`else`/`else if` blocks over integer comparisons, closed
+//!   by `end`/`끝`;
+//! - `break` inside a loop;
+//! - functions over integer parameters with an integer `return` (recursion
+//!   works).
 //!
 //! Anything outside this core is rejected with a clear bilingual diagnostic;
 //! it is never silently miscompiled. The rest of NME keeps running on CPython.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use nme_core::diagnostics::{Diagnostic, DiagnosticCode, Span};
 use nme_core::syntax::{CompareOp, Condition, ConditionValue, NmeStmt, Value};
@@ -26,6 +30,32 @@ use nme_core::{lexer, parser};
 
 use rustpython_parser::ast::{CmpOp, Constant, Expr, Operator, UnaryOp};
 use rustpython_parser::Parse as _;
+
+/// The static type the native backend tracks per variable.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum VarType {
+    Int,
+    Str,
+}
+
+/// The static type of an expression.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ExprType {
+    Int,
+    Str,
+}
+
+const PREAMBLE: &str = concat!(
+    "#include <stdio.h>\n",
+    "#include <string.h>\n",
+    "static char nme_cat_buf[8192];\n",
+    "static char *nme_cat(const char *a, const char *b) {\n",
+    "    strcpy(nme_cat_buf, a);\n",
+    "    strcat(nme_cat_buf, b);\n",
+    "    return nme_cat_buf;\n",
+    "}\n",
+    "int main(void) {\n",
+);
 
 /// Compiles the native core subset of `source` to C source text.
 ///
@@ -39,9 +69,9 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
         by_index.insert(nme_line.line_index, nme_line);
     }
 
-    let mut out = String::from("#include <stdio.h>\nint main(void) {\n");
+    let mut out = String::from(PREAMBLE);
     let mut open_braces = 1usize; // the `main` body
-    let mut declared = HashSet::new();
+    let mut declared = HashMap::new();
     let mut problems = Vec::new();
 
     for (index, line) in lines.iter().enumerate() {
@@ -58,12 +88,14 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
             }
             match &nme_line.stmt {
                 NmeStmt::Say { value } => {
-                    if let Err(diag) = emit_say(&mut out, value, source) {
+                    if let Err(diag) = emit_say(&mut out, value, source, &declared) {
                         problems.push(diag);
                     }
                 }
                 NmeStmt::Set { target, value } => {
-                    if let Err(diag) = emit_set(&mut out, &mut declared, target, value, source) {
+                    if let Err(diag) =
+                        emit_set(&mut out, &mut declared, target, value, source)
+                    {
                         problems.push(diag);
                     }
                 }
@@ -72,14 +104,21 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                     amount,
                     operation,
                 } => {
-                    if let Err(diag) = emit_update(&mut out, &mut declared, target, amount, *operation, source) {
+                    if let Err(diag) = emit_update(
+                        &mut out,
+                        &mut declared,
+                        target,
+                        amount,
+                        *operation,
+                        source,
+                    ) {
                         problems.push(diag);
                     }
                 }
                 NmeStmt::While {
                     condition,
                     inline: None,
-                } => match check_condition(condition, source, nme_line.span) {
+                } => match check_condition(condition, source, nme_line.span, &declared) {
                     Ok(condition_text) => {
                         out.push_str(&format!("while ({condition_text}) {{\n"));
                         open_braces += 1;
@@ -89,7 +128,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                 NmeStmt::When {
                     condition,
                     inline: None,
-                } => match check_condition(condition, source, nme_line.span) {
+                } => match check_condition(condition, source, nme_line.span, &declared) {
                     Ok(condition_text) => {
                         out.push_str(&format!("if ({condition_text}) {{\n"));
                         open_braces += 1;
@@ -100,7 +139,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                 NmeStmt::ElseIf {
                     condition,
                     inline: None,
-                } => match check_condition(condition, source, nme_line.span) {
+                } => match check_condition(condition, source, nme_line.span, &declared) {
                     Ok(condition_text) => {
                         out.push_str(&format!("}} else if ({condition_text}) {{\n"));
                     }
@@ -111,7 +150,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                 other => problems.push(unsupported_statement(other, nme_line.span)),
             }
         } else {
-            // A non-NME line: blank, comment, or a Python integer assignment.
+            // A non-NME line: blank, comment, or a Python assignment.
             let total_depth = line.indent + program.virtual_indents[index];
             close_braces(&mut out, &mut open_braces, total_depth + 1);
             let text = &source[line.span.start..line.span.end];
@@ -121,9 +160,14 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                 out.push('\n');
                 continue;
             }
-            if let Some(diag) =
-                emit_python_line(&mut out, &mut open_braces, &mut declared, &line.tokens, text, source)
-            {
+            if let Some(diag) = emit_python_line(
+                &mut out,
+                &mut open_braces,
+                &mut declared,
+                &line.tokens,
+                text,
+                source,
+            ) {
                 problems.push(diag);
             }
         }
@@ -146,38 +190,79 @@ fn close_braces(out: &mut String, open: &mut usize, target: usize) {
     }
 }
 
-/// Validates that a Python expression belongs to the native core: integer
-/// literals, names, `+ - *`, unary minus, and parentheses only.
-fn check_int_expression(text: &str, _source: &str, span: Span) -> Result<String, Diagnostic> {
+/// Validates and lowers a Python expression to C for the native core,
+/// returning the C text and its static type. Integer expressions pass through
+/// unchanged; string expressions lower to a name, a literal, or one `+`
+/// concatenation through the small runtime helper.
+fn check_expr(
+    text: &str,
+    span: Span,
+    declared: &HashMap<String, VarType>,
+) -> Result<(String, ExprType), Diagnostic> {
     let expr = Expr::parse(text, "<native>")
         .map_err(|_| not_supported("this expression", span))?;
-    validate_int_expr(&expr, span).map(|_| text.to_string())
+    lower_expr(&expr, span, declared)
 }
 
-fn validate_int_expr(expr: &Expr, span: Span) -> Result<(), Diagnostic> {
+fn lower_expr(
+    expr: &Expr,
+    span: Span,
+    declared: &HashMap<String, VarType>,
+) -> Result<(String, ExprType), Diagnostic> {
     match expr {
-        Expr::Constant(constant) => {
-            if matches!(constant.value, Constant::Int(_)) {
-                Ok(())
-            } else {
-                Err(not_supported("string or other constant", span))
+        Expr::Constant(constant) => match &constant.value {
+            Constant::Int(value) => Ok((format!("{value}"), ExprType::Int)),
+            Constant::Str(string) => {
+                let escaped = string.replace('\\', "\\\\").replace('"', "\\\"");
+                Ok((format!("\"{escaped}\""), ExprType::Str))
+            }
+            _ => Err(not_supported("this constant", span)),
+        },
+        Expr::Name(name) => {
+            let id = name.id.as_str();
+            if is_c_keyword(id) {
+                return Err(not_supported(
+                    &format!("a variable named `{id}` (C keyword)"),
+                    span,
+                ));
+            }
+            match declared.get(id) {
+                Some(VarType::Str) => Ok((id.to_string(), ExprType::Str)),
+                Some(VarType::Int) | None => Ok((id.to_string(), ExprType::Int)),
             }
         }
-        Expr::Name(_) => Ok(()),
-        Expr::BinOp(binop) => {
-            if matches!(
-                binop.op,
-                Operator::Add | Operator::Sub | Operator::Mult
-            ) {
-                validate_int_expr(&binop.left, span)?;
-                validate_int_expr(&binop.right, span)
-            } else {
-                Err(not_supported("this operator", span))
+        Expr::BinOp(binop) => match binop.op {
+            Operator::Add if binop_operands_are_string(binop, span, declared)? => {
+                // One binary `+` over string operands; the operands must be a
+                // name or a literal so the shared runtime buffer is safe.
+                let left = string_operand(&binop.left, span, declared)?;
+                let right = string_operand(&binop.right, span, declared)?;
+                Ok((format!("nme_cat({left}, {right})"), ExprType::Str))
             }
-        }
+            Operator::Add | Operator::Sub | Operator::Mult => {
+                let left = int_operand(&binop.left, span, declared)?;
+                let right = int_operand(&binop.right, span, declared)?;
+                Ok((
+                    format!("({left} {} {right})", operator_text(&binop.op)),
+                    ExprType::Int,
+                ))
+            }
+            _ => Err(not_supported("this operator", span)),
+        },
         Expr::UnaryOp(unary) => {
             if matches!(unary.op, UnaryOp::USub | UnaryOp::UAdd) {
-                validate_int_expr(&unary.operand, span)
+                let operand = int_operand(&unary.operand, span, declared)?;
+                Ok((
+                    format!(
+                        "({}{operand})",
+                        if matches!(unary.op, UnaryOp::USub) {
+                            "-"
+                        } else {
+                            ""
+                        }
+                    ),
+                    ExprType::Int,
+                ))
             } else {
                 Err(not_supported("this operator", span))
             }
@@ -192,18 +277,103 @@ fn validate_int_expr(expr: &Expr, span: Span) -> Result<(), Diagnostic> {
                     span,
                 ));
             }
+            let mut args = Vec::new();
             for argument in &call.args {
-                validate_int_expr(argument, span)?;
+                let (text, kind) = lower_expr(argument, span, declared)?;
+                if kind != ExprType::Int {
+                    return Err(not_supported("a string argument to a function", span));
+                }
+                args.push(text);
             }
-            Ok(())
+            Ok((format!("{}({})", callee.id, args.join(", ")), ExprType::Int))
         }
         _ => Err(not_supported("this expression", span)),
     }
 }
 
+fn binop_operands_are_string(
+    binop: &rustpython_parser::ast::ExprBinOp,
+    span: Span,
+    declared: &HashMap<String, VarType>,
+) -> Result<bool, Diagnostic> {
+    let left_kind = operand_kind(&binop.left, span, declared)?;
+    let right_kind = operand_kind(&binop.right, span, declared)?;
+    match (left_kind, right_kind) {
+        (ExprType::Str, ExprType::Str) => Ok(true),
+        (ExprType::Int, ExprType::Int) => Ok(false),
+        _ => Err(not_supported("mixing numbers and text", span)),
+    }
+}
+
+fn operand_kind(
+    expr: &Expr,
+    span: Span,
+    declared: &HashMap<String, VarType>,
+) -> Result<ExprType, Diagnostic> {
+    let (_, kind) = lower_expr(expr, span, declared)?;
+    Ok(kind)
+}
+
+fn string_operand(
+    expr: &Expr,
+    span: Span,
+    declared: &HashMap<String, VarType>,
+) -> Result<String, Diagnostic> {
+    match expr {
+        Expr::Constant(constant) => match &constant.value {
+            Constant::Str(string) => {
+                let escaped = string.replace('\\', "\\\\").replace('"', "\\\"");
+                Ok(format!("\"{escaped}\""))
+            }
+            _ => Err(not_supported("this operand", span)),
+        },
+        Expr::Name(name) => {
+            let id = name.id.as_str();
+            if is_c_keyword(id) {
+                return Err(not_supported(
+                    &format!("a variable named `{id}` (C keyword)"),
+                    span,
+                ));
+            }
+            if matches!(declared.get(id), Some(VarType::Str)) {
+                Ok(id.to_string())
+            } else {
+                Err(not_supported("this operand", span))
+            }
+        }
+        _ => Err(not_supported("nested string concatenation", span)),
+    }
+}
+
+fn int_operand(
+    expr: &Expr,
+    span: Span,
+    declared: &HashMap<String, VarType>,
+) -> Result<String, Diagnostic> {
+    let (text, kind) = lower_expr(expr, span, declared)?;
+    if kind != ExprType::Int {
+        return Err(not_supported("a text value in an integer expression", span));
+    }
+    Ok(text)
+}
+
+fn operator_text(operator: &Operator) -> &'static str {
+    match operator {
+        Operator::Add => "+",
+        Operator::Sub => "-",
+        Operator::Mult => "*",
+        _ => unreachable!("checked by the caller"),
+    }
+}
+
 /// Validates a condition: a comparison of two integer expressions, optionally
 /// negated.
-fn check_condition(condition: &Condition, source: &str, span: Span) -> Result<String, Diagnostic> {
+fn check_condition(
+    condition: &Condition,
+    source: &str,
+    span: Span,
+    declared: &HashMap<String, VarType>,
+) -> Result<String, Diagnostic> {
     match condition {
         Condition::Compare {
             left,
@@ -211,8 +381,8 @@ fn check_condition(condition: &Condition, source: &str, span: Span) -> Result<St
             right,
             negated,
         } => {
-            let left = condition_value(left, source, span)?;
-            let right = condition_value(right, source, span)?;
+            let left = condition_value(left, source, span, declared)?;
+            let right = condition_value(right, source, span, declared)?;
             let op = match operator {
                 CompareOp::Equal => "==",
                 CompareOp::Greater => ">",
@@ -229,32 +399,59 @@ fn check_condition(condition: &Condition, source: &str, span: Span) -> Result<St
             let text = code_text(code, source);
             let expr = Expr::parse(text, "<native>")
                 .map_err(|_| not_supported("this condition", span))?;
-            validate_compare(&expr, span)?;
+            validate_compare(&expr, span, declared)?;
             Ok(text.to_string())
         }
         _ => Err(not_supported("this condition", span)),
     }
 }
 
-fn condition_value(value: &ConditionValue, source: &str, span: Span) -> Result<String, Diagnostic> {
+fn condition_value(
+    value: &ConditionValue,
+    source: &str,
+    span: Span,
+    declared: &HashMap<String, VarType>,
+) -> Result<String, Diagnostic> {
     match value {
-        ConditionValue::Python(code) => check_int_expression(code_text(code, source), source, span),
-        ConditionValue::Name(name) => Ok(name.clone()),
+        ConditionValue::Python(code) => {
+            let (text, kind) = check_expr(code_text(code, source), span, declared)?;
+            if kind != ExprType::Int {
+                return Err(not_supported("a text value in a condition", span));
+            }
+            Ok(text)
+        }
+        ConditionValue::Name(name) => {
+            if is_c_keyword(name) {
+                return Err(not_supported(
+                    &format!("a variable named `{name}` (C keyword)"),
+                    span,
+                ));
+            }
+            if matches!(declared.get(name), Some(VarType::Str)) {
+                return Err(not_supported("a text value in a condition", span));
+            }
+            Ok(name.clone())
+        }
         ConditionValue::Literal(_) | ConditionValue::Text(_) => {
             Err(not_supported("non-integer condition value", span))
         }
     }
 }
 
-fn validate_compare(expr: &Expr, span: Span) -> Result<(), Diagnostic> {
+fn validate_compare(
+    expr: &Expr,
+    span: Span,
+    declared: &HashMap<String, VarType>,
+) -> Result<(), Diagnostic> {
     match expr {
         Expr::Compare(compare) if compare.ops.len() == 1 => {
             if matches!(
                 compare.ops[0],
                 CmpOp::Lt | CmpOp::LtE | CmpOp::Gt | CmpOp::GtE | CmpOp::Eq | CmpOp::NotEq
             ) {
-                validate_int_expr(&compare.left, span)?;
-                validate_int_expr(&compare.comparators[0], span)
+                int_operand(&compare.left, span, declared)?;
+                int_operand(&compare.comparators[0], span, declared)?;
+                Ok(())
             } else {
                 Err(not_supported("this comparison", span))
             }
@@ -269,29 +466,24 @@ fn code_text<'a>(code: &nme_core::syntax::Code, source: &'a str) -> &'a str {
     }
 }
 
-fn emit_say(out: &mut String, value: &Value, source: &str) -> Result<(), Diagnostic> {
+fn emit_say(
+    out: &mut String,
+    value: &Value,
+    source: &str,
+    declared: &HashMap<String, VarType>,
+) -> Result<(), Diagnostic> {
     match value {
         Value::Python(code) => {
             let text = code_text(code, source);
             let span = code_span(code);
-            let expr = Expr::parse(text, "<native>")
-                .map_err(|_| not_supported("this expression", span))?;
-            match &expr {
-                Expr::Constant(constant) => match &constant.value {
-                    Constant::Str(string) => {
-                        let escaped = string.replace('\\', "\\\\").replace('"', "\\\"");
-                        out.push_str(&format!("printf(\"%s\\n\", \"{escaped}\");\n"));
-                        Ok(())
-                    }
-                    Constant::Int(_) => {
-                        out.push_str(&format!("printf(\"%d\\n\", {text});\n"));
-                        Ok(())
-                    }
-                    _ => Err(not_supported("this constant", span)),
-                },
-                _ => {
-                    check_int_expression(text, source, span)?;
-                    out.push_str(&format!("printf(\"%d\\n\", {text});\n"));
+            let (lowered, kind) = check_expr(text, span, declared)?;
+            match kind {
+                ExprType::Int => {
+                    out.push_str(&format!("printf(\"%d\\n\", {lowered});\n"));
+                    Ok(())
+                }
+                ExprType::Str => {
+                    out.push_str(&format!("printf(\"%s\\n\", {lowered});\n"));
                     Ok(())
                 }
             }
@@ -302,7 +494,7 @@ fn emit_say(out: &mut String, value: &Value, source: &str) -> Result<(), Diagnos
                 match part {
                     nme_core::syntax::TextPart::Literal(text) => literal.push_str(text),
                     nme_core::syntax::TextPart::Variable(_) => {
-                        return Err(not_supported("a variable inside a sentence", template_span(template)));
+                        return Err(not_supported("a variable inside a sentence", span_of_value(value)));
                     }
                 }
             }
@@ -310,16 +502,16 @@ fn emit_say(out: &mut String, value: &Value, source: &str) -> Result<(), Diagnos
             out.push_str(&format!("printf(\"%s\\n\", \"{escaped}\");\n"));
             Ok(())
         }
-        Value::Literal(_) => Err(not_supported("boolean/null output", code_span_for_value(value))),
+        Value::Literal(_) => Err(not_supported("boolean/null output", span_of_value(value))),
         Value::RandomInteger { .. } | Value::RandomChoice { .. } => {
-            Err(not_supported("random values", code_span_for_value(value)))
+            Err(not_supported("random values", span_of_value(value)))
         }
     }
 }
 
 fn emit_set(
     out: &mut String,
-    declared: &mut HashSet<String>,
+    declared: &mut HashMap<String, VarType>,
     target: &str,
     value: &Value,
     source: &str,
@@ -327,30 +519,45 @@ fn emit_set(
     if is_c_keyword(target) {
         return Err(not_supported(
             &format!("a variable named `{target}` (C keyword)"),
-            Span::new(0, 0),
+            span_of_value(value),
         ));
     }
     match value {
         Value::Python(code) => {
             let text = code_text(code, source);
-            check_int_expression(text, source, code_span(code))?;
-            let prefix = if declared.insert(target.to_string()) {
-                "int "
-            } else {
-                ""
-            };
-            out.push_str(&format!("{prefix}{target} = {text};\n"));
-            Ok(())
+            let span = code_span(code);
+            let (lowered, kind) = check_expr(text, span, declared)?;
+            let is_new = !declared.contains_key(target);
+            match kind {
+                ExprType::Int => {
+                    let prefix = if is_new { "int " } else { "" };
+                    declared.insert(target.to_string(), VarType::Int);
+                    out.push_str(&format!("{prefix}{target} = {lowered};\n"));
+                    Ok(())
+                }
+                ExprType::Str => {
+                    if !lowered.starts_with('"') {
+                        return Err(not_supported(
+                            "storing a concatenated string (store a literal instead)",
+                            span,
+                        ));
+                    }
+                    let prefix = if is_new { "char *" } else { "" };
+                    declared.insert(target.to_string(), VarType::Str);
+                    out.push_str(&format!("{prefix}{target} = {lowered};\n"));
+                    Ok(())
+                }
+            }
         }
         Value::Text(_) | Value::Literal(_) | Value::RandomInteger { .. } | Value::RandomChoice { .. } => {
-            Err(not_supported("non-integer value", code_span_for_value(value)))
+            Err(not_supported("this value", span_of_value(value)))
         }
     }
 }
 
 fn emit_update(
     out: &mut String,
-    declared: &mut HashSet<String>,
+    declared: &mut HashMap<String, VarType>,
     target: &str,
     amount: &nme_core::syntax::Code,
     operation: nme_core::syntax::UpdateOp,
@@ -363,30 +570,33 @@ fn emit_update(
         ));
     }
     let amount_text = code_text(amount, source);
-    check_int_expression(amount_text, source, code_span(amount))?;
-    let prefix = if declared.insert(target.to_string()) {
-        "int "
-    } else {
-        ""
-    };
+    let (lowered, kind) = check_expr(amount_text, Span::new(0, 0), declared)?;
+    if kind != ExprType::Int {
+        return Err(not_supported("a text value in a value change", Span::new(0, 0)));
+    }
+    let is_new = !declared.contains_key(target);
+    if is_new {
+        declared.insert(target.to_string(), VarType::Int);
+    }
+    let prefix = if is_new { "int " } else { "" };
     let op = match operation {
         nme_core::syntax::UpdateOp::Add => "+=",
         nme_core::syntax::UpdateOp::Subtract => "-=",
     };
-    out.push_str(&format!("{prefix}{target} {op} {amount_text};\n"));
+    out.push_str(&format!("{prefix}{target} {op} {lowered};\n"));
     Ok(())
 }
 
-/// A Python line is accepted when it is a simple integer assignment
-/// (`score = 0`), an integer `return`, or a `def` header over integer
-/// parameters. `def` opens a C function body; `return` closes one value.
+/// A Python line is accepted when it is a simple integer or string-literal
+/// assignment, an integer `return`, or a `def` header over integer
+/// parameters. `def` opens a C function body.
 fn emit_python_line(
     out: &mut String,
     open_braces: &mut usize,
-    declared: &mut HashSet<String>,
+    declared: &mut HashMap<String, VarType>,
     tokens: &[lexer::Token],
     text: &str,
-    source: &str,
+    _source: &str,
 ) -> Option<Diagnostic> {
     let span = Span::new(0, text.len());
     match tokens.first().map(|token| &token.tok) {
@@ -420,7 +630,7 @@ fn emit_python_line(
                 out.push_str(&format!("int {name}({params}) {{\n"));
             }
             for parameter in parameters {
-                declared.insert(parameter);
+                declared.insert(parameter, VarType::Int);
             }
             *open_braces += 1;
             None
@@ -430,16 +640,22 @@ fn emit_python_line(
                 .strip_prefix("return")
                 .map(str::trim)
                 .unwrap_or_default();
-            match check_int_expression(expression, source, span) {
-                Ok(expression) => {
-                    out.push_str(&format!("return {expression};\n"));
+            match check_expr(expression, span, declared) {
+                Ok((lowered, ExprType::Int)) => {
+                    out.push_str(&format!("return {lowered};\n"));
                     None
+                }
+                Ok((_, ExprType::Str)) => {
+                    Some(not_supported("returning text from a function", span))
                 }
                 Err(diag) => Some(diag),
             }
         }
         Some(rustpython_parser::Tok::Name { .. })
-            if matches!(tokens.get(1).map(|token| &token.tok), Some(rustpython_parser::Tok::Equal)) =>
+            if matches!(
+                tokens.get(1).map(|token| &token.tok),
+                Some(rustpython_parser::Tok::Equal)
+            ) =>
         {
             let name = match &tokens[0].tok {
                 rustpython_parser::Tok::Name { name } => name.clone(),
@@ -451,15 +667,33 @@ fn emit_python_line(
                     span,
                 ));
             }
-            let expression = text.split_once('=').map(|(_, right)| right.trim()).unwrap_or(text);
-            match check_int_expression(expression, source, span) {
-                Ok(expression) => {
-                    let prefix = if declared.insert(name.clone()) {
-                        "int "
-                    } else {
-                        ""
-                    };
-                    out.push_str(&format!("{prefix}{name} = {expression};\n"));
+            let expression = text
+                .split_once('=')
+                .map(|(_, right)| right.trim())
+                .unwrap_or(text);
+            match check_expr(expression, span, declared) {
+                Ok((lowered, ExprType::Int)) => {
+                    let is_new = !declared.contains_key(&name);
+                    if is_new {
+                        declared.insert(name.clone(), VarType::Int);
+                    }
+                    let prefix = if is_new { "int " } else { "" };
+                    out.push_str(&format!("{prefix}{name} = {lowered};\n"));
+                    None
+                }
+                Ok((lowered, ExprType::Str)) => {
+                    if !lowered.starts_with('"') {
+                        return Some(not_supported(
+                            "storing a concatenated string (store a literal instead)",
+                            span,
+                        ));
+                    }
+                    let is_new = !declared.contains_key(&name);
+                    if is_new {
+                        declared.insert(name.clone(), VarType::Str);
+                    }
+                    let prefix = if is_new { "char *" } else { "" };
+                    out.push_str(&format!("{prefix}{name} = {lowered};\n"));
                     None
                 }
                 Err(diag) => Some(diag),
@@ -512,15 +746,16 @@ fn is_c_keyword(name: &str) -> bool {
     )
 }
 
-fn not_supported(what: &str, span: Span) -> Diagnostic {    Diagnostic::bilingual(
+fn not_supported(what: &str, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
         DiagnosticCode::UnsupportedModule,
         &format!("the native backend does not support {what} yet"),
         &format!("네이티브 백엔드는 아직 {what}을(를) 지원하지 않습니다"),
         span,
     )
     .with_bilingual_hint(
-        "use only the documented native core: integer values, while/if over comparisons, and say",
-        "문서에 있는 네이티브 코어만 쓰세요: 정수 값, 비교 조건의 while/if, say",
+        "use only the documented native core: integer and string values, while/if over comparisons, functions, and say",
+        "문서에 있는 네이티브 코어만 쓰세요: 정수·문자열 값, 비교 조건의 while/if, 함수, say",
     )
 }
 
@@ -528,10 +763,10 @@ fn unsupported_statement(stmt: &NmeStmt, span: Span) -> Diagnostic {
     let what = match stmt {
         NmeStmt::Ask { .. } => "input (ask)",
         NmeStmt::Times { .. } => "repeat blocks",
-        NmeStmt::ElseIf { .. } | NmeStmt::Else { .. } => "else branches",
         NmeStmt::UseModule { .. } => "bundled modules",
         NmeStmt::FileRead { .. } | NmeStmt::FileWrite { .. } => "file operations",
         NmeStmt::ModuleImport { .. } => "module imports",
+        NmeStmt::ElseIf { .. } | NmeStmt::Else { .. } => "this branch",
         _ => "this statement",
     };
     not_supported(what, span)
@@ -543,13 +778,9 @@ fn code_span(code: &nme_core::syntax::Code) -> Span {
     }
 }
 
-fn code_span_for_value(value: &Value) -> Span {
+fn span_of_value(value: &Value) -> Span {
     match value {
         Value::Python(code) => code_span(code),
         _ => Span::new(0, 0),
     }
-}
-
-fn template_span(_template: &nme_core::syntax::TextTemplate) -> Span {
-    Span::new(0, 0)
 }
