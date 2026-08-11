@@ -369,7 +369,10 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
             &format!("C 소스를 저장할 수 없습니다: {err}"),
         );
     }
-    let exe = dir.join(stem);
+    let mut exe = dir.join(stem);
+    if cfg!(windows) {
+        exe.set_extension("exe");
+    }
     let compile_status = std::process::Command::new("cc")
         .arg("-O2")
         .arg(&c_path)
@@ -410,7 +413,10 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
         }
     }
     if action == "build" {
-        let out = output.map_or_else(|| PathBuf::from(stem), PathBuf::from);
+        let mut out = output.map_or_else(|| PathBuf::from(stem), PathBuf::from);
+        if cfg!(windows) && out.extension().is_none() {
+            out.set_extension("exe");
+        }
         let copy_exe = std::fs::copy(&exe, &out).is_ok();
         let copy_c = std::fs::copy(&c_path, out.with_extension("c")).is_ok();
         let _ = std::fs::remove_dir_all(&dir);

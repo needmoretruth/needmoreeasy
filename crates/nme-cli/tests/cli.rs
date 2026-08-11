@@ -439,7 +439,12 @@ fn the_native_command_compiles_and_runs_a_core_program() {
 
     let built = run_in(&dir, &["native", "build", "count", "-o", "count_out"], None);
     assert!(built.status.success(), "{}", stderr(&built));
-    assert!(dir.join("count_out").exists(), "no executable written");
+    let executable = if cfg!(windows) {
+        dir.join("count_out.exe")
+    } else {
+        dir.join("count_out")
+    };
+    assert!(executable.exists(), "no executable written");
     assert!(dir.join("count_out.c").exists(), "no C source written");
 
     let rejected = run_in(&dir, &["native", "ask.nme"], None);
