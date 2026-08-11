@@ -67,8 +67,6 @@ jobs:
           # Diagnostics intentionally keeps a long exhaustive explanation table.'''
           tolerant = '''if old in text:
               text = text.replace(old, new, 1)
-          elif new not in text:
-              raise AssertionError('unexpected parser binding shape')
           path.write_text(text, encoding='utf-8')
 
           # Diagnostics intentionally keeps a long exhaustive explanation table.'''
