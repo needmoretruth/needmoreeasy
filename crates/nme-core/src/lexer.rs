@@ -76,7 +76,7 @@ pub fn logical_lines(source: &str) -> Result<Vec<LogicalLine>, Diagnostic> {
                 // all spans still address the untouched original source, so
                 // lowering preserves the apostrophe as ordinary sentence
                 // text (`I'm ready` or `show I'm ready`).
-                lexer_source.replace_range(offset..offset + 1, " ");
+                lexer_source.replace_range(offset..=offset, " ");
             }
         }
     }

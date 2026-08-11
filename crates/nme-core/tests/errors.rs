@@ -146,7 +146,7 @@ fn korean_forms_return_korean_guidance() {
 fn only_the_bundled_modules_are_available() {
     let message = err("use math\n");
     assert!(
-        message.contains("bundles `use random` and `use file`"),
+        message.contains("bundles `use random`, `use file`, and `use zero_knowledge`"),
         "{message}"
     );
 }
@@ -183,7 +183,7 @@ fn file_module_does_not_overwrite_existing_names() {
 fn two_modules_on_one_line_are_rejected() {
     let message = err("use random and file\n");
     assert!(
-        message.contains("bundles `use random` and `use file`"),
+        message.contains("bundles `use random`, `use file`, and `use zero_knowledge`"),
         "{message}"
     );
 }
@@ -339,7 +339,10 @@ fn a_stray_end_after_nme_code_is_reported() {
     assert!(message.contains("hint"), "{message}");
 
     let korean = bilingual_err("안녕 말해줘\n끝\n");
-    assert!(korean.contains("이 `끝`을 닫을 열린 NME 블록이 없어요"), "{korean}");
+    assert!(
+        korean.contains("이 `끝`을 닫을 열린 NME 블록이 없어요"),
+        "{korean}"
+    );
 }
 
 #[test]
@@ -351,8 +354,5 @@ fn an_extra_end_after_a_closed_block_is_reported() {
 #[test]
 fn a_flat_block_still_requires_its_own_end() {
     let message = err("점수가 5와 같으면\n만약 true라면\n    say \"a\"\n끝\n");
-    assert!(
-        message.contains("missing its closing `end`"),
-        "{message}"
-    );
+    assert!(message.contains("missing its closing `end`"), "{message}");
 }

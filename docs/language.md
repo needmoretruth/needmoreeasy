@@ -356,6 +356,8 @@ end
 
 use random
 랜덤 사용
+use zero_knowledge
+영지식 사용
 ```
 
 Blocks may contain one inline statement after `:` or several indented lines:
@@ -406,22 +408,24 @@ NME.
 
 ## Versioned bundled modules
 
-Two beginner modules ship with NME: `random` (dice and picks) and `file`
-(reading, writing, and JSON). Each has one bundled version, `0.0.1`. One
-`use` line per module is enough — both modules may be imported in the same
-program (a dice game that saves its best score needs both), but importing
-the same module twice is a collision error:
+Three beginner modules ship with NME: `random` (dice and picks), `file`
+(reading, writing, and JSON), and `zero_knowledge` / `영지식` (a Schnorr
+proof-of-knowledge reference implementation). Each has one bundled version,
+`0.0.1`. One `use` line per module is enough; importing the same module twice
+is a collision error:
 
 ```text
 use random
 use file
+use zero_knowledge
 ```
 
 `use random latest`, `use latest random`, and `use random version "0.0.1"` are
 equivalents, and so are the Korean spellings `랜덤 사용`, `랜덤 사용 최신`,
 `최신 랜덤 사용`, and `랜덤 사용 버전 "0.0.1"`. The `file` module accepts the
 same forms with `file` / `파일`: `파일 사용`, `파일 사용 최신`, `파일 사용
-버전 "0.0.1"`.
+버전 "0.0.1"`. The zero-knowledge adapter uses `zero_knowledge` / `영지식`
+with the same forms, including `영지식 사용 최신`.
 
 `latest` / `최신` selects the newest adapter bundled with the installed NME
 compiler. It is local and deterministic, not an uncontrolled network update.
@@ -445,8 +449,45 @@ Every spelling exposes both vocabularies:
 | `json_save(path, value)` | `json저장(path, value)` | `pathlib.Path(path).write_text(json.dumps(value))` |
 | `file_version` | `파일버전` | adapter version string |
 
-Both adapters reserve their helper names. If one already exists, NME stops and
-asks you to rename it instead of silently overwriting your value.
+All bundled adapters reserve their helper names. If one already exists, NME stops
+and asks you to rename it instead of silently overwriting your value.
+
+### Schnorr zero-knowledge adapter
+
+The zero-knowledge adapter uses a fixed finite-field group: RFC 3526 MODP
+Group 15 (3072-bit safe prime), generator 2, its prime-order subgroup
+`q = (p - 1) / 2`, and 256-bit verifier challenges. Secure random values come
+from Python's `secrets` module.
+
+| English helper | Korean helper | Meaning |
+| --- | --- | --- |
+| `zk_secret()` | `영지식비밀만들기()` | create a nonzero secret scalar |
+| `zk_public(secret)` | `영지식공개값(비밀값)` | create the public value |
+| `zk_nonce()` | `영지식일회값만들기()` | create a one-time prover nonce |
+| `zk_commitment(nonce)` | `영지식약속(일회값)` | first Schnorr message |
+| `zk_challenge()` | `영지식도전만들기()` | fresh 256-bit verifier challenge |
+| `zk_challenge_except(c)` | `영지식다른도전(도전값)` | fresh challenge different from `c` |
+| `zk_response(v,a,c)` | `영지식응답(일회값,비밀값,도전값)` | Schnorr response |
+| `zk_verify(A,V,c,r)` | `영지식검증(공개값,약속값,도전값,응답값)` | verify the proof transcript |
+| `zk_simulated_response()` | `영지식모의응답만들기()` | choose a simulator response |
+| `zk_simulated_commitment(A,c,r)` | `영지식모의약속(공개값,도전값,응답값)` | simulate a transcript for a preselected challenge |
+
+The Korean sentence surface removes function punctuation for the complete
+proof flow; see `examples/zk-schnorr-relay.ko.nme`. The verifier validates
+subgroup membership and all scalar/challenge ranges before checking the
+Schnorr equation.
+
+A stored transcript cannot answer a different fresh challenge. A transcript
+for a challenge chosen in advance can be simulated without the secret, which
+demonstrates the zero-knowledge property. A *live relay* is different: an
+attacker that forwards the verifier's challenge to the real prover can forward
+the real response back. Bind authentication to the intended channel/session
+when relay resistance matters.
+
+This adapter is a mathematically faithful learning/reference implementation.
+CPython big integers are not promised to be constant-time or side-channel
+hardened, so use an audited production cryptography implementation for real
+credentials, money, or other sensitive systems.
 
 Run `nme modules` or `nme 모듈` to list versions and names. Files are written
 next to the program's working folder, so save them in your project folder.
@@ -572,8 +613,10 @@ See [the conversion guide](converting-python.md).
   ambiguous literal words.
 - Sentence comparison vocabulary is intentionally small; arbitrary expressions
   and `and`/`or` logic can use the explicit block form or advanced Python.
-- The bundled `random` and `file` modules have easy module syntax in this
-  beta; other Python libraries are used with ordinary `import`.
+- The bundled `random`, `file`, and `zero_knowledge` modules have easy module
+  syntax in this beta; other Python libraries are used with ordinary `import`.
+- The zero-knowledge adapter is a learning/reference implementation, not a
+  side-channel-hardened production cryptography library.
 - `check` and `build` ask the selected CPython to compile the lowered output;
   they do not run it. Runtime errors still belong to Python.
 - `run`, `build`, and `check` require CPython. Optional `compile` requires

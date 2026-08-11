@@ -25,6 +25,8 @@ pub const RANDOM_MODULE: &str = "random";
 pub const RANDOM_MODULE_KO: &str = "랜덤";
 pub const FILE_MODULE: &str = "file";
 pub const FILE_MODULE_KO: &str = "파일";
+pub const ZERO_KNOWLEDGE_MODULE: &str = "zero_knowledge";
+pub const ZERO_KNOWLEDGE_MODULE_KO: &str = "영지식";
 pub const USE_KEYWORD_KO: &str = "사용";
 pub(crate) const FILE_READ_WORDS_EN: &[&str] = &["read"];
 pub(crate) const FILE_WRITE_WORDS_EN: &[&str] = &["write"];
@@ -35,6 +37,8 @@ pub(crate) const FILE_WRITE_WORDS_KO: &[&str] = &["저장해", "저장해줘", "
 pub const RANDOM_MODULE_VERSION: &str = "0.0.1";
 /// Version of the easy file adapter bundled with this compiler.
 pub const FILE_MODULE_VERSION: &str = "0.0.1";
+/// Version of the Schnorr zero-knowledge adapter bundled with this compiler.
+pub const ZERO_KNOWLEDGE_MODULE_VERSION: &str = "0.0.1";
 
 /// One bundled beginner module. Both languages are always exposed after one
 /// import, and each module has one explicit local version.
@@ -42,15 +46,17 @@ pub const FILE_MODULE_VERSION: &str = "0.0.1";
 pub enum BundledModuleId {
     Random,
     File,
+    ZeroKnowledge,
 }
 
 impl BundledModuleId {
-    pub const ALL: [BundledModuleId; 2] = [Self::Random, Self::File];
+    pub const ALL: [BundledModuleId; 3] = [Self::Random, Self::File, Self::ZeroKnowledge];
 
     pub fn name_en(self) -> &'static str {
         match self {
             Self::Random => RANDOM_MODULE,
             Self::File => FILE_MODULE,
+            Self::ZeroKnowledge => ZERO_KNOWLEDGE_MODULE,
         }
     }
 
@@ -58,6 +64,7 @@ impl BundledModuleId {
         match self {
             Self::Random => RANDOM_MODULE_KO,
             Self::File => FILE_MODULE_KO,
+            Self::ZeroKnowledge => ZERO_KNOWLEDGE_MODULE_KO,
         }
     }
 
@@ -65,6 +72,7 @@ impl BundledModuleId {
         match self {
             Self::Random => RANDOM_MODULE_VERSION,
             Self::File => FILE_MODULE_VERSION,
+            Self::ZeroKnowledge => ZERO_KNOWLEDGE_MODULE_VERSION,
         }
     }
 }
@@ -114,6 +122,41 @@ pub enum Value {
     Literal(Literal),
     RandomInteger { low: Code, high: Code },
     RandomChoice { choices: Vec<String> },
+    ZeroKnowledge(ZeroKnowledgeValue),
+}
+
+/// One sentence-level value from the bundled Schnorr proof-of-knowledge tools.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ZeroKnowledgeValue {
+    Secret,
+    Public {
+        secret: Code,
+    },
+    Nonce,
+    Commitment {
+        nonce: Code,
+    },
+    Challenge,
+    ChallengeExcept {
+        excluded: Code,
+    },
+    Response {
+        nonce: Code,
+        secret: Code,
+        challenge: Code,
+    },
+    Verify {
+        public_key: Code,
+        commitment: Code,
+        challenge: Code,
+        response: Code,
+    },
+    SimulatedResponse,
+    SimulatedCommitment {
+        public_key: Code,
+        challenge: Code,
+        response: Code,
+    },
 }
 
 /// One operand in a conversational condition. The parser records meaning;
