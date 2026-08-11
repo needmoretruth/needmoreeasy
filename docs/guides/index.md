@@ -17,7 +17,8 @@ data, and an expression language; 47–49 add a terminal progress bar, an invent
 store, and reading tokens; 50–52 add string tools, a grid board, and
 tic-tac-toe; 56–58 add logging, grouping, and a tiny bytecode runner;
 59–61 add a text editor, catalog search, and a mini bank; 62–64 add
-algorithms and ASCII art.
+algorithms and ASCII art; 65–67 process many files, rank records, and build a
+grade book.
 
 ## Difficulty
 
@@ -93,6 +94,9 @@ algorithms and ASCII art.
 62. [62 — Bubble sort](62-bubble.md)
 63. [63 — ASCII art](63-ascii-art.md)
 64. [64 — Binary search](64-binary-search.md)
+65. [65 — Files: many files](65-files-folder.md)
+66. [66 — Top ten](66-top-ten.md)
+67. [67 — Grade book](67-grade-book.md)
 
 ## Topic lookup
 
@@ -151,6 +155,9 @@ algorithms and ASCII art.
 - 은행 / Bank: [61](61-bank.md)
 - 알고리즘 / Algorithm: [62](62-bubble.md), [64](64-binary-search.md)
 - 아스키 아트 / ASCII art: [63](63-ascii-art.md)
+- 파일/폴더 / Files & folders: [65](65-files-folder.md)
+- 순위/Top ten: [66](66-top-ten.md)
+- 성적부/Grade book: [67](67-grade-book.md)
 
 ## All guides
 
@@ -217,6 +224,9 @@ algorithms and ASCII art.
 | 62 | ★★★★★ | 알고리즘 / Algorithm | [Bubble sort — your first algorithm](62-bubble.md) | Implementing bubble sort by hand with nested loops and a swap, compared with Python's built-in sort |
 | 63 | ★★★★★ | 아스키 아트 / ASCII art | [ASCII art — drawing with characters](63-ascii-art.md) | A right triangle, an upside-down triangle, and a diamond drawn with nested loops and string multiplication |
 | 64 | ★★★★★ | 알고리즘 / Algorithm | [Binary search — halving the guess](64-binary-search.md) | Finding a number in a sorted list by halving the search each step, with a full walkthrough of the steps |
+| 65 | ★★★★★ | 파일/폴더 / Files & folders | [Files — processing many files](65-files-folder.md) | List the files in a folder with os.listdir, read each with file_read, and report total words and letters |
+| 66 | ★★★★★ | 데이터/순위 / Data & ranking | [Top ten — ranking records](66-top-ten.md) | Load JSON records, sort by a numeric score with sorted(..., key=...), and show the top ten |
+| 67 | ★★★★★ | 프로젝트 / Project | [Project — a grade book](67-grade-book.md) | A JSON-persisted grade book with add-student, add-grade, report-averages, and a storage module |
 
 ## Where to continue
 

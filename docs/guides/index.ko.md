@@ -19,6 +19,7 @@
  56–58은 기록, 묶기, 작은 바이트코드 실행기를 다룹니다.
  59–61은 텍스트 에디터, 목록 검색, 미니 은행을 다룹니다.
  62–64는 알고리즘과 아스키 아트를 다룹니다.
+ 65–67은 여러 파일 처리, 기록 순위, 성적부 프로젝트를 다룹니다.
 
 ## 난이도
 
@@ -94,6 +95,9 @@
 62. [62 — 버블 정렬](62-bubble.ko.md)
 63. [63 — 아스키 아트](63-ascii-art.ko.md)
 64. [64 — 이진 탐색](64-binary-search.ko.md)
+65. [65 — 여러 파일 처리](65-files-folder.ko.md)
+66. [66 — 상위 열](66-top-ten.ko.md)
+67. [67 — 성적부](67-grade-book.ko.md)
 
 ## 주제별 찾아보기
 
@@ -152,6 +156,9 @@
 - 은행 / Bank: [61](61-bank.ko.md)
 - 알고리즘 / Algorithm: [62](62-bubble.ko.md), [64](64-binary-search.ko.md)
 - 아스키 아트 / ASCII art: [63](63-ascii-art.ko.md)
+- 파일/폴더 / Files & folders: [65](65-files-folder.ko.md)
+- 순위/Top ten: [66](66-top-ten.ko.md)
+- 성적부/Grade book: [67](67-grade-book.ko.md)
 
 ## 전체 목록
 
@@ -218,6 +225,9 @@
 | 62 | ★★★★★ | 알고리즘 / Algorithm | [버블 정렬 — 첫 알고리즘](62-bubble.ko.md) | 중첩 반복과 맞바꿈으로 버블 정렬을 직접 구현하고 Python 내장 정렬과 비교하기 |
 | 63 | ★★★★★ | 아스키 아트 / ASCII art | [아스키 아트 — 문자로 그리기](63-ascii-art.ko.md) | 중첩 반복과 문자열 곱셈으로 직각 삼각형, 거꾸로 삼각형, 마름모 그리기 |
 | 64 | ★★★★★ | 알고리즘 / Algorithm | [이진 탐색 — 절반씩 찾기](64-binary-search.ko.md) | 정렬된 목록에서 매 단계 탐색 범위를 절반으로 줄이며 숫자를 찾고 단계를 보여 주기 |
+| 65 | ★★★★★ | 파일/폴더 / Files & folders | [파일 — 여러 파일 처리](65-files-folder.ko.md) | os.listdir로 폴더의 파일을 나열하고 file_read로 각각 읽어 전체 단어·글자 수를 보고하기 |
+| 66 | ★★★★★ | 데이터/순위 / Data & ranking | [상위 열 — 기록 순위](66-top-ten.ko.md) | JSON 기록을 불러와 sorted(..., key=...)로 숫자 점수 기준 정렬하고 상위 열 개 보여 주기 |
+| 67 | ★★★★★ | 프로젝트 / Project | [프로젝트 — 성적부](67-grade-book.ko.md) | 학생 추가·성적 추가·평균 보고를 저장 모듈과 함께 두는 JSON 성적부 |
 
 ## 다음 단계
 

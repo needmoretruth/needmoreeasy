@@ -1,0 +1,155 @@
+# 65 — 파일: 여러 파일 처리
+
+[English](65-files-folder.md) | 한국어
+
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
+
+- 난이도 (Difficulty): ★★★★★ (5/5)
+- 선수 지식 (Prerequisites): [13 — 파일](13-files.ko.md), [36 — 단어 세기](36-word-count.ko.md)
+- 주제 (Topic): 파일/폴더 / files & folders
+- 결과물 (Result): 폴더의 파일을 나열해 각각 읽고 전체 단어·글자 수를 보고하는 프로그램 / listing the files in a folder with os.listdir, reading each with file_read, and reporting total words and letters across all of them
+
+[13](13-files.ko.md) 가이드는 코드에 이름을 적은 파일 하나를 읽었습니다.
+실제 폴더에는 파일이 많고, 미리 이름을 알지 못하는 경우가 보통입니다.
+`os.listdir(".")`은 폴더의 모든 이름을 목록으로 돌려주고,
+[13](13-files.ko.md)의 `파일읽기`는 가리키는 파일을 읽습니다. 둘이 만나면
+폴더 전체가 반복할 수 있는 목록이 됩니다.
+
+## 단계
+
+1. 프로그램 옆에 작은 텍스트 파일 두 개를 만듭니다. `하나.txt`:
+
+   ```text
+   고양이가 매트 위에 앉았다
+   개가 고양이 옆을 지나갔다
+   ```
+
+   그리고 `둘.txt`:
+
+   ```text
+   새가 지붕 위에서 노래했다
+   ```
+
+2. `import os`가 Python의 폴더 도구를 불러오고, `os.listdir(".")`은 현재
+   폴더의 모든 이름 목록을 돌려줍니다 — `.`은 "이 폴더"입니다. `len`으로
+   목록을 셉니다:
+
+   ```text
+   import os
+   이름들 = os.listdir(".")
+   말해 f"이 폴더에 {len(이름들)}개 이름이 있습니다"
+   ```
+
+   프로그램과 텍스트 파일 둘을 두면 `이 폴더에 3개 이름이 있습니다`이
+   출력됩니다. 목록에는 `files-folder.ko.nme`도 들어 있습니다 — 텍스트
+   파일만 있는 것이 아닙니다.
+
+3. `.endswith(".txt")`가 텍스트 파일만 남깁니다. `for` 반복이 남은 이름을
+   `파일읽기`로 하나씩 읽고 [36](36-word-count.ko.md)처럼 단어로
+   쪼갭니다:
+
+   ```text
+   import os
+   파일 사용 최신
+   for 이름 in os.listdir("."):
+       if 이름.endswith(".txt"):
+           단어들 = 파일읽기(이름).split()
+           말해 f"{이름}: 단어 {len(단어들)}개"
+   ```
+
+   ```text
+   둘.txt: 단어 4개
+   하나.txt: 단어 8개
+   ```
+
+4. 글자 수도 파일마다 같은 방법으로 셉니다: 공백과 줄바꿈을 지우고
+   `len`을 씁니다:
+
+   ```text
+   파일 사용 최신
+   글 = 파일읽기("하나.txt")
+   글자수 = len(글.replace(" ", "").replace("\n", ""))
+   말해 글자수
+   ```
+
+   `하나.txt`에는 글자가 22개 있습니다.
+
+5. 전체 프로그램은 먼저 `.txt` 이름을 모으고 파일마다 보고한 뒤 전체
+   합계와 가장 큰 파일을 보고합니다. `files-folder.ko.nme`로 저장합니다:
+
+   ```text
+   # files-folder.ko.nme — 폴더의 모든 .txt 파일의 단어·글자 수 보고.
+   # 실행: nme r files-folder.ko
+   # 같은 폴더에 하나.txt와 둘.txt를 먼저 만드세요.
+
+   import os
+   파일 사용 최신
+
+   파일들 = os.listdir(".")
+   txt파일들 = []
+   for 이름 in 파일들:
+       if 이름.endswith(".txt"):
+           txt파일들.append(이름)
+
+   말해 f"txt 파일 {len(txt파일들)}개를 찾았습니다:"
+
+   총단어 = 0
+   총글자 = 0
+   큰파일 = ""
+   큰단어수 = 0
+   for 이름 in txt파일들:
+       글 = 파일읽기(이름)
+       단어들 = 글.split()
+       글자수 = len(글.replace(" ", "").replace("\n", ""))
+       총단어 = 총단어 + len(단어들)
+       총글자 = 총글자 + 글자수
+       if len(단어들) > 큰단어수:
+           큰단어수 = len(단어들)
+           큰파일 = 이름
+       말해 f"  {이름}: 단어 {len(단어들)}개, 글자 {글자수}개"
+
+   말해 "전체 파일:"
+   말해 f"  단어: {총단어}"
+   말해 f"  글자: {총글자}"
+   말해 f"  가장 큰 파일: {큰파일} (단어 {큰단어수}개)"
+   ```
+
+   `if len(단어들) > 큰단어수:` 검사가 단어가 가장 많은 파일을 기억합니다 —
+   [15](15-high-score.ko.md)의 최고 점수와 같은 "지금까지 중 최고" 생각입니다.
+
+6. 텍스트 파일 둘을 폴더에 두고 실행합니다:
+
+   ```sh
+   nme r files-folder.ko
+   ```
+
+   ```text
+   txt 파일 2개를 찾았습니다:
+     둘.txt: 단어 4개, 글자 11개
+     하나.txt: 단어 8개, 글자 22개
+   전체 파일:
+     단어: 12
+     글자: 33
+     가장 큰 파일: 하나.txt (단어 8개)
+   ```
+
+   프로그램은 파일 이름을 미리 적지 않습니다: `os.listdir`이 찾아내고,
+   `if`가 `.txt`만 남기며, 합계가 파일별 수를 더합니다.
+
+7. 영어는 같은 단계를 `import os`, `use file latest`, `file_read`로 씁니다.
+   전체 영어 프로그램은 [영어 가이드](65-files-folder.md)에 있습니다.
+
+## 직접 해보기
+
+`three.txt` 파일을 추가하고 다시 실행해 보세요 — 코드를 바꾸지 않아도
+보고에 나타납니다. 또는 필터를 `if 이름.endswith(".csv"):`로 바꾸고 단어
+대신 줄 수를 세어 보세요: `글.splitlines()`.
+
+## 배운 것
+
+- `os.listdir(".")`이 현재 폴더의 모든 이름을 목록으로 돌려줍니다.
+- `.endswith(".txt")`가 목록을 원하는 파일만 남깁니다.
+- `파일읽기(이름)`은 글자 그대로의 이름뿐 아니라 어떤 문자열이든 그
+  파일을 읽습니다.
+- 폴더를 도는 `for` 반복이 파일 하나 처리 프로그램을 여러 파일 처리로
+  키웁니다.
