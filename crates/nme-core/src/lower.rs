@@ -59,6 +59,13 @@ const BILINGUAL_ZERO_KNOWLEDGE_TOOLS_PREFIX: &str = concat!(
     "zk_simulated_response = 영지식모의응답만들기 = lambda: 영지식비밀난수.randbelow(zk_order); ",
     "zk_simulated_commitment = 영지식모의약속 = lambda 공개값, 도전값, 응답값: (pow(zk_generator, 응답값, zk_prime) * pow(공개값, 도전값, zk_prime)) % zk_prime; ",
     "zk_verify = 영지식검증 = lambda 공개값, 약속값, 도전값, 응답값: (1 < 공개값 < zk_prime and pow(공개값, zk_order, zk_prime) == 1 and 1 <= 약속값 < zk_prime and pow(약속값, zk_order, zk_prime) == 1 and 0 <= 도전값 < zk_challenge_limit and 0 <= 응답값 < zk_order and 약속값 == (pow(zk_generator, 응답값, zk_prime) * pow(공개값, 도전값, zk_prime)) % zk_prime); ",
+    "zk_group_bytes = 영지식그룹바이트 = (zk_prime.bit_length() + 7) // 8; ",
+    "_nme_zk_context_bytes = lambda 문맥값: 문맥값 if isinstance(문맥값, bytes) else str(문맥값).encode(\"utf-8\"); ",
+    "_nme_zk_int_bytes = lambda 값: int(값).to_bytes(zk_group_bytes, \"big\"); ",
+    "_nme_zk_context_frame = lambda 문맥값: (lambda 바이트: len(바이트).to_bytes(8, \"big\") + 바이트)(_nme_zk_context_bytes(문맥값)); ",
+    "zk_nizk_challenge = 영지식비대화도전 = lambda 공개값, 약속값, 문맥값: int.from_bytes(__import__(\"hashlib\").sha256(b\"NME-SCHNORR-GROUP15-NIZK-v1\\0\" + _nme_zk_int_bytes(zk_generator) + _nme_zk_int_bytes(약속값) + _nme_zk_int_bytes(공개값) + _nme_zk_context_frame(문맥값)).digest(), \"big\"); ",
+    "zk_nizk_prove = 영지식비대화증명 = lambda 비밀값, 문맥값: (lambda 일회값: (lambda 약속값: (lambda 도전값: [약속값, (일회값 - 비밀값 * 도전값) % zk_order])(zk_nizk_challenge(zk_public(비밀값), 약속값, 문맥값)))(zk_commitment(일회값)))(zk_nonce()); ",
+    "zk_nizk_verify = 영지식비대화검증 = lambda 공개값, 증명값, 문맥값: (isinstance(증명값, (list, tuple)) and len(증명값) == 2 and zk_verify(공개값, 증명값[0], zk_nizk_challenge(공개값, 증명값[0], 문맥값), 증명값[1])); ",
     "zero_knowledge_version = 영지식버전 = ",
 );
 
@@ -289,6 +296,31 @@ fn lower_zero_knowledge(value: &ZeroKnowledgeValue, source: &str) -> String {
         ZeroKnowledgeValue::Public { secret } => format!(
             "pow(2, {}, {p})",
             lower_code(secret, source)
+        ),
+        ZeroKnowledgeValue::NizkChallenge {
+            public_key,
+            commitment,
+            context,
+        } => format!(
+            "zk_nizk_challenge({}, {}, {})",
+            lower_code(public_key, source),
+            lower_code(commitment, source),
+            lower_code(context, source)
+        ),
+        ZeroKnowledgeValue::NizkProof { secret, context } => format!(
+            "zk_nizk_prove({}, {})",
+            lower_code(secret, source),
+            lower_code(context, source)
+        ),
+        ZeroKnowledgeValue::NizkVerify {
+            public_key,
+            proof,
+            context,
+        } => format!(
+            "zk_nizk_verify({}, {}, {})",
+            lower_code(public_key, source),
+            lower_code(proof, source),
+            lower_code(context, source)
         ),
         ZeroKnowledgeValue::Nonce | ZeroKnowledgeValue::SimulatedResponse => format!(
             "__import__(\"secrets\").randbelow({q})"
