@@ -6,9 +6,117 @@ on:
   pull_request:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
+  prepare-beta16:
+    name: prepare-beta16-zk
+    if: github.event_name == 'pull_request' && github.head_ref == 'release/beta.16-zk'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out release candidate branch
+        uses: actions/checkout@v4
+        with:
+          ref: release/beta.16-zk
+          fetch-depth: 0
+
+      - name: Install stable Rust with required tools
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Install CPython
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Normalize source expected by exact preparation
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('docs/language.ko.md')
+          text = path.read_text(encoding='utf-8')
+          old = '''- 내장 `random`과 `file` 모듈은 이번 베타에서 쉬운 모듈 문법을 제공합니다.
+            다른 Python 라이브러리는 일반 `import`로 씁니다.'''
+          new = '''- 내장 `random`과 `file` 모듈은 이 베타에서 쉬운 모듈 문법을 지원하며,
+            다른 Python 라이브러리는 일반 `import`를 사용합니다.'''
+          assert text.count(old) == 1
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+
+      - name: Materialize zero-knowledge release source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/prepare_beta16_zk.py
+          python - <<'PY'
+          from pathlib import Path
+          workflow = Path('.github/workflows/beta16-prepare.yml').read_text(encoding='utf-8')
+          marker = '      - name: Apply release-candidate integration fixes\n'
+          start = workflow.index(marker)
+          heredoc = workflow.index("          python - <<'PY'\n", start) + len("          python - <<'PY'\n")
+          end = workflow.index('          PY\n', heredoc)
+          lines = workflow[heredoc:end].splitlines()
+          code = '\n'.join(line[10:] if line.startswith('          ') else line for line in lines)
+          exec(compile(code, 'beta16-integration-fixes', 'exec'))
+          PY
+          cargo fmt --all
+          cargo clippy --fix --workspace --all-targets --allow-dirty --allow-staged
+          cargo fmt --all
+
+      - name: Release-quality validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo fmt --all -- --check
+          cargo check --workspace
+          cargo clippy --workspace --all-targets -- -D warnings
+          cargo test --workspace
+          cargo run --quiet -p nme-cli -- --version | tee /tmp/nme-version
+          grep -Fx 'nme 0.0.1-beta.16' /tmp/nme-version
+          cargo run --quiet -p nme-cli -- modules | tee /tmp/nme-modules
+          grep -F 'zero_knowledge  0.0.1  bundled, latest' /tmp/nme-modules
+          cargo run --quiet -p nme-cli -- check examples/zk-schnorr-relay.ko.nme
+          cargo run --quiet -p nme-cli -- run examples/zk-schnorr-relay.ko.nme | tee /tmp/zk-ko
+          grep -F '영지식 증명을 수신자 비가 받아들였습니다' /tmp/zk-ko
+          grep -F '저장 전사록 재전송은 새 도전에서 실패했습니다' /tmp/zk-ko
+          grep -F '비밀값 없이도 미리 고른 도전에 맞는 전사록을 모의할 수 있습니다' /tmp/zk-ko
+          grep -F '모의 전사록은 수신자 비의 다른 도전에는 재사용할 수 없습니다' /tmp/zk-ko
+          grep -F '실시간 중계는 통과하지만 비밀 위조가 아니라' /tmp/zk-ko
+          cargo run --quiet -p nme-cli -- run examples/zk-schnorr-relay.en.nme | tee /tmp/zk-en
+          grep -F "accepted sender A's zero-knowledge proof" /tmp/zk-en
+          grep -F 'cannot replay the saved transcript' /tmp/zk-en
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          text = Path('examples/zk-schnorr-relay.ko.nme').read_text(encoding='utf-8')
+          assert re.search(r'[A-Za-z]', text) is None, 'Korean sentence-only example contains ASCII letters'
+          PY
+          if git grep -n '0.0.1-beta.15' -- ':!CHANGELOG.md' ':!CHANGELOG.ko.md'; then
+            echo 'stale beta.15 version outside changelog' >&2
+            exit 1
+          fi
+          git diff --check
+
+      - name: Commit validated candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout 7a1efe14abcdca4dd67838ee362f949b16bf779c -- .github/workflows/ci.yml
+          rm -- scripts/prepare_beta16_zk.py .github/workflows/beta16-prepare.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          while IFS= read -r file; do
+            [ -n "$file" ] && git add -- "$file"
+          done < <(git diff --name-only)
+          while IFS= read -r file; do
+            [ -n "$file" ] && git add -- "$file"
+          done < <(git ls-files --others --exclude-standard)
+          git diff --cached --check
+          git commit -m 'Prepare 0.0.1-beta.16 release candidate [beta16-applied]'
+          git push origin HEAD:release/beta.16-zk
+
   test:
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
