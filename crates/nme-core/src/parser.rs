@@ -476,6 +476,9 @@ pub fn parse_program(
                 if is_python_async_with_header(&line.tokens) && !bindings.inside_async_function() {
                     problems.push(async_with_outside_async_function_diagnostic(line.span));
                 }
+                if is_python_nonlocal_line(&line.tokens) && !bindings.has_enclosing_function() {
+                    problems.push(nonlocal_outside_function_diagnostic(line.span));
+                }
                 if is_python_return_line(&line.tokens) && !bindings.inside_function() {
                     problems.push(return_outside_function_diagnostic(line.span));
                     continue;
@@ -815,6 +818,19 @@ fn async_with_outside_async_function_diagnostic(span: Span) -> Diagnostic {
     .with_bilingual_hint(
         "put it inside an `async def` function, or use an ordinary `with` block",
         "`async def` 함수 안에 넣거나 일반 `with` 블록을 사용해 주세요",
+    )
+}
+
+fn nonlocal_outside_function_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::NonlocalOutsideFunction,
+        "`nonlocal` can only be used inside a nested function",
+        "`nonlocal`은 중첩 함수 안에서만 쓸 수 있어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "put it in a nested function or class under another function, or remove it",
+        "다른 함수 아래의 중첩 함수나 클래스에 넣거나 지워 주세요",
     )
 }
 
@@ -5608,6 +5624,30 @@ impl BindingEnv {
         false
     }
 
+    fn has_enclosing_function(&self) -> bool {
+        let Some((current_index, current_scope)) = self
+            .scopes
+            .iter()
+            .enumerate()
+            .rev()
+            .find(|(_, scope)| !matches!(scope.kind, BindingScopeKind::Other))
+        else {
+            return false;
+        };
+        if !matches!(
+            current_scope.kind,
+            BindingScopeKind::Function | BindingScopeKind::AsyncFunction | BindingScopeKind::Class
+        ) {
+            return false;
+        }
+        self.scopes[..current_index].iter().any(|scope| {
+            matches!(
+                scope.kind,
+                BindingScopeKind::Function | BindingScopeKind::AsyncFunction
+            )
+        })
+    }
+
     fn remember_nme(&mut self, stmt: &NmeStmt) {
         remember_bindings(stmt, &mut self.scopes.last_mut().expect("root scope").names);
     }
@@ -6431,6 +6471,10 @@ fn is_python_async_for_header(tokens: &[Token]) -> bool {
 fn is_python_async_with_header(tokens: &[Token]) -> bool {
     matches!(tokens.first().map(|token| &token.tok), Some(Tok::Async))
         && matches!(tokens.get(1).map(|token| &token.tok), Some(Tok::With))
+}
+
+fn is_python_nonlocal_line(tokens: &[Token]) -> bool {
+    matches!(tokens.first().map(|token| &token.tok), Some(Tok::Nonlocal))
 }
 
 fn is_python_class_header(tokens: &[Token]) -> bool {

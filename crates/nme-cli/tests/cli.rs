@@ -2670,6 +2670,34 @@ fn python_context_keywords_report_shared_function_diagnostics() {
 }
 
 #[test]
+fn top_level_nonlocal_reports_the_shared_function_diagnostic() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-nonlocal-code-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("nonlocal.nme");
+    std::fs::write(&file, "nonlocal value\n").unwrap();
+
+    let english = nme(&["check", &file.to_string_lossy()]);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(english_error.contains("error[E0113]:"), "{english_error}");
+    assert!(
+        english_error.contains("inside a nested function"),
+        "{english_error}"
+    );
+
+    let korean = nme(&["검사", &file.to_string_lossy()]);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(korean_error.contains("오류[E0113]:"), "{korean_error}");
+    assert!(
+        korean_error.contains("중첩 함수 안에서만"),
+        "{korean_error}"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn inline_branch_without_a_condition_reports_the_shared_branch_diagnostic() {
     let dir =
         std::env::temp_dir().join(format!("nme-cli-inline-branch-code-{}", std::process::id()));

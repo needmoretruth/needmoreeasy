@@ -6,6 +6,12 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.146 — 2026-08-12
+
+- Add shared bilingual `E0113` for Python `nonlocal` without an enclosing
+  function, while preserving valid nested function/class uses and leaving
+  missing outer-name binding validation to CPython.
+
 ## 0.0.1-beta.145 — 2026-08-12
 
 - Add shared bilingual `E0111`/`E0112` diagnostics for `async for` and

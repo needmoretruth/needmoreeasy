@@ -555,6 +555,63 @@ fn async_for_and_with_outside_async_functions_get_stable_diagnostics() {
 }
 
 #[test]
+fn nonlocal_without_an_enclosing_function_gets_a_stable_diagnostic() {
+    let top_level = transpile("nonlocal value\n")
+        .expect_err("module-level nonlocal must be rejected by the shared parser");
+    assert_eq!(top_level.len(), 1, "{top_level:?}");
+    assert_eq!(top_level[0].code, DiagnosticCode::NonlocalOutsideFunction);
+    assert!(top_level[0].message.contains("inside a nested function"));
+    assert!(top_level[0]
+        .message_ko
+        .as_deref()
+        .is_some_and(|message| message.contains("중첩 함수 안에서만")));
+
+    let top_level_class = transpile("class C:\n    nonlocal value\n")
+        .expect_err("a top-level class has no enclosing function");
+    assert_eq!(top_level_class.len(), 1, "{top_level_class:?}");
+    assert_eq!(
+        top_level_class[0].code,
+        DiagnosticCode::NonlocalOutsideFunction
+    );
+
+    let function_without_outer = transpile("def only():\n    nonlocal value\n")
+        .expect_err("a function without an outer function has no nonlocal scope");
+    assert_eq!(
+        function_without_outer.len(),
+        1,
+        "{function_without_outer:?}"
+    );
+    assert_eq!(
+        function_without_outer[0].code,
+        DiagnosticCode::NonlocalOutsideFunction
+    );
+
+    let method_without_outer =
+        transpile("class C:\n    def method(self):\n        nonlocal value\n")
+            .expect_err("a method in a top-level class has no enclosing function");
+    assert_eq!(method_without_outer.len(), 1, "{method_without_outer:?}");
+    assert_eq!(
+        method_without_outer[0].code,
+        DiagnosticCode::NonlocalOutsideFunction
+    );
+
+    let valid = "def outer():\n    value = 1\n    def inner():\n        nonlocal value\n        value += 1\n";
+    assert_eq!(transpile(valid).unwrap(), valid);
+    let valid_class = "def outer():\n    value = 1\n    class C:\n        nonlocal value\n";
+    assert_eq!(transpile(valid_class).unwrap(), valid_class);
+    let valid_method =
+        "def outer():\n    value = 1\n    class C:\n        def method(self):\n            nonlocal value\n";
+    assert_eq!(transpile(valid_method).unwrap(), valid_method);
+
+    let missing_binding = "def outer():\n    def inner():\n        nonlocal value\n";
+    assert_eq!(
+        transpile(missing_binding).unwrap(),
+        missing_binding,
+        "CPython retains missing-binding validation"
+    );
+}
+
+#[test]
 fn inline_branches_without_an_open_condition_get_a_stable_diagnostic() {
     let cases = [
         ("sentence-en", "when true then else show no\n"),

@@ -658,6 +658,9 @@ See [the conversion guide](converting-python.md).
   there, while ordinary generator functions may keep `yield from` unchanged.
 - Python `async for` and `async with` outside an `async def` function get
   `E0111` and `E0112`; valid asynchronous function bodies remain unchanged.
+- Python `nonlocal` without an enclosing function gets `E0113`. A nested
+  function or class under an outer function remains unchanged; CPython
+  separately checks whether the requested name is bound in that outer function.
 - Generator lambdas remain valid advanced Python: a `yield` inside
   `lambda: ...` is checked against the lambda's own function context.
 - An inline body must contain one statement; an inline `else`/`elif` without an

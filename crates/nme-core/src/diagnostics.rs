@@ -68,6 +68,8 @@ pub enum DiagnosticCode {
     AsyncForOutsideAsyncFunction,
     /// `async with` outside an async function.
     AsyncWithOutsideAsyncFunction,
+    /// `nonlocal` with no enclosing function.
+    NonlocalOutsideFunction,
     /// `say` value could not be understood.
     SayValueBroken,
     /// `say` expression is not valid.
@@ -220,6 +222,7 @@ impl DiagnosticCode {
             Self::YieldFromAsyncFunction => "E0110",
             Self::AsyncForOutsideAsyncFunction => "E0111",
             Self::AsyncWithOutsideAsyncFunction => "E0112",
+            Self::NonlocalOutsideFunction => "E0113",
             Self::SayValueBroken => "E0201",
             Self::SayValueUnparseable => "E0202",
             Self::SaySentenceUnparseable => "E0203",
@@ -289,7 +292,7 @@ impl DiagnosticCode {
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 78] = [
+    pub const ALL: [DiagnosticCode; 79] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -303,6 +306,7 @@ impl DiagnosticCode {
         Self::YieldFromAsyncFunction,
         Self::AsyncForOutsideAsyncFunction,
         Self::AsyncWithOutsideAsyncFunction,
+        Self::NonlocalOutsideFunction,
         Self::SayValueBroken,
         Self::SayValueUnparseable,
         Self::SaySentenceUnparseable,
@@ -484,6 +488,13 @@ impl DiagnosticCode {
                 "비동기 함수 밖의 `async with`",
                 "`async with` waits for an asynchronous context manager, so it must be written inside a Python `async def` function. Move the block into an async function, or use an ordinary `with` block.",
                 "`async with`는 비동기 컨텍스트 관리자를 기다리므로 Python `async def` 함수 안에서만 쓸 수 있습니다. 블록을 비동기 함수 안으로 옮기거나 일반 `with` 블록을 사용하세요.",
+            ),
+            Self::NonlocalOutsideFunction => (
+                "E0113",
+                "`nonlocal` with no enclosing function",
+                "바깥 함수가 없는 `nonlocal`",
+                "`nonlocal` needs an enclosing function, not just the current function. Put this declaration in a nested function or class under another function, or remove it. When an enclosing function exists, the core leaves validation of the requested outer name to CPython.",
+                "`nonlocal`은 현재 함수만으로는 부족하고 바깥 함수가 필요합니다. 다른 함수 아래의 중첩 함수나 클래스에 이 선언을 넣거나 지우세요. 바깥 함수가 있으면 요청한 이름의 바인딩 검사는 코어가 아니라 CPython이 담당합니다.",
             ),
             Self::SayValueBroken => (
                 "E0201",
