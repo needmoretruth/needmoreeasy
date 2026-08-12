@@ -75,6 +75,8 @@ Implemented so far:
   rejected, never silently renamed. Runtime names include `nme_copy`,
   `nme_cat`, `NME_STRING_CAPACITY`, `_nme_i`, the checked integer helpers, and
   the C library helpers used by generated code;
+- source comments are emitted as inert C comments, so comment text cannot turn
+  into a C preprocessor directive or change native function hoisting;
 
 Still planned: real boolean variables as a distinct type from integer
 truthiness, and the `native.nme` surface document.

@@ -333,6 +333,12 @@ fn escaped_native_strings_remain_valid_c_literals() {
 }
 
 #[test]
+fn python_comments_cannot_inject_c_or_change_function_hoisting() {
+    let source = "#include <missing_header.h>\n# } { /* comment */\ndef identity(value):\n    return value\n\nshow identity(1)\n";
+    assert_eq!(native_run(source).unwrap(), "1\n");
+}
+
+#[test]
 fn an_if_break_loop_works() {
     let source = "x = 0\nwhile x is less than 5\n    x add 1\n    if x is greater than 2\n        break\n    end\nend\nshow x\n";
     assert_eq!(native_run(source).unwrap(), "3\n");

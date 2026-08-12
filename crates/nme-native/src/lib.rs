@@ -16,6 +16,7 @@
 //!   float literals are rejected before C emission;
 //! - escaped native string literals; embedded NUL characters are rejected
 //!   because the C string runtime cannot preserve them;
+//! - source comments are emitted as inert C comments, never as C directives;
 //! - `set x to ...` / `x은 ...` / `x = ...` assignments of integers and
 //!   string literals (including the Python-looking form);
 //!   native string variables use checked 8192-byte buffers;
@@ -512,9 +513,13 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
             close_braces(&mut out, &mut open_braces, total_depth + 1);
             let text = line_text;
             let trimmed = text.trim();
-            if trimmed.is_empty() || trimmed.starts_with('#') {
+            if trimmed.is_empty() {
                 out.push_str(text);
                 out.push('\n');
+                continue;
+            }
+            if trimmed.starts_with('#') {
+                emit_native_comment(&mut out, text);
                 continue;
             }
             let is_function_header = !in_function
@@ -607,6 +612,12 @@ fn close_braces(out: &mut String, open: &mut usize, target: usize) {
     }
 }
 
+fn emit_native_comment(out: &mut String, source_comment: &str) {
+    out.push_str("/*");
+    out.push_str(&source_comment.replace("*/", "* /"));
+    out.push_str(" */\n");
+}
+
 /// Moves top-level generated C function definitions before `main`.
 ///
 /// GCC accepts nested functions as a non-standard extension, while Clang
@@ -657,8 +668,17 @@ fn hoist_native_functions(source: &str) -> String {
 fn c_brace_delta(line: &str) -> isize {
     let mut delta = 0isize;
     let mut in_string = false;
+    let mut in_comment = false;
     let mut escaped = false;
-    for character in line.chars() {
+    let mut characters = line.chars().peekable();
+    while let Some(character) = characters.next() {
+        if in_comment {
+            if character == '*' && characters.peek().is_some_and(|next| *next == '/') {
+                characters.next();
+                in_comment = false;
+            }
+            continue;
+        }
         if in_string {
             if escaped {
                 escaped = false;
@@ -669,6 +689,9 @@ fn c_brace_delta(line: &str) -> isize {
             }
         } else if character == '"' {
             in_string = true;
+        } else if character == '/' && characters.peek().is_some_and(|next| *next == '*') {
+            characters.next();
+            in_comment = true;
         } else if character == '{' {
             delta += 1;
         } else if character == '}' {

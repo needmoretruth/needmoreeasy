@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.57 — 2026-08-12
+
+- Emit Python comments as inert C comments during native lowering so comment
+  text cannot become a C preprocessor directive or confuse function hoisting.
+
 ## 0.0.1-beta.56 — 2026-08-12
 
 - Reject non-finite native float literals before C emission and normalize finite
