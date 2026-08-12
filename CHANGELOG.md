@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.129 — 2026-08-12
+
+- Add native six-surface regression coverage for one-line `say` output bodies,
+  alongside the existing `show` and `말해` spellings.
+
 ## 0.0.1-beta.128 — 2026-08-12
 
 - Add a Python-wins regression for the valid Korean call shape `만약 (준비)`.

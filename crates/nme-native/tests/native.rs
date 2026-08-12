@@ -1391,6 +1391,45 @@ fn one_line_nme_branch_bodies_compile_across_the_native_surface_matrix() {
 }
 
 #[test]
+fn one_line_nme_say_bodies_compile_across_the_native_surface_matrix() {
+    let cases = [
+        (
+            "sentence-en",
+            "when true then say \"sentence\"\n",
+            "sentence\n",
+        ),
+        ("sentence-ko", "만약 참 그러면 say \"문장\"\n", "문장\n"),
+        (
+            "beginner-en",
+            "if True then say \"beginner\"\n",
+            "beginner\n",
+        ),
+        (
+            "beginner-ko",
+            "저장 준비 참\n만약 준비 그러면 say \"초급\"\n",
+            "초급\n",
+        ),
+        (
+            "advanced-en",
+            "if (True) then say \"advanced\"\n",
+            "advanced\n",
+        ),
+        (
+            "advanced-ko",
+            "준비 = True\n만약 ((준비 그리고 참)) 그러면 say \"고급\"\n",
+            "고급\n",
+        ),
+    ];
+
+    for (label, source, expected) in cases {
+        let actual = native_run(source).unwrap_or_else(|error| {
+            panic!("native case failed: {label}: {error}");
+        });
+        assert_eq!(actual, expected, "native case: {label}");
+    }
+}
+
+#[test]
 fn native_control_bodies_reject_python_inline_statements() {
     for source in [
         "ready = True\nif ready then print(\"yes\")\n",
