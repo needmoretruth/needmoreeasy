@@ -188,7 +188,14 @@ fn record_completed_branch(frame: &mut NativeBlockFrame, declared: &HashMap<Stri
     record_branch_bindings(frame, declared);
     let completed = declared
         .iter()
-        .filter(|(name, kind)| !frame.bindings_before.contains_key(*name) && !is_maybe_type(**kind))
+        .filter(|(name, kind)| {
+            let is_new = !frame.bindings_before.contains_key(*name);
+            let was_maybe = frame
+                .bindings_before
+                .get(*name)
+                .is_some_and(|before| is_maybe_type(*before));
+            (is_new || was_maybe) && !is_maybe_type(**kind)
+        })
         .map(|(name, kind)| (name.clone(), concrete_type(*kind)))
         .collect::<HashMap<_, _>>();
     match &mut frame.bindings_in_all_branches {

@@ -636,6 +636,12 @@ fn bindings_assigned_in_both_if_else_branches_are_available_afterward() {
 
     let korean_function = "def 선택(값):\n    만약 값\n        결과 = 2\n    아니면\n        결과 = 3\n    끝\n    return 결과\n\n말해 선택(1)\n";
     assert_eq!(native_run(korean_function).unwrap(), "2\n");
+
+    let maybe_source = "ready = 1\nif ready\n    result = 2\nend\nif ready\n    result = 3\nelse\n    result = 4\nend\nshow result\n";
+    assert_eq!(native_run(maybe_source).unwrap(), "3\n");
+
+    let korean_maybe = "준비 = 1\n만약 준비\n    결과 = 2\n끝\n만약 준비\n    결과 = 3\n아니면\n    결과 = 4\n끝\n말해 결과\n";
+    assert_eq!(native_run(korean_maybe).unwrap(), "3\n");
 }
 
 #[test]

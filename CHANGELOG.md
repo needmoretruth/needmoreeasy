@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.107 — 2026-08-12
+
+- Upgrade a previously conditional binding when every arm of a later
+  `if`/`else` assigns it, without weakening the conservative loop and
+  one-sided-branch checks.
+- Extend the English and Korean native branch-merge regression coverage.
+
 ## 0.0.1-beta.106 — 2026-08-12
 
 - Treat a name assigned in every `if`/`else` branch as definitely initialized
