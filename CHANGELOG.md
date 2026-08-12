@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.65 — 2026-08-12
+
+- Reject C implementation-reserved identifier forms in native bindings and
+  file-scope functions before they can produce non-portable or invalid C.
+
 ## 0.0.1-beta.64 — 2026-08-12
 
 - Reject top-level native `return` with the stable `E0106` diagnostic instead

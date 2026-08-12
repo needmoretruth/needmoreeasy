@@ -1496,7 +1496,7 @@ fn emit_python_line(
                 Some(rustpython_parser::Tok::Name { name }) => name.clone(),
                 _ => return Some(native_function_header_not_supported(span)),
             };
-            if is_native_reserved_name(&name) {
+            if is_native_reserved_name(&name) || is_c_file_scope_reserved_name(&name) {
                 return Some(reserved_name("a function named", "함수 이름", &name, span));
             }
             let Some((_, parameters)) = native_function_header(tokens) else {
@@ -1667,6 +1667,23 @@ fn is_c_keyword(name: &str) -> bool {
     )
 }
 
+/// C reserves double-underscore names and names beginning with an underscore
+/// followed by an uppercase letter for the implementation, in every scope.
+fn is_c_implementation_reserved_name(name: &str) -> bool {
+    let bytes = name.as_bytes();
+    name.starts_with("__")
+        || (bytes.first() == Some(&b'_')
+            && bytes
+                .get(1)
+                .is_some_and(|character| character.is_ascii_uppercase()))
+}
+
+/// C reserves every leading-underscore name at file scope. Generated native
+/// functions have file scope, while ordinary bindings are function-local.
+fn is_c_file_scope_reserved_name(name: &str) -> bool {
+    name.starts_with('_')
+}
+
 /// Names exposed by the C headers used by generated native code.
 const NATIVE_C_HEADER_NAMES: &[&str] = &[
     "CHAR_BIT",
@@ -1809,9 +1826,8 @@ const NATIVE_C_HEADER_NAMES: &[&str] = &[
 ];
 
 /// Names emitted by the native runtime that user identifiers must not shadow.
-fn is_native_reserved_name(name: &str) -> bool {
-    is_c_keyword(name)
-        || NATIVE_C_HEADER_NAMES.contains(&name)
+fn is_native_runtime_name(name: &str) -> bool {
+    NATIVE_C_HEADER_NAMES.contains(&name)
         || matches!(
             name,
             "NME_STRING_CAPACITY"
@@ -1843,9 +1859,19 @@ fn is_native_reserved_name(name: &str) -> bool {
         )
 }
 
+fn is_native_reserved_name(name: &str) -> bool {
+    is_c_keyword(name)
+        || is_c_implementation_reserved_name(name)
+        || is_native_runtime_name(name)
+}
+
 fn native_name_reason(name: &str) -> &'static str {
     if is_c_keyword(name) {
         "C keyword"
+    } else if is_native_runtime_name(name) {
+        "reserved native runtime name"
+    } else if is_c_implementation_reserved_name(name) || is_c_file_scope_reserved_name(name) {
+        "C implementation-reserved identifier"
     } else {
         "reserved native runtime name"
     }
@@ -1854,6 +1880,10 @@ fn native_name_reason(name: &str) -> &'static str {
 fn native_name_reason_ko(name: &str) -> &'static str {
     if is_c_keyword(name) {
         "C 키워드"
+    } else if is_native_runtime_name(name) {
+        "네이티브 런타임 예약 이름"
+    } else if is_c_implementation_reserved_name(name) || is_c_file_scope_reserved_name(name) {
+        "C 구현 예약 식별자"
     } else {
         "네이티브 런타임 예약 이름"
     }

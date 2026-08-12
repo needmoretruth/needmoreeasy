@@ -75,8 +75,11 @@ Implemented so far:
 - `say`/`show`/`말해` of an integer expression, a float, a string variable,
   or a string literal;
 - Korean and English spellings both lower to the same C;
-- identifiers that collide with C keywords or generated runtime names are
-  rejected, never silently renamed. Runtime names include `nme_copy`,
+- identifiers that collide with C keywords, C implementation-reserved forms,
+  or generated runtime names are rejected, never silently renamed. Names
+  beginning `__`, names beginning `_` followed by an uppercase letter, and
+  file-scope function names beginning `_` are reserved; an ordinary local name
+  such as `_value` remains usable. Runtime names also include `nme_copy`,
   `nme_cat`, `NME_STRING_CAPACITY`, `_nme_i`, the checked integer helpers, and
   the C library symbols exposed by the generated headers;
 - source comments are emitted as inert C comments, so comment text cannot turn

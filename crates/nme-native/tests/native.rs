@@ -728,6 +728,37 @@ fn c_keyword_names_are_rejected_not_miscompiled() {
 }
 
 #[test]
+fn c_implementation_reserved_names_are_rejected_not_miscompiled() {
+    for source in [
+        "__attribute__ = 1\nshow __attribute__\n",
+        "__속성 = 1\n말해 __속성\n",
+        "def _Foo(value):\n    return value\n\nshow _Foo(1)\n",
+        "def _helper(value):\n    return value\n\nshow _helper(1)\n",
+        "def _함수(값):\n    return 값\n\n말해 _함수(1)\n",
+    ] {
+        let problems = nme_native::native_compile(source).unwrap_err();
+        assert!(
+            problems.iter().any(|problem| {
+                problem
+                    .message
+                    .contains("C implementation-reserved identifier")
+            }),
+            "{source:?}: {problems:?}"
+        );
+        assert!(
+            problems.iter().any(|problem| {
+                problem
+                    .message_ko
+                    .as_deref()
+                    .is_some_and(|message| message.contains("C 구현 예약 식별자"))
+            }),
+            "{source:?}: {problems:?}"
+        );
+    }
+    assert_eq!(native_run("_value = 1\nshow _value\n").unwrap(), "1\n");
+}
+
+#[test]
 fn native_runtime_names_are_rejected_not_miscompiled() {
     for name in [
         "NME_STRING_CAPACITY",
