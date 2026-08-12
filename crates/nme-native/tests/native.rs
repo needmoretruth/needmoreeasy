@@ -607,6 +607,18 @@ fn string_variables_and_binary_concat_compile_natively() {
 }
 
 #[test]
+fn string_self_assignment_uses_overlap_safe_copying() {
+    let source = "text = \"hello\"\ntext = text\nshow text\n";
+    let c = nme_native::native_compile(source).unwrap();
+    assert!(
+        c.contains("memmove(destination, source, length + 1);")
+            && !c.contains("memcpy(destination, source, length + 1);"),
+        "string self-assignment must not lower through overlapping memcpy: {c}"
+    );
+    assert_eq!(native_run(source).unwrap(), "hello\n");
+}
+
+#[test]
 fn string_comparison_and_len_compile_natively() {
     let source = "name = \"NME\"\nif name == \"NME\"\n    show \"match\"\nend\nif name != \"other\"\n    show \"different\"\nend\nshow len(name)\nshow len(\"hello\")\n";
     assert_eq!(native_run(source).unwrap(), "match\ndifferent\n3\n5\n");

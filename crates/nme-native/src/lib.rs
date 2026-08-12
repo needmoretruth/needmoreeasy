@@ -257,7 +257,7 @@ const PREAMBLE: &str = concat!(
     "    if (length >= capacity) {\n",
     "        nme_string_overflow();\n",
     "    }\n",
-    "    memcpy(destination, source, length + 1);\n",
+    "    memmove(destination, source, length + 1);\n",
     "}\n",
     "static char *nme_cat(const char *a, const char *b) {\n",
     "    size_t a_length = strlen(a);\n",

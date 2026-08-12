@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.66 — 2026-08-12
+
+- Use overlap-safe copying for native string assignment so valid self-assignment
+  cannot invoke undefined `memcpy` behavior.
+
 ## 0.0.1-beta.65 — 2026-08-12
 
 - Reject C implementation-reserved identifier forms in native bindings and
