@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.74 — 2026-08-12
+
+- Update the native-backend memo to separate the implemented v0 baseline from
+  future milestones and measured extensions.
+
 ## 0.0.1-beta.73 — 2026-08-12
 
 - Correct the native-backend memo so its description matches the implemented

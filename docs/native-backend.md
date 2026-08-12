@@ -44,8 +44,8 @@ vast runtime. Every serious Python-family native compiler makes the same
 choice: compile a **statically analyzable core** and keep everything else on
 CPython.
 
-The proposed NME-native backend therefore targets a **restricted, statically
-typed core subset** with semantics defined independently of CPython.
+The NME-native backend therefore targets a **restricted, statically typed core
+subset** with semantics defined independently of CPython.
 Implemented so far:
 
 - integers and finite floats with `+ - * %` arithmetic (checked signed 32-bit native
@@ -161,9 +161,9 @@ Hand-writing assembly or a mini codegen.
   maintenance and correctness cost dwarfs any benefit when mature C/LLVM
   optimizers exist. Revisit only if portability demands exclude a C toolchain. |
 
-## Recommendation
+## Recommendation for the implemented v0 backend
 
-**Generate C and compile with the system C compiler for the first NME-native
+**Generate C and compile with the system C compiler for the v0 NME-native
 backend**, and keep LLVM/Cranelift as measured upgrades later.
 
 Rationale, in order of weight:
@@ -205,17 +205,19 @@ The frontend stays shared. The native backend is a separate crate
 reusing the `DiagnosticCode` registry. A program is accepted by the native
 path only if every statement belongs to the documented core.
 
-## Milestones
+## Status and next milestones
 
-1. Document `native.nme` core surface (types, statements, functions) in this
-   repository with examples.
-2. `nme-native`: core-subset parser gate + C lowering for scalars, `say`,
-   arithmetic, `while`/`if`/`break`, and functions.
-3. Runtime: UTF-8 string helpers and integer policy (smallest correct set).
-4. `nme native run`/`nme native build` CLI entry points; a workspace test
-   that compiles, runs, and compares output against the CPython path.
-5. Benchmark the core subset against CPython honestly; only then publish
-   numbers. Extend the core only with measured evidence.
+The v0 baseline is implemented: the restricted `nme-native` compiler, its
+UTF-8 string and checked-integer runtime, the `nme native run`/`build` CLI
+entry points, bilingual diagnostics, and end-to-end tests are all in the
+workspace. The next milestones are:
+
+1. Document the `native.nme` core surface (types, statements, and functions)
+   as a dedicated reference with examples.
+2. Extend the core only when a shared semantic definition, bilingual coverage,
+   native/CPython comparison, and memory-safety tests are ready.
+3. Measure the core across supported operating systems and compilers before
+   making any broader performance or portability claim.
 
 Measured 2026-08-11 on this machine: a 50,000,000-iteration integer count-up
 loop runs in about `0.03 s` as a native `-O2` binary versus about `2.0 s` on
