@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.135 — 2026-08-12
+
+- Extend documentation parity checks to validate local example and directory
+  links, not only Markdown targets.
+
 ## 0.0.1-beta.134 — 2026-08-12
 
 - Add six-surface native regression coverage for one-line `else if` branches

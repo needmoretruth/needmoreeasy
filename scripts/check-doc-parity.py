@@ -46,12 +46,16 @@ GUIDE_METADATA = {
 }
 
 
-def local_markdown_target(path: Path, raw_target: str) -> Path | None:
+def local_link_target(path: Path, raw_target: str) -> Path | None:
     target = raw_target.split("#", 1)[0].strip().strip("<>")
     if not target or target.startswith(("http:", "https:", "mailto:")):
         return None
-    candidate = (path.parent / target).resolve()
-    return candidate if candidate.suffix == ".md" else None
+    return (path.parent / target).resolve()
+
+
+def local_markdown_target(path: Path, raw_target: str) -> Path | None:
+    candidate = local_link_target(path, raw_target)
+    return candidate if candidate is not None and candidate.suffix == ".md" else None
 
 
 def markdown_anchor(text: str) -> str:
@@ -115,7 +119,7 @@ def check_korean_links(problems: list[str]) -> None:
                     )
 
 
-def check_local_markdown_links(problems: list[str]) -> None:
+def check_local_links(problems: list[str]) -> None:
     anchor_cache: dict[Path, set[str]] = {}
     for path in ROOT.rglob("*.md"):
         if any(part in {".git", "target"} for part in path.parts):
@@ -123,13 +127,20 @@ def check_local_markdown_links(problems: list[str]) -> None:
         lines = path.read_text(encoding="utf-8").splitlines()
         for line_number, line in enumerate(lines, start=1):
             for _label, raw_target in LINK_RE.findall(line):
-                candidate = local_markdown_target(path, raw_target)
-                if candidate is not None and not candidate.is_file():
+                candidate = local_link_target(path, raw_target)
+                if candidate is not None and not (
+                    candidate.is_file() or candidate.is_dir()
+                ):
                     problems.append(
                         f"{path.relative_to(ROOT)}:{line_number}: "
-                        f"missing local Markdown link target {raw_target}"
+                        f"missing local link target {raw_target}"
                     )
-                if candidate is None or not candidate.is_file() or "#" not in raw_target:
+                if (
+                    candidate is None
+                    or not candidate.is_file()
+                    or candidate.suffix != ".md"
+                    or "#" not in raw_target
+                ):
                     continue
                 fragment = raw_target.split("#", 1)[1].strip()
                 if not fragment:
@@ -285,7 +296,7 @@ def check_example_template_loop(problems: list[str]) -> None:
 
 
 problems: list[str] = []
-check_local_markdown_links(problems)
+check_local_links(problems)
 check_korean_links(problems)
 check_guide_navigation(problems)
 check_numbered_guide_pairs(problems)
