@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.101 — 2026-08-12
+
+- Include finite-float values in the generic native-backend recovery hint and
+  cover the English and Korean hints with a regression test.
+
 ## 0.0.1-beta.100 — 2026-08-12
 
 - Align the native-backend opening summary with the implemented function

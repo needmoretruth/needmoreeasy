@@ -1922,8 +1922,8 @@ fn reserved_name(english_kind: &str, korean_kind: &str, name: &str, span: Span) 
         span,
     )
     .with_bilingual_hint(
-        "use only the documented native core: integer and string values, while/if over comparisons, functions, and say",
-        "문서에 있는 네이티브 코어만 쓰세요: 정수·문자열 값, 비교 조건의 while/if, 함수, say",
+        "use only the documented native core: integer, finite-float, and string values, while/if over comparisons, functions, and say",
+        "문서에 있는 네이티브 코어만 쓰세요: 정수·유한 실수·문자열 값, 비교 조건의 while/if, 함수, say",
     )
 }
 
@@ -2218,8 +2218,8 @@ fn not_supported(what: &str, span: Span) -> Diagnostic {
         span,
     )
     .with_bilingual_hint(
-        "use only the documented native core: integer and string values, while/if over comparisons, functions, and say",
-        "문서에 있는 네이티브 코어만 쓰세요: 정수·문자열 값, 비교 조건의 while/if, 함수, say",
+        "use only the documented native core: integer, finite-float, and string values, while/if over comparisons, functions, and say",
+        "문서에 있는 네이티브 코어만 쓰세요: 정수·유한 실수·문자열 값, 비교 조건의 while/if, 함수, say",
     )
 }
 

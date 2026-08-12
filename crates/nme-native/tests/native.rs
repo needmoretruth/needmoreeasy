@@ -1027,3 +1027,26 @@ fn input_and_modules_are_rejected_not_miscompiled() {
     ));
     assert!(native_rejects("from \"helper.nme\" import greet\n"));
 }
+
+#[test]
+fn unsupported_native_hint_lists_finite_float_values() {
+    let problems = nme_native::native_compile("ask name, \"name? \"\n").unwrap_err();
+    assert!(
+        problems.iter().any(|problem| {
+            problem
+                .hint
+                .as_deref()
+                .is_some_and(|hint| hint.contains("finite-float"))
+        }),
+        "{problems:?}"
+    );
+    assert!(
+        problems.iter().any(|problem| {
+            problem
+                .hint_ko
+                .as_deref()
+                .is_some_and(|hint| hint.contains("유한 실수"))
+        }),
+        "{problems:?}"
+    );
+}
