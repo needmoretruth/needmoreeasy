@@ -1913,15 +1913,28 @@ fn token_depths(tokens: &[Token]) -> Vec<usize> {
 }
 
 fn is_python_return_line(tokens: &[Token]) -> bool {
-    matches!(tokens.first().map(|token| &token.tok), Some(Tok::Return))
+    has_direct_python_statement(tokens, |tok| matches!(tok, Tok::Return))
 }
 
 fn is_python_continue_line(tokens: &[Token]) -> bool {
-    matches!(tokens.first().map(|token| &token.tok), Some(Tok::Continue))
+    has_direct_python_statement(tokens, |tok| matches!(tok, Tok::Continue))
 }
 
 fn is_python_break_line(tokens: &[Token]) -> bool {
-    matches!(tokens.first().map(|token| &token.tok), Some(Tok::Break))
+    has_direct_python_statement(tokens, |tok| matches!(tok, Tok::Break))
+}
+
+fn has_direct_python_statement<F>(tokens: &[Token], predicate: F) -> bool
+where
+    F: Fn(&Tok) -> bool,
+{
+    let depths = token_depths(tokens);
+    tokens.iter().enumerate().any(|(index, token)| {
+        depths[index] == 0
+            && predicate(&token.tok)
+            && (index == 0
+                || (depths[index - 1] == 0 && matches!(tokens[index - 1].tok, Tok::Semi)))
+    })
 }
 
 fn missing_end_diagnostic(block: &ExplicitBlock, offset: usize) -> Diagnostic {

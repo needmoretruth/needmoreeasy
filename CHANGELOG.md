@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.157 — 2026-08-12
+
+- Detect `return`, `break`, and `continue` after earlier semicolon-separated
+  statements in one-line Python suites, preserving the shared scope diagnostics.
+
 ## 0.0.1-beta.156 — 2026-08-12
 
 - Extend Python control-flow diagnostics to one-line function and class suites,

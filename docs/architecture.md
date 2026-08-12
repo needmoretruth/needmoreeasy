@@ -142,7 +142,8 @@ silently broken Python.
 Python context errors use the shared parser too: top-level, inline, and one-line
 function/class `return`, `yield`, `await`, `break`, and `continue` receive
 stable diagnostics when their enclosing function or loop context is invalid,
-and `yield from` in `async def` receives `E0110`, while
+including controls after top-level semicolons in a one-line suite. `yield from`
+in `async def` receives `E0110`, while
 `async for`/`async with` outside `async def` receive `E0111`/`E0112`, and
 `nonlocal` without an enclosing function receives `E0113`; valid nested
 function/class bodies and generator lambdas remain byte-identical. CPython

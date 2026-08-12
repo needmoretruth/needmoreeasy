@@ -359,6 +359,12 @@ fn python_context_diagnostics_follow_nested_function_and_class_scopes() {
         inline_class_return[0].code,
         DiagnosticCode::ReturnOutsideFunction
     );
+    let inline_class_return_after_statement = transpile("class Inner: value = 1; return 1\n")
+        .expect_err("a return after an inline class statement must be rejected");
+    assert_eq!(
+        inline_class_return_after_statement[0].code,
+        DiagnosticCode::ReturnOutsideFunction
+    );
 
     let inline_function_continue = transpile("def inner(): continue\n")
         .expect_err("continue in an inline function body needs a loop");
@@ -377,6 +383,12 @@ fn python_context_diagnostics_follow_nested_function_and_class_scopes() {
         inline_function_continue_with_tail[0].code,
         DiagnosticCode::ContinueOutsideLoop
     );
+    let inline_function_continue_after_statement = transpile("def inner(): value = 1; continue\n")
+        .expect_err("a continue after an inline statement still needs a loop");
+    assert_eq!(
+        inline_function_continue_after_statement[0].code,
+        DiagnosticCode::ContinueOutsideLoop
+    );
 
     let inline_function_break = transpile("def inner(): break\n")
         .expect_err("break in an inline function body needs a loop");
@@ -389,6 +401,12 @@ fn python_context_diagnostics_follow_nested_function_and_class_scopes() {
         .expect_err("a direct inline break with a tail still needs a loop");
     assert_eq!(
         inline_function_break_with_tail[0].code,
+        DiagnosticCode::BreakOutsideLoop
+    );
+    let inline_function_break_after_statement = transpile("def inner(): value = 1; break\n")
+        .expect_err("a break after an inline statement still needs a loop");
+    assert_eq!(
+        inline_function_break_after_statement[0].code,
         DiagnosticCode::BreakOutsideLoop
     );
 

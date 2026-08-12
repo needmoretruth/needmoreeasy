@@ -655,7 +655,8 @@ See [the conversion guide](converting-python.md).
   while valid `continue` statements inside loops remain Python.
 - A Python `break` outside a loop gets `E0102`; one-line function/class suites
   do not inherit an outer loop, while valid `break` statements inside loops
-  remain Python.
+  remain Python. The check also covers controls after an earlier semicolon-
+  separated simple statement in the same one-line suite.
 - A top-level or inline Python `yield` outside a function gets `E0108`, and
   `await` outside an `async def` function gets `E0109`; valid generator and
   asynchronous function bodies remain Python.
