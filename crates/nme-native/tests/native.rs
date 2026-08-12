@@ -96,6 +96,68 @@ fn block_bindings_remain_available_after_native_block() {
 }
 
 #[test]
+fn type_changing_assignments_are_rejected_before_c_lowering() {
+    for source in [
+        "value = 1\nvalue = \"text\"\n",
+        "def typed():\n    value = 1\n    value = \"text\"\n    return 1\n",
+    ] {
+        let problems = nme_native::native_compile(source).unwrap_err();
+        assert!(
+            problems
+                .iter()
+                .any(|problem| problem.message.contains("changing the type")),
+            "{source:?}: {problems:?}"
+        );
+        assert!(
+            problems.iter().any(|problem| {
+                problem
+                    .message_ko
+                    .as_deref()
+                    .is_some_and(|message| message.contains("타입 변경"))
+            }),
+            "{source:?}: {problems:?}"
+        );
+    }
+}
+
+#[test]
+fn value_changes_require_an_existing_binding() {
+    let problems = nme_native::native_compile("score add 1\n").unwrap_err();
+    assert!(
+        problems
+            .iter()
+            .any(|problem| problem.message.contains("assigned before a value change")),
+        "{problems:?}"
+    );
+    assert!(
+        problems.iter().any(|problem| {
+            problem
+                .message_ko
+                .as_deref()
+                .is_some_and(|message| message.contains("값을 바꾸기 전에"))
+        }),
+        "{problems:?}"
+    );
+
+    let problems = nme_native::native_compile("text = \"hi\"\ntext add 1\n").unwrap_err();
+    assert!(
+        problems
+            .iter()
+            .any(|problem| problem.message.contains("changing a string value")),
+        "{problems:?}"
+    );
+    assert!(
+        problems.iter().any(|problem| {
+            problem
+                .message_ko
+                .as_deref()
+                .is_some_and(|message| message.contains("문자열 값 변경"))
+        }),
+        "{problems:?}"
+    );
+}
+
+#[test]
 fn generated_functions_are_file_scope_portable_c() {
     let source = "def twice(n):\n    return n * 2\n\nshow twice(5)\n";
     let c = nme_native::native_compile(source).unwrap();

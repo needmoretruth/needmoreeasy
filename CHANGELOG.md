@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.48 — 2026-08-12
+
+- Reject native assignments that change a binding from integer, float, or
+  string to another type before generating incompatible C.
+- Require a prior numeric binding for `add`/`subtract` value changes and report
+  a bilingual diagnostic for uninitialized or string targets.
+
 ## 0.0.1-beta.47 — 2026-08-12
 
 - Hoist native scalar and string declarations to the active function scope when

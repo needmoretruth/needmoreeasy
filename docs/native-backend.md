@@ -56,6 +56,8 @@ Implemented so far:
   `times:` loop; `break`;
 - functions over scalar parameters with `return` (recursion works);
 - function-local scalar assignments remain scoped to their function;
+- value changes require an existing integer or float binding, and assignments
+  cannot change a native name from one type to another;
 - `say`/`show`/`말해` of an integer expression, a float, a string variable,
   or a string literal;
 - Korean and English spellings both lower to the same C;

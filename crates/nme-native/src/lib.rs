@@ -13,7 +13,8 @@
 //! - `set x to ...` / `x은 ...` / `x = ...` assignments of integers and
 //!   string literals (including the Python-looking form);
 //!   native string variables use checked 8192-byte buffers;
-//! - value changes `x add N` / `x = x + N` / `점수에 N 더해`;
+//! - value changes on an existing integer or float binding:
+//!   `x add N` / `x = x + N` / `점수에 N 더해`;
 //! - `while`/`if`/`else`/`else if` blocks over integer comparisons, closed
 //!   by `end`/`끝`;
 //! - `break` inside a loop;
@@ -188,6 +189,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                         amount,
                         *operation,
                         source,
+                        nme_line.span,
                     ) {
                         problems.push(diag);
                     }
@@ -822,6 +824,27 @@ fn emit_say(
     }
 }
 
+fn assignment_type(
+    declared: &HashMap<String, VarType>,
+    name: &str,
+    expression_type: ExprType,
+    span: Span,
+) -> Result<bool, Diagnostic> {
+    let incoming = match expression_type {
+        ExprType::Int => VarType::Int,
+        ExprType::Float => VarType::Float,
+        ExprType::Str => VarType::Str,
+    };
+    if let Some(existing) = declared.get(name).copied() {
+        if existing != incoming {
+            return Err(type_change(name, existing, incoming, span));
+        }
+        Ok(false)
+    } else {
+        Ok(true)
+    }
+}
+
 fn emit_set(
     out: &mut String,
     declaration_slots: &mut DeclarationSlots,
@@ -843,7 +866,7 @@ fn emit_set(
             let text = code_text(code, source);
             let span = code_span(code);
             let (lowered, kind) = check_expr(text, span, declared)?;
-            let is_new = !declared.contains_key(target);
+            let is_new = assignment_type(declared, target, kind, span)?;
             match kind {
                 ExprType::Int => {
                     if is_new {
@@ -891,33 +914,32 @@ fn emit_update(
     amount: &nme_core::syntax::Code,
     operation: nme_core::syntax::UpdateOp,
     source: &str,
+    span: Span,
 ) -> Result<(), Diagnostic> {
     if is_native_reserved_name(target) {
         return Err(reserved_name(
             "a variable named",
             "변수 이름",
             target,
-            Span::new(0, 0),
+            span,
         ));
+    }
+    if !declared.contains_key(target) {
+        return Err(value_change_without_binding(target, span));
+    }
+    if matches!(declared.get(target), Some(VarType::Str)) {
+        return Err(string_value_change(span));
     }
     let amount_text = code_text(amount, source);
-    let (lowered, kind) = check_expr(amount_text, Span::new(0, 0), declared)?;
+    let (lowered, kind) = check_expr(amount_text, span, declared)?;
     if kind != ExprType::Int {
-        return Err(not_supported(
-            "a text value in a value change",
-            Span::new(0, 0),
-        ));
+        return Err(not_supported("a non-integer value change amount", span));
     }
-    let is_new = !declared.contains_key(target);
-    if is_new {
-        declared.insert(target.to_string(), VarType::Int);
-    }
-    let prefix = if is_new { "int " } else { "" };
     let op = match operation {
         nme_core::syntax::UpdateOp::Add => "+=",
         nme_core::syntax::UpdateOp::Subtract => "-=",
     };
-    out.push_str(&format!("{prefix}{target} {op} {lowered};\n"));
+    out.push_str(&format!("{target} {op} {lowered};\n"));
     Ok(())
 }
 
@@ -1012,7 +1034,10 @@ fn emit_python_line(
             let expression = text.split_once('=').map_or(text, |(_, right)| right.trim());
             match check_expr(expression, span, declared) {
                 Ok((lowered, ExprType::Int)) => {
-                    let is_new = !declared.contains_key(&name);
+                    let is_new = match assignment_type(declared, &name, ExprType::Int, span) {
+                        Ok(is_new) => is_new,
+                        Err(diag) => return Some(diag),
+                    };
                     if is_new {
                         declaration_slots.declare(out, &format!("int {name};\n"));
                         declared.insert(name.clone(), VarType::Int);
@@ -1021,7 +1046,10 @@ fn emit_python_line(
                     None
                 }
                 Ok((lowered, ExprType::Float)) => {
-                    let is_new = !declared.contains_key(&name);
+                    let is_new = match assignment_type(declared, &name, ExprType::Float, span) {
+                        Ok(is_new) => is_new,
+                        Err(diag) => return Some(diag),
+                    };
                     if is_new {
                         declaration_slots.declare(out, &format!("double {name};\n"));
                         declared.insert(name.clone(), VarType::Float);
@@ -1030,13 +1058,16 @@ fn emit_python_line(
                     None
                 }
                 Ok((lowered, ExprType::Str)) => {
-                    let is_new = !declared.contains_key(&name);
-                    declared.insert(name.clone(), VarType::Str);
+                    let is_new = match assignment_type(declared, &name, ExprType::Str, span) {
+                        Ok(is_new) => is_new,
+                        Err(diag) => return Some(diag),
+                    };
                     if is_new {
                         declaration_slots.declare(
                             out,
                             &format!("char {name}[NME_STRING_CAPACITY];\n"),
                         );
+                        declared.insert(name.clone(), VarType::Str);
                     }
                     out.push_str(&format!(
                         "nme_copy({name}, sizeof {name}, {lowered});\n"
@@ -1152,6 +1183,63 @@ fn reserved_name(
     .with_bilingual_hint(
         "use only the documented native core: integer and string values, while/if over comparisons, functions, and say",
         "문서에 있는 네이티브 코어만 쓰세요: 정수·문자열 값, 비교 조건의 while/if, 함수, say",
+    )
+}
+
+fn type_change(name: &str, from: VarType, to: VarType, span: Span) -> Diagnostic {
+    let (from_english, from_korean) = native_type_names(from);
+    let (to_english, to_korean) = native_type_names(to);
+    Diagnostic::bilingual(
+        DiagnosticCode::UnsupportedModule,
+        format!(
+            "the native backend does not support changing the type of `{name}` from {from_english} to {to_english}"
+        ),
+        format!(
+            "네이티브 백엔드는 `{name}`의 타입 변경({from_korean} → {to_korean})을 지원하지 않습니다"
+        ),
+        span,
+    )
+    .with_bilingual_hint(
+        "assign one native type to each name: integer, float, or string",
+        "이름마다 네이티브 타입 하나만 대입하세요: 정수, 실수, 문자열",
+    )
+}
+
+fn native_type_names(kind: VarType) -> (&'static str, &'static str) {
+    match kind {
+        VarType::Int => ("integer", "정수"),
+        VarType::Float => ("float", "실수"),
+        VarType::Str => ("string", "문자열"),
+    }
+}
+
+fn value_change_without_binding(name: &str, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::UnsupportedModule,
+        format!(
+            "the native backend requires `{name}` to be assigned before a value change"
+        ),
+        format!(
+            "네이티브 백엔드는 값을 바꾸기 전에 `{name}`을(를) 먼저 대입해야 합니다"
+        ),
+        span,
+    )
+    .with_bilingual_hint(
+        "assign the name first, then use add/subtract to change its value",
+        "먼저 이름에 값을 대입한 다음 더하기/빼기로 값을 바꾸세요",
+    )
+}
+
+fn string_value_change(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::UnsupportedModule,
+        "the native backend does not support changing a string value",
+        "네이티브 백엔드는 문자열 값 변경을 지원하지 않습니다",
+        span,
+    )
+    .with_bilingual_hint(
+        "use add/subtract with an existing integer or float binding",
+        "이미 대입된 정수·실수 바인딩에 더하기/빼기를 사용하세요",
     )
 }
 
