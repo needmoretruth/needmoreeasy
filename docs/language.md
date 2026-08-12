@@ -656,6 +656,8 @@ See [the conversion guide](converting-python.md).
   asynchronous function bodies remain Python.
 - `yield from` inside an `async def` function gets `E0110`; use `async for`
   there, while ordinary generator functions may keep `yield from` unchanged.
+- Generator lambdas remain valid advanced Python: a `yield` inside
+  `lambda: ...` is checked against the lambda's own function context.
 - An inline body must contain one statement; an inline `else`/`elif` without an
   open condition gets `E0103`. Put branch lines in the same explicit condition
   block before its `end`.

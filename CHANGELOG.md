@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.144 — 2026-08-12
+
+- Keep generator lambdas byte-identical while Python-context diagnostics inspect
+  their own function scope, including normal lambdas nested in `async def`.
+
 ## 0.0.1-beta.143 — 2026-08-12
 
 - Diagnose `yield from` inside `async def` with shared bilingual `E0110`, while

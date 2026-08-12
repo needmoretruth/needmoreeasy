@@ -10,7 +10,7 @@ Give an AI coding assistant this one prompt:
 Read and follow this NME language handoff before writing code:
 https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
 
-Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.143`), then write the requested program as a .nme file, prefer sentence syntax for a
+Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.144`), then write the requested program as a .nme file, prefer sentence syntax for a
 beginner, mix beginner or advanced Python only where it makes the result
 clearer, and verify it with nme check.
 ```
@@ -229,6 +229,8 @@ Python context rules still apply: `return` and `yield` belong inside a function,
 while `await` belongs inside `async def`. `nme check` reports these invalid
 top-level or inline cases with stable bilingual codes `E0106`–`E0110`; in an
 `async def`, use `async for` instead of `yield from`.
+Generator lambdas such as `lambda: (yield value)` are valid advanced Python
+and must remain unchanged.
 
 Valid Python always wins. Never rewrite `say("x")`, a variable named `when`,
 text inside a string, or a comment as NME syntax.

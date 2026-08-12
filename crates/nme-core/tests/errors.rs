@@ -372,6 +372,32 @@ fn python_context_diagnostics_follow_nested_function_and_class_scopes() {
     let async_function = "async def worker():\n    await work()\n";
     assert_eq!(transpile(async_function).unwrap(), async_function);
 
+    let generator_lambda = "generator = lambda: (yield 1)\n";
+    assert_eq!(transpile(generator_lambda).unwrap(), generator_lambda);
+    let inline_generator_lambda = "when true then (lambda: (yield 1))\n";
+    assert_eq!(
+        transpile(inline_generator_lambda).unwrap(),
+        "if (True): (lambda: (yield 1))\n"
+    );
+    let class_generator_lambda = "class C:\n    generator = lambda: (yield 1)\n";
+    assert_eq!(
+        transpile(class_generator_lambda).unwrap(),
+        class_generator_lambda
+    );
+    let async_generator_lambda = "async def outer():\n    worker = lambda: (yield from values)\n";
+    assert_eq!(
+        transpile(async_generator_lambda).unwrap(),
+        async_generator_lambda
+    );
+
+    let async_lambda_await = transpile("async def outer():\n    worker = lambda: (await work())\n")
+        .expect_err("await is not valid inside a normal lambda");
+    assert_eq!(async_lambda_await.len(), 1, "{async_lambda_await:?}");
+    assert_eq!(
+        async_lambda_await[0].code,
+        DiagnosticCode::AwaitOutsideAsyncFunction
+    );
+
     let async_yield_from = transpile("async def generator():\n    yield from values\n")
         .expect_err("yield from is not valid in an async function");
     assert_eq!(async_yield_from.len(), 1, "{async_yield_from:?}");
@@ -395,6 +421,11 @@ fn python_context_diagnostics_follow_nested_function_and_class_scopes() {
 
     let generator_from = "def generator():\n    yield from values\n";
     assert_eq!(transpile(generator_from).unwrap(), generator_from);
+
+    let yield_default = transpile("def f(value=(yield 1)):\n    return value\n")
+        .expect_err("yield in a function default is outside the function body");
+    assert_eq!(yield_default.len(), 1, "{yield_default:?}");
+    assert_eq!(yield_default[0].code, DiagnosticCode::YieldOutsideFunction);
 }
 
 #[test]

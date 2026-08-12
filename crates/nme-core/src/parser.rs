@@ -462,6 +462,14 @@ pub fn parse_program(
                 }
             }
             Ok(None) => {
+                let valid_python_header = is_valid_python_header(token_text(source, &line.tokens));
+                let python_loop_header = is_python_loop_header(&line.tokens);
+                bindings.remember_python(&line.tokens, parse_line.indent);
+                if depth > 0 && valid_python_header {
+                    python_header_indents.push((line.indent, python_loop_header));
+                } else if depth == 0 && valid_python_header && python_loop_header {
+                    top_level_python_loop_indents.push(line.indent);
+                }
                 if is_python_return_line(&line.tokens) && !bindings.inside_function() {
                     problems.push(return_outside_function_diagnostic(line.span));
                     continue;
@@ -475,30 +483,18 @@ pub fn parse_program(
                     problems.push(continue_outside_loop_diagnostic(line.span));
                     continue;
                 }
-                if contains_token(&line.tokens, |token| matches!(token.tok, Tok::Yield))
-                    && !bindings.inside_function()
-                {
+                if contains_yield_outside_lambda(&line.tokens) && !bindings.inside_function() {
                     problems.push(yield_outside_function_diagnostic(line.span));
                     continue;
                 }
-                if contains_token(&line.tokens, |token| matches!(token.tok, Tok::Await))
-                    && !bindings.inside_async_function()
-                {
+                if contains_invalid_await(&line.tokens, bindings.inside_async_function()) {
                     problems.push(await_outside_async_function_diagnostic(line.span));
                     continue;
                 }
-                if contains_yield_from(&line.tokens) && bindings.inside_async_function() {
-                    problems.push(yield_from_async_function_diagnostic(line.span));
-                    continue;
-                }
-                bindings.remember_python(&line.tokens, parse_line.indent);
-                if depth > 0 && is_valid_python_header(token_text(source, &line.tokens)) {
-                    python_header_indents.push((line.indent, is_python_loop_header(&line.tokens)));
-                } else if depth == 0
-                    && is_valid_python_header(token_text(source, &line.tokens))
-                    && is_python_loop_header(&line.tokens)
+                if contains_yield_from_outside_lambda(&line.tokens)
+                    && bindings.inside_async_function()
                 {
-                    top_level_python_loop_indents.push(line.indent);
+                    problems.push(yield_from_async_function_diagnostic(line.span));
                 }
             }
             Err(problem) => problems.push(problem),
@@ -927,8 +923,7 @@ fn inline_yield_is_outside_function_in_body(
     match body {
         InlineStmt::Nme(inner) => inline_yield_is_outside_function(inner, tokens, inside_function),
         InlineStmt::Python(span) => {
-            contains_token_in_span(tokens, *span, |token| matches!(token.tok, Tok::Yield))
-                && !inside_function
+            contains_yield_outside_lambda_in_span(tokens, *span) && !inside_function
         }
     }
 }
@@ -960,8 +955,7 @@ fn inline_await_is_outside_async_function_in_body(
             inline_await_is_outside_async_function(inner, tokens, inside_async_function)
         }
         InlineStmt::Python(span) => {
-            contains_token_in_span(tokens, *span, |token| matches!(token.tok, Tok::Await))
-                && !inside_async_function
+            contains_invalid_await_in_span(tokens, *span, inside_async_function)
         }
     }
 }
@@ -993,7 +987,7 @@ fn inline_yield_from_is_in_async_function_in_body(
             inline_yield_from_is_in_async_function(inner, tokens, inside_async_function)
         }
         InlineStmt::Python(span) => {
-            contains_yield_from_in_span(tokens, *span) && inside_async_function
+            contains_yield_from_outside_lambda_in_span(tokens, *span) && inside_async_function
         }
     }
 }
@@ -1004,40 +998,104 @@ fn first_token_in_span(tokens: &[Token], span: Span) -> Option<&Token> {
         .find(|token| token.span.start >= span.start && token.span.end <= span.end)
 }
 
-fn contains_token<F>(tokens: &[Token], predicate: F) -> bool
-where
-    F: Fn(&Token) -> bool,
-{
-    tokens.iter().any(predicate)
-}
-
-fn contains_token_in_span<F>(tokens: &[Token], span: Span, predicate: F) -> bool
-where
-    F: Fn(&Token) -> bool,
-{
-    tokens.iter().any(|token| {
-        token.span.start >= span.start && token.span.end <= span.end && predicate(token)
+fn contains_yield_outside_lambda(tokens: &[Token]) -> bool {
+    tokens.iter().enumerate().any(|(index, token)| {
+        matches!(token.tok, Tok::Yield) && !token_is_inside_lambda(tokens, index)
     })
 }
 
-fn contains_yield_from(tokens: &[Token]) -> bool {
-    tokens
-        .windows(2)
-        .any(|pair| matches!(pair[0].tok, Tok::Yield) && matches!(pair[1].tok, Tok::From))
+fn contains_yield_outside_lambda_in_span(tokens: &[Token], span: Span) -> bool {
+    tokens.iter().enumerate().any(|(index, token)| {
+        token.span.start >= span.start
+            && token.span.end <= span.end
+            && matches!(token.tok, Tok::Yield)
+            && !token_is_inside_lambda(tokens, index)
+    })
 }
 
-fn contains_yield_from_in_span(tokens: &[Token], span: Span) -> bool {
-    let mut previous_was_yield = false;
-    for token in tokens
-        .iter()
-        .filter(|token| token.span.start >= span.start && token.span.end <= span.end)
-    {
-        if previous_was_yield && matches!(token.tok, Tok::From) {
+fn contains_invalid_await(tokens: &[Token], inside_async_function: bool) -> bool {
+    tokens.iter().enumerate().any(|(index, token)| {
+        matches!(token.tok, Tok::Await)
+            && (token_is_inside_lambda(tokens, index) || !inside_async_function)
+    })
+}
+
+fn contains_invalid_await_in_span(
+    tokens: &[Token],
+    span: Span,
+    inside_async_function: bool,
+) -> bool {
+    tokens.iter().enumerate().any(|(index, token)| {
+        token.span.start >= span.start
+            && token.span.end <= span.end
+            && matches!(token.tok, Tok::Await)
+            && (token_is_inside_lambda(tokens, index) || !inside_async_function)
+    })
+}
+
+fn contains_yield_from_outside_lambda(tokens: &[Token]) -> bool {
+    tokens.windows(2).enumerate().any(|(index, pair)| {
+        matches!(pair[0].tok, Tok::Yield)
+            && matches!(pair[1].tok, Tok::From)
+            && !token_is_inside_lambda(tokens, index)
+    })
+}
+
+fn contains_yield_from_outside_lambda_in_span(tokens: &[Token], span: Span) -> bool {
+    tokens.windows(2).enumerate().any(|(index, pair)| {
+        pair[0].span.start >= span.start
+            && pair[1].span.end <= span.end
+            && matches!(pair[0].tok, Tok::Yield)
+            && matches!(pair[1].tok, Tok::From)
+            && !token_is_inside_lambda(tokens, index)
+    })
+}
+
+fn token_is_inside_lambda(tokens: &[Token], target_index: usize) -> bool {
+    let depths = token_depths(tokens);
+    for lambda_index in 0..target_index {
+        if !matches!(tokens[lambda_index].tok, Tok::Lambda) {
+            continue;
+        }
+        let lambda_depth = depths[lambda_index];
+        let Some(colon_index) = (lambda_index + 1..tokens.len()).find(|&index| {
+            depths[index] == lambda_depth && matches!(tokens[index].tok, Tok::Colon)
+        }) else {
+            continue;
+        };
+        if colon_index >= target_index {
+            continue;
+        }
+        let body_ends_before_target = (colon_index + 1..target_index).any(|index| {
+            depths[index] == lambda_depth
+                && matches!(
+                    tokens[index].tok,
+                    Tok::Comma | Tok::Semi | Tok::Rpar | Tok::Rsqb | Tok::Rbrace
+                )
+        });
+        if !body_ends_before_target {
             return true;
         }
-        previous_was_yield = matches!(token.tok, Tok::Yield);
     }
     false
+}
+
+fn token_depths(tokens: &[Token]) -> Vec<usize> {
+    let mut depth = 0usize;
+    tokens
+        .iter()
+        .map(|token| {
+            let before = depth;
+            match token.tok {
+                Tok::Rpar | Tok::Rsqb | Tok::Rbrace => {
+                    depth = depth.saturating_sub(1);
+                }
+                Tok::Lpar | Tok::Lsqb | Tok::Lbrace => depth += 1,
+                _ => {}
+            }
+            before
+        })
+        .collect()
 }
 
 fn is_python_return_line(tokens: &[Token]) -> bool {
