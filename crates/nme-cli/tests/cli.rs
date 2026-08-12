@@ -608,6 +608,44 @@ fn the_native_command_compiles_and_runs_a_core_program() {
 }
 
 #[test]
+fn native_run_rejects_an_output_path_in_both_command_languages() {
+    let dir = temporary_dir("native-run-output");
+    write_nme(&dir, "hello.nme", "say 1\n");
+
+    let english = run_in(
+        &dir,
+        &["native", "run", "hello", "-o", "saved"],
+        None,
+    );
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(
+        english_error.contains("error[E9031]: `-o` is only available with `nme native build`"),
+        "{english_error}"
+    );
+    assert!(!dir.join("saved").exists(), "{english_error}");
+
+    let korean = run_in(
+        &dir,
+        &["네이티브", "실행", "hello", "-o", "saved-ko"],
+        None,
+    );
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(
+        korean_error.contains("오류[E9031]: `-o`는 `nme 네이티브 빌드`에서만 사용할 수 있습니다"),
+        "{korean_error}"
+    );
+    assert!(
+        korean_error.contains("error[E9031]: `-o` is only available with `nme native build`"),
+        "{korean_error}"
+    );
+    assert!(!dir.join("saved-ko").exists(), "{korean_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn native_build_refuses_to_overwrite_existing_artifacts() {
     if Command::new("cc").arg("--version").output().is_err() {
         eprintln!("cc not available; skipping native overwrite test");

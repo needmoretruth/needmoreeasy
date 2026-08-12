@@ -26,6 +26,11 @@ native artifact remains Python in disguise.
 
 The goal of this document is to plan that missing backend honestly.
 
+For the current CLI, `nme native run <file>` compiles and runs a temporary
+executable without saving artifacts. Use `nme native build <file> -o <path>`
+to keep the executable and generated C source; passing `-o` to `run` is
+rejected with E9031.
+
 ## The core design decision: a restricted native core, not "all of NME"
 
 NME's semantics are Python's semantics. A native compiler must choose which

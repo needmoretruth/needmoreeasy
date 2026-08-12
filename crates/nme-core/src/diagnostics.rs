@@ -186,6 +186,8 @@ pub enum DiagnosticCode {
     CliCompileModuleImportsUnsupported,
     /// `install` was given no package name.
     CliInstallPackageMissing,
+    /// `nme native run` was given an output path intended for `build`.
+    CliNativeRunOutput,
 }
 
 impl DiagnosticCode {
@@ -261,11 +263,12 @@ impl DiagnosticCode {
             Self::CliImportedModuleNameCollision => "E9028",
             Self::CliCompileModuleImportsUnsupported => "E9029",
             Self::CliInstallPackageMissing => "E9030",
+            Self::CliNativeRunOutput => "E9031",
         }
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 70] = [
+    pub const ALL: [DiagnosticCode; 71] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -336,6 +339,7 @@ impl DiagnosticCode {
         Self::CliImportedModuleNameCollision,
         Self::CliCompileModuleImportsUnsupported,
         Self::CliInstallPackageMissing,
+        Self::CliNativeRunOutput,
     ];
 
     pub fn from_code(code: &str) -> Option<Self> {
@@ -851,6 +855,13 @@ impl DiagnosticCode {
                 "패키지 이름이 없습니다",
                 "`nme install` needs one package name, for example `nme install requests`. Add the package name, or use `nme 설치 <패키지>` in the Korean command form.",
                 "`nme install`에는 패키지 이름 하나가 필요합니다. 예: `nme install requests`. 패키지 이름을 추가하거나 한국어 명령인 `nme 설치 <패키지>`를 사용하세요.",
+            ),
+            Self::CliNativeRunOutput => (
+                "E9031",
+                "`-o` is only available with `nme native build`",
+                "`-o`는 `nme 네이티브 빌드`에서만 사용할 수 있습니다",
+                "`nme native run` executes the program without saving an artifact. Use `nme native build <file> -o <path>` when you want to keep the executable and generated C source.",
+                "`nme 네이티브 실행`은 결과 파일을 저장하지 않고 프로그램을 실행합니다. 실행 파일과 생성된 C 소스를 보관하려면 `nme 네이티브 빌드 <파일> -o <경로>`를 사용하세요.",
             ),
         };
         CodeExplanation {

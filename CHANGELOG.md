@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.70 — 2026-08-12
+
+- Reject `-o` on `nme native run` with stable bilingual diagnostic E9031;
+  keep `-o` for `nme native build`.
+
 ## 0.0.1-beta.69 — 2026-08-12
 
 - Enforce English/Korean twin files for every numbered learning guide in the

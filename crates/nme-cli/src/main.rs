@@ -306,6 +306,14 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
             }
         }
     }
+    if action == "run" && output.is_some() {
+        return fail(
+            nme_core::diagnostics::DiagnosticCode::CliNativeRunOutput,
+            language,
+            "`-o` is only available with `nme native build`; `nme native run` does not save an artifact",
+            "`-o`는 `nme 네이티브 빌드`에서만 사용할 수 있습니다. `nme 네이티브 실행`은 결과 파일을 저장하지 않습니다",
+        );
+    }
     let file = match file {
         Some(file) => file,
         None => match discover_current_program(language, "native run", "네이티브 실행") {

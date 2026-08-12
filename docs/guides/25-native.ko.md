@@ -70,6 +70,8 @@
 
    `nme native build`는 실행 파일 옆에 `count.c`를 씁니다. C를 읽으면
    프로그램이 실제로 무엇이 되는지 볼 수 있습니다.
+   `-o` 옵션은 `빌드`에만 해당합니다. `nme 네이티브 실행 count -o count`는
+   `실행`이 결과 파일을 저장하지 않으므로 E9031으로 거부됩니다.
 
 4. 함수와 재귀는 코어 안에서 동작합니다. 한국어판
    `examples/native-factorial.ko.nme`(영어판 `examples/native-factorial.nme`)는

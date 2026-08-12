@@ -71,6 +71,8 @@ into a native executable with your system's C compiler.
 
    `nme native build` writes `count.c` next to the executable. Reading the C
    is how you see what your program really becomes.
+   The `-o` option belongs to `build`; `nme native run count -o count` is
+   rejected with E9031 because `run` does not save an artifact.
 
 4. Functions and recursion work inside the core — the example
    `examples/native-factorial.nme` (Korean twin
