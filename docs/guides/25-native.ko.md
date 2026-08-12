@@ -11,7 +11,7 @@
 
 지금까지 모든 프로그램은 CPython 위에서 실행됐습니다. NME가 Python으로
 컴파일하고 Python이 그것을 실행했습니다. 언어의 작은 부분 — 네이티브 코어
-— 은 더 나아가 바로 기계어가 될 수 있습니다. `nme native`는 그 코어를 C로
+— 은 더 나아가 바로 기계어가 될 수 있습니다. `nme 네이티브 실행`은 그 코어를 C로
 바꾸고 시스템 C 컴파일러로 네이티브 실행 파일을 만듭니다.
 
 ## 단계
@@ -61,15 +61,15 @@
    10
    ```
 
-   짧은 형태 `nme native count`도 같은 방식입니다.
+   영어 명령 `nme native count`도 같은 방식입니다.
 
 3. C 소스와 실행 파일을 남기려면:
 
    ```sh
-   nme native build count -o count
+   nme 네이티브 빌드 count -o count
    ```
 
-   `nme native build`는 실행 파일 옆에 `count.c`를 씁니다. `-o` 없이 `.ko`
+   `nme 네이티브 빌드`는 실행 파일 옆에 `count.c`를 씁니다. `-o` 없이 `.ko`
    파일을 빌드하면 C 이름에도 접미사를 유지한 `count.ko.c`를 만들어 영어판과
    한국어판을 한 폴더에서 빌드할 수 있습니다. Windows에서는 원본 줄기가 `.ko`로
    끝나도 기본 출력에 `.exe`가 붙습니다. C를 읽으면 프로그램이 실제로 무엇이
@@ -99,7 +99,7 @@
 
    ```sh
    nme r examples/native-factorial.ko
-   nme native examples/native-factorial.ko
+   nme 네이티브 실행 examples/native-factorial.ko
    ```
 
    둘 다 `120`을 출력합니다.
@@ -108,7 +108,7 @@
    네이티브 백엔드는 절대 조용히 잘못 컴파일하지 않습니다:
 
    ```sh
-   nme native ask-demo    # "지원하지 않습니다" 진단 출력
+   nme 네이티브 실행 ask-demo    # "지원하지 않습니다" 진단 출력
    nme r ask-demo         # CPython으로는 그대로 동작
    ```
 
@@ -128,12 +128,13 @@ Developer PowerShell의 Microsoft `cl`이 `/O2`와 `/utf-8`로 같은 일을 합
 ## 직접 해보기
 
 카운트다운을 100까지 세도록 바꾸거나, `square(n)` 함수를 만들고
-`square(7)`을 출력한 뒤 `nme native`로 실행해 보세요.
+`square(7)`을 출력한 뒤 `nme 네이티브 실행`으로 실행해 보세요.
 
 ## 배운 것
 
 - 네이티브 코어는 C로, macOS·Linux에서는 `cc`로, Windows에서는 MSVC `cl`로
   네이티브 실행 파일로 컴파일됩니다.
-- `nme native 실행`이 실행하고 `nme native 빌드`가 C와 실행 파일을 남깁니다.
+- `nme 네이티브 실행`이 실행하고 `nme 네이티브 빌드`가 C와 실행 파일을
+  남깁니다. 영어 명령은 `nme native run`과 `nme native build`입니다.
 - 함수, 반복, 조건, `say`가 모두 코어 안에서 동작합니다.
 - 코어 밖에서는 잘못 컴파일하는 대신 프로그램을 거부합니다.

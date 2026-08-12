@@ -77,10 +77,10 @@ printf '1\n3\n' | nme r examples/terminal-menu.ko
    주사위를 굴립니다. 다른 답은 `else`로 떨어져 "안녕히 가세요"를 출력하고
    `break`로 반복을 떠납니다 — `while True:`에서 나가는 유일한 길입니다.
 
-4. `nme check`는 반복을 실행하지 않고 문법만 확인합니다:
+4. `nme 검사`는 반복을 실행하지 않고 문법만 확인합니다:
 
    ```sh
-   nme check examples/terminal-menu.ko
+   nme 검사 examples/terminal-menu.ko
    ```
 
    영어 쌍둥이 `examples/terminal-menu.nme`는 같은 `while True:` 반복에

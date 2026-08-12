@@ -20,7 +20,7 @@ python3 -m http.server 8000
 ```
 
 ```sh
-nme run examples/http-client.ko
+nme 실행 examples/http-client.ko
 ```
 
 ```text
@@ -62,11 +62,11 @@ nme run examples/http-client.ko
    말해 "서버 응답: " + body.strip()
    ```
 
-4. `nme check`는 서버 없이도 프로그램을 확인합니다 — 확인은 문법만
+4. `nme 검사`는 서버 없이도 프로그램을 확인합니다 — 확인은 문법만
    필요하고, 실행만 서버가 필요합니다:
 
    ```sh
-   nme check examples/http-client.ko
+   nme 검사 examples/http-client.ko
    ```
 
 5. 영어 쌍둥이 `examples/http-client.nme`는 같은 프로그램을 씁니다. 마지막

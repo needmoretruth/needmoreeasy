@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.94 — 2026-08-12
+
+- Align Korean file, project, HTTP, terminal-menu, and native guide workflows
+  with their Korean CLI commands while retaining labeled English companions.
+
 ## 0.0.1-beta.93 — 2026-08-12
 
 - Align the Korean index and first two beginner guides with the Korean CLI
