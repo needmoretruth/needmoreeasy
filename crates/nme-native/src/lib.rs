@@ -802,13 +802,17 @@ fn lower_expr(
             if is_native_reserved_name(id) {
                 return Err(reserved_name("a variable named", "변수 이름", id, span));
             }
+            if functions.contains_key(id) {
+                return Err(native_function_value(id, span));
+            }
             match declared.get(id).copied() {
                 Some(VarType::MaybeInt | VarType::MaybeFloat | VarType::MaybeStr) => {
                     Err(uninitialized_name(id, span))
                 }
                 Some(VarType::Str) => Ok((id.to_string(), ExprType::Str)),
                 Some(VarType::Float) => Ok((id.to_string(), ExprType::Float)),
-                Some(VarType::Int) | None => Ok((id.to_string(), ExprType::Int)),
+                Some(VarType::Int) => Ok((id.to_string(), ExprType::Int)),
+                None => Err(unknown_native_name(id, span)),
             }
         }
         Expr::BinOp(binop) => match binop.op {
@@ -899,6 +903,9 @@ fn lower_expr(
                     callee.id.as_str(),
                     span,
                 ));
+            }
+            if declared.contains_key(callee.id.as_str()) {
+                return Err(native_function_name_collision(callee.id.as_str(), span));
             }
             let Some(expected_arguments) = functions.get(callee.id.as_str()).copied() else {
                 return Err(unknown_native_function(callee.id.as_str(), span));
@@ -1081,14 +1088,19 @@ fn check_condition(
                     if is_native_reserved_name(name) {
                         return Err(reserved_name("a variable named", "변수 이름", name, span));
                     }
+                    if functions.contains_key(name) {
+                        return Err(native_function_value(name, span));
+                    }
                     (
                         name.clone(),
                         match declared.get(name).copied() {
                             Some(VarType::MaybeInt | VarType::MaybeFloat | VarType::MaybeStr) => {
                                 return Err(uninitialized_name(name, span));
                             }
+                            Some(VarType::Str) => ExprType::Str,
                             Some(VarType::Float) => ExprType::Float,
-                            _ => ExprType::Int,
+                            Some(VarType::Int) => ExprType::Int,
+                            None => return Err(unknown_native_name(name, span)),
                         },
                     )
                 }
@@ -1134,13 +1146,17 @@ fn condition_operand(
             if is_native_reserved_name(name) {
                 return Err(reserved_name("a variable named", "변수 이름", name, span));
             }
+            if functions.contains_key(name) {
+                return Err(native_function_value(name, span));
+            }
             let kind = match declared.get(name).copied() {
                 Some(VarType::MaybeInt | VarType::MaybeFloat | VarType::MaybeStr) => {
                     return Err(uninitialized_name(name, span));
                 }
                 Some(VarType::Str) => ExprType::Str,
                 Some(VarType::Float) => ExprType::Float,
-                _ => ExprType::Int,
+                Some(VarType::Int) => ExprType::Int,
+                None => return Err(unknown_native_name(name, span)),
             };
             Ok((name.clone(), kind))
         }
@@ -1293,6 +1309,12 @@ fn emit_set(
             span_of_value(value),
         ));
     }
+    if functions.contains_key(target) {
+        return Err(native_function_name_collision(
+            target,
+            span_of_value(value),
+        ));
+    }
     match value {
         Value::Python(code) => {
             let text = code_text(code, source);
@@ -1422,6 +1444,15 @@ fn emit_python_line(
             };
             if let Some(parameter) = parameters
                 .iter()
+                .enumerate()
+                .find_map(|(index, parameter)| {
+                    parameters[..index].contains(parameter).then_some(parameter)
+                })
+            {
+                return Some(duplicate_native_parameter(parameter, span));
+            }
+            if let Some(parameter) = parameters
+                .iter()
                 .find(|parameter| is_native_reserved_name(parameter))
             {
                 return Some(reserved_name(
@@ -1430,6 +1461,12 @@ fn emit_python_line(
                     parameter,
                     span,
                 ));
+            }
+            if let Some(parameter) = parameters
+                .iter()
+                .find(|parameter| functions.contains_key(parameter.as_str()))
+            {
+                return Some(native_function_name_collision(parameter, span));
             }
             if parameters.is_empty() {
                 out.push_str(&format!("int {name}() {{\n"));
@@ -1475,6 +1512,9 @@ fn emit_python_line(
             };
             if is_native_reserved_name(&name) {
                 return Some(reserved_name("a variable named", "변수 이름", &name, span));
+            }
+            if functions.contains_key(&name) {
+                return Some(native_function_name_collision(&name, span));
             }
             let expression = text.split_once('=').map_or(text, |(_, right)| right.trim());
             match check_expr(expression, span, declared, functions) {
@@ -1765,6 +1805,66 @@ fn native_function_requires_return(span: Span) -> Diagnostic {
     .with_bilingual_hint(
         "add a top-level integer return after conditional blocks, or run the program with CPython",
         "조건부 블록 뒤에 최상위 정수 반환을 추가하거나 프로그램을 CPython으로 실행하세요",
+    )
+}
+
+fn unknown_native_name(name: &str, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::UnsupportedModule,
+        format!("the native backend cannot use `{name}` without a prior native binding"),
+        format!(
+            "네이티브 백엔드는 먼저 네이티브 바인딩을 하지 않고 `{name}`을(를) 사용할 수 없습니다"
+        ),
+        span,
+    )
+    .with_bilingual_hint(
+        "assign the name before using it, or run the program with CPython",
+        "사용하기 전에 이름에 대입하거나 프로그램을 CPython으로 실행하세요",
+    )
+}
+
+fn native_function_value(name: &str, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::UnsupportedModule,
+        format!("the native backend does not support using native function `{name}` as a value"),
+        format!(
+            "네이티브 백엔드는 네이티브 함수 `{name}`을(를) 값으로 사용하는 것을 지원하지 않습니다"
+        ),
+        span,
+    )
+    .with_bilingual_hint(
+        "call the function with its declared positional integer arguments",
+        "선언된 위치 기반 정수 인자로 함수를 호출하세요",
+    )
+}
+
+fn native_function_name_collision(name: &str, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::UnsupportedModule,
+        format!(
+            "the native backend does not support a binding named `{name}` because it shadows a native function name"
+        ),
+        format!(
+            "네이티브 백엔드는 네이티브 함수 이름을 가리는 `{name}` 바인딩을 지원하지 않습니다"
+        ),
+        span,
+    )
+    .with_bilingual_hint(
+        "use a different variable or parameter name, or run the program with CPython",
+        "다른 변수나 매개변수 이름을 사용하거나 프로그램을 CPython으로 실행하세요",
+    )
+}
+
+fn duplicate_native_parameter(name: &str, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::UnsupportedModule,
+        format!("native function parameter `{name}` is listed more than once"),
+        format!("네이티브 함수 매개변수 `{name}`이(가) 두 번 이상 나열되었습니다"),
+        span,
+    )
+    .with_bilingual_hint(
+        "list each function parameter name only once",
+        "함수 매개변수 이름을 각각 한 번만 적으세요",
     )
 }
 

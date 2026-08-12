@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.58 — 2026-08-12
+
+- Reject unresolved native names, bare native function values, duplicate
+  parameters, and bindings that shadow native function names before C emission.
+
 ## 0.0.1-beta.57 — 2026-08-12
 
 - Emit Python comments as inert C comments during native lowering so comment

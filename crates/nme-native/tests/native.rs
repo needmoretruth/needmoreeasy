@@ -277,6 +277,58 @@ fn unsupported_native_function_headers_are_rejected() {
 }
 
 #[test]
+fn native_names_and_function_values_are_checked_before_c_generation() {
+    let cases = [
+        (
+            "value = missing\nshow value\n",
+            "without a prior native binding",
+            "먼저 네이티브 바인딩",
+        ),
+        (
+            "def identity(value, value):\n    return value\n\nshow identity(1)\n",
+            "listed more than once",
+            "두 번 이상 나열",
+        ),
+        (
+            "def 계산(값, 값):\n    return 값\n\nshow 계산(1)\n",
+            "listed more than once",
+            "두 번 이상 나열",
+        ),
+        (
+            "def identity(value):\n    return value\n\nidentity = 1\nshow identity(1)\n",
+            "shadows a native function name",
+            "함수 이름을 가리는",
+        ),
+        (
+            "def identity(identity):\n    return identity\n\nshow identity(1)\n",
+            "shadows a native function name",
+            "함수 이름을 가리는",
+        ),
+        (
+            "def identity(value):\n    return value\n\nvalue = identity\nshow value\n",
+            "using native function `identity` as a value",
+            "함수 `identity`을(를) 값으로",
+        ),
+    ];
+    for (source, english, korean) in cases {
+        let problems = nme_native::native_compile(source).unwrap_err();
+        assert!(
+            problems.iter().any(|problem| problem.message.contains(english)),
+            "{source:?}: {problems:?}"
+        );
+        assert!(
+            problems.iter().any(|problem| {
+                problem
+                    .message_ko
+                    .as_deref()
+                    .is_some_and(|message| message.contains(korean))
+            }),
+            "{source:?}: {problems:?}"
+        );
+    }
+}
+
+#[test]
 fn nested_native_function_definitions_are_rejected() {
     let source = "def outer(value):\n    def inner(nested):\n        return nested\n    return inner(value)\n\nshow outer(1)\n";
     let problems = nme_native::native_compile(source).unwrap_err();

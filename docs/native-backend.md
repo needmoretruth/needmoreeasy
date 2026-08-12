@@ -77,6 +77,9 @@ Implemented so far:
   the C library helpers used by generated code;
 - source comments are emitted as inert C comments, so comment text cannot turn
   into a C preprocessor directive or change native function hoisting;
+- native expressions require a prior binding or a declared function call;
+  bare function values, duplicate parameters, and bindings or parameters that
+  shadow a native function name are rejected before C emission;
 
 Still planned: real boolean variables as a distinct type from integer
 truthiness, and the `native.nme` surface document.

@@ -42,6 +42,10 @@ into a native executable with your system's C compiler.
    arguments are outside the native core, as are nested function definitions.
    Float literals must be finite. Native float arithmetic uses C `double`, and
    `%g` output may print `5.0` as `5`; `-0.0` retains its sign as `-0`.
+   Native expressions must use a name assigned earlier or call a declared
+   function. Function values, duplicate parameters, and reusing a function
+   name for a variable or parameter are rejected; use the CPython path for
+   dynamic Python name behavior.
 
 2. Compile and run it natively:
 
