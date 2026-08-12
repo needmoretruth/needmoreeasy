@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.69 — 2026-08-12
+
+- Enforce English/Korean twin files for every numbered learning guide in the
+  documentation parity check.
+
 ## 0.0.1-beta.68 — 2026-08-12
 
 - Extend the documentation parity check to validate local Markdown fragment

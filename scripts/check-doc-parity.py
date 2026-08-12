@@ -163,6 +163,23 @@ def check_guide_navigation(problems: list[str]) -> None:
                 )
 
 
+def check_numbered_guide_pairs(problems: list[str]) -> None:
+    guides = ROOT / "docs" / "guides"
+    for path in guides.iterdir():
+        if not path.is_file() or not re.match(r"\d+-", path.name):
+            continue
+        if path.name.endswith(".ko.md"):
+            twin = path.with_name(f"{path.name[:-6]}.md")
+            language = "English"
+        else:
+            twin = path.with_name(f"{path.stem}.ko.md")
+            language = "Korean"
+        if not twin.is_file():
+            problems.append(
+                f"{path.relative_to(ROOT)}: missing {language} guide twin {twin.name}"
+            )
+
+
 def check_guide_metadata(problems: list[str]) -> None:
     guides = ROOT / "docs" / "guides"
     for path in guides.iterdir():
@@ -221,6 +238,7 @@ problems: list[str] = []
 check_local_markdown_links(problems)
 check_korean_links(problems)
 check_guide_navigation(problems)
+check_numbered_guide_pairs(problems)
 check_guide_metadata(problems)
 check_guide_code_block_parity(problems)
 check_example_template_loop(problems)
