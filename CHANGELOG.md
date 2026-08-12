@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.118 — 2026-08-12
+
+- Extend regression coverage for Korean comparison endings inside parenthesized
+  `elif` conditions, including exact core lowering and native execution.
+- Keep the branch case on the same shared condition-span path as `if` and
+  `while`; no separate English/Korean implementation is introduced.
+
 ## 0.0.1-beta.117 — 2026-08-12
 
 - Preserve the closing parenthesis and body boundary when Korean sentence

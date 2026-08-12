@@ -447,6 +447,24 @@ fn parenthesized_korean_comparison_endings_keep_the_condition_body_boundary() {
         "# end\n",
     );
     assert_eq!(ok(source), expected);
+
+    let branch = concat!(
+        "점수는 3\n",
+        "만약 거짓\n",
+        "    안 돼 말해줘\n",
+        "아니면 만약에 (점수가 4보다 작으면)\n",
+        "    작아요 말해줘\n",
+        "끝\n",
+    );
+    let branch_expected = concat!(
+        "점수 = 3\n",
+        "if (False):\n",
+        "    print(\"안 돼\")\n",
+        "elif (점수 < 4):\n",
+        "    print(\"작아요\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(branch), branch_expected);
 }
 
 #[test]

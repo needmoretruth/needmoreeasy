@@ -1265,6 +1265,9 @@ fn parenthesized_logical_conditions_compile_across_the_native_surface_matrix() {
 fn parenthesized_korean_comparison_endings_compile_natively() {
     let source = "점수는 1\n만약 (점수가 2보다 작으면)\n    작아요 말해줘\n끝\n";
     assert_eq!(native_run(source).unwrap(), "작아요\n");
+
+    let branch = "점수는 3\n만약 거짓\n    안 돼 말해줘\n아니면 만약에 (점수가 4보다 작으면)\n    작아요 말해줘\n끝\n";
+    assert_eq!(native_run(branch).unwrap(), "작아요\n");
 }
 
 #[test]
