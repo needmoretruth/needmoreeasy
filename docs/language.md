@@ -606,8 +606,10 @@ comparisons (including `<=`/`>=` and the natural-language "or equal"
   boolean function arguments/returns, ordinary Python `for` loops, Python
   inline bodies, and inline value changes remain outside the native core.
   Sentence repeats and beginner `times:`/`번:` loops may use one-line NME
-  output bodies, and one-line NME `say`/`show`/`말해` bodies after
+  output bodies, and one-line NME `say`/`show`/`말해` or `break` bodies after
   `then`/`그러면` are supported for these control statements and branch chains.
+  A one-line `break` must be inside a native loop; otherwise it is rejected with
+  `E0102`.
   Float arithmetic that would produce a
 non-finite result stops with a bilingual runtime error. Everything else — input, modules, files,
 classes, packages — is rejected with a clear diagnostic and still runs on

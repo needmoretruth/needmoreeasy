@@ -21,8 +21,8 @@ into a native executable with your system's C compiler.
    `else`, logical `and`/`or`, `break`, functions with integer `return`, and
    `say`/`show`/`말해`. Beginner `times:`/`번:` loops and sentence repeat
    forms can also use one-line NME output bodies. A native `if`/`while` or
-   branch body may put one NME output statement after `then`/`그러면` on the
-   same line:
+   branch body may put one NME output or `break` statement after
+   `then`/`그러면` on the same line:
 
    ```text
    score = 0
@@ -44,6 +44,17 @@ into a native executable with your system's C compiler.
    2번 반복해서 안녕 말해줘
    2 times: say "beginner"
    2번: 말해 "초급"
+   ```
+
+   A one-line `break` stops a native loop and must stay inside that loop:
+
+   ```text
+   count = 0
+   while True
+       count add 1
+       if count == 2 then break
+   end
+   show count
    ```
 
    Ordinary Python `for` loops, Python inline bodies, and inline value changes
@@ -196,5 +207,5 @@ print `square(7)`, then run it with `nme native`.
 - `nme native run` runs it; `nme native build` keeps the C and executable.
 - Functions, loops, branches, and `say`/`show`/`말해` output all work inside
   the core, including the documented one-line NME output forms for conditions
-  and repeats.
+  and repeats and one-line `break` bodies inside loops.
 - Outside the core, the backend rejects the program instead of miscompiling.

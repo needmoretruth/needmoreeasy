@@ -145,6 +145,14 @@ struct NativeControlContext<'a> {
     functions: &'a HashMap<String, usize>,
 }
 
+struct NativeInlineContext<'a> {
+    source: &'a str,
+    span: Span,
+    declared: &'a HashMap<String, VarType>,
+    functions: &'a HashMap<String, usize>,
+    allow_break: bool,
+}
+
 fn concrete_type(kind: VarType) -> VarType {
     match kind {
         VarType::Int | VarType::MaybeInt => VarType::Int,
@@ -659,38 +667,33 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                         Ok((lowered, ExprType::Int)) => {
                             let header =
                                 format!("for (int _nme_i = 0; _nme_i < {lowered}; _nme_i++)");
-                            match inline {
-                                Some(InlineStmt::Nme(inner)) => {
-                                    match lower_inline(
-                                        inner,
-                                        source,
-                                        &declared,
-                                        &functions,
-                                        nme_line.span,
-                                    ) {
-                                        Ok(text) => out.push_str(&format!("{header} {text}\n")),
-                                        Err(diag) => problems.push(diag),
-                                    }
+                            if let Some(inline) = inline {
+                                match lower_inline_body(
+                                    inline,
+                                    source,
+                                    &declared,
+                                    &functions,
+                                    nme_line.span,
+                                    true,
+                                ) {
+                                    Ok(text) => out.push_str(&format!("{header} {text}\n")),
+                                    Err(diag) => problems.push(diag),
                                 }
-                                Some(InlineStmt::Python(_)) => {
-                                    problems.push(not_supported("this inline body", nme_line.span));
-                                }
-                                None => {
-                                    out.push_str(&format!("{header} {{\n"));
-                                    open_braces += 1;
-                                    native_blocks.push(NativeBlockFrame {
-                                        body_depth: current_depth + 1,
-                                        bindings_before: declared.clone(),
-                                        is_loop: true,
-                                        definitely_runs: false,
-                                        branch_bindings: HashMap::new(),
-                                        bindings_in_all_branches: None,
-                                        has_else: false,
-                                        bindings_after_reachable_branch: None,
-                                        reachable_branch_flow: None,
-                                        branch_flow: NativeBranchFlow::FallThrough,
-                                    });
-                                }
+                            } else {
+                                out.push_str(&format!("{header} {{\n"));
+                                open_braces += 1;
+                                native_blocks.push(NativeBlockFrame {
+                                    body_depth: current_depth + 1,
+                                    bindings_before: declared.clone(),
+                                    is_loop: true,
+                                    definitely_runs: false,
+                                    branch_bindings: HashMap::new(),
+                                    bindings_in_all_branches: None,
+                                    has_else: false,
+                                    bindings_after_reachable_branch: None,
+                                    reachable_branch_flow: None,
+                                    branch_flow: NativeBranchFlow::FallThrough,
+                                });
                             }
                         }
                         Err(diag) => problems.push(diag),
@@ -698,34 +701,41 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                     }
                 }
                 NmeStmt::ElseIf { condition, inline } => {
+                    let inline_context = NativeInlineContext {
+                        source,
+                        span: nme_line.span,
+                        declared: &declared,
+                        functions: &functions,
+                        allow_break: native_blocks.iter().any(|frame| frame.is_loop),
+                    };
                     match lower_native_control(
                         "} else if",
                         Some(condition),
                         inline.as_ref(),
-                        source,
-                        nme_line.span,
-                        &declared,
-                        &functions,
+                        &inline_context,
                     ) {
-                        Ok(text) => out.push_str(&text),
+                        Ok(text) => {
+                            out.push_str(&text);
+                            mark_inline_break(&mut native_blocks, inline.as_ref(), source);
+                        }
                         Err(diag) => problems.push(diag),
                     }
                 }
                 NmeStmt::Else { inline } => {
-                    match lower_native_control(
-                        "} else",
-                        None,
-                        inline.as_ref(),
+                    let inline_context = NativeInlineContext {
                         source,
-                        nme_line.span,
-                        &declared,
-                        &functions,
-                    ) {
+                        span: nme_line.span,
+                        declared: &declared,
+                        functions: &functions,
+                        allow_break: native_blocks.iter().any(|frame| frame.is_loop),
+                    };
+                    match lower_native_control("} else", None, inline.as_ref(), &inline_context) {
                         Ok(text) => {
                             if let Some(frame) = native_blocks.last_mut() {
                                 frame.has_else = true;
                             }
                             out.push_str(&text);
+                            mark_inline_break(&mut native_blocks, inline.as_ref(), source);
                         }
                         Err(diag) => problems.push(diag),
                     }
@@ -843,6 +853,7 @@ fn lower_inline(
     declared: &HashMap<String, VarType>,
     functions: &HashMap<String, usize>,
     span: Span,
+    allow_break: bool,
 ) -> Result<String, Diagnostic> {
     match stmt {
         NmeStmt::Say { value } => {
@@ -850,7 +861,58 @@ fn lower_inline(
             emit_say(&mut out, value, source, declared, functions)?;
             Ok(out.trim_end().to_string())
         }
+        NmeStmt::Break if allow_break => Ok("break;".to_string()),
+        NmeStmt::Break => Err(native_break_outside_loop(span)),
         _ => Err(not_supported("this inline statement", span)),
+    }
+}
+
+fn lower_inline_body(
+    inline: &InlineStmt,
+    source: &str,
+    declared: &HashMap<String, VarType>,
+    functions: &HashMap<String, usize>,
+    span: Span,
+    allow_break: bool,
+) -> Result<String, Diagnostic> {
+    match inline {
+        InlineStmt::Nme(inner) => {
+            lower_inline(inner, source, declared, functions, span, allow_break)
+        }
+        InlineStmt::Python(body_span) if is_bare_python_break(source, *body_span) => {
+            if allow_break {
+                Ok("break;".to_string())
+            } else {
+                Err(native_break_outside_loop(span))
+            }
+        }
+        InlineStmt::Python(_) => Err(not_supported("this inline body", span)),
+    }
+}
+
+fn is_bare_python_break(source: &str, span: Span) -> bool {
+    source[span.start..span.end].trim() == "break"
+}
+
+fn inline_body_is_break(inline: Option<&InlineStmt>, source: &str) -> bool {
+    match inline {
+        Some(InlineStmt::Nme(inner)) => matches!(inner.as_ref(), NmeStmt::Break),
+        Some(InlineStmt::Python(span)) => is_bare_python_break(source, *span),
+        None => false,
+    }
+}
+
+fn mark_inline_break(
+    native_blocks: &mut [NativeBlockFrame],
+    inline: Option<&InlineStmt>,
+    source: &str,
+) {
+    if inline_body_is_break(inline, source) {
+        if let Some(frame) = native_blocks.last_mut() {
+            if !frame.is_loop {
+                frame.branch_flow = NativeBranchFlow::Terminated;
+            }
+        }
     }
 }
 
@@ -862,24 +924,31 @@ fn lower_native_control(
     prefix: &str,
     condition: Option<&Condition>,
     inline: Option<&InlineStmt>,
-    source: &str,
-    span: Span,
-    declared: &HashMap<String, VarType>,
-    functions: &HashMap<String, usize>,
+    context: &NativeInlineContext<'_>,
 ) -> Result<String, Diagnostic> {
     let header = if let Some(condition) = condition {
         format!(
             "{prefix} ({})",
-            check_condition(condition, source, span, declared, functions)?
+            check_condition(
+                condition,
+                context.source,
+                context.span,
+                context.declared,
+                context.functions,
+            )?
         )
     } else {
         prefix.to_string()
     };
     let body = match inline {
-        Some(InlineStmt::Nme(inner)) => {
-            Some(lower_inline(inner, source, declared, functions, span)?)
-        }
-        Some(InlineStmt::Python(_)) => return Err(not_supported("this inline body", span)),
+        Some(inline) => Some(lower_inline_body(
+            inline,
+            context.source,
+            context.declared,
+            context.functions,
+            context.span,
+            context.allow_break,
+        )?),
         None => None,
     };
     Ok(format!(
@@ -897,15 +966,14 @@ fn emit_native_condition_block(
     is_loop: bool,
     definitely_runs: bool,
 ) -> Result<(), Diagnostic> {
-    let text = lower_native_control(
-        prefix,
-        Some(condition),
-        inline,
-        context.source,
-        context.span,
-        context.declared,
-        context.functions,
-    )?;
+    let inline_context = NativeInlineContext {
+        source: context.source,
+        span: context.span,
+        declared: context.declared,
+        functions: context.functions,
+        allow_break: is_loop || context.native_blocks.iter().any(|frame| frame.is_loop),
+    };
+    let text = lower_native_control(prefix, Some(condition), inline, &inline_context)?;
     context.out.push_str(&text);
     *context.open_braces += 1;
     context.native_blocks.push(NativeBlockFrame {
@@ -918,7 +986,15 @@ fn emit_native_condition_block(
         has_else: false,
         bindings_after_reachable_branch: None,
         reachable_branch_flow: None,
-        branch_flow: NativeBranchFlow::FallThrough,
+        branch_flow: if !is_loop
+            && matches!(
+                inline,
+                Some(inline) if inline_body_is_break(Some(inline), context.source)
+            ) {
+            NativeBranchFlow::Terminated
+        } else {
+            NativeBranchFlow::FallThrough
+        },
     });
     Ok(())
 }

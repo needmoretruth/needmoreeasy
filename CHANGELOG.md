@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.131 — 2026-08-12
+
+- Support one-line native `break` bodies inside loops, with six-surface
+  coverage and bilingual rejection outside native loops.
+
 ## 0.0.1-beta.130 — 2026-08-12
 
 - Document native one-line NME output bodies for sentence repeats alongside

@@ -1013,6 +1013,77 @@ fn one_line_nme_repeat_bodies_cover_supported_surfaces_and_reject_python_loops()
 }
 
 #[test]
+fn one_line_nme_break_bodies_work_across_the_native_surface_matrix() {
+    let cases = [
+        (
+            "sentence-en",
+            "count = 0\nwhile true\n    count add 1\n    when count == 2 then break\nend\nshow count\n",
+        ),
+        (
+            "sentence-ko",
+            "횟수는 0\n동안 참\n    횟수에 1 더해\n    만약 횟수가 2와 같으면 멈춰\n끝\n횟수 말해줘\n",
+        ),
+        (
+            "beginner-en",
+            "set count to 0\nwhile True\n    count add 1\n    if count == 2 then break\nend\nshow count\n",
+        ),
+        (
+            "beginner-ko",
+            "저장 횟수 0\n동안 True\n    횟수에 1 더해\n    만약 횟수 == 2 그러면 멈춰\n끝\n말해 횟수\n",
+        ),
+        (
+            "advanced-en",
+            "count = 0\nwhile (True)\n    count = count + 1\n    if (count == 2) then break\nend\nshow count\n",
+        ),
+        (
+            "advanced-ko",
+            "횟수 = 0\n동안 ((참 그리고 참))\n    횟수 = 횟수 + 1\n    만약 ((횟수 == 2 그리고 참)) 그러면 멈춰\n끝\n말해 횟수\n",
+        ),
+    ];
+
+    for (label, source) in cases {
+        let actual = native_run(source).unwrap_or_else(|error| {
+            panic!("native case failed: {label}: {error}");
+        });
+        assert_eq!(actual, "2\n", "native case: {label}");
+    }
+
+    assert_eq!(
+        native_run("3 times: break\nshow \"done\"\n").unwrap(),
+        "done\n"
+    );
+    assert_eq!(native_run("3번: 멈춰\n말해 \"끝\"\n").unwrap(), "끝\n");
+
+    assert_eq!(
+        native_run(
+            "count = 0\nwhile true\n    count add 1\n    when false\n        show \"never\"\n    else if count == 2 then break\n    end\nend\nshow count\n"
+        )
+        .unwrap(),
+        "2\n"
+    );
+
+    for source in ["if True then break\n", "만약 참 그러면 멈춰\n"] {
+        let problems = nme_native::native_compile(source).unwrap_err();
+        assert!(
+            problems.iter().any(|problem| {
+                problem.code == DiagnosticCode::BreakOutsideLoop
+                    && problem.message.contains("can only be used inside a loop")
+            }),
+            "{source:?}: {problems:?}"
+        );
+        assert!(
+            problems.iter().any(|problem| {
+                problem
+                    .message_ko
+                    .as_deref()
+                    .is_some_and(|message| message.contains("반복문 안에서만"))
+            }),
+            "{source:?}: {problems:?}"
+        );
+    }
+}
+
+#[test]
 fn boolean_literals_in_truthy_conditions_compile_natively() {
     let source = "if true\n    show \"always\"\nend\nif false\n    show \"never\"\nend\n";
     assert_eq!(native_run(source).unwrap(), "always\n");
