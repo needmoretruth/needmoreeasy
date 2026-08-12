@@ -6,6 +6,15 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.50 — 2026-08-12
+
+- Check native signed 32-bit integer literals and arithmetic instead of
+  allowing undefined C overflow or zero-divisor behavior.
+- Report bilingual native runtime errors for integer overflow and modulo by
+  zero, while documenting the bounded native integer range.
+- Reject float arguments and return values in native functions instead of
+  silently converting them through C `int` parameters and returns.
+
 ## 0.0.1-beta.49 — 2026-08-12
 
 - Track conditional native bindings and reject reads or value changes after a

@@ -10,6 +10,8 @@
 //!
 //! - `say`/`show`/`말해` of an integer expression, a string variable, or a
 //!   string literal (one binary `+` concatenation);
+//! - signed 32-bit integer literals and arithmetic with explicit overflow and
+//!   zero-divisor checks;
 //! - `set x to ...` / `x은 ...` / `x = ...` assignments of integers and
 //!   string literals (including the Python-looking form);
 //!   native string variables use checked 8192-byte buffers;
@@ -151,11 +153,66 @@ fn finish_native_block(frame: NativeBlockFrame, declared: &mut HashMap<String, V
 }
 
 const PREAMBLE: &str = concat!(
+    "#include <limits.h>\n",
     "#include <stdio.h>\n",
     "#include <stdlib.h>\n",
     "#include <string.h>\n",
+    "#if INT_MAX != 2147483647 || INT_MIN != (-2147483647 - 1)\n",
+    "#error \"NME native backend requires a 32-bit C int\"\n",
+    "#endif\n",
     "#define NME_STRING_CAPACITY 8192\n",
     "static char nme_cat_buf[NME_STRING_CAPACITY];\n",
+    "static void nme_integer_overflow(void) {\n",
+    "    fputs(\"nme native: integer overflow / 정수 오버플로가 발생했습니다\\n\", stderr);\n",
+    "    exit(1);\n",
+    "}\n",
+    "static void nme_integer_division_by_zero(void) {\n",
+    "    fputs(\"nme native: integer modulo by zero / 정수 나머지의 제수가 0입니다\\n\", stderr);\n",
+    "    exit(1);\n",
+    "}\n",
+    "static int nme_add_int(int left, int right) {\n",
+    "    if ((right > 0 && left > INT_MAX - right)\n",
+    "        || (right < 0 && left < INT_MIN - right)) {\n",
+    "        nme_integer_overflow();\n",
+    "    }\n",
+    "    return left + right;\n",
+    "}\n",
+    "static int nme_sub_int(int left, int right) {\n",
+    "    if ((right < 0 && left > INT_MAX + right)\n",
+    "        || (right > 0 && left < INT_MIN + right)) {\n",
+    "        nme_integer_overflow();\n",
+    "    }\n",
+    "    return left - right;\n",
+    "}\n",
+    "static int nme_mul_int(int left, int right) {\n",
+    "    long long result = (long long)left * (long long)right;\n",
+    "    if (result > INT_MAX || result < INT_MIN) {\n",
+    "        nme_integer_overflow();\n",
+    "    }\n",
+    "    return (int)result;\n",
+    "}\n",
+    "static int nme_mod_int(int left, int right) {\n",
+    "    if (right == 0) {\n",
+    "        nme_integer_division_by_zero();\n",
+    "    }\n",
+    "    if (left == INT_MIN && right == -1) {\n",
+    "        nme_integer_overflow();\n",
+    "    }\n",
+    "    return left % right;\n",
+    "}\n",
+    "static int nme_neg_int(int value) {\n",
+    "    if (value == INT_MIN) {\n",
+    "        nme_integer_overflow();\n",
+    "    }\n",
+    "    return -value;\n",
+    "}\n",
+    "static int nme_len(const char *value) {\n",
+    "    size_t length = strlen(value);\n",
+    "    if (length > (size_t)INT_MAX) {\n",
+    "        nme_integer_overflow();\n",
+    "    }\n",
+    "    return (int)length;\n",
+    "}\n",
     "static void nme_string_overflow(void) {\n",
     "    fputs(\"nme native: string value exceeds 8191 bytes / 문자열 값이 8191바이트를 초과했습니다\\n\", stderr);\n",
     "    exit(1);\n",
@@ -495,8 +552,9 @@ fn c_brace_delta(line: &str) -> isize {
 
 /// Validates and lowers a Python expression to C for the native core,
 /// returning the C text and its static type. Integer expressions pass through
-/// unchanged; string expressions lower to a name, a literal, or one `+`
-/// concatenation through the small runtime helper.
+/// Integer expressions use checked native runtime helpers; string expressions
+/// lower to a name, a literal, or one `+` concatenation through the small
+/// runtime helper.
 fn check_expr(
     text: &str,
     span: Span,
@@ -506,6 +564,34 @@ fn check_expr(
     lower_expr(&expr, span, declared)
 }
 
+fn native_integer_literal(
+    value: &impl std::fmt::Display,
+    negative: bool,
+    span: Span,
+) -> Result<String, Diagnostic> {
+    let magnitude_text = value.to_string();
+    let magnitude = magnitude_text
+        .parse::<u64>()
+        .map_err(|_| integer_literal_out_of_range(&magnitude_text, negative, span))?;
+    let maximum = if negative { 2_147_483_648 } else { 2_147_483_647 };
+    if magnitude > maximum {
+        return Err(integer_literal_out_of_range(
+            &magnitude_text,
+            negative,
+            span,
+        ));
+    }
+    if negative {
+        if magnitude == 2_147_483_648 {
+            Ok("(-2147483647 - 1)".to_string())
+        } else {
+            Ok(format!("-{magnitude}"))
+        }
+    } else {
+        Ok(magnitude.to_string())
+    }
+}
+
 fn lower_expr(
     expr: &Expr,
     span: Span,
@@ -513,7 +599,10 @@ fn lower_expr(
 ) -> Result<(String, ExprType), Diagnostic> {
     match expr {
         Expr::Constant(constant) => match &constant.value {
-            Constant::Int(value) => Ok((format!("{value}"), ExprType::Int)),
+            Constant::Int(value) => Ok((
+                native_integer_literal(value, false, span)?,
+                ExprType::Int,
+            )),
             Constant::Float(value) => Ok((format!("{value}"), ExprType::Float)),
             Constant::Str(string) => {
                 let escaped = string.replace('\\', "\\\\").replace('"', "\\\"");
@@ -559,8 +648,13 @@ fn lower_expr(
                 } else {
                     ExprType::Int
                 };
+                let lowered = if kind == ExprType::Int {
+                    format!("{}({left}, {right})", integer_operator_text(&binop.op))
+                } else {
+                    format!("({left} {} {right})", operator_text(&binop.op))
+                };
                 Ok((
-                    format!("({left} {} {right})", operator_text(&binop.op)),
+                    lowered,
                     kind,
                 ))
             }
@@ -568,16 +662,29 @@ fn lower_expr(
         },
         Expr::UnaryOp(unary) => {
             if matches!(unary.op, UnaryOp::USub | UnaryOp::UAdd) {
+                if let Expr::Constant(constant) = unary.operand.as_ref() {
+                    if let Constant::Int(value) = &constant.value {
+                        let negative = matches!(unary.op, UnaryOp::USub);
+                        return Ok((
+                            native_integer_literal(value, negative, span)?,
+                            ExprType::Int,
+                        ));
+                    }
+                }
                 let (operand, kind) = numeric_operand(&unary.operand, span, declared)?;
                 Ok((
-                    format!(
-                        "({}{operand})",
-                        if matches!(unary.op, UnaryOp::USub) {
-                            "-"
-                        } else {
-                            ""
-                        }
-                    ),
+                    if kind == ExprType::Int && matches!(unary.op, UnaryOp::USub) {
+                        format!("nme_neg_int({operand})")
+                    } else {
+                        format!(
+                            "({}{operand})",
+                            if matches!(unary.op, UnaryOp::USub) {
+                                "-"
+                            } else {
+                                ""
+                            }
+                        )
+                    },
                     kind,
                 ))
             } else {
@@ -591,7 +698,7 @@ fn lower_expr(
             if callee.id.as_str() == "len" && call.args.len() == 1 {
                 let (argument, kind) = lower_expr(&call.args[0], span, declared)?;
                 if kind == ExprType::Str {
-                    return Ok((format!("strlen({argument})"), ExprType::Int));
+                    return Ok((format!("nme_len({argument})"), ExprType::Int));
                 }
             }
             if is_native_reserved_name(callee.id.as_str()) {
@@ -605,8 +712,8 @@ fn lower_expr(
             let mut args = Vec::new();
             for argument in &call.args {
                 let (text, kind) = lower_expr(argument, span, declared)?;
-                if kind == ExprType::Str {
-                    return Err(not_supported("a string argument to a function", span));
+                if kind != ExprType::Int {
+                    return Err(native_function_requires_integer(span));
                 }
                 args.push(text);
             }
@@ -686,6 +793,17 @@ fn operator_text(operator: &Operator) -> &'static str {
         Operator::Sub => "-",
         Operator::Mult => "*",
         Operator::Mod => "%",
+        _ => unreachable!("checked by the caller"),
+    }
+}
+
+#[allow(clippy::trivially_copy_pass_by_ref)]
+fn integer_operator_text(operator: &Operator) -> &'static str {
+    match operator {
+        Operator::Add => "nme_add_int",
+        Operator::Sub => "nme_sub_int",
+        Operator::Mult => "nme_mul_int",
+        Operator::Mod => "nme_mod_int",
         _ => unreachable!("checked by the caller"),
     }
 }
@@ -1040,11 +1158,25 @@ fn emit_update(
     if kind != ExprType::Int {
         return Err(not_supported("a non-integer value change amount", span));
     }
-    let op = match operation {
-        nme_core::syntax::UpdateOp::Add => "+=",
-        nme_core::syntax::UpdateOp::Subtract => "-=",
-    };
-    out.push_str(&format!("{target} {op} {lowered};\n"));
+    let target_kind = concrete_type(
+        declared
+            .get(target)
+            .copied()
+            .expect("value change target was checked above"),
+    );
+    if target_kind == VarType::Int {
+        let helper = match operation {
+            nme_core::syntax::UpdateOp::Add => "nme_add_int",
+            nme_core::syntax::UpdateOp::Subtract => "nme_sub_int",
+        };
+        out.push_str(&format!("{target} = {helper}({target}, {lowered});\n"));
+    } else {
+        let op = match operation {
+            nme_core::syntax::UpdateOp::Add => "+=",
+            nme_core::syntax::UpdateOp::Subtract => "-=",
+        };
+        out.push_str(&format!("{target} {op} {lowered};\n"));
+    }
     Ok(())
 }
 
@@ -1113,12 +1245,12 @@ fn emit_python_line(
                 .map(str::trim)
                 .unwrap_or_default();
             match check_expr(expression, span, declared) {
-                Ok((lowered, ExprType::Int | ExprType::Float)) => {
+                Ok((lowered, ExprType::Int)) => {
                     out.push_str(&format!("return {lowered};\n"));
                     None
                 }
-                Ok((_, ExprType::Str)) => {
-                    Some(not_supported("returning text from a function", span))
+                Ok((_, ExprType::Float | ExprType::Str)) => {
+                    Some(native_function_requires_integer(span))
                 }
                 Err(diag) => Some(diag),
             }
@@ -1234,11 +1366,21 @@ fn is_native_reserved_name(name: &str) -> bool {
             name,
             "NME_STRING_CAPACITY"
                 | "_nme_i"
+                | "INT_MAX"
+                | "INT_MIN"
                 | "main"
+                | "nme_add_int"
                 | "memcpy"
                 | "nme_cat"
                 | "nme_cat_buf"
                 | "nme_copy"
+                | "nme_integer_division_by_zero"
+                | "nme_integer_overflow"
+                | "nme_len"
+                | "nme_mod_int"
+                | "nme_mul_int"
+                | "nme_neg_int"
+                | "nme_sub_int"
                 | "nme_string_overflow"
                 | "printf"
                 | "strcmp"
@@ -1363,6 +1505,45 @@ fn uninitialized_name(name: &str, span: Span) -> Diagnostic {
     .with_bilingual_hint(
         "assign the name before the control block, or use it inside the block after assignment",
         "제어 블록 전에 이름에 대입하거나 대입한 뒤 블록 안에서 사용하세요",
+    )
+}
+
+fn integer_literal_out_of_range(
+    magnitude: &str,
+    negative: bool,
+    span: Span,
+) -> Diagnostic {
+    let literal = if negative {
+        format!("-{magnitude}")
+    } else {
+        magnitude.to_string()
+    };
+    Diagnostic::bilingual(
+        DiagnosticCode::UnsupportedModule,
+        format!(
+            "the native backend only supports integer literals from -2147483648 to 2147483647; `{literal}` is outside that range"
+        ),
+        format!(
+            "네이티브 백엔드는 -2147483648부터 2147483647까지의 정수 리터럴만 지원합니다. `{literal}`은(는) 그 범위를 벗어납니다"
+        ),
+        span,
+    )
+    .with_bilingual_hint(
+        "use a value within the native integer range or run this program with CPython",
+        "네이티브 정수 범위 안의 값을 사용하거나 이 프로그램을 CPython으로 실행하세요",
+    )
+}
+
+fn native_function_requires_integer(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::UnsupportedModule,
+        "native backend functions currently accept and return integer values",
+        "네이티브 백엔드 함수는 현재 정수 값만 매개변수와 반환값으로 받습니다",
+        span,
+    )
+    .with_bilingual_hint(
+        "pass and return integers in native functions, or run the program with CPython",
+        "네이티브 함수에는 정수를 전달하고 반환하거나 프로그램을 CPython으로 실행하세요",
     )
 }
 

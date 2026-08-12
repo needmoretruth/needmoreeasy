@@ -39,10 +39,11 @@ The proposed NME-native backend therefore targets a **restricted, statically
 typed core subset** with semantics defined independently of CPython.
 Implemented so far:
 
-- integers and floats with `+ - * %` arithmetic (C `int`/`double`;
-  integer modulo only, float modulo rejected; integer overflow behavior
-  is C's, documented as a later `i64`/bignum decision; whole floats print
-  with C's `%g`, which may differ cosmetically from Python's `5.0`);
+- integers and floats with `+ - * %` arithmetic (checked signed 32-bit native
+  integers from `-2147483648` through `2147483647`; integer modulo only, with
+  overflow and zero-divisor errors reported by the bilingual native runtime;
+  float arithmetic uses C `double`, and whole floats print with C's `%g`, which
+  may differ cosmetically from Python's `5.0`);
 - string variables with `+` concatenation into variables (checked fixed
   8192-byte buffers), string output, string `==`/`!=` comparisons through
   `strcmp`, and a `len` builtin; nested concatenation and ordering text are
@@ -54,7 +55,8 @@ Implemented so far:
   the natural-language "or equal" connectors), over integer truthiness
   (`if ready`, `while turns`), and over boolean literals; the beginner
   `times:` loop; `break`;
-- functions over scalar parameters with `return` (recursion works);
+- functions over integer scalar parameters with integer `return` (recursion
+  works); float or string function values are rejected rather than converted;
 - function-local scalar assignments remain scoped to their function;
 - value changes require an existing integer or float binding, and assignments
   cannot change a native name from one type to another;
@@ -66,8 +68,8 @@ Implemented so far:
 - Korean and English spellings both lower to the same C;
 - identifiers that collide with C keywords or generated runtime names are
   rejected, never silently renamed. Runtime names include `nme_copy`,
-  `nme_cat`, `NME_STRING_CAPACITY`, `_nme_i`, and the C library helpers used by
-  generated code;
+  `nme_cat`, `NME_STRING_CAPACITY`, `_nme_i`, the checked integer helpers, and
+  the C library helpers used by generated code;
 
 Still planned: real boolean variables as a distinct type from integer
 truthiness, and the `native.nme` surface document.

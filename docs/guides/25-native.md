@@ -31,6 +31,9 @@ into a native executable with your system's C compiler.
    Native string variables use a checked 8192-byte buffer. If a stored or
    concatenated value is larger than 8191 UTF-8 bytes, the native program stops
    with a bilingual runtime error; use the CPython path for unrestricted text.
+   Native integers are signed 32-bit values (`-2147483648` through
+   `2147483647`); overflow and modulo by zero stop with a bilingual runtime
+   error. Native functions currently accept and return integers only.
 
 2. Compile and run it natively:
 

@@ -64,6 +64,82 @@ fn arithmetic_in_say_lowers_to_c() {
 }
 
 #[test]
+fn integer_arithmetic_overflow_fails_explicitly() {
+    let error = native_run("show 2147483647 + 1\n")
+        .expect_err("native integer overflow must not be undefined C behavior");
+    assert!(error.contains("integer overflow"), "{error}");
+    assert!(error.contains("정수 오버플로"), "{error}");
+}
+
+#[test]
+fn native_integer_boundaries_and_literal_range_are_checked() {
+    assert_eq!(
+        native_run("x = 2147483647\nshow x\nx = -2147483648\nshow x\n").unwrap(),
+        "2147483647\n-2147483648\n"
+    );
+
+    let problems = nme_native::native_compile("show 2147483648\n").unwrap_err();
+    assert!(
+        problems
+            .iter()
+            .any(|problem| problem.message.contains("outside that range")),
+        "{problems:?}"
+    );
+    assert!(
+        problems.iter().any(|problem| {
+            problem
+                .message_ko
+                .as_deref()
+                .is_some_and(|message| message.contains("범위를 벗어납니다"))
+        }),
+        "{problems:?}"
+    );
+}
+
+#[test]
+fn other_integer_runtime_errors_are_explicit() {
+    for (source, expected) in [
+        ("show 46341 * 46341\n", "integer overflow"),
+        (
+            "x = -2147483648\nshow x - 1\n",
+            "integer overflow",
+        ),
+        ("show 1 % 0\n", "integer modulo by zero"),
+    ] {
+        let error = native_run(source).expect_err("invalid native integer arithmetic");
+        assert!(error.contains(expected), "{source:?}: {error}");
+        assert!(error.contains("정수"), "{source:?}: {error}");
+    }
+}
+
+#[test]
+fn native_functions_reject_float_arguments_and_returns() {
+    for source in [
+        "def identity(value):\n    return value\n\nshow identity(1.5)\n",
+        "def fractional():\n    return 1.5\n\nshow fractional()\n",
+    ] {
+        let problems = nme_native::native_compile(source).unwrap_err();
+        assert!(
+            problems.iter().any(|problem| {
+                problem
+                    .message
+                    .contains("accept and return integer values")
+            }),
+            "{source:?}: {problems:?}"
+        );
+        assert!(
+            problems.iter().any(|problem| {
+                problem
+                    .message_ko
+                    .as_deref()
+                    .is_some_and(|message| message.contains("정수 값만"))
+            }),
+            "{source:?}: {problems:?}"
+        );
+    }
+}
+
+#[test]
 fn a_string_literal_is_printed() {
     assert_eq!(
         native_run("show \"hello world\"\n").unwrap(),
@@ -338,8 +414,18 @@ fn native_runtime_names_are_rejected_not_miscompiled() {
     for name in [
         "NME_STRING_CAPACITY",
         "_nme_i",
+        "INT_MAX",
+        "INT_MIN",
+        "nme_add_int",
         "nme_cat",
         "nme_copy",
+        "nme_integer_division_by_zero",
+        "nme_integer_overflow",
+        "nme_len",
+        "nme_mod_int",
+        "nme_mul_int",
+        "nme_neg_int",
+        "nme_sub_int",
         "printf",
         "len",
     ] {
