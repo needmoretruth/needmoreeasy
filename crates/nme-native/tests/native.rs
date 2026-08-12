@@ -946,6 +946,50 @@ fn korean_spellings_compile_natively() {
 }
 
 #[test]
+fn native_surface_acceptance_matrix_runs_all_six_forms() {
+    let cases = [
+        (
+            "sentence-en",
+            "score = 5\nwhile score is less than 10\n    score add 1\nend\nshow score\n",
+            "10\n",
+        ),
+        (
+            "sentence-ko",
+            "점수 = 5\n동안 점수가 10보다 작을 동안\n    점수에 1 더해\n끝\n점수 말해줘\n",
+            "10\n",
+        ),
+        (
+            "beginner-en",
+            "score = 5\n5 times:\n    score add 1\nshow score\n",
+            "10\n",
+        ),
+        (
+            "beginner-ko",
+            "점수 = 5\n5번:\n    점수에 1 더해\n점수 말해줘\n",
+            "10\n",
+        ),
+        (
+            "advanced-en",
+            "def twice(value):\n    return value * 2\n\nshow twice(5)\n",
+            "10\n",
+        ),
+        (
+            "advanced-ko",
+            "def 두배(값):\n    return 값 * 2\n\n말해 두배(5)\n",
+            "10\n",
+        ),
+    ];
+
+    for (label, source, expected) in cases {
+        assert_eq!(
+            native_run(source).unwrap(),
+            expected,
+            "native case: {label}"
+        );
+    }
+}
+
+#[test]
 fn unreachable_true_branch_alternatives_do_not_export_bindings() {
     for source in [
         "if true\n    show \"yes\"\nelse\n    hidden = 1\nend\nvalue = hidden\nshow value\n",

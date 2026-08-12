@@ -583,8 +583,9 @@ comparisons (including `<=`/`>=` and the natural-language "or equal"
 integers, floats, and strings. Everything else — input, modules, files,
 classes, packages — is rejected with a clear diagnostic and still runs on
 CPython with `nme run`. Identifiers that collide with C keywords are rejected,
-never renamed. See the [native-backend memo](native-backend.md) for the design
-and the honest measured benchmark.
+never renamed. See the [native core reference](native-reference.md) for the
+accepted surface and the [native-backend memo](native-backend.md) for the
+design and honest measured benchmark.
 
 ## Python conversion
 

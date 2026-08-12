@@ -2,11 +2,11 @@
 
 English | [한국어](native-backend.ko.md)
 
-[Home](../README.md) | [Install](install.md) | [Getting started](getting-started.md) | [Tutorial](tutorial.md) | [Language reference](language.md) | [Guides](guides/index.md)
+[Home](../README.md) | [Install](install.md) | [Getting started](getting-started.md) | [Tutorial](tutorial.md) | [Language reference](language.md) | [Native core reference](native-reference.md) | [Guides](guides/index.md)
 
 > Status: v0 is implemented (`nme native run`/`nme native build`). The
-> statically typed core subset — integer and finite-float values and arithmetic, sentence
-> `while`/`if`/`else`/`else if` over comparisons, `break`, functions over integer
+> statically typed core subset — integer and finite-float values, strings, and arithmetic,
+> sentence `while`/`if`/`else`/`else if` over comparisons, beginner `times:` loops, `break`, functions over integer
 > scalar parameters with an unconditional integer `return` (recursion works),
 > and `say` — compiles to
 > C and then to a native executable through the system C compiler. Everything
@@ -114,7 +114,8 @@ Implemented so far:
   shadow a native function name are rejected before C emission;
 
 Still planned: real boolean variables as a distinct type from integer
-truthiness, and the `native.nme` surface document.
+truthiness. The currently accepted surface is documented in the [native core
+reference](native-reference.md).
 
 Everything outside the core — dynamic Python, classes, imports, packages,
 `use random`/`use file` adapters — stays on the **Python compatibility
@@ -229,11 +230,9 @@ UTF-8 string and checked-integer runtime, the `nme native run`/`build` CLI
 entry points, bilingual diagnostics, and end-to-end tests are all in the
 workspace. The next milestones are:
 
-1. Document the `native.nme` core surface (types, statements, and functions)
-   as a dedicated reference with examples.
-2. Extend the core only when a shared semantic definition, bilingual coverage,
+1. Extend the core only when a shared semantic definition, bilingual coverage,
    native/CPython comparison, and memory-safety tests are ready.
-3. Measure the core across supported operating systems and compilers before
+2. Measure the core across supported operating systems and compilers before
    making any broader performance or portability claim.
 
 Measured 2026-08-11 on this machine: a 50,000,000-iteration integer count-up

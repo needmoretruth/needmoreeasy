@@ -91,7 +91,7 @@ warns that its `bin` directory is not on `PATH`. It does not reinstall NME.
 Windows PowerShell uses the PATH step in the
 [installation guide](docs/install.md#windows-11).
 
-Expected version: `nme 0.0.1-beta.101`.
+Expected version: `nme 0.0.1-beta.102`.
 
 Windows, macOS, and Linux instructions are in the
 [installation guide](docs/install.md). The [five-minute guide](docs/getting-started.md)
@@ -168,7 +168,7 @@ way for checking and building. `nme m`, `nme v`, and `nme h` are short forms of
 with Nuitka, `nme conv app.py` converts Python into NME, and `nme install
 requests` installs a Python package with pip.
 
-A core subset of NME can also compile straight to native machine code with `nme native run hello` (integer values, sentence `while`/`if`/`else`, `break`, functions with recursion, and `say` — try [`native-factorial.nme`](examples/native-factorial.nme) (Korean twin [`native-factorial.ko.nme`](examples/native-factorial.ko.nme)); everything else still runs on CPython). See the [native-backend memo](docs/native-backend.md).
+A core subset of NME can also compile straight to native machine code with `nme native run hello` (integer and finite-float values, strings, sentence `while`/`if`/`else`, beginner `times:`, `break`, functions with integer parameters and unconditional integer returns, and `say` — try [`native-factorial.nme`](examples/native-factorial.nme) (Korean twin [`native-factorial.ko.nme`](examples/native-factorial.ko.nme)); everything else still runs on CPython). See the [native core reference](docs/native-reference.md) and [native-backend memo](docs/native-backend.md).
 
 Program names may also be shortened while they stay unique: `nme r gue` runs
 `guessing-game.nme`. When several programs match, NME lists them and asks you
@@ -299,6 +299,7 @@ See [Python conversion](docs/converting-python.md).
 - [AI coding assistants](docs/ai-assistants.md) — one link that Claude Code,
   Codex, Cursor Agent, or OpenCode can read before writing NME
 - [Compiler architecture](docs/architecture.md) — contributor design rules
+- [Native core reference](docs/native-reference.md) — the exact v0 values, statements, functions, and six surface examples
 - [Native backend research](docs/native-backend.md) — the implemented v0 NME-native C backend and roadmap for extending its restricted subset
 - [Version policy](docs/versioning.md) and [changelog](CHANGELOG.md)
 

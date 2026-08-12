@@ -120,9 +120,9 @@ into a native executable with your system's C compiler.
 checks every statement against the documented core, and emits C. On macOS and
 Linux, `cc` turns that into machine code with `-O2`; on Windows, Microsoft's
 `cl` does the same with `/O2` and `/utf-8` from a Developer PowerShell for
-Visual Studio. The
-[architecture memo](../native-backend.md) compares this C backend with LLVM
-and Cranelift and explains why C is the first backend.
+Visual Studio. The [native core reference](../native-reference.md) lists the
+accepted surface; the [architecture memo](../native-backend.md) compares this
+C backend with LLVM and Cranelift and explains why C is the first backend.
 
 Performance is honest and measured: on this machine, a 50-million-iteration
 integer loop runs about 60× faster natively than on CPython. That is one

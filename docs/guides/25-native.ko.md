@@ -118,7 +118,8 @@
 모든 문장을 문서화된 코어와 대조한 뒤 C를 만듭니다. macOS와 Linux에서는
 `cc`가 그것을 `-O2`로 기계어로 만들고, Windows에서는 Visual Studio
 Developer PowerShell의 Microsoft `cl`이 `/O2`와 `/utf-8`로 같은 일을 합니다.
-[구조 메모](../native-backend.ko.md)는 이 C 백엔드를 LLVM·Cranelift와 비교하고
+[네이티브 코어 레퍼런스](../native-reference.ko.md)는 허용되는 표면을 정리하고,
+[구조 메모](../native-backend.ko.md)는 이 C 백엔드를 LLVM·Cranelift와 비교하여
 왜 C가 첫 백엔드인지 설명합니다.
 
 성능은 정직하게 측정됩니다: 이 머신에서 정수 5,000만 회 반복문이

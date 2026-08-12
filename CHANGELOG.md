@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.102 — 2026-08-12
+
+- Add a dedicated English/Korean native-core reference and link it from the
+  README, language reference, native guide, and backend memo.
+- Cover equivalent sentence, beginner, and advanced native programs in both
+  languages with one end-to-end six-case acceptance test.
+
 ## 0.0.1-beta.101 — 2026-08-12
 
 - Include finite-float values in the generic native-backend recovery hint and
