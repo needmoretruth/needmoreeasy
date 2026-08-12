@@ -160,10 +160,11 @@ is diagnosed without inheriting nested function or class scopes. One-line
 Python function suites use their body tokens as the same function context, so
 valid inline `yield`, `await`, and bare `return` statements are preserved.
 Conflicting `global`/`nonlocal` declarations receive `E0119`/`E0120`; the
-scope tracker excludes nested function parameters and comprehension-local names
-so valid Python remains byte-identical.
-Annotation expressions count as name uses for this check, while f-string
-contents remain opaque to the NME token layer and are validated by CPython.
+scope tracker covers one-line function/class suites, excludes nested function
+parameters and comprehension-local names, and rejects annotated targets where
+Python does so. Valid Python remains byte-identical. Annotation expressions
+count as name uses for this check, while f-string contents remain opaque to the
+NME token layer and are validated by CPython.
 
 ### 7. Bundled modules are local and versioned
 

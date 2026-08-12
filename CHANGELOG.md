@@ -6,6 +6,12 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.155 — 2026-08-12
+
+- Extend shared Python scope diagnostics to one-line function and class suites,
+  including `global`/`nonlocal` conflicts, annotated targets, `nonlocal`
+  placement, and star imports.
+
 ## 0.0.1-beta.154 — 2026-08-12
 
 - Preserve valid contextual keywords in one-line Python function suites and

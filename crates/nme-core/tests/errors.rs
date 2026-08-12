@@ -586,6 +586,14 @@ fn nonlocal_without_an_enclosing_function_gets_a_stable_diagnostic() {
         DiagnosticCode::NonlocalOutsideFunction
     );
 
+    let inline_function = transpile("def only(): nonlocal value\n")
+        .expect_err("an inline function without an outer function has no nonlocal scope");
+    assert_eq!(inline_function.len(), 1, "{inline_function:?}");
+    assert_eq!(
+        inline_function[0].code,
+        DiagnosticCode::NonlocalOutsideFunction
+    );
+
     let method_without_outer =
         transpile("class C:\n    def method(self):\n        nonlocal value\n")
             .expect_err("a method in a top-level class has no enclosing function");
@@ -597,11 +605,18 @@ fn nonlocal_without_an_enclosing_function_gets_a_stable_diagnostic() {
 
     let valid = "def outer():\n    value = 1\n    def inner():\n        nonlocal value\n        value += 1\n";
     assert_eq!(transpile(valid).unwrap(), valid);
+    let valid_inline = "def outer():\n    value = 1\n    def inner(): nonlocal value; value += 1\n";
+    assert_eq!(transpile(valid_inline).unwrap(), valid_inline);
     let valid_class = "def outer():\n    value = 1\n    class C:\n        nonlocal value\n";
     assert_eq!(transpile(valid_class).unwrap(), valid_class);
+    let valid_inline_class = "def outer():\n    value = 1\n    class C: nonlocal value\n";
+    assert_eq!(transpile(valid_inline_class).unwrap(), valid_inline_class);
     let valid_method =
         "def outer():\n    value = 1\n    class C:\n        def method(self):\n            nonlocal value\n";
     assert_eq!(transpile(valid_method).unwrap(), valid_method);
+    let valid_inline_method =
+        "def outer():\n    value = 1\n    class C:\n        def method(self): nonlocal value\n";
+    assert_eq!(transpile(valid_inline_method).unwrap(), valid_inline_method);
 
     let missing_binding = "def outer():\n    def inner():\n        nonlocal value\n";
     assert_eq!(
@@ -624,10 +639,26 @@ fn star_import_inside_python_scope_gets_a_stable_diagnostic() {
     assert_eq!(function.len(), 1, "{function:?}");
     assert_eq!(function[0].code, DiagnosticCode::ImportStarOutsideModule);
 
+    let inline_function = transpile("def load(): from helper import *\n")
+        .expect_err("star imports inside inline functions must be rejected");
+    assert_eq!(inline_function.len(), 1, "{inline_function:?}");
+    assert_eq!(
+        inline_function[0].code,
+        DiagnosticCode::ImportStarOutsideModule
+    );
+
     let class = transpile("class Loader:\n    from helper import *\n")
         .expect_err("star imports inside classes must be rejected by the shared parser");
     assert_eq!(class.len(), 1, "{class:?}");
     assert_eq!(class[0].code, DiagnosticCode::ImportStarOutsideModule);
+
+    let inline_class = transpile("class Loader: from helper import *\n")
+        .expect_err("star imports inside inline classes must be rejected");
+    assert_eq!(inline_class.len(), 1, "{inline_class:?}");
+    assert_eq!(
+        inline_class[0].code,
+        DiagnosticCode::ImportStarOutsideModule
+    );
 }
 
 #[test]
@@ -895,6 +926,14 @@ fn conflicting_global_and_nonlocal_declarations_are_rejected_before_cpython() {
         "def read():\n    print(value)\n    global value\n",
         "def parameter(value):\n    global value\n",
         "def annotated():\n    fn: value = 1\n    global value\n",
+        "def update(): value = 1; global value\n",
+        "def read(): print(value); global value\n",
+        "def parameter(value): global value\n",
+        "def annotated(): fn: value = 1; global value\n",
+        "def annotated(): value: other = 1; global value\n",
+        "def annotated(): global value; value: other = 1\n",
+        "def annotated():\n    value: other = 1\n    global value\n",
+        "value: other\nglobal value\n",
     ];
     for source in global_cases {
         let problems =
@@ -911,6 +950,11 @@ fn conflicting_global_and_nonlocal_declarations_are_rejected_before_cpython() {
         "def outer():\n    value = 1\n    def update():\n        value = 2\n        nonlocal value\n",
         "def outer():\n    value = 1\n    def read():\n        print(value)\n        nonlocal value\n",
         "def outer():\n    value = 1\n    def parameter(value):\n        nonlocal value\n",
+        "def outer():\n    value = 1\n    def update(): value = 2; nonlocal value\n",
+        "def outer():\n    value = 1\n    def read(): print(value); nonlocal value\n",
+        "def outer():\n    value = 1\n    def parameter(value): nonlocal value\n",
+        "def outer():\n    value = 1\n    def annotated(): value: other = 1; nonlocal value\n",
+        "def outer():\n    value = 1\n    def annotated(): nonlocal value; value: other = 1\n",
     ];
     for source in nonlocal_cases {
         let problems =
@@ -940,6 +984,11 @@ fn conflicting_global_and_nonlocal_declarations_are_rejected_before_cpython() {
     assert_eq!(transpile(valid_lambda).unwrap(), valid_lambda);
     let valid_annotation = "def read():\n    fn: other = 1\n    global value\n";
     assert_eq!(transpile(valid_annotation).unwrap(), valid_annotation);
+    let valid_module_annotation_global = "global value\nvalue: other\n";
+    assert_eq!(
+        transpile(valid_module_annotation_global).unwrap(),
+        valid_module_annotation_global
+    );
 }
 
 #[test]

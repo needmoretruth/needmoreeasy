@@ -2836,14 +2836,10 @@ fn conflicting_global_and_nonlocal_declarations_report_shared_diagnostics() {
     std::fs::create_dir_all(&dir).unwrap();
     let global_file = dir.join("global-conflict.nme");
     let nonlocal_file = dir.join("nonlocal-conflict.nme");
-    std::fs::write(
-        &global_file,
-        "def update():\n    value = 1\n    global value\n",
-    )
-    .unwrap();
+    std::fs::write(&global_file, "def update(): value = 1; global value\n").unwrap();
     std::fs::write(
         &nonlocal_file,
-        "def outer():\n    value = 1\n    def update():\n        value = 2\n        nonlocal value\n",
+        "def outer():\n    value = 1\n    def update(): value = 2; nonlocal value\n",
     )
     .unwrap();
 

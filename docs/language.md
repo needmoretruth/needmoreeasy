@@ -658,12 +658,13 @@ See [the conversion guide](converting-python.md).
   there, while ordinary generator functions may keep `yield from` unchanged.
 - Python `async for` and `async with` outside an `async def` function get
   `E0111` and `E0112`; valid asynchronous function bodies remain unchanged.
-- Python `nonlocal` without an enclosing function gets `E0113`. A nested
-  function or class under an outer function remains unchanged; CPython
-  separately checks whether the requested name is bound in that outer function.
-- Python `from ... import *` inside a function or class gets `E0114`; import
-  the names explicitly there. Module-level star imports, including ones under
-  a module-level conditional, remain unchanged.
+- Python `nonlocal` without an enclosing function gets `E0113`, including in a
+  one-line function or class suite. A nested function or class under an outer
+  function remains unchanged; CPython separately checks whether the requested
+  name is bound in that outer function.
+- Python `from ... import *` inside a function or class gets `E0114`, including
+  one-line suites; import the names explicitly there. Module-level star
+  imports, including ones under a module-level conditional, remain unchanged.
 - Python does not allow `break`, `continue`, or `return` inside an `except*`
   block; NME reports `E0115`. Nested function bodies and control flow after the
   handler suite remain unchanged.
@@ -679,10 +680,11 @@ See [the conversion guide](converting-python.md).
   normally indented body, while a bare `return` and returns in nested
   functions remain valid.
 - A `global` or `nonlocal` declaration after an earlier use or assignment in
-  the same scope gets `E0119` or `E0120`; parameters cannot use either
-  declaration. Put the declaration first. Valid module, nested-function, and
-  comprehension scopes remain unchanged. Names used in annotations count as
-  uses; f-string validation remains CPython's responsibility.
+  the same scope gets `E0119` or `E0120`, including in one-line suites;
+  parameters and annotated targets cannot use either declaration. Put the
+  declaration first. Valid module, nested-function, and comprehension scopes
+  remain unchanged. Names used in annotations count as uses; f-string
+  validation remains CPython's responsibility.
 - Generator lambdas remain valid advanced Python: a `yield` inside
   `lambda: ...` is checked against the lambda's own function context.
 - An inline body must contain one statement; an inline `else`/`elif` without an

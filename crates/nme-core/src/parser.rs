@@ -203,6 +203,7 @@ pub fn parse_program(
     let mut python_declaration_contexts = vec![PythonDeclarationContext {
         body_scope_depth: 0,
         seen_names: HashSet::new(),
+        annotation_targets: HashSet::new(),
         declarations: HashMap::new(),
     }];
 
@@ -541,10 +542,13 @@ pub fn parse_program(
             Ok(None) => {
                 let valid_python_header = is_valid_python_header(token_text(source, &line.tokens));
                 let python_loop_header = is_python_loop_header(&line.tokens);
+                let inline_python_scope_body = python_inline_suite_body(&line.tokens);
                 let inline_python_function_body = python_inline_function_body(&line.tokens);
                 let (context_tokens, inside_function, inside_async_function) =
                     if let Some(body) = inline_python_function_body {
                         (body, true, is_python_async_function_header(&line.tokens))
+                    } else if let Some(body) = inline_python_scope_body {
+                        (body, false, false)
                     } else {
                         (
                             line.tokens.as_slice(),
@@ -552,6 +556,12 @@ pub fn parse_program(
                             bindings.inside_async_function(),
                         )
                     };
+                let inline_python_scope = inline_python_scope_body.is_some();
+                let has_enclosing_function = if inline_python_scope {
+                    bindings.has_function_scope()
+                } else {
+                    bindings.has_enclosing_function()
+                };
                 if let Some(kind) = remember_python_declaration_context(
                     &mut python_declaration_contexts,
                     &line.tokens,
@@ -572,12 +582,12 @@ pub fn parse_program(
                 if is_python_async_with_header(&line.tokens) && !bindings.inside_async_function() {
                     problems.push(async_with_outside_async_function_diagnostic(line.span));
                 }
-                if is_python_nonlocal_line(&line.tokens) && !bindings.has_enclosing_function() {
+                if contains_python_nonlocal(context_tokens) && !has_enclosing_function {
                     problems.push(nonlocal_outside_function_diagnostic(line.span));
                 }
-                if is_python_import_star_line(&line.tokens)
-                    && is_valid_python_statement(token_text(source, &line.tokens))
-                    && bindings.inside_non_module_scope()
+                if is_python_import_star_line(context_tokens)
+                    && is_valid_python_statement(token_text(source, context_tokens))
+                    && (inline_python_scope || bindings.inside_non_module_scope())
                 {
                     problems.push(import_star_outside_module_diagnostic(line.span));
                 }
@@ -598,7 +608,7 @@ pub fn parse_program(
                     problems.push(except_star_control_flow_diagnostic(line.span));
                     continue;
                 }
-                if contains_yield_inside_comprehension(&line.tokens) {
+                if contains_yield_inside_comprehension(context_tokens) {
                     problems.push(yield_inside_comprehension_diagnostic(line.span));
                     continue;
                 }
@@ -621,7 +631,7 @@ pub fn parse_program(
                         problems.push(return_value_in_async_generator_diagnostic(line.span));
                         continue;
                     }
-                } else {
+                } else if !inline_python_scope {
                     remember_async_generator_context(
                         &mut async_function_contexts,
                         &line.tokens,
@@ -1467,6 +1477,26 @@ fn remember_python_declaration_context(
     tokens: &[Token],
     python_scope_depth: usize,
 ) -> Option<PythonDeclarationKind> {
+    if let Some(body) = python_inline_suite_body(tokens) {
+        if let Some(context) = contexts
+            .last_mut()
+            .filter(|context| context.body_scope_depth == python_scope_depth)
+        {
+            for name in python_names_seen_in_scope(tokens, &[]) {
+                context.seen_names.insert(name);
+            }
+        }
+        let (_, parameters) = python_scope_header(tokens).expect("inline Python scope header");
+        let mut inline_context = PythonDeclarationContext {
+            body_scope_depth: python_scope_depth + 1,
+            seen_names: parameters,
+            annotation_targets: HashSet::new(),
+            declarations: HashMap::new(),
+        };
+        let declarations = python_declarations(body);
+        return remember_python_declarations_in_scope(&mut inline_context, body, &declarations);
+    }
+
     let declarations = if python_scope_header(tokens).is_some() {
         Vec::new()
     } else {
@@ -1475,37 +1505,68 @@ fn remember_python_declaration_context(
     let conflict = contexts
         .last_mut()
         .filter(|context| context.body_scope_depth == python_scope_depth)
-        .and_then(|context| {
-            let conflict = declarations.iter().find_map(|declaration| {
-                declaration.names.iter().find_map(|(name, _)| {
-                    let has_other_declaration = context
-                        .declarations
-                        .get(name)
-                        .is_some_and(|previous| *previous != declaration.kind);
-                    (has_other_declaration || context.seen_names.contains(name))
-                        .then_some(declaration.kind)
-                })
-            });
-            for declaration in &declarations {
-                for (name, _) in &declaration.names {
-                    context
-                        .declarations
-                        .entry(name.clone())
-                        .or_insert(declaration.kind);
-                }
-            }
-            for name in python_names_seen_in_scope(tokens, &declarations) {
-                context.seen_names.insert(name);
-            }
-            conflict
-        });
+        .and_then(|context| remember_python_declarations_in_scope(context, tokens, &declarations));
 
     if let Some((_, parameters)) = python_scope_header(tokens) {
         contexts.push(PythonDeclarationContext {
             body_scope_depth: python_scope_depth + 1,
             seen_names: parameters,
+            annotation_targets: HashSet::new(),
             declarations: HashMap::new(),
         });
+    }
+    conflict
+}
+
+fn remember_python_declarations_in_scope(
+    context: &mut PythonDeclarationContext,
+    tokens: &[Token],
+    declarations: &[PythonDeclaration],
+) -> Option<PythonDeclarationKind> {
+    let mut conflict = None;
+    for (declaration_index, declaration) in declarations.iter().enumerate() {
+        let declaration_start = declaration
+            .names
+            .first()
+            .map_or(0, |(_, name_index)| name_index.saturating_sub(1));
+        for name in python_names_seen_in_scope(
+            &tokens[..declaration_start],
+            &declarations[..declaration_index],
+        ) {
+            context.seen_names.insert(name);
+        }
+        for name in python_annotation_target_names(&tokens[..declaration_start]) {
+            context.annotation_targets.insert(name);
+        }
+        for (name, _) in &declaration.names {
+            let has_other_declaration = context
+                .declarations
+                .get(name)
+                .is_some_and(|previous| *previous != declaration.kind);
+            let has_annotation_target = context.annotation_targets.contains(name);
+            if conflict.is_none()
+                && (has_other_declaration
+                    || context.seen_names.contains(name)
+                    || has_annotation_target)
+            {
+                conflict = Some(declaration.kind);
+            }
+            context
+                .declarations
+                .entry(name.clone())
+                .or_insert(declaration.kind);
+        }
+    }
+    for name in python_annotation_target_names(tokens) {
+        if context.body_scope_depth != 0 && conflict.is_none() {
+            if let Some(kind) = context.declarations.get(&name) {
+                conflict = Some(*kind);
+            }
+        }
+        context.annotation_targets.insert(name);
+    }
+    for name in python_names_seen_in_scope(tokens, declarations) {
+        context.seen_names.insert(name);
     }
     conflict
 }
@@ -1577,6 +1638,22 @@ fn python_names_seen_in_scope(tokens: &[Token], declarations: &[PythonDeclaratio
         .collect()
 }
 
+fn python_annotation_target_names(tokens: &[Token]) -> Vec<String> {
+    tokens
+        .iter()
+        .enumerate()
+        .filter_map(|(index, token)| {
+            if !is_python_annotation_target_name(tokens, index) {
+                return None;
+            }
+            let Tok::Name { name } = &token.tok else {
+                return None;
+            };
+            Some(name.clone())
+        })
+        .collect()
+}
+
 fn is_python_keyword_argument_name(tokens: &[Token], index: usize) -> bool {
     tokens
         .get(index + 1)
@@ -1623,6 +1700,12 @@ fn is_lambda_parameter_name(tokens: &[Token], index: usize) -> bool {
 }
 
 fn is_python_annotation_target_name(tokens: &[Token], index: usize) -> bool {
+    if !matches!(
+        tokens.get(index).map(|token| &token.tok),
+        Some(Tok::Name { .. })
+    ) {
+        return false;
+    }
     let depths = token_depths(tokens);
     let Some(next) = tokens.get(index + 1) else {
         return false;
@@ -6242,6 +6325,7 @@ struct PythonDeclaration {
 struct PythonDeclarationContext {
     body_scope_depth: usize,
     seen_names: HashSet<String>,
+    annotation_targets: HashSet<String>,
     declarations: HashMap<String, PythonDeclarationKind>,
 }
 
@@ -6365,6 +6449,15 @@ impl BindingEnv {
             return false;
         }
         self.scopes[..current_index].iter().any(|scope| {
+            matches!(
+                scope.kind,
+                BindingScopeKind::Function | BindingScopeKind::AsyncFunction
+            )
+        })
+    }
+
+    fn has_function_scope(&self) -> bool {
+        self.scopes.iter().any(|scope| {
             matches!(
                 scope.kind,
                 BindingScopeKind::Function | BindingScopeKind::AsyncFunction
@@ -7213,8 +7306,10 @@ fn is_python_async_with_header(tokens: &[Token]) -> bool {
         && matches!(tokens.get(1).map(|token| &token.tok), Some(Tok::With))
 }
 
-fn is_python_nonlocal_line(tokens: &[Token]) -> bool {
-    matches!(tokens.first().map(|token| &token.tok), Some(Tok::Nonlocal))
+fn contains_python_nonlocal(tokens: &[Token]) -> bool {
+    python_declarations(tokens)
+        .iter()
+        .any(|declaration| matches!(declaration.kind, PythonDeclarationKind::Nonlocal))
 }
 
 fn is_python_import_star_line(tokens: &[Token]) -> bool {

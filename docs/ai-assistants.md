@@ -10,7 +10,7 @@ Give an AI coding assistant this one prompt:
 Read and follow this NME language handoff before writing code:
 https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
 
-Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.154`), then write the requested program as a .nme file, prefer sentence syntax for a
+Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.155`), then write the requested program as a .nme file, prefer sentence syntax for a
 beginner, mix beginner or advanced Python only where it makes the result
 clearer, and verify it with nme check.
 ```
@@ -231,12 +231,13 @@ top-level or inline cases with stable bilingual codes `E0106`–`E0110`; in an
 `async def`, use `async for` instead of `yield from`.
 `async for` and `async with` also belong inside `async def`; invalid placements
 receive `E0111` and `E0112`.
-`nonlocal` needs an enclosing function; invalid top-level, top-level-class, or
-non-nested-function placements receive `E0113`. Nested functions and classes
-under an outer function remain valid, while CPython checks whether the named
-outer binding exists.
+`nonlocal` needs an enclosing function; invalid top-level, top-level-class,
+non-nested-function, and one-line-suite placements receive `E0113`. Nested
+functions and classes under an outer function remain valid, while CPython
+checks whether the named outer binding exists.
 Python star imports (`from ... import *`) are module-level only; using one
-inside a function or class receives `E0114`. Import names explicitly there.
+inside a function or class, including a one-line suite, receives `E0114`.
+Import names explicitly there.
 Python also rejects `break`, `continue`, and `return` inside `except*`; NME
 reports `E0115`. Keep those controls outside the handler or use a normal
 `except` block when its semantics fit.
@@ -251,9 +252,10 @@ the return appears before its first `yield`. One-line Python suites are tracked
 as function bodies too, so valid inline `yield`, `await`, and bare `return`
 remain unchanged. Use a bare `return`; nested function returns remain valid.
 `global` and `nonlocal` must precede uses or assignments in their scope, and
-cannot name parameters; NME reports `E0119`/`E0120` for those conflicts. Put the
-declaration first, and annotation expressions count as uses. F-string
-validation remains with CPython; comprehension-local names stay separate.
+cannot name parameters or annotated targets; NME reports `E0119`/`E0120` for
+those conflicts, including in one-line suites. Put the declaration first, and
+annotation expressions count as uses. F-string validation remains with CPython;
+comprehension-local names stay separate.
 Generator lambdas such as `lambda: (yield value)` are valid advanced Python
 and must remain unchanged.
 

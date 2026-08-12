@@ -6,6 +6,12 @@ NME의 중요한 변경 사항을 이 문서에 기록합니다.
 
 ## 미출시 (Unreleased)
 
+## 0.0.1-beta.155 — 2026-08-12
+
+- 한 줄 Python 함수·클래스 본문에도 공유 Python 범위 진단을 적용해
+  `global`·`nonlocal` 충돌, annotation 대상, `nonlocal` 위치, 별표 import를
+  안정적인 진단으로 표시합니다.
+
 ## 0.0.1-beta.154 — 2026-08-12
 
 - 한 줄 Python 함수 본문의 올바른 문맥 키워드를 보존하고, 그 안의 비동기
