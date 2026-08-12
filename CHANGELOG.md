@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.121 — 2026-08-12
+
+- Fix parenthesized Korean `while` conditions when a comparison ending comes
+  before an inner `and`/`그리고` or `or`/`또는` connector.
+- Keep the spoken `동안` ending inside the shared condition tree and preserve
+  the actual loop-body boundary after the wrapper.
+
 ## 0.0.1-beta.120 — 2026-08-12
 
 - Add explicit core and native regression coverage for parenthesized Korean

@@ -1279,6 +1279,18 @@ fn parenthesized_korean_comparison_endings_compile_natively() {
 }
 
 #[test]
+fn parenthesized_korean_while_endings_compile_natively() {
+    let korean = "준비는 참\n횟수는 0\n동안 (횟수가 2보다 작을 동안 그리고 준비)\n    횟수에 1 더해\n끝\n횟수 말해줘\n";
+    assert_eq!(native_run(korean).unwrap(), "2\n");
+
+    let english_keyword = "준비 = True\n횟수 = 0\nwhile (횟수가 2보다 작을 동안 그리고 준비)\n    횟수 add 1\nend\nshow 횟수\n";
+    assert_eq!(native_run(english_keyword).unwrap(), "2\n");
+
+    let disjunction = "준비는 거짓\n횟수는 0\n동안 (횟수가 2보다 작을 동안 또는 준비)\n    횟수에 1 더해\n끝\n횟수 말해줘\n";
+    assert_eq!(native_run(disjunction).unwrap(), "2\n");
+}
+
+#[test]
 fn parenthesized_logical_conditions_work_in_native_while_loops_across_the_surface_matrix() {
     let cases = [
         (

@@ -10,7 +10,7 @@ Give an AI coding assistant this one prompt:
 Read and follow this NME language handoff before writing code:
 https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
 
-Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.120`), then write the requested program as a .nme file, prefer sentence syntax for a
+Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.121`), then write the requested program as a .nme file, prefer sentence syntax for a
 beginner, mix beginner or advanced Python only where it makes the result
 clearer, and verify it with nme check.
 ```
@@ -171,6 +171,8 @@ parenthesized in a colon-free `if` or `while` header, such as `if (ready and
 score > 2)`; valid Python calls such as `when(ready and score > 2)` remain
 Python. Korean comparison endings can remain inside that wrapper and precede a
 connector, such as `만약 (점수가 2보다 크면 그리고 준비)`.
+The same shared rule applies to a Korean `while` ending, such as
+`동안 (횟수가 2보다 작을 동안 그리고 준비)`.
 
 ### Use beginner syntax when precision matters
 

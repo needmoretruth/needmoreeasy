@@ -10,7 +10,7 @@ AI 코딩 도우미에게 다음 문장 하나를 전달하세요.
 NME 코드를 작성하기 전에 이 문서를 읽고 따르세요.
 https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.ko.md
 
-먼저 `nme --version`으로 지원되는 베타(현재 `0.0.1-beta.120`)를 확인하세요. 그다음 요청한 프로그램을 .nme 파일로 작성하세요. 초보자에게는 문장형을 우선하고,
+먼저 `nme --version`으로 지원되는 베타(현재 `0.0.1-beta.121`)를 확인하세요. 그다음 요청한 프로그램을 .nme 파일로 작성하세요. 초보자에게는 문장형을 우선하고,
 더 분명할 때만 초급 문법이나 고급 Python을 섞으며, nme 검사로 확인하세요.
 ```
 
@@ -167,6 +167,8 @@ if score is greater than 10 then show You won
 같은 올바른 Python 호출은 계속 Python으로 남습니다. 한국어 비교 끝말도 괄호
 안에 둘 수 있고 연결어보다 앞에 놓을 수 있습니다. 예를 들어
 `만약 (점수가 2보다 크면 그리고 준비)`처럼 씁니다.
+같은 규칙이 한국어 `while` 끝말에도 적용되므로
+`동안 (횟수가 2보다 작을 동안 그리고 준비)`처럼 쓸 수 있습니다.
 
 ### 정확해야 하면 초급 문법 사용
 

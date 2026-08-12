@@ -2441,6 +2441,24 @@ fn korean_while_connector(tokens: &[Token]) -> Option<(Vec<Token>, usize)> {
                 condition.push(tokens[body_start].clone());
                 body_start += 1;
             }
+            // A Korean comparison ending may appear before a logical
+            // connector inside a whole wrapper. It is part of the condition,
+            // not the loop boundary, so keep the remaining wrapped tokens
+            // while dropping only the spoken `동안` markers.
+            if tokens
+                .get(body_start)
+                .is_some_and(|token| token_matches_exact(token, &["and", "or", "그리고", "또는"]))
+            {
+                if let Some(wrapper_end) = condition_wrapper_end(tokens, condition_start) {
+                    condition.extend(
+                        tokens[body_start..=wrapper_end]
+                            .iter()
+                            .filter(|token| !token_matches_exact(token, &["동안"]))
+                            .cloned(),
+                    );
+                    body_start = wrapper_end + 1;
+                }
+            }
             return Some((condition, body_start));
         }
     }
@@ -2603,6 +2621,29 @@ fn parse_natural_condition(
         }
     }
     parse_natural_condition_atom(source, tokens, connector, known_names, spelling)
+}
+
+fn condition_wrapper_end(tokens: &[Token], start: usize) -> Option<usize> {
+    if !tokens
+        .get(start)
+        .is_some_and(|token| matches!(&token.tok, Tok::Lpar))
+    {
+        return None;
+    }
+    let mut depth = 0usize;
+    for (index, token) in tokens.iter().enumerate().skip(start) {
+        match token.tok {
+            Tok::Lpar => depth += 1,
+            Tok::Rpar => {
+                depth = depth.checked_sub(1)?;
+                if depth == 0 {
+                    return Some(index);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
 }
 
 fn strip_outer_condition_parentheses(tokens: &[Token]) -> Option<&[Token]> {
