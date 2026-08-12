@@ -6,6 +6,12 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.61 — 2026-08-12
+
+- Make native `len` count UTF-8 Unicode characters rather than storage bytes,
+  matching Python behavior for non-ASCII text while retaining the byte buffer
+  limit.
+
 ## 0.0.1-beta.60 — 2026-08-12
 
 - Isolate native binding analysis between sibling branches so a read in one

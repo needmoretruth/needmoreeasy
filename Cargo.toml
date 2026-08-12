@@ -3,7 +3,7 @@ resolver = "2"
 members = ["crates/nme-core", "crates/nme-cli", "crates/nme-native"]
 
 [workspace.package]
-version = "0.0.1-beta.60"
+version = "0.0.1-beta.61"
 edition = "2021"
 license = "Apache-2.0"
 repository = "https://github.com/needmoretruth/needmoreeasy"

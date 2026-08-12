@@ -562,6 +562,7 @@ fn string_comparison_and_len_compile_natively() {
 
     let korean = "이름 = \"안녕\"\n만약 이름이 \"안녕\"와 같으면\n    말해 \"같아요\"\n끝\n";
     assert_eq!(native_run(korean).unwrap(), "같아요\n");
+    assert_eq!(native_run("말해 len(\"안녕\")\n").unwrap(), "2\n");
 }
 
 #[test]

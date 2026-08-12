@@ -32,7 +32,8 @@ into a native executable with your system's C compiler.
    concatenated value is larger than 8191 UTF-8 bytes, the native program stops
    with a bilingual runtime error; escaped newlines and tabs are supported, but
    embedded NUL characters are rejected. Use the CPython path for unrestricted
-   text.
+   text. `len` counts Unicode characters even though the storage limit is in
+   UTF-8 bytes.
    Native integers are signed 32-bit values (`-2147483648` through
    `2147483647`); overflow and modulo by zero stop with a bilingual runtime
    error. Native functions currently accept and return integers only, and each
