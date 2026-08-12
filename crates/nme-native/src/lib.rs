@@ -109,6 +109,7 @@ impl DeclarationSlots {
 struct NativeBlockFrame {
     body_depth: usize,
     bindings_before: HashMap<String, VarType>,
+    is_loop: bool,
     definitely_runs: bool,
     branch_bindings: HashMap<String, VarType>,
     bindings_after_reachable_branch: Option<HashMap<String, VarType>>,
@@ -460,6 +461,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                         native_blocks.push(NativeBlockFrame {
                             body_depth: current_depth + 1,
                             bindings_before: declared.clone(),
+                            is_loop: true,
                             definitely_runs: false,
                             branch_bindings: HashMap::new(),
                             bindings_after_reachable_branch: None,
@@ -483,6 +485,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                         native_blocks.push(NativeBlockFrame {
                             body_depth: current_depth + 1,
                             bindings_before: declared.clone(),
+                            is_loop: false,
                             definitely_runs: condition_definitely_true(condition),
                             branch_bindings: HashMap::new(),
                             bindings_after_reachable_branch: None,
@@ -490,7 +493,13 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                     }
                     Err(diag) => problems.push(diag),
                 },
-                NmeStmt::Break => out.push_str("break;\n"),
+                NmeStmt::Break => {
+                    if native_blocks.iter().any(|frame| frame.is_loop) {
+                        out.push_str("break;\n");
+                    } else {
+                        problems.push(native_break_outside_loop(nme_line.span));
+                    }
+                }
                 NmeStmt::Times { count, inline } => {
                     let count_text = code_text(count, source);
                     match check_expr(count_text, nme_line.span, &declared, &functions) {
@@ -519,6 +528,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                                     native_blocks.push(NativeBlockFrame {
                                         body_depth: current_depth + 1,
                                         bindings_before: declared.clone(),
+                                        is_loop: true,
                                         definitely_runs: false,
                                         branch_bindings: HashMap::new(),
                                         bindings_after_reachable_branch: None,
@@ -1839,6 +1849,19 @@ fn native_name_reason_ko(name: &str) -> &'static str {
     } else {
         "네이티브 런타임 예약 이름"
     }
+}
+
+fn native_break_outside_loop(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::BreakOutsideLoop,
+        "`break` can only be used inside a loop",
+        "`멈춰`는 반복문 안에서만 쓸 수 있어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "put it inside a native `while ... end` or `times:` loop",
+        "네이티브 `동안 ... 끝` 또는 `3번:` 반복 안에 넣어 주세요",
+    )
 }
 
 fn reserved_name(

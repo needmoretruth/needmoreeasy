@@ -6,6 +6,8 @@
 use std::process::Command;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
+use nme_core::diagnostics::DiagnosticCode;
+
 static COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 fn native_run(source: &str) -> Result<String, String> {
@@ -394,6 +396,32 @@ fn python_comments_cannot_inject_c_or_change_function_hoisting() {
 fn an_if_break_loop_works() {
     let source = "x = 0\nwhile x is less than 5\n    x add 1\n    if x is greater than 2\n        break\n    end\nend\nshow x\n";
     assert_eq!(native_run(source).unwrap(), "3\n");
+}
+
+#[test]
+fn break_inside_a_non_loop_native_block_is_rejected_bilingually() {
+    for source in [
+        "if true\n    break\nend\n",
+        "만약 True라면\n    멈춰\n끝\n",
+    ] {
+        let problems = nme_native::native_compile(source).unwrap_err();
+        assert!(
+            problems.iter().any(|problem| {
+                problem.code == DiagnosticCode::BreakOutsideLoop
+                    && problem.message.contains("can only be used inside a loop")
+            }),
+            "{source:?}: {problems:?}"
+        );
+        assert!(
+            problems.iter().any(|problem| {
+                problem
+                    .message_ko
+                    .as_deref()
+                    .is_some_and(|message| message.contains("반복문 안에서만"))
+            }),
+            "{source:?}: {problems:?}"
+        );
+    }
 }
 
 #[test]

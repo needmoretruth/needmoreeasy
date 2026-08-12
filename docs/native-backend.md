@@ -55,7 +55,8 @@ Implemented so far:
   float, and string comparisons (`<`, `>`, `<=`, `>=`, `==`, `!=`, plus
   the natural-language "or equal" connectors), over integer truthiness
   (`if ready`, `while turns`), and over boolean literals; the beginner
-  `times:` loop; `break`;
+  `times:` loop; `break` inside a native loop only. A `break` nested only in
+  an `if` is rejected with `E0102` before C is emitted;
 - functions over integer scalar parameters with an unconditional integer
   `return` (recursion works); calls must target a function in the file with its
   declared arity and use positional arguments. Simple positional integer
