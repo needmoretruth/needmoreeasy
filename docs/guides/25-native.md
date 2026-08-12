@@ -39,7 +39,8 @@ into a native executable with your system's C compiler.
    error. Native functions currently accept and return integers only, and each
    function needs a top-level integer `return`; an arm may return early, but
    every path that continues after a control block must reach that final
-   return. Calls may name a function defined later in the same file, with the
+   return. A branch that breaks out of its enclosing native loop is also a
+   terminating path. Calls may name a function defined later in the same file, with the
    declared number of positional arguments.
    Use simple integer parameters in the header; defaults, varargs, and keyword
    arguments are outside the native core, as are nested function definitions.
@@ -52,10 +53,10 @@ into a native executable with your system's C compiler.
    dynamic Python name behavior.
    A name assigned only in an unreachable `else` or `else if` after `if true`
    is not available after the block. A name assigned in every branch of an
-   `if`/`else` chain is available afterward; a branch that returns early does not
-   need to assign it. One continuing branch cannot read a name first assigned in
-   a sibling branch, and a loop-created name remains conditional if the loop may
-   not run.
+   `if`/`else` chain is available afterward; a branch that returns early or
+   breaks out of its enclosing loop does not need to assign it. One continuing
+   branch cannot read a name first assigned in a sibling branch, and a
+   loop-created name remains conditional if the loop may not run.
 
 2. Compile and run it natively:
 

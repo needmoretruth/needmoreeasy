@@ -603,6 +603,11 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                 NmeStmt::Break => {
                     if native_blocks.iter().any(|frame| frame.is_loop) {
                         out.push_str("break;\n");
+                        if let Some(frame) = native_blocks.last_mut() {
+                            if !frame.is_loop {
+                                frame.branch_flow = NativeBranchFlow::Terminated;
+                            }
+                        }
                     } else {
                         problems.push(native_break_outside_loop(nme_line.span));
                     }

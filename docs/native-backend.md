@@ -86,9 +86,10 @@ Implemented so far:
 - functions over integer scalar parameters with a required top-level integer
   `return` (recursion works); calls may target any function in the file,
   including one defined later, with its declared arity and positional
-  arguments. An early `return` in a branch is allowed when every path that
-  continues past the block reaches that top-level return. Simple positional
-  integer parameters only are accepted in headers; duplicate definitions,
+  arguments. An early `return`, or a `break` that exits the enclosing native
+  loop, may terminate a branch; every path that continues past the block must
+  reach the required top-level return. Simple positional integer parameters
+  only are accepted in headers; duplicate definitions,
   defaults, varargs, nested definitions, keyword arguments, float or string
   function values, functions with only branch returns, and top-level `return`
   (`E0106`) are rejected rather than converted or left to C fallthrough;
@@ -100,10 +101,10 @@ Implemented so far:
   branch is known to run, while names assigned only in its unreachable
   `else`/`else if` alternatives are not exported. A name assigned in every
   possible fall-through path of an `if`/`else` chain is available after the
-  block; a branch that returns early does not need to initialize that name. A
-  name assigned in only one continuing branch, or inside a loop that may not
-  run, remains conditional, and sibling branches do not make each other's new
-  bindings visible;
+  block; a branch that returns early or breaks out of its enclosing loop does
+  not need to initialize that name. A name assigned in only one continuing
+  branch, or inside a loop that may not run, remains conditional, and sibling
+  branches do not make each other's new bindings visible;
 - `say`/`show`/`말해` of an integer expression, a float, a string variable,
   or a string literal;
 - Korean and English spellings both lower to the same C;

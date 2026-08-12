@@ -689,6 +689,59 @@ fn early_return_branch_works_across_the_native_surface_matrix() {
 }
 
 #[test]
+fn break_branch_does_not_require_a_fallthrough_binding() {
+    let source = "value = 0\nwhile value < 2\n    if value == 0\n        break\n    else\n        result = 2\n    end\n    show result\n    value add 1\nend\nshow \"done\"\n";
+    assert_eq!(native_run(source).unwrap(), "done\n");
+
+    let korean = "값 = 0\n동안 값이 2보다 작을 동안\n    만약 값이 0과 같으면\n        멈춰\n    아니면\n        결과 = 2\n    끝\n    말해 결과\n    값에 1 더해\n끝\n말해 \"끝\"\n";
+    assert_eq!(native_run(korean).unwrap(), "끝\n");
+}
+
+#[test]
+fn break_branch_works_across_the_native_surface_matrix() {
+    let cases = [
+        (
+            "sentence-en",
+            "value = 0\nwhile value is less than 2\n    when value equals 0\n        break\n    else\n        set result to 2\n    end\n    show result\n    value add 1\nend\nshow \"done\"\n",
+            "done\n",
+        ),
+        (
+            "sentence-ko",
+            "값 = 0\n동안 값이 2보다 작을 동안\n    만약에 값이 0과 같으면\n        멈춰\n    아니면\n        저장 결과 2\n    끝\n    말해 결과\n    값에 1 더해\n끝\n말해 \"끝\"\n",
+            "끝\n",
+        ),
+        (
+            "beginner-en",
+            "value = 0\nwhile value < 2\n    if value == 0\n        break\n    else\n        result = 2\n    end\n    show result\n    value add 1\nend\nshow \"done\"\n",
+            "done\n",
+        ),
+        (
+            "beginner-ko",
+            "값 = 0\n동안 값 < 2\n    만약 값 == 0\n        멈춰\n    아니면\n        결과 = 2\n    끝\n    말해 결과\n    값에 1 더해\n끝\n말해 \"끝\"\n",
+            "끝\n",
+        ),
+        (
+            "advanced-en",
+            "def choose():\n    value = 0\n    while value < 2\n        if value == 0\n            break\n        else\n            result = 2\n        end\n        show result\n        value add 1\n    end\n    return 1\n\nshow choose()\n",
+            "1\n",
+        ),
+        (
+            "advanced-ko",
+            "def 선택():\n    값 = 0\n    동안 값 < 2\n        만약 값 == 0\n            멈춰\n        아니면\n            결과 = 2\n        끝\n        말해 결과\n        값에 1 더해\n    끝\n    return 1\n\n말해 선택()\n",
+            "1\n",
+        ),
+    ];
+
+    for (label, source, expected) in cases {
+        assert_eq!(
+            native_run(source).unwrap(),
+            expected,
+            "native case: {label}"
+        );
+    }
+}
+
+#[test]
 fn generated_functions_are_file_scope_portable_c() {
     let source = "def twice(n):\n    return n * 2\n\nshow twice(5)\n";
     let c = nme_native::native_compile(source).unwrap();

@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.109 — 2026-08-12
+
+- Exclude a branch that breaks out of its enclosing native loop from
+  fall-through binding analysis, matching the existing early-return behavior.
+- Cover the shared English and Korean behavior across sentence, beginner, and
+  mixed advanced native surfaces, and align the native documentation.
+
 ## 0.0.1-beta.108 — 2026-08-12
 
 - Allow a native `if`/`else` branch that returns early to be excluded from
