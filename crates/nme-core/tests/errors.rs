@@ -631,6 +631,61 @@ fn star_import_inside_python_scope_gets_a_stable_diagnostic() {
 }
 
 #[test]
+fn control_flow_inside_except_star_gets_a_stable_diagnostic() {
+    let cases = [
+        (
+            "return",
+            "def load():\n    try:\n        pass\n    except* Exception:\n        return\n",
+        ),
+        (
+            "break",
+            "while True:\n    try:\n        pass\n    except* Exception:\n        break\n",
+        ),
+        (
+            "continue",
+            "while True:\n    try:\n        pass\n    except* Exception:\n        continue\n",
+        ),
+        (
+            "nested return",
+            "def load():\n    try:\n        pass\n    except* Exception:\n        if ready:\n            return\n",
+        ),
+        (
+            "inline break",
+            "while True:\n    try:\n        pass\n    except* Exception:\n        when ready then break\n",
+        ),
+    ];
+    for (label, source) in cases {
+        let problems = transpile(source)
+            .expect_err("control flow inside except* must be rejected by the shared parser");
+        assert_eq!(problems.len(), 1, "{label}: {problems:?}");
+        assert_eq!(
+            problems[0].code,
+            DiagnosticCode::ControlFlowInExceptStar,
+            "{label}: {problems:?}"
+        );
+    }
+
+    let normal_except =
+        "def load():\n    try:\n        pass\n    except Exception:\n        return\n";
+    assert_eq!(transpile(normal_except).unwrap(), normal_except);
+    let valid_except_star = "try:\n    pass\nexcept* Exception:\n    pass\n";
+    assert_eq!(transpile(valid_except_star).unwrap(), valid_except_star);
+    let nested_function =
+        "def outer():\n    try:\n        pass\n    except* Exception:\n        def inner():\n            return\n";
+    assert_eq!(transpile(nested_function).unwrap(), nested_function);
+    let nested_method = "def outer():\n    try:\n        pass\n    except* Exception:\n        class C:\n            def method(self):\n                return\n";
+    assert_eq!(transpile(nested_method).unwrap(), nested_method);
+    let return_after_except_star =
+        "def load():\n    try:\n        pass\n    except* Exception:\n        pass\n    return\n";
+    assert_eq!(
+        transpile(return_after_except_star).unwrap(),
+        return_after_except_star
+    );
+    let malformed_header = "except* Exception:\n    break\n";
+    assert_eq!(transpile(malformed_header).unwrap(), malformed_header);
+}
+
+#[test]
 fn inline_branches_without_an_open_condition_get_a_stable_diagnostic() {
     let cases = [
         ("sentence-en", "when true then else show no\n"),

@@ -664,6 +664,9 @@ See [the conversion guide](converting-python.md).
 - Python `from ... import *` inside a function or class gets `E0114`; import
   the names explicitly there. Module-level star imports, including ones under
   a module-level conditional, remain unchanged.
+- Python does not allow `break`, `continue`, or `return` inside an `except*`
+  block; NME reports `E0115`. Nested function bodies and control flow after the
+  handler suite remain unchanged.
 - Generator lambdas remain valid advanced Python: a `yield` inside
   `lambda: ...` is checked against the lambda's own function context.
 - An inline body must contain one statement; an inline `else`/`elif` without an

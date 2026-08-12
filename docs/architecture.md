@@ -148,6 +148,8 @@ function/class bodies and generator lambdas remain byte-identical. CPython
 still owns validation of whether a requested `nonlocal` name is bound in an
 outer function. A valid module-level `from ... import *` remains unchanged,
 while the same star import inside a function or class receives `E0114`.
+`break`/`continue`/`return` inside an `except*` suite receive `E0115`; the
+tracker resets across nested Python function/class scopes and after the suite.
 
 ### 7. Bundled modules are local and versioned
 

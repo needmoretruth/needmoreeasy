@@ -192,6 +192,12 @@ pub fn parse_program(
     // valid while allowing inline `break` diagnostics in ordinary Python
     // conditional suites.
     let mut top_level_python_loop_indents = Vec::<usize>::new();
+    // `except*` suites have one Python-specific control-flow restriction:
+    // `break`, `continue`, and `return` are not allowed in their bodies.
+    // Track their physical header indentation separately from ordinary
+    // Python headers so nested functions and classes still use BindingEnv.
+    let mut python_except_star_indents = Vec::<(usize, usize)>::new();
+    let mut python_try_indents = Vec::<usize>::new();
 
     for (index, line) in lines.iter().enumerate() {
         let is_end = exact_end(line.tokens.as_slice());
@@ -248,6 +254,25 @@ pub fn parse_program(
         }) {
             python_header_indents.pop();
         }
+        while python_try_indents
+            .last()
+            .is_some_and(|header_indent| line.indent < *header_indent)
+        {
+            python_try_indents.pop();
+        }
+        if python_try_indents.last().is_some_and(|header_indent| {
+            line.indent == *header_indent
+                && !is_python_try_header(&line.tokens)
+                && !is_python_try_clause_header(&line.tokens)
+        }) {
+            python_try_indents.pop();
+        }
+        while python_except_star_indents
+            .last()
+            .is_some_and(|(header_indent, _)| line.indent <= *header_indent)
+        {
+            python_except_star_indents.pop();
+        }
         // Keep Python's compatibility rule strict at the top level: an
         // indented Python body is still the user's responsibility unless an
         // explicit NME block is already open. This prevents a malformed
@@ -303,6 +328,9 @@ pub fn parse_program(
         let next_indent = force_suite.then_some(parse_line.indent + 1).or(next_indent);
 
         bindings.enter_line(parse_line.indent);
+        let inside_python_except_star = python_except_star_indents
+            .last()
+            .is_some_and(|(_, scope_depth)| *scope_depth == bindings.python_scope_depth());
         let known_names = bindings.visible_names();
         let block = BlockCtx::TopLevel {
             line: &parse_line,
@@ -402,6 +430,13 @@ pub fn parse_program(
                     problems.push(yield_from_async_function_diagnostic(line.span));
                     continue;
                 }
+                if inside_python_except_star
+                    && (matches!(stmt, NmeStmt::Break)
+                        || inline_except_star_control_flow(&stmt, &line.tokens))
+                {
+                    problems.push(except_star_control_flow_diagnostic(line.span));
+                    continue;
+                }
                 if matches!(stmt, NmeStmt::End) {
                     if blocks.is_empty() {
                         problems.push(unmatched_end_diagnostic(line.span));
@@ -498,6 +533,10 @@ pub fn parse_program(
                     problems.push(continue_outside_loop_diagnostic(line.span));
                     continue;
                 }
+                if inside_python_except_star && is_python_except_star_control_line(&line.tokens) {
+                    problems.push(except_star_control_flow_diagnostic(line.span));
+                    continue;
+                }
                 if contains_yield_outside_lambda(&line.tokens) && !bindings.inside_function() {
                     problems.push(yield_outside_function_diagnostic(line.span));
                     continue;
@@ -510,6 +549,16 @@ pub fn parse_program(
                     && bindings.inside_async_function()
                 {
                     problems.push(yield_from_async_function_diagnostic(line.span));
+                }
+                if is_python_try_header(&line.tokens) {
+                    python_try_indents.push(line.indent);
+                }
+                if is_python_except_star_header(&line.tokens)
+                    && python_try_indents
+                        .last()
+                        .is_some_and(|header_indent| *header_indent == line.indent)
+                {
+                    python_except_star_indents.push((line.indent, bindings.python_scope_depth()));
                 }
             }
             Err(problem) => problems.push(problem),
@@ -853,6 +902,19 @@ fn import_star_outside_module_diagnostic(span: Span) -> Diagnostic {
     )
 }
 
+fn except_star_control_flow_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::ControlFlowInExceptStar,
+        "`break`, `continue`, and `return` cannot be used inside an `except*` block",
+        "`except*` 블록 안에서는 `break`, `continue`, `return`을 쓸 수 없어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "move the control-flow statement outside the `except*` block, or use a normal `except` block",
+        "제어 흐름 문장을 `except*` 블록 밖으로 옮기거나 일반 `except` 블록을 사용해 주세요",
+    )
+}
+
 fn branch_without_condition_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
         DiagnosticCode::BranchWithoutCondition,
@@ -931,6 +993,30 @@ fn inline_continue_is_outside_loop_in_body(
                 .is_some_and(|token| matches!(token.tok, Tok::Continue))
                 && !inside_loop
         }
+    }
+}
+
+fn inline_except_star_control_flow(stmt: &NmeStmt, tokens: &[Token]) -> bool {
+    match stmt {
+        NmeStmt::Times { inline, .. }
+        | NmeStmt::While { inline, .. }
+        | NmeStmt::When { inline, .. }
+        | NmeStmt::ElseIf { inline, .. }
+        | NmeStmt::Else { inline } => inline
+            .as_ref()
+            .is_some_and(|body| inline_except_star_control_flow_in_body(body, tokens)),
+        _ => false,
+    }
+}
+
+fn inline_except_star_control_flow_in_body(body: &InlineStmt, tokens: &[Token]) -> bool {
+    match body {
+        InlineStmt::Nme(inner) => {
+            matches!(inner.as_ref(), NmeStmt::Break)
+                || inline_except_star_control_flow(inner, tokens)
+        }
+        InlineStmt::Python(span) => first_token_in_span(tokens, *span)
+            .is_some_and(|token| matches!(token.tok, Tok::Break | Tok::Continue | Tok::Return)),
     }
 }
 
@@ -5656,6 +5742,20 @@ impl BindingEnv {
         false
     }
 
+    fn python_scope_depth(&self) -> usize {
+        self.scopes
+            .iter()
+            .filter(|scope| {
+                matches!(
+                    scope.kind,
+                    BindingScopeKind::Function
+                        | BindingScopeKind::AsyncFunction
+                        | BindingScopeKind::Class
+                )
+            })
+            .count()
+    }
+
     fn has_enclosing_function(&self) -> bool {
         let Some((current_index, current_scope)) = self
             .scopes
@@ -6520,6 +6620,29 @@ fn is_python_import_star_line(tokens: &[Token]) -> bool {
         && tokens[import_index + 1..]
             .iter()
             .any(|token| matches!(token.tok, Tok::Star))
+}
+
+fn is_python_except_star_control_line(tokens: &[Token]) -> bool {
+    matches!(
+        tokens.first().map(|token| &token.tok),
+        Some(Tok::Break | Tok::Continue | Tok::Return)
+    )
+}
+
+fn is_python_except_star_header(tokens: &[Token]) -> bool {
+    matches!(tokens.first().map(|token| &token.tok), Some(Tok::Except))
+        && matches!(tokens.get(1).map(|token| &token.tok), Some(Tok::Star))
+}
+
+fn is_python_try_header(tokens: &[Token]) -> bool {
+    matches!(tokens.first().map(|token| &token.tok), Some(Tok::Try))
+}
+
+fn is_python_try_clause_header(tokens: &[Token]) -> bool {
+    matches!(
+        tokens.first().map(|token| &token.tok),
+        Some(Tok::Except | Tok::Else | Tok::Finally)
+    )
 }
 
 fn is_python_class_header(tokens: &[Token]) -> bool {

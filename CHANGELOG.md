@@ -6,6 +6,12 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.148 — 2026-08-12
+
+- Add shared bilingual `E0115` for `break`, `continue`, and `return` inside
+  Python `except*` blocks, while preserving nested function bodies and control
+  flow after the handler suite.
+
 ## 0.0.1-beta.147 — 2026-08-12
 
 - Add shared bilingual `E0114` for `from ... import *` inside Python functions

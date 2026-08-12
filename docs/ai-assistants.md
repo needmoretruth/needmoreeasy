@@ -10,7 +10,7 @@ Give an AI coding assistant this one prompt:
 Read and follow this NME language handoff before writing code:
 https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
 
-Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.147`), then write the requested program as a .nme file, prefer sentence syntax for a
+Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.148`), then write the requested program as a .nme file, prefer sentence syntax for a
 beginner, mix beginner or advanced Python only where it makes the result
 clearer, and verify it with nme check.
 ```
@@ -237,6 +237,9 @@ under an outer function remain valid, while CPython checks whether the named
 outer binding exists.
 Python star imports (`from ... import *`) are module-level only; using one
 inside a function or class receives `E0114`. Import names explicitly there.
+Python also rejects `break`, `continue`, and `return` inside `except*`; NME
+reports `E0115`. Keep those controls outside the handler or use a normal
+`except` block when its semantics fit.
 Generator lambdas such as `lambda: (yield value)` are valid advanced Python
 and must remain unchanged.
 

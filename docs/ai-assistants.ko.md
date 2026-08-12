@@ -10,7 +10,7 @@ AI 코딩 도우미에게 다음 문장 하나를 전달하세요.
 NME 코드를 작성하기 전에 이 문서를 읽고 따르세요.
 https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.ko.md
 
-먼저 `nme --version`으로 지원되는 베타(현재 `0.0.1-beta.147`)를 확인하세요. 그다음 요청한 프로그램을 .nme 파일로 작성하세요. 초보자에게는 문장형을 우선하고,
+먼저 `nme --version`으로 지원되는 베타(현재 `0.0.1-beta.148`)를 확인하세요. 그다음 요청한 프로그램을 .nme 파일로 작성하세요. 초보자에게는 문장형을 우선하고,
 더 분명할 때만 초급 문법이나 고급 Python을 섞으며, nme 검사로 확인하세요.
 ```
 
@@ -234,6 +234,9 @@ CPython이 검사합니다.
 Python 별표 import(`from ... import *`)는 모듈 수준에서만 쓸 수 있습니다.
 함수나 클래스 안에서 사용하면 `E0114`가 표시되므로 이름을 명시적으로
 import하세요.
+Python은 `except*` 안의 `break`, `continue`, `return`도 거부하며 NME는
+`E0115`를 표시합니다. 제어 흐름을 핸들러 밖으로 옮기거나 의미가 맞을 때
+일반 `except` 블록을 사용하세요.
 `lambda: (yield 값)` 같은 제너레이터 람다는 올바른 고급 Python이므로
 그대로 보존해야 합니다.
 

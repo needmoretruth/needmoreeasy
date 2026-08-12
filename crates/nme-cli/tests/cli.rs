@@ -2720,6 +2720,32 @@ fn star_import_inside_python_scope_reports_the_shared_import_diagnostic() {
 }
 
 #[test]
+fn control_flow_inside_except_star_reports_the_shared_context_diagnostic() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-except-star-code-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("except-star.nme");
+    std::fs::write(
+        &file,
+        "def load():\n    try:\n        pass\n    except* Exception:\n        return\n",
+    )
+    .unwrap();
+
+    let english = nme(&["check", &file.to_string_lossy()]);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(english_error.contains("error[E0115]:"), "{english_error}");
+    assert!(english_error.contains("except*"), "{english_error}");
+
+    let korean = nme(&["검사", &file.to_string_lossy()]);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(korean_error.contains("오류[E0115]:"), "{korean_error}");
+    assert!(korean_error.contains("except*"), "{korean_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn inline_branch_without_a_condition_reports_the_shared_branch_diagnostic() {
     let dir =
         std::env::temp_dir().join(format!("nme-cli-inline-branch-code-{}", std::process::id()));

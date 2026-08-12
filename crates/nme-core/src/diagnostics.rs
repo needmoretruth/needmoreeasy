@@ -72,6 +72,8 @@ pub enum DiagnosticCode {
     NonlocalOutsideFunction,
     /// Star import inside a function or class.
     ImportStarOutsideModule,
+    /// Control flow inside an `except*` block.
+    ControlFlowInExceptStar,
     /// `say` value could not be understood.
     SayValueBroken,
     /// `say` expression is not valid.
@@ -226,6 +228,7 @@ impl DiagnosticCode {
             Self::AsyncWithOutsideAsyncFunction => "E0112",
             Self::NonlocalOutsideFunction => "E0113",
             Self::ImportStarOutsideModule => "E0114",
+            Self::ControlFlowInExceptStar => "E0115",
             Self::SayValueBroken => "E0201",
             Self::SayValueUnparseable => "E0202",
             Self::SaySentenceUnparseable => "E0203",
@@ -295,7 +298,7 @@ impl DiagnosticCode {
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 80] = [
+    pub const ALL: [DiagnosticCode; 81] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -311,6 +314,7 @@ impl DiagnosticCode {
         Self::AsyncWithOutsideAsyncFunction,
         Self::NonlocalOutsideFunction,
         Self::ImportStarOutsideModule,
+        Self::ControlFlowInExceptStar,
         Self::SayValueBroken,
         Self::SayValueUnparseable,
         Self::SaySentenceUnparseable,
@@ -506,6 +510,13 @@ impl DiagnosticCode {
                 "모듈 범위 밖의 별표 import",
                 "`from ... import *` is only allowed at module scope, not inside a function or class. Import the names explicitly inside that scope, or move the star import to the module level.",
                 "`from ... import *`은 함수나 클래스 안이 아니라 모듈 범위에서만 쓸 수 있습니다. 그 범위 안에서는 이름을 명시적으로 import하거나 별표 import를 모듈 수준으로 옮기세요.",
+            ),
+            Self::ControlFlowInExceptStar => (
+                "E0115",
+                "control flow inside an `except*` block",
+                "`except*` 블록 안의 제어 흐름",
+                "Python does not allow `break`, `continue`, or `return` inside an `except*` block. Move the control-flow statement outside the block, or use a normal `except` block when its semantics are appropriate.",
+                "Python은 `except*` 블록 안에서 `break`, `continue`, `return`을 허용하지 않습니다. 제어 흐름 문장을 블록 밖으로 옮기거나, 의미가 맞을 때 일반 `except` 블록을 사용하세요.",
             ),
             Self::SayValueBroken => (
                 "E0201",
