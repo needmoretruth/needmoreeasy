@@ -5,7 +5,8 @@ English | [한국어](native-backend.ko.md)
 [Home](../README.md) | [Install](install.md) | [Getting started](getting-started.md) | [Tutorial](tutorial.md) | [Language reference](language.md) | [Native core reference](native-reference.md) | [Guides](guides/index.md)
 
 > Status: v0 is implemented (`nme native run`/`nme native build`). The
-> statically typed core subset — integer and finite-float values, strings, and arithmetic,
+> statically typed core subset — boolean, integer, and finite-float values,
+> strings, and arithmetic,
 > sentence `while`/`if`/`else`/`else if` over comparisons, beginner `times:` loops, `break`, functions over integer
 > scalar parameters with an unconditional integer `return` (recursion works),
 > and `say` — compiles to
@@ -78,8 +79,9 @@ Implemented so far:
 - control flow: sentence `while`/`if`/`else`/`else if` over integer,
   float, and string comparisons (`<`, `>`, `<=`, `>=`, `==`, `!=`, plus
   the natural-language "or equal" connectors), over integer and finite-float
-  truthiness (`if ready`, `while turns`; zero is false), and over boolean
-  literals; the beginner
+  truthiness (`if ready`, `while turns`; zero is false), over boolean literals
+  and bindings (`if ready`, `while ready`; `False` is false); boolean equality
+  and inequality comparisons; the beginner
   `times:` loop; and `break` inside a native loop, including an `if` nested
   inside that loop. A `break` outside a loop is rejected with `E0102` before C
   is emitted;
@@ -94,6 +96,10 @@ Implemented so far:
   function values, functions with only branch returns, and top-level `return`
   (`E0106`) are rejected rather than converted or left to C fallthrough;
 - function-local scalar assignments remain scoped to their function;
+- boolean bindings are a distinct native type from integers. They may be
+  assigned, compared for equality or inequality, used as truthy conditions, and
+  shown as `True`/`False`; boolean arithmetic, value changes, and function
+  arguments or returns remain outside the native core;
 - value changes require an existing integer or float binding, and assignments
   cannot change a native name from one type to another;
 - a name first assigned in a possibly skipped control block must be assigned
@@ -105,8 +111,7 @@ Implemented so far:
   not need to initialize that name. A name assigned in only one continuing
   branch, or inside a loop that may not run, remains conditional, and sibling
   branches do not make each other's new bindings visible;
-- `say`/`show`/`말해` of an integer expression, a float, a string variable,
-  or a string literal;
+- `say`/`show`/`말해` of an integer, float, boolean, or string expression;
 - Korean and English spellings both lower to the same C;
 - identifiers that collide with C keywords, C implementation-reserved forms,
   or generated runtime names are rejected, never silently renamed. Names
@@ -121,9 +126,11 @@ Implemented so far:
   bare function values, duplicate parameters, and bindings or parameters that
   shadow a native function name are rejected before C emission;
 
-Still planned: real boolean variables as a distinct type from integer
-truthiness. The currently accepted surface is documented in the [native core
-reference](native-reference.md).
+The currently accepted boolean surface is documented in the [native core
+reference](native-reference.md): boolean literals and names have their own
+static type, even though the generated C representation uses an `int` with
+`0`/`1` values. This representation detail does not make boolean arithmetic or
+updates valid NME operations.
 
 Everything outside the core — dynamic Python, classes, imports, packages,
 `use random`/`use file` adapters — stays on the **Python compatibility

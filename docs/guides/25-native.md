@@ -17,8 +17,8 @@ into a native executable with your system's C compiler.
 ## Steps
 
 1. Write a program that stays inside the native core. The core covers
-   integers, finite floats, and string literals, `while`/`if`/`else`, `break`,
-   functions with `return`, and `say`:
+   boolean, integer, and finite-float values, string literals, `while`/`if`/
+   `else`, `break`, functions with integer `return`, and `say`:
 
    ```text
    score = 0
@@ -57,6 +57,32 @@ into a native executable with your system's C compiler.
    breaks out of its enclosing loop does not need to assign it. One continuing
    branch cannot read a name first assigned in a sibling branch, and a
    loop-created name remains conditional if the loop may not run.
+
+   Boolean names are distinct from integer names even though the generated C
+   stores both in an `int`. They can be assigned, compared with `==`/`!=`, used
+   directly as conditions, and shown as `True` or `False`:
+
+   ```text
+   ready = True
+   show ready
+   if ready
+       show "ready"
+   end
+   ready = False
+   show ready
+   ```
+
+   The same value can be written through the easier English and Korean forms:
+
+   ```text
+   ready save true
+   set ready to True
+   준비는 참
+   저장 준비 True
+   ```
+
+   Boolean arithmetic, `add`/`subtract` updates, and boolean function
+   parameters or returns stay on the CPython path.
 
 2. Compile and run it natively:
 

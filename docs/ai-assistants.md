@@ -10,7 +10,7 @@ Give an AI coding assistant this one prompt:
 Read and follow this NME language handoff before writing code:
 https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
 
-Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.109`), then write the requested program as a .nme file, prefer sentence syntax for a
+Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.110`), then write the requested program as a .nme file, prefer sentence syntax for a
 beginner, mix beginner or advanced Python only where it makes the result
 clearer, and verify it with nme check.
 ```
@@ -193,6 +193,14 @@ use random
 
 `count times:` repeats `count` times — the variable must hold a number.
 `횟수번:` does the same with `횟수`.
+
+When the user asks for the restricted native backend, boolean names are
+supported as a type distinct from integers: assign `True`/`False`, use the name
+in a truthy `if`/`while`, and `show` prints `True` or `False`. Do not use
+boolean arithmetic or `add`/`subtract` updates in native code; direct those
+programs to CPython unless the user explicitly wants a native-core diagnostic.
+The [native core reference](https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/native-reference.md)
+defines the complete boundary.
 
 ### Use any Python as advanced NME
 

@@ -94,22 +94,42 @@ The native core currently supports these values:
 - String literals and string variables. A stored or concatenated value may be
   at most 8191 UTF-8 bytes. Escaped newlines and tabs work, embedded NUL
   characters and ordering comparisons do not. `len` counts Unicode characters.
+- Boolean values. `True`/`False` and the sentence spellings `true`/`false`/
+  `참`/`거짓` can be assigned to names as a type distinct from integers.
+  Boolean names work in truthy conditions and `show` prints them as `True` or `False`. Boolean
+  equality and inequality comparisons are supported; boolean arithmetic,
+  `add`/`subtract` updates, and boolean function arguments or returns are not.
 
 Arithmetic uses `+`, `-`, `*`, and integer `%`. Comparisons support integers,
-finite floats, and string equality/inequality. Integer and finite-float values
-may also be used directly as conditions: zero is false and a nonzero value is
-true. Boolean literals `true` and `false` work in conditions, but real Boolean
-variables are not yet a separate native type.
+finite floats, string equality/inequality, and boolean equality/inequality.
+Integer, finite-float, and boolean values may also be used directly as
+conditions: zero, `False`, and `false` are false; nonzero values, `True`, and
+`true` are true.
 
-Use `say`, `show`, or `말해` to output an integer, float, string, or supported
-expression. A native expression may use a literal, a name assigned earlier, or
-a call to a declared native function.
+Use `say`, `show`, or `말해` to output an integer, float, boolean, string, or
+supported expression. A native expression may use a literal, a name assigned
+earlier, a supported comparison, or a call to a declared native function.
+
+These equivalent bindings cover the three NME levels and both user languages:
+
+| Level | English | Korean |
+| --- | --- | --- |
+| Sentence | `ready save true` | `준비는 참` |
+| Beginner | `set ready to True` | `저장 준비 True` |
+| Advanced | `ready = True` | `준비 = True` |
+
+After any of these lines, `show ready`/`말해 준비` prints `True`, and the name
+can be used directly in `if` or `while`. Reassigning `False` keeps the same
+boolean type.
+
+Run the paired examples with `nme native run examples/native-boolean` and
+`nme native run examples/native-boolean.ko`.
 
 ## Statements and blocks
 
 - `name = expression` creates a typed binding. A later assignment must keep the
   same type; sentence updates such as `score add 1` and `점수에 1 더해` require
-  an existing integer binding.
+  an existing integer or float binding and cannot change a boolean.
 - Sentence `while`, `if`, `else`, and `else if` blocks use `end` or `끝`.
   Comparisons may use symbolic operators or the documented natural-language
   connectors. Beginner `times:` and `번:` loops are supported.

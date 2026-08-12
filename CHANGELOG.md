@@ -6,6 +6,17 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.110 — 2026-08-12
+
+- Add real native boolean bindings as a static type distinct from integers;
+  `True`/`False` and sentence `true`/`false`/`참`/`거짓` values can be assigned,
+  compared, used as conditions, and shown as `True` or `False`.
+- Reject boolean arithmetic, value changes, and integer-only native function
+  arguments or returns instead of relying on their C `int` representation.
+- Cover the behavior across English and Korean sentence, beginner, and
+  advanced surfaces, with synchronized native references, guides, AI guidance,
+  and installation/version documentation.
+
 ## 0.0.1-beta.109 — 2026-08-12
 
 - Exclude a branch that breaks out of its enclosing native loop from

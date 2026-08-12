@@ -9,7 +9,8 @@
 //! The core subset in this version is small and documented:
 //!
 //! - `say`/`show`/`말해` of an integer expression, a finite float expression,
-//!   a string variable, or a string literal (one binary `+` concatenation);
+//!   a boolean expression, a string variable, or a string literal (one binary
+//!   `+` concatenation);
 //! - signed 32-bit integer literals and arithmetic with explicit overflow and
 //!   zero-divisor checks;
 //! - finite float literals and arithmetic as C `double` values; non-finite
@@ -18,15 +19,16 @@
 //! - escaped native string literals; embedded NUL characters are rejected
 //!   because the C string runtime cannot preserve them;
 //! - source comments are emitted as inert C comments, never as C directives;
-//! - `set x to ...` / `x은 ...` / `x = ...` assignments of integers, finite
-//!   floats, and string literals (including the Python-looking form);
+//! - `set x to ...` / `x은 ...` / `x = ...` assignments of booleans, integers,
+//!   finite floats, and string literals (including the Python-looking form);
 //!   native string variables use checked 8192-byte buffers;
 //! - value changes on an existing integer or float binding:
 //!   `x add N` / `x = x + N` / `점수에 N 더해`;
 //! - bindings first assigned in a possibly skipped control block must be
 //!   initialized before the block or used after assignment within it;
-//! - `while`/`if`/`else`/`else if` blocks over integer, finite-float, and
-//!   string comparisons, closed by `end`/`끝`, plus `times:`/`번:` loops;
+//! - `while`/`if`/`else`/`else if` blocks over integer, finite-float, string,
+//!   and boolean comparisons or truthiness, closed by `end`/`끝`, plus
+//!   `times:`/`번:` loops;
 //! - `break` inside a loop;
 //! - functions over integer parameters with an unconditional integer `return`
 //!   (recursion works); calls must name a function in the file and use its
@@ -51,9 +53,11 @@ enum VarType {
     Int,
     Float,
     Str,
+    Bool,
     MaybeInt,
     MaybeFloat,
     MaybeStr,
+    MaybeBool,
 }
 
 /// The static type of an expression.
@@ -62,6 +66,7 @@ enum ExprType {
     Int,
     Float,
     Str,
+    Bool,
 }
 
 /// Tracks declaration insertion points for the main function and generated
@@ -131,6 +136,7 @@ fn concrete_type(kind: VarType) -> VarType {
         VarType::Int | VarType::MaybeInt => VarType::Int,
         VarType::Float | VarType::MaybeFloat => VarType::Float,
         VarType::Str | VarType::MaybeStr => VarType::Str,
+        VarType::Bool | VarType::MaybeBool => VarType::Bool,
     }
 }
 
@@ -139,14 +145,17 @@ fn maybe_type(kind: VarType) -> VarType {
         VarType::Int => VarType::MaybeInt,
         VarType::Float => VarType::MaybeFloat,
         VarType::Str => VarType::MaybeStr,
-        VarType::MaybeInt | VarType::MaybeFloat | VarType::MaybeStr => unreachable!(),
+        VarType::Bool => VarType::MaybeBool,
+        VarType::MaybeInt | VarType::MaybeFloat | VarType::MaybeStr | VarType::MaybeBool => {
+            unreachable!()
+        }
     }
 }
 
 fn is_maybe_type(kind: VarType) -> bool {
     matches!(
         kind,
-        VarType::MaybeInt | VarType::MaybeFloat | VarType::MaybeStr
+        VarType::MaybeInt | VarType::MaybeFloat | VarType::MaybeStr | VarType::MaybeBool
     )
 }
 
@@ -985,6 +994,9 @@ fn lower_expr(
                 Ok((native_integer_literal(value, false, span)?, ExprType::Int))
             }
             Constant::Float(value) => Ok((native_float_literal(*value, span)?, ExprType::Float)),
+            Constant::Bool(value) => {
+                Ok((if *value { "1" } else { "0" }.to_string(), ExprType::Bool))
+            }
             Constant::Str(string) => Ok((c_string_literal(string, span)?, ExprType::Str)),
             _ => Err(not_supported("this constant", span)),
         },
@@ -997,12 +1009,16 @@ fn lower_expr(
                 return Err(native_function_value(id, span));
             }
             match declared.get(id).copied() {
-                Some(VarType::MaybeInt | VarType::MaybeFloat | VarType::MaybeStr) => {
-                    Err(uninitialized_name(id, span))
-                }
+                Some(
+                    VarType::MaybeInt
+                    | VarType::MaybeFloat
+                    | VarType::MaybeStr
+                    | VarType::MaybeBool,
+                ) => Err(uninitialized_name(id, span)),
                 Some(VarType::Str) => Ok((id.to_string(), ExprType::Str)),
                 Some(VarType::Float) => Ok((id.to_string(), ExprType::Float)),
                 Some(VarType::Int) => Ok((id.to_string(), ExprType::Int)),
+                Some(VarType::Bool) => Ok((id.to_string(), ExprType::Bool)),
                 None => Err(unknown_native_name(id, span)),
             }
         }
@@ -1039,6 +1055,10 @@ fn lower_expr(
             }
             _ => Err(not_supported("this operator", span)),
         },
+        Expr::Compare(_) => Ok((
+            lower_compare(expr, span, declared, functions)?,
+            ExprType::Bool,
+        )),
         Expr::UnaryOp(unary) => {
             if matches!(unary.op, UnaryOp::USub | UnaryOp::UAdd) {
                 if let Expr::Constant(constant) = unary.operand.as_ref() {
@@ -1125,6 +1145,9 @@ fn binop_operands_are_string(
     match (left_kind, right_kind) {
         (ExprType::Str, ExprType::Str) => Ok(true),
         (ExprType::Int | ExprType::Float, ExprType::Int | ExprType::Float) => Ok(false),
+        (ExprType::Bool, _) | (_, ExprType::Bool) => {
+            Err(not_supported("a boolean in arithmetic", span))
+        }
         _ => Err(not_supported("mixing numbers and text", span)),
     }
 }
@@ -1172,8 +1195,10 @@ fn numeric_operand(
     functions: &HashMap<String, usize>,
 ) -> Result<(String, ExprType), Diagnostic> {
     let (text, kind) = lower_expr(expr, span, declared, functions)?;
-    if matches!(kind, ExprType::Str) {
-        return Err(not_supported("a text value in a numeric expression", span));
+    match kind {
+        ExprType::Str => return Err(not_supported("a text value in a numeric expression", span)),
+        ExprType::Bool => return Err(not_supported("a boolean in a numeric expression", span)),
+        ExprType::Int | ExprType::Float => {}
     }
     Ok((text, kind))
 }
@@ -1244,6 +1269,9 @@ fn check_condition(
                     ExprType::Int | ExprType::Float,
                     CompareOp::GreaterOrEqual,
                 ) => format!("{left} >= {right}"),
+                (ExprType::Bool, ExprType::Bool, CompareOp::Equal) => {
+                    format!("{left} == {right}")
+                }
                 (ExprType::Str, ExprType::Str, CompareOp::Equal) => {
                     format!("strcmp({left}, {right}) == 0")
                 }
@@ -1275,12 +1303,18 @@ fn check_condition(
                     (
                         name.clone(),
                         match declared.get(name).copied() {
-                            Some(VarType::MaybeInt | VarType::MaybeFloat | VarType::MaybeStr) => {
+                            Some(
+                                VarType::MaybeInt
+                                | VarType::MaybeFloat
+                                | VarType::MaybeStr
+                                | VarType::MaybeBool,
+                            ) => {
                                 return Err(uninitialized_name(name, span));
                             }
                             Some(VarType::Str) => ExprType::Str,
                             Some(VarType::Float) => ExprType::Float,
                             Some(VarType::Int) => ExprType::Int,
+                            Some(VarType::Bool) => ExprType::Bool,
                             None => return Err(unknown_native_name(name, span)),
                         },
                     )
@@ -1289,8 +1323,8 @@ fn check_condition(
                     check_expr(code_text(code, source), span, declared, functions)?
                 }
                 ConditionValue::Literal(literal) => match literal {
-                    nme_core::syntax::Literal::True => ("(1)".to_string(), ExprType::Int),
-                    nme_core::syntax::Literal::False => ("(0)".to_string(), ExprType::Int),
+                    nme_core::syntax::Literal::True => ("(1)".to_string(), ExprType::Bool),
+                    nme_core::syntax::Literal::False => ("(0)".to_string(), ExprType::Bool),
                     nme_core::syntax::Literal::None => {
                         return Err(not_supported("null truthiness", span));
                     }
@@ -1331,18 +1365,28 @@ fn condition_operand(
                 return Err(native_function_value(name, span));
             }
             let kind = match declared.get(name).copied() {
-                Some(VarType::MaybeInt | VarType::MaybeFloat | VarType::MaybeStr) => {
+                Some(
+                    VarType::MaybeInt
+                    | VarType::MaybeFloat
+                    | VarType::MaybeStr
+                    | VarType::MaybeBool,
+                ) => {
                     return Err(uninitialized_name(name, span));
                 }
                 Some(VarType::Str) => ExprType::Str,
                 Some(VarType::Float) => ExprType::Float,
                 Some(VarType::Int) => ExprType::Int,
+                Some(VarType::Bool) => ExprType::Bool,
                 None => return Err(unknown_native_name(name, span)),
             };
             Ok((name.clone(), kind))
         }
         ConditionValue::Text(text) => Ok((c_string_literal(text, span)?, ExprType::Str)),
-        ConditionValue::Literal(_) => Err(not_supported("boolean/null in a condition", span)),
+        ConditionValue::Literal(literal) => match literal {
+            nme_core::syntax::Literal::True => Ok(("1".to_string(), ExprType::Bool)),
+            nme_core::syntax::Literal::False => Ok(("0".to_string(), ExprType::Bool)),
+            nme_core::syntax::Literal::None => Err(not_supported("null in a condition", span)),
+        },
     }
 }
 
@@ -1381,10 +1425,15 @@ fn lower_compare(
             CmpOp::NotEq => Ok(format!("(strcmp({left}, {right}) != 0)")),
             _ => Err(not_supported("ordering text in a condition", span)),
         },
-        _ => Err(not_supported(
-            "mixing numbers and text in a condition",
-            span,
-        )),
+        (ExprType::Bool, ExprType::Bool) => match compare.ops[0] {
+            CmpOp::Eq => Ok(format!("({left} == {right})")),
+            CmpOp::NotEq => Ok(format!("({left} != {right})")),
+            _ => Err(not_supported(
+                "ordering boolean values in a condition",
+                span,
+            )),
+        },
+        _ => Err(not_supported("incompatible values in a condition", span)),
     }
 }
 
@@ -1415,6 +1464,12 @@ fn emit_say(
                     out.push_str(&format!("printf(\"%g\\n\", {lowered});\n"));
                     Ok(())
                 }
+                ExprType::Bool => {
+                    out.push_str(&format!(
+                        "printf(\"%s\\n\", {lowered} ? \"True\" : \"False\");\n"
+                    ));
+                    Ok(())
+                }
                 ExprType::Str => {
                     out.push_str(&format!("printf(\"%s\\n\", {lowered});\n"));
                     Ok(())
@@ -1438,7 +1493,19 @@ fn emit_say(
             out.push_str(&format!("printf(\"%s\\n\", {escaped});\n"));
             Ok(())
         }
-        Value::Literal(_) => Err(not_supported("boolean/null output", span_of_value(value))),
+        Value::Literal(literal) => match literal {
+            nme_core::syntax::Literal::True => {
+                out.push_str("puts(\"True\");\n");
+                Ok(())
+            }
+            nme_core::syntax::Literal::False => {
+                out.push_str("puts(\"False\");\n");
+                Ok(())
+            }
+            nme_core::syntax::Literal::None => {
+                Err(not_supported("null output", span_of_value(value)))
+            }
+        },
         Value::RandomInteger { .. } | Value::RandomChoice { .. } => {
             Err(not_supported("random values", span_of_value(value)))
         }
@@ -1458,6 +1525,7 @@ fn assignment_type(
         ExprType::Int => VarType::Int,
         ExprType::Float => VarType::Float,
         ExprType::Str => VarType::Str,
+        ExprType::Bool => VarType::Bool,
     };
     if let Some(existing) = declared.get(name).copied() {
         let existing_concrete = concrete_type(existing);
@@ -1513,6 +1581,14 @@ fn emit_set(
                     out.push_str(&format!("{target} = {lowered};\n"));
                     Ok(())
                 }
+                ExprType::Bool => {
+                    if is_new {
+                        declaration_slots.declare(out, &format!("int {target};\n"));
+                    }
+                    declared.insert(target.to_string(), VarType::Bool);
+                    out.push_str(&format!("{target} = {lowered};\n"));
+                    Ok(())
+                }
                 ExprType::Str => {
                     if is_new {
                         declaration_slots
@@ -1526,8 +1602,24 @@ fn emit_set(
                 }
             }
         }
+        Value::Literal(literal) => {
+            let lowered = match literal {
+                nme_core::syntax::Literal::True => "1",
+                nme_core::syntax::Literal::False => "0",
+                nme_core::syntax::Literal::None => {
+                    return Err(not_supported("null value", span_of_value(value)));
+                }
+            };
+            let span = span_of_value(value);
+            let is_new = assignment_type(declared, target, ExprType::Bool, span)?;
+            if is_new {
+                declaration_slots.declare(out, &format!("int {target};\n"));
+            }
+            declared.insert(target.to_string(), VarType::Bool);
+            out.push_str(&format!("{target} = {lowered};\n"));
+            Ok(())
+        }
         Value::Text(_)
-        | Value::Literal(_)
         | Value::RandomInteger { .. }
         | Value::RandomChoice { .. }
         | Value::ZeroKnowledge(_) => Err(not_supported("this value", span_of_value(value))),
@@ -1554,6 +1646,7 @@ fn emit_update(
     match declared.get(target).copied() {
         Some(kind) if is_maybe_type(kind) => return Err(uninitialized_name(target, span)),
         Some(VarType::Str) => return Err(string_value_change(span)),
+        Some(VarType::Bool) => return Err(not_supported("changing a boolean value", span)),
         _ => {}
     }
     let amount_text = code_text(amount, source);
@@ -1663,7 +1756,7 @@ fn emit_python_line(
                     out.push_str(&format!("return {lowered};\n"));
                     None
                 }
-                Ok((_, ExprType::Float | ExprType::Str)) => {
+                Ok((_, ExprType::Float | ExprType::Str | ExprType::Bool)) => {
                     Some(native_function_requires_integer(span))
                 }
                 Err(diag) => Some(diag),
@@ -1708,6 +1801,18 @@ fn emit_python_line(
                         declaration_slots.declare(out, &format!("double {name};\n"));
                     }
                     declared.insert(name.clone(), VarType::Float);
+                    out.push_str(&format!("{name} = {lowered};\n"));
+                    None
+                }
+                Ok((lowered, ExprType::Bool)) => {
+                    let is_new = match assignment_type(declared, &name, ExprType::Bool, span) {
+                        Ok(is_new) => is_new,
+                        Err(diag) => return Some(diag),
+                    };
+                    if is_new {
+                        declaration_slots.declare(out, &format!("int {name};\n"));
+                    }
+                    declared.insert(name.clone(), VarType::Bool);
                     out.push_str(&format!("{name} = {lowered};\n"));
                     None
                 }
@@ -2037,8 +2142,8 @@ fn reserved_name(english_kind: &str, korean_kind: &str, name: &str, span: Span) 
         span,
     )
     .with_bilingual_hint(
-        "use only the documented native core: integer, finite-float, and string values, while/if over comparisons, functions, and say",
-        "문서에 있는 네이티브 코어만 쓰세요: 정수·유한 실수·문자열 값, 비교 조건의 while/if, 함수, say",
+        "use only the documented native core: boolean, integer, finite-float, and string values, while/if over comparisons, functions, and say",
+        "문서에 있는 네이티브 코어만 쓰세요: 불리언·정수·유한 실수·문자열 값, 비교 조건의 while/if, 함수, say",
     )
 }
 
@@ -2056,8 +2161,8 @@ fn type_change(name: &str, from: VarType, to: VarType, span: Span) -> Diagnostic
         span,
     )
     .with_bilingual_hint(
-        "assign one native type to each name: integer, float, or string",
-        "이름마다 네이티브 타입 하나만 대입하세요: 정수, 실수, 문자열",
+        "assign one native type to each name: boolean, integer, float, or string",
+        "이름마다 네이티브 타입 하나만 대입하세요: 불리언, 정수, 실수, 문자열",
     )
 }
 
@@ -2066,7 +2171,10 @@ fn native_type_names(kind: VarType) -> (&'static str, &'static str) {
         VarType::Int => ("integer", "정수"),
         VarType::Float => ("float", "실수"),
         VarType::Str => ("string", "문자열"),
-        VarType::MaybeInt | VarType::MaybeFloat | VarType::MaybeStr => unreachable!(),
+        VarType::Bool => ("boolean", "불리언"),
+        VarType::MaybeInt | VarType::MaybeFloat | VarType::MaybeStr | VarType::MaybeBool => {
+            unreachable!()
+        }
     }
 }
 
@@ -2326,15 +2434,23 @@ fn native_non_finite_float(span: Span) -> Diagnostic {
 }
 
 fn not_supported(what: &str, span: Span) -> Diagnostic {
+    let what_ko = match what {
+        "a boolean in arithmetic" => "산술에서 불리언 값",
+        "a boolean in a numeric expression" => "숫자 표현식의 불리언 값",
+        "ordering boolean values in a condition" => "조건에서 불리언 값의 순서 비교",
+        "incompatible values in a condition" => "조건에서 호환되지 않는 값",
+        "changing a boolean value" => "불리언 값 변경",
+        _ => what,
+    };
     Diagnostic::bilingual(
         DiagnosticCode::UnsupportedModule,
         format!("the native backend does not support {what} yet"),
-        format!("네이티브 백엔드는 아직 {what}을(를) 지원하지 않습니다"),
+        format!("네이티브 백엔드는 아직 {what_ko}을(를) 지원하지 않습니다"),
         span,
     )
     .with_bilingual_hint(
-        "use only the documented native core: integer, finite-float, and string values, while/if over comparisons, functions, and say",
-        "문서에 있는 네이티브 코어만 쓰세요: 정수·유한 실수·문자열 값, 비교 조건의 while/if, 함수, say",
+        "use only the documented native core: boolean, integer, finite-float, and string values, while/if over comparisons, functions, and say",
+        "문서에 있는 네이티브 코어만 쓰세요: 불리언·정수·유한 실수·문자열 값, 비교 조건의 while/if, 함수, say",
     )
 }
 

@@ -91,7 +91,7 @@ warns that its `bin` directory is not on `PATH`. It does not reinstall NME.
 Windows PowerShell uses the PATH step in the
 [installation guide](docs/install.md#windows-11).
 
-Expected version: `nme 0.0.1-beta.109`.
+Expected version: `nme 0.0.1-beta.110`.
 
 Windows, macOS, and Linux instructions are in the
 [installation guide](docs/install.md). The [five-minute guide](docs/getting-started.md)
@@ -168,7 +168,7 @@ way for checking and building. `nme m`, `nme v`, and `nme h` are short forms of
 with Nuitka, `nme conv app.py` converts Python into NME, and `nme install
 requests` installs a Python package with pip.
 
-A core subset of NME can also compile straight to native machine code with `nme native run hello` (integer and finite-float values, strings, sentence `while`/`if`/`else`, beginner `times:`, `break`, functions with integer parameters and unconditional integer returns, and `say` — try [`native-factorial.nme`](examples/native-factorial.nme) (Korean twin [`native-factorial.ko.nme`](examples/native-factorial.ko.nme)); everything else still runs on CPython). See the [native core reference](docs/native-reference.md) and [native-backend memo](docs/native-backend.md).
+A core subset of NME can also compile straight to native machine code with `nme native run hello` (boolean, integer, and finite-float values, strings, sentence `while`/`if`/`else`, beginner `times:`, `break`, functions with integer parameters and unconditional integer returns, and `say` — try [`native-factorial.nme`](examples/native-factorial.nme) and [`native-boolean.nme`](examples/native-boolean.nme) (Korean twins [`native-factorial.ko.nme`](examples/native-factorial.ko.nme) and [`native-boolean.ko.nme`](examples/native-boolean.ko.nme)); boolean arithmetic and other unsupported features still run on CPython). See the [native core reference](docs/native-reference.md) and [native-backend memo](docs/native-backend.md).
 
 Program names may also be shortened while they stay unique: `nme r gue` runs
 `guessing-game.nme`. When several programs match, NME lists them and asks you

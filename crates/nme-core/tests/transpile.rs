@@ -1237,6 +1237,14 @@ fn korean_beginner_save_words_are_explicit_and_mixable() {
 }
 
 #[test]
+fn korean_save_word_accepts_boolean_literals() {
+    assert_eq!(
+        ok("저장 준비 참\n저장 준비 거짓\n"),
+        "준비 = True\n준비 = False\n"
+    );
+}
+
+#[test]
 fn spoken_target_first_save_is_a_small_bridge_to_python_assignment() {
     let source = concat!("이름 저장 민수\n", "name save Mina\n");
     assert_eq!(

@@ -919,6 +919,178 @@ fn boolean_literals_in_truthy_conditions_compile_natively() {
 }
 
 #[test]
+fn boolean_literals_print_with_python_spelling() {
+    let english = "show true\nshow false\n";
+    assert_eq!(native_run(english).unwrap(), "True\nFalse\n");
+
+    let korean = "말해 참\n말해 거짓\n";
+    assert_eq!(native_run(korean).unwrap(), "True\nFalse\n");
+}
+
+#[test]
+fn boolean_bindings_work_as_native_conditions_across_the_surface_matrix() {
+    let cases = [
+        (
+            "sentence-en",
+            "ready save true\nshow ready\nwhen ready\n    show \"yes\"\nend\nready save false\nshow ready\nwhen ready\n    show \"no\"\nend\n",
+        ),
+        (
+            "sentence-ko",
+            "준비는 참\n말해 준비\n만약 준비\n    말해 \"예\"\n끝\n준비는 거짓\n말해 준비\n만약 준비\n    말해 \"아니요\"\n끝\n",
+        ),
+        (
+            "beginner-en",
+            "set ready to True\nshow ready\nif ready\n    show \"yes\"\nend\nset ready to False\nshow ready\nif ready\n    show \"no\"\nend\n",
+        ),
+        (
+            "beginner-ko",
+            "저장 준비 True\n말해 준비\n만약 준비\n    말해 \"예\"\n끝\n저장 준비 False\n말해 준비\n만약 준비\n    말해 \"아니요\"\n끝\n",
+        ),
+        (
+            "advanced-en",
+            "ready = True\nshow ready\nif ready\n    show \"yes\"\nend\nready = False\nshow ready\nif ready\n    show \"no\"\nend\n",
+        ),
+        (
+            "advanced-ko",
+            "준비 = True\n말해 준비\n만약 준비\n    말해 \"예\"\n끝\n준비 = False\n말해 준비\n만약 준비\n    말해 \"아니요\"\n끝\n",
+        ),
+    ];
+
+    for (label, source) in cases {
+        let expected = if label.ends_with("ko") {
+            "True\n예\nFalse\n"
+        } else {
+            "True\nyes\nFalse\n"
+        };
+        let output =
+            native_run(source).unwrap_or_else(|error| panic!("native case {label}: {error}"));
+        assert_eq!(output, expected, "native case: {label}");
+    }
+}
+
+#[test]
+fn boolean_expression_bindings_work_across_the_surface_matrix() {
+    let cases = [
+        (
+            "sentence-en",
+            "set ready to 1 == 1\nwhen ready\n    show \"yes\"\nend\n",
+        ),
+        (
+            "sentence-ko",
+            "준비는 1 == 1\n만약 준비\n    말해 \"예\"\n끝\n",
+        ),
+        (
+            "beginner-en",
+            "save ready to 1 == 1\nif ready\n    show \"yes\"\nend\n",
+        ),
+        (
+            "beginner-ko",
+            "저장 준비 1 == 1\n만약 준비\n    말해 \"예\"\n끝\n",
+        ),
+        (
+            "advanced-en",
+            "ready = 1 == 1\nif ready\n    show \"yes\"\nend\n",
+        ),
+        (
+            "advanced-ko",
+            "준비 = 1 == 1\n만약 준비\n    말해 \"예\"\n끝\n",
+        ),
+    ];
+
+    for (label, source) in cases {
+        let expected = if label.ends_with("ko") {
+            "예\n"
+        } else {
+            "yes\n"
+        };
+        let output =
+            native_run(source).unwrap_or_else(|error| panic!("native case {label}: {error}"));
+        assert_eq!(output, expected, "native case: {label}");
+    }
+}
+
+#[test]
+fn native_booleans_remain_distinct_from_integer_values() {
+    for source in [
+        "ready = True\nshow ready + 1\n",
+        "준비 = True\n말해 준비 + 1\n",
+    ] {
+        let problems = nme_native::native_compile(source).unwrap_err();
+        assert!(
+            problems
+                .iter()
+                .any(|problem| problem.message.contains("a boolean in arithmetic")),
+            "{source:?}: {problems:?}"
+        );
+        assert!(
+            problems.iter().any(|problem| {
+                problem
+                    .message_ko
+                    .as_deref()
+                    .is_some_and(|message| message.contains("불리언"))
+            }),
+            "{source:?}: {problems:?}"
+        );
+    }
+
+    for source in [
+        "ready = True\nready add 1\n",
+        "준비 = True\n준비에 1 더해\n",
+    ] {
+        let problems = nme_native::native_compile(source).unwrap_err();
+        assert!(
+            problems
+                .iter()
+                .any(|problem| problem.message.contains("changing a boolean value")),
+            "{source:?}: {problems:?}"
+        );
+    }
+
+    for source in ["ready = True\nready = 1\n", "준비 = True\n준비 = 1\n"] {
+        let problems = nme_native::native_compile(source).unwrap_err();
+        assert!(
+            problems
+                .iter()
+                .any(|problem| problem.message.contains("changing the type")),
+            "{source:?}: {problems:?}"
+        );
+        assert!(
+            problems.iter().any(|problem| {
+                problem
+                    .message_ko
+                    .as_deref()
+                    .is_some_and(|message| message.contains("타입 변경"))
+            }),
+            "{source:?}: {problems:?}"
+        );
+    }
+
+    for source in [
+        "def identity(value):\n    return value\n\nshow identity(True)\n",
+        "def 준비(값):\n    return 값\n\n말해 준비(True)\n",
+        "def ready():\n    return True\n\nshow ready()\n",
+        "def 준비됨():\n    return True\n\n말해 준비됨()\n",
+    ] {
+        let problems = nme_native::native_compile(source).unwrap_err();
+        assert!(
+            problems
+                .iter()
+                .any(|problem| { problem.message.contains("accept and return integer values") }),
+            "{source:?}: {problems:?}"
+        );
+    }
+}
+
+#[test]
+fn boolean_bindings_work_through_native_loops_and_branch_merges() {
+    let english = "ready = True\nsame = ready == True\ndifferent = ready != False\nshow same\nshow different\nwhile ready\n    show \"once\"\n    ready = False\nend\nflag = True\nif flag\n    result = True\nelse\n    result = False\nend\nshow result\n";
+    assert_eq!(native_run(english).unwrap(), "True\nTrue\nonce\nTrue\n");
+
+    let korean = "준비 = True\n같음 = 준비 == True\n다름 = 준비 != False\n말해 같음\n말해 다름\n동안 준비\n    말해 \"한 번\"\n    준비 = False\n끝\n표시 = True\n만약 표시\n    저장 결과 참\n아니면\n    저장 결과 거짓\n끝\n말해 결과\n";
+    assert_eq!(native_run(korean).unwrap(), "True\nTrue\n한 번\nTrue\n");
+}
+
+#[test]
 fn truthy_conditions_compile_natively() {
     let source = "ready = 1\nif ready\n    show \"ready yes\"\nend\nready = 0\nif ready\n    show \"no\"\nend\nturns = 3\nwhile turns\n    show turns\n    turns add -1\nend\n";
     assert_eq!(native_run(source).unwrap(), "ready yes\n3\n2\n1\n");
