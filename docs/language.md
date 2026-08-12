@@ -651,6 +651,9 @@ See [the conversion guide](converting-python.md).
   with a bilingual hint; valid returns inside functions remain Python.
 - A top-level or inline Python `continue` outside a loop gets `E0107` with a
   bilingual hint; valid `continue` statements inside loops remain Python.
+- A top-level or inline Python `yield` outside a function gets `E0108`, and
+  `await` outside an `async def` function gets `E0109`; valid generator and
+  asynchronous function bodies remain Python.
 - An inline body must contain one statement; an inline `else`/`elif` without an
   open condition gets `E0103`. Put branch lines in the same explicit condition
   block before its `end`.

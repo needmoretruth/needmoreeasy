@@ -58,6 +58,10 @@ pub enum DiagnosticCode {
     ReturnOutsideFunction,
     /// `continue` outside a loop.
     ContinueOutsideLoop,
+    /// `yield` outside a function.
+    YieldOutsideFunction,
+    /// `await` outside an async function.
+    AwaitOutsideAsyncFunction,
     /// `say` value could not be understood.
     SayValueBroken,
     /// `say` expression is not valid.
@@ -205,6 +209,8 @@ impl DiagnosticCode {
             Self::MissingEnd => "E0105",
             Self::ReturnOutsideFunction => "E0106",
             Self::ContinueOutsideLoop => "E0107",
+            Self::YieldOutsideFunction => "E0108",
+            Self::AwaitOutsideAsyncFunction => "E0109",
             Self::SayValueBroken => "E0201",
             Self::SayValueUnparseable => "E0202",
             Self::SaySentenceUnparseable => "E0203",
@@ -274,7 +280,7 @@ impl DiagnosticCode {
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 73] = [
+    pub const ALL: [DiagnosticCode; 75] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -283,6 +289,8 @@ impl DiagnosticCode {
         Self::MissingEnd,
         Self::ReturnOutsideFunction,
         Self::ContinueOutsideLoop,
+        Self::YieldOutsideFunction,
+        Self::AwaitOutsideAsyncFunction,
         Self::SayValueBroken,
         Self::SayValueUnparseable,
         Self::SaySentenceUnparseable,
@@ -429,6 +437,20 @@ impl DiagnosticCode {
                 "반복문 밖의 `continue`",
                 "`continue` skips to the next iteration, so it must be written inside a valid Python or NME loop. Move it inside the loop, or remove it.",
                 "`continue`는 다음 반복으로 건너뛰므로 올바른 Python 또는 NME 반복문 안에서만 쓸 수 있습니다. 반복문 안으로 옮기거나 지우세요.",
+            ),
+            Self::YieldOutsideFunction => (
+                "E0108",
+                "`yield` outside a function",
+                "함수 밖의 `yield`",
+                "`yield` produces a value from a generator, so it must be written inside a Python `def` or `async def` function. Move it inside a function, or remove it.",
+                "`yield`는 제너레이터에서 값을 내보내므로 Python `def` 또는 `async def` 함수 안에서만 쓸 수 있습니다. 함수 안으로 옮기거나 지우세요.",
+            ),
+            Self::AwaitOutsideAsyncFunction => (
+                "E0109",
+                "`await` outside an async function",
+                "비동기 함수 밖의 `await`",
+                "`await` pauses an asynchronous operation, so it must be written inside a Python `async def` function. Move it into an async function, or remove it.",
+                "`await`는 비동기 작업을 기다리므로 Python `async def` 함수 안에서만 쓸 수 있습니다. 비동기 함수 안으로 옮기거나 지우세요.",
             ),
             Self::SayValueBroken => (
                 "E0201",

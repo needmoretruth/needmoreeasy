@@ -2525,6 +2525,66 @@ fn top_level_continue_reports_the_shared_loop_diagnostic() {
 }
 
 #[test]
+fn python_context_keywords_report_shared_function_diagnostics() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-python-context-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let yield_file = dir.join("yield.nme");
+    let await_file = dir.join("await.nme");
+    std::fs::write(&yield_file, "yield 1\n").unwrap();
+    std::fs::write(&await_file, "await work()\n").unwrap();
+
+    let yield_english = nme(&["check", &yield_file.to_string_lossy()]);
+    assert!(!yield_english.status.success());
+    let yield_english_error = stderr(&yield_english);
+    assert!(
+        yield_english_error.contains("error[E0108]:"),
+        "{yield_english_error}"
+    );
+    assert!(
+        yield_english_error.contains("inside a function"),
+        "{yield_english_error}"
+    );
+
+    let yield_korean = nme(&["검사", &yield_file.to_string_lossy()]);
+    assert!(!yield_korean.status.success());
+    let yield_korean_error = stderr(&yield_korean);
+    assert!(
+        yield_korean_error.contains("오류[E0108]:"),
+        "{yield_korean_error}"
+    );
+    assert!(
+        yield_korean_error.contains("함수 안에서만"),
+        "{yield_korean_error}"
+    );
+
+    let await_english = nme(&["check", &await_file.to_string_lossy()]);
+    assert!(!await_english.status.success());
+    let await_english_error = stderr(&await_english);
+    assert!(
+        await_english_error.contains("error[E0109]:"),
+        "{await_english_error}"
+    );
+    assert!(
+        await_english_error.contains("inside an async function"),
+        "{await_english_error}"
+    );
+
+    let await_korean = nme(&["검사", &await_file.to_string_lossy()]);
+    assert!(!await_korean.status.success());
+    let await_korean_error = stderr(&await_korean);
+    assert!(
+        await_korean_error.contains("오류[E0109]:"),
+        "{await_korean_error}"
+    );
+    assert!(
+        await_korean_error.contains("비동기 함수 안에서만"),
+        "{await_korean_error}"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn inline_branch_without_a_condition_reports_the_shared_branch_diagnostic() {
     let dir =
         std::env::temp_dir().join(format!("nme-cli-inline-branch-code-{}", std::process::id()));

@@ -139,6 +139,9 @@ Every user-facing compiler error needs a plain message, an exact caret span,
 and a useful `hint`. Collect independent errors in one pass. Input that is
 neither valid Python nor an unambiguous NME form must never be emitted as
 silently broken Python.
+Python context errors use the shared parser too: top-level or inline `return`,
+`yield`, and `await` receive stable diagnostics when their enclosing function
+context is invalid, while valid Python function bodies remain byte-identical.
 
 ### 7. Bundled modules are local and versioned
 

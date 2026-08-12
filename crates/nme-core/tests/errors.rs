@@ -270,6 +270,110 @@ fn continue_outside_a_loop_gets_a_stable_diagnostic() {
 }
 
 #[test]
+fn yield_outside_a_function_gets_a_stable_bilingual_diagnostic() {
+    let cases = [
+        ("top-level", "yield 1\n"),
+        ("sentence-en", "when true then yield 1\n"),
+        ("sentence-ko", "만약 참 그러면 yield 1\n"),
+        ("beginner-en", "if True then yield 1\n"),
+        ("beginner-ko", "만약 True 그러면 yield 1\n"),
+        ("advanced-en", "if (True) then yield 1\n"),
+        ("advanced-ko", "만약 ((참 그리고 참)) 그러면 yield 1\n"),
+    ];
+
+    for (label, source) in cases {
+        let problems = match transpile(source) {
+            Ok(output) => panic!("expected yield diagnostic for {label}, got {output:?}"),
+            Err(problems) => problems,
+        };
+        assert_eq!(problems.len(), 1, "core case: {label}: {problems:?}");
+        let problem = &problems[0];
+        assert_eq!(
+            problem.code,
+            DiagnosticCode::YieldOutsideFunction,
+            "core case: {label}"
+        );
+        assert!(
+            problem.message.contains("inside a function"),
+            "{label}: {problem:?}"
+        );
+        assert!(
+            problem
+                .message_ko
+                .as_deref()
+                .is_some_and(|message| message.contains("함수 안에서만")),
+            "{label}: {problem:?}"
+        );
+    }
+}
+
+#[test]
+fn await_outside_an_async_function_gets_a_stable_bilingual_diagnostic() {
+    let cases = [
+        ("top-level", "await work()\n"),
+        ("sentence-en", "when true then await work()\n"),
+        ("sentence-ko", "만약 참 그러면 await work()\n"),
+        ("beginner-en", "if True then await work()\n"),
+        ("beginner-ko", "만약 True 그러면 await work()\n"),
+        ("advanced-en", "if (True) then await work()\n"),
+        ("advanced-ko", "만약 ((참 그리고 참)) 그러면 await work()\n"),
+    ];
+
+    for (label, source) in cases {
+        let problems = match transpile(source) {
+            Ok(output) => panic!("expected await diagnostic for {label}, got {output:?}"),
+            Err(problems) => problems,
+        };
+        assert_eq!(problems.len(), 1, "core case: {label}: {problems:?}");
+        let problem = &problems[0];
+        assert_eq!(
+            problem.code,
+            DiagnosticCode::AwaitOutsideAsyncFunction,
+            "core case: {label}"
+        );
+        assert!(
+            problem.message.contains("inside an async function"),
+            "{label}: {problem:?}"
+        );
+        assert!(
+            problem
+                .message_ko
+                .as_deref()
+                .is_some_and(|message| message.contains("비동기 함수 안에서만")),
+            "{label}: {problem:?}"
+        );
+    }
+}
+
+#[test]
+fn python_context_diagnostics_follow_nested_function_and_class_scopes() {
+    let class_return = transpile("def outer():\n    class Inner:\n        return 1\n")
+        .expect_err("return in a class body must not inherit the outer function scope");
+    assert_eq!(class_return.len(), 1, "{class_return:?}");
+    assert_eq!(class_return[0].code, DiagnosticCode::ReturnOutsideFunction);
+
+    let class_yield = transpile("def outer():\n    class Inner:\n        yield 1\n")
+        .expect_err("yield in a class body must not inherit the outer function scope");
+    assert_eq!(class_yield.len(), 1, "{class_yield:?}");
+    assert_eq!(class_yield[0].code, DiagnosticCode::YieldOutsideFunction);
+
+    let nested_await = transpile("async def outer():\n    def inner():\n        await work()\n")
+        .expect_err("a nested ordinary function is not async");
+    assert_eq!(nested_await.len(), 1, "{nested_await:?}");
+    assert_eq!(
+        nested_await[0].code,
+        DiagnosticCode::AwaitOutsideAsyncFunction
+    );
+
+    let generator = "def generator():\n    yield 1\n";
+    assert_eq!(transpile(generator).unwrap(), generator);
+    let async_generator = "async def generator():\n    yield 1\n";
+    assert_eq!(transpile(async_generator).unwrap(), async_generator);
+    let async_function = "async def worker():\n    await work()\n";
+    assert_eq!(transpile(async_function).unwrap(), async_function);
+}
+
+#[test]
 fn inline_branches_without_an_open_condition_get_a_stable_diagnostic() {
     let cases = [
         ("sentence-en", "when true then else show no\n"),

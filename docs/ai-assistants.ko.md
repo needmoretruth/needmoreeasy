@@ -10,7 +10,7 @@ AI 코딩 도우미에게 다음 문장 하나를 전달하세요.
 NME 코드를 작성하기 전에 이 문서를 읽고 따르세요.
 https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.ko.md
 
-먼저 `nme --version`으로 지원되는 베타(현재 `0.0.1-beta.141`)를 확인하세요. 그다음 요청한 프로그램을 .nme 파일로 작성하세요. 초보자에게는 문장형을 우선하고,
+먼저 `nme --version`으로 지원되는 베타(현재 `0.0.1-beta.142`)를 확인하세요. 그다음 요청한 프로그램을 .nme 파일로 작성하세요. 초보자에게는 문장형을 우선하고,
 더 분명할 때만 초급 문법이나 고급 Python을 섞으며, nme 검사로 확인하세요.
 ```
 
@@ -220,6 +220,10 @@ use random
 쉬운 표현이 뜻을 바꿀 수 있다면 Python 문법을 억지로 번역하지 마세요. 함수,
 클래스, import, 컴프리헨션, 비동기 코드, 예외 처리, 설치한 Python 패키지와
 모든 올바른 Python 기능은 그대로 둘 수 있습니다.
+
+Python의 문맥 규칙도 그대로 적용됩니다. `return`과 `yield`는 함수 안에,
+`await`는 `async def` 안에 있어야 하며, 잘못된 최상위·인라인 형태를
+`nme 검사`하면 안정적인 이중 언어 코드 `E0106`–`E0109`가 표시됩니다.
 
 올바른 Python이 항상 우선합니다. `say("x")`, `when`이라는 변수, 문자열
 안의 글, 주석을 NME 문법으로 바꾸면 안 됩니다.

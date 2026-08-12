@@ -381,6 +381,19 @@ pub fn parse_program(
                     problems.push(return_outside_function_diagnostic(line.span));
                     continue;
                 }
+                if inline_yield_is_outside_function(&stmt, &line.tokens, bindings.inside_function())
+                {
+                    problems.push(yield_outside_function_diagnostic(line.span));
+                    continue;
+                }
+                if inline_await_is_outside_async_function(
+                    &stmt,
+                    &line.tokens,
+                    bindings.inside_async_function(),
+                ) {
+                    problems.push(await_outside_async_function_diagnostic(line.span));
+                    continue;
+                }
                 if matches!(stmt, NmeStmt::End) {
                     if blocks.is_empty() {
                         problems.push(unmatched_end_diagnostic(line.span));
@@ -452,6 +465,18 @@ pub fn parse_program(
                     || !top_level_python_loop_indents.is_empty();
                 if is_python_continue_line(&line.tokens) && !inside_loop {
                     problems.push(continue_outside_loop_diagnostic(line.span));
+                    continue;
+                }
+                if contains_token(&line.tokens, |token| matches!(token.tok, Tok::Yield))
+                    && !bindings.inside_function()
+                {
+                    problems.push(yield_outside_function_diagnostic(line.span));
+                    continue;
+                }
+                if contains_token(&line.tokens, |token| matches!(token.tok, Tok::Await))
+                    && !bindings.inside_async_function()
+                {
+                    problems.push(await_outside_async_function_diagnostic(line.span));
                     continue;
                 }
                 bindings.remember_python(&line.tokens, parse_line.indent);
@@ -714,6 +739,32 @@ fn return_outside_function_diagnostic(span: Span) -> Diagnostic {
     )
 }
 
+fn yield_outside_function_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::YieldOutsideFunction,
+        "`yield` can only be used inside a function",
+        "`yield`는 함수 안에서만 쓸 수 있어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "put it inside a `def` or `async def` function, or remove it",
+        "`def` 또는 `async def` 함수 안에 넣거나 지워 주세요",
+    )
+}
+
+fn await_outside_async_function_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::AwaitOutsideAsyncFunction,
+        "`await` can only be used inside an async function",
+        "`await`는 비동기 함수 안에서만 쓸 수 있어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "put it inside an `async def` function, or remove it",
+        "`async def` 함수 안에 넣거나 지워 주세요",
+    )
+}
+
 fn branch_without_condition_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
         DiagnosticCode::BranchWithoutCondition,
@@ -826,10 +877,90 @@ fn inline_return_is_outside_function_in_body(
     }
 }
 
+fn inline_yield_is_outside_function(
+    stmt: &NmeStmt,
+    tokens: &[Token],
+    inside_function: bool,
+) -> bool {
+    match stmt {
+        NmeStmt::Times { inline, .. }
+        | NmeStmt::While { inline, .. }
+        | NmeStmt::When { inline, .. }
+        | NmeStmt::ElseIf { inline, .. }
+        | NmeStmt::Else { inline } => inline.as_ref().is_some_and(|body| {
+            inline_yield_is_outside_function_in_body(body, tokens, inside_function)
+        }),
+        _ => false,
+    }
+}
+
+fn inline_yield_is_outside_function_in_body(
+    body: &InlineStmt,
+    tokens: &[Token],
+    inside_function: bool,
+) -> bool {
+    match body {
+        InlineStmt::Nme(inner) => inline_yield_is_outside_function(inner, tokens, inside_function),
+        InlineStmt::Python(span) => {
+            contains_token_in_span(tokens, *span, |token| matches!(token.tok, Tok::Yield))
+                && !inside_function
+        }
+    }
+}
+
+fn inline_await_is_outside_async_function(
+    stmt: &NmeStmt,
+    tokens: &[Token],
+    inside_async_function: bool,
+) -> bool {
+    match stmt {
+        NmeStmt::Times { inline, .. }
+        | NmeStmt::While { inline, .. }
+        | NmeStmt::When { inline, .. }
+        | NmeStmt::ElseIf { inline, .. }
+        | NmeStmt::Else { inline } => inline.as_ref().is_some_and(|body| {
+            inline_await_is_outside_async_function_in_body(body, tokens, inside_async_function)
+        }),
+        _ => false,
+    }
+}
+
+fn inline_await_is_outside_async_function_in_body(
+    body: &InlineStmt,
+    tokens: &[Token],
+    inside_async_function: bool,
+) -> bool {
+    match body {
+        InlineStmt::Nme(inner) => {
+            inline_await_is_outside_async_function(inner, tokens, inside_async_function)
+        }
+        InlineStmt::Python(span) => {
+            contains_token_in_span(tokens, *span, |token| matches!(token.tok, Tok::Await))
+                && !inside_async_function
+        }
+    }
+}
+
 fn first_token_in_span(tokens: &[Token], span: Span) -> Option<&Token> {
     tokens
         .iter()
         .find(|token| token.span.start >= span.start && token.span.end <= span.end)
+}
+
+fn contains_token<F>(tokens: &[Token], predicate: F) -> bool
+where
+    F: Fn(&Token) -> bool,
+{
+    tokens.iter().any(predicate)
+}
+
+fn contains_token_in_span<F>(tokens: &[Token], span: Span, predicate: F) -> bool
+where
+    F: Fn(&Token) -> bool,
+{
+    tokens.iter().any(|token| {
+        token.span.start >= span.start && token.span.end <= span.end && predicate(token)
+    })
 }
 
 fn is_python_return_line(tokens: &[Token]) -> bool {
@@ -5223,6 +5354,8 @@ fn body_diagnostic(_kind: SuiteKind, span: Span) -> Diagnostic {
 enum BindingScopeKind {
     Root,
     Function,
+    AsyncFunction,
+    Class,
     Other,
 }
 
@@ -5287,9 +5420,25 @@ impl BindingEnv {
     }
 
     fn inside_function(&self) -> bool {
-        self.scopes
-            .iter()
-            .any(|scope| matches!(scope.kind, BindingScopeKind::Function))
+        for scope in self.scopes.iter().rev() {
+            match scope.kind {
+                BindingScopeKind::Function | BindingScopeKind::AsyncFunction => return true,
+                BindingScopeKind::Class => return false,
+                BindingScopeKind::Root | BindingScopeKind::Other => {}
+            }
+        }
+        false
+    }
+
+    fn inside_async_function(&self) -> bool {
+        for scope in self.scopes.iter().rev() {
+            match scope.kind {
+                BindingScopeKind::AsyncFunction => return true,
+                BindingScopeKind::Function | BindingScopeKind::Class => return false,
+                BindingScopeKind::Root | BindingScopeKind::Other => {}
+            }
+        }
+        false
     }
 
     fn remember_nme(&mut self, stmt: &NmeStmt) {
@@ -5310,8 +5459,12 @@ impl BindingEnv {
             self.pending = Some(PendingScope {
                 header_indent: indent,
                 names: parameters,
-                kind: if is_python_function_header(tokens) {
+                kind: if is_python_async_function_header(tokens) {
+                    BindingScopeKind::AsyncFunction
+                } else if is_python_function_header(tokens) {
                     BindingScopeKind::Function
+                } else if is_python_class_header(tokens) {
+                    BindingScopeKind::Class
                 } else {
                     BindingScopeKind::Other
                 },
@@ -6096,6 +6249,15 @@ fn is_python_function_header(tokens: &[Token]) -> bool {
     matches!(tokens.first().map(|token| &token.tok), Some(Tok::Def))
         || (matches!(tokens.first().map(|token| &token.tok), Some(Tok::Async))
             && matches!(tokens.get(1).map(|token| &token.tok), Some(Tok::Def)))
+}
+
+fn is_python_async_function_header(tokens: &[Token]) -> bool {
+    matches!(tokens.first().map(|token| &token.tok), Some(Tok::Async))
+        && matches!(tokens.get(1).map(|token| &token.tok), Some(Tok::Def))
+}
+
+fn is_python_class_header(tokens: &[Token]) -> bool {
+    matches!(tokens.first().map(|token| &token.tok), Some(Tok::Class))
 }
 
 fn is_valid_python_expression(text: &str) -> bool {

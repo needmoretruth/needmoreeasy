@@ -6,6 +6,12 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.142 — 2026-08-12
+
+- Add shared bilingual `E0108`/`E0109` diagnostics for `yield` outside a
+  function and `await` outside an `async def`, and keep `return`/`yield` from
+  inheriting an outer function context through nested class bodies.
+
 ## 0.0.1-beta.141 — 2026-08-12
 
 - Extend the shared inline-branch `E0103` guard to sentence-repeat bodies and
