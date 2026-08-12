@@ -6,6 +6,14 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.113 — 2026-08-12
+
+- Align the native-backend status summary with the implemented logical
+  `and`/`or` condition support and its Python precedence and short-circuit
+  behavior.
+- Keep the English and Korean backend overview banners synchronized with the
+  detailed native capability list.
+
 ## 0.0.1-beta.112 — 2026-08-12
 
 - Add native logical conditions with `and`/`or` and the Korean spellings

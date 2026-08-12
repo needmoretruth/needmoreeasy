@@ -5,8 +5,9 @@
 [README](../README.ko.md) | [설치](install.ko.md) | [시작하기](getting-started.ko.md) | [학습 과정](tutorial.ko.md) | [문법 안내](language.ko.md) | [네이티브 코어 레퍼런스](native-reference.ko.md) | [가이드](guides/index.ko.md)
 
 > 상태: v0이 구현되었습니다(`nme 네이티브 실행`/`nme 네이티브 빌드`). 정적 타입
-> 코어 부분집합 — 불리언·정수·유한 실수 값과 문자열·산술, 비교 조건의 문장형
-> `while`/`if`/`else`/`else if`, 초급 `번:` 반복, `break`, 정수 스칼라 매개변수와 모든 경로에서 정수 `return`을
+> 코어 부분집합 — 불리언·정수·유한 실수 값과 문자열·산술, 비교와 논리
+> `and`/`or` 조건의 문장형 `while`/`if`/`else`/`else if`, 초급 `번:` 반복,
+> `break`, 정수 스칼라 매개변수와 모든 경로에서 정수 `return`을
 > 쓰는 함수(재귀 동작), `say`/`말해` —
 > 을 C로 내리고 시스템 C 컴파일러로 네이티브 실행 파일을 만듭니다. 코어
 > 밖의 모든 것은 명확한 진단으로 거부되며 CPython으로 그대로 실행됩니다.
