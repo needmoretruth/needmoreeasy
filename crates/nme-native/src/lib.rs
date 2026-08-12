@@ -24,7 +24,8 @@
 //! - `break` inside a loop;
 //! - functions over integer parameters with an unconditional integer `return`
 //!   (recursion works); calls must name a function in the file and use its
-//!   declared arity; headers use simple positional integer parameters only.
+//!   declared arity; headers use simple positional integer parameters only and
+//!   definitions must be at file scope.
 //!
 //! Anything outside this core is rejected with a clear bilingual diagnostic;
 //! it is never silently miscompiled. The rest of NME keeps running on CPython.
@@ -518,6 +519,14 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                     line.tokens.first().map(|token| &token.tok),
                     Some(rustpython_parser::Tok::Def)
                 );
+            let is_function_definition = matches!(
+                line.tokens.first().map(|token| &token.tok),
+                Some(rustpython_parser::Tok::Def)
+            );
+            if is_function_definition && !is_function_header {
+                problems.push(native_nested_function(line.span));
+                continue;
+            }
             if is_function_header {
                 saved_main_scope = Some(std::mem::take(&mut declared));
                 in_function = true;
@@ -1773,6 +1782,19 @@ fn native_function_header_not_supported(span: Span) -> Diagnostic {
     .with_bilingual_hint(
         "use a simple def name(integer, ...) header without defaults, annotations, or varargs",
         "기본값·주석·가변 인자 없이 단순한 def 이름(정수, ...) 함수 헤더를 사용하세요",
+    )
+}
+
+fn native_nested_function(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::UnsupportedModule,
+        "the native backend does not support nested function definitions",
+        "네이티브 백엔드는 중첩 함수 정의를 지원하지 않습니다",
+        span,
+    )
+    .with_bilingual_hint(
+        "move the function definition to the file level, or run the program with CPython",
+        "함수 정의를 파일 최상위로 옮기거나 프로그램을 CPython으로 실행하세요",
     )
 }
 

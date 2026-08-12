@@ -37,7 +37,7 @@ into a native executable with your system's C compiler.
    function needs an unconditional top-level integer `return`; calls must name
    a function in the file with the declared number of positional arguments.
    Use simple integer parameters in the header; defaults, varargs, and keyword
-   arguments are outside the native core.
+   arguments are outside the native core, as are nested function definitions.
 
 2. Compile and run it natively:
 

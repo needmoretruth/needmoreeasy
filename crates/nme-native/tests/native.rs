@@ -277,6 +277,27 @@ fn unsupported_native_function_headers_are_rejected() {
 }
 
 #[test]
+fn nested_native_function_definitions_are_rejected() {
+    let source = "def outer(value):\n    def inner(nested):\n        return nested\n    return inner(value)\n\nshow outer(1)\n";
+    let problems = nme_native::native_compile(source).unwrap_err();
+    assert!(
+        problems
+            .iter()
+            .any(|problem| problem.message.contains("nested function definitions")),
+        "{problems:?}"
+    );
+    assert!(
+        problems.iter().any(|problem| {
+            problem
+                .message_ko
+                .as_deref()
+                .is_some_and(|message| message.contains("중첩 함수 정의"))
+        }),
+        "{problems:?}"
+    );
+}
+
+#[test]
 fn a_string_literal_is_printed() {
     assert_eq!(
         native_run("show \"hello world\"\n").unwrap(),

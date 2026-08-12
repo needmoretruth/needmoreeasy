@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.54 — 2026-08-12
+
+- Reject nested native function definitions before C emission; the native
+  function surface is explicitly file-scope only.
+
 ## 0.0.1-beta.53 — 2026-08-12
 
 - Reject duplicate native function definitions and unsupported default or

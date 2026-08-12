@@ -195,9 +195,10 @@ Add no dependency or abstraction without a current, demonstrated need.
 - `nme native run`/`nme native build` is the NME-native AOT backend
   (`nme-native` crate): it compiles a restricted, statically typed core
   subset to C and then to a native executable with the system C compiler.
-  Its current integer policy is checked signed 32-bit arithmetic and integer
-  functions with unconditional returns only; overflow and modulo-by-zero are
-  explicit native runtime errors rather than undefined C behavior.
+  Its current integer policy is checked signed 32-bit arithmetic and file-scope
+  integer functions with unconditional returns only; overflow and
+  modulo-by-zero are explicit native runtime errors rather than undefined C
+  behavior.
   Everything outside the documented core is rejected with a clear bilingual
   diagnostic and remains runnable on CPython. See
   [the native-backend memo](native-backend.md).
