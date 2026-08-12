@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.120 — 2026-08-12
+
+- Add explicit core and native regression coverage for parenthesized Korean
+  comparison endings before the `또는`/`or` connector.
+
 ## 0.0.1-beta.119 — 2026-08-12
 
 - Fix parenthesized Korean logical conditions where a comparison ending comes
