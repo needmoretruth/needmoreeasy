@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.85 — 2026-08-12
+
+- Teach the Python-packages guide to install third-party libraries through the
+  bilingual `nme install` / `nme 설치` wrapper and explain its E9025 failure path.
+
 ## 0.0.1-beta.84 — 2026-08-12
 
 - Keep MSVC compiler banners out of successful `nme native` output and preserve
