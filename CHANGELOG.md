@@ -6,6 +6,12 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.159 — 2026-08-12
+
+- Keep full-tree formatting checks on branch pushes while pull-request checks
+  format only Rust files changed by the PR, avoiding failures from pre-existing
+  formatting drift on the base branch.
+
 ## 0.0.1-beta.158 — 2026-08-12
 
 - Detect star imports and `except*` control-flow statements after earlier
