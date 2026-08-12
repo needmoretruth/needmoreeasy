@@ -483,6 +483,78 @@ fn yield_from_inside_async_functions_gets_a_stable_bilingual_diagnostic() {
 }
 
 #[test]
+fn async_for_and_with_outside_async_functions_get_stable_diagnostics() {
+    let async_for_top = transpile("async for item in stream():\n    pass\n")
+        .expect_err("top-level async for must be rejected");
+    assert_eq!(async_for_top.len(), 1, "{async_for_top:?}");
+    assert_eq!(
+        async_for_top[0].code,
+        DiagnosticCode::AsyncForOutsideAsyncFunction
+    );
+    assert!(async_for_top[0]
+        .message
+        .contains("inside an async function"));
+    assert!(async_for_top[0]
+        .message_ko
+        .as_deref()
+        .is_some_and(|message| message.contains("비동기 함수 안에서만")));
+
+    let async_for_sync = transpile("def f():\n    async for item in stream():\n        pass\n")
+        .expect_err("async for in a normal function must be rejected");
+    assert_eq!(async_for_sync.len(), 1, "{async_for_sync:?}");
+    assert_eq!(
+        async_for_sync[0].code,
+        DiagnosticCode::AsyncForOutsideAsyncFunction
+    );
+
+    let async_for_class = transpile(
+        "async def outer():\n    class C:\n        async for item in stream():\n            pass\n",
+    )
+    .expect_err("async for in a class body must not inherit an outer async function");
+    assert_eq!(async_for_class.len(), 1, "{async_for_class:?}");
+    assert_eq!(
+        async_for_class[0].code,
+        DiagnosticCode::AsyncForOutsideAsyncFunction
+    );
+
+    let async_with_top = transpile("async with resource():\n    pass\n")
+        .expect_err("top-level async with must be rejected");
+    assert_eq!(async_with_top.len(), 1, "{async_with_top:?}");
+    assert_eq!(
+        async_with_top[0].code,
+        DiagnosticCode::AsyncWithOutsideAsyncFunction
+    );
+    assert!(async_with_top[0]
+        .message
+        .contains("inside an async function"));
+    assert!(async_with_top[0]
+        .message_ko
+        .as_deref()
+        .is_some_and(|message| message.contains("비동기 함수 안에서만")));
+
+    let async_with_sync = transpile("def f():\n    async with resource():\n        pass\n")
+        .expect_err("async with in a normal function must be rejected");
+    assert_eq!(async_with_sync.len(), 1, "{async_with_sync:?}");
+    assert_eq!(
+        async_with_sync[0].code,
+        DiagnosticCode::AsyncWithOutsideAsyncFunction
+    );
+
+    let async_with_class = transpile(
+        "async def outer():\n    class C:\n        async with resource():\n            pass\n",
+    )
+    .expect_err("async with in a class body must not inherit an outer async function");
+    assert_eq!(async_with_class.len(), 1, "{async_with_class:?}");
+    assert_eq!(
+        async_with_class[0].code,
+        DiagnosticCode::AsyncWithOutsideAsyncFunction
+    );
+
+    let valid = "async def worker():\n    async for item in stream():\n        async with resource(item):\n            pass\n";
+    assert_eq!(transpile(valid).unwrap(), valid);
+}
+
+#[test]
 fn inline_branches_without_an_open_condition_get_a_stable_diagnostic() {
     let cases = [
         ("sentence-en", "when true then else show no\n"),

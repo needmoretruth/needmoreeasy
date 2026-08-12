@@ -2531,6 +2531,8 @@ fn python_context_keywords_report_shared_function_diagnostics() {
     let yield_file = dir.join("yield.nme");
     let await_file = dir.join("await.nme");
     let yield_from_file = dir.join("yield-from.nme");
+    let async_for_file = dir.join("async-for.nme");
+    let async_with_file = dir.join("async-with.nme");
     std::fs::write(&yield_file, "yield 1\n").unwrap();
     std::fs::write(&await_file, "await work()\n").unwrap();
     std::fs::write(
@@ -2538,6 +2540,8 @@ fn python_context_keywords_report_shared_function_diagnostics() {
         "async def generator():\n    yield from values\n",
     )
     .unwrap();
+    std::fs::write(&async_for_file, "async for item in stream():\n    pass\n").unwrap();
+    std::fs::write(&async_with_file, "async with resource():\n    pass\n").unwrap();
 
     let yield_english = nme(&["check", &yield_file.to_string_lossy()]);
     assert!(!yield_english.status.success());
@@ -2610,6 +2614,56 @@ fn python_context_keywords_report_shared_function_diagnostics() {
     assert!(
         yield_from_korean_error.contains("비동기 함수 안에서는"),
         "{yield_from_korean_error}"
+    );
+
+    let async_for_english = nme(&["check", &async_for_file.to_string_lossy()]);
+    assert!(!async_for_english.status.success());
+    let async_for_english_error = stderr(&async_for_english);
+    assert!(
+        async_for_english_error.contains("error[E0111]:"),
+        "{async_for_english_error}"
+    );
+    assert!(
+        async_for_english_error.contains("async for")
+            && async_for_english_error.contains("inside an async function"),
+        "{async_for_english_error}"
+    );
+
+    let async_for_korean = nme(&["검사", &async_for_file.to_string_lossy()]);
+    assert!(!async_for_korean.status.success());
+    let async_for_korean_error = stderr(&async_for_korean);
+    assert!(
+        async_for_korean_error.contains("오류[E0111]:"),
+        "{async_for_korean_error}"
+    );
+    assert!(
+        async_for_korean_error.contains("비동기 함수 안에서만"),
+        "{async_for_korean_error}"
+    );
+
+    let async_with_english = nme(&["check", &async_with_file.to_string_lossy()]);
+    assert!(!async_with_english.status.success());
+    let async_with_english_error = stderr(&async_with_english);
+    assert!(
+        async_with_english_error.contains("error[E0112]:"),
+        "{async_with_english_error}"
+    );
+    assert!(
+        async_with_english_error.contains("async with")
+            && async_with_english_error.contains("inside an async function"),
+        "{async_with_english_error}"
+    );
+
+    let async_with_korean = nme(&["검사", &async_with_file.to_string_lossy()]);
+    assert!(!async_with_korean.status.success());
+    let async_with_korean_error = stderr(&async_with_korean);
+    assert!(
+        async_with_korean_error.contains("오류[E0112]:"),
+        "{async_with_korean_error}"
+    );
+    assert!(
+        async_with_korean_error.contains("비동기 함수 안에서만"),
+        "{async_with_korean_error}"
     );
 
     let _ = std::fs::remove_dir_all(&dir);

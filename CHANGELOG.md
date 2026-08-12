@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.145 — 2026-08-12
+
+- Add shared bilingual `E0111`/`E0112` diagnostics for `async for` and
+  `async with` outside `async def` functions.
+
 ## 0.0.1-beta.144 — 2026-08-12
 
 - Keep generator lambdas byte-identical while Python-context diagnostics inspect

@@ -634,6 +634,8 @@ nme 변환 app.py --level 문장형 --language 한국어 -o app.nme
 - `async def` 함수 안의 `yield from`에는 `E0110`이 표시됩니다. 그 안에서는
   `async for`를 사용하고, 일반 제너레이터 함수의 `yield from`은 그대로 둘 수
   있습니다.
+- `async def` 함수 밖의 Python `async for`와 `async with`에는 각각 `E0111`과
+  `E0112`가 표시됩니다. 올바른 비동기 함수 본문은 그대로 보존됩니다.
 - 제너레이터 람다는 올바른 고급 Python으로 남습니다. `lambda: ...` 안의
   `yield`는 람다 자체의 함수 문맥에서 검사됩니다.
 - 인라인 본문에는 실행 문장 하나만 쓸 수 있습니다. 열린 조건이 없는 인라인

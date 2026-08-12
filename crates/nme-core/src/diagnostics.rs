@@ -64,6 +64,10 @@ pub enum DiagnosticCode {
     AwaitOutsideAsyncFunction,
     /// `yield from` inside an async function.
     YieldFromAsyncFunction,
+    /// `async for` outside an async function.
+    AsyncForOutsideAsyncFunction,
+    /// `async with` outside an async function.
+    AsyncWithOutsideAsyncFunction,
     /// `say` value could not be understood.
     SayValueBroken,
     /// `say` expression is not valid.
@@ -214,6 +218,8 @@ impl DiagnosticCode {
             Self::YieldOutsideFunction => "E0108",
             Self::AwaitOutsideAsyncFunction => "E0109",
             Self::YieldFromAsyncFunction => "E0110",
+            Self::AsyncForOutsideAsyncFunction => "E0111",
+            Self::AsyncWithOutsideAsyncFunction => "E0112",
             Self::SayValueBroken => "E0201",
             Self::SayValueUnparseable => "E0202",
             Self::SaySentenceUnparseable => "E0203",
@@ -283,7 +289,7 @@ impl DiagnosticCode {
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 76] = [
+    pub const ALL: [DiagnosticCode; 78] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -295,6 +301,8 @@ impl DiagnosticCode {
         Self::YieldOutsideFunction,
         Self::AwaitOutsideAsyncFunction,
         Self::YieldFromAsyncFunction,
+        Self::AsyncForOutsideAsyncFunction,
+        Self::AsyncWithOutsideAsyncFunction,
         Self::SayValueBroken,
         Self::SayValueUnparseable,
         Self::SaySentenceUnparseable,
@@ -462,6 +470,20 @@ impl DiagnosticCode {
                 "비동기 함수 안의 `yield from`",
                 "An async generator may use `yield`, but Python does not allow `yield from` inside `async def`. Use an `async for` loop to yield values from an async source, or use a normal `def` generator.",
                 "비동기 제너레이터에서는 `yield`를 쓸 수 있지만 Python은 `async def` 안의 `yield from`을 허용하지 않습니다. 비동기 원천의 값을 내보내려면 `async for`를 쓰거나 일반 `def` 제너레이터를 사용하세요.",
+            ),
+            Self::AsyncForOutsideAsyncFunction => (
+                "E0111",
+                "`async for` outside an async function",
+                "비동기 함수 밖의 `async for`",
+                "`async for` waits for an asynchronous iterator, so it must be written inside a Python `async def` function. Move the loop into an async function, or use an ordinary `for` loop.",
+                "`async for`는 비동기 반복자를 기다리므로 Python `async def` 함수 안에서만 쓸 수 있습니다. 반복문을 비동기 함수 안으로 옮기거나 일반 `for` 반복문을 사용하세요.",
+            ),
+            Self::AsyncWithOutsideAsyncFunction => (
+                "E0112",
+                "`async with` outside an async function",
+                "비동기 함수 밖의 `async with`",
+                "`async with` waits for an asynchronous context manager, so it must be written inside a Python `async def` function. Move the block into an async function, or use an ordinary `with` block.",
+                "`async with`는 비동기 컨텍스트 관리자를 기다리므로 Python `async def` 함수 안에서만 쓸 수 있습니다. 블록을 비동기 함수 안으로 옮기거나 일반 `with` 블록을 사용하세요.",
             ),
             Self::SayValueBroken => (
                 "E0201",

@@ -470,6 +470,12 @@ pub fn parse_program(
                 } else if depth == 0 && valid_python_header && python_loop_header {
                     top_level_python_loop_indents.push(line.indent);
                 }
+                if is_python_async_for_header(&line.tokens) && !bindings.inside_async_function() {
+                    problems.push(async_for_outside_async_function_diagnostic(line.span));
+                }
+                if is_python_async_with_header(&line.tokens) && !bindings.inside_async_function() {
+                    problems.push(async_with_outside_async_function_diagnostic(line.span));
+                }
                 if is_python_return_line(&line.tokens) && !bindings.inside_function() {
                     problems.push(return_outside_function_diagnostic(line.span));
                     continue;
@@ -783,6 +789,32 @@ fn yield_from_async_function_diagnostic(span: Span) -> Diagnostic {
     .with_bilingual_hint(
         "use `async for` to yield values from an async source, or use a normal `def` generator",
         "비동기 원천의 값을 내보내려면 `async for`를 쓰거나 일반 `def` 제너레이터를 사용해 주세요",
+    )
+}
+
+fn async_for_outside_async_function_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::AsyncForOutsideAsyncFunction,
+        "`async for` can only be used inside an async function",
+        "`async for`는 비동기 함수 안에서만 쓸 수 있어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "put it inside an `async def` function, or use an ordinary `for` loop",
+        "`async def` 함수 안에 넣거나 일반 `for` 반복문을 사용해 주세요",
+    )
+}
+
+fn async_with_outside_async_function_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::AsyncWithOutsideAsyncFunction,
+        "`async with` can only be used inside an async function",
+        "`async with`는 비동기 함수 안에서만 쓸 수 있어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "put it inside an `async def` function, or use an ordinary `with` block",
+        "`async def` 함수 안에 넣거나 일반 `with` 블록을 사용해 주세요",
     )
 }
 
@@ -6389,6 +6421,16 @@ fn is_python_function_header(tokens: &[Token]) -> bool {
 fn is_python_async_function_header(tokens: &[Token]) -> bool {
     matches!(tokens.first().map(|token| &token.tok), Some(Tok::Async))
         && matches!(tokens.get(1).map(|token| &token.tok), Some(Tok::Def))
+}
+
+fn is_python_async_for_header(tokens: &[Token]) -> bool {
+    matches!(tokens.first().map(|token| &token.tok), Some(Tok::Async))
+        && matches!(tokens.get(1).map(|token| &token.tok), Some(Tok::For))
+}
+
+fn is_python_async_with_header(tokens: &[Token]) -> bool {
+    matches!(tokens.first().map(|token| &token.tok), Some(Tok::Async))
+        && matches!(tokens.get(1).map(|token| &token.tok), Some(Tok::With))
 }
 
 fn is_python_class_header(tokens: &[Token]) -> bool {

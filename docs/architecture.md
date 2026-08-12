@@ -142,6 +142,7 @@ silently broken Python.
 Python context errors use the shared parser too: top-level or inline `return`,
 `yield`, and `await` receive stable diagnostics when their enclosing function
 context is invalid, and `yield from` in `async def` receives `E0110`, while
+`async for`/`async with` outside `async def` receive `E0111`/`E0112`, and
 valid Python function bodies and generator lambdas remain byte-identical.
 
 ### 7. Bundled modules are local and versioned
