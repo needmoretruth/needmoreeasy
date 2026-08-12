@@ -576,8 +576,9 @@ The native core covers: integer and float values with `+ - * %` arithmetic
 variables with one binary `+` concatenation, `len`, and `==`/`!=` string
 comparisons; `while`/`if`/`else`/`else if` over integer, float, and string
 comparisons (including `<=`/`>=` and the natural-language "or equal"
-connectors), over integer truthiness (`if ready`, `while turns`), and over
-boolean literals; the beginner `times:` loop; `break`; functions over scalar
+  connectors), over integer and finite-float truthiness (`if ready`, `while turns`;
+  zero is false), and over boolean literals; the beginner `times:` loop; `break`;
+  functions over scalar
 parameters with `return` (recursion works); `say`/`show`/`말해` of
 integers, floats, and strings. Everything else — input, modules, files,
 classes, packages — is rejected with a clear diagnostic and still runs on

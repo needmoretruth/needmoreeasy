@@ -75,8 +75,9 @@ Implemented so far:
   native-runtime error instead of overflowing the buffer;
 - control flow: sentence `while`/`if`/`else`/`else if` over integer,
   float, and string comparisons (`<`, `>`, `<=`, `>=`, `==`, `!=`, plus
-  the natural-language "or equal" connectors), over integer truthiness
-  (`if ready`, `while turns`), and over boolean literals; the beginner
+  the natural-language "or equal" connectors), over integer and finite-float
+  truthiness (`if ready`, `while turns`; zero is false), and over boolean
+  literals; the beginner
   `times:` loop; `break` inside a native loop only. A `break` nested only in
   an `if` is rejected with `E0102` before C is emitted;
 - functions over integer scalar parameters with an unconditional integer

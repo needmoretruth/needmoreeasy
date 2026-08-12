@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.97 — 2026-08-12
+
+- Document finite-float truthiness in the native subset and cover its English
+  and Korean behavior with an end-to-end native regression test.
+
 ## 0.0.1-beta.96 — 2026-08-12
 
 - Align Korean reference, installation, and native-backend workflows with the

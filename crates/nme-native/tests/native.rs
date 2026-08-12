@@ -771,6 +771,16 @@ fn truthy_conditions_compile_natively() {
 }
 
 #[test]
+fn finite_float_truthiness_compiles_in_english_and_korean() {
+    let english = "value = 0.5\nif value\n    show \"positive\"\nend\nvalue = 0.0\nif value\n    show \"zero\"\nend\n";
+    assert_eq!(native_run(english).unwrap(), "positive\n");
+
+    let korean =
+        "값 = 0.5\n만약 값\n    말해 \"양수\"\n끝\n값 = 0.0\n만약 값\n    말해 \"영\"\n끝\n";
+    assert_eq!(native_run(korean).unwrap(), "양수\n");
+}
+
+#[test]
 fn string_concat_at_first_assignment_compiles_natively() {
     let source = "greeting = \"hello\" + \" world\"\nshow greeting\nname = \"NME\"\nname = name + \" rocks\"\nshow name\n";
     assert_eq!(native_run(source).unwrap(), "hello world\nNME rocks\n");
