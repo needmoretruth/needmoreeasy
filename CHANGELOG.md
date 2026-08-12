@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.98 — 2026-08-12
+
+- Align the language reference with the native function subset: integer scalar
+  parameters and an unconditional integer `return`.
+
 ## 0.0.1-beta.97 — 2026-08-12
 
 - Document finite-float truthiness in the native subset and cover its English
