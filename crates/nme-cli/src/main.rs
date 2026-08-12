@@ -210,7 +210,7 @@ fn main() -> ExitCode {
                     ),
                     &format!(
                         "`{path}` 명령을 알 수 없습니다. `nme 도움`으로 명령을 확인하세요.\n\
-                         팁: 현재 폴더에 .nme 파일이 하나뿐이면 `nme r`만으로 실행할 수 있어요."
+                         팁: 현재 폴더에 .nme 파일이 하나뿐이면 `nme 실행`만으로 실행할 수 있어요."
                     ),
                 )
             }
@@ -371,7 +371,7 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
             ),
             &format!(
                 "`{}`은(는) 폴더이지 프로그램이 아니에요.\n\
-                 도움말: .nme 프로그램이 있는 폴더에서 `nme r`을 실행하거나, 프로그램 이름을 적어 주세요",
+                 도움말: .nme 프로그램이 있는 폴더에서 `nme 실행`을 실행하거나, 프로그램 이름을 적어 주세요",
                 path.display()
             ),
         );
@@ -520,7 +520,7 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
                 ),
                 &format!(
                     "네이티브 컴파일러({NATIVE_C_COMPILER})가 실패했습니다: {status}\n\
-                          도움말: C 컴파일러를 설치하거나 `nme run`으로 실행하세요"
+                          도움말: C 컴파일러를 설치하거나 `nme 실행`으로 실행하세요"
                 ),
             );
         }
@@ -534,7 +534,7 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
                 ),
                 &format!(
                     "네이티브 C 컴파일러({NATIVE_C_COMPILER})를 시작할 수 없습니다: {error}\n\
-                          도움말: C 컴파일러를 설치하거나 `nme run`으로 실행하세요"
+                          도움말: C 컴파일러를 설치하거나 `nme 실행`으로 실행하세요"
                 ),
             );
         }
@@ -917,7 +917,7 @@ fn command_compile(args: &[String], language: MessageLanguage) -> ExitCode {
             nme_core::diagnostics::DiagnosticCode::CliCompileModuleImportsUnsupported,
             language,
             "module imports are not supported by `nme compile` yet; run the program with `nme run`",
-            "`nme compile`은 아직 모듈 가져오기를 지원하지 않습니다. `nme run`으로 실행하세요",
+            "`nme 컴파일`은 아직 모듈 가져오기를 지원하지 않습니다. `nme 실행`으로 실행하세요",
         );
     }
     match exec::compile_native(&compiled.source, stem, &python, &output) {
@@ -1709,7 +1709,7 @@ fn transpile_file(
                     ),
                     &format!(
                         "`{}`은(는) 폴더이지 프로그램이 아니에요.\n\
-                         도움말: .nme 프로그램이 있는 폴더에서 `nme r`을 실행하거나, 프로그램 이름을 적어 주세요",
+                         도움말: .nme 프로그램이 있는 폴더에서 `nme 실행`을 실행하거나, 프로그램 이름을 적어 주세요",
                         path.display()
                     ),
                 ));
@@ -1741,7 +1741,7 @@ fn transpile_file(
                     stem = name.trim_end_matches(".nme")
                 ),
                 None => format!(
-                    "도움말: 이 폴더에 `{}` 프로그램을 만들거나, `nme r`을 실행하면\n\
+                    "도움말: 이 폴더에 `{}` 프로그램을 만들거나, `nme 실행`을 실행하면\n\
                      이 폴더에 있는 .nme 프로그램을 실행합니다",
                     create_name.display()
                 ),

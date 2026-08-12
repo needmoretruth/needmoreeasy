@@ -614,7 +614,9 @@ See [the conversion guide](converting-python.md).
   Compiler codes run from `E0001`; command-line errors (missing file, unknown
   command, Python startup) use `E9xxx` and are explained the same way.
 - Independent problems are collected when possible.
-- Korean-led forms receive Korean guidance.
+- Korean-led CLI commands receive Korean-first explanations and recovery examples
+  such as `nme 실행`, `nme 컴파일`, and `nme 설치`; English command invocations
+  remain English-only.
 
 ## Current limits
 

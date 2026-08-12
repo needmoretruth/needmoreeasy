@@ -6,6 +6,12 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.99 — 2026-08-12
+
+- Make Korean-first CLI diagnostics use Korean command spellings in their
+  recovery examples and code explanations, while keeping English invocations
+  English-only.
+
 ## 0.0.1-beta.98 — 2026-08-12
 
 - Align the language reference with the native function subset: integer scalar

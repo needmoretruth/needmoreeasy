@@ -1224,6 +1224,7 @@ fn korean_missing_file_errors_are_substantively_bilingual() {
         error.contains("couldn't read nme-file-that-does-not-exist"),
         "{error}"
     );
+    assert!(error.contains("nme 실행"), "{error}");
     assert!(
         error.contains("nme-file-that-does-not-exist.nme"),
         "{error}"
@@ -1381,7 +1382,7 @@ fn compile_module_imports_have_a_precise_bilingual_diagnostic() {
     assert!(!output.status.success());
     let error = stderr(&output);
     assert!(
-        error.contains("오류[E9029]: `nme compile`은 아직 모듈 가져오기를 지원하지 않습니다"),
+        error.contains("오류[E9029]: `nme 컴파일`은 아직 모듈 가져오기를 지원하지 않습니다"),
         "{error}"
     );
     assert!(
@@ -1952,6 +1953,10 @@ fn a_directory_argument_explains_that_it_is_a_folder() {
         "{korean_native_error}"
     );
     assert!(
+        korean_native_error.contains("nme 실행"),
+        "{korean_native_error}"
+    );
+    assert!(
         korean_native_error.contains("error[E9014]:"),
         "{korean_native_error}"
     );
@@ -2335,7 +2340,7 @@ fn error_lookup_commands_print_the_requested_explanation() {
         stderr(&compile_imports)
     );
     assert!(
-        stdout(&compile_imports).contains("`nme compile`은 모듈 가져오기를 지원하지 않습니다"),
+        stdout(&compile_imports).contains("`nme 컴파일`은 모듈 가져오기를 지원하지 않습니다"),
         "{}",
         stdout(&compile_imports)
     );
@@ -2426,6 +2431,14 @@ fn cli_errors_carry_lookup_codes() {
         stderr(&unknown_command)
     );
 
+    let korean_unknown_command = nme(&["알수없는명령"]);
+    assert!(!korean_unknown_command.status.success());
+    assert!(
+        stderr(&korean_unknown_command).contains("nme 실행"),
+        "{}",
+        stderr(&korean_unknown_command)
+    );
+
     let missing_file = nme(&["run", "definitely-not-a-program.nme"]);
     assert!(!missing_file.status.success());
     assert!(
@@ -2453,6 +2466,29 @@ fn cli_errors_carry_lookup_codes() {
         "{}",
         stdout(&cli_code_korean)
     );
+}
+
+#[test]
+fn korean_cli_code_pages_use_korean_command_spellings() {
+    let cases = [
+        ("E9001", "nme 실행"),
+        ("E9002", "nme 모듈"),
+        ("E9009", "nme 빌드 -o"),
+        ("E9014", "nme 실행"),
+        ("E9015", "nme 실행"),
+        ("E9017", "nme 실행 hello"),
+        ("E9029", "nme 컴파일"),
+        ("E9030", "nme 설치 requests"),
+    ];
+    for (code, expected) in cases {
+        let output = nme(&["ko", code]);
+        assert!(output.status.success(), "{code}: {}", stderr(&output));
+        assert!(
+            stdout(&output).contains(expected),
+            "{code} should contain `{expected}`:\n{}",
+            stdout(&output)
+        );
+    }
 }
 
 #[test]

@@ -655,14 +655,14 @@ impl DiagnosticCode {
                 "unknown command",
                 "알 수 없는 명령",
                 "The first word of the command is not one NME knows. Run `nme help` (or `nme 도움`) for the command list; `nme r` runs the single .nme program in the current folder.",
-                "명령의 첫 단어가 NME가 아는 명령이 아닙니다. `nme 도움`(`nme help`)으로 명령 목록을 보세요. 현재 폴더에 .nme 프로그램이 하나뿐이면 `nme r`만으로 실행할 수 있습니다.",
+                "명령의 첫 단어가 NME가 아는 명령이 아닙니다. `nme 도움`(`nme help`)으로 명령 목록을 보세요. 현재 폴더에 .nme 프로그램이 하나뿐이면 `nme 실행`으로 실행할 수 있습니다.",
             ),
             Self::CliModulesExtraArgument => (
                 "E9002",
                 "`modules` takes no extra arguments",
                 "`모듈` 명령에는 추가 인자가 없습니다",
                 "`nme modules` only lists the bundled modules. Do not add a file name or option.",
-                "`nme modules`는 내장 모듈 목록만 보여 줍니다. 파일 이름이나 옵션을 붙이지 마세요.",
+                "`nme 모듈`은 내장 모듈 목록만 보여 줍니다. 파일 이름이나 옵션을 붙이지 마세요.",
             ),
             Self::CliInvalidOptionValue => (
                 "E9003",
@@ -711,7 +711,7 @@ impl DiagnosticCode {
                 "refusing to overwrite the output",
                 "결과 파일을 덮어쓰지 않습니다",
                 "`nme build -o`, `nme compile -o`, and `nme native build -o` never overwrite an existing file by accident. Delete or rename the existing file, or choose another output name.",
-                "`nme build -o`, `nme compile -o`, `nme native build -o`는 실수로 기존 파일을 덮어쓰지 않습니다. 기존 파일을 삭제하거나 이름을 바꾸거나 다른 출력 이름을 고르세요.",
+                "`nme 빌드 -o`, `nme 컴파일 -o`, `nme 네이티브 빌드 -o`는 실수로 기존 파일을 덮어쓰지 않습니다. 기존 파일을 삭제하거나 이름을 바꾸거나 다른 출력 이름을 고르세요.",
             ),
             Self::CliNativeCompileFailed => (
                 "E9010",
@@ -746,14 +746,14 @@ impl DiagnosticCode {
                 "that is a folder, not a program",
                 "폴더는 프로그램이 아닙니다",
                 "NME runs a single .nme file, not a folder. Type a program name, or run `nme r` inside the folder that contains one .nme program.",
-                "NME는 폴더가 아니라 .nme 파일 하나를 실행합니다. 프로그램 이름을 적거나, .nme 프로그램이 있는 폴더 안에서 `nme r`을 실행하세요.",
+                "NME는 폴더가 아니라 .nme 파일 하나를 실행합니다. 프로그램 이름을 적거나, .nme 프로그램이 있는 폴더 안에서 `nme 실행`을 실행하세요.",
             ),
             Self::CliMissingProgram => (
                 "E9015",
                 "the program file does not exist",
                 "프로그램 파일이 없습니다",
                 "The typed name does not match a file. If you see a `did you mean` hint, use that name; otherwise create the file or run `nme r` to run the single .nme program here.",
-                "적은 이름과 일치하는 파일이 없습니다. `did you mean` 힌트가 보이면 그 이름을 쓰세요. 아니면 파일을 만들거나, 여기 있는 .nme 프로그램 하나를 `nme r`로 실행하세요.",
+                "적은 이름과 일치하는 파일이 없습니다. `did you mean` 힌트가 보이면 그 이름을 쓰세요. 아니면 파일을 만들거나, 여기 있는 .nme 프로그램 하나를 `nme 실행`으로 실행하세요.",
             ),
             Self::CliFolderReadFailed => (
                 "E9016",
@@ -767,7 +767,7 @@ impl DiagnosticCode {
                 "no .nme program in this folder",
                 "이 폴더에 .nme 프로그램이 없습니다",
                 "`nme r` without a file name needs one .nme program in the current folder. Create one (for example hello.nme) or type a file name: `nme r hello`.",
-                "파일 이름 없이 `nme r`을 실행하려면 현재 폴더에 .nme 프로그램이 하나 필요합니다. 파일을 만들거나(예: hello.nme) 파일 이름을 적으세요: `nme r hello`.",
+                "파일 이름 없이 `nme 실행`을 실행하려면 현재 폴더에 .nme 프로그램이 하나 필요합니다. 파일을 만들거나(예: hello.nme) 파일 이름을 적으세요: `nme 실행 hello`.",
             ),
             Self::CliPickAnswerUnreadable => (
                 "E9018",
@@ -849,16 +849,16 @@ impl DiagnosticCode {
             Self::CliCompileModuleImportsUnsupported => (
                 "E9029",
                 "module imports are not supported by `nme compile`",
-                "`nme compile`은 모듈 가져오기를 지원하지 않습니다",
+                "`nme 컴파일`은 모듈 가져오기를 지원하지 않습니다",
                 "`nme compile` currently compiles one transpiled program and does not bundle imported `.nme` modules. Use `nme run`, `nme check`, or `nme build` for a program that imports another `.nme` file.",
-                "`nme compile`은 현재 변환한 프로그램 하나만 컴파일하며 가져온 `.nme` 모듈을 함께 묶지 않습니다. 다른 `.nme` 파일을 가져오는 프로그램은 `nme 실행`, `nme 검사`, 또는 `nme 빌드`를 사용하세요.",
+                "`nme 컴파일`은 현재 변환한 프로그램 하나만 컴파일하며 가져온 `.nme` 모듈을 함께 묶지 않습니다. 다른 `.nme` 파일을 가져오는 프로그램은 `nme 실행`, `nme 검사`, 또는 `nme 빌드`를 사용하세요.",
             ),
             Self::CliInstallPackageMissing => (
                 "E9030",
                 "the package name is missing",
                 "패키지 이름이 없습니다",
                 "`nme install` needs one package name, for example `nme install requests`. Add the package name, or use `nme 설치 <패키지>` in the Korean command form.",
-                "`nme install`에는 패키지 이름 하나가 필요합니다. 예: `nme install requests`. 패키지 이름을 추가하거나 한국어 명령인 `nme 설치 <패키지>`를 사용하세요.",
+                "`nme 설치`에는 패키지 이름 하나가 필요합니다. 예: `nme 설치 requests`. 패키지 이름을 추가하세요.",
             ),
             Self::CliNativeRunOutput => (
                 "E9031",
