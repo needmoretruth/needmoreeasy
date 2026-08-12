@@ -12,6 +12,7 @@
 //!   string literal (one binary `+` concatenation);
 //! - `set x to ...` / `x은 ...` / `x = ...` assignments of integers and
 //!   string literals (including the Python-looking form);
+//!   native string variables use checked 8192-byte buffers;
 //! - value changes `x add N` / `x = x + N` / `점수에 N 더해`;
 //! - `while`/`if`/`else`/`else if` blocks over integer comparisons, closed
 //!   by `end`/`끝`;
@@ -49,11 +50,30 @@ enum ExprType {
 
 const PREAMBLE: &str = concat!(
     "#include <stdio.h>\n",
+    "#include <stdlib.h>\n",
     "#include <string.h>\n",
-    "static char nme_cat_buf[8192];\n",
+    "#define NME_STRING_CAPACITY 8192\n",
+    "static char nme_cat_buf[NME_STRING_CAPACITY];\n",
+    "static void nme_string_overflow(void) {\n",
+    "    fputs(\"nme native: string value exceeds 8191 bytes / 문자열 값이 8191바이트를 초과했습니다\\n\", stderr);\n",
+    "    exit(1);\n",
+    "}\n",
+    "static void nme_copy(char *destination, size_t capacity, const char *source) {\n",
+    "    size_t length = strlen(source);\n",
+    "    if (length >= capacity) {\n",
+    "        nme_string_overflow();\n",
+    "    }\n",
+    "    memcpy(destination, source, length + 1);\n",
+    "}\n",
     "static char *nme_cat(const char *a, const char *b) {\n",
-    "    strcpy(nme_cat_buf, a);\n",
-    "    strcat(nme_cat_buf, b);\n",
+    "    size_t a_length = strlen(a);\n",
+    "    size_t b_length = strlen(b);\n",
+    "    if (a_length >= NME_STRING_CAPACITY\n",
+    "        || b_length >= NME_STRING_CAPACITY - a_length) {\n",
+    "        nme_string_overflow();\n",
+    "    }\n",
+    "    memcpy(nme_cat_buf, a, a_length);\n",
+    "    memcpy(nme_cat_buf + a_length, b, b_length + 1);\n",
     "    return nme_cat_buf;\n",
     "}\n",
     "int main(void) {\n",
@@ -767,16 +787,12 @@ fn emit_set(
                 }
                 ExprType::Str => {
                     declared.insert(target.to_string(), VarType::Str);
-                    if is_new && lowered.starts_with('"') {
-                        out.push_str(&format!("char {target}[8192] = {lowered};\n"));
-                    } else {
-                        // A C array cannot be initialized from a function
-                        // call, so declare the buffer first, then copy.
-                        if is_new {
-                            out.push_str(&format!("char {target}[8192];\n"));
-                        }
-                        out.push_str(&format!("strcpy({target}, {lowered});\n"));
+                    if is_new {
+                        out.push_str(&format!("char {target}[NME_STRING_CAPACITY];\n"));
                     }
+                    out.push_str(&format!(
+                        "nme_copy({target}, sizeof {target}, {lowered});\n"
+                    ));
                     Ok(())
                 }
             }
@@ -929,14 +945,12 @@ fn emit_python_line(
                 Ok((lowered, ExprType::Str)) => {
                     let is_new = !declared.contains_key(&name);
                     declared.insert(name.clone(), VarType::Str);
-                    if is_new && lowered.starts_with('"') {
-                        out.push_str(&format!("char {name}[8192] = {lowered};\n"));
-                    } else {
-                        if is_new {
-                            out.push_str(&format!("char {name}[8192];\n"));
-                        }
-                        out.push_str(&format!("strcpy({name}, {lowered});\n"));
+                    if is_new {
+                        out.push_str(&format!("char {name}[NME_STRING_CAPACITY];\n"));
                     }
+                    out.push_str(&format!(
+                        "nme_copy({name}, sizeof {name}, {lowered});\n"
+                    ));
                     None
                 }
                 Err(diag) => Some(diag),

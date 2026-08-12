@@ -6,6 +6,14 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.43 — 2026-08-12
+
+- Replace unbounded native string copies and concatenation with checked helpers.
+- Stop oversized stored or concatenated strings with a bilingual runtime error
+  instead of allowing fixed-buffer overflow.
+- Document the native string capacity and keep the CPython path available for
+  unrestricted text.
+
 ## 0.0.1-beta.42 — 2026-08-12
 
 - Make `nme build -o` refuse to overwrite an existing Python output with E9009.

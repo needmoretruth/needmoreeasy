@@ -36,6 +36,12 @@ fn native_run(source: &str) -> Result<String, String> {
         .output()
         .map_err(|error| format!("could not run the native program: {error}"))?;
     let _ = std::fs::remove_dir_all(&dir);
+    if !output.status.success() {
+        return Err(format!(
+            "native program failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        ));
+    }
     Ok(String::from_utf8_lossy(&output.stdout).replace("\r\n", "\n"))
 }
 
@@ -198,6 +204,23 @@ fn string_concat_at_first_assignment_compiles_natively() {
 fn string_concat_into_variables_works() {
     let source = "greeting = \"hello\"\ngreeting = greeting + \" world\"\nshow greeting\nname = \"NME\"\nname = \"great \" + name\nshow name\n";
     assert_eq!(native_run(source).unwrap(), "hello world\ngreat NME\n");
+}
+
+#[test]
+fn oversized_string_values_fail_without_buffer_overflow() {
+    let literal = "x".repeat(8192);
+    let source = format!("text = \"{literal}\"\nshow text\n");
+    let error = native_run(&source).expect_err("an oversized string must fail cleanly");
+    assert!(error.contains("string value exceeds 8191 bytes"), "{error}");
+
+    let prefix = "x".repeat(8191);
+    let concat_source = format!("text = \"{prefix}\"\nshow text + \"y\"\n");
+    let concat_error =
+        native_run(&concat_source).expect_err("an oversized concatenation must fail cleanly");
+    assert!(
+        concat_error.contains("string value exceeds 8191 bytes"),
+        "{concat_error}"
+    );
 }
 
 #[test]

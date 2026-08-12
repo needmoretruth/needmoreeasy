@@ -28,6 +28,10 @@ into a native executable with your system's C compiler.
    show score
    ```
 
+   Native string variables use a checked 8192-byte buffer. If a stored or
+   concatenated value is larger than 8191 UTF-8 bytes, the native program stops
+   with a bilingual runtime error; use the CPython path for unrestricted text.
+
 2. Compile and run it natively:
 
    ```sh

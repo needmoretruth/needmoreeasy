@@ -43,10 +43,12 @@ Implemented so far:
   integer modulo only, float modulo rejected; integer overflow behavior
   is C's, documented as a later `i64`/bignum decision; whole floats print
   with C's `%g`, which may differ cosmetically from Python's `5.0`);
-- string variables with `+` concatenation into variables (fixed buffers,
-  `strcpy`), string output, string `==`/`!=` comparisons through `strcmp`,
-  and a `len` builtin; nested concatenation and ordering text are rejected
-  rather than miscompiled;
+- string variables with `+` concatenation into variables (checked fixed
+  8192-byte buffers), string output, string `==`/`!=` comparisons through
+  `strcmp`, and a `len` builtin; nested concatenation and ordering text are
+  rejected rather than miscompiled. A stored or concatenated value beyond
+  8191 UTF-8 bytes stops with a bilingual native-runtime error instead of
+  overflowing the buffer;
 - control flow: sentence `while`/`if`/`else`/`else if` over integer,
   float, and string comparisons (`<`, `>`, `<=`, `>=`, `==`, `!=`, plus
   the natural-language "or equal" connectors), over integer truthiness
