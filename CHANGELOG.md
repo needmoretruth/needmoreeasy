@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.126 — 2026-08-12
+
+- Add native regression coverage for one-line NME `while` output bodies across
+  sentence, beginner, and advanced syntax in both English and Korean.
+- Include the spoken Korean comparison ending alongside symbolic and natural
+  English conditions so all six surfaces exercise the same native path.
+
 ## 0.0.1-beta.125 — 2026-08-12
 
 - Teach the native one-line NME output-body form in the English and Korean

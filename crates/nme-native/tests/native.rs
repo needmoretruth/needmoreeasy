@@ -1305,6 +1305,49 @@ fn one_line_nme_control_bodies_compile_across_the_native_surface_matrix() {
 }
 
 #[test]
+fn one_line_nme_while_bodies_compile_across_the_native_surface_matrix() {
+    let cases = [
+        (
+            "sentence-en",
+            "turns save 0\nwhile turns is greater than 0 then show \"never\"\nshow turns\n",
+            "0\n",
+        ),
+        (
+            "sentence-ko",
+            "횟수는 0\n동안 횟수가 0보다 크면 횟수 말해줘\n횟수 말해줘\n",
+            "0\n",
+        ),
+        (
+            "beginner-en",
+            "set turns to 0\nwhile turns > 0 then show \"never\"\nshow turns\n",
+            "0\n",
+        ),
+        (
+            "beginner-ko",
+            "저장 횟수 0\n동안 횟수 > 0 그러면 말해 \"안 돼\"\n말해 횟수\n",
+            "0\n",
+        ),
+        (
+            "advanced-en",
+            "turns = 0\nwhile (turns > 0) then show \"never\"\nshow turns\n",
+            "0\n",
+        ),
+        (
+            "advanced-ko",
+            "횟수 = 0\n동안 (횟수 > 0) 그러면 말해 \"안 돼\"\n말해 횟수\n",
+            "0\n",
+        ),
+    ];
+
+    for (label, source, expected) in cases {
+        let actual = native_run(source).unwrap_or_else(|error| {
+            panic!("native case failed: {label}: {error}");
+        });
+        assert_eq!(actual, expected, "native case: {label}");
+    }
+}
+
+#[test]
 fn native_control_bodies_reject_python_inline_statements() {
     for source in [
         "ready = True\nif ready then print(\"yes\")\n",
