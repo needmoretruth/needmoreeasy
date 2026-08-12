@@ -1048,6 +1048,46 @@ fn one_line_nme_break_bodies_work_across_the_native_surface_matrix() {
         assert_eq!(actual, "2\n", "native case: {label}");
     }
 
+    let inline_loop_cases = [
+        (
+            "sentence-en",
+            "while true then break here\nshow \"done\"\n",
+            "done\n",
+        ),
+        (
+            "sentence-ko",
+            "동안 참 그러면 여기서 멈춰\n말해 \"끝\"\n",
+            "끝\n",
+        ),
+        (
+            "beginner-en",
+            "while True then break\nshow \"done\"\n",
+            "done\n",
+        ),
+        (
+            "beginner-ko",
+            "동안 True 그러면 멈춰\n말해 \"끝\"\n",
+            "끝\n",
+        ),
+        (
+            "advanced-en",
+            "while (True) then break\nshow \"done\"\n",
+            "done\n",
+        ),
+        (
+            "advanced-ko",
+            "동안 ((참 그리고 참)) 그러면 멈춰\n말해 \"끝\"\n",
+            "끝\n",
+        ),
+    ];
+
+    for (label, source, expected) in inline_loop_cases {
+        let actual = native_run(source).unwrap_or_else(|error| {
+            panic!("native case failed: {label}: {error}");
+        });
+        assert_eq!(actual, expected, "native case: {label}");
+    }
+
     assert_eq!(
         native_run("3 times: break\nshow \"done\"\n").unwrap(),
         "done\n"

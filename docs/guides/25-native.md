@@ -64,6 +64,13 @@ into a native executable with your system's C compiler.
    show "after"
    ```
 
+   A loop itself may also use a one-line body:
+
+   ```text
+   while True then break here
+   show "after"
+   ```
+
    Ordinary Python `for` loops, Python inline bodies, and inline value changes
    remain outside this restricted native subset; use the CPython path for
    those forms.

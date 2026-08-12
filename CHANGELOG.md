@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.133 — 2026-08-12
+
+- Add six-surface native regression coverage for one-line `while` bodies that
+  terminate with `break`.
+
 ## 0.0.1-beta.132 — 2026-08-12
 
 - Recognize sentence-repeat `break here`/`여기서 멈춰` bodies in the shared
