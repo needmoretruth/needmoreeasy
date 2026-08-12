@@ -159,8 +159,8 @@ available as `examples/native-logical` and `examples/native-logical.ko`.
   `말해`, for example `if ready then show "ready"`. Python inline bodies and
   inline value updates remain outside this restricted subset.
 - A one-line NME `break` body is supported inside a native loop, for example
-  `if done then break` or `2 times: break`. A `break` outside a native loop is
-  rejected with `E0102`.
+  `if done then break here`, `2 times: break`, or `repeat 2 times and break
+  here`. A `break` outside a native loop is rejected with `E0102`.
 - Ordinary Python `for` loops remain outside the native subset; use the CPython
   path for unrestricted Python loop syntax.
 - Bindings created only in a possibly skipped branch are not available before

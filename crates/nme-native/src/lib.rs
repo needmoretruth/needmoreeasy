@@ -28,8 +28,8 @@
 //!   initialized before the block or used after assignment within it;
 //! - `while`/`if`/`else`/`else if` blocks over integer, finite-float, string,
 //!   and boolean comparisons or truthiness, closed by `end`/`끝`, plus
-//!   documented logical `and`/`or` conditions, one-line NME output bodies, and
-//!   `times:`/`번:` loops;
+//!   documented logical `and`/`or` conditions, one-line NME output and loop
+//!   `break` bodies, and `times:`/`번:` loops;
 //! - `break` inside a loop;
 //! - functions over integer parameters with an unconditional integer `return`
 //!   (recursion works); calls must name a function in the file and use its

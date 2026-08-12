@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.132 — 2026-08-12
+
+- Recognize sentence-repeat `break here`/`여기서 멈춰` bodies in the shared
+  parser and cover them through the native backend's six-surface break tests.
+
 ## 0.0.1-beta.131 — 2026-08-12
 
 - Support one-line native `break` bodies inside loops, with six-surface

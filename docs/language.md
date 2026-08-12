@@ -610,6 +610,8 @@ comparisons (including `<=`/`>=` and the natural-language "or equal"
   `then`/`그러면` are supported for these control statements and branch chains.
   A one-line `break` must be inside a native loop; otherwise it is rejected with
   `E0102`.
+  Sentence repeats also accept sentence one-line `break here` bodies, such as
+  `repeat 3 times and break here`.
   Float arithmetic that would produce a
 non-finite result stops with a bilingual runtime error. Everything else — input, modules, files,
 classes, packages — is rejected with a clear diagnostic and still runs on

@@ -3429,6 +3429,9 @@ fn parse_sentence_repeat_body(
     header_span: Span,
     known_names: &HashSet<String>,
 ) -> Result<Option<InlineStmt>, Diagnostic> {
+    if let Some(inner) = match_break(source, body, known_names, MatchMode::Exact)? {
+        return Ok(Some(InlineStmt::Nme(Box::new(inner))));
+    }
     let plain_words = !body.is_empty()
         && body.iter().all(is_text_token)
         && !body.iter().any(|token| literal_token(token).is_some());

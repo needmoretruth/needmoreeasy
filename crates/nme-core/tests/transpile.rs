@@ -932,6 +932,18 @@ fn times_inline_nme_body() {
 }
 
 #[test]
+fn sentence_repeat_inline_break_uses_the_shared_break_statement() {
+    assert_eq!(
+        ok("repeat 3 times and break here\n"),
+        "for _ in range(3): break\n"
+    );
+    assert_eq!(
+        ok("3번 반복해서 여기서 멈춰\n"),
+        "for _ in range(3): break\n"
+    );
+}
+
+#[test]
 fn times_inline_python_body() {
     assert_eq!(
         ok("3 times: print('hey')\n"),

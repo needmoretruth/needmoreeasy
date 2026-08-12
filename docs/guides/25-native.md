@@ -52,9 +52,16 @@ into a native executable with your system's C compiler.
    count = 0
    while True
        count add 1
-       if count == 2 then break
+       if count == 2 then break here
    end
    show count
+   ```
+
+   The sentence repeat spelling can use the same one-line body:
+
+   ```text
+   repeat 3 times and break here
+   show "after"
    ```
 
    Ordinary Python `for` loops, Python inline bodies, and inline value changes

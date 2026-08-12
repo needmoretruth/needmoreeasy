@@ -1017,11 +1017,11 @@ fn one_line_nme_break_bodies_work_across_the_native_surface_matrix() {
     let cases = [
         (
             "sentence-en",
-            "count = 0\nwhile true\n    count add 1\n    when count == 2 then break\nend\nshow count\n",
+            "count = 0\nwhile true\n    count add 1\n    when count == 2 then break here\nend\nshow count\n",
         ),
         (
             "sentence-ko",
-            "횟수는 0\n동안 참\n    횟수에 1 더해\n    만약 횟수가 2와 같으면 멈춰\n끝\n횟수 말해줘\n",
+            "횟수는 0\n동안 참\n    횟수에 1 더해\n    만약 횟수가 2와 같으면 여기서 멈춰\n끝\n횟수 말해줘\n",
         ),
         (
             "beginner-en",
@@ -1053,6 +1053,14 @@ fn one_line_nme_break_bodies_work_across_the_native_surface_matrix() {
         "done\n"
     );
     assert_eq!(native_run("3번: 멈춰\n말해 \"끝\"\n").unwrap(), "끝\n");
+    assert_eq!(
+        native_run("repeat 3 times and break here\nshow \"done\"\n").unwrap(),
+        "done\n"
+    );
+    assert_eq!(
+        native_run("3번 반복해서 여기서 멈춰\n말해 \"끝\"\n").unwrap(),
+        "끝\n"
+    );
 
     assert_eq!(
         native_run(
