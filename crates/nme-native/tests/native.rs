@@ -522,8 +522,31 @@ fn modulo_in_conditions_compiles_natively() {
 
 #[test]
 fn float_literals_arithmetic_and_conditions_compile_natively() {
-    let source = "pi = 3.14\nshow pi\nshow 1 + 0.5\nr = 2\nshow 3.14 * r * r\nif pi is greater than 3\n    show \"pi big\"\nend\n";
-    assert_eq!(native_run(source).unwrap(), "3.14\n1.5\n12.56\npi big\n");
+    let source = "pi = 3.14\nshow pi\nshow 1 + 0.5\nr = 2\nshow 3.14 * r * r\nwhole = 5.0\nshow whole\nzero = -0.0\nshow zero\nif pi is greater than 3\n    show \"pi big\"\nend\n";
+    assert_eq!(
+        native_run(source).unwrap(),
+        "3.14\n1.5\n12.56\n5\n-0\npi big\n"
+    );
+}
+
+#[test]
+fn non_finite_native_float_literals_are_rejected() {
+    let problems = nme_native::native_compile("show 1e309\n").unwrap_err();
+    assert!(
+        problems
+            .iter()
+            .any(|problem| problem.message.contains("finite float literals")),
+        "{problems:?}"
+    );
+    assert!(
+        problems.iter().any(|problem| {
+            problem
+                .message_ko
+                .as_deref()
+                .is_some_and(|message| message.contains("유한한 실수 리터럴"))
+        }),
+        "{problems:?}"
+    );
 }
 
 #[test]

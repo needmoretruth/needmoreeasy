@@ -5,7 +5,7 @@ English | [한국어](native-backend.ko.md)
 [Home](../README.md) | [Install](install.md) | [Getting started](getting-started.md) | [Tutorial](tutorial.md) | [Language reference](language.md) | [Guides](guides/index.md)
 
 > Status: v0 is implemented (`nme native run`/`nme native build`). The
-> statically typed core subset — integer values and arithmetic, sentence
+> statically typed core subset — integer and finite-float values and arithmetic, sentence
 > `while`/`if`/`else`/`else if` over comparisons, `break`, functions over
 > scalar parameters with `return` (recursion works), and `say` — compiles to
 > C and then to a native executable through the system C compiler. Everything
@@ -39,11 +39,11 @@ The proposed NME-native backend therefore targets a **restricted, statically
 typed core subset** with semantics defined independently of CPython.
 Implemented so far:
 
-- integers and floats with `+ - * %` arithmetic (checked signed 32-bit native
+- integers and finite floats with `+ - * %` arithmetic (checked signed 32-bit native
   integers from `-2147483648` through `2147483647`; integer modulo only, with
   overflow and zero-divisor errors reported by the bilingual native runtime;
-  float arithmetic uses C `double`, and whole floats print with C's `%g`, which
-  may differ cosmetically from Python's `5.0`);
+  float literals must be finite, float arithmetic uses C `double`, and whole
+  floats print with C's `%g`, which may differ cosmetically from Python's `5.0`);
 - string variables with `+` concatenation into variables (checked fixed
   8192-byte buffers), escaped string output, string `==`/`!=` comparisons
   through `strcmp`, and a `len` builtin; nested concatenation, embedded NUL

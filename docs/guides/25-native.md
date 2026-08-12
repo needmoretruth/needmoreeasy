@@ -17,8 +17,8 @@ into a native executable with your system's C compiler.
 ## Steps
 
 1. Write a program that stays inside the native core. The core covers
-   integers and string literals, `while`/`if`/`else`, `break`, functions with
-   `return`, and `say`:
+   integers, finite floats, and string literals, `while`/`if`/`else`, `break`,
+   functions with `return`, and `say`:
 
    ```text
    score = 0
@@ -40,6 +40,8 @@ into a native executable with your system's C compiler.
    a function in the file with the declared number of positional arguments.
    Use simple integer parameters in the header; defaults, varargs, and keyword
    arguments are outside the native core, as are nested function definitions.
+   Float literals must be finite. Native float arithmetic uses C `double`, and
+   `%g` output may print `5.0` as `5`; `-0.0` retains its sign as `-0`.
 
 2. Compile and run it natively:
 

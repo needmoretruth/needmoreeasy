@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.56 — 2026-08-12
+
+- Reject non-finite native float literals before C emission and normalize finite
+  whole-number literals as C `double` values, preserving signed zero.
+
 ## 0.0.1-beta.55 — 2026-08-12
 
 - Escape native string literals for valid C output, including control

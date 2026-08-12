@@ -8,10 +8,12 @@
 //!
 //! The core subset in this version is small and documented:
 //!
-//! - `say`/`show`/`말해` of an integer expression, a string variable, or a
-//!   string literal (one binary `+` concatenation);
+//! - `say`/`show`/`말해` of an integer expression, a finite float expression,
+//!   a string variable, or a string literal (one binary `+` concatenation);
 //! - signed 32-bit integer literals and arithmetic with explicit overflow and
 //!   zero-divisor checks;
+//! - finite float literals and arithmetic as C `double` values; non-finite
+//!   float literals are rejected before C emission;
 //! - escaped native string literals; embedded NUL characters are rejected
 //!   because the C string runtime cannot preserve them;
 //! - `set x to ...` / `x은 ...` / `x = ...` assignments of integers and
@@ -719,6 +721,17 @@ fn native_integer_literal(
     }
 }
 
+fn native_float_literal(value: f64, span: Span) -> Result<String, Diagnostic> {
+    if !value.is_finite() {
+        return Err(native_non_finite_float(span));
+    }
+    let mut text = value.to_string();
+    if !text.contains('.') && !text.contains('e') && !text.contains('E') {
+        text.push_str(".0");
+    }
+    Ok(text)
+}
+
 fn c_string_literal(value: &str, span: Span) -> Result<String, Diagnostic> {
     let mut escaped = String::new();
     for character in value.chars() {
@@ -755,7 +768,7 @@ fn lower_expr(
                 native_integer_literal(value, false, span)?,
                 ExprType::Int,
             )),
-            Constant::Float(value) => Ok((format!("{value}"), ExprType::Float)),
+            Constant::Float(value) => Ok((native_float_literal(*value, span)?, ExprType::Float)),
             Constant::Str(string) => {
                 Ok((c_string_literal(string, span)?, ExprType::Str))
             }
@@ -1829,6 +1842,19 @@ fn native_string_nul(span: Span) -> Diagnostic {
     .with_bilingual_hint(
         "use text without an embedded NUL character, or run the program with CPython",
         "내부 NUL 문자가 없는 텍스트를 사용하거나 프로그램을 CPython으로 실행하세요",
+    )
+}
+
+fn native_non_finite_float(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::UnsupportedModule,
+        "the native backend only supports finite float literals",
+        "네이티브 백엔드는 유한한 실수 리터럴만 지원합니다",
+        span,
+    )
+    .with_bilingual_hint(
+        "use a finite float literal, or run the program with CPython",
+        "유한한 실수 리터럴을 사용하거나 프로그램을 CPython으로 실행하세요",
     )
 }
 
