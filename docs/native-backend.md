@@ -67,8 +67,9 @@ Implemented so far:
   `times:` loop; `break` inside a native loop only. A `break` nested only in
   an `if` is rejected with `E0102` before C is emitted;
 - functions over integer scalar parameters with an unconditional integer
-  `return` (recursion works); calls must target a function in the file with its
-  declared arity and use positional arguments. Simple positional integer
+  `return` (recursion works); calls may target any function in the file,
+  including one defined later, with its declared arity and positional
+  arguments. Simple positional integer
   parameters only are accepted in headers; duplicate definitions, defaults,
   varargs, nested definitions, keyword arguments, float or string function
   values, branch-only returns, and top-level `return` (`E0106`) are rejected

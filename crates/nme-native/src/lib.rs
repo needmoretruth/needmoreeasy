@@ -270,7 +270,6 @@ const PREAMBLE: &str = concat!(
     "    memcpy(nme_cat_buf + a_length, b, b_length + 1);\n",
     "    return nme_cat_buf;\n",
     "}\n",
-    "int main(void) {\n",
 );
 
 fn native_function_header(tokens: &[lexer::Token]) -> Option<(String, Vec<String>)> {
@@ -334,6 +333,35 @@ fn native_function_signatures(
     (functions, problems)
 }
 
+/// Emits prototypes before `main` so a native function may call another
+/// function that appears later in the NME source. The frontend already limits
+/// native functions to integer parameters and returns, so the C declarations
+/// can use the same fixed signature for every accepted function.
+fn native_function_prototypes(lines: &[lexer::LogicalLine]) -> String {
+    let mut prototypes = String::new();
+    for line in lines {
+        if !matches!(
+            line.tokens.first().map(|token| &token.tok),
+            Some(rustpython_parser::Tok::Def)
+        ) {
+            continue;
+        }
+        let Some((name, parameters)) = native_function_header(&line.tokens) else {
+            continue;
+        };
+        let parameter_types = if parameters.is_empty() {
+            "void".to_string()
+        } else {
+            (0..parameters.len())
+                .map(|_| "int")
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        prototypes.push_str(&format!("int {name}({parameter_types});\n"));
+    }
+    prototypes
+}
+
 /// Compiles the native core subset of `source` to C source text.
 ///
 /// On failure returns every problem found, ready to render with
@@ -349,6 +377,8 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
     let (functions, signature_problems) = native_function_signatures(&lines);
 
     let mut out = String::from(PREAMBLE);
+    out.push_str(&native_function_prototypes(&lines));
+    out.push_str("int main(void) {\n");
     let mut open_braces = 1usize; // the `main` body
     let mut declaration_slots = DeclarationSlots::new(&out);
     let mut declared = HashMap::new();
@@ -1529,7 +1559,7 @@ fn emit_python_line(
                 return Some(native_function_name_collision(parameter, span));
             }
             if parameters.is_empty() {
-                out.push_str(&format!("int {name}() {{\n"));
+                out.push_str(&format!("int {name}(void) {{\n"));
             } else {
                 let params = parameters
                     .iter()

@@ -212,6 +212,31 @@ fn native_function_calls_require_the_declared_arity() {
 }
 
 #[test]
+fn mutually_recursive_native_functions_have_forward_declarations() {
+    let source = r#"def is_even(value):
+    if value is less than 1
+        return 1
+    end
+    return is_odd(value - 1)
+
+def is_odd(value):
+    if value is less than 1
+        return 0
+    end
+    return is_even(value - 1)
+
+show is_even(6)
+"#;
+    assert_eq!(native_run(source).unwrap(), "1\n");
+}
+
+#[test]
+fn zero_argument_native_functions_use_void_prototypes() {
+    let source = "def answer():\n    return 42\n\nshow answer()\n";
+    assert_eq!(native_run(source).unwrap(), "42\n");
+}
+
+#[test]
 fn native_function_calls_reject_keyword_arguments() {
     let source = "def identity(value):\n    return value\n\nshow identity(1, value=2)\n";
     let problems = nme_native::native_compile(source).unwrap_err();

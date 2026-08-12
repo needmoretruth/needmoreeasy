@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.76 — 2026-08-12
+
+- Emit C prototypes before native function definitions so forward calls and
+  mutual recursion compile correctly, including zero-argument functions.
+
 ## 0.0.1-beta.75 — 2026-08-12
 
 - Update both README compiler descriptions to identify the implemented v0
