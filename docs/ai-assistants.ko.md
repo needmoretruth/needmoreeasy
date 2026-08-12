@@ -10,7 +10,7 @@ AI 코딩 도우미에게 다음 문장 하나를 전달하세요.
 NME 코드를 작성하기 전에 이 문서를 읽고 따르세요.
 https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.ko.md
 
-먼저 `nme --version`으로 지원되는 베타(현재 `0.0.1-beta.115`)를 확인하세요. 그다음 요청한 프로그램을 .nme 파일로 작성하세요. 초보자에게는 문장형을 우선하고,
+먼저 `nme --version`으로 지원되는 베타(현재 `0.0.1-beta.116`)를 확인하세요. 그다음 요청한 프로그램을 .nme 파일로 작성하세요. 초보자에게는 문장형을 우선하고,
 더 분명할 때만 초급 문법이나 고급 Python을 섞으며, nme 검사로 확인하세요.
 ```
 
@@ -163,8 +163,8 @@ if score is greater than 10 then show You won
 같은 블록에서 `멈춰`/`break`, `그리고`/`and`, `또는`/`or`, `아니면 만약에`/`elif`,
 `아니면`/`else`를 사용할 수 있습니다. 네 칸 들여쓰기와 일반 Python도 계속
 유효합니다. NME 조건 전체는 `만약 (준비 그리고 점수 > 2)`처럼 콜론 없는
-헤더에서 괄호로 감쌀 수 있으며, `when(ready and score > 2)` 같은 올바른
-Python 호출은 계속 Python으로 남습니다.
+`만약`이나 `동안` 헤더에서 괄호로 감쌀 수 있으며, `when(ready and score > 2)`
+같은 올바른 Python 호출은 계속 Python으로 남습니다.
 
 ### 정확해야 하면 초급 문법 사용
 

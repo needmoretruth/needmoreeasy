@@ -2397,12 +2397,20 @@ fn korean_while_connector(tokens: &[Token]) -> Option<(Vec<Token>, usize)> {
     // Prefer the last `동안` so a logical condition may carry an ending on
     // every operand: `점수가 5와 같지 않을 동안 그리고 점수가 0보다 클 동안`.
     // Earlier `동안` markers are loop endings too and only describe how the
-    // operands are spoken, so they are dropped from the condition tokens.
-    for (index, token) in tokens.iter().enumerate().skip(1).rev() {
+    // operands are spoken, so they are dropped from the condition tokens. A
+    // leading Korean while word is also dropped here; keeping it would make
+    // an outer parenthesized condition start with the loop keyword instead
+    // of its actual subject.
+    let condition_start = usize::from(
+        tokens
+            .first()
+            .is_some_and(|token| token_matches_exact(token, WHILE_WORDS_KO)),
+    );
+    for (index, token) in tokens.iter().enumerate().skip(condition_start + 1).rev() {
         if !token_matches_exact(token, &["동안"]) {
             continue;
         }
-        let mut condition = tokens[..index]
+        let mut condition = tokens[condition_start..index]
             .iter()
             .filter(|token| !token_matches_exact(token, &["동안"]))
             .cloned()
@@ -2418,7 +2426,15 @@ fn korean_while_connector(tokens: &[Token]) -> Option<(Vec<Token>, usize)> {
             }
         }
         if !condition.is_empty() {
-            return Some((condition, index + 1));
+            let mut body_start = index + 1;
+            while tokens
+                .get(body_start)
+                .is_some_and(|token| matches!(token.tok, Tok::Rpar | Tok::Rsqb | Tok::Rbrace))
+            {
+                condition.push(tokens[body_start].clone());
+                body_start += 1;
+            }
+            return Some((condition, body_start));
         }
     }
     None

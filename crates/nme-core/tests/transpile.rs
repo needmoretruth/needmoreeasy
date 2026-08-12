@@ -1367,6 +1367,25 @@ fn english_while_keyword_accepts_a_korean_condition_ending() {
 }
 
 #[test]
+fn parenthesized_korean_sentence_while_endings_keep_the_condition_shape() {
+    let source = concat!(
+        "준비는 참\n",
+        "횟수는 0\n",
+        "동안 (준비 그리고 횟수가 2보다 작을 동안)\n",
+        "횟수에 1 더해\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "준비 = True\n",
+        "횟수 = 0\n",
+        "while ((준비 and 횟수 < 2)):\n",
+        "    횟수 = 횟수 + 1\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
 fn korean_negation_connectors_lower_to_not_equals() {
     let source = concat!(
         "만약 점수가 5와 같지 않으면\n",

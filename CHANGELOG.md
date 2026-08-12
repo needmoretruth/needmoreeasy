@@ -6,6 +6,16 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.116 — 2026-08-12
+
+- Fix Korean sentence `while`/`동안` headers whose natural ending appears
+  inside a parenthesized logical condition, preserving the matching closing
+  bracket and the real body span.
+- Cover parenthesized logical `while` conditions across English and Korean
+  sentence, beginner, and advanced native surfaces.
+- Keep the shared condition grammar and valid-Python boundary documented in
+  both language references, native references, and AI guidance.
+
 ## 0.0.1-beta.115 — 2026-08-12
 
 - Accept parentheses around a whole colon-free NME logical condition, such as

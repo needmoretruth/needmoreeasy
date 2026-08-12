@@ -284,9 +284,10 @@ if ready and score > 2 then show Go
 if ready or waiting then show Please wait
 ```
 
-Parentheses may surround a whole NME condition, for example `if (ready and
-score > 2)`. Keep the header colon-free so NME owns the line; a valid Python
-call such as `when(ready and score > 2)` remains Python byte-for-byte.
+Parentheses may surround a whole NME condition in an `if` or `while` header,
+for example `if (ready and score > 2)`. Keep the header colon-free so NME owns
+the line; a valid Python call such as `when(ready and score > 2)` remains
+Python byte-for-byte.
 
 ### Random without code punctuation
 
