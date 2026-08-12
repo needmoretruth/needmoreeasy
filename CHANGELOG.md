@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.150 — 2026-08-12
+
+- Add shared bilingual `E0117` for asynchronous comprehensions outside an
+  `async def` function, while preserving valid async-comprehension bodies.
+
 ## 0.0.1-beta.149 — 2026-08-12
 
 - Add shared bilingual `E0116` for `yield` inside Python comprehensions,

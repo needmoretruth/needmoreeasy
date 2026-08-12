@@ -152,6 +152,8 @@ while the same star import inside a function or class receives `E0114`.
 tracker resets across nested Python function/class scopes and after the suite.
 `yield` inside a comprehension receives `E0116`; token-depth matching keeps
 ordinary `yield` expressions and lambdas nested inside comprehensions intact.
+An `async for` inside a comprehension outside an `async def` receives `E0117`;
+the same token-depth path distinguishes it from an ordinary `async for` header.
 
 ### 7. Bundled modules are local and versioned
 

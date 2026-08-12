@@ -413,6 +413,16 @@ pub fn parse_program(
                     problems.push(yield_inside_comprehension_diagnostic(line.span));
                     continue;
                 }
+                if inline_async_comprehension_outside_async_function(
+                    &stmt,
+                    &line.tokens,
+                    bindings.inside_async_function(),
+                ) {
+                    problems.push(async_comprehension_outside_async_function_diagnostic(
+                        line.span,
+                    ));
+                    continue;
+                }
                 if inline_yield_is_outside_function(&stmt, &line.tokens, bindings.inside_function())
                 {
                     problems.push(yield_outside_function_diagnostic(line.span));
@@ -543,6 +553,15 @@ pub fn parse_program(
                 }
                 if contains_yield_inside_comprehension(&line.tokens) {
                     problems.push(yield_inside_comprehension_diagnostic(line.span));
+                    continue;
+                }
+                if contains_async_comprehension_outside_async_function(
+                    &line.tokens,
+                    bindings.inside_async_function(),
+                ) {
+                    problems.push(async_comprehension_outside_async_function_diagnostic(
+                        line.span,
+                    ));
                     continue;
                 }
                 if contains_yield_outside_lambda(&line.tokens) && !bindings.inside_function() {
@@ -936,6 +955,19 @@ fn yield_inside_comprehension_diagnostic(span: Span) -> Diagnostic {
     )
 }
 
+fn async_comprehension_outside_async_function_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::AsyncComprehensionOutsideAsyncFunction,
+        "an async comprehension must be inside an async function",
+        "비동기 컴프리헨션은 비동기 함수 안에 있어야 해요",
+        span,
+    )
+    .with_bilingual_hint(
+        "move the comprehension into an `async def` function, or use an ordinary `for` comprehension",
+        "컴프리헨션을 `async def` 함수 안으로 옮기거나 일반 `for` 컴프리헨션을 사용해 주세요",
+    )
+}
+
 fn branch_without_condition_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
         DiagnosticCode::BranchWithoutCondition,
@@ -1092,6 +1124,44 @@ fn inline_yield_inside_comprehension_in_body(body: &InlineStmt, tokens: &[Token]
     }
 }
 
+fn inline_async_comprehension_outside_async_function(
+    stmt: &NmeStmt,
+    tokens: &[Token],
+    inside_async_function: bool,
+) -> bool {
+    match stmt {
+        NmeStmt::Times { inline, .. }
+        | NmeStmt::While { inline, .. }
+        | NmeStmt::When { inline, .. }
+        | NmeStmt::ElseIf { inline, .. }
+        | NmeStmt::Else { inline } => inline.as_ref().is_some_and(|body| {
+            inline_async_comprehension_outside_async_function_in_body(
+                body,
+                tokens,
+                inside_async_function,
+            )
+        }),
+        _ => false,
+    }
+}
+
+fn inline_async_comprehension_outside_async_function_in_body(
+    body: &InlineStmt,
+    tokens: &[Token],
+    inside_async_function: bool,
+) -> bool {
+    match body {
+        InlineStmt::Nme(inner) => {
+            inline_async_comprehension_outside_async_function(inner, tokens, inside_async_function)
+        }
+        InlineStmt::Python(span) => contains_async_comprehension_outside_async_function_in_span(
+            tokens,
+            *span,
+            inside_async_function,
+        ),
+    }
+}
+
 fn inline_yield_is_outside_function(
     stmt: &NmeStmt,
     tokens: &[Token],
@@ -1204,6 +1274,45 @@ fn contains_yield_inside_comprehension_in_span(tokens: &[Token], span: Span) -> 
             && token.span.end <= span.end
             && matches!(token.tok, Tok::Yield)
             && yield_is_inside_comprehension(tokens, index)
+    })
+}
+
+fn contains_async_comprehension_outside_async_function(
+    tokens: &[Token],
+    inside_async_function: bool,
+) -> bool {
+    tokens.windows(2).enumerate().any(|(index, pair)| {
+        matches!(pair[0].tok, Tok::Async)
+            && matches!(pair[1].tok, Tok::For)
+            && async_for_is_inside_comprehension(tokens, index)
+            && (!inside_async_function || enclosing_lambda_body_start(tokens, index).is_some())
+    })
+}
+
+fn contains_async_comprehension_outside_async_function_in_span(
+    tokens: &[Token],
+    span: Span,
+    inside_async_function: bool,
+) -> bool {
+    tokens.windows(2).enumerate().any(|(index, pair)| {
+        pair[0].span.start >= span.start
+            && pair[1].span.end <= span.end
+            && matches!(pair[0].tok, Tok::Async)
+            && matches!(pair[1].tok, Tok::For)
+            && async_for_is_inside_comprehension(tokens, index)
+            && (!inside_async_function || enclosing_lambda_body_start(tokens, index).is_some())
+    })
+}
+
+fn async_for_is_inside_comprehension(tokens: &[Token], async_index: usize) -> bool {
+    let depths = token_depths(tokens);
+    let closes = matching_bracket_closes(tokens);
+    (0..async_index).any(|open_index| {
+        let is_open = matches!(tokens[open_index].tok, Tok::Lpar | Tok::Lsqb | Tok::Lbrace);
+        let Some(close_index) = closes[open_index] else {
+            return false;
+        };
+        is_open && async_index < close_index && depths[async_index] == depths[open_index] + 1
     })
 }
 

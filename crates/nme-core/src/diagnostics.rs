@@ -76,6 +76,8 @@ pub enum DiagnosticCode {
     ControlFlowInExceptStar,
     /// `yield` inside a comprehension.
     YieldInsideComprehension,
+    /// An async comprehension outside an async function.
+    AsyncComprehensionOutsideAsyncFunction,
     /// `say` value could not be understood.
     SayValueBroken,
     /// `say` expression is not valid.
@@ -232,6 +234,7 @@ impl DiagnosticCode {
             Self::ImportStarOutsideModule => "E0114",
             Self::ControlFlowInExceptStar => "E0115",
             Self::YieldInsideComprehension => "E0116",
+            Self::AsyncComprehensionOutsideAsyncFunction => "E0117",
             Self::SayValueBroken => "E0201",
             Self::SayValueUnparseable => "E0202",
             Self::SaySentenceUnparseable => "E0203",
@@ -301,7 +304,7 @@ impl DiagnosticCode {
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 82] = [
+    pub const ALL: [DiagnosticCode; 83] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -319,6 +322,7 @@ impl DiagnosticCode {
         Self::ImportStarOutsideModule,
         Self::ControlFlowInExceptStar,
         Self::YieldInsideComprehension,
+        Self::AsyncComprehensionOutsideAsyncFunction,
         Self::SayValueBroken,
         Self::SayValueUnparseable,
         Self::SaySentenceUnparseable,
@@ -528,6 +532,13 @@ impl DiagnosticCode {
                 "컴프리헨션 안의 `yield`",
                 "Python does not allow `yield` inside a list, set, dictionary, or generator comprehension. Replace the comprehension with an explicit loop, or move `yield` outside the comprehension.",
                 "Python은 리스트·집합·딕셔너리·제너레이터 컴프리헨션 안의 `yield`를 허용하지 않습니다. 컴프리헨션을 명시적인 반복문으로 바꾸거나 `yield`를 컴프리헨션 밖으로 옮기세요.",
+            ),
+            Self::AsyncComprehensionOutsideAsyncFunction => (
+                "E0117",
+                "async comprehension outside an async function",
+                "비동기 함수 밖의 비동기 컴프리헨션",
+                "Python only allows a comprehension with `async for` inside an `async def` function. Move it into an async function, or use an ordinary `for` comprehension for a synchronous iterable.",
+                "Python은 `async for`가 있는 컴프리헨션을 `async def` 함수 안에서만 허용합니다. 컴프리헨션을 비동기 함수 안으로 옮기거나 동기 반복자에는 일반 `for` 컴프리헨션을 사용하세요.",
             ),
             Self::SayValueBroken => (
                 "E0201",

@@ -670,6 +670,9 @@ See [the conversion guide](converting-python.md).
 - Python does not allow `yield` inside a list, set, dictionary, or generator
   comprehension; NME reports `E0116`. A plain `yield` expression and a
   generator lambda remain unchanged when Python permits them.
+- An `async for` inside a list, set, dictionary, or generator comprehension
+  outside an `async def` function gets `E0117`. Move the comprehension into an
+  async function; valid async comprehensions remain unchanged.
 - Generator lambdas remain valid advanced Python: a `yield` inside
   `lambda: ...` is checked against the lambda's own function context.
 - An inline body must contain one statement; an inline `else`/`elif` without an

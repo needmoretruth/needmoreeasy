@@ -735,6 +735,64 @@ fn yield_inside_comprehension_gets_a_stable_diagnostic() {
 }
 
 #[test]
+fn async_comprehension_outside_async_function_gets_a_stable_diagnostic() {
+    let cases = [
+        ("top level", "values = [item async for item in stream()]\n"),
+        (
+            "synchronous function",
+            "def collect():\n    return [item async for item in stream()]\n",
+        ),
+        (
+            "sentence-en",
+            "when true then [item async for item in stream()]\n",
+        ),
+        (
+            "sentence-ko",
+            "만약 참 그러면 [item async for item in stream()]\n",
+        ),
+        (
+            "beginner-en",
+            "if True then [item async for item in stream()]\n",
+        ),
+        (
+            "beginner-ko",
+            "만약 True 그러면 [item async for item in stream()]\n",
+        ),
+        (
+            "advanced-en",
+            "if (True) then [item async for item in stream()]\n",
+        ),
+        (
+            "advanced-ko",
+            "만약 ((참 그리고 참)) 그러면 [item async for item in stream()]\n",
+        ),
+        (
+            "normal lambda inside async function",
+            "async def outer():\n    return lambda: [item async for item in stream()]\n",
+        ),
+    ];
+    for (label, source) in cases {
+        let problems =
+            transpile(source).expect_err("async comprehensions need an async function context");
+        assert_eq!(problems.len(), 1, "{label}: {problems:?}");
+        assert_eq!(
+            problems[0].code,
+            DiagnosticCode::AsyncComprehensionOutsideAsyncFunction,
+            "{label}: {problems:?}"
+        );
+    }
+
+    let valid = "async def collect():\n    return [item async for item in stream()]\n";
+    assert_eq!(transpile(valid).unwrap(), valid);
+    let nested_async =
+        "def outer():\n    async def inner():\n        return [item async for item in stream()]\n";
+    assert_eq!(transpile(nested_async).unwrap(), nested_async);
+    let valid_inline =
+        "async def collect():\n    when ready then [item async for item in stream()]\n";
+    assert!(transpile(valid_inline).is_ok());
+}
+
+#[test]
 fn inline_branches_without_an_open_condition_get_a_stable_diagnostic() {
     let cases = [
         ("sentence-en", "when true then else show no\n"),
