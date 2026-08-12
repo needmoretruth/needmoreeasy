@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.139 — 2026-08-12
+
+- Report top-level and inline Python `continue` outside a loop with the shared
+  bilingual `E0107` diagnostic while preserving valid loop bodies.
+
 ## 0.0.1-beta.138 — 2026-08-12
 
 - Report top-level and inline `return` outside a Python function with the

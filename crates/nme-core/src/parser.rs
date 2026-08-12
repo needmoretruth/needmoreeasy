@@ -369,6 +369,10 @@ pub fn parse_program(
                     problems.push(break_outside_loop_diagnostic(line.span));
                     continue;
                 }
+                if inline_continue_is_outside_loop(&stmt, &line.tokens, inside_loop) {
+                    problems.push(continue_outside_loop_diagnostic(line.span));
+                    continue;
+                }
                 if inline_return_is_outside_function(
                     &stmt,
                     &line.tokens,
@@ -439,6 +443,15 @@ pub fn parse_program(
             Ok(None) => {
                 if is_python_return_line(&line.tokens) && !bindings.inside_function() {
                     problems.push(return_outside_function_diagnostic(line.span));
+                    continue;
+                }
+                let inside_loop = blocks
+                    .iter()
+                    .any(|block| matches!(block, ExplicitBlock::Loop { .. }))
+                    || python_header_indents.iter().any(|(_, is_loop)| *is_loop)
+                    || !top_level_python_loop_indents.is_empty();
+                if is_python_continue_line(&line.tokens) && !inside_loop {
+                    problems.push(continue_outside_loop_diagnostic(line.span));
                     continue;
                 }
                 bindings.remember_python(&line.tokens, parse_line.indent);
@@ -675,6 +688,19 @@ fn break_outside_loop_diagnostic(span: Span) -> Diagnostic {
     )
 }
 
+fn continue_outside_loop_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::ContinueOutsideLoop,
+        "`continue` can only be used inside a loop",
+        "`continue`는 반복문 안에서만 쓸 수 있어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "put it inside `while`, `repeat`, or a Python `for`/`while` loop, or remove it",
+        "`while`, `repeat`, 또는 Python `for`/`while` 반복문 안에 넣거나 지워 주세요",
+    )
+}
+
 fn return_outside_function_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
         DiagnosticCode::ReturnOutsideFunction,
@@ -740,6 +766,35 @@ fn inline_break_is_outside_loop_in_body(
     }
 }
 
+fn inline_continue_is_outside_loop(stmt: &NmeStmt, tokens: &[Token], inside_loop: bool) -> bool {
+    match stmt {
+        NmeStmt::Times { inline, .. } | NmeStmt::While { inline, .. } => inline
+            .as_ref()
+            .is_some_and(|body| inline_continue_is_outside_loop_in_body(body, tokens, true)),
+        NmeStmt::When { inline, .. }
+        | NmeStmt::ElseIf { inline, .. }
+        | NmeStmt::Else { inline } => inline
+            .as_ref()
+            .is_some_and(|body| inline_continue_is_outside_loop_in_body(body, tokens, inside_loop)),
+        _ => false,
+    }
+}
+
+fn inline_continue_is_outside_loop_in_body(
+    body: &InlineStmt,
+    tokens: &[Token],
+    inside_loop: bool,
+) -> bool {
+    match body {
+        InlineStmt::Nme(inner) => inline_continue_is_outside_loop(inner, tokens, inside_loop),
+        InlineStmt::Python(span) => {
+            first_token_in_span(tokens, *span)
+                .is_some_and(|token| matches!(token.tok, Tok::Continue))
+                && !inside_loop
+        }
+    }
+}
+
 fn inline_return_is_outside_function(
     stmt: &NmeStmt,
     tokens: &[Token],
@@ -779,6 +834,10 @@ fn first_token_in_span(tokens: &[Token], span: Span) -> Option<&Token> {
 
 fn is_python_return_line(tokens: &[Token]) -> bool {
     matches!(tokens.first().map(|token| &token.tok), Some(Tok::Return))
+}
+
+fn is_python_continue_line(tokens: &[Token]) -> bool {
+    tokens.len() == 1 && matches!(tokens.first().map(|token| &token.tok), Some(Tok::Continue))
 }
 
 fn missing_end_diagnostic(block: &ExplicitBlock, offset: usize) -> Diagnostic {

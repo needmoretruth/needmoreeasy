@@ -531,6 +531,39 @@ fn return_outside_a_native_function_is_rejected_before_c_generation() {
 }
 
 #[test]
+fn continue_outside_a_loop_uses_the_shared_bilingual_diagnostic() {
+    let cases = [
+        ("top-level", "continue\n"),
+        ("sentence-en", "when true then continue\n"),
+        ("sentence-ko", "만약 참 그러면 continue\n"),
+        ("beginner-en", "if True then continue\n"),
+        ("beginner-ko", "만약 True 그러면 continue\n"),
+        ("advanced-en", "if (True) then continue\n"),
+        ("advanced-ko", "만약 ((참 그리고 참)) 그러면 continue\n"),
+    ];
+
+    for (label, source) in cases {
+        let problems = nme_native::native_compile(source).unwrap_err();
+        assert!(
+            problems.iter().any(|problem| {
+                problem.code == DiagnosticCode::ContinueOutsideLoop
+                    && problem.message.contains("inside a loop")
+            }),
+            "{label}: {problems:?}"
+        );
+        assert!(
+            problems.iter().any(|problem| {
+                problem
+                    .message_ko
+                    .as_deref()
+                    .is_some_and(|message| message.contains("반복문 안에서만"))
+            }),
+            "{label}: {problems:?}"
+        );
+    }
+}
+
+#[test]
 fn function_locals_do_not_leak_into_main() {
     let source = "def local_value(n):\n    local = 0\n    if n\n        local = n + 1\n    end\n    return local\n\nlocal = 100\nshow local\nshow local_value(2)\n";
     assert_eq!(native_run(source).unwrap(), "100\n3\n");

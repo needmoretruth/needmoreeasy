@@ -2249,6 +2249,38 @@ fn error_lookup_commands_print_the_requested_explanation() {
         "{break_korean_out}"
     );
 
+    let continue_english = nme(&["en", "E0107"]);
+    assert!(
+        continue_english.status.success(),
+        "{}",
+        stderr(&continue_english)
+    );
+    let continue_english_out = stdout(&continue_english);
+    assert!(
+        continue_english_out.contains("`continue` outside a loop"),
+        "{continue_english_out}"
+    );
+    assert!(
+        continue_english_out.contains("next iteration"),
+        "{continue_english_out}"
+    );
+
+    let continue_korean = nme(&["ko", "E0107"]);
+    assert!(
+        continue_korean.status.success(),
+        "{}",
+        stderr(&continue_korean)
+    );
+    let continue_korean_out = stdout(&continue_korean);
+    assert!(
+        continue_korean_out.contains("반복문 밖의 `continue`"),
+        "{continue_korean_out}"
+    );
+    assert!(
+        continue_korean_out.contains("다음 반복"),
+        "{continue_korean_out}"
+    );
+
     let korean_alias = nme(&["에러", "E0101"]);
     assert!(korean_alias.status.success(), "{}", stderr(&korean_alias));
     assert!(
@@ -2466,6 +2498,28 @@ fn top_level_return_reports_the_shared_function_diagnostic() {
     let korean_error = stderr(&korean);
     assert!(korean_error.contains("오류[E0106]:"), "{korean_error}");
     assert!(korean_error.contains("함수 안에서만"), "{korean_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn top_level_continue_reports_the_shared_loop_diagnostic() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-continue-code-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("continue.nme");
+    std::fs::write(&file, "continue\n").unwrap();
+
+    let english = nme(&["check", &file.to_string_lossy()]);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(english_error.contains("error[E0107]:"), "{english_error}");
+    assert!(english_error.contains("inside a loop"), "{english_error}");
+
+    let korean = nme(&["검사", &file.to_string_lossy()]);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(korean_error.contains("오류[E0107]:"), "{korean_error}");
+    assert!(korean_error.contains("반복문 안에서만"), "{korean_error}");
 
     let _ = std::fs::remove_dir_all(&dir);
 }

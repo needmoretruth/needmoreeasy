@@ -56,6 +56,8 @@ pub enum DiagnosticCode {
     MissingEnd,
     /// `return` outside a function.
     ReturnOutsideFunction,
+    /// `continue` outside a loop.
+    ContinueOutsideLoop,
     /// `say` value could not be understood.
     SayValueBroken,
     /// `say` expression is not valid.
@@ -202,6 +204,7 @@ impl DiagnosticCode {
             Self::DuplicateElse => "E0104",
             Self::MissingEnd => "E0105",
             Self::ReturnOutsideFunction => "E0106",
+            Self::ContinueOutsideLoop => "E0107",
             Self::SayValueBroken => "E0201",
             Self::SayValueUnparseable => "E0202",
             Self::SaySentenceUnparseable => "E0203",
@@ -271,7 +274,7 @@ impl DiagnosticCode {
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 72] = [
+    pub const ALL: [DiagnosticCode; 73] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -279,6 +282,7 @@ impl DiagnosticCode {
         Self::DuplicateElse,
         Self::MissingEnd,
         Self::ReturnOutsideFunction,
+        Self::ContinueOutsideLoop,
         Self::SayValueBroken,
         Self::SayValueUnparseable,
         Self::SaySentenceUnparseable,
@@ -418,6 +422,13 @@ impl DiagnosticCode {
                 "함수 밖의 `return`",
                 "`return` sends a value back from a function, so it cannot appear at the top level. Move it inside a `def` function, or remove it.",
                 "`return`은 함수에서 값을 돌려주므로 파일 최상위에 쓸 수 없습니다. `def` 함수 안으로 옮기거나 지우세요.",
+            ),
+            Self::ContinueOutsideLoop => (
+                "E0107",
+                "`continue` outside a loop",
+                "반복문 밖의 `continue`",
+                "`continue` skips to the next iteration, so it must be written inside a valid Python or NME loop. Move it inside the loop, or remove it.",
+                "`continue`는 다음 반복으로 건너뛰므로 올바른 Python 또는 NME 반복문 안에서만 쓸 수 있습니다. 반복문 안으로 옮기거나 지우세요.",
             ),
             Self::SayValueBroken => (
                 "E0201",

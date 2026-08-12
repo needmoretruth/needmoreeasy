@@ -1727,6 +1727,26 @@ fn inline_returns_keep_python_function_contexts_valid() {
 }
 
 #[test]
+fn inline_continues_keep_python_and_nme_loop_contexts_valid() {
+    assert_eq!(
+        ok("for item in items:\n    if True then continue\n"),
+        "for item in items:\n    if (True): continue\n"
+    );
+    assert_eq!(
+        ok("while ready:\n    만약 참 그러면 continue\n"),
+        "while ready:\n    if (True): continue\n"
+    );
+    assert_eq!(
+        ok("while ready\n    if True then continue\nend\n"),
+        "while (ready):\n    if (True): continue\n# end\n"
+    );
+    assert_eq!(
+        ok("while ready\n    continue\nend\n"),
+        "while (ready):\n    continue\n# end\n"
+    );
+}
+
+#[test]
 fn attached_korean_else_if_is_supported() {
     let source = concat!(
         "만약 준비\n",

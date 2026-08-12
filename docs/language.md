@@ -649,6 +649,8 @@ See [the conversion guide](converting-python.md).
   command, Python startup) use `E9xxx` and are explained the same way.
 - A top-level or inline `return` outside a Python `def` function gets `E0106`
   with a bilingual hint; valid returns inside functions remain Python.
+- A top-level or inline Python `continue` outside a loop gets `E0107` with a
+  bilingual hint; valid `continue` statements inside loops remain Python.
 - Independent problems are collected when possible.
 - Korean-led CLI commands receive Korean-first explanations and recovery examples
   such as `nme 실행`, `nme 컴파일`, and `nme 설치`; English command invocations
