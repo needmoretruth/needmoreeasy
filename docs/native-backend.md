@@ -6,8 +6,9 @@ English | [한국어](native-backend.ko.md)
 
 > Status: v0 is implemented (`nme native run`/`nme native build`). The
 > statically typed core subset — integer and finite-float values and arithmetic, sentence
-> `while`/`if`/`else`/`else if` over comparisons, `break`, functions over
-> scalar parameters with `return` (recursion works), and `say` — compiles to
+> `while`/`if`/`else`/`else if` over comparisons, `break`, functions over integer
+> scalar parameters with an unconditional integer `return` (recursion works),
+> and `say` — compiles to
 > C and then to a native executable through the system C compiler. Everything
 > outside the core is rejected with a clear diagnostic and still runs on
 > CPython. This document is the honest technical plan for the full backend;

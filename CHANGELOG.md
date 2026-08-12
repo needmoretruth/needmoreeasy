@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.100 — 2026-08-12
+
+- Align the native-backend opening summary with the implemented function
+  subset: integer scalar parameters and an unconditional integer `return`.
+
 ## 0.0.1-beta.99 — 2026-08-12
 
 - Make Korean-first CLI diagnostics use Korean command spellings in their
