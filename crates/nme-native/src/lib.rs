@@ -12,6 +12,8 @@
 //!   string literal (one binary `+` concatenation);
 //! - signed 32-bit integer literals and arithmetic with explicit overflow and
 //!   zero-divisor checks;
+//! - escaped native string literals; embedded NUL characters are rejected
+//!   because the C string runtime cannot preserve them;
 //! - `set x to ...` / `x은 ...` / `x = ...` assignments of integers and
 //!   string literals (including the Python-looking form);
 //!   native string variables use checked 8192-byte buffers;
@@ -717,6 +719,30 @@ fn native_integer_literal(
     }
 }
 
+fn c_string_literal(value: &str, span: Span) -> Result<String, Diagnostic> {
+    let mut escaped = String::new();
+    for character in value.chars() {
+        match character {
+            '\0' => return Err(native_string_nul(span)),
+            '\\' => escaped.push_str("\\\\"),
+            '"' => escaped.push_str("\\\""),
+            '?' => escaped.push_str("\\?"),
+            '\n' => escaped.push_str("\\n"),
+            '\r' => escaped.push_str("\\r"),
+            '\t' => escaped.push_str("\\t"),
+            '\x08' => escaped.push_str("\\b"),
+            '\x0c' => escaped.push_str("\\f"),
+            '\x0b' => escaped.push_str("\\v"),
+            '\x07' => escaped.push_str("\\a"),
+            character if character.is_ascii_control() => {
+                escaped.push_str(&format!("\\x{:02x}\"\"", character as u8));
+            }
+            character => escaped.push(character),
+        }
+    }
+    Ok(format!("\"{escaped}\""))
+}
+
 fn lower_expr(
     expr: &Expr,
     span: Span,
@@ -731,8 +757,7 @@ fn lower_expr(
             )),
             Constant::Float(value) => Ok((format!("{value}"), ExprType::Float)),
             Constant::Str(string) => {
-                let escaped = string.replace('\\', "\\\\").replace('"', "\\\"");
-                Ok((format!("\"{escaped}\""), ExprType::Str))
+                Ok((c_string_literal(string, span)?, ExprType::Str))
             }
             _ => Err(not_supported("this constant", span)),
         },
@@ -897,10 +922,7 @@ fn string_operand(
 ) -> Result<String, Diagnostic> {
     match expr {
         Expr::Constant(constant) => match &constant.value {
-            Constant::Str(string) => {
-                let escaped = string.replace('\\', "\\\\").replace('"', "\\\"");
-                Ok(format!("\"{escaped}\""))
-            }
+            Constant::Str(string) => c_string_literal(string, span),
             _ => Err(not_supported("this operand", span)),
         },
         Expr::Name(name) => {
@@ -1087,8 +1109,7 @@ fn condition_operand(
             Ok((name.clone(), kind))
         }
         ConditionValue::Text(text) => {
-            let escaped = text.replace('\\', "\\\\").replace('"', "\\\"");
-            Ok((format!("\"{escaped}\""), ExprType::Str))
+            Ok((c_string_literal(text, span)?, ExprType::Str))
         }
         ConditionValue::Literal(_) => Err(not_supported("boolean/null in a condition", span)),
     }
@@ -1183,8 +1204,8 @@ fn emit_say(
                     }
                 }
             }
-            let escaped = literal.replace('\\', "\\\\").replace('"', "\\\"");
-            out.push_str(&format!("printf(\"%s\\n\", \"{escaped}\");\n"));
+            let escaped = c_string_literal(&literal, span_of_value(value))?;
+            out.push_str(&format!("printf(\"%s\\n\", {escaped});\n"));
             Ok(())
         }
         Value::Literal(_) => Err(not_supported("boolean/null output", span_of_value(value))),
@@ -1795,6 +1816,19 @@ fn native_nested_function(span: Span) -> Diagnostic {
     .with_bilingual_hint(
         "move the function definition to the file level, or run the program with CPython",
         "함수 정의를 파일 최상위로 옮기거나 프로그램을 CPython으로 실행하세요",
+    )
+}
+
+fn native_string_nul(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::UnsupportedModule,
+        "the native backend does not support strings with embedded NUL characters",
+        "네이티브 백엔드는 내부 NUL 문자가 들어 있는 문자열을 지원하지 않습니다",
+        span,
+    )
+    .with_bilingual_hint(
+        "use text without an embedded NUL character, or run the program with CPython",
+        "내부 NUL 문자가 없는 텍스트를 사용하거나 프로그램을 CPython으로 실행하세요",
     )
 }
 

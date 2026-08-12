@@ -306,6 +306,33 @@ fn a_string_literal_is_printed() {
 }
 
 #[test]
+fn escaped_native_strings_remain_valid_c_literals() {
+    assert_eq!(
+        native_run("show \"line\\nnext\\tend\"\n").unwrap(),
+        "line\nnext\tend\n"
+    );
+
+    let problems = nme_native::native_compile("show \"a\\0b\"\n").unwrap_err();
+    assert!(
+        problems.iter().any(|problem| {
+            problem
+                .message
+                .contains("embedded NUL characters")
+        }),
+        "{problems:?}"
+    );
+    assert!(
+        problems.iter().any(|problem| {
+            problem
+                .message_ko
+                .as_deref()
+                .is_some_and(|message| message.contains("내부 NUL 문자"))
+        }),
+        "{problems:?}"
+    );
+}
+
+#[test]
 fn an_if_break_loop_works() {
     let source = "x = 0\nwhile x is less than 5\n    x add 1\n    if x is greater than 2\n        break\n    end\nend\nshow x\n";
     assert_eq!(native_run(source).unwrap(), "3\n");

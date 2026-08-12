@@ -45,11 +45,11 @@ Implemented so far:
   float arithmetic uses C `double`, and whole floats print with C's `%g`, which
   may differ cosmetically from Python's `5.0`);
 - string variables with `+` concatenation into variables (checked fixed
-  8192-byte buffers), string output, string `==`/`!=` comparisons through
-  `strcmp`, and a `len` builtin; nested concatenation and ordering text are
-  rejected rather than miscompiled. A stored or concatenated value beyond
-  8191 UTF-8 bytes stops with a bilingual native-runtime error instead of
-  overflowing the buffer;
+  8192-byte buffers), escaped string output, string `==`/`!=` comparisons
+  through `strcmp`, and a `len` builtin; nested concatenation, embedded NUL
+  characters, and ordering text are rejected rather than miscompiled. A stored
+  or concatenated value beyond 8191 UTF-8 bytes stops with a bilingual
+  native-runtime error instead of overflowing the buffer;
 - control flow: sentence `while`/`if`/`else`/`else if` over integer,
   float, and string comparisons (`<`, `>`, `<=`, `>=`, `==`, `!=`, plus
   the natural-language "or equal" connectors), over integer truthiness

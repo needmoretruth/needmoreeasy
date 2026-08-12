@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.55 — 2026-08-12
+
+- Escape native string literals for valid C output, including control
+  characters, and reject embedded NUL strings that C APIs cannot preserve.
+
 ## 0.0.1-beta.54 — 2026-08-12
 
 - Reject nested native function definitions before C emission; the native
