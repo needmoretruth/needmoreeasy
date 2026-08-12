@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.119 — 2026-08-12
+
+- Fix parenthesized Korean logical conditions where a comparison ending comes
+  before an inner `and`/`그리고` or `or`/`또는` connector.
+- Scan fully wrapped conditions at their effective logical depth while keeping
+  nested operand parentheses opaque, with core and native regression coverage.
+
 ## 0.0.1-beta.118 — 2026-08-12
 
 - Extend regression coverage for Korean comparison endings inside parenthesized

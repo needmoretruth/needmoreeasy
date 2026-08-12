@@ -112,6 +112,8 @@ short-circuit evaluation. The Korean spellings `그리고` and `또는` have the
 same behavior. Parentheses may surround a whole colon-free NME condition in an
 `if` or `while` header, but Python-colon conditions remain outside this native
 subset. Korean sentence comparison endings may remain inside the parentheses.
+They may also precede a logical connector inside the wrapper, for example
+`만약 (점수가 2보다 크면 그리고 준비)`.
 
 Use `say`, `show`, or `말해` to output an integer, float, boolean, string, or
 supported expression. A native expression may use a literal, a name assigned

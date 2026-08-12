@@ -2150,6 +2150,10 @@ enum ConditionConnector {
 }
 
 fn find_exact_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionConnector)> {
+    if let Some(inner) = strip_outer_condition_parentheses(tokens) {
+        return find_exact_condition_connector(inner)
+            .map(|(index, connector)| (index + 1, connector));
+    }
     // Spoken Korean splits `<=`/`>=` into two tokens (`10보다 작거나
     // 같으면`); the lone `같으면` would otherwise match equality.
     for (index, pair) in tokens.windows(2).enumerate() {
@@ -2240,6 +2244,9 @@ fn is_or_equal_phrase_at(tokens: &[Token], index: usize) -> bool {
 }
 
 fn find_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionConnector)> {
+    if let Some(inner) = strip_outer_condition_parentheses(tokens) {
+        return find_condition_connector(inner).map(|(index, connector)| (index + 1, connector));
+    }
     if let Some(connector) = find_exact_condition_connector(tokens) {
         return Some(connector);
     }

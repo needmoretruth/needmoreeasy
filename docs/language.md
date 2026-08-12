@@ -288,7 +288,9 @@ Parentheses may surround a whole NME condition in an `if` or `while` header,
 for example `if (ready and score > 2)`. Keep the header colon-free so NME owns
 the line; a valid Python call such as `when(ready and score > 2)` remains
 Python byte-for-byte. Korean sentence endings can stay inside the same wrapper,
-as in `만약 (점수가 2보다 작으면)`.
+as in `만약 (점수가 2보다 작으면)`. A comparison ending may also precede a
+logical connector inside the wrapper, as in `만약 (점수가 2보다 크면 그리고
+준비)`.
 
 ### Random without code punctuation
 

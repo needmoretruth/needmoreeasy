@@ -468,6 +468,25 @@ fn parenthesized_korean_comparison_endings_keep_the_condition_body_boundary() {
 }
 
 #[test]
+fn parenthesized_korean_comparisons_can_precede_logical_connectors() {
+    let source = concat!(
+        "점수는 3\n",
+        "준비는 참\n",
+        "만약 (점수가 2보다 크면 그리고 준비)\n",
+        "성공 말해줘\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "점수 = 3\n",
+        "준비 = True\n",
+        "if ((점수 > 2 and 준비)):\n",
+        "    print(\"성공\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
 fn short_korean_condition_endings_accept_natural_equality_and_literals() {
     let source = concat!(
         "이름은 철수\n",

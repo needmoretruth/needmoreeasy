@@ -1268,6 +1268,10 @@ fn parenthesized_korean_comparison_endings_compile_natively() {
 
     let branch = "점수는 3\n만약 거짓\n    안 돼 말해줘\n아니면 만약에 (점수가 4보다 작으면)\n    작아요 말해줘\n끝\n";
     assert_eq!(native_run(branch).unwrap(), "작아요\n");
+
+    let logical =
+        "점수는 3\n준비는 참\n만약 (점수가 2보다 크면 그리고 준비)\n    성공 말해줘\n끝\n";
+    assert_eq!(native_run(logical).unwrap(), "성공\n");
 }
 
 #[test]
