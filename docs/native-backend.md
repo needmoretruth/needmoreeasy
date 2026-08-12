@@ -36,6 +36,9 @@ rejected with E9031. With no `-o`, NME appends `.c` to the full source stem,
 so `count.ko.nme` produces `count.ko.c` instead of colliding with `count.c`.
 On Windows, implicit outputs also receive `.exe` even when the source stem ends
 in `.ko`.
+A source named `count.c.nme` therefore uses `count.c` as its default executable
+and `count.c.c` as its generated source; only an explicit `-o count.c` is
+rejected as a C-source collision.
 Choose only one action word; passing both `run` and `build` is rejected with
 E9032.
 

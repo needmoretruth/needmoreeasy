@@ -644,6 +644,28 @@ fn native_build_keeps_korean_twin_c_sources_separate() {
 }
 
 #[test]
+fn native_build_default_output_allows_a_c_source_stem() {
+    if Command::new("cc").arg("--version").output().is_err() {
+        eprintln!("cc not available; skipping native C-stem build test");
+        return;
+    }
+    let dir = temporary_dir("native-c-stem-build");
+    write_nme(&dir, "count.c.nme", "show 1\n");
+
+    let built = run_in(&dir, &["native", "build", "count.c"], None);
+    assert!(built.status.success(), "{}", stderr(&built));
+    let executable = if cfg!(windows) {
+        dir.join("count.c.exe")
+    } else {
+        dir.join("count.c")
+    };
+    assert!(executable.exists(), "no default executable written");
+    assert!(dir.join("count.c.c").exists(), "no generated C source written");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn native_run_rejects_an_output_path_in_both_command_languages() {
     let dir = temporary_dir("native-run-output");
     write_nme(&dir, "hello.nme", "say 1\n");

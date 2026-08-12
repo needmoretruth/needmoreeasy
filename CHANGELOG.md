@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.78 — 2026-08-12
+
+- Allow default native builds for source stems ending in `.c`, while keeping
+  the explicit `-o <path>.c` collision guard.
+
 ## 0.0.1-beta.77 — 2026-08-12
 
 - Keep default native artifact names distinct for English and `.ko` sibling

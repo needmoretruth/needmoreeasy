@@ -414,7 +414,8 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
         if cfg!(windows) && (default_output || out.extension().is_none()) {
             out.set_extension("exe");
         }
-        if out
+        if !default_output
+            && out
             .extension()
             .and_then(|extension| extension.to_str())
             .is_some_and(|extension| extension.eq_ignore_ascii_case("c"))
