@@ -679,7 +679,8 @@ See [the conversion guide](converting-python.md).
 - A `global` or `nonlocal` declaration after an earlier use or assignment in
   the same scope gets `E0119` or `E0120`; parameters cannot use either
   declaration. Put the declaration first. Valid module, nested-function, and
-  comprehension scopes remain unchanged.
+  comprehension scopes remain unchanged. Names used in annotations count as
+  uses; f-string validation remains CPython's responsibility.
 - Generator lambdas remain valid advanced Python: a `yield` inside
   `lambda: ...` is checked against the lambda's own function context.
 - An inline body must contain one statement; an inline `else`/`elif` without an

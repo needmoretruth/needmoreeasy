@@ -1545,7 +1545,7 @@ fn python_names_seen_in_scope(tokens: &[Token], declarations: &[PythonDeclaratio
                 || is_python_keyword_argument_name(tokens, index)
                 || token_is_inside_lambda(tokens, index)
                 || is_lambda_parameter_name(tokens, index)
-                || is_python_annotation_name(tokens, index)
+                || is_python_annotation_target_name(tokens, index)
                 || is_comprehension_local_name(tokens, index)
             {
                 None
@@ -1601,27 +1601,18 @@ fn is_lambda_parameter_name(tokens: &[Token], index: usize) -> bool {
     !in_default
 }
 
-fn is_python_annotation_name(tokens: &[Token], index: usize) -> bool {
+fn is_python_annotation_target_name(tokens: &[Token], index: usize) -> bool {
     let depths = token_depths(tokens);
-    let Some(colon_index) = (0..index).rev().find(|&candidate| {
-        depths[candidate] == depths[index] && matches!(tokens[candidate].tok, Tok::Colon)
-    }) else {
+    let Some(next) = tokens.get(index + 1) else {
         return false;
     };
-    if colon_index == 0
-        || !matches!(tokens[0].tok, Tok::Name { .. })
-        || (0..colon_index).any(|candidate| {
-            depths[candidate] == depths[colon_index] && matches!(tokens[candidate].tok, Tok::Equal)
-        })
-    {
+    if !matches!(next.tok, Tok::Colon) || depths[index] != depths[index + 1] {
         return false;
     }
-    !(0..colon_index).any(|candidate| {
-        matches!(
-            tokens[candidate].tok,
-            Tok::If | Tok::For | Tok::While | Tok::With | Tok::Match | Tok::Case
-        )
-    })
+    index == 0
+        || tokens
+            .get(index.wrapping_sub(1))
+            .is_some_and(|previous| matches!(previous.tok, Tok::Comma | Tok::Semi))
 }
 
 fn is_comprehension_local_name(tokens: &[Token], index: usize) -> bool {

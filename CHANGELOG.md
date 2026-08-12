@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.153 — 2026-08-12
+
+- Correct `E0119` handling for names used in Python annotations while keeping
+  f-string validation with the CPython backend.
+
 ## 0.0.1-beta.152 — 2026-08-12
 
 - Add shared bilingual `E0119`/`E0120` for conflicting `global` and `nonlocal`

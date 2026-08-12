@@ -858,6 +858,7 @@ fn conflicting_global_and_nonlocal_declarations_are_rejected_before_cpython() {
         "def update():\n    value = 1\n    global value\n",
         "def read():\n    print(value)\n    global value\n",
         "def parameter(value):\n    global value\n",
+        "def annotated():\n    fn: value = 1\n    global value\n",
     ];
     for source in global_cases {
         let problems =
@@ -901,7 +902,7 @@ fn conflicting_global_and_nonlocal_declarations_are_rejected_before_cpython() {
     );
     let valid_lambda = "def read():\n    fn = lambda value: value\n    global value\n";
     assert_eq!(transpile(valid_lambda).unwrap(), valid_lambda);
-    let valid_annotation = "def read():\n    fn: value = 1\n    global value\n";
+    let valid_annotation = "def read():\n    fn: other = 1\n    global value\n";
     assert_eq!(transpile(valid_annotation).unwrap(), valid_annotation);
 }
 
