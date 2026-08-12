@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.90 — 2026-08-12
+
+- Align the English and Korean condition/random guide examples with their
+  named language paths, while retaining explicit mixed-language examples.
+
 ## 0.0.1-beta.89 — 2026-08-12
 
 - Align the English and Korean break-loop guide examples with their named
