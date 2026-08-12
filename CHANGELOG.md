@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.67 — 2026-08-12
+
+- Make the documentation parity check fail when a local Markdown link points
+  to a missing file.
+
 ## 0.0.1-beta.66 — 2026-08-12
 
 - Use overlap-safe copying for native string assignment so valid self-assignment

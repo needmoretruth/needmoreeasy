@@ -87,6 +87,21 @@ def check_korean_links(problems: list[str]) -> None:
                     )
 
 
+def check_local_markdown_links(problems: list[str]) -> None:
+    for path in ROOT.rglob("*.md"):
+        if any(part in {".git", "target"} for part in path.parts):
+            continue
+        lines = path.read_text(encoding="utf-8").splitlines()
+        for line_number, line in enumerate(lines, start=1):
+            for _label, raw_target in LINK_RE.findall(line):
+                candidate = local_markdown_target(path, raw_target)
+                if candidate is not None and not candidate.is_file():
+                    problems.append(
+                        f"{path.relative_to(ROOT)}:{line_number}: "
+                        f"missing local Markdown link target {raw_target}"
+                    )
+
+
 def check_guide_navigation(problems: list[str]) -> None:
     guides = ROOT / "docs" / "guides"
     for path in guides.iterdir():
@@ -162,6 +177,7 @@ def check_example_template_loop(problems: list[str]) -> None:
 
 
 problems: list[str] = []
+check_local_markdown_links(problems)
 check_korean_links(problems)
 check_guide_navigation(problems)
 check_guide_metadata(problems)
