@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.75 — 2026-08-12
+
+- Update both README compiler descriptions to identify the implemented v0
+  native C backend and its roadmap, rather than describing it as only a plan.
+
 ## 0.0.1-beta.74 — 2026-08-12
 
 - Update the native-backend memo to separate the implemented v0 baseline from

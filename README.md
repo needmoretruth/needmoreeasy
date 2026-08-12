@@ -91,7 +91,7 @@ warns that its `bin` directory is not on `PATH`. It does not reinstall NME.
 Windows PowerShell uses the PATH step in the
 [installation guide](docs/install.md#windows-11).
 
-Expected version: `nme 0.0.1-beta.74`.
+Expected version: `nme 0.0.1-beta.75`.
 
 Windows, macOS, and Linux instructions are in the
 [installation guide](docs/install.md). The [five-minute guide](docs/getting-started.md)
@@ -299,15 +299,17 @@ See [Python conversion](docs/converting-python.md).
 - [AI coding assistants](docs/ai-assistants.md) — one link that Claude Code,
   Codex, Cursor Agent, or OpenCode can read before writing NME
 - [Compiler architecture](docs/architecture.md) — contributor design rules
-- [Native backend research](docs/native-backend.md) — the honest plan for a real NME-native AOT compiler, separate from Python compatibility
+- [Native backend research](docs/native-backend.md) — the implemented v0 NME-native C backend and roadmap for extending its restricted subset
 - [Version policy](docs/versioning.md) and [changelog](CHANGELOG.md)
 
 ## Compiler model
 
 NME is a compiler, not a second Python interpreter. The Rust core performs a
 pure source-to-source compilation into ordinary Python. Python tokenization
-and parsing come from `rustpython-parser`; execution comes from CPython or the
-optional Nuitka native backend. Compilation preserves physical line counts so
-traceback line numbers continue to match the `.nme` file.
+and parsing come from `rustpython-parser`; the Python-compatible path runs on
+CPython, while `nme compile` can optionally invoke Nuitka. The separate
+`nme native` command compiles its restricted NME subset to C and then to an
+executable with the system C compiler. Compilation preserves physical line
+counts so traceback line numbers continue to match the `.nme` file.
 
 Licensed under Apache-2.0.
