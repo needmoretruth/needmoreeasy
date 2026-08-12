@@ -54,6 +54,36 @@ pub enum DiagnosticCode {
     DuplicateElse,
     /// A block that never got its closing `end`/`끝`.
     MissingEnd,
+    /// `return` outside a function.
+    ReturnOutsideFunction,
+    /// `continue` outside a loop.
+    ContinueOutsideLoop,
+    /// `yield` outside a function.
+    YieldOutsideFunction,
+    /// `await` outside an async function.
+    AwaitOutsideAsyncFunction,
+    /// `yield from` inside an async function.
+    YieldFromAsyncFunction,
+    /// `async for` outside an async function.
+    AsyncForOutsideAsyncFunction,
+    /// `async with` outside an async function.
+    AsyncWithOutsideAsyncFunction,
+    /// `nonlocal` with no enclosing function.
+    NonlocalOutsideFunction,
+    /// Star import inside a function or class.
+    ImportStarOutsideModule,
+    /// Control flow inside an `except*` block.
+    ControlFlowInExceptStar,
+    /// `yield` inside a comprehension.
+    YieldInsideComprehension,
+    /// An async comprehension outside an async function.
+    AsyncComprehensionOutsideAsyncFunction,
+    /// A return value inside an async generator.
+    ReturnValueInAsyncGenerator,
+    /// A `global` declaration conflicts with an earlier name use.
+    GlobalDeclarationConflict,
+    /// A `nonlocal` declaration conflicts with an earlier name use.
+    NonlocalDeclarationConflict,
     /// `say` value could not be understood.
     SayValueBroken,
     /// `say` expression is not valid.
@@ -121,8 +151,9 @@ pub enum DiagnosticCode {
     /// The Python source given to the converter is not valid.
     ConvertInvalidPython,
     // E9xxx codes describe CLI-level problems (bad arguments, missing files,
-    // Python/Nuitka startup). They never appear on a `Diagnostic` span; the
-    // `nme ko`/`nme en` lookup shares one registry for both kinds.
+    // Python/Nuitka startup, package installation). They never appear on a
+    // `Diagnostic` span; the `nme ko`/`nme en` lookup shares one registry for
+    // both kinds.
     /// An unknown command word.
     CliUnknownCommand,
     /// `modules` was given an extra argument.
@@ -171,6 +202,22 @@ pub enum DiagnosticCode {
     CliErrorLookupInvalidArgs,
     /// The error-lookup command got a code that does not exist.
     CliErrorLookupUnknownCode,
+    /// pip could not install the requested package.
+    CliPackageInstallFailed,
+    /// The generated native executable could not be started.
+    CliNativeRunStartFailed,
+    /// A temporary working folder could not be created.
+    CliFolderCreateFailed,
+    /// Two imported `.nme` files would get the same Python module name.
+    CliImportedModuleNameCollision,
+    /// `nme compile` does not yet support imported `.nme` modules.
+    CliCompileModuleImportsUnsupported,
+    /// `install` was given no package name.
+    CliInstallPackageMissing,
+    /// `nme native run` was given an output path intended for `build`.
+    CliNativeRunOutput,
+    /// `nme native` was given more than one action word.
+    CliNativeActionRepeated,
 }
 
 impl DiagnosticCode {
@@ -182,6 +229,21 @@ impl DiagnosticCode {
             Self::BranchWithoutCondition => "E0103",
             Self::DuplicateElse => "E0104",
             Self::MissingEnd => "E0105",
+            Self::ReturnOutsideFunction => "E0106",
+            Self::ContinueOutsideLoop => "E0107",
+            Self::YieldOutsideFunction => "E0108",
+            Self::AwaitOutsideAsyncFunction => "E0109",
+            Self::YieldFromAsyncFunction => "E0110",
+            Self::AsyncForOutsideAsyncFunction => "E0111",
+            Self::AsyncWithOutsideAsyncFunction => "E0112",
+            Self::NonlocalOutsideFunction => "E0113",
+            Self::ImportStarOutsideModule => "E0114",
+            Self::ControlFlowInExceptStar => "E0115",
+            Self::YieldInsideComprehension => "E0116",
+            Self::AsyncComprehensionOutsideAsyncFunction => "E0117",
+            Self::ReturnValueInAsyncGenerator => "E0118",
+            Self::GlobalDeclarationConflict => "E0119",
+            Self::NonlocalDeclarationConflict => "E0120",
             Self::SayValueBroken => "E0201",
             Self::SayValueUnparseable => "E0202",
             Self::SaySentenceUnparseable => "E0203",
@@ -239,17 +301,40 @@ impl DiagnosticCode {
             Self::CliAmbiguousProgramPrefix => "E9022",
             Self::CliErrorLookupInvalidArgs => "E9023",
             Self::CliErrorLookupUnknownCode => "E9024",
+            Self::CliPackageInstallFailed => "E9025",
+            Self::CliNativeRunStartFailed => "E9026",
+            Self::CliFolderCreateFailed => "E9027",
+            Self::CliImportedModuleNameCollision => "E9028",
+            Self::CliCompileModuleImportsUnsupported => "E9029",
+            Self::CliInstallPackageMissing => "E9030",
+            Self::CliNativeRunOutput => "E9031",
+            Self::CliNativeActionRepeated => "E9032",
         }
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 63] = [
+    pub const ALL: [DiagnosticCode; 86] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
         Self::BranchWithoutCondition,
         Self::DuplicateElse,
         Self::MissingEnd,
+        Self::ReturnOutsideFunction,
+        Self::ContinueOutsideLoop,
+        Self::YieldOutsideFunction,
+        Self::AwaitOutsideAsyncFunction,
+        Self::YieldFromAsyncFunction,
+        Self::AsyncForOutsideAsyncFunction,
+        Self::AsyncWithOutsideAsyncFunction,
+        Self::NonlocalOutsideFunction,
+        Self::ImportStarOutsideModule,
+        Self::ControlFlowInExceptStar,
+        Self::YieldInsideComprehension,
+        Self::AsyncComprehensionOutsideAsyncFunction,
+        Self::ReturnValueInAsyncGenerator,
+        Self::GlobalDeclarationConflict,
+        Self::NonlocalDeclarationConflict,
         Self::SayValueBroken,
         Self::SayValueUnparseable,
         Self::SaySentenceUnparseable,
@@ -307,6 +392,14 @@ impl DiagnosticCode {
         Self::CliAmbiguousProgramPrefix,
         Self::CliErrorLookupInvalidArgs,
         Self::CliErrorLookupUnknownCode,
+        Self::CliPackageInstallFailed,
+        Self::CliNativeRunStartFailed,
+        Self::CliFolderCreateFailed,
+        Self::CliImportedModuleNameCollision,
+        Self::CliCompileModuleImportsUnsupported,
+        Self::CliInstallPackageMissing,
+        Self::CliNativeRunOutput,
+        Self::CliNativeActionRepeated,
     ];
 
     pub fn from_code(code: &str) -> Option<Self> {
@@ -351,15 +444,15 @@ impl DiagnosticCode {
                 "E0102",
                 "`break` outside a loop",
                 "반복문 밖의 `break`",
-                "`break` (or `멈춰`) stops the nearest loop, so it can only be written inside a `while` loop. Move it inside the loop, or remove it.",
-                "`break`(`멈춰`)는 가장 가까운 반복문을 멈추므로 `while` 반복문 안에서만 쓸 수 있습니다. 반복문 안으로 옮기거나 지우세요.",
+                "`break` (or `멈춰`) stops the nearest loop, so it must be written inside an NME `while`/`repeat` block or a valid Python loop. Move it inside the loop, or remove it.",
+                "`break`(`멈춰`)는 가장 가까운 반복문을 멈추므로 NME `while`/`repeat` 블록이나 올바른 Python 반복문 안에서만 쓸 수 있습니다. 반복문 안으로 옮기거나 지우세요.",
             ),
             Self::BranchWithoutCondition => (
                 "E0103",
                 "an `else` or `elif` with no open condition",
                 "열린 조건이 없는 `아니면`",
-                "`else`, `else if`, `elif`, `아니면` are branches of an `if` (or `만약`) block. Write the `if` line first and keep the `else` inside the same block, before its `end`.",
-                "`else`, `else if`, `elif`, `아니면`은 `if`(`만약`) 블록의 가지입니다. 먼저 `if` 줄을 쓰고, `else`는 같은 블록 안에서 `끝`보다 앞에 두세요.",
+                "`else`, `else if`, `elif`, `아니면` are branches of an `if` (or `만약`) block. Write the `if` line first and keep the branch inside the same block, before its `end`; an inline body must contain a statement, not a branch.",
+                "`else`, `else if`, `elif`, `아니면`은 `if`(`만약`) 블록의 가지입니다. 먼저 `if` 줄을 쓰고, 가지는 같은 블록 안에서 `끝`보다 앞에 두세요. 인라인 본문에는 가지가 아니라 실행 문장을 적어야 합니다.",
             ),
             Self::DuplicateElse => (
                 "E0104",
@@ -374,6 +467,111 @@ impl DiagnosticCode {
                 "닫는 `end`가 없는 블록",
                 "This loop or condition block is still open at the end of the file. Add a closing `end` (or `끝`) line after the block's last line.",
                 "이 반복문·조건 블록이 파일 끝까지 열려 있습니다. 블록의 마지막 줄 뒤에 닫는 `end`(`끝`) 줄을 추가하세요.",
+            ),
+            Self::ReturnOutsideFunction => (
+                "E0106",
+                "`return` outside a function",
+                "함수 밖의 `return`",
+                "`return` sends a value back from a function, so it cannot appear at the top level. Move it inside a `def` function, or remove it.",
+                "`return`은 함수에서 값을 돌려주므로 파일 최상위에 쓸 수 없습니다. `def` 함수 안으로 옮기거나 지우세요.",
+            ),
+            Self::ContinueOutsideLoop => (
+                "E0107",
+                "`continue` outside a loop",
+                "반복문 밖의 `continue`",
+                "`continue` skips to the next iteration, so it must be written inside a valid Python or NME loop. Move it inside the loop, or remove it.",
+                "`continue`는 다음 반복으로 건너뛰므로 올바른 Python 또는 NME 반복문 안에서만 쓸 수 있습니다. 반복문 안으로 옮기거나 지우세요.",
+            ),
+            Self::YieldOutsideFunction => (
+                "E0108",
+                "`yield` outside a function",
+                "함수 밖의 `yield`",
+                "`yield` produces a value from a generator, so it must be written inside a Python `def` or `async def` function. Move it inside a function, or remove it.",
+                "`yield`는 제너레이터에서 값을 내보내므로 Python `def` 또는 `async def` 함수 안에서만 쓸 수 있습니다. 함수 안으로 옮기거나 지우세요.",
+            ),
+            Self::AwaitOutsideAsyncFunction => (
+                "E0109",
+                "`await` outside an async function",
+                "비동기 함수 밖의 `await`",
+                "`await` pauses an asynchronous operation, so it must be written inside a Python `async def` function. Move it into an async function, or remove it.",
+                "`await`는 비동기 작업을 기다리므로 Python `async def` 함수 안에서만 쓸 수 있습니다. 비동기 함수 안으로 옮기거나 지우세요.",
+            ),
+            Self::YieldFromAsyncFunction => (
+                "E0110",
+                "`yield from` inside an async function",
+                "비동기 함수 안의 `yield from`",
+                "An async generator may use `yield`, but Python does not allow `yield from` inside `async def`. Use an `async for` loop to yield values from an async source, or use a normal `def` generator.",
+                "비동기 제너레이터에서는 `yield`를 쓸 수 있지만 Python은 `async def` 안의 `yield from`을 허용하지 않습니다. 비동기 원천의 값을 내보내려면 `async for`를 쓰거나 일반 `def` 제너레이터를 사용하세요.",
+            ),
+            Self::AsyncForOutsideAsyncFunction => (
+                "E0111",
+                "`async for` outside an async function",
+                "비동기 함수 밖의 `async for`",
+                "`async for` waits for an asynchronous iterator, so it must be written inside a Python `async def` function. Move the loop into an async function, or use an ordinary `for` loop.",
+                "`async for`는 비동기 반복자를 기다리므로 Python `async def` 함수 안에서만 쓸 수 있습니다. 반복문을 비동기 함수 안으로 옮기거나 일반 `for` 반복문을 사용하세요.",
+            ),
+            Self::AsyncWithOutsideAsyncFunction => (
+                "E0112",
+                "`async with` outside an async function",
+                "비동기 함수 밖의 `async with`",
+                "`async with` waits for an asynchronous context manager, so it must be written inside a Python `async def` function. Move the block into an async function, or use an ordinary `with` block.",
+                "`async with`는 비동기 컨텍스트 관리자를 기다리므로 Python `async def` 함수 안에서만 쓸 수 있습니다. 블록을 비동기 함수 안으로 옮기거나 일반 `with` 블록을 사용하세요.",
+            ),
+            Self::NonlocalOutsideFunction => (
+                "E0113",
+                "`nonlocal` with no enclosing function",
+                "바깥 함수가 없는 `nonlocal`",
+                "`nonlocal` needs an enclosing function, not just the current function. Put this declaration in a nested function or class under another function, or remove it. When an enclosing function exists, the core leaves validation of the requested outer name to CPython.",
+                "`nonlocal`은 현재 함수만으로는 부족하고 바깥 함수가 필요합니다. 다른 함수 아래의 중첩 함수나 클래스에 이 선언을 넣거나 지우세요. 바깥 함수가 있으면 요청한 이름의 바인딩 검사는 코어가 아니라 CPython이 담당합니다.",
+            ),
+            Self::ImportStarOutsideModule => (
+                "E0114",
+                "star import outside module scope",
+                "모듈 범위 밖의 별표 import",
+                "`from ... import *` is only allowed at module scope, not inside a function or class. Import the names explicitly inside that scope, or move the star import to the module level.",
+                "`from ... import *`은 함수나 클래스 안이 아니라 모듈 범위에서만 쓸 수 있습니다. 그 범위 안에서는 이름을 명시적으로 import하거나 별표 import를 모듈 수준으로 옮기세요.",
+            ),
+            Self::ControlFlowInExceptStar => (
+                "E0115",
+                "control flow inside an `except*` block",
+                "`except*` 블록 안의 제어 흐름",
+                "Python does not allow `break`, `continue`, or `return` inside an `except*` block. Move the control-flow statement outside the block, or use a normal `except` block when its semantics are appropriate.",
+                "Python은 `except*` 블록 안에서 `break`, `continue`, `return`을 허용하지 않습니다. 제어 흐름 문장을 블록 밖으로 옮기거나, 의미가 맞을 때 일반 `except` 블록을 사용하세요.",
+            ),
+            Self::YieldInsideComprehension => (
+                "E0116",
+                "`yield` inside a comprehension",
+                "컴프리헨션 안의 `yield`",
+                "Python does not allow `yield` inside a list, set, dictionary, or generator comprehension. Replace the comprehension with an explicit loop, or move `yield` outside the comprehension.",
+                "Python은 리스트·집합·딕셔너리·제너레이터 컴프리헨션 안의 `yield`를 허용하지 않습니다. 컴프리헨션을 명시적인 반복문으로 바꾸거나 `yield`를 컴프리헨션 밖으로 옮기세요.",
+            ),
+            Self::AsyncComprehensionOutsideAsyncFunction => (
+                "E0117",
+                "async comprehension outside an async function",
+                "비동기 함수 밖의 비동기 컴프리헨션",
+                "Python only allows a comprehension with `async for` inside an `async def` function. Move it into an async function, or use an ordinary `for` comprehension for a synchronous iterable.",
+                "Python은 `async for`가 있는 컴프리헨션을 `async def` 함수 안에서만 허용합니다. 컴프리헨션을 비동기 함수 안으로 옮기거나 동기 반복자에는 일반 `for` 컴프리헨션을 사용하세요.",
+            ),
+            Self::ReturnValueInAsyncGenerator => (
+                "E0118",
+                "return value inside an async generator",
+                "비동기 제너레이터 안의 반환값",
+                "Python does not allow an async generator to return a value. Use a bare `return`, or move the value-returning statement into a separate async function.",
+                "Python은 비동기 제너레이터에서 반환값을 허용하지 않습니다. 값이 없는 `return`을 사용하거나 값을 반환하는 문장을 별도의 비동기 함수로 옮기세요.",
+            ),
+            Self::GlobalDeclarationConflict => (
+                "E0119",
+                "conflicting `global` declaration",
+                "충돌하는 `global` 선언",
+                "Python requires `global` to appear before the name is used or assigned in the same scope, and a parameter cannot be declared global. Move the declaration earlier or choose another name.",
+                "Python에서는 같은 범위에서 이름을 사용하거나 대입하기 전에 `global`을 적어야 하며, 매개변수는 global로 선언할 수 없습니다. 선언을 앞에 적거나 다른 이름을 사용하세요.",
+            ),
+            Self::NonlocalDeclarationConflict => (
+                "E0120",
+                "conflicting `nonlocal` declaration",
+                "충돌하는 `nonlocal` 선언",
+                "Python requires `nonlocal` to appear before the name is used or assigned in the same scope, and a parameter cannot be declared nonlocal. Move the declaration earlier or choose another name.",
+                "Python에서는 같은 범위에서 이름을 사용하거나 대입하기 전에 `nonlocal`을 적어야 하며, 매개변수는 nonlocal로 선언할 수 없습니다. 선언을 앞에 적거나 다른 이름을 사용하세요.",
             ),
             Self::SayValueBroken => (
                 "E0201",
@@ -611,14 +809,14 @@ impl DiagnosticCode {
                 "unknown command",
                 "알 수 없는 명령",
                 "The first word of the command is not one NME knows. Run `nme help` (or `nme 도움`) for the command list; `nme r` runs the single .nme program in the current folder.",
-                "명령의 첫 단어가 NME가 아는 명령이 아닙니다. `nme 도움`(`nme help`)으로 명령 목록을 보세요. 현재 폴더에 .nme 프로그램이 하나뿐이면 `nme r`만으로 실행할 수 있습니다.",
+                "명령의 첫 단어가 NME가 아는 명령이 아닙니다. `nme 도움`(`nme help`)으로 명령 목록을 보세요. 현재 폴더에 .nme 프로그램이 하나뿐이면 `nme 실행`으로 실행할 수 있습니다.",
             ),
             Self::CliModulesExtraArgument => (
                 "E9002",
                 "`modules` takes no extra arguments",
                 "`모듈` 명령에는 추가 인자가 없습니다",
                 "`nme modules` only lists the bundled modules. Do not add a file name or option.",
-                "`nme modules`는 내장 모듈 목록만 보여 줍니다. 파일 이름이나 옵션을 붙이지 마세요.",
+                "`nme 모듈`은 내장 모듈 목록만 보여 줍니다. 파일 이름이나 옵션을 붙이지 마세요.",
             ),
             Self::CliInvalidOptionValue => (
                 "E9003",
@@ -652,8 +850,8 @@ impl DiagnosticCode {
                 "E9007",
                 "a file could not be read",
                 "파일을 읽을 수 없습니다",
-                "NME could not open the file. Check the path, the file name, and the folder permissions, then run the command again.",
-                "NME가 파일을 열 수 없습니다. 경로, 파일 이름, 폴더 권한을 확인한 뒤 다시 실행하세요.",
+                "NME could not open the program, converted input, or imported module file. Check the path, the file name, and the folder permissions, then run the command again.",
+                "NME가 프로그램, 변환할 입력, 또는 가져온 모듈 파일을 열 수 없습니다. 경로, 파일 이름, 폴더 권한을 확인한 뒤 다시 실행하세요.",
             ),
             Self::CliFileWriteFailed => (
                 "E9008",
@@ -666,22 +864,22 @@ impl DiagnosticCode {
                 "E9009",
                 "refusing to overwrite the output",
                 "결과 파일을 덮어쓰지 않습니다",
-                "`nme build -o` and `nme compile -o` never overwrite an existing file by accident. Delete or rename the existing file, or choose another output name.",
-                "`nme build -o`와 `nme compile -o`는 실수로 기존 파일을 덮어쓰지 않습니다. 기존 파일을 삭제하거나 이름을 바꾸거나 다른 출력 이름을 고르세요.",
+                "`nme build -o`, `nme compile -o`, and `nme native build -o` never overwrite an existing file by accident. Delete or rename the existing file, or choose another output name.",
+                "`nme 빌드 -o`, `nme 컴파일 -o`, `nme 네이티브 빌드 -o`는 실수로 기존 파일을 덮어쓰지 않습니다. 기존 파일을 삭제하거나 이름을 바꾸거나 다른 출력 이름을 고르세요.",
             ),
             Self::CliNativeCompileFailed => (
                 "E9010",
                 "the native compiler failed",
                 "네이티브 컴파일이 실패했습니다",
-                "Nuitka stopped with an error while building the executable. The compiler message above says why. Confirm Python, Nuitka, and a platform C compiler are installed, then try again.",
-                "실행 파일을 만드는 동안 Nuitka가 오류로 멈췄습니다. 위의 컴파일러 메시지에서 이유를 확인하세요. Python, Nuitka, 운영체제용 C 컴파일러가 설치되어 있는지 확인한 뒤 다시 시도하세요.",
+                "An NME native build failed while making an executable. `nme compile` uses Nuitka; `nme native` uses the system C compiler. The compiler message above says why. Install the toolchain required by the command, then try again.",
+                "NME 네이티브 빌드에서 실행 파일을 만드는 중 실패했습니다. `nme 컴파일`은 Nuitka를, `nme 네이티브`(영어 `nme native`)는 시스템 C 컴파일러를 사용합니다. 위 컴파일러 메시지에서 이유를 확인하고 해당 명령에 필요한 도구를 설치한 뒤 다시 시도하세요.",
             ),
             Self::CliNativeCompileStartFailed => (
                 "E9011",
                 "the native compiler could not be started",
                 "네이티브 컴파일러를 시작할 수 없습니다",
-                "NME could not launch Nuitka. Install Python and Nuitka (`python3 -m pip install nuitka`), then run the command again.",
-                "NME가 Nuitka를 실행하지 못했습니다. Python과 Nuitka를 설치(`python3 -m pip install nuitka`)한 뒤 다시 실행하세요.",
+                "NME could not start the compiler for this native build. `nme compile` needs Python and Nuitka; `nme native` needs a system C compiler such as `cc` or `clang`. Install the tool required by the command, then try again.",
+                "NME가 네이티브 빌드에 필요한 컴파일러를 시작하지 못했습니다. `nme 컴파일`에는 Python과 Nuitka가, `nme 네이티브`(영어 `nme native`)에는 `cc`나 `clang` 같은 시스템 C 컴파일러가 필요합니다. 해당 명령에 필요한 도구를 설치한 뒤 다시 시도하세요.",
             ),
             Self::CliCpythonValidationFailed => (
                 "E9012",
@@ -702,14 +900,14 @@ impl DiagnosticCode {
                 "that is a folder, not a program",
                 "폴더는 프로그램이 아닙니다",
                 "NME runs a single .nme file, not a folder. Type a program name, or run `nme r` inside the folder that contains one .nme program.",
-                "NME는 폴더가 아니라 .nme 파일 하나를 실행합니다. 프로그램 이름을 적거나, .nme 프로그램이 있는 폴더 안에서 `nme r`을 실행하세요.",
+                "NME는 폴더가 아니라 .nme 파일 하나를 실행합니다. 프로그램 이름을 적거나, .nme 프로그램이 있는 폴더 안에서 `nme 실행`을 실행하세요.",
             ),
             Self::CliMissingProgram => (
                 "E9015",
                 "the program file does not exist",
                 "프로그램 파일이 없습니다",
                 "The typed name does not match a file. If you see a `did you mean` hint, use that name; otherwise create the file or run `nme r` to run the single .nme program here.",
-                "적은 이름과 일치하는 파일이 없습니다. `did you mean` 힌트가 보이면 그 이름을 쓰세요. 아니면 파일을 만들거나, 여기 있는 .nme 프로그램 하나를 `nme r`로 실행하세요.",
+                "적은 이름과 일치하는 파일이 없습니다. `did you mean` 힌트가 보이면 그 이름을 쓰세요. 아니면 파일을 만들거나, 여기 있는 .nme 프로그램 하나를 `nme 실행`으로 실행하세요.",
             ),
             Self::CliFolderReadFailed => (
                 "E9016",
@@ -723,7 +921,7 @@ impl DiagnosticCode {
                 "no .nme program in this folder",
                 "이 폴더에 .nme 프로그램이 없습니다",
                 "`nme r` without a file name needs one .nme program in the current folder. Create one (for example hello.nme) or type a file name: `nme r hello`.",
-                "파일 이름 없이 `nme r`을 실행하려면 현재 폴더에 .nme 프로그램이 하나 필요합니다. 파일을 만들거나(예: hello.nme) 파일 이름을 적으세요: `nme r hello`.",
+                "파일 이름 없이 `nme 실행`을 실행하려면 현재 폴더에 .nme 프로그램이 하나 필요합니다. 파일을 만들거나(예: hello.nme) 파일 이름을 적으세요: `nme 실행 hello`.",
             ),
             Self::CliPickAnswerUnreadable => (
                 "E9018",
@@ -773,6 +971,62 @@ impl DiagnosticCode {
                 "알 수 없는 오류 코드",
                 "The code is not one NME uses. Run `nme ko` to see the full list, or copy the code exactly from the error message.",
                 "이 코드는 NME가 쓰는 코드가 아닙니다. `nme ko`로 전체 목록을 보거나, 오류 메시지에서 코드를 정확히 복사하세요.",
+            ),
+            Self::CliPackageInstallFailed => (
+                "E9025",
+                "pip could not install the package",
+                "pip이 패키지를 설치하지 못했습니다",
+                "The `nme install` command asked Python's pip to install a package, but pip exited with an error. Check the package name, your internet connection, and that pip is installed, then try again.",
+                "`nme 설치`가 Python의 pip으로 패키지를 설치하려 했지만 pip이 오류로 끝났습니다. 패키지 이름, 인터넷 연결, pip 설치 여부를 확인한 뒤 다시 시도하세요.",
+            ),
+            Self::CliNativeRunStartFailed => (
+                "E9026",
+                "the native program could not be started",
+                "네이티브 프로그램을 시작할 수 없습니다",
+                "`nme native` built an executable, but the operating system could not start it. Check executable permissions and platform compatibility, or run the program through CPython with `nme run`.",
+                "`nme 네이티브`가 실행 파일을 만들었지만 운영체제가 시작하지 못했습니다. 실행 권한과 운영체제 호환성을 확인하거나 `nme 실행`으로 CPython 경로를 사용하세요.",
+            ),
+            Self::CliFolderCreateFailed => (
+                "E9027",
+                "a temporary working folder could not be created",
+                "임시 작업 폴더를 만들 수 없습니다",
+                "NME could not create the temporary working folder needed for a native build or imported modules. Check the temporary-directory setting and folder permissions, then try again.",
+                "NME가 네이티브 빌드나 가져온 모듈에 필요한 임시 작업 폴더를 만들 수 없습니다. 임시 폴더 설정과 폴더 권한을 확인한 뒤 다시 시도하세요.",
+            ),
+            Self::CliImportedModuleNameCollision => (
+                "E9028",
+                "two imported modules have the same name",
+                "가져온 모듈 두 개의 이름이 같습니다",
+                "NME found two imported `.nme` files with the same name without `.nme`, so they would become the same Python module. Rename one file or import only one of them.",
+                "NME가 `.nme`를 뺀 이름이 같은 가져온 모듈을 두 개 찾았습니다. 두 모듈이 같은 Python 모듈이 되므로 파일 하나의 이름을 바꾸거나 하나만 가져오세요.",
+            ),
+            Self::CliCompileModuleImportsUnsupported => (
+                "E9029",
+                "module imports are not supported by `nme compile`",
+                "`nme 컴파일`은 모듈 가져오기를 지원하지 않습니다",
+                "`nme compile` currently compiles one transpiled program and does not bundle imported `.nme` modules. Use `nme run`, `nme check`, or `nme build` for a program that imports another `.nme` file.",
+                "`nme 컴파일`은 현재 변환한 프로그램 하나만 컴파일하며 가져온 `.nme` 모듈을 함께 묶지 않습니다. 다른 `.nme` 파일을 가져오는 프로그램은 `nme 실행`, `nme 검사`, 또는 `nme 빌드`를 사용하세요.",
+            ),
+            Self::CliInstallPackageMissing => (
+                "E9030",
+                "the package name is missing",
+                "패키지 이름이 없습니다",
+                "`nme install` needs one package name, for example `nme install requests`. Add the package name, or use `nme 설치 <패키지>` in the Korean command form.",
+                "`nme 설치`에는 패키지 이름 하나가 필요합니다. 예: `nme 설치 requests`. 패키지 이름을 추가하세요.",
+            ),
+            Self::CliNativeRunOutput => (
+                "E9031",
+                "`-o` is only available with `nme native build`",
+                "`-o`는 `nme 네이티브 빌드`에서만 사용할 수 있습니다",
+                "`nme native run` executes the program without saving an artifact. Use `nme native build <file> -o <path>` when you want to keep the executable and generated C source.",
+                "`nme 네이티브 실행`은 결과 파일을 저장하지 않고 프로그램을 실행합니다. 실행 파일과 생성된 C 소스를 보관하려면 `nme 네이티브 빌드 <파일> -o <경로>`를 사용하세요.",
+            ),
+            Self::CliNativeActionRepeated => (
+                "E9032",
+                "more than one native action was given",
+                "네이티브 동작을 두 개 이상 적었습니다",
+                "Choose exactly one native action: `run` or `build`. Write `nme native run <file>` to execute, or `nme native build <file>` to keep artifacts.",
+                "네이티브 동작은 `실행` 또는 `빌드` 중 하나만 선택하세요. 실행하려면 `nme 네이티브 실행 <파일>`, 결과물을 보관하려면 `nme 네이티브 빌드 <파일>`을 사용하세요.",
             ),
         };
         CodeExplanation {

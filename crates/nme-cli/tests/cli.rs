@@ -59,6 +59,19 @@ fn python_available() -> bool {
         .is_ok_and(|out| out.status.success())
 }
 
+fn native_compiler() -> &'static str {
+    if cfg!(windows) {
+        "cl"
+    } else {
+        "cc"
+    }
+}
+
+fn native_compiler_available() -> bool {
+    let probe = if cfg!(windows) { "/?" } else { "--version" };
+    Command::new(native_compiler()).arg(probe).output().is_ok()
+}
+
 #[test]
 fn build_prints_transpiled_python() {
     let output = nme(&["build", &example("hello.nme")]);
@@ -361,12 +374,25 @@ fn a_missing_module_gets_a_clear_error() {
 
     let output = run_in(&dir, &["run", "main"], None);
     assert!(!output.status.success());
+    let error = stderr(&output);
     assert!(
-        stderr(&output).contains("couldn't read module"),
-        "{}",
-        stderr(&output)
+        error.contains("error[E9007]: couldn't read module"),
+        "{error}"
     );
-    assert!(stderr(&output).contains("nope.nme"), "{}", stderr(&output));
+    assert!(error.contains("nope.nme"), "{error}");
+    assert!(!error.contains("E9015"), "{error}");
+
+    let korean = run_in(&dir, &["실행", "main"], None);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(
+        korean_error.contains("오류[E9007]: nope.nme 모듈을 읽을 수 없습니다"),
+        "{korean_error}"
+    );
+    assert!(
+        korean_error.contains("error[E9007]: couldn't read module"),
+        "{korean_error}"
+    );
 
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -398,10 +424,150 @@ fn module_imports_reach_nested_imports() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+#[cfg(unix)]
+#[test]
+fn module_staging_does_not_reuse_stale_python_files() {
+    use std::os::unix::fs::PermissionsExt as _;
+
+    if !python_available() {
+        eprintln!("Python not available; skipping stale module staging test");
+        return;
+    }
+    let dir = temporary_dir("stale-module-staging");
+    let temp_root = dir.join("tmp");
+    std::fs::create_dir_all(&temp_root).unwrap();
+    write_nme(&dir, "helper.nme", "fresh = \"fresh\"\n");
+    write_nme(
+        &dir,
+        "main.nme",
+        "from \"helper.nme\" import fresh\nshow fresh\nimport stale\nshow stale.value\n",
+    );
+
+    let wrapper = dir.join("nme-wrapper.sh");
+    std::fs::write(
+        &wrapper,
+        format!(
+            "#!/bin/sh\nmkdir -p \"$TMPDIR/nme-modules-$$\"\nprintf '%s\\n' 'value = \"stale\"' > \"$TMPDIR/nme-modules-$$/stale.py\"\nexec \"{}\" \"$@\"\n",
+            env!("CARGO_BIN_EXE_nme")
+        ),
+    )
+    .unwrap();
+    let mut permissions = std::fs::metadata(&wrapper).unwrap().permissions();
+    permissions.set_mode(0o755);
+    std::fs::set_permissions(&wrapper, permissions).unwrap();
+
+    let output = Command::new(&wrapper)
+        .args(["run", "main"])
+        .current_dir(&dir)
+        .env("TMPDIR", &temp_root)
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    assert_eq!(stdout(&output), "fresh\n");
+    let error = stderr(&output);
+    assert!(error.contains("ModuleNotFoundError"), "{error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn imported_module_stem_collisions_are_bilingual_and_precise() {
+    let dir = temporary_dir("module-stem-collision");
+    std::fs::create_dir_all(dir.join("one")).unwrap();
+    std::fs::create_dir_all(dir.join("two")).unwrap();
+    write_nme(&dir.join("one"), "helper.nme", "first = 1\n");
+    write_nme(&dir.join("two"), "helper.nme", "second = 2\n");
+    write_nme(
+        &dir,
+        "main.nme",
+        "from \"one/helper.nme\" import first\nfrom \"two/helper.nme\" import second\n",
+    );
+
+    let output = run_in(&dir, &["실행", "main"], None);
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(
+        error.contains("오류[E9028]: 가져온 모듈 두 개가 모두 `helper`라는 이름입니다"),
+        "{error}"
+    );
+    assert!(
+        error.contains("error[E9028]: two imported modules are both named `helper`"),
+        "{error}"
+    );
+    assert!(!error.contains("E9003"), "{error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[cfg(unix)]
+#[test]
+fn korean_module_staging_failures_are_bilingual_and_precise() {
+    let dir = std::env::temp_dir().join(format!(
+        "nme-cli-module-staging-failure-{}",
+        std::process::id()
+    ));
+    std::fs::create_dir_all(&dir).unwrap();
+    write_nme(
+        &dir,
+        "main.nme",
+        "from \"helper.nme\" import value\nshow value\n",
+    );
+    write_nme(&dir, "helper.nme", "value = 1\n");
+    let blocked_temp = dir.join("temp-file");
+    std::fs::write(&blocked_temp, "not a folder").unwrap();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_nme"))
+        .args(["실행", "main"])
+        .current_dir(&dir)
+        .env("TMPDIR", &blocked_temp)
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    let korean_position = error
+        .find("오류[E9027]: 임시 작업 폴더를 만들 수 없습니다")
+        .unwrap_or_else(|| panic!("{error}"));
+    let english_position = error
+        .find("error[E9027]: couldn't create the temporary working folder")
+        .unwrap_or_else(|| panic!("{error}"));
+    assert!(korean_position < english_position, "{error}");
+    assert!(!error.contains("E9016"), "{error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[cfg(unix)]
+#[test]
+fn korean_compile_staging_failures_are_bilingual_and_precise() {
+    let dir = temporary_dir("compile-staging-failure");
+    write_nme(&dir, "main.nme", "show 1\n");
+    let blocked_temp = dir.join("temp-file");
+    std::fs::write(&blocked_temp, "not a folder").unwrap();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_nme"))
+        .args(["컴파일", "main"])
+        .current_dir(&dir)
+        .env("TMPDIR", &blocked_temp)
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    let korean_position = error
+        .find("오류[E9027]: 네이티브 컴파일용 임시 작업 폴더를 만들 수 없습니다")
+        .unwrap_or_else(|| panic!("{error}"));
+    let english_position = error
+        .find("error[E9027]: couldn't create the temporary working folder for native compilation")
+        .unwrap_or_else(|| panic!("{error}"));
+    assert!(korean_position < english_position, "{error}");
+    assert!(!error.contains("E9011"), "{error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 #[test]
 fn the_native_example_matches_the_python_path_output() {
-    if Command::new("cc").arg("--version").output().is_err() || !python_available() {
-        eprintln!("cc or Python not available; skipping native parity test");
+    if !native_compiler_available() || !python_available() {
+        eprintln!("native C compiler or Python not available; skipping native parity test");
         return;
     }
     let python_output = nme(&["run", &example("native-count.nme")]);
@@ -422,12 +588,11 @@ fn the_native_example_matches_the_python_path_output() {
 
 #[test]
 fn the_native_command_compiles_and_runs_a_core_program() {
-    if Command::new("cc").arg("--version").output().is_err() {
-        eprintln!("cc not available; skipping native test");
+    if !native_compiler_available() {
+        eprintln!("native C compiler not available; skipping native test");
         return;
     }
-    let dir = std::env::temp_dir().join(format!("nme-cli-native-{}", std::process::id()));
-    std::fs::create_dir_all(&dir).unwrap();
+    let dir = temporary_dir("native-command");
     std::fs::write(
         dir.join("count.nme"),
         "score = 0\nwhile score is less than 3\n    score add 1\nend\nshow score\nshow \"done\"\n",
@@ -455,6 +620,314 @@ fn the_native_command_compiles_and_runs_a_core_program() {
 }
 
 #[test]
+fn native_build_keeps_korean_twin_c_sources_separate() {
+    if !native_compiler_available() {
+        eprintln!("native C compiler not available; skipping native twin build test");
+        return;
+    }
+    let dir = temporary_dir("native-korean-twin-build");
+    write_nme(&dir, "count.nme", "show 1\n");
+    write_nme(&dir, "count.ko.nme", "말해 1\n");
+
+    let english = run_in(&dir, &["native", "build", "count"], None);
+    assert!(english.status.success(), "{}", stderr(&english));
+    assert!(dir.join("count.c").exists(), "no English C source written");
+    let english_executable = if cfg!(windows) {
+        dir.join("count.exe")
+    } else {
+        dir.join("count")
+    };
+    assert!(english_executable.exists(), "no English executable written");
+
+    let korean = run_in(&dir, &["네이티브", "빌드", "count.ko"], None);
+    assert!(korean.status.success(), "{}", stderr(&korean));
+    assert!(
+        dir.join("count.ko.c").exists(),
+        "no Korean C source written: {}",
+        stderr(&korean)
+    );
+    let korean_executable = if cfg!(windows) {
+        dir.join("count.ko.exe")
+    } else {
+        dir.join("count.ko")
+    };
+    assert!(korean_executable.exists(), "no Korean executable written");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn native_build_default_output_allows_a_c_source_stem() {
+    if !native_compiler_available() {
+        eprintln!("native C compiler not available; skipping native C-stem build test");
+        return;
+    }
+    let dir = temporary_dir("native-c-stem-build");
+    write_nme(&dir, "count.c.nme", "show 1\n");
+
+    let built = run_in(&dir, &["native", "build", "count.c"], None);
+    assert!(built.status.success(), "{}", stderr(&built));
+    let executable = if cfg!(windows) {
+        dir.join("count.c.exe")
+    } else {
+        dir.join("count.c")
+    };
+    assert!(executable.exists(), "no default executable written");
+    assert!(
+        dir.join("count.c.c").exists(),
+        "no generated C source written"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn native_run_rejects_an_output_path_in_both_command_languages() {
+    let dir = temporary_dir("native-run-output");
+    write_nme(&dir, "hello.nme", "say 1\n");
+
+    let english = run_in(&dir, &["native", "run", "hello", "-o", "saved"], None);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(
+        english_error.contains("error[E9031]: `-o` is only available with `nme native build`"),
+        "{english_error}"
+    );
+    assert!(!dir.join("saved").exists(), "{english_error}");
+
+    let korean = run_in(&dir, &["네이티브", "실행", "hello", "-o", "saved-ko"], None);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(
+        korean_error.contains("오류[E9031]: `-o`는 `nme 네이티브 빌드`에서만 사용할 수 있습니다"),
+        "{korean_error}"
+    );
+    assert!(
+        korean_error.contains("error[E9031]: `-o` is only available with `nme native build`"),
+        "{korean_error}"
+    );
+    assert!(!dir.join("saved-ko").exists(), "{korean_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn native_rejects_repeated_run_and_build_actions() {
+    let dir = temporary_dir("native-repeated-action");
+    write_nme(&dir, "hello.nme", "say 1\n");
+
+    let english = run_in(&dir, &["native", "run", "build", "hello"], None);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(
+        english_error.contains("error[E9032]: choose only one native action: `run` or `build`"),
+        "{english_error}"
+    );
+
+    let korean = run_in(&dir, &["네이티브", "실행", "빌드", "hello"], None);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(
+        korean_error
+            .contains("오류[E9032]: 네이티브 동작은 `실행` 또는 `빌드` 중 하나만 선택하세요"),
+        "{korean_error}"
+    );
+    assert!(
+        korean_error.contains("error[E9032]: choose only one native action: `run` or `build`"),
+        "{korean_error}"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn native_build_refuses_to_overwrite_existing_artifacts() {
+    if !native_compiler_available() {
+        eprintln!("native C compiler not available; skipping native overwrite test");
+        return;
+    }
+    let dir = temporary_dir("native-overwrite");
+    write_nme(&dir, "count.nme", "say 1\n");
+    let executable = if cfg!(windows) {
+        dir.join("count_out.exe")
+    } else {
+        dir.join("count_out")
+    };
+    let c_source = dir.join("count_out.c");
+    std::fs::write(&executable, "keep executable").unwrap();
+    std::fs::write(&c_source, "keep C source").unwrap();
+
+    let output = run_in(&dir, &["native", "build", "count", "-o", "count_out"], None);
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(
+        error.contains("error[E9009]: refusing to overwrite"),
+        "{error}"
+    );
+    assert_eq!(
+        std::fs::read_to_string(&executable).unwrap(),
+        "keep executable"
+    );
+    assert_eq!(std::fs::read_to_string(&c_source).unwrap(), "keep C source");
+
+    let korean = run_in(
+        &dir,
+        &["네이티브", "빌드", "count", "-o", "count_out"],
+        None,
+    );
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(
+        korean_error.contains("오류[E9009]: 이미 있는 결과 파일을 덮어쓰지 않습니다"),
+        "{korean_error}"
+    );
+    assert!(
+        korean_error.contains("error[E9009]: refusing to overwrite"),
+        "{korean_error}"
+    );
+    assert_eq!(
+        std::fs::read_to_string(&executable).unwrap(),
+        "keep executable"
+    );
+    assert_eq!(std::fs::read_to_string(&c_source).unwrap(), "keep C source");
+
+    let source_only = dir.join("source-only.c");
+    std::fs::write(&source_only, "keep source-only C").unwrap();
+    let source_only_build = run_in(
+        &dir,
+        &["native", "build", "count", "-o", "source-only"],
+        None,
+    );
+    assert!(!source_only_build.status.success());
+    let source_only_error = stderr(&source_only_build);
+    assert!(
+        source_only_error.contains("error[E9009]: refusing to overwrite existing native source"),
+        "{source_only_error}"
+    );
+    assert_eq!(
+        std::fs::read_to_string(&source_only).unwrap(),
+        "keep source-only C"
+    );
+
+    let collision = run_in(
+        &dir,
+        &["native", "build", "count", "-o", "collision.c"],
+        None,
+    );
+    assert!(!collision.status.success());
+    let collision_error = stderr(&collision);
+    assert!(
+        collision_error.contains("error[E9003]: -o cannot use the generated C source path"),
+        "{collision_error}"
+    );
+    assert!(!dir.join("collision.c").exists(), "{collision_error}");
+
+    let korean_collision = run_in(
+        &dir,
+        &["네이티브", "빌드", "count", "-o", "kollision.c"],
+        None,
+    );
+    assert!(!korean_collision.status.success());
+    let korean_collision_error = stderr(&korean_collision);
+    assert!(
+        korean_collision_error
+            .contains("오류[E9003]: -o에는 생성되는 C 소스 경로를 사용할 수 없습니다"),
+        "{korean_collision_error}"
+    );
+    assert!(
+        korean_collision_error.contains("error[E9003]: -o cannot use the generated C source path"),
+        "{korean_collision_error}"
+    );
+    assert!(
+        !dir.join("kollision.c").exists(),
+        "{korean_collision_error}"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[cfg(unix)]
+#[test]
+fn native_run_start_failures_use_a_native_diagnostic() {
+    use std::os::unix::fs::PermissionsExt as _;
+
+    let dir = std::env::temp_dir().join(format!(
+        "nme-cli-native-start-failure-{}",
+        std::process::id()
+    ));
+    let tools = dir.join("tools");
+    std::fs::create_dir_all(&tools).unwrap();
+    std::fs::write(dir.join("hello.nme"), "say 1\n").unwrap();
+
+    let fake_cc = tools.join("cc");
+    std::fs::write(&fake_cc, "#!/bin/sh\nexit 0\n").unwrap();
+    let mut permissions = std::fs::metadata(&fake_cc).unwrap().permissions();
+    permissions.set_mode(0o755);
+    std::fs::set_permissions(&fake_cc, permissions).unwrap();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_nme"))
+        .args(["native", "hello"])
+        .current_dir(&dir)
+        .env("PATH", &tools)
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(
+        error.contains("error[E9026]: couldn't start the native program"),
+        "{error}"
+    );
+    assert!(!error.contains("E9013"), "{error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[cfg(unix)]
+#[test]
+fn native_unreadable_program_uses_a_file_read_diagnostic() {
+    use std::os::unix::fs::PermissionsExt as _;
+
+    let dir = temporary_dir("native-unreadable-program");
+    let file = dir.join("main.nme");
+    write_nme(&dir, "main.nme", "say 1\n");
+    let mut permissions = std::fs::metadata(&file).unwrap().permissions();
+    permissions.set_mode(0o000);
+    std::fs::set_permissions(&file, permissions).unwrap();
+
+    let output = run_in(&dir, &["네이티브", "실행", "main"], None);
+    let run = run_in(&dir, &["실행", "main"], None);
+    let mut restored = std::fs::metadata(&file).unwrap().permissions();
+    restored.set_mode(0o644);
+    std::fs::set_permissions(&file, restored).unwrap();
+
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(
+        error.contains("오류[E9007]: main.nme 파일을 읽을 수 없습니다"),
+        "{error}"
+    );
+    assert!(
+        error.contains("error[E9007]: couldn't read main.nme"),
+        "{error}"
+    );
+    assert!(!error.contains("E9015"), "{error}");
+
+    assert!(!run.status.success());
+    let run_error = stderr(&run);
+    assert!(
+        run_error.contains("오류[E9007]: main.nme 파일을 읽을 수 없습니다"),
+        "{run_error}"
+    );
+    assert!(
+        run_error.contains("error[E9007]: couldn't read main.nme"),
+        "{run_error}"
+    );
+    assert!(!run_error.contains("E9015"), "{run_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn install_requires_a_package_and_explains_pip_failures() {
     let no_package = nme(&["install"]);
     assert!(!no_package.status.success());
@@ -462,6 +935,28 @@ fn install_requires_a_package_and_explains_pip_failures() {
         stderr(&no_package).contains("which package should I install"),
         "{}",
         stderr(&no_package)
+    );
+
+    // NME rejects an empty package before invoking pip, so this stays
+    // deterministic even when pip changes how it handles empty requirements.
+    let invalid_package = nme(&["install", ""]);
+    assert!(!invalid_package.status.success());
+    assert!(
+        stderr(&invalid_package).contains("error[E9025]: pip cannot install an empty package name"),
+        "{}",
+        stderr(&invalid_package)
+    );
+
+    let invalid_korean_package = nme(&["설치", ""]);
+    assert!(!invalid_korean_package.status.success());
+    let korean_error = stderr(&invalid_korean_package);
+    assert!(
+        korean_error.contains("오류[E9025]: pip은 빈 패키지 이름을 설치할 수 없습니다"),
+        "{korean_error}"
+    );
+    assert!(
+        korean_error.contains("error[E9025]: pip cannot install an empty package name"),
+        "{korean_error}"
     );
 
     let two = nme(&["install", "a", "b"]);
@@ -688,6 +1183,32 @@ fn command_errors_follow_the_command_language() {
         .find("error[E9004]: unknown option")
         .unwrap();
     assert!(korean_position < english_position, "{bilingual_error}");
+
+    let native = nme(&["네이티브", "--not-an-option"]);
+    assert!(!native.status.success());
+    let native_error = stderr(&native);
+    let native_korean_position = native_error
+        .find("오류[E9004]: 알 수 없는 옵션입니다")
+        .unwrap();
+    let native_english_position = native_error.find("error[E9004]: unknown option").unwrap();
+    assert!(
+        native_korean_position < native_english_position,
+        "{native_error}"
+    );
+
+    let install = nme(&["설치"]);
+    assert!(!install.status.success());
+    let install_error = stderr(&install);
+    let install_korean_position = install_error
+        .find("오류[E9030]: 어떤 패키지를 설치할까요?")
+        .unwrap();
+    let install_english_position = install_error
+        .find("error[E9030]: which package should I install?")
+        .unwrap();
+    assert!(
+        install_korean_position < install_english_position,
+        "{install_error}"
+    );
 }
 
 #[test]
@@ -703,6 +1224,7 @@ fn korean_missing_file_errors_are_substantively_bilingual() {
         error.contains("couldn't read nme-file-that-does-not-exist"),
         "{error}"
     );
+    assert!(error.contains("nme 실행"), "{error}");
     assert!(
         error.contains("nme-file-that-does-not-exist.nme"),
         "{error}"
@@ -774,8 +1296,7 @@ fn convert_can_write_beginner_nme_to_a_file() {
 fn compile_invokes_the_native_backend_and_creates_the_requested_artifact() {
     use std::os::unix::fs::PermissionsExt as _;
 
-    let dir = std::env::temp_dir().join(format!("nme-cli-native-{}", std::process::id()));
-    std::fs::create_dir_all(&dir).unwrap();
+    let dir = temporary_dir("compile-native-artifact");
     let input = dir.join("hello.nme");
     let output_file = dir.join("hello-app");
     let fake_python = dir.join("fake-python");
@@ -806,6 +1327,69 @@ fn compile_invokes_the_native_backend_and_creates_the_requested_artifact() {
     let invoked = std::fs::read_to_string(arguments).unwrap();
     assert!(invoked.contains("-m\nnuitka\n"), "{invoked}");
     assert!(invoked.contains("--onefile"), "{invoked}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn build_refuses_to_overwrite_an_existing_python_artifact() {
+    let dir = temporary_dir("build-overwrite");
+    write_nme(&dir, "main.nme", "show Hello\n");
+    write_nme(&dir, "already.py", "keep Python\n");
+
+    let english = run_in(&dir, &["build", "main", "-o", "already.py"], None);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(
+        english_error.contains("error[E9009]: refusing to overwrite existing output"),
+        "{english_error}"
+    );
+    assert_eq!(
+        std::fs::read_to_string(dir.join("already.py")).unwrap(),
+        "keep Python\n"
+    );
+
+    let korean = run_in(&dir, &["빌드", "main", "-o", "already.py"], None);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(
+        korean_error.contains("오류[E9009]: 이미 있는 결과 파일을 덮어쓰지 않습니다"),
+        "{korean_error}"
+    );
+    assert!(
+        korean_error.contains("error[E9009]: refusing to overwrite existing output"),
+        "{korean_error}"
+    );
+    assert_eq!(
+        std::fs::read_to_string(dir.join("already.py")).unwrap(),
+        "keep Python\n"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn compile_module_imports_have_a_precise_bilingual_diagnostic() {
+    let dir = temporary_dir("compile-module-import");
+    write_nme(&dir, "helper.nme", "value = 1\n");
+    write_nme(
+        &dir,
+        "main.nme",
+        "from \"helper.nme\" import value\nshow value\n",
+    );
+
+    let output = run_in(&dir, &["컴파일", "main"], None);
+    assert!(!output.status.success());
+    let error = stderr(&output);
+    assert!(
+        error.contains("오류[E9029]: `nme 컴파일`은 아직 모듈 가져오기를 지원하지 않습니다"),
+        "{error}"
+    );
+    assert!(
+        error.contains("error[E9029]: module imports are not supported by `nme compile` yet"),
+        "{error}"
+    );
+    assert!(!error.contains("E9003"), "{error}");
 
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -1346,6 +1930,45 @@ fn a_directory_argument_explains_that_it_is_a_folder() {
         "{korean_error}"
     );
 
+    let native = nme(&["native", &dir.to_string_lossy()]);
+    assert!(!native.status.success());
+    let native_error = stderr(&native);
+    assert!(native_error.contains("error[E9014]:"), "{native_error}");
+    assert!(
+        native_error.contains("is a folder, not a program"),
+        "{native_error}"
+    );
+    assert!(!native_error.contains("E9007"), "{native_error}");
+    assert!(!native_error.contains("오류["), "{native_error}");
+
+    let korean_native = nme(&["네이티브", &dir.to_string_lossy()]);
+    assert!(!korean_native.status.success());
+    let korean_native_error = stderr(&korean_native);
+    assert!(
+        korean_native_error.contains("오류[E9014]:"),
+        "{korean_native_error}"
+    );
+    assert!(
+        korean_native_error.contains("폴더이지 프로그램이 아니에요"),
+        "{korean_native_error}"
+    );
+    assert!(
+        korean_native_error.contains("nme 실행"),
+        "{korean_native_error}"
+    );
+    assert!(
+        korean_native_error.contains("error[E9014]:"),
+        "{korean_native_error}"
+    );
+    assert!(
+        korean_native_error.contains("is a folder, not a program"),
+        "{korean_native_error}"
+    );
+    assert!(
+        !korean_native_error.contains("E9007"),
+        "{korean_native_error}"
+    );
+
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -1602,6 +2225,62 @@ fn error_lookup_commands_print_the_requested_explanation() {
     );
     assert!(!english_out.contains("열린 블록"), "{english_out}");
 
+    let break_english = nme(&["en", "E0102"]);
+    assert!(break_english.status.success(), "{}", stderr(&break_english));
+    let break_english_out = stdout(&break_english);
+    assert!(
+        break_english_out.contains("`while`/`repeat`"),
+        "{break_english_out}"
+    );
+    assert!(
+        break_english_out.contains("Python loop"),
+        "{break_english_out}"
+    );
+
+    let break_korean = nme(&["ko", "E0102"]);
+    assert!(break_korean.status.success(), "{}", stderr(&break_korean));
+    let break_korean_out = stdout(&break_korean);
+    assert!(
+        break_korean_out.contains("`while`/`repeat`"),
+        "{break_korean_out}"
+    );
+    assert!(
+        break_korean_out.contains("Python 반복문"),
+        "{break_korean_out}"
+    );
+
+    let continue_english = nme(&["en", "E0107"]);
+    assert!(
+        continue_english.status.success(),
+        "{}",
+        stderr(&continue_english)
+    );
+    let continue_english_out = stdout(&continue_english);
+    assert!(
+        continue_english_out.contains("`continue` outside a loop"),
+        "{continue_english_out}"
+    );
+    assert!(
+        continue_english_out.contains("next iteration"),
+        "{continue_english_out}"
+    );
+
+    let continue_korean = nme(&["ko", "E0107"]);
+    assert!(
+        continue_korean.status.success(),
+        "{}",
+        stderr(&continue_korean)
+    );
+    let continue_korean_out = stdout(&continue_korean);
+    assert!(
+        continue_korean_out.contains("반복문 밖의 `continue`"),
+        "{continue_korean_out}"
+    );
+    assert!(
+        continue_korean_out.contains("다음 반복"),
+        "{continue_korean_out}"
+    );
+
     let korean_alias = nme(&["에러", "E0101"]);
     assert!(korean_alias.status.success(), "{}", stderr(&korean_alias));
     assert!(
@@ -1616,6 +2295,134 @@ fn error_lookup_commands_print_the_requested_explanation() {
         stdout(&english_alias).contains("an `end` with no open block"),
         "{}",
         stdout(&english_alias)
+    );
+
+    let package_english = nme(&["en", "E9025"]);
+    assert!(
+        package_english.status.success(),
+        "{}",
+        stderr(&package_english)
+    );
+    assert!(
+        stdout(&package_english).contains("pip could not install the package"),
+        "{}",
+        stdout(&package_english)
+    );
+
+    let package_korean = nme(&["ko", "E9025"]);
+    assert!(
+        package_korean.status.success(),
+        "{}",
+        stderr(&package_korean)
+    );
+    assert!(
+        stdout(&package_korean).contains("pip이 패키지를 설치하지 못했습니다"),
+        "{}",
+        stdout(&package_korean)
+    );
+
+    let native_failure = nme(&["en", "E9010"]);
+    assert!(
+        native_failure.status.success(),
+        "{}",
+        stderr(&native_failure)
+    );
+    let native_failure_out = stdout(&native_failure);
+    assert!(
+        native_failure_out.contains("nme compile"),
+        "{native_failure_out}"
+    );
+    assert!(
+        native_failure_out.contains("nme native"),
+        "{native_failure_out}"
+    );
+
+    let native_start = nme(&["ko", "E9011"]);
+    assert!(native_start.status.success(), "{}", stderr(&native_start));
+    let native_start_out = stdout(&native_start);
+    assert!(
+        native_start_out.contains("nme 컴파일"),
+        "{native_start_out}"
+    );
+    assert!(
+        native_start_out.contains("시스템 C 컴파일러"),
+        "{native_start_out}"
+    );
+
+    let native_run = nme(&["en", "E9026"]);
+    assert!(native_run.status.success(), "{}", stderr(&native_run));
+    assert!(
+        stdout(&native_run).contains("the native program could not be started"),
+        "{}",
+        stdout(&native_run)
+    );
+
+    let native_run_korean = nme(&["ko", "E9026"]);
+    assert!(
+        native_run_korean.status.success(),
+        "{}",
+        stderr(&native_run_korean)
+    );
+    assert!(
+        stdout(&native_run_korean).contains("네이티브 프로그램을 시작할 수 없습니다"),
+        "{}",
+        stdout(&native_run_korean)
+    );
+
+    let folder_create = nme(&["en", "E9027"]);
+    assert!(folder_create.status.success(), "{}", stderr(&folder_create));
+    assert!(
+        stdout(&folder_create).contains("a temporary working folder could not be created"),
+        "{}",
+        stdout(&folder_create)
+    );
+
+    let module_collision = nme(&["en", "E9028"]);
+    assert!(
+        module_collision.status.success(),
+        "{}",
+        stderr(&module_collision)
+    );
+    assert!(
+        stdout(&module_collision).contains("two imported modules have the same name"),
+        "{}",
+        stdout(&module_collision)
+    );
+
+    let compile_imports = nme(&["ko", "E9029"]);
+    assert!(
+        compile_imports.status.success(),
+        "{}",
+        stderr(&compile_imports)
+    );
+    assert!(
+        stdout(&compile_imports).contains("`nme 컴파일`은 모듈 가져오기를 지원하지 않습니다"),
+        "{}",
+        stdout(&compile_imports)
+    );
+
+    let install_package = nme(&["en", "E9030"]);
+    assert!(
+        install_package.status.success(),
+        "{}",
+        stderr(&install_package)
+    );
+    assert!(
+        stdout(&install_package).contains("the package name is missing"),
+        "{}",
+        stdout(&install_package)
+    );
+
+    let install_package_korean = nme(&["ko", "E9030"]);
+    assert!(
+        install_package_korean.status.success(),
+        "{}",
+        stderr(&install_package_korean)
+    );
+    assert!(
+        stdout(&install_package_korean).contains("패키지 이름이 없습니다"),
+        "{}",
+        stdout(&install_package_korean)
     );
 
     let unknown = nme(&["ko", "E9999"]);
@@ -1635,6 +2442,9 @@ fn error_lookup_without_a_code_lists_every_code() {
     let out = stdout(&english);
     assert!(out.contains("E0001"), "{out}");
     assert!(out.contains("E0702"), "{out}");
+    assert!(out.contains("E9025"), "{out}");
+    assert!(out.contains("E9029"), "{out}");
+    assert!(out.contains("E9030"), "{out}");
     assert!(out.contains("E0102  `break` outside a loop"), "{out}");
 
     let korean = nme(&["ko"]);
@@ -1668,6 +2478,424 @@ fn a_real_error_reports_its_lookup_code() {
 }
 
 #[test]
+fn top_level_return_reports_the_shared_function_diagnostic() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-return-code-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("return.nme");
+    std::fs::write(&file, "return 1\n").unwrap();
+
+    let english = nme(&["check", &file.to_string_lossy()]);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(english_error.contains("error[E0106]:"), "{english_error}");
+    assert!(
+        english_error.contains("inside a function"),
+        "{english_error}"
+    );
+
+    let korean = nme(&["검사", &file.to_string_lossy()]);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(korean_error.contains("오류[E0106]:"), "{korean_error}");
+    assert!(korean_error.contains("함수 안에서만"), "{korean_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn top_level_continue_reports_the_shared_loop_diagnostic() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-continue-code-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("continue.nme");
+    std::fs::write(&file, "continue\n").unwrap();
+
+    let english = nme(&["check", &file.to_string_lossy()]);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(english_error.contains("error[E0107]:"), "{english_error}");
+    assert!(english_error.contains("inside a loop"), "{english_error}");
+
+    let korean = nme(&["검사", &file.to_string_lossy()]);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(korean_error.contains("오류[E0107]:"), "{korean_error}");
+    assert!(korean_error.contains("반복문 안에서만"), "{korean_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn python_context_keywords_report_shared_function_diagnostics() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-python-context-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let yield_file = dir.join("yield.nme");
+    let await_file = dir.join("await.nme");
+    let yield_from_file = dir.join("yield-from.nme");
+    let async_for_file = dir.join("async-for.nme");
+    let async_with_file = dir.join("async-with.nme");
+    std::fs::write(&yield_file, "yield 1\n").unwrap();
+    std::fs::write(&await_file, "await work()\n").unwrap();
+    std::fs::write(
+        &yield_from_file,
+        "async def generator():\n    yield from values\n",
+    )
+    .unwrap();
+    std::fs::write(&async_for_file, "async for item in stream():\n    pass\n").unwrap();
+    std::fs::write(&async_with_file, "async with resource():\n    pass\n").unwrap();
+
+    let yield_english = nme(&["check", &yield_file.to_string_lossy()]);
+    assert!(!yield_english.status.success());
+    let yield_english_error = stderr(&yield_english);
+    assert!(
+        yield_english_error.contains("error[E0108]:"),
+        "{yield_english_error}"
+    );
+    assert!(
+        yield_english_error.contains("inside a function"),
+        "{yield_english_error}"
+    );
+
+    let yield_korean = nme(&["검사", &yield_file.to_string_lossy()]);
+    assert!(!yield_korean.status.success());
+    let yield_korean_error = stderr(&yield_korean);
+    assert!(
+        yield_korean_error.contains("오류[E0108]:"),
+        "{yield_korean_error}"
+    );
+    assert!(
+        yield_korean_error.contains("함수 안에서만"),
+        "{yield_korean_error}"
+    );
+
+    let await_english = nme(&["check", &await_file.to_string_lossy()]);
+    assert!(!await_english.status.success());
+    let await_english_error = stderr(&await_english);
+    assert!(
+        await_english_error.contains("error[E0109]:"),
+        "{await_english_error}"
+    );
+    assert!(
+        await_english_error.contains("inside an async function"),
+        "{await_english_error}"
+    );
+
+    let await_korean = nme(&["검사", &await_file.to_string_lossy()]);
+    assert!(!await_korean.status.success());
+    let await_korean_error = stderr(&await_korean);
+    assert!(
+        await_korean_error.contains("오류[E0109]:"),
+        "{await_korean_error}"
+    );
+    assert!(
+        await_korean_error.contains("비동기 함수 안에서만"),
+        "{await_korean_error}"
+    );
+
+    let yield_from_english = nme(&["check", &yield_from_file.to_string_lossy()]);
+    assert!(!yield_from_english.status.success());
+    let yield_from_english_error = stderr(&yield_from_english);
+    assert!(
+        yield_from_english_error.contains("error[E0110]:"),
+        "{yield_from_english_error}"
+    );
+    assert!(
+        yield_from_english_error.contains("yield from")
+            && yield_from_english_error.contains("async function"),
+        "{yield_from_english_error}"
+    );
+
+    let yield_from_korean = nme(&["검사", &yield_from_file.to_string_lossy()]);
+    assert!(!yield_from_korean.status.success());
+    let yield_from_korean_error = stderr(&yield_from_korean);
+    assert!(
+        yield_from_korean_error.contains("오류[E0110]:"),
+        "{yield_from_korean_error}"
+    );
+    assert!(
+        yield_from_korean_error.contains("비동기 함수 안에서는"),
+        "{yield_from_korean_error}"
+    );
+
+    let async_for_english = nme(&["check", &async_for_file.to_string_lossy()]);
+    assert!(!async_for_english.status.success());
+    let async_for_english_error = stderr(&async_for_english);
+    assert!(
+        async_for_english_error.contains("error[E0111]:"),
+        "{async_for_english_error}"
+    );
+    assert!(
+        async_for_english_error.contains("async for")
+            && async_for_english_error.contains("inside an async function"),
+        "{async_for_english_error}"
+    );
+
+    let async_for_korean = nme(&["검사", &async_for_file.to_string_lossy()]);
+    assert!(!async_for_korean.status.success());
+    let async_for_korean_error = stderr(&async_for_korean);
+    assert!(
+        async_for_korean_error.contains("오류[E0111]:"),
+        "{async_for_korean_error}"
+    );
+    assert!(
+        async_for_korean_error.contains("비동기 함수 안에서만"),
+        "{async_for_korean_error}"
+    );
+
+    let async_with_english = nme(&["check", &async_with_file.to_string_lossy()]);
+    assert!(!async_with_english.status.success());
+    let async_with_english_error = stderr(&async_with_english);
+    assert!(
+        async_with_english_error.contains("error[E0112]:"),
+        "{async_with_english_error}"
+    );
+    assert!(
+        async_with_english_error.contains("async with")
+            && async_with_english_error.contains("inside an async function"),
+        "{async_with_english_error}"
+    );
+
+    let async_with_korean = nme(&["검사", &async_with_file.to_string_lossy()]);
+    assert!(!async_with_korean.status.success());
+    let async_with_korean_error = stderr(&async_with_korean);
+    assert!(
+        async_with_korean_error.contains("오류[E0112]:"),
+        "{async_with_korean_error}"
+    );
+    assert!(
+        async_with_korean_error.contains("비동기 함수 안에서만"),
+        "{async_with_korean_error}"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn top_level_nonlocal_reports_the_shared_function_diagnostic() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-nonlocal-code-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("nonlocal.nme");
+    std::fs::write(&file, "nonlocal value\n").unwrap();
+
+    let english = nme(&["check", &file.to_string_lossy()]);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(english_error.contains("error[E0113]:"), "{english_error}");
+    assert!(
+        english_error.contains("inside a nested function"),
+        "{english_error}"
+    );
+
+    let korean = nme(&["검사", &file.to_string_lossy()]);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(korean_error.contains("오류[E0113]:"), "{korean_error}");
+    assert!(
+        korean_error.contains("중첩 함수 안에서만"),
+        "{korean_error}"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn star_import_inside_python_scope_reports_the_shared_import_diagnostic() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-import-star-code-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("import-star.nme");
+    std::fs::write(&file, "def load():\n    from helper import *\n").unwrap();
+
+    let english = nme(&["check", &file.to_string_lossy()]);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(english_error.contains("error[E0114]:"), "{english_error}");
+    assert!(english_error.contains("module scope"), "{english_error}");
+
+    let korean = nme(&["검사", &file.to_string_lossy()]);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(korean_error.contains("오류[E0114]:"), "{korean_error}");
+    assert!(korean_error.contains("모듈 범위"), "{korean_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn control_flow_inside_except_star_reports_the_shared_context_diagnostic() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-except-star-code-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("except-star.nme");
+    std::fs::write(
+        &file,
+        "def load():\n    try:\n        pass\n    except* Exception:\n        return\n",
+    )
+    .unwrap();
+
+    let english = nme(&["check", &file.to_string_lossy()]);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(english_error.contains("error[E0115]:"), "{english_error}");
+    assert!(english_error.contains("except*"), "{english_error}");
+
+    let korean = nme(&["검사", &file.to_string_lossy()]);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(korean_error.contains("오류[E0115]:"), "{korean_error}");
+    assert!(korean_error.contains("except*"), "{korean_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn yield_inside_comprehension_reports_the_shared_context_diagnostic() {
+    let dir = std::env::temp_dir().join(format!(
+        "nme-cli-yield-comprehension-code-{}",
+        std::process::id()
+    ));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("yield-comprehension.nme");
+    std::fs::write(
+        &file,
+        "def collect(values):\n    return [(yield value) for value in values]\n",
+    )
+    .unwrap();
+
+    let english = nme(&["check", &file.to_string_lossy()]);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(english_error.contains("error[E0116]:"), "{english_error}");
+    assert!(english_error.contains("comprehension"), "{english_error}");
+
+    let korean = nme(&["검사", &file.to_string_lossy()]);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(korean_error.contains("오류[E0116]:"), "{korean_error}");
+    assert!(korean_error.contains("컴프리헨션"), "{korean_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn async_comprehension_outside_async_function_reports_the_shared_context_diagnostic() {
+    let dir = std::env::temp_dir().join(format!(
+        "nme-cli-async-comprehension-code-{}",
+        std::process::id()
+    ));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("async-comprehension.nme");
+    std::fs::write(&file, "values = [item async for item in stream()]\n").unwrap();
+
+    let english = nme(&["check", &file.to_string_lossy()]);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(english_error.contains("error[E0117]:"), "{english_error}");
+    assert!(
+        english_error.contains("async comprehension"),
+        "{english_error}"
+    );
+
+    let korean = nme(&["검사", &file.to_string_lossy()]);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(korean_error.contains("오류[E0117]:"), "{korean_error}");
+    assert!(korean_error.contains("비동기 컴프리헨션"), "{korean_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn return_value_inside_async_generator_reports_the_shared_context_diagnostic() {
+    let dir = std::env::temp_dir().join(format!(
+        "nme-cli-async-generator-return-code-{}",
+        std::process::id()
+    ));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("async-generator-return.nme");
+    std::fs::write(&file, "async def stream(): yield 1; return 2\n").unwrap();
+
+    let english = nme(&["check", &file.to_string_lossy()]);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(english_error.contains("error[E0118]:"), "{english_error}");
+    assert!(english_error.contains("async generator"), "{english_error}");
+
+    let korean = nme(&["검사", &file.to_string_lossy()]);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(korean_error.contains("오류[E0118]:"), "{korean_error}");
+    assert!(korean_error.contains("비동기 제너레이터"), "{korean_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn conflicting_global_and_nonlocal_declarations_report_shared_diagnostics() {
+    let dir = std::env::temp_dir().join(format!(
+        "nme-cli-declaration-conflict-code-{}",
+        std::process::id()
+    ));
+    std::fs::create_dir_all(&dir).unwrap();
+    let global_file = dir.join("global-conflict.nme");
+    let nonlocal_file = dir.join("nonlocal-conflict.nme");
+    std::fs::write(&global_file, "def update(): value = 1; global value\n").unwrap();
+    std::fs::write(
+        &nonlocal_file,
+        "def outer():\n    value = 1\n    def update(): value = 2; nonlocal value\n",
+    )
+    .unwrap();
+
+    let global_english = nme(&["check", &global_file.to_string_lossy()]);
+    assert!(!global_english.status.success());
+    let global_english_error = stderr(&global_english);
+    assert!(
+        global_english_error.contains("error[E0119]:"),
+        "{global_english_error}"
+    );
+    assert!(
+        global_english_error.contains("`global` conflicts"),
+        "{global_english_error}"
+    );
+
+    let nonlocal_korean = nme(&["검사", &nonlocal_file.to_string_lossy()]);
+    assert!(!nonlocal_korean.status.success());
+    let nonlocal_korean_error = stderr(&nonlocal_korean);
+    assert!(
+        nonlocal_korean_error.contains("오류[E0120]:"),
+        "{nonlocal_korean_error}"
+    );
+    assert!(
+        nonlocal_korean_error.contains("`nonlocal` 선언이"),
+        "{nonlocal_korean_error}"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn inline_branch_without_a_condition_reports_the_shared_branch_diagnostic() {
+    let dir =
+        std::env::temp_dir().join(format!("nme-cli-inline-branch-code-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let english_file = dir.join("english.nme");
+    let korean_file = dir.join("korean.nme");
+    std::fs::write(&english_file, "if True then else show no\n").unwrap();
+    std::fs::write(&korean_file, "만약 참 그러면 아니면 말해 아니요\n").unwrap();
+
+    let english = nme(&["check", &english_file.to_string_lossy()]);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(english_error.contains("error[E0103]:"), "{english_error}");
+    assert!(english_error.contains("open condition"), "{english_error}");
+
+    let korean = nme(&["검사", &korean_file.to_string_lossy()]);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(korean_error.contains("오류[E0103]:"), "{korean_error}");
+    assert!(korean_error.contains("열린 조건"), "{korean_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn cli_errors_carry_lookup_codes() {
     let unknown_command = nme(&["this-command-does-not-exist"]);
     assert!(!unknown_command.status.success());
@@ -1675,6 +2903,14 @@ fn cli_errors_carry_lookup_codes() {
         stderr(&unknown_command).contains("error[E9001]:"),
         "{}",
         stderr(&unknown_command)
+    );
+
+    let korean_unknown_command = nme(&["알수없는명령"]);
+    assert!(!korean_unknown_command.status.success());
+    assert!(
+        stderr(&korean_unknown_command).contains("nme 실행"),
+        "{}",
+        stderr(&korean_unknown_command)
     );
 
     let missing_file = nme(&["run", "definitely-not-a-program.nme"]);
@@ -1704,6 +2940,29 @@ fn cli_errors_carry_lookup_codes() {
         "{}",
         stdout(&cli_code_korean)
     );
+}
+
+#[test]
+fn korean_cli_code_pages_use_korean_command_spellings() {
+    let cases = [
+        ("E9001", "nme 실행"),
+        ("E9002", "nme 모듈"),
+        ("E9009", "nme 빌드 -o"),
+        ("E9014", "nme 실행"),
+        ("E9015", "nme 실행"),
+        ("E9017", "nme 실행 hello"),
+        ("E9029", "nme 컴파일"),
+        ("E9030", "nme 설치 requests"),
+    ];
+    for (code, expected) in cases {
+        let output = nme(&["ko", code]);
+        assert!(output.status.success(), "{code}: {}", stderr(&output));
+        assert!(
+            stdout(&output).contains(expected),
+            "{code} should contain `{expected}`:\n{}",
+            stdout(&output)
+        );
+    }
 }
 
 #[test]

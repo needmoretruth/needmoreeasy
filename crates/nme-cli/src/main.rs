@@ -128,6 +128,7 @@ const HELP_KOREAN: &str = r"nme — NeedMoreEasy: 더 쉽게 시작해서 Python
 ";
 
 const DEFAULT_PYTHON: &str = if cfg!(windows) { "py" } else { "python3" };
+const NATIVE_C_COMPILER: &str = if cfg!(windows) { "cl" } else { "cc" };
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum MessageLanguage {
@@ -150,8 +151,10 @@ fn main() -> ExitCode {
         Some("변환") => command_convert(&args[1..], MessageLanguage::KoreanAndEnglish),
         Some("modules" | "module" | "m") => command_modules(&args[1..], MessageLanguage::English),
         Some("모듈") => command_modules(&args[1..], MessageLanguage::KoreanAndEnglish),
-        Some("native" | "네이티브") => command_native(&args[1..], MessageLanguage::English),
-        Some("install" | "설치") => command_install(&args[1..], MessageLanguage::English),
+        Some("native") => command_native(&args[1..], MessageLanguage::English),
+        Some("네이티브") => command_native(&args[1..], MessageLanguage::KoreanAndEnglish),
+        Some("install") => command_install(&args[1..], MessageLanguage::English),
+        Some("설치") => command_install(&args[1..], MessageLanguage::KoreanAndEnglish),
         Some("ko" | "error" | "에러") => {
             command_error_lookup(&args[1..], MessageLanguage::KoreanAndEnglish)
         }
@@ -207,7 +210,7 @@ fn main() -> ExitCode {
                     ),
                     &format!(
                         "`{path}` 명령을 알 수 없습니다. `nme 도움`으로 명령을 확인하세요.\n\
-                         팁: 현재 폴더에 .nme 파일이 하나뿐이면 `nme r`만으로 실행할 수 있어요."
+                         팁: 현재 폴더에 .nme 파일이 하나뿐이면 `nme 실행`만으로 실행할 수 있어요."
                     ),
                 )
             }
@@ -267,13 +270,36 @@ fn command_modules(args: &[String], language: MessageLanguage) -> ExitCode {
 #[allow(clippy::too_many_lines)]
 fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
     let mut action = "run";
+    let mut action_seen = false;
     let mut file = None;
     let mut output = None;
     let mut rest = args.iter();
     while let Some(arg) = rest.next() {
         match arg.as_str() {
-            "run" | "실행" => action = "run",
-            "build" | "빌드" => action = "build",
+            "run" | "실행" => {
+                if action_seen {
+                    return fail(
+                        nme_core::diagnostics::DiagnosticCode::CliNativeActionRepeated,
+                        language,
+                        "choose only one native action: `run` or `build`",
+                        "네이티브 동작은 `실행` 또는 `빌드` 중 하나만 선택하세요",
+                    );
+                }
+                action = "run";
+                action_seen = true;
+            }
+            "build" | "빌드" => {
+                if action_seen {
+                    return fail(
+                        nme_core::diagnostics::DiagnosticCode::CliNativeActionRepeated,
+                        language,
+                        "choose only one native action: `run` or `build`",
+                        "네이티브 동작은 `실행` 또는 `빌드` 중 하나만 선택하세요",
+                    );
+                }
+                action = "build";
+                action_seen = true;
+            }
             "-o" | "--output" => match rest.next() {
                 Some(path) => output = Some(path.clone()),
                 None => {
@@ -304,6 +330,14 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
             }
         }
     }
+    if action == "run" && output.is_some() {
+        return fail(
+            nme_core::diagnostics::DiagnosticCode::CliNativeRunOutput,
+            language,
+            "`-o` is only available with `nme native build`; `nme native run` does not save an artifact",
+            "`-o`는 `nme 네이티브 빌드`에서만 사용할 수 있습니다. `nme 네이티브 실행`은 결과 파일을 저장하지 않습니다",
+        );
+    }
     let file = match file {
         Some(file) => file,
         None => match discover_current_program(language, "native run", "네이티브 실행") {
@@ -326,11 +360,35 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
         NameResolution::None => resolve_nme_path(Path::new(&file)),
     };
     let shown_path = path.to_string_lossy();
+    if path.is_dir() {
+        return fail(
+            nme_core::diagnostics::DiagnosticCode::CliFolderNotProgram,
+            language,
+            &format!(
+                "`{}` is a folder, not a program.\n\
+                 hint: run `nme r` inside a folder that contains a .nme program, or type the program name",
+                path.display()
+            ),
+            &format!(
+                "`{}`은(는) 폴더이지 프로그램이 아니에요.\n\
+                 도움말: .nme 프로그램이 있는 폴더에서 `nme 실행`을 실행하거나, 프로그램 이름을 적어 주세요",
+                path.display()
+            ),
+        );
+    }
     let source = match std::fs::read_to_string(&path) {
         Ok(source) => source,
         Err(err) => {
+            if err.kind() == std::io::ErrorKind::NotFound {
+                return fail(
+                    nme_core::diagnostics::DiagnosticCode::CliMissingProgram,
+                    language,
+                    &format!("couldn't read {shown_path}: {err}"),
+                    &format!("{shown_path} 파일을 읽을 수 없습니다: {err}"),
+                );
+            }
             return fail(
-                nme_core::diagnostics::DiagnosticCode::CliMissingProgram,
+                nme_core::diagnostics::DiagnosticCode::CliFileReadFailed,
                 language,
                 &format!("couldn't read {shown_path}: {err}"),
                 &format!("{shown_path} 파일을 읽을 수 없습니다: {err}"),
@@ -351,16 +409,77 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
         .file_stem()
         .and_then(|name| name.to_str())
         .unwrap_or("program");
-    let dir = std::env::temp_dir().join(format!("nme-native-run-{}", std::process::id()));
-    if let Err(err) = std::fs::create_dir_all(&dir) {
-        return fail(
-            nme_core::diagnostics::DiagnosticCode::CliFolderReadFailed,
-            language,
-            &format!("couldn't create the native build folder: {err}"),
-            &format!("네이티브 빌드 폴더를 만들 수 없습니다: {err}"),
+    let build_output = if action == "build" {
+        let default_output = output.is_none();
+        let mut out = output.map_or_else(
+            || {
+                if cfg!(windows) {
+                    PathBuf::from(format!("{stem}.exe"))
+                } else {
+                    PathBuf::from(stem)
+                }
+            },
+            PathBuf::from,
         );
-    }
-    let c_path = dir.join(format!("{stem}.c"));
+        if cfg!(windows) && !default_output && out.extension().is_none() {
+            out.set_extension("exe");
+        }
+        if !default_output
+            && out
+                .extension()
+                .and_then(|extension| extension.to_str())
+                .is_some_and(|extension| extension.eq_ignore_ascii_case("c"))
+        {
+            return fail(
+                nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
+                language,
+                "-o cannot use the generated C source path; choose an executable path",
+                "-o에는 생성되는 C 소스 경로를 사용할 수 없습니다. 실행 파일 경로를 적어 주세요",
+            );
+        }
+        let c_output = if default_output {
+            PathBuf::from(format!("{stem}.c"))
+        } else {
+            out.with_extension("c")
+        };
+        if out.exists() {
+            return fail(
+                nme_core::diagnostics::DiagnosticCode::CliRefuseOverwrite,
+                language,
+                &format!("refusing to overwrite existing output: {}", out.display()),
+                &format!("이미 있는 결과 파일을 덮어쓰지 않습니다: {}", out.display()),
+            );
+        }
+        if c_output.exists() {
+            return fail(
+                nme_core::diagnostics::DiagnosticCode::CliRefuseOverwrite,
+                language,
+                &format!(
+                    "refusing to overwrite existing native source: {}",
+                    c_output.display()
+                ),
+                &format!(
+                    "이미 있는 네이티브 소스 파일을 덮어쓰지 않습니다: {}",
+                    c_output.display()
+                ),
+            );
+        }
+        Some((out, c_output))
+    } else {
+        None
+    };
+    let dir = match exec::TemporaryDirectory::new("nme-native-run") {
+        Ok(dir) => dir,
+        Err(err) => {
+            return fail(
+                nme_core::diagnostics::DiagnosticCode::CliFolderCreateFailed,
+                language,
+                &format!("couldn't create the native build folder: {err}"),
+                &format!("네이티브 빌드 폴더를 만들 수 없습니다: {err}"),
+            );
+        }
+    };
+    let c_path = dir.path().join(format!("{stem}.c"));
     if let Err(err) = std::fs::write(&c_path, c_source) {
         return fail(
             nme_core::diagnostics::DiagnosticCode::CliFileWriteFailed,
@@ -369,57 +488,60 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
             &format!("C 소스를 저장할 수 없습니다: {err}"),
         );
     }
-    let mut exe = dir.join(stem);
+    let exe = if cfg!(windows) {
+        dir.path().join(format!("{stem}.exe"))
+    } else {
+        dir.path().join(stem)
+    };
+    let mut compiler = std::process::Command::new(NATIVE_C_COMPILER);
     if cfg!(windows) {
-        exe.set_extension("exe");
+        compiler
+            .arg("/nologo")
+            .arg("/O2")
+            .arg("/utf-8")
+            .arg(format!("/Fe:{}", exe.display()))
+            .arg(&c_path);
+    } else {
+        compiler.arg("-O2").arg(&c_path).arg("-o").arg(&exe);
     }
-    let compile_status = std::process::Command::new("cc")
-        .arg("-O2")
-        .arg(&c_path)
-        .arg("-o")
-        .arg(&exe)
+    let compile_status = compiler
+        .current_dir(dir.path())
+        .stdout(std::process::Stdio::null())
         .status();
     match compile_status {
         Ok(status) if status.success() => {}
         Ok(status) => {
-            let _ = std::fs::remove_dir_all(&dir);
             return fail(
                 nme_core::diagnostics::DiagnosticCode::CliNativeCompileFailed,
                 language,
                 &format!(
-                    "the native compiler (cc) failed with {status}\n\
+                    "the native compiler ({NATIVE_C_COMPILER}) failed with {status}\n\
                           hint: install a C compiler, or run this program with `nme run`"
                 ),
                 &format!(
-                    "네이티브 컴파일러(cc)가 실패했습니다: {status}\n\
-                          도움말: C 컴파일러를 설치하거나 `nme run`으로 실행하세요"
+                    "네이티브 컴파일러({NATIVE_C_COMPILER})가 실패했습니다: {status}\n\
+                          도움말: C 컴파일러를 설치하거나 `nme 실행`으로 실행하세요"
                 ),
             );
         }
         Err(error) => {
-            let _ = std::fs::remove_dir_all(&dir);
             return fail(
                 nme_core::diagnostics::DiagnosticCode::CliNativeCompileStartFailed,
                 language,
                 &format!(
-                    "couldn't start the C compiler: {error}\n\
+                    "couldn't start the native C compiler ({NATIVE_C_COMPILER}): {error}\n\
                           hint: install a C compiler, or run this program with `nme run`"
                 ),
                 &format!(
-                    "C 컴파일러를 시작할 수 없습니다: {error}\n\
-                          도움말: C 컴파일러를 설치하거나 `nme run`으로 실행하세요"
+                    "네이티브 C 컴파일러({NATIVE_C_COMPILER})를 시작할 수 없습니다: {error}\n\
+                          도움말: C 컴파일러를 설치하거나 `nme 실행`으로 실행하세요"
                 ),
             );
         }
     }
-    if action == "build" {
-        let mut out = output.map_or_else(|| PathBuf::from(stem), PathBuf::from);
-        if cfg!(windows) && out.extension().is_none() {
-            out.set_extension("exe");
-        }
+    if let Some((out, c_output)) = build_output {
         let copy_exe = std::fs::copy(&exe, &out).is_ok();
-        let copy_c = std::fs::copy(&c_path, out.with_extension("c")).is_ok();
-        let _ = std::fs::remove_dir_all(&dir);
+        let copy_c = std::fs::copy(&c_path, &c_output).is_ok();
         if copy_exe && copy_c {
             ExitCode::SUCCESS
         } else {
@@ -432,14 +554,13 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
         }
     } else {
         let run_status = std::process::Command::new(&exe).status();
-        let _ = std::fs::remove_dir_all(&dir);
         match run_status {
             Ok(status) => exit_code(status),
             Err(err) => fail(
-                nme_core::diagnostics::DiagnosticCode::CliPythonStartFailed,
+                nme_core::diagnostics::DiagnosticCode::CliNativeRunStartFailed,
                 language,
-                &format!("couldn't run the native program: {err}"),
-                &format!("네이티브 프로그램을 실행할 수 없습니다: {err}"),
+                &format!("couldn't start the native program: {err}"),
+                &format!("네이티브 프로그램을 시작할 수 없습니다: {err}"),
             ),
         }
     }
@@ -452,7 +573,7 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
 fn command_install(args: &[String], language: MessageLanguage) -> ExitCode {
     if args.is_empty() {
         return fail(
-            nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
+            nme_core::diagnostics::DiagnosticCode::CliInstallPackageMissing,
             language,
             "which package should I install? e.g. nme install requests",
             "어떤 패키지를 설치할까요? 예: nme 설치 requests",
@@ -473,6 +594,16 @@ fn command_install(args: &[String], language: MessageLanguage) -> ExitCode {
         );
     }
     let package = &args[0];
+    if package.trim().is_empty() {
+        return fail(
+            nme_core::diagnostics::DiagnosticCode::CliPackageInstallFailed,
+            language,
+            "pip cannot install an empty package name.\n\
+             hint: provide a package name, e.g. `nme install requests`",
+            "pip은 빈 패키지 이름을 설치할 수 없습니다.\n\
+             도움말: 패키지 이름을 입력하세요. 예: `nme 설치 requests`",
+        );
+    }
     let python = DEFAULT_PYTHON;
     let status = std::process::Command::new(python)
         .arg("-m")
@@ -493,7 +624,7 @@ fn command_install(args: &[String], language: MessageLanguage) -> ExitCode {
             ExitCode::SUCCESS
         }
         Ok(status) => fail(
-            nme_core::diagnostics::DiagnosticCode::CliNativeCompileFailed,
+            nme_core::diagnostics::DiagnosticCode::CliPackageInstallFailed,
             language,
             &format!(
                 "pip failed to install {package} (exit {}).\n\
@@ -783,10 +914,10 @@ fn command_compile(args: &[String], language: MessageLanguage) -> ExitCode {
     };
     if !compiled.imports.is_empty() {
         return fail(
-            nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
+            nme_core::diagnostics::DiagnosticCode::CliCompileModuleImportsUnsupported,
             language,
             "module imports are not supported by `nme compile` yet; run the program with `nme run`",
-            "`nme compile`은 아직 모듈 가져오기를 지원하지 않습니다. `nme run`으로 실행하세요",
+            "`nme 컴파일`은 아직 모듈 가져오기를 지원하지 않습니다. `nme 실행`으로 실행하세요",
         );
     }
     match exec::compile_native(&compiled.source, stem, &python, &output) {
@@ -820,7 +951,23 @@ fn command_compile(args: &[String], language: MessageLanguage) -> ExitCode {
                  도움말: `{python} -m pip install nuitka`로 Nuitka를 설치하고 C 컴파일러가 있는지 확인하세요"
             ),
         ),
-        Err(error) => fail(
+        Err(exec::CompileNativeError::TemporaryFolder(error)) => fail(
+            nme_core::diagnostics::DiagnosticCode::CliFolderCreateFailed,
+            language,
+            &format!(
+                "couldn't create the temporary working folder for native compilation: {error}"
+            ),
+            &format!(
+                "네이티브 컴파일용 임시 작업 폴더를 만들 수 없습니다: {error}"
+            ),
+        ),
+        Err(exec::CompileNativeError::TemporarySource(error)) => fail(
+            nme_core::diagnostics::DiagnosticCode::CliFileWriteFailed,
+            language,
+            &format!("couldn't write the temporary Python source: {error}"),
+            &format!("임시 Python 소스를 저장할 수 없습니다: {error}"),
+        ),
+        Err(exec::CompileNativeError::Other(error)) => fail(
             nme_core::diagnostics::DiagnosticCode::CliNativeCompileStartFailed,
             language,
             &format!(
@@ -958,7 +1105,7 @@ fn command_run(args: &[String], language: MessageLanguage) -> ExitCode {
     let module_dir = if modules.is_empty() {
         None
     } else {
-        match write_modules_to_temp(&modules) {
+        match write_modules_to_temp(&modules, language) {
             Ok(dir) => Some(dir),
             Err(code) => return code,
         }
@@ -967,12 +1114,9 @@ fn command_run(args: &[String], language: MessageLanguage) -> ExitCode {
         &compiled.source,
         &compiled.path,
         &python,
-        module_dir.as_deref(),
+        module_dir.as_ref().map(exec::TemporaryDirectory::path),
         &program_args,
     );
-    if let Some(dir) = module_dir {
-        let _ = std::fs::remove_dir_all(dir);
-    }
     match run_status {
         Ok(status) => exit_code(status),
         Err(err) => fail(
@@ -1051,6 +1195,19 @@ fn command_build(args: &[String], language: MessageLanguage) -> ExitCode {
             Err(code) => return code,
         },
     };
+    if let Some(path) = output.as_deref().map(Path::new) {
+        if path.exists() {
+            return fail(
+                nme_core::diagnostics::DiagnosticCode::CliRefuseOverwrite,
+                language,
+                &format!("refusing to overwrite existing output: {}", path.display()),
+                &format!(
+                    "이미 있는 결과 파일을 덮어쓰지 않습니다: {}",
+                    path.display()
+                ),
+            );
+        }
+    }
 
     let compiled = match transpile_file(&file, language, "build", "빌드") {
         Ok(ok) => ok,
@@ -1552,9 +1709,17 @@ fn transpile_file(
                     ),
                     &format!(
                         "`{}`은(는) 폴더이지 프로그램이 아니에요.\n\
-                         도움말: .nme 프로그램이 있는 폴더에서 `nme r`을 실행하거나, 프로그램 이름을 적어 주세요",
+                         도움말: .nme 프로그램이 있는 폴더에서 `nme 실행`을 실행하거나, 프로그램 이름을 적어 주세요",
                         path.display()
                     ),
+                ));
+            }
+            if err.kind() != std::io::ErrorKind::NotFound {
+                return Err(fail(
+                    nme_core::diagnostics::DiagnosticCode::CliFileReadFailed,
+                    language,
+                    &format!("couldn't read {shown_path}: {err}"),
+                    &format!("{shown_path} 파일을 읽을 수 없습니다: {err}"),
                 ));
             }
             let suggestion = suggest_program(&path);
@@ -1576,7 +1741,7 @@ fn transpile_file(
                     stem = name.trim_end_matches(".nme")
                 ),
                 None => format!(
-                    "도움말: 이 폴더에 `{}` 프로그램을 만들거나, `nme r`을 실행하면\n\
+                    "도움말: 이 폴더에 `{}` 프로그램을 만들거나, `nme 실행`을 실행하면\n\
                      이 폴더에 있는 .nme 프로그램을 실행합니다",
                     create_name.display()
                 ),
@@ -1628,7 +1793,7 @@ fn transpile_modules(
             .to_string();
         if let Some((existing, _)) = modules.iter().find(|(name, _)| name == &stem) {
             return Err(fail(
-                nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
+                nme_core::diagnostics::DiagnosticCode::CliImportedModuleNameCollision,
                 language,
                 &format!("two imported modules are both named `{existing}`; rename one of them"),
                 &format!("가져온 모듈 두 개가 모두 `{existing}`라는 이름입니다. 하나를 바꾸세요"),
@@ -1638,7 +1803,7 @@ fn transpile_modules(
             Ok(source) => source,
             Err(err) => {
                 return Err(fail(
-                    nme_core::diagnostics::DiagnosticCode::CliMissingProgram,
+                    nme_core::diagnostics::DiagnosticCode::CliFileReadFailed,
                     language,
                     &format!(
                         "couldn't read module {}: {err}\n\
@@ -1712,21 +1877,23 @@ fn check_modules(
 }
 
 /// Writes transpiled modules to a fresh temporary folder and returns it.
-fn write_modules_to_temp(modules: &[(String, String)]) -> Result<PathBuf, ExitCode> {
-    let dir = std::env::temp_dir().join(format!("nme-modules-{}", std::process::id()));
-    if let Err(err) = std::fs::create_dir_all(&dir) {
-        return Err(fail(
-            nme_core::diagnostics::DiagnosticCode::CliFolderReadFailed,
-            MessageLanguage::English,
-            &format!("couldn't create the module folder: {err}"),
-            &format!("모듈 폴더를 만들 수 없습니다: {err}"),
-        ));
-    }
+fn write_modules_to_temp(
+    modules: &[(String, String)],
+    language: MessageLanguage,
+) -> Result<exec::TemporaryDirectory, ExitCode> {
+    let dir = exec::TemporaryDirectory::new("nme-modules").map_err(|err| {
+        fail(
+            nme_core::diagnostics::DiagnosticCode::CliFolderCreateFailed,
+            language,
+            &format!("couldn't create the temporary working folder: {err}"),
+            &format!("임시 작업 폴더를 만들 수 없습니다: {err}"),
+        )
+    })?;
     for (stem, python) in modules {
-        if let Err(err) = std::fs::write(dir.join(format!("{stem}.py")), python) {
+        if let Err(err) = std::fs::write(dir.path().join(format!("{stem}.py")), python) {
             return Err(fail(
                 nme_core::diagnostics::DiagnosticCode::CliFileWriteFailed,
-                MessageLanguage::English,
+                language,
                 &format!("couldn't write the module {stem}.py: {err}"),
                 &format!("{stem}.py 모듈을 저장할 수 없습니다: {err}"),
             ));

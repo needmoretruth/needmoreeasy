@@ -2,15 +2,15 @@
 
 [English](58-bytecode.md) | 한국어
 
-[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
 - 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [49 — Tokens](49-tokens.md), [29 — Bootstrap](29-bootstrap.md)
+- 선수 지식 (Prerequisites): [49 — Tokens](49-tokens.ko.md), [29 — Bootstrap](29-bootstrap.ko.md)
 - 주제 (Topic): 컴파일러 / compiler
 - 결과물 (Result): 간단한 명령을 단계 목록으로 컴파일하고 가상 머신처럼 한 단계씩 실행하기 / compiling simple instructions into a list of steps and running them one by one like a tiny virtual machine
 
-가이드 [29](29-bootstrap.md)는 소스 텍스트를 Python으로 번역해 실행했고,
-[49](49-tokens.md)는 줄을 토큰으로 나누어 실행을 보냈습니다. 다음 단계는
+가이드 [29](29-bootstrap.ko.md)는 소스 텍스트를 Python으로 번역해 실행했고,
+[49](49-tokens.ko.md)는 줄을 토큰으로 나누어 실행을 보냈습니다. 다음 단계는
 **바이트코드**입니다: 이미 작은 데이터 단계로 컴파일된 명령. 실행기 — 작은
 **가상 머신** — 은 프로그램 카운터로 그 단계들을 걸어갑니다. Python이 자기
 코드를 실행하는 방식입니다.

@@ -107,7 +107,7 @@ set value to 0
 
 say f"{name} starts"
 
-while value
+while value < 3:
     set value to value + 1
 end
 
@@ -231,7 +231,7 @@ cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo test --workspace --locked
 ```
 
-그리고 예제마다 `nme check`와 `nme run`을 직접 실행합니다.
+그리고 예제마다 `nme 검사`와 `nme 실행`을 직접 실행합니다.
 
 템플릿을 그대로 채우는 것이 목표는 아닙니다. 독자가 가장 짧은 경로로 핵심 개념을
 이해하도록 불필요한 부분을 지우는 것도 좋은 예제 설계입니다.

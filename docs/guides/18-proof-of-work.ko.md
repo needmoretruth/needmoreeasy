@@ -2,10 +2,13 @@
 
 [English](18-proof-of-work.md) | 한국어
 
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
+
 [17 — 암호화폐 장부](17-blockchain.ko.md) | [전체 니드모어코인 가이드](cryptocurrency.ko.md)
 
 - 난이도: ★★★★★
 - 선수 지식: [17 — 암호화폐 장부](17-blockchain.ko.md), [07 — 동안](07-while.ko.md)
+- 주제 (Topic): 작업증명과 블록 연결
 - 결과물: 이전 블록 해시와 거래를 묶어 SHA-256 작업증명 블록 만들기
 
 거래가 유효해도 그것만으로 블록체인이 되지는 않습니다. 새 블록은 직전 블록의

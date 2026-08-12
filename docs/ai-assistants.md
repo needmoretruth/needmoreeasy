@@ -10,7 +10,7 @@ Give an AI coding assistant this one prompt:
 Read and follow this NME language handoff before writing code:
 https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
 
-Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.16`), then write the requested program as a .nme file, prefer sentence syntax for a
+Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.160`), then write the requested program as a .nme file, prefer sentence syntax for a
 beginner, mix beginner or advanced Python only where it makes the result
 clearer, and verify it with nme check.
 ```
@@ -166,7 +166,19 @@ end
 
 The same block supports `break`/`멈춰`, `and`/`그리고`, `or`/`또는`,
 `elif`/`아니면 만약에`, and `else`/`아니면`. Indented bodies and ordinary Python
-remain valid when a learner is ready to use them.
+remain valid when a learner is ready to use them. A whole NME condition may be
+parenthesized in a colon-free `if` or `while` header, such as `if (ready and
+score > 2)`; valid Python calls such as `when(ready and score > 2)` remain
+Python. Korean comparison endings can remain inside that wrapper and precede a
+connector, such as `만약 (점수가 2보다 크면 그리고 준비)`.
+The same shared rule applies to a Korean `while` ending, such as
+`동안 (횟수가 2보다 작을 동안 그리고 준비)`.
+The connector spellings can be mixed in the same wrapper, for example
+`만약 (점수가 2보다 크면 and 준비)`.
+Korean NME words can also be valid Python identifiers: if `만약` is bound,
+`만약 (준비)` is a Python call shape and must stay byte-identical. Use a spoken
+ending such as `만약 준비라면`, or an NME connector such as
+`만약 ((준비 그리고 참))`, when an NME block is intended.
 
 ### Use beginner syntax when precision matters
 
@@ -194,12 +206,63 @@ use random
 `count times:` repeats `count` times — the variable must hold a number.
 `횟수번:` does the same with `횟수`.
 
+When the user asks for the restricted native backend, boolean names are
+supported as a type distinct from integers: assign `True`/`False`, use the name
+in a truthy `if`/`while`, combine supported conditions with short-circuiting
+`and`/`or`, and `show` prints `True` or `False`. Do not use
+boolean arithmetic or `add`/`subtract` updates in native code; direct those
+programs to CPython unless the user explicitly wants a native-core diagnostic.
+Native `if`/`while`/branch bodies may use one-line NME `say`/`show` or `break`
+after `then`/`그러면`; sentence repeats may use a one-line `break here` body.
+Python inline bodies and inline value updates remain outside the native subset.
+The [native core reference](https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/native-reference.md)
+defines the complete boundary.
+
 ### Use any Python as advanced NME
 
 Do not translate a Python construct when the easier equivalent would change
 semantics. Functions, classes, imports, comprehensions, async code, exception
 handling, installed Python packages, and every other valid Python feature may
 remain Python.
+
+Python context rules still apply: `return` and `yield` belong inside a function,
+while `await` belongs inside `async def`, and `break`/`continue` belong inside
+loops. `nme check` reports invalid top-level, inline, and one-line
+function/class cases with stable bilingual codes `E0102`, `E0106`–`E0110`; a
+one-line function or class does not inherit an outer loop. In an `async def`, use
+`async for` instead of `yield from`; the same control-flow check covers a
+semicolon-separated statement later in a one-line suite.
+`async for` and `async with` also belong inside `async def`; invalid placements
+receive `E0111` and `E0112`.
+`nonlocal` needs an enclosing function; invalid top-level, top-level-class,
+non-nested-function, and one-line-suite placements receive `E0113`. Nested
+functions and classes under an outer function remain valid, while CPython
+checks whether the named outer binding exists.
+Python star imports (`from ... import *`) are module-level only; using one
+inside a function or class, including a one-line suite or a star import after
+an earlier semicolon-separated statement, receives `E0114`. Import names
+explicitly there.
+Python also rejects `break`, `continue`, and `return` inside `except*`; NME
+reports `E0115`, including when the control follows an earlier semicolon-
+separated statement in the handler. Keep those controls outside the handler or
+use a normal `except` block when its semantics fit.
+Python rejects `yield` inside list, set, dictionary, and generator
+comprehensions; NME reports `E0116`. Replace the comprehension with an explicit
+loop, while keeping ordinary generator lambdas unchanged.
+Python also rejects an `async for` inside a comprehension outside `async def`;
+NME reports `E0117`. Move that comprehension into an async function, while
+preserving valid async comprehensions.
+An async generator cannot return a value; NME reports `E0118`, including when
+the return appears before its first `yield`. One-line Python suites are tracked
+as function bodies too, so valid inline `yield`, `await`, and bare `return`
+remain unchanged. Use a bare `return`; nested function returns remain valid.
+`global` and `nonlocal` must precede uses or assignments in their scope, and
+cannot name parameters or annotated targets; NME reports `E0119`/`E0120` for
+those conflicts, including in one-line suites. Put the declaration first, and
+annotation expressions count as uses. F-string validation remains with CPython;
+comprehension-local names stay separate.
+Generator lambdas such as `lambda: (yield value)` are valid advanced Python
+and must remain unchanged.
 
 Valid Python always wins. Never rewrite `say("x")`, a variable named `when`,
 text inside a string, or a comment as NME syntax.
@@ -236,8 +299,8 @@ nme build program -o program.py
 
 `check` and `build` ask the selected CPython to compile the generated source;
 they do not execute it. `nme help` and English commands print English only.
-Korean commands such as `nme 도움`, `nme 검사`, and `nme 실행` print Korean
-guidance followed by the equivalent English guidance.
+Korean commands such as `nme 도움`, `nme 검사`, `nme 실행`, `nme 네이티브`, and
+`nme 설치` use Korean-first bilingual diagnostics or guidance.
 
 Use `nme run program` when execution is safe and desired. Use
 `nme compile program -o program` only when the user wants a native artifact

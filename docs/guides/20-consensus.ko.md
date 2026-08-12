@@ -2,10 +2,13 @@
 
 [English](20-consensus.md) | 한국어
 
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
+
 [19 — 거래 증명](19-signatures.ko.md) | [전체 니드모어코인 가이드](cryptocurrency.ko.md)
 
 - 난이도: ★★★★★
 - 선수 지식: [18 — 작업증명](18-proof-of-work.ko.md), [19 — 거래 증명](19-signatures.ko.md)
+- 주제 (Topic): 사슬 검증과 합의의 경계
 - 결과물: 창세 상태부터 모든 거래와 블록을 재실행하는 단일 노드 검증기
 
 이 단계의 핵심은 **블록을 만든 프로그램의 기억을 믿지 않는 것**입니다. 검증기는

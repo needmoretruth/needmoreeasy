@@ -139,6 +139,36 @@ Every user-facing compiler error needs a plain message, an exact caret span,
 and a useful `hint`. Collect independent errors in one pass. Input that is
 neither valid Python nor an unambiguous NME form must never be emitted as
 silently broken Python.
+Python context errors use the shared parser too: top-level, inline, and one-line
+function/class `return`, `yield`, `await`, `break`, and `continue` receive
+stable diagnostics when their enclosing function or loop context is invalid,
+including controls after top-level semicolons in a one-line suite. `yield from`
+in `async def` receives `E0110`, while
+`async for`/`async with` outside `async def` receive `E0111`/`E0112`, and
+`nonlocal` without an enclosing function receives `E0113`; valid nested
+function/class bodies and generator lambdas remain byte-identical. CPython
+still owns validation of whether a requested `nonlocal` name is bound in an
+outer function. A valid module-level `from ... import *` remains unchanged,
+while the same star import inside a function or class receives `E0114`,
+including after an earlier semicolon-separated statement in a one-line suite.
+`break`/`continue`/`return` inside an `except*` suite receive `E0115`, including
+after an earlier semicolon-separated statement; the tracker resets across
+nested Python function/class scopes and after the suite.
+`yield` inside a comprehension receives `E0116`; token-depth matching keeps
+ordinary `yield` expressions and lambdas nested inside comprehensions intact.
+An `async for` inside a comprehension outside an `async def` receives `E0117`;
+the same token-depth path distinguishes it from an ordinary `async for` header.
+An async generator's value-bearing `return` receives `E0118`; the parser
+tracks direct yields and defers the decision so a return before the first yield
+is diagnosed without inheriting nested function or class scopes. One-line
+Python function suites use their body tokens as the same function context, so
+valid inline `yield`, `await`, and bare `return` statements are preserved.
+Conflicting `global`/`nonlocal` declarations receive `E0119`/`E0120`; the
+scope tracker covers one-line function/class suites, excludes nested function
+parameters and comprehension-local names, and rejects annotated targets where
+Python does so. Valid Python remains byte-identical. Annotation expressions
+count as name uses for this check, while f-string contents remain opaque to the
+NME token layer and are validated by CPython.
 
 ### 7. Bundled modules are local and versioned
 
@@ -157,10 +187,11 @@ both language aliases, diagnostics, tests, and bilingual documentation.
 sibling `.nme` file. The CLI transpiles imported modules (transitively) into a
 temporary folder and adds that folder to `sys.path` through an environment
 variable, so the transpiled `from helper import name1` is ordinary Python
-importing an ordinary Python module. The explicit name list is the module
-boundary: nothing else leaks between files, and there is no shared global
-state. Module file names must be valid Python identifiers because the
-generated import uses the file stem.
+importing an ordinary Python module. Each invocation owns its staging folder;
+the folder is removed after execution and also when a module write fails. The
+explicit name list is the module boundary: nothing else leaks between files,
+and there is no shared global state. Module file names must be valid Python
+identifiers because the generated import uses the file stem.
 
 ### 8. Small and safe Rust
 
@@ -194,6 +225,11 @@ Add no dependency or abstraction without a current, demonstrated need.
 - `nme native run`/`nme native build` is the NME-native AOT backend
   (`nme-native` crate): it compiles a restricted, statically typed core
   subset to C and then to a native executable with the system C compiler.
+  Its current numeric policy is checked signed 32-bit integer arithmetic,
+  finite C `double` literals, and file-scope integer functions with
+  unconditional returns only; overflow and
+  modulo-by-zero are explicit native runtime errors rather than undefined C
+  behavior.
   Everything outside the documented core is rejected with a clear bilingual
   diagnostic and remains runnable on CPython. See
   [the native-backend memo](native-backend.md).

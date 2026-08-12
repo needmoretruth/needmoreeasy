@@ -5,7 +5,7 @@
 //! Easier forms are matched only from lexer tokens; strings and comments are
 //! never searched or rewritten as text.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use rustpython_parser::{parse as parse_python, Mode, Tok};
 
@@ -185,7 +185,27 @@ pub fn parse_program(
     // The source indent is retained as the unambiguous signal for a real
     // Python dedent; explicit NME `break`/`end`/branch lines also close a
     // flat Python suite when they are at the header's level.
-    let mut python_header_indents = Vec::<usize>::new();
+    let mut python_header_indents = Vec::<(usize, bool)>::new();
+    // Top-level Python headers are intentionally not virtualized, but their
+    // loop kind still matters when an NME inline body appears in their
+    // physically indented suite. This keeps `for ...:`/`while ...:` bodies
+    // valid while allowing inline `break` diagnostics in ordinary Python
+    // conditional suites.
+    let mut top_level_python_loop_indents = Vec::<usize>::new();
+    // `except*` suites have one Python-specific control-flow restriction:
+    // `break`, `continue`, and `return` are not allowed in their bodies.
+    // Track their physical header indentation separately from ordinary
+    // Python headers so nested functions and classes still use BindingEnv.
+    let mut python_except_star_indents = Vec::<(usize, usize)>::new();
+    let mut python_try_indents = Vec::<usize>::new();
+    let mut async_function_contexts = Vec::<AsyncFunctionContext>::new();
+    let mut completed_async_functions = Vec::<AsyncFunctionContext>::new();
+    let mut python_declaration_contexts = vec![PythonDeclarationContext {
+        body_scope_depth: 0,
+        seen_names: HashSet::new(),
+        annotation_targets: HashSet::new(),
+        declarations: HashMap::new(),
+    }];
 
     for (index, line) in lines.iter().enumerate() {
         let is_end = exact_end(line.tokens.as_slice());
@@ -229,12 +249,37 @@ pub fn parse_program(
         if depth == 0 {
             python_header_indents.clear();
         }
+        while top_level_python_loop_indents
+            .last()
+            .is_some_and(|header_indent| line.indent <= *header_indent)
+        {
+            top_level_python_loop_indents.pop();
+        }
         let closes_flat_python_suite = is_end.is_some() || is_break || branch_shape.is_some();
         while python_header_indents.last().is_some_and(|header_indent| {
-            line.indent < *header_indent
-                || (closes_flat_python_suite && line.indent <= *header_indent)
+            line.indent < header_indent.0
+                || (closes_flat_python_suite && line.indent <= header_indent.0)
         }) {
             python_header_indents.pop();
+        }
+        while python_try_indents
+            .last()
+            .is_some_and(|header_indent| line.indent < *header_indent)
+        {
+            python_try_indents.pop();
+        }
+        if python_try_indents.last().is_some_and(|header_indent| {
+            line.indent == *header_indent
+                && !is_python_try_header(&line.tokens)
+                && !is_python_try_clause_header(&line.tokens)
+        }) {
+            python_try_indents.pop();
+        }
+        while python_except_star_indents
+            .last()
+            .is_some_and(|(header_indent, _)| line.indent <= *header_indent)
+        {
+            python_except_star_indents.pop();
         }
         // Keep Python's compatibility rule strict at the top level: an
         // indented Python body is still the user's responsibility unless an
@@ -291,6 +336,24 @@ pub fn parse_program(
         let next_indent = force_suite.then_some(parse_line.indent + 1).or(next_indent);
 
         bindings.enter_line(parse_line.indent);
+        let python_scope_depth = bindings.python_scope_depth();
+        while async_function_contexts
+            .last()
+            .is_some_and(|context| context.body_scope_depth > python_scope_depth)
+        {
+            if let Some(context) = async_function_contexts.pop() {
+                completed_async_functions.push(context);
+            }
+        }
+        while python_declaration_contexts
+            .last()
+            .is_some_and(|context| context.body_scope_depth > python_scope_depth)
+        {
+            python_declaration_contexts.pop();
+        }
+        let inside_python_except_star = python_except_star_indents
+            .last()
+            .is_some_and(|(_, scope_depth)| *scope_depth == bindings.python_scope_depth());
         let known_names = bindings.visible_names();
         let block = BlockCtx::TopLevel {
             line: &parse_line,
@@ -348,6 +411,75 @@ pub fn parse_program(
         match classified {
             Ok(Some(stmt)) => {
                 saw_nme = true;
+                let inside_loop = blocks
+                    .iter()
+                    .any(|block| matches!(block, ExplicitBlock::Loop { .. }))
+                    || python_header_indents.iter().any(|(_, is_loop)| *is_loop)
+                    || !top_level_python_loop_indents.is_empty();
+                if inline_break_is_outside_loop(&stmt, source, inside_loop) {
+                    problems.push(break_outside_loop_diagnostic(line.span));
+                    continue;
+                }
+                if inline_continue_is_outside_loop(&stmt, &line.tokens, inside_loop) {
+                    problems.push(continue_outside_loop_diagnostic(line.span));
+                    continue;
+                }
+                if inline_return_is_outside_function(
+                    &stmt,
+                    &line.tokens,
+                    bindings.inside_function(),
+                ) {
+                    problems.push(return_outside_function_diagnostic(line.span));
+                    continue;
+                }
+                if inline_yield_inside_comprehension(&stmt, &line.tokens) {
+                    problems.push(yield_inside_comprehension_diagnostic(line.span));
+                    continue;
+                }
+                if inline_async_comprehension_outside_async_function(
+                    &stmt,
+                    &line.tokens,
+                    bindings.inside_async_function(),
+                ) {
+                    problems.push(async_comprehension_outside_async_function_diagnostic(
+                        line.span,
+                    ));
+                    continue;
+                }
+                remember_async_generator_context(
+                    &mut async_function_contexts,
+                    &line.tokens,
+                    python_scope_depth,
+                    line.span,
+                );
+                if inline_yield_is_outside_function(&stmt, &line.tokens, bindings.inside_function())
+                {
+                    problems.push(yield_outside_function_diagnostic(line.span));
+                    continue;
+                }
+                if inline_await_is_outside_async_function(
+                    &stmt,
+                    &line.tokens,
+                    bindings.inside_async_function(),
+                ) {
+                    problems.push(await_outside_async_function_diagnostic(line.span));
+                    continue;
+                }
+                if inline_yield_from_is_in_async_function(
+                    &stmt,
+                    &line.tokens,
+                    bindings.inside_async_function(),
+                ) {
+                    problems.push(yield_from_async_function_diagnostic(line.span));
+                    continue;
+                }
+                if inside_python_except_star
+                    && (matches!(stmt, NmeStmt::Break)
+                        || inline_except_star_control_flow(&stmt, &line.tokens))
+                {
+                    problems.push(except_star_control_flow_diagnostic(line.span));
+                    continue;
+                }
                 if matches!(stmt, NmeStmt::End) {
                     if blocks.is_empty() {
                         problems.push(unmatched_end_diagnostic(line.span));
@@ -408,12 +540,146 @@ pub fn parse_program(
                 }
             }
             Ok(None) => {
+                let valid_python_header = is_valid_python_header(token_text(source, &line.tokens));
+                let python_loop_header = is_python_loop_header(&line.tokens);
+                let inline_python_scope_body = python_inline_suite_body(&line.tokens);
+                let inline_python_function_body = python_inline_function_body(&line.tokens);
+                let inline_python_class_body =
+                    inline_python_scope_body.filter(|_| is_python_class_header(&line.tokens));
+                let (context_tokens, inside_function, inside_async_function) =
+                    if let Some(body) = inline_python_function_body {
+                        (body, true, is_python_async_function_header(&line.tokens))
+                    } else if let Some(body) = inline_python_scope_body {
+                        (body, false, false)
+                    } else {
+                        (
+                            line.tokens.as_slice(),
+                            bindings.inside_function(),
+                            bindings.inside_async_function(),
+                        )
+                    };
+                let inline_python_scope = inline_python_scope_body.is_some();
+                let inside_inline_python_class = inline_python_class_body.is_some();
+                let contextual_function = inside_function && !inside_inline_python_class;
+                let has_enclosing_function = if inline_python_scope {
+                    bindings.has_function_scope()
+                } else {
+                    bindings.has_enclosing_function()
+                };
+                if let Some(kind) = remember_python_declaration_context(
+                    &mut python_declaration_contexts,
+                    &line.tokens,
+                    python_scope_depth,
+                ) {
+                    problems.push(python_declaration_conflict_diagnostic(kind, line.span));
+                    continue;
+                }
                 bindings.remember_python(&line.tokens, parse_line.indent);
-                if depth > 0 && is_valid_python_header(token_text(source, &line.tokens)) {
-                    python_header_indents.push(line.indent);
+                if depth > 0 && valid_python_header {
+                    python_header_indents.push((line.indent, python_loop_header));
+                } else if depth == 0 && valid_python_header && python_loop_header {
+                    top_level_python_loop_indents.push(line.indent);
+                }
+                if is_python_async_for_header(&line.tokens) && !bindings.inside_async_function() {
+                    problems.push(async_for_outside_async_function_diagnostic(line.span));
+                }
+                if is_python_async_with_header(&line.tokens) && !bindings.inside_async_function() {
+                    problems.push(async_with_outside_async_function_diagnostic(line.span));
+                }
+                if contains_python_nonlocal(context_tokens) && !has_enclosing_function {
+                    problems.push(nonlocal_outside_function_diagnostic(line.span));
+                }
+                if is_python_import_star_line(context_tokens)
+                    && is_valid_python_statement(token_text(source, context_tokens))
+                    && (inline_python_scope || bindings.inside_non_module_scope())
+                {
+                    problems.push(import_star_outside_module_diagnostic(line.span));
+                }
+                if is_python_return_line(context_tokens) && !contextual_function {
+                    problems.push(return_outside_function_diagnostic(line.span));
+                    continue;
+                }
+                let inside_loop = blocks
+                    .iter()
+                    .any(|block| matches!(block, ExplicitBlock::Loop { .. }))
+                    || python_header_indents.iter().any(|(_, is_loop)| *is_loop)
+                    || !top_level_python_loop_indents.is_empty();
+                if is_python_continue_line(context_tokens) && (!inside_loop || inline_python_scope)
+                {
+                    problems.push(continue_outside_loop_diagnostic(line.span));
+                    continue;
+                }
+                if inline_python_scope && is_python_break_line(context_tokens) {
+                    problems.push(break_outside_loop_diagnostic(line.span));
+                    continue;
+                }
+                if inside_python_except_star && is_python_except_star_control_line(&line.tokens) {
+                    problems.push(except_star_control_flow_diagnostic(line.span));
+                    continue;
+                }
+                if contains_yield_inside_comprehension(context_tokens) {
+                    problems.push(yield_inside_comprehension_diagnostic(line.span));
+                    continue;
+                }
+                if contains_async_comprehension_outside_async_function(
+                    context_tokens,
+                    inside_async_function,
+                ) {
+                    problems.push(async_comprehension_outside_async_function_diagnostic(
+                        line.span,
+                    ));
+                    continue;
+                }
+                if let Some(body) = inline_python_function_body {
+                    let has_direct_yield = contains_yield_outside_lambda(body)
+                        && !contains_yield_inside_comprehension(body);
+                    if is_python_async_function_header(&line.tokens)
+                        && has_direct_yield
+                        && contains_return_with_value(body)
+                    {
+                        problems.push(return_value_in_async_generator_diagnostic(line.span));
+                        continue;
+                    }
+                } else if !inline_python_scope {
+                    remember_async_generator_context(
+                        &mut async_function_contexts,
+                        &line.tokens,
+                        python_scope_depth,
+                        line.span,
+                    );
+                }
+                if contains_yield_outside_lambda(context_tokens) && !inside_function {
+                    problems.push(yield_outside_function_diagnostic(line.span));
+                    continue;
+                }
+                if contains_invalid_await(context_tokens, inside_async_function) {
+                    problems.push(await_outside_async_function_diagnostic(line.span));
+                    continue;
+                }
+                if contains_yield_from_outside_lambda(context_tokens) && inside_async_function {
+                    problems.push(yield_from_async_function_diagnostic(line.span));
+                }
+                if is_python_try_header(&line.tokens) {
+                    python_try_indents.push(line.indent);
+                }
+                if is_python_except_star_header(&line.tokens)
+                    && python_try_indents
+                        .last()
+                        .is_some_and(|header_indent| *header_indent == line.indent)
+                {
+                    python_except_star_indents.push((line.indent, bindings.python_scope_depth()));
                 }
             }
             Err(problem) => problems.push(problem),
+        }
+    }
+
+    completed_async_functions.extend(async_function_contexts);
+    for context in completed_async_functions {
+        if context.has_yield {
+            for span in context.return_value_spans {
+                problems.push(return_value_in_async_generator_diagnostic(span));
+            }
         }
     }
 
@@ -632,9 +898,203 @@ fn break_outside_loop_diagnostic(span: Span) -> Diagnostic {
         span,
     )
     .with_bilingual_hint(
-        "put it inside `while ... end` or `repeat ... end`",
-        "`동안 ... 끝` 또는 `반복 ... 끝` 안에 넣어 주세요",
+        "put it inside `while ... end`, `repeat ... end`, or a Python `for`/`while` loop",
+        "`동안 ... 끝`, `반복 ... 끝`, 또는 Python `for`/`while` 반복문 안에 넣어 주세요",
     )
+}
+
+fn continue_outside_loop_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::ContinueOutsideLoop,
+        "`continue` can only be used inside a loop",
+        "`continue`는 반복문 안에서만 쓸 수 있어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "put it inside `while`, `repeat`, or a Python `for`/`while` loop, or remove it",
+        "`while`, `repeat`, 또는 Python `for`/`while` 반복문 안에 넣거나 지워 주세요",
+    )
+}
+
+fn return_outside_function_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::ReturnOutsideFunction,
+        "`return` can only be used inside a function",
+        "`return`은 함수 안에서만 쓸 수 있어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "put it inside a `def` function, or remove it",
+        "`def` 함수 안에 넣거나 지워 주세요",
+    )
+}
+
+fn yield_outside_function_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::YieldOutsideFunction,
+        "`yield` can only be used inside a function",
+        "`yield`는 함수 안에서만 쓸 수 있어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "put it inside a `def` or `async def` function, or remove it",
+        "`def` 또는 `async def` 함수 안에 넣거나 지워 주세요",
+    )
+}
+
+fn await_outside_async_function_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::AwaitOutsideAsyncFunction,
+        "`await` can only be used inside an async function",
+        "`await`는 비동기 함수 안에서만 쓸 수 있어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "put it inside an `async def` function, or remove it",
+        "`async def` 함수 안에 넣거나 지워 주세요",
+    )
+}
+
+fn yield_from_async_function_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::YieldFromAsyncFunction,
+        "`yield from` cannot be used inside an async function",
+        "비동기 함수 안에서는 `yield from`을 쓸 수 없어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "use `async for` to yield values from an async source, or use a normal `def` generator",
+        "비동기 원천의 값을 내보내려면 `async for`를 쓰거나 일반 `def` 제너레이터를 사용해 주세요",
+    )
+}
+
+fn async_for_outside_async_function_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::AsyncForOutsideAsyncFunction,
+        "`async for` can only be used inside an async function",
+        "`async for`는 비동기 함수 안에서만 쓸 수 있어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "put it inside an `async def` function, or use an ordinary `for` loop",
+        "`async def` 함수 안에 넣거나 일반 `for` 반복문을 사용해 주세요",
+    )
+}
+
+fn async_with_outside_async_function_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::AsyncWithOutsideAsyncFunction,
+        "`async with` can only be used inside an async function",
+        "`async with`는 비동기 함수 안에서만 쓸 수 있어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "put it inside an `async def` function, or use an ordinary `with` block",
+        "`async def` 함수 안에 넣거나 일반 `with` 블록을 사용해 주세요",
+    )
+}
+
+fn nonlocal_outside_function_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::NonlocalOutsideFunction,
+        "`nonlocal` can only be used inside a nested function",
+        "`nonlocal`은 중첩 함수 안에서만 쓸 수 있어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "put it in a nested function or class under another function, or remove it",
+        "다른 함수 아래의 중첩 함수나 클래스에 넣거나 지워 주세요",
+    )
+}
+
+fn import_star_outside_module_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::ImportStarOutsideModule,
+        "`from ... import *` can only be used at module scope",
+        "`from ... import *`은 모듈 범위에서만 쓸 수 있어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "import the names explicitly here, or move the star import to the module level",
+        "여기서는 이름을 명시적으로 import하거나 별표 import를 모듈 수준으로 옮겨 주세요",
+    )
+}
+
+fn except_star_control_flow_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::ControlFlowInExceptStar,
+        "`break`, `continue`, and `return` cannot be used inside an `except*` block",
+        "`except*` 블록 안에서는 `break`, `continue`, `return`을 쓸 수 없어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "move the control-flow statement outside the `except*` block, or use a normal `except` block",
+        "제어 흐름 문장을 `except*` 블록 밖으로 옮기거나 일반 `except` 블록을 사용해 주세요",
+    )
+}
+
+fn yield_inside_comprehension_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::YieldInsideComprehension,
+        "`yield` cannot be used inside a comprehension",
+        "컴프리헨션 안에서는 `yield`를 쓸 수 없어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "replace the comprehension with an explicit loop, or move `yield` outside it",
+        "컴프리헨션을 명시적인 반복문으로 바꾸거나 `yield`를 밖으로 옮겨 주세요",
+    )
+}
+
+fn async_comprehension_outside_async_function_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::AsyncComprehensionOutsideAsyncFunction,
+        "an async comprehension must be inside an async function",
+        "비동기 컴프리헨션은 비동기 함수 안에 있어야 해요",
+        span,
+    )
+    .with_bilingual_hint(
+        "move the comprehension into an `async def` function, or use an ordinary `for` comprehension",
+        "컴프리헨션을 `async def` 함수 안으로 옮기거나 일반 `for` 컴프리헨션을 사용해 주세요",
+    )
+}
+
+fn return_value_in_async_generator_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::ReturnValueInAsyncGenerator,
+        "an async generator cannot return a value",
+        "비동기 제너레이터에서는 값을 반환할 수 없어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "use a bare `return`, or move the value-returning statement into a separate async function",
+        "값이 없는 `return`을 사용하거나 값을 반환하는 문장을 별도의 비동기 함수로 옮겨 주세요",
+    )
+}
+
+fn python_declaration_conflict_diagnostic(kind: PythonDeclarationKind, span: Span) -> Diagnostic {
+    match kind {
+        PythonDeclarationKind::Global => Diagnostic::bilingual(
+            DiagnosticCode::GlobalDeclarationConflict,
+            "`global` conflicts with an earlier name use or assignment",
+            "`global` 선언이 앞선 이름 사용이나 대입과 충돌해요",
+            span,
+        )
+        .with_bilingual_hint(
+            "move `global` before the first use or assignment, and do not declare a parameter global",
+            "첫 사용이나 대입보다 `global`을 먼저 적고, 매개변수를 global로 선언하지 말아 주세요",
+        ),
+        PythonDeclarationKind::Nonlocal => Diagnostic::bilingual(
+            DiagnosticCode::NonlocalDeclarationConflict,
+            "`nonlocal` conflicts with an earlier name use or assignment",
+            "`nonlocal` 선언이 앞선 이름 사용이나 대입과 충돌해요",
+            span,
+        )
+        .with_bilingual_hint(
+            "move `nonlocal` before the first use or assignment, and do not declare a parameter nonlocal",
+            "첫 사용이나 대입보다 `nonlocal`을 먼저 적고, 매개변수를 nonlocal로 선언하지 말아 주세요",
+        ),
+    }
 }
 
 fn branch_without_condition_diagnostic(span: Span) -> Diagnostic {
@@ -661,6 +1121,820 @@ fn duplicate_else_diagnostic(span: Span) -> Diagnostic {
         "put another condition before `else`, or close the block",
         "`아니면` 전에 조건을 더 쓰거나 블록을 닫아 주세요",
     )
+}
+
+fn inline_break_is_outside_loop(stmt: &NmeStmt, source: &str, inside_loop: bool) -> bool {
+    match stmt {
+        NmeStmt::Break => !inside_loop,
+        NmeStmt::Times { inline, .. } | NmeStmt::While { inline, .. } => inline
+            .as_ref()
+            .is_some_and(|body| inline_break_is_outside_loop_in_body(body, source, true)),
+        NmeStmt::When { inline, .. }
+        | NmeStmt::ElseIf { inline, .. }
+        | NmeStmt::Else { inline } => inline
+            .as_ref()
+            .is_some_and(|body| inline_break_is_outside_loop_in_body(body, source, inside_loop)),
+        _ => false,
+    }
+}
+
+fn inline_break_is_outside_loop_in_body(
+    body: &InlineStmt,
+    source: &str,
+    inside_loop: bool,
+) -> bool {
+    match body {
+        InlineStmt::Nme(inner) => inline_break_is_outside_loop(inner, source, inside_loop),
+        InlineStmt::Python(span) => source[span.start..span.end].trim() == "break" && !inside_loop,
+    }
+}
+
+fn inline_continue_is_outside_loop(stmt: &NmeStmt, tokens: &[Token], inside_loop: bool) -> bool {
+    match stmt {
+        NmeStmt::Times { inline, .. } | NmeStmt::While { inline, .. } => inline
+            .as_ref()
+            .is_some_and(|body| inline_continue_is_outside_loop_in_body(body, tokens, true)),
+        NmeStmt::When { inline, .. }
+        | NmeStmt::ElseIf { inline, .. }
+        | NmeStmt::Else { inline } => inline
+            .as_ref()
+            .is_some_and(|body| inline_continue_is_outside_loop_in_body(body, tokens, inside_loop)),
+        _ => false,
+    }
+}
+
+fn inline_continue_is_outside_loop_in_body(
+    body: &InlineStmt,
+    tokens: &[Token],
+    inside_loop: bool,
+) -> bool {
+    match body {
+        InlineStmt::Nme(inner) => inline_continue_is_outside_loop(inner, tokens, inside_loop),
+        InlineStmt::Python(span) => {
+            first_token_in_span(tokens, *span)
+                .is_some_and(|token| matches!(token.tok, Tok::Continue))
+                && !inside_loop
+        }
+    }
+}
+
+fn inline_except_star_control_flow(stmt: &NmeStmt, tokens: &[Token]) -> bool {
+    match stmt {
+        NmeStmt::Times { inline, .. }
+        | NmeStmt::While { inline, .. }
+        | NmeStmt::When { inline, .. }
+        | NmeStmt::ElseIf { inline, .. }
+        | NmeStmt::Else { inline } => inline
+            .as_ref()
+            .is_some_and(|body| inline_except_star_control_flow_in_body(body, tokens)),
+        _ => false,
+    }
+}
+
+fn inline_except_star_control_flow_in_body(body: &InlineStmt, tokens: &[Token]) -> bool {
+    match body {
+        InlineStmt::Nme(inner) => {
+            matches!(inner.as_ref(), NmeStmt::Break)
+                || inline_except_star_control_flow(inner, tokens)
+        }
+        InlineStmt::Python(span) => first_token_in_span(tokens, *span)
+            .is_some_and(|token| matches!(token.tok, Tok::Break | Tok::Continue | Tok::Return)),
+    }
+}
+
+fn inline_return_is_outside_function(
+    stmt: &NmeStmt,
+    tokens: &[Token],
+    inside_function: bool,
+) -> bool {
+    match stmt {
+        NmeStmt::Times { inline, .. }
+        | NmeStmt::While { inline, .. }
+        | NmeStmt::When { inline, .. }
+        | NmeStmt::ElseIf { inline, .. }
+        | NmeStmt::Else { inline } => inline.as_ref().is_some_and(|body| {
+            inline_return_is_outside_function_in_body(body, tokens, inside_function)
+        }),
+        _ => false,
+    }
+}
+
+fn inline_return_is_outside_function_in_body(
+    body: &InlineStmt,
+    tokens: &[Token],
+    inside_function: bool,
+) -> bool {
+    match body {
+        InlineStmt::Nme(inner) => inline_return_is_outside_function(inner, tokens, inside_function),
+        InlineStmt::Python(span) => {
+            first_token_in_span(tokens, *span).is_some_and(|token| matches!(token.tok, Tok::Return))
+                && !inside_function
+        }
+    }
+}
+
+fn inline_yield_inside_comprehension(stmt: &NmeStmt, tokens: &[Token]) -> bool {
+    match stmt {
+        NmeStmt::Times { inline, .. }
+        | NmeStmt::While { inline, .. }
+        | NmeStmt::When { inline, .. }
+        | NmeStmt::ElseIf { inline, .. }
+        | NmeStmt::Else { inline } => inline
+            .as_ref()
+            .is_some_and(|body| inline_yield_inside_comprehension_in_body(body, tokens)),
+        _ => false,
+    }
+}
+
+fn inline_yield_inside_comprehension_in_body(body: &InlineStmt, tokens: &[Token]) -> bool {
+    match body {
+        InlineStmt::Nme(inner) => inline_yield_inside_comprehension(inner, tokens),
+        InlineStmt::Python(span) => contains_yield_inside_comprehension_in_span(tokens, *span),
+    }
+}
+
+fn inline_async_comprehension_outside_async_function(
+    stmt: &NmeStmt,
+    tokens: &[Token],
+    inside_async_function: bool,
+) -> bool {
+    match stmt {
+        NmeStmt::Times { inline, .. }
+        | NmeStmt::While { inline, .. }
+        | NmeStmt::When { inline, .. }
+        | NmeStmt::ElseIf { inline, .. }
+        | NmeStmt::Else { inline } => inline.as_ref().is_some_and(|body| {
+            inline_async_comprehension_outside_async_function_in_body(
+                body,
+                tokens,
+                inside_async_function,
+            )
+        }),
+        _ => false,
+    }
+}
+
+fn inline_async_comprehension_outside_async_function_in_body(
+    body: &InlineStmt,
+    tokens: &[Token],
+    inside_async_function: bool,
+) -> bool {
+    match body {
+        InlineStmt::Nme(inner) => {
+            inline_async_comprehension_outside_async_function(inner, tokens, inside_async_function)
+        }
+        InlineStmt::Python(span) => contains_async_comprehension_outside_async_function_in_span(
+            tokens,
+            *span,
+            inside_async_function,
+        ),
+    }
+}
+
+fn inline_yield_is_outside_function(
+    stmt: &NmeStmt,
+    tokens: &[Token],
+    inside_function: bool,
+) -> bool {
+    match stmt {
+        NmeStmt::Times { inline, .. }
+        | NmeStmt::While { inline, .. }
+        | NmeStmt::When { inline, .. }
+        | NmeStmt::ElseIf { inline, .. }
+        | NmeStmt::Else { inline } => inline.as_ref().is_some_and(|body| {
+            inline_yield_is_outside_function_in_body(body, tokens, inside_function)
+        }),
+        _ => false,
+    }
+}
+
+fn inline_yield_is_outside_function_in_body(
+    body: &InlineStmt,
+    tokens: &[Token],
+    inside_function: bool,
+) -> bool {
+    match body {
+        InlineStmt::Nme(inner) => inline_yield_is_outside_function(inner, tokens, inside_function),
+        InlineStmt::Python(span) => {
+            contains_yield_outside_lambda_in_span(tokens, *span) && !inside_function
+        }
+    }
+}
+
+fn inline_await_is_outside_async_function(
+    stmt: &NmeStmt,
+    tokens: &[Token],
+    inside_async_function: bool,
+) -> bool {
+    match stmt {
+        NmeStmt::Times { inline, .. }
+        | NmeStmt::While { inline, .. }
+        | NmeStmt::When { inline, .. }
+        | NmeStmt::ElseIf { inline, .. }
+        | NmeStmt::Else { inline } => inline.as_ref().is_some_and(|body| {
+            inline_await_is_outside_async_function_in_body(body, tokens, inside_async_function)
+        }),
+        _ => false,
+    }
+}
+
+fn inline_await_is_outside_async_function_in_body(
+    body: &InlineStmt,
+    tokens: &[Token],
+    inside_async_function: bool,
+) -> bool {
+    match body {
+        InlineStmt::Nme(inner) => {
+            inline_await_is_outside_async_function(inner, tokens, inside_async_function)
+        }
+        InlineStmt::Python(span) => {
+            contains_invalid_await_in_span(tokens, *span, inside_async_function)
+        }
+    }
+}
+
+fn inline_yield_from_is_in_async_function(
+    stmt: &NmeStmt,
+    tokens: &[Token],
+    inside_async_function: bool,
+) -> bool {
+    match stmt {
+        NmeStmt::Times { inline, .. }
+        | NmeStmt::While { inline, .. }
+        | NmeStmt::When { inline, .. }
+        | NmeStmt::ElseIf { inline, .. }
+        | NmeStmt::Else { inline } => inline.as_ref().is_some_and(|body| {
+            inline_yield_from_is_in_async_function_in_body(body, tokens, inside_async_function)
+        }),
+        _ => false,
+    }
+}
+
+fn inline_yield_from_is_in_async_function_in_body(
+    body: &InlineStmt,
+    tokens: &[Token],
+    inside_async_function: bool,
+) -> bool {
+    match body {
+        InlineStmt::Nme(inner) => {
+            inline_yield_from_is_in_async_function(inner, tokens, inside_async_function)
+        }
+        InlineStmt::Python(span) => {
+            contains_yield_from_outside_lambda_in_span(tokens, *span) && inside_async_function
+        }
+    }
+}
+
+fn first_token_in_span(tokens: &[Token], span: Span) -> Option<&Token> {
+    tokens
+        .iter()
+        .find(|token| token.span.start >= span.start && token.span.end <= span.end)
+}
+
+fn contains_yield_inside_comprehension(tokens: &[Token]) -> bool {
+    tokens.iter().enumerate().any(|(index, token)| {
+        matches!(token.tok, Tok::Yield) && yield_is_inside_comprehension(tokens, index)
+    })
+}
+
+fn contains_yield_inside_comprehension_in_span(tokens: &[Token], span: Span) -> bool {
+    tokens.iter().enumerate().any(|(index, token)| {
+        token.span.start >= span.start
+            && token.span.end <= span.end
+            && matches!(token.tok, Tok::Yield)
+            && yield_is_inside_comprehension(tokens, index)
+    })
+}
+
+fn contains_async_comprehension_outside_async_function(
+    tokens: &[Token],
+    inside_async_function: bool,
+) -> bool {
+    tokens.windows(2).enumerate().any(|(index, pair)| {
+        matches!(pair[0].tok, Tok::Async)
+            && matches!(pair[1].tok, Tok::For)
+            && async_for_is_inside_comprehension(tokens, index)
+            && (!inside_async_function || enclosing_lambda_body_start(tokens, index).is_some())
+    })
+}
+
+fn contains_async_comprehension_outside_async_function_in_span(
+    tokens: &[Token],
+    span: Span,
+    inside_async_function: bool,
+) -> bool {
+    tokens.windows(2).enumerate().any(|(index, pair)| {
+        pair[0].span.start >= span.start
+            && pair[1].span.end <= span.end
+            && matches!(pair[0].tok, Tok::Async)
+            && matches!(pair[1].tok, Tok::For)
+            && async_for_is_inside_comprehension(tokens, index)
+            && (!inside_async_function || enclosing_lambda_body_start(tokens, index).is_some())
+    })
+}
+
+fn async_for_is_inside_comprehension(tokens: &[Token], async_index: usize) -> bool {
+    let depths = token_depths(tokens);
+    let closes = matching_bracket_closes(tokens);
+    (0..async_index).any(|open_index| {
+        let is_open = matches!(tokens[open_index].tok, Tok::Lpar | Tok::Lsqb | Tok::Lbrace);
+        let Some(close_index) = closes[open_index] else {
+            return false;
+        };
+        is_open && async_index < close_index && depths[async_index] == depths[open_index] + 1
+    })
+}
+
+fn remember_async_generator_context(
+    contexts: &mut Vec<AsyncFunctionContext>,
+    tokens: &[Token],
+    python_scope_depth: usize,
+    span: Span,
+) {
+    let has_direct_yield =
+        contains_yield_outside_lambda(tokens) && !contains_yield_inside_comprehension(tokens);
+    let has_return_value = contains_return_with_value(tokens);
+    if let Some(context) = contexts
+        .last_mut()
+        .filter(|context| context.body_scope_depth == python_scope_depth)
+    {
+        context.has_yield |= has_direct_yield;
+        if has_return_value {
+            context.return_value_spans.push(span);
+        }
+    }
+    if is_python_async_function_header(tokens) {
+        contexts.push(AsyncFunctionContext {
+            body_scope_depth: python_scope_depth + 1,
+            has_yield: false,
+            return_value_spans: Vec::new(),
+        });
+    }
+}
+
+fn contains_return_with_value(tokens: &[Token]) -> bool {
+    tokens.iter().enumerate().any(|(index, token)| {
+        matches!(token.tok, Tok::Return)
+            && tokens
+                .get(index + 1)
+                .is_some_and(|next| !matches!(next.tok, Tok::Semi))
+    })
+}
+
+fn remember_python_declaration_context(
+    contexts: &mut Vec<PythonDeclarationContext>,
+    tokens: &[Token],
+    python_scope_depth: usize,
+) -> Option<PythonDeclarationKind> {
+    if let Some(body) = python_inline_suite_body(tokens) {
+        if let Some(context) = contexts
+            .last_mut()
+            .filter(|context| context.body_scope_depth == python_scope_depth)
+        {
+            for name in python_names_seen_in_scope(tokens, &[]) {
+                context.seen_names.insert(name);
+            }
+        }
+        let (_, parameters) = python_scope_header(tokens).expect("inline Python scope header");
+        let mut inline_context = PythonDeclarationContext {
+            body_scope_depth: python_scope_depth + 1,
+            seen_names: parameters,
+            annotation_targets: HashSet::new(),
+            declarations: HashMap::new(),
+        };
+        let declarations = python_declarations(body);
+        return remember_python_declarations_in_scope(&mut inline_context, body, &declarations);
+    }
+
+    let declarations = if python_scope_header(tokens).is_some() {
+        Vec::new()
+    } else {
+        python_declarations(tokens)
+    };
+    let conflict = contexts
+        .last_mut()
+        .filter(|context| context.body_scope_depth == python_scope_depth)
+        .and_then(|context| remember_python_declarations_in_scope(context, tokens, &declarations));
+
+    if let Some((_, parameters)) = python_scope_header(tokens) {
+        contexts.push(PythonDeclarationContext {
+            body_scope_depth: python_scope_depth + 1,
+            seen_names: parameters,
+            annotation_targets: HashSet::new(),
+            declarations: HashMap::new(),
+        });
+    }
+    conflict
+}
+
+fn remember_python_declarations_in_scope(
+    context: &mut PythonDeclarationContext,
+    tokens: &[Token],
+    declarations: &[PythonDeclaration],
+) -> Option<PythonDeclarationKind> {
+    let mut conflict = None;
+    for (declaration_index, declaration) in declarations.iter().enumerate() {
+        let declaration_start = declaration
+            .names
+            .first()
+            .map_or(0, |(_, name_index)| name_index.saturating_sub(1));
+        for name in python_names_seen_in_scope(
+            &tokens[..declaration_start],
+            &declarations[..declaration_index],
+        ) {
+            context.seen_names.insert(name);
+        }
+        for name in python_annotation_target_names(&tokens[..declaration_start]) {
+            context.annotation_targets.insert(name);
+        }
+        for (name, _) in &declaration.names {
+            let has_other_declaration = context
+                .declarations
+                .get(name)
+                .is_some_and(|previous| *previous != declaration.kind);
+            let has_annotation_target = context.annotation_targets.contains(name);
+            if conflict.is_none()
+                && (has_other_declaration
+                    || context.seen_names.contains(name)
+                    || has_annotation_target)
+            {
+                conflict = Some(declaration.kind);
+            }
+            context
+                .declarations
+                .entry(name.clone())
+                .or_insert(declaration.kind);
+        }
+    }
+    for name in python_annotation_target_names(tokens) {
+        if context.body_scope_depth != 0 && conflict.is_none() {
+            if let Some(kind) = context.declarations.get(&name) {
+                conflict = Some(*kind);
+            }
+        }
+        context.annotation_targets.insert(name);
+    }
+    for name in python_names_seen_in_scope(tokens, declarations) {
+        context.seen_names.insert(name);
+    }
+    conflict
+}
+
+fn python_declarations(tokens: &[Token]) -> Vec<PythonDeclaration> {
+    let mut declarations = Vec::new();
+    let mut index = 0;
+    while index < tokens.len() {
+        let kind = match tokens[index].tok {
+            Tok::Global => PythonDeclarationKind::Global,
+            Tok::Nonlocal => PythonDeclarationKind::Nonlocal,
+            _ => {
+                index += 1;
+                continue;
+            }
+        };
+        if index > 0 && !matches!(tokens[index - 1].tok, Tok::Semi | Tok::Colon | Tok::Newline) {
+            index += 1;
+            continue;
+        }
+        let mut names = Vec::new();
+        let mut cursor = index + 1;
+        while cursor < tokens.len() && !matches!(tokens[cursor].tok, Tok::Semi) {
+            if let Tok::Name { name } = &tokens[cursor].tok {
+                let previous_is_separator =
+                    cursor == index + 1 || matches!(tokens[cursor - 1].tok, Tok::Comma);
+                if previous_is_separator {
+                    names.push((name.clone(), cursor));
+                }
+            }
+            cursor += 1;
+        }
+        if !names.is_empty() {
+            declarations.push(PythonDeclaration { kind, names });
+        }
+        index = cursor;
+    }
+    declarations
+}
+
+fn python_names_seen_in_scope(tokens: &[Token], declarations: &[PythonDeclaration]) -> Vec<String> {
+    let declared_indices: HashSet<usize> = declarations
+        .iter()
+        .flat_map(|declaration| declaration.names.iter().map(|(_, index)| *index))
+        .collect();
+    if let Some((name, _)) = python_scope_header(tokens) {
+        return vec![name];
+    }
+    tokens
+        .iter()
+        .enumerate()
+        .filter_map(|(index, token)| {
+            let Tok::Name { name } = &token.tok else {
+                return None;
+            };
+            if declared_indices.contains(&index)
+                || index > 0 && matches!(tokens[index - 1].tok, Tok::Dot)
+                || is_python_keyword_argument_name(tokens, index)
+                || token_is_inside_lambda(tokens, index)
+                || is_lambda_parameter_name(tokens, index)
+                || is_python_annotation_target_name(tokens, index)
+                || is_comprehension_local_name(tokens, index)
+            {
+                None
+            } else {
+                Some(name.clone())
+            }
+        })
+        .collect()
+}
+
+fn python_annotation_target_names(tokens: &[Token]) -> Vec<String> {
+    tokens
+        .iter()
+        .enumerate()
+        .filter_map(|(index, token)| {
+            if !is_python_annotation_target_name(tokens, index) {
+                return None;
+            }
+            let Tok::Name { name } = &token.tok else {
+                return None;
+            };
+            Some(name.clone())
+        })
+        .collect()
+}
+
+fn is_python_keyword_argument_name(tokens: &[Token], index: usize) -> bool {
+    tokens
+        .get(index + 1)
+        .is_some_and(|token| matches!(token.tok, Tok::Equal))
+        && tokens
+            .get(index.wrapping_sub(1))
+            .is_some_and(|token| matches!(token.tok, Tok::Lpar | Tok::Comma))
+}
+
+fn is_lambda_parameter_name(tokens: &[Token], index: usize) -> bool {
+    let depths = token_depths(tokens);
+    let Some(lambda_index) = (0..index).rev().find(|&candidate| {
+        if !matches!(tokens[candidate].tok, Tok::Lambda) {
+            return false;
+        }
+        (candidate + 1..tokens.len()).any(|colon| {
+            depths[colon] == depths[candidate]
+                && matches!(tokens[colon].tok, Tok::Colon)
+                && index < colon
+        })
+    }) else {
+        return false;
+    };
+    let Some(colon_index) = (lambda_index + 1..tokens.len()).find(|&candidate| {
+        depths[candidate] == depths[lambda_index] && matches!(tokens[candidate].tok, Tok::Colon)
+    }) else {
+        return false;
+    };
+    if index >= colon_index || !matches!(tokens[index].tok, Tok::Name { .. }) {
+        return false;
+    }
+    let mut in_default = false;
+    for candidate in lambda_index + 1..index {
+        if depths[candidate] != depths[lambda_index] {
+            continue;
+        }
+        match tokens[candidate].tok {
+            Tok::Equal => in_default = true,
+            Tok::Comma => in_default = false,
+            _ => {}
+        }
+    }
+    !in_default
+}
+
+fn is_python_annotation_target_name(tokens: &[Token], index: usize) -> bool {
+    if !matches!(
+        tokens.get(index).map(|token| &token.tok),
+        Some(Tok::Name { .. })
+    ) {
+        return false;
+    }
+    let depths = token_depths(tokens);
+    let Some(next) = tokens.get(index + 1) else {
+        return false;
+    };
+    if !matches!(next.tok, Tok::Colon) || depths[index] != depths[index + 1] {
+        return false;
+    }
+    index == 0
+        || tokens
+            .get(index.wrapping_sub(1))
+            .is_some_and(|previous| matches!(previous.tok, Tok::Comma | Tok::Semi))
+}
+
+fn is_comprehension_local_name(tokens: &[Token], index: usize) -> bool {
+    let depths = token_depths(tokens);
+    let closes = matching_bracket_closes(tokens);
+    (0..index).any(|open_index| {
+        if !matches!(tokens[open_index].tok, Tok::Lpar | Tok::Lsqb | Tok::Lbrace) {
+            return false;
+        }
+        let Some(close_index) = closes[open_index] else {
+            return false;
+        };
+        if index >= close_index {
+            return false;
+        }
+        let body_depth = depths[open_index] + 1;
+        let for_indices: Vec<usize> = (open_index + 1..close_index)
+            .filter(|&candidate| {
+                depths[candidate] == body_depth && matches!(tokens[candidate].tok, Tok::For)
+            })
+            .collect();
+        let Some(first_for) = for_indices.first().copied() else {
+            return false;
+        };
+        if index > open_index && index < first_for && depths[index] >= body_depth {
+            return true;
+        }
+        for for_index in for_indices {
+            let Some(in_index) = (for_index + 1..close_index).find(|&candidate| {
+                depths[candidate] == body_depth && matches!(tokens[candidate].tok, Tok::In)
+            }) else {
+                continue;
+            };
+            if (for_index + 1..in_index).contains(&index) && depths[index] >= body_depth {
+                return true;
+            }
+            let next_for = (in_index + 1..close_index).find(|&candidate| {
+                depths[candidate] == body_depth && matches!(tokens[candidate].tok, Tok::For)
+            });
+            let segment_end = next_for.unwrap_or(close_index);
+            if index > in_index
+                && index < segment_end
+                && (in_index + 1..index).any(|candidate| {
+                    depths[candidate] == body_depth && matches!(tokens[candidate].tok, Tok::If)
+                })
+            {
+                return true;
+            }
+        }
+        false
+    })
+}
+
+fn yield_is_inside_comprehension(tokens: &[Token], target_index: usize) -> bool {
+    let depths = token_depths(tokens);
+    let closes = matching_bracket_closes(tokens);
+    let lambda_body_start = enclosing_lambda_body_start(tokens, target_index);
+    (0..target_index).any(|open_index| {
+        let is_open = matches!(tokens[open_index].tok, Tok::Lpar | Tok::Lsqb | Tok::Lbrace);
+        let Some(close_index) = closes[open_index] else {
+            return false;
+        };
+        if !is_open || target_index >= close_index {
+            return false;
+        }
+        let body_depth = depths[open_index] + 1;
+        let has_comprehension_for = (open_index + 1..close_index)
+            .any(|index| depths[index] == body_depth && matches!(tokens[index].tok, Tok::For));
+        has_comprehension_for
+            && lambda_body_start.is_none_or(|lambda_start| open_index >= lambda_start)
+    })
+}
+
+fn matching_bracket_closes(tokens: &[Token]) -> Vec<Option<usize>> {
+    let mut stack = Vec::new();
+    let mut closes = vec![None; tokens.len()];
+    for (index, token) in tokens.iter().enumerate() {
+        match token.tok {
+            Tok::Lpar | Tok::Lsqb | Tok::Lbrace => stack.push(index),
+            Tok::Rpar | Tok::Rsqb | Tok::Rbrace => {
+                if let Some(open_index) = stack.pop() {
+                    closes[open_index] = Some(index);
+                }
+            }
+            _ => {}
+        }
+    }
+    closes
+}
+
+fn contains_yield_outside_lambda(tokens: &[Token]) -> bool {
+    tokens.iter().enumerate().any(|(index, token)| {
+        matches!(token.tok, Tok::Yield) && !token_is_inside_lambda(tokens, index)
+    })
+}
+
+fn contains_yield_outside_lambda_in_span(tokens: &[Token], span: Span) -> bool {
+    tokens.iter().enumerate().any(|(index, token)| {
+        token.span.start >= span.start
+            && token.span.end <= span.end
+            && matches!(token.tok, Tok::Yield)
+            && !token_is_inside_lambda(tokens, index)
+    })
+}
+
+fn contains_invalid_await(tokens: &[Token], inside_async_function: bool) -> bool {
+    tokens.iter().enumerate().any(|(index, token)| {
+        matches!(token.tok, Tok::Await)
+            && (token_is_inside_lambda(tokens, index) || !inside_async_function)
+    })
+}
+
+fn contains_invalid_await_in_span(
+    tokens: &[Token],
+    span: Span,
+    inside_async_function: bool,
+) -> bool {
+    tokens.iter().enumerate().any(|(index, token)| {
+        token.span.start >= span.start
+            && token.span.end <= span.end
+            && matches!(token.tok, Tok::Await)
+            && (token_is_inside_lambda(tokens, index) || !inside_async_function)
+    })
+}
+
+fn contains_yield_from_outside_lambda(tokens: &[Token]) -> bool {
+    tokens.windows(2).enumerate().any(|(index, pair)| {
+        matches!(pair[0].tok, Tok::Yield)
+            && matches!(pair[1].tok, Tok::From)
+            && !token_is_inside_lambda(tokens, index)
+    })
+}
+
+fn contains_yield_from_outside_lambda_in_span(tokens: &[Token], span: Span) -> bool {
+    tokens.windows(2).enumerate().any(|(index, pair)| {
+        pair[0].span.start >= span.start
+            && pair[1].span.end <= span.end
+            && matches!(pair[0].tok, Tok::Yield)
+            && matches!(pair[1].tok, Tok::From)
+            && !token_is_inside_lambda(tokens, index)
+    })
+}
+
+fn token_is_inside_lambda(tokens: &[Token], target_index: usize) -> bool {
+    enclosing_lambda_body_start(tokens, target_index).is_some()
+}
+
+fn enclosing_lambda_body_start(tokens: &[Token], target_index: usize) -> Option<usize> {
+    let depths = token_depths(tokens);
+    (0..target_index).rev().find_map(|lambda_index| {
+        if !matches!(tokens[lambda_index].tok, Tok::Lambda) {
+            return None;
+        }
+        let lambda_depth = depths[lambda_index];
+        let colon_index = (lambda_index + 1..target_index).find(|&index| {
+            depths[index] == lambda_depth && matches!(tokens[index].tok, Tok::Colon)
+        })?;
+        let body_ends_before_target = (colon_index + 1..target_index).any(|index| {
+            depths[index] == lambda_depth
+                && matches!(
+                    tokens[index].tok,
+                    Tok::Comma | Tok::Semi | Tok::Rpar | Tok::Rsqb | Tok::Rbrace
+                )
+        });
+        (!body_ends_before_target).then_some(colon_index + 1)
+    })
+}
+
+fn token_depths(tokens: &[Token]) -> Vec<usize> {
+    let mut depth = 0usize;
+    tokens
+        .iter()
+        .map(|token| {
+            let before = depth;
+            match token.tok {
+                Tok::Rpar | Tok::Rsqb | Tok::Rbrace => {
+                    depth = depth.saturating_sub(1);
+                }
+                Tok::Lpar | Tok::Lsqb | Tok::Lbrace => depth += 1,
+                _ => {}
+            }
+            before
+        })
+        .collect()
+}
+
+fn is_python_return_line(tokens: &[Token]) -> bool {
+    has_direct_python_statement(tokens, |tok| matches!(tok, Tok::Return))
+}
+
+fn is_python_continue_line(tokens: &[Token]) -> bool {
+    has_direct_python_statement(tokens, |tok| matches!(tok, Tok::Continue))
+}
+
+fn is_python_break_line(tokens: &[Token]) -> bool {
+    has_direct_python_statement(tokens, |tok| matches!(tok, Tok::Break))
+}
+
+fn has_direct_python_statement<F>(tokens: &[Token], predicate: F) -> bool
+where
+    F: Fn(&Tok) -> bool,
+{
+    let depths = token_depths(tokens);
+    tokens.iter().enumerate().any(|(index, token)| {
+        depths[index] == 0
+            && predicate(&token.tok)
+            && (index == 0
+                || (depths[index - 1] == 0 && matches!(tokens[index - 1].tok, Tok::Semi)))
+    })
 }
 
 fn missing_end_diagnostic(block: &ExplicitBlock, offset: usize) -> Diagnostic {
@@ -703,7 +1977,7 @@ fn classify(
     // Future Python grammar may be newer than rustpython-parser. A
     // call/attribute/subscript shape is never NME's whitespace-led beginner
     // form, so preserve it for the selected CPython instead of hijacking it.
-    if looks_like_python_invocation(tokens) {
+    if looks_like_python_invocation(tokens) && !is_header_shape(tokens) {
         return Ok(None);
     }
     // rustpython-parser can lag behind the CPython selected by the CLI (for
@@ -1945,6 +3219,8 @@ fn match_subject_when(
     // a comparison word somewhere in its body.
     if when_action_at(tokens, 0, MatchMode::Recover).is_some()
         || repeat_action_at(tokens, 0, MatchMode::Recover).is_some()
+        || attached_korean_times_sentence(source, tokens).is_some()
+        || find_count_marker(tokens, MatchMode::Exact).is_some()
         || ask_action_at(tokens, 0, MatchMode::Recover).is_some()
         || output_action_at(tokens, 0, MatchMode::Recover).is_some()
         || set_action_at(tokens, 0, MatchMode::Recover).is_some()
@@ -2150,6 +3426,10 @@ enum ConditionConnector {
 }
 
 fn find_exact_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionConnector)> {
+    if let Some(inner) = strip_outer_condition_parentheses(tokens) {
+        return find_exact_condition_connector(inner)
+            .map(|(index, connector)| (index + 1, connector));
+    }
     // Spoken Korean splits `<=`/`>=` into two tokens (`10보다 작거나
     // 같으면`); the lone `같으면` would otherwise match equality.
     for (index, pair) in tokens.windows(2).enumerate() {
@@ -2240,6 +3520,9 @@ fn is_or_equal_phrase_at(tokens: &[Token], index: usize) -> bool {
 }
 
 fn find_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionConnector)> {
+    if let Some(inner) = strip_outer_condition_parentheses(tokens) {
+        return find_condition_connector(inner).map(|(index, connector)| (index + 1, connector));
+    }
     if let Some(connector) = find_exact_condition_connector(tokens) {
         return Some(connector);
     }
@@ -2397,12 +3680,20 @@ fn korean_while_connector(tokens: &[Token]) -> Option<(Vec<Token>, usize)> {
     // Prefer the last `동안` so a logical condition may carry an ending on
     // every operand: `점수가 5와 같지 않을 동안 그리고 점수가 0보다 클 동안`.
     // Earlier `동안` markers are loop endings too and only describe how the
-    // operands are spoken, so they are dropped from the condition tokens.
-    for (index, token) in tokens.iter().enumerate().skip(1).rev() {
+    // operands are spoken, so they are dropped from the condition tokens. A
+    // leading Korean while word is also dropped here; keeping it would make
+    // an outer parenthesized condition start with the loop keyword instead
+    // of its actual subject.
+    let condition_start = usize::from(
+        tokens
+            .first()
+            .is_some_and(|token| token_matches_exact(token, WHILE_WORDS_KO)),
+    );
+    for (index, token) in tokens.iter().enumerate().skip(condition_start + 1).rev() {
         if !token_matches_exact(token, &["동안"]) {
             continue;
         }
-        let mut condition = tokens[..index]
+        let mut condition = tokens[condition_start..index]
             .iter()
             .filter(|token| !token_matches_exact(token, &["동안"]))
             .cloned()
@@ -2418,7 +3709,33 @@ fn korean_while_connector(tokens: &[Token]) -> Option<(Vec<Token>, usize)> {
             }
         }
         if !condition.is_empty() {
-            return Some((condition, index + 1));
+            let mut body_start = index + 1;
+            while tokens
+                .get(body_start)
+                .is_some_and(|token| matches!(token.tok, Tok::Rpar | Tok::Rsqb | Tok::Rbrace))
+            {
+                condition.push(tokens[body_start].clone());
+                body_start += 1;
+            }
+            // A Korean comparison ending may appear before a logical
+            // connector inside a whole wrapper. It is part of the condition,
+            // not the loop boundary, so keep the remaining wrapped tokens
+            // while dropping only the spoken `동안` markers.
+            if tokens
+                .get(body_start)
+                .is_some_and(|token| token_matches_exact(token, &["and", "or", "그리고", "또는"]))
+            {
+                if let Some(wrapper_end) = condition_wrapper_end(tokens, condition_start) {
+                    condition.extend(
+                        tokens[body_start..=wrapper_end]
+                            .iter()
+                            .filter(|token| !token_matches_exact(token, &["동안"]))
+                            .cloned(),
+                    );
+                    body_start = wrapper_end + 1;
+                }
+            }
+            return Some((condition, body_start));
         }
     }
     None
@@ -2511,6 +3828,13 @@ fn condition_tokens_before(
             };
         }
     }
+    while tokens
+        .get(body_start)
+        .is_some_and(|token| matches!(token.tok, Tok::Rpar | Tok::Rsqb | Tok::Rbrace))
+    {
+        condition.push(tokens[body_start].clone());
+        body_start += 1;
+    }
     (condition, body_start, connector)
 }
 
@@ -2523,6 +3847,13 @@ fn parse_natural_condition(
 ) -> Result<Condition, Diagnostic> {
     if tokens.is_empty() {
         return Err(condition_missing(spelling, Span::new(0, 0)));
+    }
+    // Parentheses around a whole NME condition should not turn its logical
+    // connectors into an opaque Python expression. Keep the token-based
+    // logical grammar active while still allowing parentheses inside an
+    // operand, such as `if (ready) and score > 2`.
+    if let Some(inner) = strip_outer_condition_parentheses(tokens) {
+        return parse_natural_condition(source, inner, connector, known_names, spelling);
     }
     // `or` has lower precedence than `and`, just like Python.  Splitting on
     // tokens (rather than source text) keeps strings and nested expressions
@@ -2566,6 +3897,53 @@ fn parse_natural_condition(
         }
     }
     parse_natural_condition_atom(source, tokens, connector, known_names, spelling)
+}
+
+fn condition_wrapper_end(tokens: &[Token], start: usize) -> Option<usize> {
+    if !tokens
+        .get(start)
+        .is_some_and(|token| matches!(&token.tok, Tok::Lpar))
+    {
+        return None;
+    }
+    let mut depth = 0usize;
+    for (index, token) in tokens.iter().enumerate().skip(start) {
+        match token.tok {
+            Tok::Lpar => depth += 1,
+            Tok::Rpar => {
+                depth = depth.checked_sub(1)?;
+                if depth == 0 {
+                    return Some(index);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
+fn strip_outer_condition_parentheses(tokens: &[Token]) -> Option<&[Token]> {
+    if tokens.len() < 2
+        || !tokens
+            .first()
+            .is_some_and(|token| matches!(&token.tok, Tok::Lpar))
+    {
+        return None;
+    }
+    let mut depth = 0usize;
+    for (index, token) in tokens.iter().enumerate() {
+        match token.tok {
+            Tok::Lpar => depth += 1,
+            Tok::Rpar => {
+                depth = depth.checked_sub(1)?;
+                if depth == 0 && index + 1 != tokens.len() {
+                    return None;
+                }
+            }
+            _ => {}
+        }
+    }
+    (depth == 0).then(|| &tokens[1..tokens.len() - 1])
 }
 
 fn logical_operator_at(tokens: &[Token], operator: LogicalOp) -> Option<usize> {
@@ -3327,6 +4705,12 @@ fn parse_sentence_repeat_body(
     header_span: Span,
     known_names: &HashSet<String>,
 ) -> Result<Option<InlineStmt>, Diagnostic> {
+    if branch_shape(body).is_some() {
+        return Err(branch_without_condition_diagnostic(span_of(body)));
+    }
+    if let Some(inner) = match_break(source, body, known_names, MatchMode::Exact)? {
+        return Ok(Some(InlineStmt::Nme(Box::new(inner))));
+    }
     let plain_words = !body.is_empty()
         && body.iter().all(is_text_token)
         && !body.iter().any(|token| literal_token(token).is_some());
@@ -3340,6 +4724,9 @@ fn parse_sentence_repeat_body(
         || find_ask_shape(body, MatchMode::Recover).is_some();
     if !body.is_empty() && (!plain_words || has_action) {
         if let Some(inner) = classify(source, body, &BlockCtx::Inline, known_names)? {
+            if matches!(&inner, NmeStmt::ElseIf { .. } | NmeStmt::Else { .. }) {
+                return Err(branch_without_condition_diagnostic(span_of(body)));
+            }
             return Ok(Some(InlineStmt::Nme(Box::new(inner))));
         }
     }
@@ -4840,6 +6227,9 @@ fn parse_suite_body(
     if has_top_level_semicolon(body) {
         return Err(one_statement_diagnostic(kind, body_span));
     }
+    if branch_shape(body).is_some() {
+        return Err(branch_without_condition_diagnostic(body_span));
+    }
     // Korean `멈춰` is a valid Python identifier, so the Python-wins check in
     // `classify` intentionally leaves a bare top-level name alone. Inside an
     // already recognized NME suite, however, the documented Korean break
@@ -4849,6 +6239,9 @@ fn parse_suite_body(
         return Ok(Some(InlineStmt::Nme(Box::new(NmeStmt::Break))));
     }
     if let Some(inner) = classify(source, body, &BlockCtx::Inline, known_names)? {
+        if matches!(&inner, NmeStmt::ElseIf { .. } | NmeStmt::Else { .. }) {
+            return Err(branch_without_condition_diagnostic(body_span));
+        }
         return Ok(Some(InlineStmt::Nme(Box::new(inner))));
     }
     if !is_valid_python_statement(&source[body_span.start..body_span.end]) {
@@ -4923,14 +6316,49 @@ fn body_diagnostic(_kind: SuiteKind, span: Span) -> Diagnostic {
 
 // --------------------------------------------------------------- helpers
 
+#[derive(Clone, Copy)]
+enum BindingScopeKind {
+    Root,
+    Function,
+    AsyncFunction,
+    Class,
+    Other,
+}
+
 struct BindingScope {
     body_indent: usize,
     names: HashSet<String>,
+    kind: BindingScopeKind,
+}
+
+struct AsyncFunctionContext {
+    body_scope_depth: usize,
+    has_yield: bool,
+    return_value_spans: Vec<Span>,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum PythonDeclarationKind {
+    Global,
+    Nonlocal,
+}
+
+struct PythonDeclaration {
+    kind: PythonDeclarationKind,
+    names: Vec<(String, usize)>,
+}
+
+struct PythonDeclarationContext {
+    body_scope_depth: usize,
+    seen_names: HashSet<String>,
+    annotation_targets: HashSet<String>,
+    declarations: HashMap<String, PythonDeclarationKind>,
 }
 
 struct PendingScope {
     header_indent: usize,
     names: HashSet<String>,
+    kind: BindingScopeKind,
 }
 
 struct BindingEnv {
@@ -4944,6 +6372,7 @@ impl BindingEnv {
             scopes: vec![BindingScope {
                 body_indent: 0,
                 names: HashSet::new(),
+                kind: BindingScopeKind::Root,
             }],
             pending: None,
         }
@@ -4955,6 +6384,7 @@ impl BindingEnv {
                 self.scopes.push(BindingScope {
                     body_indent: indent,
                     names: pending.names,
+                    kind: pending.kind,
                 });
             }
         }
@@ -4975,7 +6405,90 @@ impl BindingEnv {
         self.scopes.push(BindingScope {
             body_indent,
             names: HashSet::new(),
+            kind: BindingScopeKind::Other,
         });
+    }
+
+    fn inside_function(&self) -> bool {
+        for scope in self.scopes.iter().rev() {
+            match scope.kind {
+                BindingScopeKind::Function | BindingScopeKind::AsyncFunction => return true,
+                BindingScopeKind::Class => return false,
+                BindingScopeKind::Root | BindingScopeKind::Other => {}
+            }
+        }
+        false
+    }
+
+    fn inside_async_function(&self) -> bool {
+        for scope in self.scopes.iter().rev() {
+            match scope.kind {
+                BindingScopeKind::AsyncFunction => return true,
+                BindingScopeKind::Function | BindingScopeKind::Class => return false,
+                BindingScopeKind::Root | BindingScopeKind::Other => {}
+            }
+        }
+        false
+    }
+
+    fn inside_non_module_scope(&self) -> bool {
+        for scope in self.scopes.iter().rev() {
+            match scope.kind {
+                BindingScopeKind::Root => return false,
+                BindingScopeKind::Function
+                | BindingScopeKind::AsyncFunction
+                | BindingScopeKind::Class => return true,
+                BindingScopeKind::Other => {}
+            }
+        }
+        false
+    }
+
+    fn python_scope_depth(&self) -> usize {
+        self.scopes
+            .iter()
+            .filter(|scope| {
+                matches!(
+                    scope.kind,
+                    BindingScopeKind::Function
+                        | BindingScopeKind::AsyncFunction
+                        | BindingScopeKind::Class
+                )
+            })
+            .count()
+    }
+
+    fn has_enclosing_function(&self) -> bool {
+        let Some((current_index, current_scope)) = self
+            .scopes
+            .iter()
+            .enumerate()
+            .rev()
+            .find(|(_, scope)| !matches!(scope.kind, BindingScopeKind::Other))
+        else {
+            return false;
+        };
+        if !matches!(
+            current_scope.kind,
+            BindingScopeKind::Function | BindingScopeKind::AsyncFunction | BindingScopeKind::Class
+        ) {
+            return false;
+        }
+        self.scopes[..current_index].iter().any(|scope| {
+            matches!(
+                scope.kind,
+                BindingScopeKind::Function | BindingScopeKind::AsyncFunction
+            )
+        })
+    }
+
+    fn has_function_scope(&self) -> bool {
+        self.scopes.iter().any(|scope| {
+            matches!(
+                scope.kind,
+                BindingScopeKind::Function | BindingScopeKind::AsyncFunction
+            )
+        })
     }
 
     fn remember_nme(&mut self, stmt: &NmeStmt) {
@@ -4993,10 +6506,21 @@ impl BindingEnv {
                 .expect("root scope")
                 .names
                 .insert(name);
-            self.pending = Some(PendingScope {
-                header_indent: indent,
-                names: parameters,
-            });
+            if python_inline_suite_body(tokens).is_none() {
+                self.pending = Some(PendingScope {
+                    header_indent: indent,
+                    names: parameters,
+                    kind: if is_python_async_function_header(tokens) {
+                        BindingScopeKind::AsyncFunction
+                    } else if is_python_function_header(tokens) {
+                        BindingScopeKind::Function
+                    } else if is_python_class_header(tokens) {
+                        BindingScopeKind::Class
+                    } else {
+                        BindingScopeKind::Other
+                    },
+                });
+            }
         }
     }
 }
@@ -5030,6 +6554,20 @@ fn python_scope_header(tokens: &[Token]) -> Option<(String, HashSet<String>)> {
         }
     }
     Some((name, parameters))
+}
+
+fn python_inline_suite_body(tokens: &[Token]) -> Option<&[Token]> {
+    python_scope_header(tokens)?;
+    let depths = token_depths(tokens);
+    let colon_index = tokens.iter().enumerate().find_map(|(index, token)| {
+        (depths[index] == 0 && matches!(token.tok, Tok::Colon)).then_some(index)
+    })?;
+    let body = tokens.get(colon_index + 1..)?;
+    (!body.is_empty()).then_some(body)
+}
+
+fn python_inline_function_body(tokens: &[Token]) -> Option<&[Token]> {
+    is_python_function_header(tokens).then(|| python_inline_suite_body(tokens))?
 }
 
 fn remember_python_binding(tokens: &[Token], names: &mut HashSet<String>) {
@@ -5763,6 +7301,93 @@ fn is_valid_python_statement(text: &str) -> bool {
 
 fn is_valid_python_header(text: &str) -> bool {
     parse_python(&format!("{text}\n    pass"), Mode::Module, "<nme>").is_ok()
+}
+
+fn is_python_loop_header(tokens: &[Token]) -> bool {
+    matches!(
+        tokens.first().map(|token| &token.tok),
+        Some(Tok::For | Tok::While)
+    ) || (matches!(tokens.first().map(|token| &token.tok), Some(Tok::Async))
+        && matches!(tokens.get(1).map(|token| &token.tok), Some(Tok::For)))
+}
+
+fn is_python_function_header(tokens: &[Token]) -> bool {
+    matches!(tokens.first().map(|token| &token.tok), Some(Tok::Def))
+        || (matches!(tokens.first().map(|token| &token.tok), Some(Tok::Async))
+            && matches!(tokens.get(1).map(|token| &token.tok), Some(Tok::Def)))
+}
+
+fn is_python_async_function_header(tokens: &[Token]) -> bool {
+    matches!(tokens.first().map(|token| &token.tok), Some(Tok::Async))
+        && matches!(tokens.get(1).map(|token| &token.tok), Some(Tok::Def))
+}
+
+fn is_python_async_for_header(tokens: &[Token]) -> bool {
+    matches!(tokens.first().map(|token| &token.tok), Some(Tok::Async))
+        && matches!(tokens.get(1).map(|token| &token.tok), Some(Tok::For))
+}
+
+fn is_python_async_with_header(tokens: &[Token]) -> bool {
+    matches!(tokens.first().map(|token| &token.tok), Some(Tok::Async))
+        && matches!(tokens.get(1).map(|token| &token.tok), Some(Tok::With))
+}
+
+fn contains_python_nonlocal(tokens: &[Token]) -> bool {
+    python_declarations(tokens)
+        .iter()
+        .any(|declaration| matches!(declaration.kind, PythonDeclarationKind::Nonlocal))
+}
+
+fn is_python_import_star_line(tokens: &[Token]) -> bool {
+    let depths = token_depths(tokens);
+    tokens.iter().enumerate().any(|(start, token)| {
+        if depths[start] != 0
+            || !matches!(token.tok, Tok::From)
+            || (start > 0
+                && !(depths[start - 1] == 0 && matches!(tokens[start - 1].tok, Tok::Semi)))
+        {
+            return false;
+        }
+        let end = (start + 1..tokens.len())
+            .find(|&index| depths[index] == 0 && matches!(tokens[index].tok, Tok::Semi))
+            .unwrap_or(tokens.len());
+        let statement = &tokens[start..end];
+        let Some(import_index) = statement
+            .iter()
+            .position(|token| matches!(token.tok, Tok::Import))
+        else {
+            return false;
+        };
+        statement[import_index + 1..]
+            .iter()
+            .any(|token| matches!(token.tok, Tok::Star))
+    })
+}
+
+fn is_python_except_star_control_line(tokens: &[Token]) -> bool {
+    has_direct_python_statement(tokens, |tok| {
+        matches!(tok, Tok::Break | Tok::Continue | Tok::Return)
+    })
+}
+
+fn is_python_except_star_header(tokens: &[Token]) -> bool {
+    matches!(tokens.first().map(|token| &token.tok), Some(Tok::Except))
+        && matches!(tokens.get(1).map(|token| &token.tok), Some(Tok::Star))
+}
+
+fn is_python_try_header(tokens: &[Token]) -> bool {
+    matches!(tokens.first().map(|token| &token.tok), Some(Tok::Try))
+}
+
+fn is_python_try_clause_header(tokens: &[Token]) -> bool {
+    matches!(
+        tokens.first().map(|token| &token.tok),
+        Some(Tok::Except | Tok::Else | Tok::Finally)
+    )
+}
+
+fn is_python_class_header(tokens: &[Token]) -> bool {
+    matches!(tokens.first().map(|token| &token.tok), Some(Tok::Class))
 }
 
 fn is_valid_python_expression(text: &str) -> bool {

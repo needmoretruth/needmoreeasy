@@ -20,12 +20,12 @@
    준비 = True
    기다림 = False
    동안 준비 또는 기다림
-   show Still working
-   멈춰
+       아직 작동 중이에요 말해줘
+       멈춰
    끝
    ```
 
-   첫 바퀴가 돌며 `Still working`을 출력하고 `멈춰`가 반복을 끝내므로
+   첫 바퀴가 돌며 `아직 작동 중이에요`를 출력하고 `멈춰`가 반복을 끝내므로
    정확히 한 번 실행됩니다.
 
 2. 영어는 `while`, `break`, `end`를 씁니다:
@@ -56,13 +56,13 @@
 이름이 생기는 즉시 반복을 멈추세요:
 
 ```text
-name = ""
-while name == ""
-    ask name What is your name?
-    if name exists
-        break
-    end
-end
+이름은 ""
+동안 이름 == ""
+    이름을 물어봐 이름이 뭐예요?
+    만약에 이름이 있으면
+        멈춰
+    끝
+끝
 ```
 
 ## 배운 것

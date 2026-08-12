@@ -284,6 +284,22 @@ if ready and score > 2 then show Go
 if ready or waiting then show Please wait
 ```
 
+Parentheses may surround a whole NME condition in an `if` or `while` header,
+for example `if (ready and score > 2)`. Keep the header colon-free so NME owns
+the line; a valid Python call such as `when(ready and score > 2)` remains
+Python byte-for-byte. Korean sentence endings can stay inside the same wrapper,
+as in `만약 (점수가 2보다 작으면)`. A comparison ending may also precede a
+logical connector inside the wrapper, as in `만약 (점수가 2보다 크면 그리고
+준비)`. The same placement works for a Korean `while` ending, as in
+`동안 (횟수가 2보다 작을 동안 그리고 준비)`. The connector spellings can be
+mixed too, as in `만약 (점수가 2보다 크면 and 준비)`.
+
+Korean NME words can also be valid Python identifiers. For example,
+`만약 (준비)` is a valid Python call shape when `만약` is bound, so it stays
+byte-identical Python. To make the line an NME block instead, use a spoken
+condition ending such as `만약 준비라면`, or include an NME connector such as
+`만약 ((준비 그리고 참))`.
+
 ### Random without code punctuation
 
 ```text
@@ -524,7 +540,10 @@ program, transpiles it, and makes it importable; module errors surface with
 the module's file name. Imports may chain (`helper.nme` can import another
 module), the file name must be a Python identifier (`helper.nme`, not
 `my-helper.nme` or `shapes.ko.nme`), and two imported modules must not share a
-name. `nme compile` does not support module imports yet.
+name; that collision is reported as E9028 with a repair suggestion. `nme compile`
+does not support module imports yet and reports E9029; use `nme run`, `nme check`,
+or `nme build` for a program that imports another `.nme` file. If an imported
+file cannot be opened, the CLI reports E9007 and names the module path.
 
 Sentence syntax can read and write files without the module line or Python
 punctuation. The path is always a quoted string:
@@ -568,19 +587,38 @@ machine code, independent of CPython. `nme native run hello` compiles to C
 with the system C compiler and runs the executable; `nme native build hello
 -o hello` keeps the C source and the executable.
 
-The native core covers: integer and float values with `+ - * %` arithmetic
+The native core covers: boolean, integer, and finite-float values with `+ - * %` arithmetic
 (integer modulo; float modulo is rejected); string literals and string
 variables with one binary `+` concatenation, `len`, and `==`/`!=` string
 comparisons; `while`/`if`/`else`/`else if` over integer, float, and string
 comparisons (including `<=`/`>=` and the natural-language "or equal"
-connectors), over integer truthiness (`if ready`, `while turns`), and over
-boolean literals; the beginner `times:` loop; `break`; functions over scalar
-parameters with `return` (recursion works); `say`/`show`/`말해` of
-integers, floats, and strings. Everything else — input, modules, files,
+  connectors), over integer and finite-float truthiness (`if ready`, `while turns`;
+  zero is false), and over boolean literals and bindings (`if ready`, `while ready`;
+  `False` is false); boolean equality/inequality; the beginner `times:` loop; `break`;
+  logical `and`/`or` conditions use Python precedence and short-circuiting;
+  names assigned on every possible fall-through path of an `if`/`else` block
+  are available after it, and a branch that returns early or breaks its
+  enclosing loop does not need to assign them, including a terminating path
+  that contains a nested conditional; functions over integer scalar
+  parameters with a required top-level
+  integer `return` (recursion works); `say`/`show`/`말해` of
+  integers, floats, booleans, and strings. Boolean arithmetic, value changes,
+  boolean function arguments/returns, ordinary Python `for` loops, Python
+  inline bodies, and inline value changes remain outside the native core.
+  Sentence repeats and beginner `times:`/`번:` loops may use one-line NME
+  output bodies, and one-line NME `say`/`show`/`말해` or `break` bodies after
+  `then`/`그러면` are supported for these control statements and branch chains.
+  A one-line `break` must be inside a native loop; otherwise it is rejected with
+  `E0102`.
+  Sentence repeats also accept sentence one-line `break here` bodies, such as
+  `repeat 3 times and break here`.
+  Float arithmetic that would produce a
+non-finite result stops with a bilingual runtime error. Everything else — input, modules, files,
 classes, packages — is rejected with a clear diagnostic and still runs on
 CPython with `nme run`. Identifiers that collide with C keywords are rejected,
-never renamed. See the [native-backend memo](native-backend.md) for the design
-and the honest measured benchmark.
+never renamed. See the [native core reference](native-reference.md) for the
+accepted surface and the [native-backend memo](native-backend.md) for the
+design and honest measured benchmark.
 
 ## Python conversion
 
@@ -609,8 +647,61 @@ See [the conversion guide](converting-python.md).
   `nme ko <CODE>` (English: `nme en <CODE>`); `nme ko` alone lists every code.
   Compiler codes run from `E0001`; command-line errors (missing file, unknown
   command, Python startup) use `E9xxx` and are explained the same way.
+- A top-level or inline `return` outside a Python `def` function gets `E0106`
+  with a bilingual hint; one-line class suites do not inherit an outer
+  function, and valid returns inside functions remain Python.
+- A top-level or inline Python `continue` outside a loop gets `E0107` with a
+  bilingual hint; one-line function/class suites do not inherit an outer loop,
+  while valid `continue` statements inside loops remain Python.
+- A Python `break` outside a loop gets `E0102`; one-line function/class suites
+  do not inherit an outer loop, while valid `break` statements inside loops
+  remain Python. The check also covers controls after an earlier semicolon-
+  separated simple statement in the same one-line suite.
+- A top-level or inline Python `yield` outside a function gets `E0108`, and
+  `await` outside an `async def` function gets `E0109`; valid generator and
+  asynchronous function bodies remain Python.
+- `yield from` inside an `async def` function gets `E0110`; use `async for`
+  there, while ordinary generator functions may keep `yield from` unchanged.
+- Python `async for` and `async with` outside an `async def` function get
+  `E0111` and `E0112`; valid asynchronous function bodies remain unchanged.
+- Python `nonlocal` without an enclosing function gets `E0113`, including in a
+  one-line function or class suite. A nested function or class under an outer
+  function remains unchanged; CPython separately checks whether the requested
+  name is bound in that outer function.
+- Python `from ... import *` inside a function or class gets `E0114`, including
+  one-line suites and a star import after an earlier semicolon-separated
+  statement; import the names explicitly there. Module-level star imports,
+  including ones under a module-level conditional, remain unchanged.
+- Python does not allow `break`, `continue`, or `return` inside an `except*`
+  block; NME reports `E0115`, including when the control follows an earlier
+  semicolon-separated statement in the handler. Nested function bodies and
+  control flow after the handler suite remain unchanged.
+- Python does not allow `yield` inside a list, set, dictionary, or generator
+  comprehension; NME reports `E0116`. A plain `yield` expression and a
+  generator lambda remain unchanged when Python permits them.
+- An `async for` inside a list, set, dictionary, or generator comprehension
+  outside an `async def` function gets `E0117`. Move the comprehension into an
+  async function; valid async comprehensions remain unchanged.
+- An async generator cannot return a value; NME reports `E0118` even when the
+  return appears before the first `yield`. One-line Python suites such as
+  `async def stream(): yield 1; return 2` use the same function context as a
+  normally indented body, while a bare `return` and returns in nested
+  functions remain valid.
+- A `global` or `nonlocal` declaration after an earlier use or assignment in
+  the same scope gets `E0119` or `E0120`, including in one-line suites;
+  parameters and annotated targets cannot use either declaration. Put the
+  declaration first. Valid module, nested-function, and comprehension scopes
+  remain unchanged. Names used in annotations count as uses; f-string
+  validation remains CPython's responsibility.
+- Generator lambdas remain valid advanced Python: a `yield` inside
+  `lambda: ...` is checked against the lambda's own function context.
+- An inline body must contain one statement; an inline `else`/`elif` without an
+  open condition gets `E0103`. Put branch lines in the same explicit condition
+  block before its `end`.
 - Independent problems are collected when possible.
-- Korean-led forms receive Korean guidance.
+- Korean-led CLI commands receive Korean-first explanations and recovery examples
+  such as `nme 실행`, `nme 컴파일`, and `nme 설치`; English command invocations
+  remain English-only.
 
 ## Current limits
 

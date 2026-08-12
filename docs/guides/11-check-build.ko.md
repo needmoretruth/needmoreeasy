@@ -18,7 +18,7 @@ Python 그 자체를 보여 줍니다.
 1. 실행하지 않고 프로그램을 확인합니다:
 
    ```sh
-   nme check hello
+   nme 검사 hello
    nme c hello
    ```
 
@@ -28,7 +28,7 @@ Python 그 자체를 보여 줍니다.
 2. 프로그램이 어떤 Python이 되는지 봅니다:
 
    ```sh
-   nme build hello -o hello.py
+   nme 빌드 hello -o hello.py
    python3 hello.py
    ```
 
@@ -44,17 +44,19 @@ Python 그 자체를 보여 줍니다.
    아닌 왼쪽 끝 줄)에 적어서 확인해 보세요:
 
    ```sh
-   nme c broken.nme
+   nme 검사 broken.nme
    ```
 
    컴파일러는 코드, 정확한 줄, 힌트를 함께 출력합니다:
 
    ```text
+   오류[E0102]: `멈춰`는 반복문 안에서만 쓸 수 있어요
    error[E0102]: `break` can only be used inside a loop
      --> broken.nme:1:1
      |
    1 | break
      | ^^^^^
+     = 도움말: `동안 ... 끝` 또는 `반복 ... 끝` 안에 넣어 주세요
      = hint: put it inside `while ... end` or `repeat ... end`
    ```
 
@@ -69,12 +71,14 @@ Python 그 자체를 보여 줍니다.
 
 ## 직접 해보기
 
-지금까지 만든 모든 가이드 프로그램을 `nme c <파일>`로 확인하고, 하나를
-빌드해 생성된 Python을 읽어 보세요.
+지금까지 만든 모든 가이드 프로그램을 `nme 검사 <파일>`로 확인하고, 하나를
+`nme 빌드`해 생성된 Python을 읽어 보세요.
 
 ## 배운 것
 
-- `nme check` / `nme c`는 실행 없이 확인하고, 조용하면 성공입니다.
-- `nme build` / `nme b`는 생성된 Python을 보여 주고, `-o`로 저장합니다.
+- `nme 검사` / `nme check` / `nme c`는 실행 없이 확인하고, 조용하면
+  성공입니다.
+- `nme 빌드` / `nme build` / `nme b`는 생성된 Python을 보여 주고, `-o`로
+  저장합니다.
 - 오류 메시지는 `E0102` 같은 코드와 정확한 캐럿, 힌트를 담습니다.
 - `nme ko <코드>` / `nme en <코드>`로 각 코드를 설명받을 수 있습니다.

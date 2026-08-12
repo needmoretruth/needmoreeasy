@@ -140,6 +140,20 @@ remain true:
 - a balance sum equals supply
 - a parser rejects an invalid shape
 
+A bad test asserts one accidental output:
+
+```text
+assert observed_hash == "1234"
+```
+
+A better test checks properties that survive changing random inputs:
+
+```text
+assert mined_hash < work_target
+assert not validate(tampered_data)
+assert sum(balances) == total_supply
+```
+
 ## 10. Give learners specific edits to try
 
 End a guide with at least three experiments, such as:

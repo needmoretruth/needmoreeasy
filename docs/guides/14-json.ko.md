@@ -28,7 +28,7 @@
 2. 실행하고 새 파일을 봅니다:
 
    ```sh
-   nme r record
+   nme 실행 record
    cat 기록.json
    ```
 
@@ -42,7 +42,7 @@
    말해 f"{기록['이름']}: {기록['점수']}점"
    ```
 
-   `nme r load`를 실행하면 `민수: 7점`이 출력됩니다 — 값은 첫 프로그램이
+   `nme 실행 load`를 실행하면 `민수: 7점`이 출력됩니다 — 값은 첫 프로그램이
    끝난 뒤에도 살아 있었습니다.
 
 4. 영어는 `json_save`와 `json_load`입니다:
@@ -61,11 +61,11 @@
 보세요:
 
 ```text
-use file latest
-me = {"city": "Seoul", "age": 12}
-json_save("me.json", me)
-back = json_load("me.json")
-say f"I live in {back['city']} and I am {back['age']}"
+파일 사용 최신
+내정보 = {"도시": "서울", "나이": 12}
+json저장("내정보.json", 내정보)
+돌아온 = json읽기("내정보.json")
+말해 f"{돌아온['도시']}에 살고 나이는 {돌아온['나이']}살"
 ```
 
 ## 배운 것

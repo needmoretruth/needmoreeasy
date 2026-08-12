@@ -6,6 +6,861 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.160 — 2026-08-12
+
+- Fetch the pull-request parent commit before checking changed Rust files, so
+  the platform Format jobs can run their scoped rustfmt gate in a shallow CI
+  checkout.
+
+## 0.0.1-beta.159 — 2026-08-12
+
+- Keep full-tree formatting checks on branch pushes while pull-request checks
+  format only Rust files changed by the PR, avoiding failures from pre-existing
+  formatting drift on the base branch.
+
+## 0.0.1-beta.158 — 2026-08-12
+
+- Detect star imports and `except*` control-flow statements after earlier
+  semicolon-separated statements, preserving the shared `E0114` and `E0115`
+  diagnostics in one-line Python suites.
+
+## 0.0.1-beta.157 — 2026-08-12
+
+- Detect `return`, `break`, and `continue` after earlier semicolon-separated
+  statements in one-line Python suites, preserving the shared scope diagnostics.
+
+## 0.0.1-beta.156 — 2026-08-12
+
+- Extend Python control-flow diagnostics to one-line function and class suites,
+  so `return`, `break`, and `continue` do not inherit invalid outer contexts.
+
+## 0.0.1-beta.155 — 2026-08-12
+
+- Extend shared Python scope diagnostics to one-line function and class suites,
+  including `global`/`nonlocal` conflicts, annotated targets, `nonlocal`
+  placement, and star imports.
+
+## 0.0.1-beta.154 — 2026-08-12
+
+- Preserve valid contextual keywords in one-line Python function suites and
+  report async-generator value returns there with the shared `E0118` diagnostic.
+
+## 0.0.1-beta.153 — 2026-08-12
+
+- Correct `E0119` handling for names used in Python annotations while keeping
+  f-string validation with the CPython backend.
+
+## 0.0.1-beta.152 — 2026-08-12
+
+- Add shared bilingual `E0119`/`E0120` for conflicting `global` and `nonlocal`
+  declarations, while preserving declarations placed before valid uses.
+
+## 0.0.1-beta.151 — 2026-08-12
+
+- Add shared bilingual `E0118` for return values inside async generators,
+  while preserving bare returns and nested function scopes.
+
+## 0.0.1-beta.150 — 2026-08-12
+
+- Add shared bilingual `E0117` for asynchronous comprehensions outside an
+  `async def` function, while preserving valid async-comprehension bodies.
+
+## 0.0.1-beta.149 — 2026-08-12
+
+- Add shared bilingual `E0116` for `yield` inside Python comprehensions,
+  while preserving ordinary `yield` expressions and generator lambdas where
+  Python permits them.
+
+## 0.0.1-beta.148 — 2026-08-12
+
+- Add shared bilingual `E0115` for `break`, `continue`, and `return` inside
+  Python `except*` blocks, while preserving nested function bodies and control
+  flow after the handler suite.
+
+## 0.0.1-beta.147 — 2026-08-12
+
+- Add shared bilingual `E0114` for `from ... import *` inside Python functions
+  and classes, while preserving valid module-level star imports.
+
+## 0.0.1-beta.146 — 2026-08-12
+
+- Add shared bilingual `E0113` for Python `nonlocal` without an enclosing
+  function, while preserving valid nested function/class uses and leaving
+  missing outer-name binding validation to CPython.
+
+## 0.0.1-beta.145 — 2026-08-12
+
+- Add shared bilingual `E0111`/`E0112` diagnostics for `async for` and
+  `async with` outside `async def` functions.
+
+## 0.0.1-beta.144 — 2026-08-12
+
+- Keep generator lambdas byte-identical while Python-context diagnostics inspect
+  their own function scope, including normal lambdas nested in `async def`.
+
+## 0.0.1-beta.143 — 2026-08-12
+
+- Diagnose `yield from` inside `async def` with shared bilingual `E0110`, while
+  preserving it unchanged in ordinary generator functions.
+
+## 0.0.1-beta.142 — 2026-08-12
+
+- Add shared bilingual `E0108`/`E0109` diagnostics for `yield` outside a
+  function and `await` outside an `async def`, and keep `return`/`yield` from
+  inheriting an outer function context through nested class bodies.
+
+## 0.0.1-beta.141 — 2026-08-12
+
+- Extend the shared inline-branch `E0103` guard to sentence-repeat bodies and
+  keep Korean repeat shapes ahead of subject-first condition recovery.
+
+## 0.0.1-beta.140 — 2026-08-12
+
+- Reject inline `else`/`elif` bodies without an open condition with the shared
+  bilingual `E0103` diagnostic instead of lowering invalid Python.
+
+## 0.0.1-beta.139 — 2026-08-12
+
+- Report top-level and inline Python `continue` outside a loop with the shared
+  bilingual `E0107` diagnostic while preserving valid loop bodies.
+
+## 0.0.1-beta.138 — 2026-08-12
+
+- Report top-level and inline `return` outside a Python function with the
+  shared bilingual `E0106` diagnostic while preserving valid function bodies.
+
+## 0.0.1-beta.137 — 2026-08-12
+
+- Clarify bilingual `E0102` recovery guidance so it covers NME `repeat` and
+  valid Python loops alongside NME `while`.
+
+## 0.0.1-beta.136 — 2026-08-12
+
+- Report one-line `break` outside a loop with the stable bilingual `E0102`
+  diagnostic in the shared parser while preserving valid Python loop bodies.
+
+## 0.0.1-beta.135 — 2026-08-12
+
+- Extend documentation parity checks to validate local example and directory
+  links, not only Markdown targets.
+
+## 0.0.1-beta.134 — 2026-08-12
+
+- Add six-surface native regression coverage for one-line `else if` branches
+  that terminate with `break`.
+
+## 0.0.1-beta.133 — 2026-08-12
+
+- Add six-surface native regression coverage for one-line `while` bodies that
+  terminate with `break`.
+
+## 0.0.1-beta.132 — 2026-08-12
+
+- Recognize sentence-repeat `break here`/`여기서 멈춰` bodies in the shared
+  parser and cover them through the native backend's six-surface break tests.
+
+## 0.0.1-beta.131 — 2026-08-12
+
+- Support one-line native `break` bodies inside loops, with six-surface
+  coverage and bilingual rejection outside native loops.
+
+## 0.0.1-beta.130 — 2026-08-12
+
+- Document native one-line NME output bodies for sentence repeats alongside
+  `times:`/`번:` loops, and add six-surface support/boundary regression coverage.
+
+## 0.0.1-beta.129 — 2026-08-12
+
+- Add native six-surface regression coverage for one-line `say` output bodies,
+  alongside the existing `show` and `말해` spellings.
+
+## 0.0.1-beta.128 — 2026-08-12
+
+- Add a Python-wins regression for the valid Korean call shape `만약 (준비)`.
+- Clarify in the English and Korean language, native-reference, and AI guides
+  how to select an NME block when a Korean keyword-like identifier is bound.
+
+## 0.0.1-beta.127 — 2026-08-12
+
+- Add native regression coverage for one-line NME `else if`/`else` bodies across
+  sentence, beginner, and advanced syntax in both English and Korean.
+- Exercise both branch outcomes while keeping the Python-wins boundary explicit
+  for the advanced Korean condition fixture.
+
+## 0.0.1-beta.126 — 2026-08-12
+
+- Add native regression coverage for one-line NME `while` output bodies across
+  sentence, beginner, and advanced syntax in both English and Korean.
+- Include the spoken Korean comparison ending alongside symbolic and natural
+  English conditions so all six surfaces exercise the same native path.
+
+## 0.0.1-beta.125 — 2026-08-12
+
+- Teach the native one-line NME output-body form in the English and Korean
+  native learning guides, including its CPython-only boundary.
+
+## 0.0.1-beta.124 — 2026-08-12
+
+- Document beta123's native one-line NME control bodies in the backend design
+  memo so the architecture notes match the implemented subset.
+
+## 0.0.1-beta.123 — 2026-08-12
+
+- Extend the native backend to lower one-line NME `say`/`show` bodies after
+  `then`/`그러면` for `if`/`while` and branch chains.
+- Preserve native branch-flow tracking across inline `elif`/`else` bodies while
+  keeping unsupported Python inline statements rejected.
+
+## 0.0.1-beta.122 — 2026-08-12
+
+- Add shared-parser and native regression coverage for Korean comparison endings
+  before mixed-language `and`/`or` connectors inside wrapped conditions.
+
+## 0.0.1-beta.121 — 2026-08-12
+
+- Fix parenthesized Korean `while` conditions when a comparison ending comes
+  before an inner `and`/`그리고` or `or`/`또는` connector.
+- Keep the spoken `동안` ending inside the shared condition tree and preserve
+  the actual loop-body boundary after the wrapper.
+
+## 0.0.1-beta.120 — 2026-08-12
+
+- Add explicit core and native regression coverage for parenthesized Korean
+  comparison endings before the `또는`/`or` connector.
+
+## 0.0.1-beta.119 — 2026-08-12
+
+- Fix parenthesized Korean logical conditions where a comparison ending comes
+  before an inner `and`/`그리고` or `or`/`또는` connector.
+- Scan fully wrapped conditions at their effective logical depth while keeping
+  nested operand parentheses opaque, with core and native regression coverage.
+
+## 0.0.1-beta.118 — 2026-08-12
+
+- Extend regression coverage for Korean comparison endings inside parenthesized
+  `elif` conditions, including exact core lowering and native execution.
+- Keep the branch case on the same shared condition-span path as `if` and
+  `while`; no separate English/Korean implementation is introduced.
+
+## 0.0.1-beta.117 — 2026-08-12
+
+- Preserve the closing parenthesis and body boundary when Korean sentence
+  comparison endings appear inside parenthesized `if`/`elif`/`while` conditions.
+- Cover the corrected form in core transpilation and native execution while
+  keeping the shared English/Korean condition path.
+
+## 0.0.1-beta.116 — 2026-08-12
+
+- Fix Korean sentence `while`/`동안` headers whose natural ending appears
+  inside a parenthesized logical condition, preserving the matching closing
+  bracket and the real body span.
+- Cover parenthesized logical `while` conditions across English and Korean
+  sentence, beginner, and advanced native surfaces.
+- Keep the shared condition grammar and valid-Python boundary documented in
+  both language references, native references, and AI guidance.
+
+## 0.0.1-beta.115 — 2026-08-12
+
+- Accept parentheses around a whole colon-free NME logical condition, such as
+  `if (ready and score > 2)`, while preserving the shared English/Korean
+  condition tree.
+- Keep valid Python calls such as `when(ready and score > 2)` byte-identical
+  instead of treating them as NME headers.
+- Cover the English/Korean sentence, beginner, and advanced surfaces in the
+  native matrix and synchronize the language, native-reference, and AI guides.
+
+## 0.0.1-beta.114 — 2026-08-12
+
+- Extend native logical-condition regression coverage to `while` blocks across
+  English and Korean sentence, beginner, and advanced surfaces.
+- Document that the native reference covers logical conditions in both `if` and
+  `while` control flow.
+
+## 0.0.1-beta.113 — 2026-08-12
+
+- Align the native-backend status summary with the implemented logical
+  `and`/`or` condition support and its Python precedence and short-circuit
+  behavior.
+- Keep the English and Korean backend overview banners synchronized with the
+  detailed native capability list.
+
+## 0.0.1-beta.112 — 2026-08-12
+
+- Add native logical conditions with `and`/`or` and the Korean spellings
+  `그리고`/`또는`, preserving Python precedence and short-circuit evaluation.
+- Lower the shared condition tree recursively while keeping unsupported
+  Python-colon conditions and native operands outside the restricted subset.
+- Cover the six English/Korean sentence, beginner, and advanced surfaces with
+  short-circuit regression tests, paired examples, and synchronized native
+  documentation.
+
+## 0.0.1-beta.111 — 2026-08-12
+
+- Fix native fall-through analysis for a terminating nested conditional, so a
+  name assigned on every path that can actually reach a later return is not
+  rejected as conditionally initialized.
+- Preserve conservative loop analysis and the required top-level integer
+  return for native functions.
+- Cover English and Korean sentence, beginner, and mixed advanced native
+  forms, with synchronized native references, guides, and language docs.
+
+## 0.0.1-beta.110 — 2026-08-12
+
+- Add real native boolean bindings as a static type distinct from integers;
+  `True`/`False` and sentence `true`/`false`/`참`/`거짓` values can be assigned,
+  compared, used as conditions, and shown as `True` or `False`.
+- Reject boolean arithmetic, value changes, and integer-only native function
+  arguments or returns instead of relying on their C `int` representation.
+- Cover the behavior across English and Korean sentence, beginner, and
+  advanced surfaces, with synchronized native references, guides, AI guidance,
+  and installation/version documentation.
+
+## 0.0.1-beta.109 — 2026-08-12
+
+- Exclude a branch that breaks out of its enclosing native loop from
+  fall-through binding analysis, matching the existing early-return behavior.
+- Cover the shared English and Korean behavior across sentence, beginner, and
+  mixed advanced native surfaces, and align the native documentation.
+
+## 0.0.1-beta.108 — 2026-08-12
+
+- Allow a native `if`/`else` branch that returns early to be excluded from
+  fall-through binding analysis, so a later return can use a name assigned on
+  every path that reaches it.
+- Cover the behavior across English and Korean sentence, beginner, and mixed
+  advanced native surfaces, and align the native reference and guides.
+
+## 0.0.1-beta.107 — 2026-08-12
+
+- Upgrade a previously conditional binding when every arm of a later
+  `if`/`else` assigns it, without weakening the conservative loop and
+  one-sided-branch checks.
+- Extend the English and Korean native branch-merge regression coverage.
+
+## 0.0.1-beta.106 — 2026-08-12
+
+- Treat a name assigned in every `if`/`else` branch as definitely initialized
+  after the block while keeping one-sided and possibly skipped loop bindings
+  conditional.
+- Cover the shared English and Korean branch-merge behavior in native tests and
+  references.
+
+## 0.0.1-beta.105 — 2026-08-12
+
+- Fix native comparisons of two string concatenations so each operand keeps
+  its own checked runtime buffer instead of comparing the second result with
+  itself.
+- Cover the corrected behavior in English and Korean native sentence syntax.
+
+## 0.0.1-beta.104 — 2026-08-12
+
+- Correct the native-backend contract to document that `break` works inside an
+  `if` nested in a native loop and is rejected only outside loops.
+- Clarify the native expression-lowering comment for checked integer and
+  finite-float helpers.
+
+## 0.0.1-beta.103 — 2026-08-12
+
+- Reject non-finite results from native finite-float arithmetic with a bilingual
+  runtime error instead of allowing C `double` overflow to produce `inf`.
+- Cover the runtime boundary across sentence, beginner, and advanced English
+  and Korean native surfaces.
+- Align native reference, guide, language-reference, and backend comments with
+  the checked finite-float result policy.
+
+## 0.0.1-beta.102 — 2026-08-12
+
+- Add a dedicated English/Korean native-core reference and link it from the
+  README, language reference, native guide, and backend memo.
+- Cover equivalent sentence, beginner, and advanced native programs in both
+  languages with one end-to-end six-case acceptance test.
+
+## 0.0.1-beta.101 — 2026-08-12
+
+- Include finite-float values in the generic native-backend recovery hint and
+  cover the English and Korean hints with a regression test.
+
+## 0.0.1-beta.100 — 2026-08-12
+
+- Align the native-backend opening summary with the implemented function
+  subset: integer scalar parameters and an unconditional integer `return`.
+
+## 0.0.1-beta.99 — 2026-08-12
+
+- Make Korean-first CLI diagnostics use Korean command spellings in their
+  recovery examples and code explanations, while keeping English invocations
+  English-only.
+
+## 0.0.1-beta.98 — 2026-08-12
+
+- Align the language reference with the native function subset: integer scalar
+  parameters and an unconditional integer `return`.
+
+## 0.0.1-beta.97 — 2026-08-12
+
+- Document finite-float truthiness in the native subset and cover its English
+  and Korean behavior with an end-to-end native regression test.
+
+## 0.0.1-beta.96 — 2026-08-12
+
+- Align Korean reference, installation, and native-backend workflows with the
+  Korean CLI commands, while labeling intentional English command spellings.
+
+## 0.0.1-beta.95 — 2026-08-12
+
+- Align Korean example-authoring, example-template, and calculator verification
+  instructions with `nme 검사` and `nme 실행`.
+
+## 0.0.1-beta.94 — 2026-08-12
+
+- Align Korean file, project, HTTP, terminal-menu, and native guide workflows
+  with their Korean CLI commands while retaining labeled English companions.
+
+## 0.0.1-beta.93 — 2026-08-12
+
+- Align the Korean index and first two beginner guides with the Korean CLI
+  path, using `nme 실행` and `nme 검사` from the first run.
+
+## 0.0.1-beta.92 — 2026-08-12
+
+- Align the Korean file and JSON guide workflows with Korean CLI commands and
+  give their try-it examples Korean primary paths.
+
+## 0.0.1-beta.91 — 2026-08-12
+
+- Align the Korean check/build and conversion guide commands with the Korean
+  CLI paths, and document the Korean-first bilingual diagnostic output.
+
+## 0.0.1-beta.90 — 2026-08-12
+
+- Align the English and Korean condition/random guide examples with their
+  named language paths, while retaining explicit mixed-language examples.
+
+## 0.0.1-beta.89 — 2026-08-12
+
+- Align the English and Korean break-loop guide examples with their named
+  language paths, while retaining a separate mixed-language example.
+
+## 0.0.1-beta.88 — 2026-08-12
+
+- Align the English and Korean while-loop guide examples with their named
+  language paths, while retaining a separate mixed-language example.
+
+## 0.0.1-beta.87 — 2026-08-12
+
+- Align the Korean Python-packages guide with `birthday.ko.nme`, Korean
+  beginner spellings, and the equivalent English learning path.
+
+## 0.0.1-beta.86 — 2026-08-12
+
+- Run the Windows CLI install smoke test under PowerShell so Git Bash's
+  `link.exe` cannot shadow the MSVC linker configured by CI.
+
+## 0.0.1-beta.85 — 2026-08-12
+
+- Teach the Python-packages guide to install third-party libraries through the
+  bilingual `nme install` / `nme 설치` wrapper and explain its E9025 failure path.
+
+## 0.0.1-beta.84 — 2026-08-12
+
+- Keep MSVC compiler banners out of successful `nme native` output and preserve
+  `.c`/`.ko` source stems in Windows default executable names (`.c.exe` and
+  `.ko.exe`).
+- Align native-backend documentation with the corrected cross-platform names.
+
+## 0.0.1-beta.83 — 2026-08-12
+
+- Configure the Windows CI job with a Visual Studio developer environment so
+  native C tests can find `cl.exe` and exercise the real MSVC path.
+
+## 0.0.1-beta.82 — 2026-08-12
+
+- Reject blank package names before invoking pip so `nme install` cannot report
+  a successful no-op when a newer pip ignores an empty requirement.
+- Apply the stable Rust formatter used by CI to the workspace.
+- Keep the native backend and its tests clean under the current Clippy gate.
+
+## 0.0.1-beta.81 — 2026-08-12
+
+- Pass MSVC `/utf-8` for Windows native builds and tests so generated Korean
+  and English C strings retain their intended text.
+
+## 0.0.1-beta.80 — 2026-08-12
+
+- Make generated native C runtime helpers warning-safe for GCC, Clang, and
+  MSVC, and reserve the generated `NME_UNUSED` macro from user identifiers.
+
+## 0.0.1-beta.79 — 2026-08-12
+
+- Select MSVC `cl` with Windows-compatible flags for `nme native`, keep `cc`
+  on macOS/Linux, and document the required Windows developer shell.
+
+## 0.0.1-beta.78 — 2026-08-12
+
+- Allow default native builds for source stems ending in `.c`, while keeping
+  the explicit `-o <path>.c` collision guard.
+
+## 0.0.1-beta.77 — 2026-08-12
+
+- Keep default native artifact names distinct for English and `.ko` sibling
+  programs, add `.exe` to implicit Windows outputs even for `.ko` stems, and
+  preserve explicit `-o` naming behavior.
+
+## 0.0.1-beta.76 — 2026-08-12
+
+- Emit C prototypes before native function definitions so forward calls and
+  mutual recursion compile correctly, including zero-argument functions.
+
+## 0.0.1-beta.75 — 2026-08-12
+
+- Update both README compiler descriptions to identify the implemented v0
+  native C backend and its roadmap, rather than describing it as only a plan.
+
+## 0.0.1-beta.74 — 2026-08-12
+
+- Update the native-backend memo to separate the implemented v0 baseline from
+  future milestones and measured extensions.
+
+## 0.0.1-beta.73 — 2026-08-12
+
+- Correct the native-backend memo so its description matches the implemented
+  restricted NME-to-C path and the separate Python/Nuitka path.
+- Cover blank-line and comment layouts between native function headers and
+  bodies in the backend regression suite.
+
+## 0.0.1-beta.72 — 2026-08-12
+
+- Make the documentation parity check verify that both sequential guide indexes
+  list every numbered English/Korean guide exactly once and in order.
+
+## 0.0.1-beta.71 — 2026-08-12
+
+- Reject repeated `run`/`build` action words in `nme native` with stable
+  bilingual diagnostic E9032, and make native CLI test directories unique.
+
+## 0.0.1-beta.70 — 2026-08-12
+
+- Reject `-o` on `nme native run` with stable bilingual diagnostic E9031;
+  keep `-o` for `nme native build`.
+
+## 0.0.1-beta.69 — 2026-08-12
+
+- Enforce English/Korean twin files for every numbered learning guide in the
+  documentation parity check.
+
+## 0.0.1-beta.68 — 2026-08-12
+
+- Extend the documentation parity check to validate local Markdown fragment
+  links against their target headings as well as checking target files.
+
+## 0.0.1-beta.67 — 2026-08-12
+
+- Make the documentation parity check fail when a local Markdown link points
+  to a missing file.
+
+## 0.0.1-beta.66 — 2026-08-12
+
+- Use overlap-safe copying for native string assignment so valid self-assignment
+  cannot invoke undefined `memcpy` behavior.
+
+## 0.0.1-beta.65 — 2026-08-12
+
+- Reject C implementation-reserved identifier forms in native bindings and
+  file-scope functions before they can produce non-portable or invalid C.
+
+## 0.0.1-beta.64 — 2026-08-12
+
+- Reject top-level native `return` with the stable `E0106` diagnostic instead
+  of emitting it as a return from `main`.
+
+## 0.0.1-beta.63 — 2026-08-12
+
+- Reject native `break` statements outside a loop with the stable `E0102`
+  diagnostic before generating invalid C.
+
+## 0.0.1-beta.62 — 2026-08-12
+
+- Reserve macros, typedefs, and declarations exposed by generated C headers so
+  native identifiers cannot be changed by preprocessing or C library clashes.
+
+## 0.0.1-beta.61 — 2026-08-12
+
+- Make native `len` count UTF-8 Unicode characters rather than storage bytes,
+  matching Python behavior for non-ASCII text while retaining the byte buffer
+  limit.
+
+## 0.0.1-beta.60 — 2026-08-12
+
+- Isolate native binding analysis between sibling branches so a read in one
+  branch cannot use a name assigned only in another branch.
+- Preserve C declaration reuse and conservative maybe-initialized tracking after
+  uncertain control blocks.
+
+## 0.0.1-beta.59 — 2026-08-12
+
+- Keep bindings from unreachable `else`/`else if` alternatives after `if true`
+  out of the definite native scope, preventing reads of uninitialized C values.
+
+## 0.0.1-beta.58 — 2026-08-12
+
+- Reject unresolved native names, bare native function values, duplicate
+  parameters, and bindings that shadow native function names before C emission.
+
+## 0.0.1-beta.57 — 2026-08-12
+
+- Emit Python comments as inert C comments during native lowering so comment
+  text cannot become a C preprocessor directive or confuse function hoisting.
+
+## 0.0.1-beta.56 — 2026-08-12
+
+- Reject non-finite native float literals before C emission and normalize finite
+  whole-number literals as C `double` values, preserving signed zero.
+
+## 0.0.1-beta.55 — 2026-08-12
+
+- Escape native string literals for valid C output, including control
+  characters, and reject embedded NUL strings that C APIs cannot preserve.
+
+## 0.0.1-beta.54 — 2026-08-12
+
+- Reject nested native function definitions before C emission; the native
+  function surface is explicitly file-scope only.
+
+## 0.0.1-beta.53 — 2026-08-12
+
+- Reject duplicate native function definitions and unsupported default or
+  varargs headers before C generation.
+- Reject keyword arguments in native calls so no AST arguments are silently
+  dropped.
+
+## 0.0.1-beta.52 — 2026-08-12
+
+- Validate native function calls against integer function definitions and their
+  declared arity before emitting C, with bilingual diagnostics for unknown or
+  mismatched calls.
+
+## 0.0.1-beta.51 — 2026-08-12
+
+- Reject native functions that can fall through without an unconditional
+  integer return, preventing undefined C return values after conditional-only
+  branches.
+
+## 0.0.1-beta.50 — 2026-08-12
+
+- Check native signed 32-bit integer literals and arithmetic instead of
+  allowing undefined C overflow or zero-divisor behavior.
+- Report bilingual native runtime errors for integer overflow and modulo by
+  zero, while documenting the bounded native integer range.
+- Reject float arguments and return values in native functions instead of
+  silently converting them through C `int` parameters and returns.
+
+## 0.0.1-beta.49 — 2026-08-12
+
+- Track conditional native bindings and reject reads or value changes after a
+  possibly skipped block unless the name was initialized beforehand.
+- Keep statically true `if true` blocks usable while reporting a precise
+  bilingual diagnostic for uncertain initialization.
+
+## 0.0.1-beta.48 — 2026-08-12
+
+- Reject native assignments that change a binding from integer, float, or
+  string to another type before generating incompatible C.
+- Require a prior numeric binding for `add`/`subtract` value changes and report
+  a bilingual diagnostic for uninitialized or string targets.
+
+## 0.0.1-beta.47 — 2026-08-12
+
+- Hoist native scalar and string declarations to the active function scope when
+  assignments occur inside control blocks, while preserving source control
+  flow and later binding use.
+- Prevent nested-block assignments from producing out-of-scope C declarations.
+
+## 0.0.1-beta.46 — 2026-08-12
+
+- Keep native function-local scalar bindings separate from main-program
+  bindings, so names can be reused without generating invalid C.
+- Document the scope behavior in both native backend references.
+
+## 0.0.1-beta.45 — 2026-08-12
+
+- Reject generated native-runtime names in function parameters before emitting C,
+  including unused parameters that would otherwise shadow runtime helpers.
+- Keep the same precise bilingual diagnostic used for native variables and
+  function names.
+
+## 0.0.1-beta.44 — 2026-08-12
+
+- Reject C keywords and generated native-runtime names before C lowering, with
+  precise bilingual diagnostics instead of allowing namespace collisions.
+- Reserve helper names such as `nme_copy`, `nme_cat`, `len`, and `_nme_i`
+  without silently renaming user identifiers.
+
+## 0.0.1-beta.43 — 2026-08-12
+
+- Replace unbounded native string copies and concatenation with checked helpers.
+- Stop oversized stored or concatenated strings with a bilingual runtime error
+  instead of allowing fixed-buffer overflow.
+- Document the native string capacity and keep the CPython path available for
+  unrestricted text.
+
+## 0.0.1-beta.42 — 2026-08-12
+
+- Make `nme build -o` refuse to overwrite an existing Python output with E9009.
+- Keep the existing artifact unchanged for English and Korean build commands,
+  matching `nme compile` and `nme native build`.
+
+## 0.0.1-beta.41 — 2026-08-12
+
+- Own imported-module, native, and Nuitka staging directories for the whole
+  operation and remove them on both success and early failure.
+- Prevent partial Python or C staging files from being left behind when a write
+  fails.
+
+## 0.0.1-beta.40 — 2026-08-12
+
+- Use fresh per-invocation temporary directories for imported-module, native,
+  and Nuitka staging instead of reusing process-ID-only folders.
+- Prevent stale Python files left by a crashed run or PID reuse from shadowing
+  ordinary imports in a later program.
+
+## 0.0.1-beta.39 — 2026-08-12
+
+- Make `nme native build` refuse to overwrite an existing executable or
+  companion C source with E9009, matching the other build commands.
+- Reject `.c` output paths with E9003 so the executable and generated C source
+  cannot target the same file.
+- Extend the E9009 English/Korean lookup explanation to cover native artifacts.
+
+## 0.0.1-beta.38 — 2026-08-12
+
+- Make `nme native` classify directory arguments as E9014 instead of reporting
+  them as unreadable files E9007, matching the CPython-backed commands.
+- Add English/Korean native-command coverage for the shared folder diagnostic.
+
+## 0.0.1-beta.37 — 2026-08-12
+
+- Keep existing but unreadable program files on E9007 instead of reporting them
+  as missing programs E9015 for `nme run` and `nme native`.
+- Preserve E9015 for paths that actually cannot be found.
+
+## 0.0.1-beta.36 — 2026-08-12
+
+- Keep `nme compile` temporary-folder failures on E9027 instead of reporting
+  them as native compiler startup failures E9011.
+- Classify temporary Python-source write failures as E9008 while preserving
+  E9011 for failures to start the external compiler process.
+
+## 0.0.1-beta.35 — 2026-08-12
+
+- Report unreadable imported `.nme` modules with the existing file-read
+  diagnostic E9007 instead of the top-level program-resolution code E9015.
+- Expand E9007’s bilingual explanation to cover imported module files.
+
+## 0.0.1-beta.34 — 2026-08-12
+
+- Give `nme install` without a package name its own stable diagnostic, E9030,
+  instead of reusing the option-value code E9003.
+- Add English/Korean lookup coverage for the missing-package argument path.
+
+## 0.0.1-beta.33 — 2026-08-12
+
+- Give imported module-name collisions their own stable diagnostic, E9028,
+  instead of reporting them as invalid option values.
+- Give the current `nme compile` module-import limitation its own stable
+  diagnostic, E9029, with bilingual lookup and CLI regression coverage.
+
+## 0.0.1-beta.32 — 2026-08-12
+
+- Add E9027 for temporary working-folder creation failures instead of labeling
+  them as current-folder read errors.
+- Preserve Korean-first bilingual diagnostics when imported modules are staged
+  for execution.
+
+## 0.0.1-beta.31 — 2026-08-12
+
+- Give native executable startup failures their own stable diagnostic, E9026,
+  instead of reporting them as Python startup errors.
+- Add a deterministic Unix CLI regression and bilingual public lookup coverage
+  for the native-program startup path.
+
+## 0.0.1-beta.30 — 2026-08-12
+
+- Clarify E9010 and E9011 in both languages so their recovery guidance covers
+  the Nuitka `compile` path and the system-C-compiler `native` path.
+- Add public lookup regressions that keep the two backend toolchains visible to
+  beginners.
+
+## 0.0.1-beta.29 — 2026-08-12
+
+- Give failed Python package installs their own appended diagnostic code,
+  E9025, instead of reusing the native-compiler code E9010.
+- Add bilingual lookup and network-independent CLI regression coverage for the
+  package-install failure path.
+
+## 0.0.1-beta.28 — 2026-08-12
+
+- Route the Korean `네이티브` and `설치` command aliases through the same
+  Korean-first bilingual diagnostics as the other Korean CLI commands.
+- Add regression coverage for both failure paths while preserving English-only
+  output for the English commands.
+
+## 0.0.1-beta.27 — 2026-08-12
+
+- Fix the English beginner skeleton in both example-template twins so its loop
+  stops at three instead of becoming an accidental infinite loop.
+- Add a parity regression guard for the bounded English and Korean template
+  loops.
+
+## 0.0.1-beta.26 — 2026-08-12
+
+- Fill the remaining English code examples in the main NeedMoreCoin guide and
+  the example-authoring guide so paired guides expose equivalent teaching
+  material.
+- Extend the documentation parity check to every guide pair, not only numbered
+  guides, and require matching code-block coverage.
+
+## 0.0.1-beta.25 — 2026-08-12
+
+- Complete the missing Topic metadata in the four NeedMoreCoin sequence guides
+  in both languages.
+- Add equivalent English sentence-level proof-of-work and transaction-proof
+  snippets, and enforce numbered-guide code-block parity in CI.
+
+## 0.0.1-beta.24 — 2026-08-12
+
+- Repair Korean documentation links so local pages lead to their Korean twins,
+  while deliberate English comparison links remain available.
+- Complete consistent bilingual navigation for the guide sequence and add a CI
+  parity check that catches wrong-language links and missing navigation rows.
+
+## 0.0.1-beta.23 — 2026-08-12
+
+- Keep the proof-of-work difficulty labels consistent across the six
+  NeedMoreCoin examples (Korean/English sentence, beginner, and advanced
+  surfaces), with a regression test for the shared learning contract.
+
+## 0.0.1-beta.22 — 2026-08-12
+
+- Make the six-way NeedMoreCoin learning matrix fast and deterministic enough
+  for regular example validation, and keep the sentence examples genuinely
+  punctuation-free where their surface promises that progression.
+- Add parser and regression coverage for the pure English sentence proof
+  expressions and validate the Korean and English sentence sources separately.
+
+## 0.0.1-beta.21 — 2026-08-12
+
+- Repair the locked release metadata and keep CLI and cryptocurrency example
+  regression checks aligned with the current beta package versions.
+
+## 0.0.1-beta.20 — 2026-08-12
+
+- Replace the earlier standalone blockchain demonstrations with the
+  NeedMoreCoin learning project: complete Korean/English sentence, beginner,
+  and advanced examples, a shared construction guide, and an authoring
+  standard for six-way examples.
+- Add automated coverage that checks all six examples, their intended syntax
+  surfaces, and their shared observable behavior.
+
 ## 0.0.1-beta.19 — 2026-08-12
 
 - Converge the public beta Git topology with `main`: the final beta.19 release commit keeps beta.18 as its first parent and records the current main tip as its second parent. The beta first-parent release line still advances exactly one version per public commit, while `main` becomes an actual ancestor of the next-generation `beta` branch.

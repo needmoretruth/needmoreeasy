@@ -9,11 +9,13 @@ prereleases while the language is still being designed.
 
 ## Current release line
 
-The current release is `0.0.1-beta.19`; the public line began at
-`0.0.1-beta.1`. Later public beta releases increase the last number:
-`0.0.1-beta.2`, `0.0.1-beta.3`, `0.0.1-beta.4`, `0.0.1-beta.5`, `0.0.1-beta.6`, `0.0.1-beta.7`, `0.0.1-beta.8`, `0.0.1-beta.9`, `0.0.1-beta.10`, `0.0.1-beta.11`, `0.0.1-beta.12`, `0.0.1-beta.13`, `0.0.1-beta.14`, `0.0.1-beta.19`, and so on. A Git commit or a branch push is not
-automatically a release, so development commits can share the version of the
-beta they are preparing.
+The current release is `0.0.1-beta.160`; the public line began at
+`0.0.1-beta.1`. Later public beta releases increase the last number by one.
+A Git commit or a branch push is not automatically a release, so development
+commits can share the version of the beta they are preparing.
+
+Read the [beta.153 release notes](release-beta.153.md) for the current checkpoint;
+older beta notes remain available beside it.
 
 Each release must update these together:
 

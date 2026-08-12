@@ -1,0 +1,8 @@
+# A native boolean is distinct from an integer truthy value.
+ready save true
+show ready
+when ready
+    show "ready"
+end
+ready save false
+show ready

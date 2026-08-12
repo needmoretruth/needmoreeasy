@@ -91,7 +91,7 @@ warns that its `bin` directory is not on `PATH`. It does not reinstall NME.
 Windows PowerShell uses the PATH step in the
 [installation guide](docs/install.md#windows-11).
 
-Expected version: `nme 0.0.1-beta.23`.
+Expected version: `nme 0.0.1-beta.160`.
 
 Windows, macOS, and Linux instructions are in the
 [installation guide](docs/install.md). The [five-minute guide](docs/getting-started.md)
@@ -168,7 +168,7 @@ way for checking and building. `nme m`, `nme v`, and `nme h` are short forms of
 with Nuitka, `nme conv app.py` converts Python into NME, and `nme install
 requests` installs a Python package with pip.
 
-A core subset of NME can also compile straight to native machine code with `nme native run hello` (integer values, sentence `while`/`if`/`else`, `break`, functions with recursion, and `say` — try [`native-factorial.nme`](examples/native-factorial.nme) (Korean twin [`native-factorial.ko.nme`](examples/native-factorial.ko.nme)); everything else still runs on CPython). See the [native-backend memo](docs/native-backend.md).
+A core subset of NME can also compile straight to native machine code with `nme native run hello` (boolean, integer, and finite-float values, strings, sentence `while`/`if`/`else`, one-line NME output bodies after `then`, logical `and`/`or`, beginner `times:`, `break`, functions with integer parameters and unconditional integer returns, and `say` — try [`native-factorial.nme`](examples/native-factorial.nme), [`native-boolean.nme`](examples/native-boolean.nme), and [`native-logical.nme`](examples/native-logical.nme) (Korean twins [`native-factorial.ko.nme`](examples/native-factorial.ko.nme), [`native-boolean.ko.nme`](examples/native-boolean.ko.nme), and [`native-logical.ko.nme`](examples/native-logical.ko.nme)); boolean arithmetic and other unsupported features still run on CPython). See the [native core reference](docs/native-reference.md) and [native-backend memo](docs/native-backend.md).
 
 Program names may also be shortened while they stay unique: `nme r gue` runs
 `guessing-game.nme`. When several programs match, NME lists them and asks you
@@ -299,15 +299,18 @@ See [Python conversion](docs/converting-python.md).
 - [AI coding assistants](docs/ai-assistants.md) — one link that Claude Code,
   Codex, Cursor Agent, or OpenCode can read before writing NME
 - [Compiler architecture](docs/architecture.md) — contributor design rules
-- [Native backend research](docs/native-backend.md) — the honest plan for a real NME-native AOT compiler, separate from Python compatibility
+- [Native core reference](docs/native-reference.md) — the exact v0 values, statements, functions, and six surface examples
+- [Native backend research](docs/native-backend.md) — the implemented v0 NME-native C backend and roadmap for extending its restricted subset
 - [Version policy](docs/versioning.md) and [changelog](CHANGELOG.md)
 
 ## Compiler model
 
 NME is a compiler, not a second Python interpreter. The Rust core performs a
 pure source-to-source compilation into ordinary Python. Python tokenization
-and parsing come from `rustpython-parser`; execution comes from CPython or the
-optional Nuitka native backend. Compilation preserves physical line counts so
-traceback line numbers continue to match the `.nme` file.
+and parsing come from `rustpython-parser`; the Python-compatible path runs on
+CPython, while `nme compile` can optionally invoke Nuitka. The separate
+`nme native` command compiles its restricted NME subset to C and then to an
+executable with the system C compiler. Compilation preserves physical line
+counts so traceback line numbers continue to match the `.nme` file.
 
 Licensed under Apache-2.0.

@@ -150,32 +150,108 @@ fn stop_after_input_error(child: &mut std::process::Child) {
     let _ = child.wait();
 }
 
+/// Creates a fresh temporary directory for one staging operation.
+///
+/// The process ID alone is not enough: a crashed invocation can leave its
+/// directory behind, and a later process can reuse that ID. A timestamp plus
+/// an existence check keeps stale files out of the next operation.
+pub fn fresh_temp_dir(prefix: &str) -> io::Result<PathBuf> {
+    let root = std::env::temp_dir();
+    std::fs::create_dir_all(&root)?;
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |duration| duration.as_nanos());
+    for attempt in 0..100 {
+        let dir = root.join(format!(
+            "{prefix}-{}-{timestamp}-{attempt}",
+            std::process::id()
+        ));
+        match std::fs::create_dir(&dir) {
+            Ok(()) => return Ok(dir),
+            Err(error) if error.kind() == io::ErrorKind::AlreadyExists => {}
+            Err(error) => return Err(error),
+        }
+    }
+    Err(io::Error::new(
+        io::ErrorKind::AlreadyExists,
+        "could not find a fresh temporary directory name",
+    ))
+}
+
+/// Owns one staging directory and removes it when the operation finishes.
+pub struct TemporaryDirectory {
+    path: PathBuf,
+}
+
+impl TemporaryDirectory {
+    pub fn new(prefix: &str) -> io::Result<Self> {
+        Ok(Self {
+            path: fresh_temp_dir(prefix)?,
+        })
+    }
+
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+}
+
+impl Drop for TemporaryDirectory {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.path);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::TemporaryDirectory;
+
+    #[test]
+    fn temporary_directory_is_removed_when_guard_drops() {
+        let directory = TemporaryDirectory::new("nme-cleanup-test").expect("directory");
+        let path = directory.path().to_path_buf();
+        std::fs::write(path.join("partial.py"), "partial = True\n").expect("partial file");
+        assert!(path.is_dir());
+
+        drop(directory);
+
+        assert!(!path.exists());
+    }
+}
+
 /// Compiles transpiled Python to a native executable through Nuitka.
 ///
 /// Nuitka and a platform C compiler are intentionally external tools: the NME
 /// binary stays small, while users who want a standalone artifact can opt in.
+#[derive(Debug)]
+pub enum CompileNativeError {
+    TemporaryFolder(io::Error),
+    TemporarySource(io::Error),
+    Other(io::Error),
+}
+
 pub fn compile_native(
     python_source: &str,
     stem: &str,
     python: &str,
     output: &Path,
-) -> io::Result<ExitStatus> {
-    let output = absolute_path(output)?;
+) -> Result<ExitStatus, CompileNativeError> {
+    let output = absolute_path(output).map_err(CompileNativeError::Other)?;
     let output_dir = output.parent().unwrap_or_else(|| Path::new("."));
     if !output_dir.is_dir() {
-        return Err(io::Error::new(
+        return Err(CompileNativeError::Other(io::Error::new(
             io::ErrorKind::NotFound,
             format!("output directory does not exist: {}", output_dir.display()),
-        ));
+        )));
     }
     let output_name = output
         .file_name()
-        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "output needs a file name"))?;
+        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "output needs a file name"))
+        .map_err(CompileNativeError::Other)?;
 
-    let dir = std::env::temp_dir().join(format!("nme-compile-{}", std::process::id()));
-    std::fs::create_dir_all(&dir)?;
-    let program = dir.join(format!("{stem}.py"));
-    std::fs::write(&program, python_source)?;
+    let dir =
+        TemporaryDirectory::new("nme-compile").map_err(CompileNativeError::TemporaryFolder)?;
+    let program = dir.path().join(format!("{stem}.py"));
+    std::fs::write(&program, python_source).map_err(CompileNativeError::TemporarySource)?;
 
     let mut command = Command::new(python);
     configure_python_utf8(&mut command);
@@ -192,9 +268,7 @@ pub fn compile_native(
         .arg(&program)
         .status();
 
-    let _ = std::fs::remove_file(&program);
-    let _ = std::fs::remove_dir(&dir);
-    status
+    status.map_err(CompileNativeError::Other)
 }
 
 fn absolute_path(path: &Path) -> io::Result<PathBuf> {

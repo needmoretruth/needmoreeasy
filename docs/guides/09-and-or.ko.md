@@ -35,9 +35,9 @@
    `or`는 한쪽만 참이면 됩니다:
 
    ```text
-   준비 = True
-   기다림 = False
-   if 준비 or 기다림 then show Please wait
+   ready = True
+   waiting = False
+   if ready or waiting then show Please wait
    ```
 
 3. `그리고`가 `또는`보다 먼저 묶입니다. Python과 똑같습니다:
@@ -51,9 +51,11 @@
 4. 합친 조건은 반복에서도 쓸 수 있습니다:
 
    ```text
+   준비 = True
+   기다림 = False
    동안 준비 또는 기다림
-   show Still working
-   멈춰
+       기다려 말해줘
+       멈춰
    끝
    ```
 
@@ -62,9 +64,9 @@
 이름이 있고 시간이 늦었을 때만 인사를 보여 주세요:
 
 ```text
-name = "Mina"
-hour = 21
-만약에 이름이 있으면 그리고 hour가 18보다 크면 잘 자요 이름! 말해줘
+이름은 "민수"
+시간은 21
+만약에 이름이 있으면 그리고 시간이 18보다 크면 좋은 저녁이에요 이름! 말해줘
 ```
 
 ## 배운 것

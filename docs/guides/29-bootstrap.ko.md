@@ -2,14 +2,14 @@
 
 [English](29-bootstrap.md) | 한국어
 
-[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
 - 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [28 — Compiler](28-compiler.md), [23 — Modules](23-modules.md)
+- 선수 지식 (Prerequisites): [28 — Compiler](28-compiler.ko.md), [23 — Modules](23-modules.ko.md)
 - 주제 (Topic): 부트스트랩 / bootstrap
 - 결과물 (Result): NME로 쓴 미니 컴파일러 / a tiny compiler written in NME
 
-가이드 [28](28-compiler.md)은 줄을 직접 해석했습니다. 다음 단계는 진짜
+가이드 [28](28-compiler.ko.md)은 줄을 직접 해석했습니다. 다음 단계는 진짜
 컴파일러의 씨앗입니다: 작은 언어를 다른 언어로 **번역**하고 결과를
 실행하는 프로그램. NME 안에서 컴파일러를 쓰는 것을 부트스트래핑이라고
 하며, 모든 진짜 컴파일러가 이렇게 자랍니다. `examples/bootstrap.nme`가

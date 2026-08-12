@@ -2,10 +2,13 @@
 
 [English](17-blockchain.md) | 한국어
 
-[README](../../README.ko.md) | [가이드](index.ko.md) | [전체 니드모어코인 가이드](cryptocurrency.ko.md)
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
+
+[전체 니드모어코인 가이드](cryptocurrency.ko.md)
 
 - 난이도: ★★★★☆
 - 선수 지식: [03 — 저장](03-set.ko.md), [06 — 조건](06-if.ko.md), [07 — 동안](07-while.ko.md)
+- 주제 (Topic): 암호화폐 장부와 거래
 - 결과물: 잔액·거래번호·수수료·발행량을 검증하는 작은 암호화폐 상태 장부
 
 이제 블록체인 학습 예제는 단순한 해시 목록 대신 `NeedMoreCoin`이라는 하나의

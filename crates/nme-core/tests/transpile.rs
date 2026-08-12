@@ -389,6 +389,180 @@ fn subject_first_korean_conditions_can_use_flat_end_blocks() {
 }
 
 #[test]
+fn parenthesized_logical_conditions_keep_the_shared_condition_shape() {
+    let english = concat!(
+        "ready = True\n",
+        "score = 3\n",
+        "if (ready and score > 2)\n",
+        "    show yes\n",
+        "end\n",
+    );
+    let english_expected = concat!(
+        "ready = True\n",
+        "score = 3\n",
+        "if ((ready and score > 2)):\n",
+        "    print(\"yes\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(english), english_expected);
+
+    let korean = concat!(
+        "준비는 참\n",
+        "점수는 3\n",
+        "만약 (준비 그리고 점수 > 2)\n",
+        "    성공 말해줘\n",
+        "끝\n",
+    );
+    let korean_expected = concat!(
+        "준비 = True\n",
+        "점수 = 3\n",
+        "if ((준비 and 점수 > 2)):\n",
+        "    print(\"성공\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(korean), korean_expected);
+
+    assert_eq!(
+        ok("if (ready and score > 2) then show yes\n"),
+        "if ((ready and score > 2)): print(\"yes\")\n",
+    );
+    assert_eq!(
+        ok("만약 (준비 그리고 점수 > 2) 그러면 성공 말해줘\n"),
+        "if ((준비 and 점수 > 2)): print(\"성공\")\n",
+    );
+}
+
+#[test]
+fn parenthesized_korean_comparison_endings_keep_the_condition_body_boundary() {
+    let source = concat!(
+        "점수는 1\n",
+        "만약 (점수가 2보다 작으면)\n",
+        "작아요 말해줘\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "점수 = 1\n",
+        "if (점수 < 2):\n",
+        "    print(\"작아요\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+
+    let branch = concat!(
+        "점수는 3\n",
+        "만약 거짓\n",
+        "    안 돼 말해줘\n",
+        "아니면 만약에 (점수가 4보다 작으면)\n",
+        "    작아요 말해줘\n",
+        "끝\n",
+    );
+    let branch_expected = concat!(
+        "점수 = 3\n",
+        "if (False):\n",
+        "    print(\"안 돼\")\n",
+        "elif (점수 < 4):\n",
+        "    print(\"작아요\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(branch), branch_expected);
+
+    let logical_branch = concat!(
+        "점수는 3\n",
+        "준비는 참\n",
+        "만약 거짓\n",
+        "    안 돼 말해줘\n",
+        "아니면 만약에 (점수가 2보다 크면 그리고 준비)\n",
+        "    성공 말해줘\n",
+        "끝\n",
+    );
+    let logical_branch_expected = concat!(
+        "점수 = 3\n",
+        "준비 = True\n",
+        "if (False):\n",
+        "    print(\"안 돼\")\n",
+        "elif ((점수 > 2 and 준비)):\n",
+        "    print(\"성공\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(logical_branch), logical_branch_expected);
+}
+
+#[test]
+fn parenthesized_korean_comparisons_can_precede_logical_connectors() {
+    let source = concat!(
+        "점수는 3\n",
+        "준비는 참\n",
+        "만약 (점수가 2보다 크면 그리고 준비)\n",
+        "성공 말해줘\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "점수 = 3\n",
+        "준비 = True\n",
+        "if ((점수 > 2 and 준비)):\n",
+        "    print(\"성공\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+
+    let mixed = concat!(
+        "점수는 3\n",
+        "준비는 참\n",
+        "만약 (점수가 2보다 크면 and 준비)\n",
+        "성공 말해줘\n",
+        "끝\n",
+    );
+    let mixed_expected = concat!(
+        "점수 = 3\n",
+        "준비 = True\n",
+        "if ((점수 > 2 and 준비)):\n",
+        "    print(\"성공\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(mixed), mixed_expected);
+
+    assert_eq!(
+        ok("만약 (점수가 2보다 크면 그리고 준비) 그러면 성공 말해줘\n"),
+        "if ((점수 > 2 and 준비)): print(\"성공\")\n",
+    );
+}
+
+#[test]
+fn parenthesized_korean_comparisons_can_precede_or_connectors() {
+    let source = concat!(
+        "점수는 3\n",
+        "준비는 거짓\n",
+        "만약 (점수가 2보다 작으면 또는 준비)\n",
+        "실패 말해줘\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "점수 = 3\n",
+        "준비 = False\n",
+        "if ((점수 < 2 or 준비)):\n",
+        "    print(\"실패\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+
+    let mixed = concat!(
+        "점수는 3\n",
+        "준비는 거짓\n",
+        "만약 (점수가 2보다 작으면 or 준비)\n",
+        "실패 말해줘\n",
+        "끝\n",
+    );
+    let mixed_expected = concat!(
+        "점수 = 3\n",
+        "준비 = False\n",
+        "if ((점수 < 2 or 준비)):\n",
+        "    print(\"실패\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(mixed), mixed_expected);
+}
+
+#[test]
 fn short_korean_condition_endings_accept_natural_equality_and_literals() {
     let source = concat!(
         "이름은 철수\n",
@@ -754,6 +928,18 @@ fn times_inline_nme_body() {
     assert_eq!(
         ok("5 times: say \"Hello\"\n"),
         "for _ in range(5): print(\"Hello\")\n"
+    );
+}
+
+#[test]
+fn sentence_repeat_inline_break_uses_the_shared_break_statement() {
+    assert_eq!(
+        ok("repeat 3 times and break here\n"),
+        "for _ in range(3): break\n"
+    );
+    assert_eq!(
+        ok("3번 반복해서 여기서 멈춰\n"),
+        "for _ in range(3): break\n"
     );
 }
 
@@ -1237,6 +1423,14 @@ fn korean_beginner_save_words_are_explicit_and_mixable() {
 }
 
 #[test]
+fn korean_save_word_accepts_boolean_literals() {
+    assert_eq!(
+        ok("저장 준비 참\n저장 준비 거짓\n"),
+        "준비 = True\n준비 = False\n"
+    );
+}
+
+#[test]
 fn spoken_target_first_save_is_a_small_bridge_to_python_assignment() {
     let source = concat!("이름 저장 민수\n", "name save Mina\n");
     assert_eq!(
@@ -1312,6 +1506,60 @@ fn english_while_keyword_accepts_a_korean_condition_ending() {
         ok("while playing 동안 성공 말해줘\n"),
         "while (playing): print(\"성공\")\n"
     );
+}
+
+#[test]
+fn parenthesized_korean_sentence_while_endings_keep_the_condition_shape() {
+    let source = concat!(
+        "준비는 참\n",
+        "횟수는 0\n",
+        "동안 (준비 그리고 횟수가 2보다 작을 동안)\n",
+        "횟수에 1 더해\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "준비 = True\n",
+        "횟수 = 0\n",
+        "while ((준비 and 횟수 < 2)):\n",
+        "    횟수 = 횟수 + 1\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn parenthesized_korean_while_endings_can_precede_logical_connectors() {
+    let source = concat!(
+        "준비는 참\n",
+        "횟수는 0\n",
+        "동안 (횟수가 2보다 작을 동안 그리고 준비)\n",
+        "횟수에 1 더해\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "준비 = True\n",
+        "횟수 = 0\n",
+        "while ((횟수 < 2 and 준비)):\n",
+        "    횟수 = 횟수 + 1\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+
+    let disjunction = concat!(
+        "준비는 거짓\n",
+        "횟수는 0\n",
+        "동안 (횟수가 2보다 작을 동안 또는 준비)\n",
+        "횟수에 1 더해\n",
+        "끝\n",
+    );
+    let disjunction_expected = concat!(
+        "준비 = False\n",
+        "횟수 = 0\n",
+        "while ((횟수 < 2 or 준비)):\n",
+        "    횟수 = 횟수 + 1\n",
+        "# end\n",
+    );
+    assert_eq!(ok(disjunction), disjunction_expected);
 }
 
 #[test]
@@ -1452,6 +1700,50 @@ fn korean_break_alias_is_lowered_inside_an_inline_condition() {
         "# end\n",
     );
     assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn inline_breaks_keep_python_and_nme_loop_contexts_valid() {
+    assert_eq!(
+        ok("for value in [1]:\n    if True then break\n"),
+        "for value in [1]:\n    if (True): break\n"
+    );
+    assert_eq!(
+        ok("while True\n    if False then break\nend\n"),
+        "while (True):\n    if (False): break\n# end\n"
+    );
+}
+
+#[test]
+fn inline_returns_keep_python_function_contexts_valid() {
+    assert_eq!(
+        ok("def choose():\n    if True then return 1\n"),
+        "def choose():\n    if (True): return 1\n"
+    );
+    assert_eq!(
+        ok("def choose():\n    만약 참 그러면 return 1\n"),
+        "def choose():\n    if (True): return 1\n"
+    );
+}
+
+#[test]
+fn inline_continues_keep_python_and_nme_loop_contexts_valid() {
+    assert_eq!(
+        ok("for item in items:\n    if True then continue\n"),
+        "for item in items:\n    if (True): continue\n"
+    );
+    assert_eq!(
+        ok("while ready:\n    만약 참 그러면 continue\n"),
+        "while ready:\n    if (True): continue\n"
+    );
+    assert_eq!(
+        ok("while ready\n    if True then continue\nend\n"),
+        "while (ready):\n    if (True): continue\n# end\n"
+    );
+    assert_eq!(
+        ok("while ready\n    continue\nend\n"),
+        "while (ready):\n    continue\n# end\n"
+    );
 }
 
 #[test]

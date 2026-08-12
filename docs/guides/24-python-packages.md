@@ -12,7 +12,8 @@ English | [한국어](24-python-packages.ko.md)
 Python ships with many ready-made packages. Because advanced NME is ordinary
 Python, any of them is available inside a `.nme` file — that is the third
 syntax level. The example `examples/birthday.nme` uses the `datetime` package
-to count down to a birthday.
+to count down to a birthday. Its Korean twin, `examples/birthday.ko.nme`, uses
+Korean beginner spellings over the same calculation.
 
 ## Steps
 
@@ -51,28 +52,40 @@ to count down to a birthday.
    nme run birthday
    ```
 
+   The number changes with today's date and your answers:
+
    ```text
-   your next birthday is in 136 days
+   your next birthday is in <number> days
    ```
 
 3. Other standard packages work the same way. `statistics` can average a
    list, `collections` can count things, and `json` (already used by the
    `use file` module) reads and writes data.
 
-4. Third-party libraries are installed with pip first, then imported the same
-   way. The command is different on each operating system — see the
-   [installation guide](../install.md) — but the NME code is always:
+4. Third-party libraries are installed with NME's package command, a small
+   wrapper around Python's pip. It chooses the usual Python command for your
+   operating system and installs one package at a time:
 
    ```sh
-   python3 -m pip install requests
+   nme install requests
    ```
+
+   The Korean command form is equivalent:
+
+   ```sh
+   nme 설치 requests
+   ```
+
+   The command needs internet access. If pip fails, NME reports E9025; check
+   the package name, your connection, and that pip is installed before trying
+   again. After a successful install, import the package the same way:
 
    ```text
    import requests
    ```
 
-   An installed package is used exactly like a standard one. Installing
-   packages needs internet access and is not part of this offline compiler.
+   An installed package is used exactly like a standard one. Package
+   installation is not part of this offline compiler.
 
 ## Try it yourself
 
@@ -84,4 +97,4 @@ birthday, or print the weekday of a date with `date(2026, 12, 25).strftime("%A")
 - `from datetime import date` brings a package name into your program.
 - The standard library is always available inside NME.
 - Beginner `ask` and Python package calls mix freely on one file.
-- Third-party packages install with pip and import the same way.
+- `nme install` / `nme 설치` wraps pip, then third-party packages import the same way.

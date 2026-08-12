@@ -151,7 +151,7 @@
            말해 "형식: 숫자 연산자 숫자"
    ```
 
-   `nme check calculator.ko`가 두 파일을 모두 확인하고, `nme r
+   `nme 검사 calculator.ko`가 두 파일을 모두 확인하고, `nme r
    calculator.ko`는 전처럼 import를 실행합니다.
 
 6. 영어 쌍둥이 `calculator.nme`는 같은 `def`를 쓰고 반복을 `ask`,

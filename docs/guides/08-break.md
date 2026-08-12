@@ -33,7 +33,7 @@ immediately and continues with the lines after it.
    ```text
    준비 = True
    동안 준비
-       show working
+       작동 중이에요 말해줘
        멈춰
    끝
    ```
@@ -58,12 +58,12 @@ Stop a loop as soon as a name exists:
 
 ```text
 name = ""
-동안 name == ""
-    이름을 물어봐 이름이 뭐예요?
-    만약에 이름이 있으면
-        멈춰
-    끝
-끝
+while name == ""
+    ask name What is your name?
+    if name exists
+        break
+    end
+end
 ```
 
 ## What you learned

@@ -2,10 +2,10 @@
 
 [English](54-stats.md) | 한국어
 
-[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
 - 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [30 — Data](30-data.md), [42 — Compare](42-compare.md)
+- 선수 지식 (Prerequisites): [30 — Data](30-data.ko.md), [42 — Compare](42-compare.ko.md)
 - 주제 (Topic): 통계/데이터 / statistics
 - 결과물 (Result): JSON 숫자 목록에서 count·평균·중앙값·최빈값·최소·최대·범위 보고하기 / loading a JSON list and reporting count, mean, median, mode, min, max, and range
 

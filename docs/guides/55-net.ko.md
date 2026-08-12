@@ -2,10 +2,10 @@
 
 [English](55-net.md) | 한국어
 
-[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
 - 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [32 — Weather](32-weather.md), [44 — Playlist](44-playlist.md)
+- 선수 지식 (Prerequisites): [32 — Weather](32-weather.ko.md), [44 — Playlist](44-playlist.ko.md)
 - 주제 (Topic): 네트워크 / network
 - 결과물 (Result): 로컬 HTTP 서버에서 메시지를 받아 미니 채팅처럼 보여 주기 / fetching messages from a local HTTP server and showing them like a mini chat
 
@@ -26,7 +26,7 @@
    ]
    ```
 
-2. 가이드 [32](32-weather.md)처럼 Python 내장 HTTP 서버로 폴더를
+2. 가이드 [32](32-weather.ko.md)처럼 Python 내장 HTTP 서버로 폴더를
    서비스하세요:
 
    ```sh

@@ -2,14 +2,14 @@
 
 [English](77-download.md) | 한국어
 
-[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
 - 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [55 — Network](55-net.md), [13 — Files](13-files.md)
+- 선수 지식 (Prerequisites): [55 — Network](55-net.ko.md), [13 — Files](13-files.ko.md)
 - 주제 (Topic): 네트워크/파일 / network & files
 - 결과물 (Result): 로컬 HTTP 서버에서 파일을 받아 진행 상황을 보여 주며 저장하기 / downloading a file from a local HTTP server and saving it while showing progress
 
-[55](55-net.md)는 데이터를 가져와 보여 주었고, [76](76-poll.md)은 같은
+[55](55-net.ko.md)는 데이터를 가져와 보여 주었고, [76](76-poll.ko.md)은 같은
 것을 반복해서 가져왔습니다. 이번 가이드는 파일을 한 번 받아서
 **저장**합니다 — 다운로더의 핵심입니다. 웹 페이지를 읽는 것과 파일을
 받는 것은 같은 호출이며, 새로 나오는 개념은 조금씩 읽어 나가는 것과
@@ -27,7 +27,7 @@
    파일은 무사히 디스크에 도착했습니다.
    ```
 
-2. [55](55-net.md)에서처럼 폴더를 Python 내장 HTTP 서버로 띄우세요:
+2. [55](55-net.ko.md)에서처럼 폴더를 Python 내장 HTTP 서버로 띄우세요:
 
    ```sh
    python3 -m http.server 8000
@@ -45,9 +45,9 @@
    ```
 
    응답은 원시 바이트라서 `.decode("utf-8")`로 텍스트로 바꿔야 합니다.
-   [32](32-weather.md)에서 JSON을 풀 때 쓴 것과 같은 호출입니다.
+   [32](32-weather.ko.md)에서 JSON을 풀 때 쓴 것과 같은 호출입니다.
 
-4. 저장은 `file_write` 한 번입니다 — [13](13-files.md). 전체 프로그램이
+4. 저장은 `file_write` 한 번입니다 — [13](13-files.ko.md). 전체 프로그램이
    다운로드하고 저장합니다. `download.nme`로 저장하세요:
 
    ```text
@@ -119,7 +119,7 @@
    64바이트씩 읽으므로 데이터가 도착할 때마다 진행 줄이 갱신되고, 빈
    조각이 오면 `break`로 멈춥니다. `b"".join(chunks)`가 바이트 조각을
    이어 붙이고, `.decode("utf-8")`은 완전한 파일에 대해 한 번만
-   실행됩니다. 이 루프는 [76](76-poll.md)에서 서버를 폴링한 것과 같은
+   실행됩니다. 이 루프는 [76](76-poll.ko.md)에서 서버를 폴링한 것과 같은
    패턴인데, 여기서는 서버가 끝날 때까지 보냅니다.
 
 7. 실행하세요:
@@ -140,9 +140,9 @@
 ## 직접 해보기
 
 `story.txt` 옆에 `content.txt`와 `notes.txt`를 만들고, 프로그램이 폴더에
-있는 파일을 전부 받도록 바꿔 보세요 — [65](65-files-folder.md)가 폴더를
+있는 파일을 전부 받도록 바꿔 보세요 — [65](65-files-folder.ko.md)가 폴더를
 나열하는 방법을 보여 주고, 파일 이름마다 `urlopen` 호출 하나가 됩니다.
-또는 [76](76-poll.md)의 `status.json`처럼 변하는 페이지를 받아서
+또는 [76](76-poll.ko.md)의 `status.json`처럼 변하는 페이지를 받아서
 폴링할 때마다 스냅샷을 저장해 보세요.
 
 ## 배운 것

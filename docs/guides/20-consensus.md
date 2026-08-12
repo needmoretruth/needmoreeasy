@@ -2,10 +2,13 @@
 
 English | [한국어](20-consensus.ko.md)
 
+[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+
 [19 — Transaction proofs](19-signatures.md) | [Full NeedMoreCoin guide](cryptocurrency.md)
 
 - Difficulty: ★★★★★
 - Prerequisites: [18 — Proof of work](18-proof-of-work.md), [19 — Transaction proofs](19-signatures.md)
+- Topic: chain validation and consensus boundaries
 - Result: a single-node validator that replays every transaction and block from genesis
 
 The core rule is simple: **do not trust the program state that existed while a

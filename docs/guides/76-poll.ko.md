@@ -2,10 +2,10 @@
 
 [English](76-poll.md) | 한국어
 
-[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
 - 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [55 — Network](55-net.md), [70 — Reaction](70-reaction.md)
+- 선수 지식 (Prerequisites): [55 — Network](55-net.ko.md), [70 — Reaction](70-reaction.ko.md)
 - 주제 (Topic): 네트워크/시간 / network & timing
 - 결과물 (Result): 로컬 서버의 status.json을 몇 초마다 다시 받아 변화를 보고하기 / repeatedly fetching a status.json from a local server every few seconds and reporting changes
 
@@ -21,13 +21,13 @@
    {"status": "working", "step": 1}
    ```
 
-2. 가이드 [55](55-net.md)처럼 폴더를 서비스하세요:
+2. 가이드 [55](55-net.ko.md)처럼 폴더를 서비스하세요:
 
    ```sh
    python3 -m http.server 8000
    ```
 
-3. 상태를 받는 것은 가이드 [55](55-net.md)와 같은 `urlopen` 호출입니다:
+3. 상태를 받는 것은 가이드 [55](55-net.ko.md)와 같은 `urlopen` 호출입니다:
 
    ```text
    from urllib.request import urlopen

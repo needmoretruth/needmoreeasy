@@ -49,9 +49,11 @@ needs at least one.
 4. Combined conditions work in loops too:
 
    ```text
+   ready = True
+   waiting = False
    while ready or waiting
-   show Still working
-   break
+       show Still working
+       break
    end
    ```
 

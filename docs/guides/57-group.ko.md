@@ -2,14 +2,14 @@
 
 [English](57-group.md) | 한국어
 
-[Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
+[README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
 - 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [36 — Word count](36-word-count.md), [54 — Stats](54-stats.md)
+- 선수 지식 (Prerequisites): [36 — Word count](36-word-count.ko.md), [54 — Stats](54-stats.ko.md)
 - 주제 (Topic): 데이터 / data
 - 결과물 (Result): 범주 키로 dict 목록을 목록들의 dict로 묶고, 범주별 개수를 보고하기 / grouping a list of dicts by a category key into a dict of lists, then reporting counts per category
 
-세기(가이드 [36](36-word-count.md), [54](54-stats.md))는 *몇 개인지* 답합니다.
+세기(가이드 [36](36-word-count.ko.md), [54](54-stats.ko.md))는 *몇 개인지* 답합니다.
 묶기는 *범주별로 몇 개인지* 답합니다: dict 목록 하나를 키 값 하나당 하나의
 목록들로 나눕니다.
 
@@ -28,8 +28,8 @@
    ]
    ```
 
-2. 가이드 [14](14-json.md)의 `json_load`로 불러옵니다. 손으로 묶는 법은
-   가이드 [36](36-word-count.md)의 `if word in tally` 생각입니다 — 새 범주는
+2. 가이드 [14](14-json.ko.md)의 `json_load`로 불러옵니다. 손으로 묶는 법은
+   가이드 [36](36-word-count.ko.md)의 `if word in tally` 생각입니다 — 새 범주는
    빈 목록부터 시작합니다:
 
    ```text

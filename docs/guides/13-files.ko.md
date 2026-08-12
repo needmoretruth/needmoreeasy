@@ -28,14 +28,14 @@
 2. 실행합니다:
 
    ```sh
-   nme run diary
+   nme 실행 diary
    ```
 
    콘솔에 `오늘은 좋은 날이에요`가 출력됩니다. 폴더를 보면 프로그램 옆에
    `일기.txt` 파일이 생겨 있습니다.
 
 3. 파일은 `nme`를 실행하는 폴더에 만들어집니다. 프로그램과 파일을 한
-   폴더에 두세요. `nme r`은 `nme run`의 짧은 명령입니다:
+   폴더에 두세요. `nme r`은 `nme 실행`의 짧은 명령입니다:
 
    ```sh
    nme r diary
@@ -57,9 +57,9 @@
 좋아하는 음식을 `food.txt`에 저장하고 다시 읽어 보세요:
 
 ```text
-use file latest
-file_write("food.txt", "Kimchi stew")
-show file_read("food.txt")
+파일 사용 최신
+파일쓰기("food.txt", "김치찌개")
+말해 파일읽기("food.txt")
 ```
 
 ## 배운 것

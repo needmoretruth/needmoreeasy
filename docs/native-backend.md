@@ -2,12 +2,17 @@
 
 English | [한국어](native-backend.ko.md)
 
-[Home](../README.md) | [Install](install.md) | [Getting started](getting-started.md) | [Tutorial](tutorial.md) | [Language reference](language.md) | [Guides](guides/index.md)
+[Home](../README.md) | [Install](install.md) | [Getting started](getting-started.md) | [Tutorial](tutorial.md) | [Language reference](language.md) | [Native core reference](native-reference.md) | [Guides](guides/index.md)
 
 > Status: v0 is implemented (`nme native run`/`nme native build`). The
-> statically typed core subset — integer values and arithmetic, sentence
-> `while`/`if`/`else`/`else if` over comparisons, `break`, functions over
-> scalar parameters with `return` (recursion works), and `say` — compiles to
+> statically typed core subset — boolean, integer, and finite-float values,
+> strings, and arithmetic,
+> sentence `while`/`if`/`else`/`else if` over comparisons and logical `and`/`or`
+> conditions, beginner `times:`/`번:` loops and sentence repeat forms with
+> one-line NME output or `break` bodies, one-line NME `say`/`show`/`말해` or `break` bodies
+> after `then`/`그러면`, `break`, functions over integer
+> scalar parameters with an unconditional integer `return` (recursion works),
+> and `say` — compiles to
 > C and then to a native executable through the system C compiler. Everything
 > outside the core is rejected with a clear diagnostic and still runs on
 > CPython. This document is the honest technical plan for the full backend;
@@ -21,10 +26,32 @@ sentence, beginner, and advanced levels to ordinary Python, preserving one
 physical line per source line, and CPython runs the result. `nme compile`
 asks the installed Nuitka to build that Python into an executable. Nuitka is a
 mature Python-to-C compiler, but it is **not** an NME-native backend: NME
-still has no compiler that turns NME source into machine code itself, and the
-native artifact remains Python in disguise.
+uses that path for the full Python-compatible pipeline, so its artifact still
+has Python runtime semantics. The separate `nme native` backend compiles its
+documented restricted NME subset to C and a system-compiler executable; it does
+not claim to compile all NME or all Python.
 
-The goal of this document is to plan that missing backend honestly.
+The goal of this document is to define and extend that restricted backend
+honestly while keeping the full language on CPython.
+
+The CLI uses `cc` on macOS and Linux, and Microsoft's `cl` on Windows. On
+Windows, start a Developer PowerShell for Visual Studio (or another shell
+where `cl.exe` is on `PATH`) before using `nme native`. NME passes `/utf-8` so
+Korean and English strings in generated C keep their UTF-8 meaning. The CPython
+commands do not need that compiler shell.
+
+For the current CLI, `nme native run <file>` compiles and runs a temporary
+executable without saving artifacts. Use `nme native build <file> -o <path>`
+to keep the executable and generated C source; passing `-o` to `run` is
+rejected with E9031. With no `-o`, NME appends `.c` to the full source stem,
+so `count.ko.nme` produces `count.ko.c` instead of colliding with `count.c`.
+On Windows, implicit outputs also receive `.exe` even when the source stem ends
+in `.ko`.
+A source named `count.c.nme` therefore uses `count.c` as its default executable
+on Unix and `count.c.exe` on Windows, with `count.c.c` as its generated source;
+only an explicit `-o count.c` is rejected as a C-source collision.
+Choose only one action word; passing both `run` and `build` is rejected with
+E9032.
 
 ## The core design decision: a restricted native core, not "all of NME"
 
@@ -35,32 +62,86 @@ vast runtime. Every serious Python-family native compiler makes the same
 choice: compile a **statically analyzable core** and keep everything else on
 CPython.
 
-The proposed NME-native backend therefore targets a **restricted, statically
-typed core subset** with semantics defined independently of CPython.
+The NME-native backend therefore targets a **restricted, statically typed core
+subset** with semantics defined independently of CPython.
 Implemented so far:
 
-- integers and floats with `+ - * %` arithmetic (C `int`/`double`;
-  integer modulo only, float modulo rejected; integer overflow behavior
-  is C's, documented as a later `i64`/bignum decision; whole floats print
-  with C's `%g`, which may differ cosmetically from Python's `5.0`);
-- string variables with `+` concatenation into variables (fixed buffers,
-  `strcpy`), string output, string `==`/`!=` comparisons through `strcmp`,
-  and a `len` builtin; nested concatenation and ordering text are rejected
-  rather than miscompiled;
+- integers and finite floats with `+ - * %` arithmetic (checked signed 32-bit native
+  integers from `-2147483648` through `2147483647`; integer modulo only, with
+  overflow and zero-divisor errors reported by the bilingual native runtime;
+  float literals must be finite, float arithmetic uses C `double`, non-finite
+  arithmetic results stop with a bilingual native-runtime error, and whole
+  floats print with C's `%g`, which may differ cosmetically from Python's `5.0`);
+- string variables with `+` concatenation into variables (checked fixed
+  8192-byte buffers), escaped string output, string `==`/`!=` comparisons
+  through `strcmp`, and a Unicode-character-counting `len` builtin; nested
+  concatenation, embedded NUL characters, and ordering text are rejected rather
+  than miscompiled. A stored
+  or concatenated value beyond 8191 UTF-8 bytes stops with a bilingual
+  native-runtime error instead of overflowing the buffer;
 - control flow: sentence `while`/`if`/`else`/`else if` over integer,
   float, and string comparisons (`<`, `>`, `<=`, `>=`, `==`, `!=`, plus
-  the natural-language "or equal" connectors), over integer truthiness
-  (`if ready`, `while turns`), and over boolean literals; the beginner
-  `times:` loop; `break`;
-- functions over scalar parameters with `return` (recursion works);
-- `say`/`show`/`말해` of an integer expression, a float, a string variable,
-  or a string literal;
+  the natural-language "or equal" connectors), over integer and finite-float
+  truthiness (`if ready`, `while turns`; zero is false), over boolean literals
+  and bindings (`if ready`, `while ready`; `False` is false); boolean equality
+  and inequality comparisons; logical `and`/`or` over supported conditions with
+  Python precedence and short-circuit evaluation; the beginner `times:`/`번:`
+  loops and sentence repeat forms with one-line NME output or `break` bodies; one-line
+  NME `say`/`show`/`말해` bodies after `then`/`그러면` for these condition
+  blocks and their branches; one-line NME `break` bodies inside a native loop;
+  and `break` inside a native loop, including an `if` nested inside that loop.
+  Ordinary Python `for` loops, Python inline bodies, and inline value changes
+  remain outside the native subset. A `break` outside a loop is rejected with
+  `E0102` before C is emitted;
+- functions over integer scalar parameters with a required top-level integer
+  `return` (recursion works); calls may target any function in the file,
+  including one defined later, with its declared arity and positional
+  arguments. An early `return`, or a `break` that exits the enclosing native
+  loop, may terminate a branch; every path that continues past the block must
+  reach the required top-level return. This is recursive: a nested conditional
+  with no reachable fall-through arm also terminates the enclosing branch.
+  Simple positional integer parameters
+  only are accepted in headers; duplicate definitions,
+  defaults, varargs, nested definitions, keyword arguments, float or string
+  function values, functions with only branch returns, and top-level `return`
+  (`E0106`) are rejected rather than converted or left to C fallthrough;
+- function-local scalar assignments remain scoped to their function;
+- boolean bindings are a distinct native type from integers. They may be
+  assigned, compared for equality or inequality, used as truthy conditions, and
+  shown as `True`/`False`; boolean arithmetic, value changes, and function
+  arguments or returns remain outside the native core;
+- value changes require an existing integer or float binding, and assignments
+  cannot change a native name from one type to another;
+- a name first assigned in a possibly skipped control block must be assigned
+  before that block or used after assignment inside it; a literal `if true`
+  branch is known to run, while names assigned only in its unreachable
+  `else`/`else if` alternatives are not exported. A name assigned in every
+  possible fall-through path of an `if`/`else` chain is available after the
+  block; a branch that returns early or breaks out of its enclosing loop does
+  not need to initialize that name, including when the terminating path contains
+  a nested conditional. A name assigned in only one continuing branch, or inside
+  a loop that may not run, remains conditional, and sibling branches do not make
+  each other's new bindings visible;
+- `say`/`show`/`말해` of an integer, float, boolean, or string expression;
 - Korean and English spellings both lower to the same C;
-- identifiers that collide with C keywords are rejected, never silently
-  renamed.
+- identifiers that collide with C keywords, C implementation-reserved forms,
+  or generated runtime names are rejected, never silently renamed. Names
+  beginning `__`, names beginning `_` followed by an uppercase letter, and
+  file-scope function names beginning `_` are reserved; an ordinary local name
+  such as `_value` remains usable. Runtime names also include `nme_copy`,
+  `nme_cat`, `NME_STRING_CAPACITY`, `NME_UNUSED`, `_nme_i`, the checked integer
+  helpers, and the C library symbols exposed by the generated headers;
+- source comments are emitted as inert C comments, so comment text cannot turn
+  into a C preprocessor directive or change native function hoisting;
+- native expressions require a literal, a prior binding, or a declared function call;
+  bare function values, duplicate parameters, and bindings or parameters that
+  shadow a native function name are rejected before C emission;
 
-Still planned: real boolean variables as a distinct type from integer
-truthiness, and the `native.nme` surface document.
+The currently accepted boolean surface is documented in the [native core
+reference](native-reference.md): boolean literals and names have their own
+static type, even though the generated C representation uses an `int` with
+`0`/`1` values. This representation detail does not make boolean arithmetic or
+updates valid NME operations.
 
 Everything outside the core — dynamic Python, classes, imports, packages,
 `use random`/`use file` adapters — stays on the **Python compatibility
@@ -72,13 +153,14 @@ is the honest separation the language needs.
 
 ### 1. C backend (generate C, compile with a system C compiler)
 
-Lower the core subset to C and call `cc`/`clang`. This is the approach taken
-by Cython (for typed regions), Nuitka, and many small language experiments.
+Lower the core subset to C and call `cc`/`clang` on Unix-like systems or
+Microsoft's `cl` on Windows. This is the approach taken by Cython (for typed
+regions), Nuitka, and many small language experiments.
 
 | | |
 | --- | --- |
 | Maturity | C optimizers (gcc, clang) are the most mature compilers in existence |
-| Dependencies | none beyond a system C compiler (already required for Nuitka) |
+| Dependencies | none beyond a system C compiler (already required for Nuitka); use `cl` from a Windows developer shell |
 | Build-time model | classic AOT: C source is an artifact the learner can read |
 | Runtime | small: string/collection helpers, integer policy; written once |
 | Verification | fully testable in this environment (gcc is present) |
@@ -123,9 +205,9 @@ Hand-writing assembly or a mini codegen.
   maintenance and correctness cost dwarfs any benefit when mature C/LLVM
   optimizers exist. Revisit only if portability demands exclude a C toolchain. |
 
-## Recommendation
+## Recommendation for the implemented v0 backend
 
-**Generate C and compile with the system C compiler for the first NME-native
+**Generate C and compile with the system C compiler for the v0 NME-native
 backend**, and keep LLVM/Cranelift as measured upgrades later.
 
 Rationale, in order of weight:
@@ -167,17 +249,17 @@ The frontend stays shared. The native backend is a separate crate
 reusing the `DiagnosticCode` registry. A program is accepted by the native
 path only if every statement belongs to the documented core.
 
-## Milestones
+## Status and next milestones
 
-1. Document `native.nme` core surface (types, statements, functions) in this
-   repository with examples.
-2. `nme-native`: core-subset parser gate + C lowering for scalars, `say`,
-   arithmetic, `while`/`if`/`break`, and functions.
-3. Runtime: UTF-8 string helpers and integer policy (smallest correct set).
-4. `nme native run`/`nme native build` CLI entry points; a workspace test
-   that compiles, runs, and compares output against the CPython path.
-5. Benchmark the core subset against CPython honestly; only then publish
-   numbers. Extend the core only with measured evidence.
+The v0 baseline is implemented: the restricted `nme-native` compiler, its
+UTF-8 string and checked-integer runtime, the `nme native run`/`build` CLI
+entry points, bilingual diagnostics, and end-to-end tests are all in the
+workspace. The next milestones are:
+
+1. Extend the core only when a shared semantic definition, bilingual coverage,
+   native/CPython comparison, and memory-safety tests are ready.
+2. Measure the core across supported operating systems and compilers before
+   making any broader performance or portability claim.
 
 Measured 2026-08-11 on this machine: a 50,000,000-iteration integer count-up
 loop runs in about `0.03 s` as a native `-O2` binary versus about `2.0 s` on

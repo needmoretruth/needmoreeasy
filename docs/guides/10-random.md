@@ -47,7 +47,7 @@ with one `use` line.
 
    ```text
    use random latest
-   set roll to 랜덤정수(1, 6)
+   set roll to random number from 1 to 6
    show roll
    ```
 
@@ -56,11 +56,11 @@ with one `use` line.
 Roll two dice and show both:
 
 ```text
-랜덤 사용 최신
-첫번째는 1부터 6까지 랜덤정수
-두번째는 1부터 6까지 랜덤정수
-첫번째 보여줘
-두번째 보여줘
+use random latest
+set first to random number from 1 to 6
+set second to random number from 1 to 6
+show first
+show second
 ```
 
 ## What you learned

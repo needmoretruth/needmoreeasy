@@ -1,7 +1,7 @@
 //! Broken input must produce friendly, beginner-oriented diagnostics —
 //! never silently broken Python output.
 
-use nme_core::diagnostics::{render_all, render_all_bilingual};
+use nme_core::diagnostics::{render_all, render_all_bilingual, DiagnosticCode};
 use nme_core::transpile;
 
 /// Transpiles and expects exactly one diagnostic; returns message + hint.
@@ -140,6 +140,1013 @@ fn korean_forms_return_korean_guidance() {
     let when = bilingual_err("만약 준비됨\n");
     assert!(when.contains("필요해요"), "{when}");
     assert!(when.contains("needs `:`"), "{when}");
+}
+
+#[test]
+fn inline_break_outside_a_loop_gets_the_stable_bilingual_diagnostic() {
+    let cases = [
+        ("sentence-en", "when true then break here\n"),
+        ("sentence-ko", "만약 참 그러면 멈춰\n"),
+        ("beginner-en", "if True then break\n"),
+        ("beginner-ko", "만약 True 그러면 멈춰\n"),
+        ("advanced-en", "if (True) then break\n"),
+        ("advanced-ko", "만약 ((참 그리고 참)) 그러면 멈춰\n"),
+    ];
+
+    for (label, source) in cases {
+        let problems = match transpile(source) {
+            Ok(output) => panic!("expected inline break diagnostic for {label}, got {output:?}"),
+            Err(problems) => problems,
+        };
+        assert_eq!(problems.len(), 1, "core case: {label}: {problems:?}");
+        let problem = &problems[0];
+        assert_eq!(
+            problem.code,
+            DiagnosticCode::BreakOutsideLoop,
+            "core case: {label}"
+        );
+        assert!(
+            problem.message.contains("inside a loop"),
+            "{label}: {problem:?}"
+        );
+        assert!(
+            problem
+                .message_ko
+                .as_deref()
+                .is_some_and(|message| message.contains("반복문 안에서만")),
+            "{label}: {problem:?}"
+        );
+        assert!(
+            problem
+                .hint
+                .as_deref()
+                .is_some_and(|hint| hint.contains("Python") && hint.contains("for")),
+            "{label}: {problem:?}"
+        );
+        assert!(
+            problem
+                .hint_ko
+                .as_deref()
+                .is_some_and(|hint| hint.contains("Python") && hint.contains("for")),
+            "{label}: {problem:?}"
+        );
+    }
+}
+
+#[test]
+fn return_outside_a_function_gets_the_stable_bilingual_diagnostic() {
+    let cases = [
+        ("top-level", "return 1\n"),
+        ("sentence-en", "when true then return 1\n"),
+        ("sentence-ko", "만약 참 그러면 return 1\n"),
+        ("beginner-en", "if True then return 1\n"),
+        ("beginner-ko", "만약 True 그러면 return 1\n"),
+        ("advanced-en", "if (True) then return 1\n"),
+        ("advanced-ko", "만약 ((참 그리고 참)) 그러면 return 1\n"),
+    ];
+
+    for (label, source) in cases {
+        let problems = match transpile(source) {
+            Ok(output) => panic!("expected return diagnostic for {label}, got {output:?}"),
+            Err(problems) => problems,
+        };
+        assert_eq!(problems.len(), 1, "core case: {label}: {problems:?}");
+        let problem = &problems[0];
+        assert_eq!(
+            problem.code,
+            DiagnosticCode::ReturnOutsideFunction,
+            "core case: {label}"
+        );
+        assert!(
+            problem.message.contains("inside a function"),
+            "{label}: {problem:?}"
+        );
+        assert!(
+            problem
+                .message_ko
+                .as_deref()
+                .is_some_and(|message| message.contains("함수 안에서만")),
+            "{label}: {problem:?}"
+        );
+    }
+}
+
+#[test]
+fn continue_outside_a_loop_gets_a_stable_diagnostic() {
+    let cases = [
+        ("top-level", "continue\n"),
+        ("sentence-en", "when true then continue\n"),
+        ("sentence-ko", "만약 참 그러면 continue\n"),
+        ("beginner-en", "if True then continue\n"),
+        ("beginner-ko", "만약 True 그러면 continue\n"),
+        ("advanced-en", "if (True) then continue\n"),
+        ("advanced-ko", "만약 ((참 그리고 참)) 그러면 continue\n"),
+    ];
+
+    for (label, source) in cases {
+        let problems = match transpile(source) {
+            Ok(output) => panic!("expected continue diagnostic for {label}, got {output:?}"),
+            Err(problems) => problems,
+        };
+        assert_eq!(problems.len(), 1, "core case: {label}: {problems:?}");
+        let problem = &problems[0];
+        assert_eq!(
+            problem.code,
+            DiagnosticCode::ContinueOutsideLoop,
+            "core case: {label}"
+        );
+        assert!(
+            problem.message.contains("inside a loop"),
+            "{label}: {problem:?}"
+        );
+        assert!(
+            problem
+                .message_ko
+                .as_deref()
+                .is_some_and(|message| message.contains("반복문 안에서만")),
+            "{label}: {problem:?}"
+        );
+    }
+}
+
+#[test]
+fn yield_outside_a_function_gets_a_stable_bilingual_diagnostic() {
+    let cases = [
+        ("top-level", "yield 1\n"),
+        ("sentence-en", "when true then yield 1\n"),
+        ("sentence-ko", "만약 참 그러면 yield 1\n"),
+        ("beginner-en", "if True then yield 1\n"),
+        ("beginner-ko", "만약 True 그러면 yield 1\n"),
+        ("advanced-en", "if (True) then yield 1\n"),
+        ("advanced-ko", "만약 ((참 그리고 참)) 그러면 yield 1\n"),
+    ];
+
+    for (label, source) in cases {
+        let problems = match transpile(source) {
+            Ok(output) => panic!("expected yield diagnostic for {label}, got {output:?}"),
+            Err(problems) => problems,
+        };
+        assert_eq!(problems.len(), 1, "core case: {label}: {problems:?}");
+        let problem = &problems[0];
+        assert_eq!(
+            problem.code,
+            DiagnosticCode::YieldOutsideFunction,
+            "core case: {label}"
+        );
+        assert!(
+            problem.message.contains("inside a function"),
+            "{label}: {problem:?}"
+        );
+        assert!(
+            problem
+                .message_ko
+                .as_deref()
+                .is_some_and(|message| message.contains("함수 안에서만")),
+            "{label}: {problem:?}"
+        );
+    }
+}
+
+#[test]
+fn await_outside_an_async_function_gets_a_stable_bilingual_diagnostic() {
+    let cases = [
+        ("top-level", "await work()\n"),
+        ("sentence-en", "when true then await work()\n"),
+        ("sentence-ko", "만약 참 그러면 await work()\n"),
+        ("beginner-en", "if True then await work()\n"),
+        ("beginner-ko", "만약 True 그러면 await work()\n"),
+        ("advanced-en", "if (True) then await work()\n"),
+        ("advanced-ko", "만약 ((참 그리고 참)) 그러면 await work()\n"),
+    ];
+
+    for (label, source) in cases {
+        let problems = match transpile(source) {
+            Ok(output) => panic!("expected await diagnostic for {label}, got {output:?}"),
+            Err(problems) => problems,
+        };
+        assert_eq!(problems.len(), 1, "core case: {label}: {problems:?}");
+        let problem = &problems[0];
+        assert_eq!(
+            problem.code,
+            DiagnosticCode::AwaitOutsideAsyncFunction,
+            "core case: {label}"
+        );
+        assert!(
+            problem.message.contains("inside an async function"),
+            "{label}: {problem:?}"
+        );
+        assert!(
+            problem
+                .message_ko
+                .as_deref()
+                .is_some_and(|message| message.contains("비동기 함수 안에서만")),
+            "{label}: {problem:?}"
+        );
+    }
+}
+
+#[test]
+fn python_context_diagnostics_follow_nested_function_and_class_scopes() {
+    let class_return = transpile("def outer():\n    class Inner:\n        return 1\n")
+        .expect_err("return in a class body must not inherit the outer function scope");
+    assert_eq!(class_return.len(), 1, "{class_return:?}");
+    assert_eq!(class_return[0].code, DiagnosticCode::ReturnOutsideFunction);
+
+    let inline_class_return = transpile("class Inner: return 1\n")
+        .expect_err("return in an inline class body must be rejected");
+    assert_eq!(inline_class_return.len(), 1, "{inline_class_return:?}");
+    assert_eq!(
+        inline_class_return[0].code,
+        DiagnosticCode::ReturnOutsideFunction
+    );
+    let inline_class_return_after_statement = transpile("class Inner: value = 1; return 1\n")
+        .expect_err("a return after an inline class statement must be rejected");
+    assert_eq!(
+        inline_class_return_after_statement[0].code,
+        DiagnosticCode::ReturnOutsideFunction
+    );
+
+    let inline_function_continue = transpile("def inner(): continue\n")
+        .expect_err("continue in an inline function body needs a loop");
+    assert_eq!(
+        inline_function_continue.len(),
+        1,
+        "{inline_function_continue:?}"
+    );
+    assert_eq!(
+        inline_function_continue[0].code,
+        DiagnosticCode::ContinueOutsideLoop
+    );
+    let inline_function_continue_with_tail = transpile("def inner(): continue; value = 1\n")
+        .expect_err("a direct inline continue with a tail still needs a loop");
+    assert_eq!(
+        inline_function_continue_with_tail[0].code,
+        DiagnosticCode::ContinueOutsideLoop
+    );
+    let inline_function_continue_after_statement = transpile("def inner(): value = 1; continue\n")
+        .expect_err("a continue after an inline statement still needs a loop");
+    assert_eq!(
+        inline_function_continue_after_statement[0].code,
+        DiagnosticCode::ContinueOutsideLoop
+    );
+
+    let inline_function_break = transpile("def inner(): break\n")
+        .expect_err("break in an inline function body needs a loop");
+    assert_eq!(inline_function_break.len(), 1, "{inline_function_break:?}");
+    assert_eq!(
+        inline_function_break[0].code,
+        DiagnosticCode::BreakOutsideLoop
+    );
+    let inline_function_break_with_tail = transpile("def inner(): break; value = 1\n")
+        .expect_err("a direct inline break with a tail still needs a loop");
+    assert_eq!(
+        inline_function_break_with_tail[0].code,
+        DiagnosticCode::BreakOutsideLoop
+    );
+    let inline_function_break_after_statement = transpile("def inner(): value = 1; break\n")
+        .expect_err("a break after an inline statement still needs a loop");
+    assert_eq!(
+        inline_function_break_after_statement[0].code,
+        DiagnosticCode::BreakOutsideLoop
+    );
+
+    let nested_inline_continue = transpile("for item in values:\n    def inner(): continue\n")
+        .expect_err("an inline function must not inherit an outer loop");
+    assert_eq!(
+        nested_inline_continue.len(),
+        1,
+        "{nested_inline_continue:?}"
+    );
+    assert_eq!(
+        nested_inline_continue[0].code,
+        DiagnosticCode::ContinueOutsideLoop
+    );
+
+    let class_yield = transpile("def outer():\n    class Inner:\n        yield 1\n")
+        .expect_err("yield in a class body must not inherit the outer function scope");
+    assert_eq!(class_yield.len(), 1, "{class_yield:?}");
+    assert_eq!(class_yield[0].code, DiagnosticCode::YieldOutsideFunction);
+
+    let nested_await = transpile("async def outer():\n    def inner():\n        await work()\n")
+        .expect_err("a nested ordinary function is not async");
+    assert_eq!(nested_await.len(), 1, "{nested_await:?}");
+    assert_eq!(
+        nested_await[0].code,
+        DiagnosticCode::AwaitOutsideAsyncFunction
+    );
+
+    let generator = "def generator():\n    yield 1\n";
+    assert_eq!(transpile(generator).unwrap(), generator);
+    let async_generator = "async def generator():\n    yield 1\n";
+    assert_eq!(transpile(async_generator).unwrap(), async_generator);
+    let async_function = "async def worker():\n    await work()\n";
+    assert_eq!(transpile(async_function).unwrap(), async_function);
+
+    let generator_lambda = "generator = lambda: (yield 1)\n";
+    assert_eq!(transpile(generator_lambda).unwrap(), generator_lambda);
+    let inline_generator_lambda = "when true then (lambda: (yield 1))\n";
+    assert_eq!(
+        transpile(inline_generator_lambda).unwrap(),
+        "if (True): (lambda: (yield 1))\n"
+    );
+    let class_generator_lambda = "class C:\n    generator = lambda: (yield 1)\n";
+    assert_eq!(
+        transpile(class_generator_lambda).unwrap(),
+        class_generator_lambda
+    );
+    let async_generator_lambda = "async def outer():\n    worker = lambda: (yield from values)\n";
+    assert_eq!(
+        transpile(async_generator_lambda).unwrap(),
+        async_generator_lambda
+    );
+
+    let async_lambda_await = transpile("async def outer():\n    worker = lambda: (await work())\n")
+        .expect_err("await is not valid inside a normal lambda");
+    assert_eq!(async_lambda_await.len(), 1, "{async_lambda_await:?}");
+    assert_eq!(
+        async_lambda_await[0].code,
+        DiagnosticCode::AwaitOutsideAsyncFunction
+    );
+
+    let async_yield_from = transpile("async def generator():\n    yield from values\n")
+        .expect_err("yield from is not valid in an async function");
+    assert_eq!(async_yield_from.len(), 1, "{async_yield_from:?}");
+    assert_eq!(
+        async_yield_from[0].code,
+        DiagnosticCode::YieldFromAsyncFunction
+    );
+
+    let inline_async_yield_from =
+        transpile("async def generator():\n    if True then yield from values\n")
+            .expect_err("inline yield from is not valid in an async function");
+    assert_eq!(
+        inline_async_yield_from.len(),
+        1,
+        "{inline_async_yield_from:?}"
+    );
+    assert_eq!(
+        inline_async_yield_from[0].code,
+        DiagnosticCode::YieldFromAsyncFunction
+    );
+
+    let generator_from = "def generator():\n    yield from values\n";
+    assert_eq!(transpile(generator_from).unwrap(), generator_from);
+
+    let yield_default = transpile("def f(value=(yield 1)):\n    return value\n")
+        .expect_err("yield in a function default is outside the function body");
+    assert_eq!(yield_default.len(), 1, "{yield_default:?}");
+    assert_eq!(yield_default[0].code, DiagnosticCode::YieldOutsideFunction);
+}
+
+#[test]
+fn yield_from_inside_async_functions_gets_a_stable_bilingual_diagnostic() {
+    let cases = [
+        (
+            "sentence-en",
+            "async def generator():\n    when true then yield from values\n",
+        ),
+        (
+            "sentence-ko",
+            "async def generator():\n    만약 참 그러면 yield from values\n",
+        ),
+        (
+            "beginner-en",
+            "async def generator():\n    if True then yield from values\n",
+        ),
+        (
+            "beginner-ko",
+            "async def generator():\n    만약 True 그러면 yield from values\n",
+        ),
+        (
+            "advanced-en",
+            "async def generator():\n    if (True) then yield from values\n",
+        ),
+        (
+            "advanced-ko",
+            "async def generator():\n    만약 ((참 그리고 참)) 그러면 yield from values\n",
+        ),
+    ];
+
+    for (label, source) in cases {
+        let problems = transpile(source).expect_err("expected yield-from diagnostic");
+        assert_eq!(problems.len(), 1, "core case: {label}: {problems:?}");
+        let problem = &problems[0];
+        assert_eq!(
+            problem.code,
+            DiagnosticCode::YieldFromAsyncFunction,
+            "core case: {label}"
+        );
+        assert!(
+            problem
+                .message
+                .contains("cannot be used inside an async function"),
+            "{label}: {problem:?}"
+        );
+        assert!(
+            problem
+                .message_ko
+                .as_deref()
+                .is_some_and(|message| message.contains("비동기 함수 안에서는")),
+            "{label}: {problem:?}"
+        );
+    }
+}
+
+#[test]
+fn async_for_and_with_outside_async_functions_get_stable_diagnostics() {
+    let async_for_top = transpile("async for item in stream():\n    pass\n")
+        .expect_err("top-level async for must be rejected");
+    assert_eq!(async_for_top.len(), 1, "{async_for_top:?}");
+    assert_eq!(
+        async_for_top[0].code,
+        DiagnosticCode::AsyncForOutsideAsyncFunction
+    );
+    assert!(async_for_top[0]
+        .message
+        .contains("inside an async function"));
+    assert!(async_for_top[0]
+        .message_ko
+        .as_deref()
+        .is_some_and(|message| message.contains("비동기 함수 안에서만")));
+
+    let async_for_sync = transpile("def f():\n    async for item in stream():\n        pass\n")
+        .expect_err("async for in a normal function must be rejected");
+    assert_eq!(async_for_sync.len(), 1, "{async_for_sync:?}");
+    assert_eq!(
+        async_for_sync[0].code,
+        DiagnosticCode::AsyncForOutsideAsyncFunction
+    );
+
+    let async_for_class = transpile(
+        "async def outer():\n    class C:\n        async for item in stream():\n            pass\n",
+    )
+    .expect_err("async for in a class body must not inherit an outer async function");
+    assert_eq!(async_for_class.len(), 1, "{async_for_class:?}");
+    assert_eq!(
+        async_for_class[0].code,
+        DiagnosticCode::AsyncForOutsideAsyncFunction
+    );
+
+    let async_with_top = transpile("async with resource():\n    pass\n")
+        .expect_err("top-level async with must be rejected");
+    assert_eq!(async_with_top.len(), 1, "{async_with_top:?}");
+    assert_eq!(
+        async_with_top[0].code,
+        DiagnosticCode::AsyncWithOutsideAsyncFunction
+    );
+    assert!(async_with_top[0]
+        .message
+        .contains("inside an async function"));
+    assert!(async_with_top[0]
+        .message_ko
+        .as_deref()
+        .is_some_and(|message| message.contains("비동기 함수 안에서만")));
+
+    let async_with_sync = transpile("def f():\n    async with resource():\n        pass\n")
+        .expect_err("async with in a normal function must be rejected");
+    assert_eq!(async_with_sync.len(), 1, "{async_with_sync:?}");
+    assert_eq!(
+        async_with_sync[0].code,
+        DiagnosticCode::AsyncWithOutsideAsyncFunction
+    );
+
+    let async_with_class = transpile(
+        "async def outer():\n    class C:\n        async with resource():\n            pass\n",
+    )
+    .expect_err("async with in a class body must not inherit an outer async function");
+    assert_eq!(async_with_class.len(), 1, "{async_with_class:?}");
+    assert_eq!(
+        async_with_class[0].code,
+        DiagnosticCode::AsyncWithOutsideAsyncFunction
+    );
+
+    let valid = "async def worker():\n    async for item in stream():\n        async with resource(item):\n            pass\n";
+    assert_eq!(transpile(valid).unwrap(), valid);
+}
+
+#[test]
+fn nonlocal_without_an_enclosing_function_gets_a_stable_diagnostic() {
+    let top_level = transpile("nonlocal value\n")
+        .expect_err("module-level nonlocal must be rejected by the shared parser");
+    assert_eq!(top_level.len(), 1, "{top_level:?}");
+    assert_eq!(top_level[0].code, DiagnosticCode::NonlocalOutsideFunction);
+    assert!(top_level[0].message.contains("inside a nested function"));
+    assert!(top_level[0]
+        .message_ko
+        .as_deref()
+        .is_some_and(|message| message.contains("중첩 함수 안에서만")));
+
+    let top_level_class = transpile("class C:\n    nonlocal value\n")
+        .expect_err("a top-level class has no enclosing function");
+    assert_eq!(top_level_class.len(), 1, "{top_level_class:?}");
+    assert_eq!(
+        top_level_class[0].code,
+        DiagnosticCode::NonlocalOutsideFunction
+    );
+
+    let function_without_outer = transpile("def only():\n    nonlocal value\n")
+        .expect_err("a function without an outer function has no nonlocal scope");
+    assert_eq!(
+        function_without_outer.len(),
+        1,
+        "{function_without_outer:?}"
+    );
+    assert_eq!(
+        function_without_outer[0].code,
+        DiagnosticCode::NonlocalOutsideFunction
+    );
+
+    let inline_function = transpile("def only(): nonlocal value\n")
+        .expect_err("an inline function without an outer function has no nonlocal scope");
+    assert_eq!(inline_function.len(), 1, "{inline_function:?}");
+    assert_eq!(
+        inline_function[0].code,
+        DiagnosticCode::NonlocalOutsideFunction
+    );
+
+    let method_without_outer =
+        transpile("class C:\n    def method(self):\n        nonlocal value\n")
+            .expect_err("a method in a top-level class has no enclosing function");
+    assert_eq!(method_without_outer.len(), 1, "{method_without_outer:?}");
+    assert_eq!(
+        method_without_outer[0].code,
+        DiagnosticCode::NonlocalOutsideFunction
+    );
+
+    let valid = "def outer():\n    value = 1\n    def inner():\n        nonlocal value\n        value += 1\n";
+    assert_eq!(transpile(valid).unwrap(), valid);
+    let valid_inline = "def outer():\n    value = 1\n    def inner(): nonlocal value; value += 1\n";
+    assert_eq!(transpile(valid_inline).unwrap(), valid_inline);
+    let valid_class = "def outer():\n    value = 1\n    class C:\n        nonlocal value\n";
+    assert_eq!(transpile(valid_class).unwrap(), valid_class);
+    let valid_inline_class = "def outer():\n    value = 1\n    class C: nonlocal value\n";
+    assert_eq!(transpile(valid_inline_class).unwrap(), valid_inline_class);
+    let valid_method =
+        "def outer():\n    value = 1\n    class C:\n        def method(self):\n            nonlocal value\n";
+    assert_eq!(transpile(valid_method).unwrap(), valid_method);
+    let valid_inline_method =
+        "def outer():\n    value = 1\n    class C:\n        def method(self): nonlocal value\n";
+    assert_eq!(transpile(valid_inline_method).unwrap(), valid_inline_method);
+
+    let missing_binding = "def outer():\n    def inner():\n        nonlocal value\n";
+    assert_eq!(
+        transpile(missing_binding).unwrap(),
+        missing_binding,
+        "CPython retains missing-binding validation"
+    );
+}
+
+#[test]
+fn star_import_inside_python_scope_gets_a_stable_diagnostic() {
+    let module_level = "from helper import *\n";
+    assert_eq!(transpile(module_level).unwrap(), module_level);
+
+    let module_condition = "if ready:\n    from helper import *\n";
+    assert_eq!(transpile(module_condition).unwrap(), module_condition);
+
+    let function = transpile("def load():\n    from helper import *\n")
+        .expect_err("star imports inside functions must be rejected by the shared parser");
+    assert_eq!(function.len(), 1, "{function:?}");
+    assert_eq!(function[0].code, DiagnosticCode::ImportStarOutsideModule);
+
+    let inline_function = transpile("def load(): value = 1; from helper import *\n")
+        .expect_err("star imports after an inline statement must be rejected");
+    assert_eq!(inline_function.len(), 1, "{inline_function:?}");
+    assert_eq!(
+        inline_function[0].code,
+        DiagnosticCode::ImportStarOutsideModule
+    );
+
+    let inline_function = transpile("def load(): from helper import *\n")
+        .expect_err("star imports inside inline functions must be rejected");
+    assert_eq!(inline_function.len(), 1, "{inline_function:?}");
+    assert_eq!(
+        inline_function[0].code,
+        DiagnosticCode::ImportStarOutsideModule
+    );
+
+    let class = transpile("class Loader:\n    from helper import *\n")
+        .expect_err("star imports inside classes must be rejected by the shared parser");
+    assert_eq!(class.len(), 1, "{class:?}");
+    assert_eq!(class[0].code, DiagnosticCode::ImportStarOutsideModule);
+
+    let inline_class = transpile("class Loader: from helper import *\n")
+        .expect_err("star imports inside inline classes must be rejected");
+    assert_eq!(inline_class.len(), 1, "{inline_class:?}");
+    assert_eq!(
+        inline_class[0].code,
+        DiagnosticCode::ImportStarOutsideModule
+    );
+    let inline_class_after_statement = transpile("class Loader: value = 1; from helper import *\n")
+        .expect_err("star imports after an inline class statement must be rejected");
+    assert_eq!(
+        inline_class_after_statement[0].code,
+        DiagnosticCode::ImportStarOutsideModule
+    );
+}
+
+#[test]
+fn control_flow_inside_except_star_gets_a_stable_diagnostic() {
+    let cases = [
+        (
+            "return",
+            "def load():\n    try:\n        pass\n    except* Exception:\n        return\n",
+        ),
+        (
+            "break",
+            "while True:\n    try:\n        pass\n    except* Exception:\n        break\n",
+        ),
+        (
+            "continue",
+            "while True:\n    try:\n        pass\n    except* Exception:\n        continue\n",
+        ),
+        (
+            "nested return",
+            "def load():\n    try:\n        pass\n    except* Exception:\n        if ready:\n            return\n",
+        ),
+        (
+            "inline break",
+            "while True:\n    try:\n        pass\n    except* Exception:\n        when ready then break\n",
+        ),
+        (
+            "break after statement",
+            "while True:\n    try:\n        pass\n    except* Exception:\n        value = 1; break\n",
+        ),
+        (
+            "continue after statement",
+            "while True:\n    try:\n        pass\n    except* Exception:\n        value = 1; continue\n",
+        ),
+        (
+            "return after statement",
+            "def load():\n    try:\n        pass\n    except* Exception:\n        value = 1; return\n",
+        ),
+    ];
+    for (label, source) in cases {
+        let problems = transpile(source)
+            .expect_err("control flow inside except* must be rejected by the shared parser");
+        assert_eq!(problems.len(), 1, "{label}: {problems:?}");
+        assert_eq!(
+            problems[0].code,
+            DiagnosticCode::ControlFlowInExceptStar,
+            "{label}: {problems:?}"
+        );
+    }
+
+    let normal_except =
+        "def load():\n    try:\n        pass\n    except Exception:\n        return\n";
+    assert_eq!(transpile(normal_except).unwrap(), normal_except);
+    let valid_except_star = "try:\n    pass\nexcept* Exception:\n    pass\n";
+    assert_eq!(transpile(valid_except_star).unwrap(), valid_except_star);
+    let nested_function =
+        "def outer():\n    try:\n        pass\n    except* Exception:\n        def inner():\n            return\n";
+    assert_eq!(transpile(nested_function).unwrap(), nested_function);
+    let nested_method = "def outer():\n    try:\n        pass\n    except* Exception:\n        class C:\n            def method(self):\n                return\n";
+    assert_eq!(transpile(nested_method).unwrap(), nested_method);
+    let return_after_except_star =
+        "def load():\n    try:\n        pass\n    except* Exception:\n        pass\n    return\n";
+    assert_eq!(
+        transpile(return_after_except_star).unwrap(),
+        return_after_except_star
+    );
+    let malformed_header = "except* Exception:\n    break\n";
+    assert_eq!(transpile(malformed_header).unwrap(), malformed_header);
+}
+
+#[test]
+fn yield_inside_comprehension_gets_a_stable_diagnostic() {
+    let cases = [
+        (
+            "list comprehension",
+            "def collect(values):\n    return [(yield value) for value in values]\n",
+        ),
+        (
+            "generator expression",
+            "def collect(values):\n    return (yield value for value in values)\n",
+        ),
+        (
+            "set comprehension",
+            "def collect(values):\n    return {(yield value) for value in values}\n",
+        ),
+        (
+            "dictionary comprehension",
+            "def collect(values):\n    return {value: (yield value) for value in values}\n",
+        ),
+        (
+            "comprehension inside a generator lambda",
+            "def collect(values):\n    return (lambda: [(yield value) for value in values])\n",
+        ),
+        (
+            "inline body",
+            "def collect(values):\n    when True then [(yield value) for value in values]\n",
+        ),
+    ];
+    for (label, source) in cases {
+        let problems = transpile(source)
+            .expect_err("yield inside a comprehension must be rejected by the shared parser");
+        assert_eq!(problems.len(), 1, "{label}: {problems:?}");
+        assert_eq!(
+            problems[0].code,
+            DiagnosticCode::YieldInsideComprehension,
+            "{label}: {problems:?}"
+        );
+    }
+
+    let yield_group = "def collect():\n    return (yield value)\n";
+    assert_eq!(transpile(yield_group).unwrap(), yield_group);
+    let lambda_inside_comprehension =
+        "def collect(values):\n    return [(lambda: (yield value)) for value in values]\n";
+    assert_eq!(
+        transpile(lambda_inside_comprehension).unwrap(),
+        lambda_inside_comprehension
+    );
+}
+
+#[test]
+fn async_comprehension_outside_async_function_gets_a_stable_diagnostic() {
+    let cases = [
+        ("top level", "values = [item async for item in stream()]\n"),
+        (
+            "synchronous function",
+            "def collect():\n    return [item async for item in stream()]\n",
+        ),
+        (
+            "sentence-en",
+            "when true then [item async for item in stream()]\n",
+        ),
+        (
+            "sentence-ko",
+            "만약 참 그러면 [item async for item in stream()]\n",
+        ),
+        (
+            "beginner-en",
+            "if True then [item async for item in stream()]\n",
+        ),
+        (
+            "beginner-ko",
+            "만약 True 그러면 [item async for item in stream()]\n",
+        ),
+        (
+            "advanced-en",
+            "if (True) then [item async for item in stream()]\n",
+        ),
+        (
+            "advanced-ko",
+            "만약 ((참 그리고 참)) 그러면 [item async for item in stream()]\n",
+        ),
+        (
+            "normal lambda inside async function",
+            "async def outer():\n    return lambda: [item async for item in stream()]\n",
+        ),
+    ];
+    for (label, source) in cases {
+        let problems =
+            transpile(source).expect_err("async comprehensions need an async function context");
+        assert_eq!(problems.len(), 1, "{label}: {problems:?}");
+        assert_eq!(
+            problems[0].code,
+            DiagnosticCode::AsyncComprehensionOutsideAsyncFunction,
+            "{label}: {problems:?}"
+        );
+    }
+
+    let valid = "async def collect():\n    return [item async for item in stream()]\n";
+    assert_eq!(transpile(valid).unwrap(), valid);
+    let nested_async =
+        "def outer():\n    async def inner():\n        return [item async for item in stream()]\n";
+    assert_eq!(transpile(nested_async).unwrap(), nested_async);
+    let valid_inline =
+        "async def collect():\n    when ready then [item async for item in stream()]\n";
+    assert!(transpile(valid_inline).is_ok());
+}
+
+#[test]
+fn return_value_inside_async_generator_gets_a_stable_diagnostic() {
+    let cases = [
+        (
+            "return after yield",
+            "async def stream():\n    yield 1\n    return 2\n",
+        ),
+        (
+            "return before yield",
+            "async def stream():\n    return 2\n    yield 1\n",
+        ),
+        (
+            "one-line Python suite",
+            "async def stream(): yield 1; return 2\n",
+        ),
+        (
+            "sentence-en",
+            "async def stream():\n    yield 1\n    when True then return 2\n",
+        ),
+        (
+            "sentence-ko",
+            "async def stream():\n    yield 1\n    만약 참 그러면 return 2\n",
+        ),
+        (
+            "beginner-en",
+            "async def stream():\n    yield 1\n    if True then return 2\n",
+        ),
+        (
+            "beginner-ko",
+            "async def stream():\n    yield 1\n    만약 True 그러면 return 2\n",
+        ),
+        (
+            "advanced-en",
+            "async def stream():\n    yield 1\n    if (True) then return 2\n",
+        ),
+        (
+            "advanced-ko",
+            "async def stream():\n    yield 1\n    만약 ((참 그리고 참)) 그러면 return 2\n",
+        ),
+    ];
+    for (label, source) in cases {
+        let problems = transpile(source).expect_err("an async generator cannot return a value");
+        assert_eq!(problems.len(), 1, "{label}: {problems:?}");
+        assert_eq!(
+            problems[0].code,
+            DiagnosticCode::ReturnValueInAsyncGenerator,
+            "{label}: {problems:?}"
+        );
+    }
+
+    let async_function = "async def compute():\n    return 2\n";
+    assert_eq!(transpile(async_function).unwrap(), async_function);
+    let bare_return = "async def stream():\n    yield 1\n    return\n";
+    assert_eq!(transpile(bare_return).unwrap(), bare_return);
+    let nested_function = "async def outer():\n    yield 1\n    def inner():\n        return 2\n";
+    assert_eq!(transpile(nested_function).unwrap(), nested_function);
+    let nested_async_function =
+        "async def outer():\n    yield 1\n    async def inner():\n        return 2\n";
+    assert_eq!(
+        transpile(nested_async_function).unwrap(),
+        nested_async_function
+    );
+}
+
+#[test]
+fn one_line_python_function_suites_keep_contextual_keywords_in_scope() {
+    let valid_cases = [
+        ("normal generator", "def stream(): yield 1\n"),
+        ("async generator", "async def stream(): yield 1\n"),
+        ("async await", "async def wait(): await value\n"),
+        (
+            "bare return after yield",
+            "async def stream(): yield 1; return\n",
+        ),
+        (
+            "nested normal generator",
+            "async def outer():\n    def inner(): yield 1\n    return 2\n",
+        ),
+        (
+            "nested async generator",
+            "async def outer():\n    async def inner(): yield 1; return\n",
+        ),
+    ];
+    for (label, source) in valid_cases {
+        assert_eq!(transpile(source).unwrap(), source, "{label}");
+    }
+
+    let nested_invalid = "async def outer():\n    async def inner(): yield 1; return 2\n";
+    let problems = transpile(nested_invalid).expect_err("nested async generator return value");
+    assert_eq!(problems.len(), 1, "{problems:?}");
+    assert_eq!(
+        problems[0].code,
+        DiagnosticCode::ReturnValueInAsyncGenerator
+    );
+}
+
+#[test]
+fn conflicting_global_and_nonlocal_declarations_are_rejected_before_cpython() {
+    let global_cases = [
+        "def update():\n    value = 1\n    global value\n",
+        "def read():\n    print(value)\n    global value\n",
+        "def parameter(value):\n    global value\n",
+        "def annotated():\n    fn: value = 1\n    global value\n",
+        "def update(): value = 1; global value\n",
+        "def read(): print(value); global value\n",
+        "def parameter(value): global value\n",
+        "def annotated(): fn: value = 1; global value\n",
+        "def annotated(): value: other = 1; global value\n",
+        "def annotated(): global value; value: other = 1\n",
+        "def annotated():\n    value: other = 1\n    global value\n",
+        "value: other\nglobal value\n",
+    ];
+    for source in global_cases {
+        let problems =
+            transpile(source).expect_err("global declaration conflict should not reach CPython");
+        assert_eq!(problems.len(), 1, "global case: {problems:?}");
+        assert_eq!(
+            problems[0].code,
+            DiagnosticCode::GlobalDeclarationConflict,
+            "global case: {problems:?}"
+        );
+    }
+
+    let nonlocal_cases = [
+        "def outer():\n    value = 1\n    def update():\n        value = 2\n        nonlocal value\n",
+        "def outer():\n    value = 1\n    def read():\n        print(value)\n        nonlocal value\n",
+        "def outer():\n    value = 1\n    def parameter(value):\n        nonlocal value\n",
+        "def outer():\n    value = 1\n    def update(): value = 2; nonlocal value\n",
+        "def outer():\n    value = 1\n    def read(): print(value); nonlocal value\n",
+        "def outer():\n    value = 1\n    def parameter(value): nonlocal value\n",
+        "def outer():\n    value = 1\n    def annotated(): value: other = 1; nonlocal value\n",
+        "def outer():\n    value = 1\n    def annotated(): nonlocal value; value: other = 1\n",
+    ];
+    for source in nonlocal_cases {
+        let problems =
+            transpile(source).expect_err("nonlocal declaration conflict should not reach CPython");
+        assert_eq!(problems.len(), 1, "nonlocal case: {problems:?}");
+        assert_eq!(
+            problems[0].code,
+            DiagnosticCode::NonlocalDeclarationConflict,
+            "nonlocal case: {problems:?}"
+        );
+    }
+
+    let valid_global = "def update():\n    global value\n    value = 1\n";
+    assert_eq!(transpile(valid_global).unwrap(), valid_global);
+    let valid_nonlocal =
+        "def outer():\n    value = 1\n    def update():\n        nonlocal value\n        value = 2\n";
+    assert_eq!(transpile(valid_nonlocal).unwrap(), valid_nonlocal);
+    let valid_comprehension =
+        "def collect():\n    values = [value for value in items]\n    global value\n";
+    assert_eq!(transpile(valid_comprehension).unwrap(), valid_comprehension);
+    let valid_one_line_function = "value = 1\ndef read(): global value\n";
+    assert_eq!(
+        transpile(valid_one_line_function).unwrap(),
+        valid_one_line_function
+    );
+    let valid_lambda = "def read():\n    fn = lambda value: value\n    global value\n";
+    assert_eq!(transpile(valid_lambda).unwrap(), valid_lambda);
+    let valid_annotation = "def read():\n    fn: other = 1\n    global value\n";
+    assert_eq!(transpile(valid_annotation).unwrap(), valid_annotation);
+    let valid_module_annotation_global = "global value\nvalue: other\n";
+    assert_eq!(
+        transpile(valid_module_annotation_global).unwrap(),
+        valid_module_annotation_global
+    );
+}
+
+#[test]
+fn inline_branches_without_an_open_condition_get_a_stable_diagnostic() {
+    let cases = [
+        ("sentence-en", "when true then else show no\n"),
+        ("sentence-ko", "만약 참 그러면 아니면 말해 아니요\n"),
+        ("beginner-en", "if True then else show no\n"),
+        ("beginner-ko", "만약 True 그러면 아니면 말해 아니요\n"),
+        ("advanced-en", "if (True) then else show no\n"),
+        (
+            "advanced-ko",
+            "만약 ((참 그리고 참)) 그러면 아니면 말해 아니요\n",
+        ),
+    ];
+
+    for (label, source) in cases {
+        let problems = match transpile(source) {
+            Ok(output) => panic!("expected inline branch diagnostic for {label}, got {output:?}"),
+            Err(problems) => problems,
+        };
+        assert_eq!(problems.len(), 1, "core case: {label}: {problems:?}");
+        let problem = &problems[0];
+        assert_eq!(
+            problem.code,
+            DiagnosticCode::BranchWithoutCondition,
+            "core case: {label}"
+        );
+        assert!(
+            problem.message.contains("open condition"),
+            "{label}: {problem:?}"
+        );
+        assert!(
+            problem
+                .message_ko
+                .as_deref()
+                .is_some_and(|message| message.contains("열린 조건")),
+            "{label}: {problem:?}"
+        );
+    }
+}
+
+#[test]
+fn sentence_repeat_inline_branches_without_a_condition_get_a_stable_diagnostic() {
+    let cases = [
+        ("sentence-en", "repeat 3 times and else show no\n"),
+        ("sentence-ko", "3번 반복해서 아니면 말해 아니요\n"),
+    ];
+
+    for (label, source) in cases {
+        let problems = match transpile(source) {
+            Ok(output) => panic!("expected repeat branch diagnostic for {label}, got {output:?}"),
+            Err(problems) => problems,
+        };
+        assert_eq!(problems.len(), 1, "core case: {label}: {problems:?}");
+        let problem = &problems[0];
+        assert_eq!(
+            problem.code,
+            DiagnosticCode::BranchWithoutCondition,
+            "core case: {label}"
+        );
+    }
 }
 
 #[test]
