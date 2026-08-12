@@ -6,6 +6,12 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.77 — 2026-08-12
+
+- Keep default native artifact names distinct for English and `.ko` sibling
+  programs, add `.exe` to implicit Windows outputs even for `.ko` stems, and
+  preserve explicit `-o` naming behavior.
+
 ## 0.0.1-beta.76 — 2026-08-12
 
 - Emit C prototypes before native function definitions so forward calls and

@@ -32,8 +32,12 @@ honestly while keeping the full language on CPython.
 For the current CLI, `nme native run <file>` compiles and runs a temporary
 executable without saving artifacts. Use `nme native build <file> -o <path>`
 to keep the executable and generated C source; passing `-o` to `run` is
-rejected with E9031. Choose only one action word; passing both `run` and
-`build` is rejected with E9032.
+rejected with E9031. With no `-o`, NME appends `.c` to the full source stem,
+so `count.ko.nme` produces `count.ko.c` instead of colliding with `count.c`.
+On Windows, implicit outputs also receive `.exe` even when the source stem ends
+in `.ko`.
+Choose only one action word; passing both `run` and `build` is rejected with
+E9032.
 
 ## The core design decision: a restricted native core, not "all of NME"
 

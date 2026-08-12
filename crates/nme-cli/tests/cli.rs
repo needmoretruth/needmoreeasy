@@ -607,6 +607,43 @@ fn the_native_command_compiles_and_runs_a_core_program() {
 }
 
 #[test]
+fn native_build_keeps_korean_twin_c_sources_separate() {
+    if Command::new("cc").arg("--version").output().is_err() {
+        eprintln!("cc not available; skipping native twin build test");
+        return;
+    }
+    let dir = temporary_dir("native-korean-twin-build");
+    write_nme(&dir, "count.nme", "show 1\n");
+    write_nme(&dir, "count.ko.nme", "말해 1\n");
+
+    let english = run_in(&dir, &["native", "build", "count"], None);
+    assert!(english.status.success(), "{}", stderr(&english));
+    assert!(dir.join("count.c").exists(), "no English C source written");
+    let english_executable = if cfg!(windows) {
+        dir.join("count.exe")
+    } else {
+        dir.join("count")
+    };
+    assert!(english_executable.exists(), "no English executable written");
+
+    let korean = run_in(&dir, &["네이티브", "빌드", "count.ko"], None);
+    assert!(korean.status.success(), "{}", stderr(&korean));
+    assert!(
+        dir.join("count.ko.c").exists(),
+        "no Korean C source written: {}",
+        stderr(&korean)
+    );
+    let korean_executable = if cfg!(windows) {
+        dir.join("count.ko.exe")
+    } else {
+        dir.join("count.ko")
+    };
+    assert!(korean_executable.exists(), "no Korean executable written");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn native_run_rejects_an_output_path_in_both_command_languages() {
     let dir = temporary_dir("native-run-output");
     write_nme(&dir, "hello.nme", "say 1\n");

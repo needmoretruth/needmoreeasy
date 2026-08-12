@@ -70,8 +70,11 @@ into a native executable with your system's C compiler.
    nme native build count -o count
    ```
 
-   `nme native build` writes `count.c` next to the executable. Reading the C
-   is how you see what your program really becomes.
+   `nme native build` writes `count.c` next to the executable. Without `-o`, a
+   `.ko` source keeps that suffix in its C name (`count.ko.c`), so English and
+   Korean twins can be built in one folder. On Windows, implicit outputs also
+   receive `.exe` when the source stem ends in `.ko`. Reading the C is how you
+   see what your program really becomes.
    The `-o` option belongs to `build`; `nme native run count -o count` is
    rejected with E9031 because `run` does not save an artifact.
    Choose one action word: writing both `run` and `build` is rejected with

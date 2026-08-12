@@ -409,8 +409,9 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
         .and_then(|name| name.to_str())
         .unwrap_or("program");
     let build_output = if action == "build" {
+        let default_output = output.is_none();
         let mut out = output.map_or_else(|| PathBuf::from(stem), PathBuf::from);
-        if cfg!(windows) && out.extension().is_none() {
+        if cfg!(windows) && (default_output || out.extension().is_none()) {
             out.set_extension("exe");
         }
         if out
@@ -425,7 +426,11 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
                 "-o에는 생성되는 C 소스 경로를 사용할 수 없습니다. 실행 파일 경로를 적어 주세요",
             );
         }
-        let c_output = out.with_extension("c");
+        let c_output = if default_output {
+            PathBuf::from(format!("{stem}.c"))
+        } else {
+            out.with_extension("c")
+        };
         if out.exists() {
             return fail(
                 nme_core::diagnostics::DiagnosticCode::CliRefuseOverwrite,
