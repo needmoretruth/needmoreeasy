@@ -394,6 +394,14 @@ pub fn parse_program(
                     problems.push(await_outside_async_function_diagnostic(line.span));
                     continue;
                 }
+                if inline_yield_from_is_in_async_function(
+                    &stmt,
+                    &line.tokens,
+                    bindings.inside_async_function(),
+                ) {
+                    problems.push(yield_from_async_function_diagnostic(line.span));
+                    continue;
+                }
                 if matches!(stmt, NmeStmt::End) {
                     if blocks.is_empty() {
                         problems.push(unmatched_end_diagnostic(line.span));
@@ -477,6 +485,10 @@ pub fn parse_program(
                     && !bindings.inside_async_function()
                 {
                     problems.push(await_outside_async_function_diagnostic(line.span));
+                    continue;
+                }
+                if contains_yield_from(&line.tokens) && bindings.inside_async_function() {
+                    problems.push(yield_from_async_function_diagnostic(line.span));
                     continue;
                 }
                 bindings.remember_python(&line.tokens, parse_line.indent);
@@ -765,6 +777,19 @@ fn await_outside_async_function_diagnostic(span: Span) -> Diagnostic {
     )
 }
 
+fn yield_from_async_function_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::YieldFromAsyncFunction,
+        "`yield from` cannot be used inside an async function",
+        "비동기 함수 안에서는 `yield from`을 쓸 수 없어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "use `async for` to yield values from an async source, or use a normal `def` generator",
+        "비동기 원천의 값을 내보내려면 `async for`를 쓰거나 일반 `def` 제너레이터를 사용해 주세요",
+    )
+}
+
 fn branch_without_condition_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
         DiagnosticCode::BranchWithoutCondition,
@@ -941,6 +966,38 @@ fn inline_await_is_outside_async_function_in_body(
     }
 }
 
+fn inline_yield_from_is_in_async_function(
+    stmt: &NmeStmt,
+    tokens: &[Token],
+    inside_async_function: bool,
+) -> bool {
+    match stmt {
+        NmeStmt::Times { inline, .. }
+        | NmeStmt::While { inline, .. }
+        | NmeStmt::When { inline, .. }
+        | NmeStmt::ElseIf { inline, .. }
+        | NmeStmt::Else { inline } => inline.as_ref().is_some_and(|body| {
+            inline_yield_from_is_in_async_function_in_body(body, tokens, inside_async_function)
+        }),
+        _ => false,
+    }
+}
+
+fn inline_yield_from_is_in_async_function_in_body(
+    body: &InlineStmt,
+    tokens: &[Token],
+    inside_async_function: bool,
+) -> bool {
+    match body {
+        InlineStmt::Nme(inner) => {
+            inline_yield_from_is_in_async_function(inner, tokens, inside_async_function)
+        }
+        InlineStmt::Python(span) => {
+            contains_yield_from_in_span(tokens, *span) && inside_async_function
+        }
+    }
+}
+
 fn first_token_in_span(tokens: &[Token], span: Span) -> Option<&Token> {
     tokens
         .iter()
@@ -961,6 +1018,26 @@ where
     tokens.iter().any(|token| {
         token.span.start >= span.start && token.span.end <= span.end && predicate(token)
     })
+}
+
+fn contains_yield_from(tokens: &[Token]) -> bool {
+    tokens
+        .windows(2)
+        .any(|pair| matches!(pair[0].tok, Tok::Yield) && matches!(pair[1].tok, Tok::From))
+}
+
+fn contains_yield_from_in_span(tokens: &[Token], span: Span) -> bool {
+    let mut previous_was_yield = false;
+    for token in tokens
+        .iter()
+        .filter(|token| token.span.start >= span.start && token.span.end <= span.end)
+    {
+        if previous_was_yield && matches!(token.tok, Tok::From) {
+            return true;
+        }
+        previous_was_yield = matches!(token.tok, Tok::Yield);
+    }
+    false
 }
 
 fn is_python_return_line(tokens: &[Token]) -> bool {

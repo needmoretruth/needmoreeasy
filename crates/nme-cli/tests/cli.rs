@@ -2530,8 +2530,14 @@ fn python_context_keywords_report_shared_function_diagnostics() {
     std::fs::create_dir_all(&dir).unwrap();
     let yield_file = dir.join("yield.nme");
     let await_file = dir.join("await.nme");
+    let yield_from_file = dir.join("yield-from.nme");
     std::fs::write(&yield_file, "yield 1\n").unwrap();
     std::fs::write(&await_file, "await work()\n").unwrap();
+    std::fs::write(
+        &yield_from_file,
+        "async def generator():\n    yield from values\n",
+    )
+    .unwrap();
 
     let yield_english = nme(&["check", &yield_file.to_string_lossy()]);
     assert!(!yield_english.status.success());
@@ -2579,6 +2585,31 @@ fn python_context_keywords_report_shared_function_diagnostics() {
     assert!(
         await_korean_error.contains("비동기 함수 안에서만"),
         "{await_korean_error}"
+    );
+
+    let yield_from_english = nme(&["check", &yield_from_file.to_string_lossy()]);
+    assert!(!yield_from_english.status.success());
+    let yield_from_english_error = stderr(&yield_from_english);
+    assert!(
+        yield_from_english_error.contains("error[E0110]:"),
+        "{yield_from_english_error}"
+    );
+    assert!(
+        yield_from_english_error.contains("yield from")
+            && yield_from_english_error.contains("async function"),
+        "{yield_from_english_error}"
+    );
+
+    let yield_from_korean = nme(&["검사", &yield_from_file.to_string_lossy()]);
+    assert!(!yield_from_korean.status.success());
+    let yield_from_korean_error = stderr(&yield_from_korean);
+    assert!(
+        yield_from_korean_error.contains("오류[E0110]:"),
+        "{yield_from_korean_error}"
+    );
+    assert!(
+        yield_from_korean_error.contains("비동기 함수 안에서는"),
+        "{yield_from_korean_error}"
     );
 
     let _ = std::fs::remove_dir_all(&dir);

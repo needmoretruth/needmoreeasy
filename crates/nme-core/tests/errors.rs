@@ -371,6 +371,84 @@ fn python_context_diagnostics_follow_nested_function_and_class_scopes() {
     assert_eq!(transpile(async_generator).unwrap(), async_generator);
     let async_function = "async def worker():\n    await work()\n";
     assert_eq!(transpile(async_function).unwrap(), async_function);
+
+    let async_yield_from = transpile("async def generator():\n    yield from values\n")
+        .expect_err("yield from is not valid in an async function");
+    assert_eq!(async_yield_from.len(), 1, "{async_yield_from:?}");
+    assert_eq!(
+        async_yield_from[0].code,
+        DiagnosticCode::YieldFromAsyncFunction
+    );
+
+    let inline_async_yield_from =
+        transpile("async def generator():\n    if True then yield from values\n")
+            .expect_err("inline yield from is not valid in an async function");
+    assert_eq!(
+        inline_async_yield_from.len(),
+        1,
+        "{inline_async_yield_from:?}"
+    );
+    assert_eq!(
+        inline_async_yield_from[0].code,
+        DiagnosticCode::YieldFromAsyncFunction
+    );
+
+    let generator_from = "def generator():\n    yield from values\n";
+    assert_eq!(transpile(generator_from).unwrap(), generator_from);
+}
+
+#[test]
+fn yield_from_inside_async_functions_gets_a_stable_bilingual_diagnostic() {
+    let cases = [
+        (
+            "sentence-en",
+            "async def generator():\n    when true then yield from values\n",
+        ),
+        (
+            "sentence-ko",
+            "async def generator():\n    만약 참 그러면 yield from values\n",
+        ),
+        (
+            "beginner-en",
+            "async def generator():\n    if True then yield from values\n",
+        ),
+        (
+            "beginner-ko",
+            "async def generator():\n    만약 True 그러면 yield from values\n",
+        ),
+        (
+            "advanced-en",
+            "async def generator():\n    if (True) then yield from values\n",
+        ),
+        (
+            "advanced-ko",
+            "async def generator():\n    만약 ((참 그리고 참)) 그러면 yield from values\n",
+        ),
+    ];
+
+    for (label, source) in cases {
+        let problems = transpile(source).expect_err("expected yield-from diagnostic");
+        assert_eq!(problems.len(), 1, "core case: {label}: {problems:?}");
+        let problem = &problems[0];
+        assert_eq!(
+            problem.code,
+            DiagnosticCode::YieldFromAsyncFunction,
+            "core case: {label}"
+        );
+        assert!(
+            problem
+                .message
+                .contains("cannot be used inside an async function"),
+            "{label}: {problem:?}"
+        );
+        assert!(
+            problem
+                .message_ko
+                .as_deref()
+                .is_some_and(|message| message.contains("비동기 함수 안에서는")),
+            "{label}: {problem:?}"
+        );
+    }
 }
 
 #[test]

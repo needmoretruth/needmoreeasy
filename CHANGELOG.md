@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.143 — 2026-08-12
+
+- Diagnose `yield from` inside `async def` with shared bilingual `E0110`, while
+  preserving it unchanged in ordinary generator functions.
+
 ## 0.0.1-beta.142 — 2026-08-12
 
 - Add shared bilingual `E0108`/`E0109` diagnostics for `yield` outside a
