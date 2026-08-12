@@ -6,6 +6,12 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.46 — 2026-08-12
+
+- Keep native function-local scalar bindings separate from main-program
+  bindings, so names can be reused without generating invalid C.
+- Document the scope behavior in both native backend references.
+
 ## 0.0.1-beta.45 — 2026-08-12
 
 - Reject generated native-runtime names in function parameters before emitting C,

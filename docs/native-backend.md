@@ -55,6 +55,7 @@ Implemented so far:
   (`if ready`, `while turns`), and over boolean literals; the beginner
   `times:` loop; `break`;
 - functions over scalar parameters with `return` (recursion works);
+- function-local scalar assignments remain scoped to their function;
 - `say`/`show`/`말해` of an integer expression, a float, a string variable,
   or a string literal;
 - Korean and English spellings both lower to the same C;

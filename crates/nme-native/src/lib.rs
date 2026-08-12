@@ -95,9 +95,20 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
     let mut out = String::from(PREAMBLE);
     let mut open_braces = 1usize; // the `main` body
     let mut declared = HashMap::new();
+    let mut saved_main_scope = None;
+    let mut in_function = false;
     let mut problems = Vec::new();
 
     for (index, line) in lines.iter().enumerate() {
+        let line_text = &source[line.span.start..line.span.end];
+        let is_significant_line = !line_text.trim().is_empty()
+            && !line_text.trim_start().starts_with('#');
+        if in_function && line.indent == 0 && is_significant_line {
+            if let Some(main_scope) = saved_main_scope.take() {
+                declared = main_scope;
+            }
+            in_function = false;
+        }
         if let Some(nme_line) = by_index.get(&index) {
             // `else`/`else if` lines emit their own closing `}` before the
             // next branch, so the generic brace closing must not run first.
@@ -192,12 +203,22 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
             // A non-NME line: blank, comment, or a Python assignment.
             let total_depth = line.indent + program.virtual_indents[index];
             close_braces(&mut out, &mut open_braces, total_depth + 1);
-            let text = &source[line.span.start..line.span.end];
+            let text = line_text;
             let trimmed = text.trim();
             if trimmed.is_empty() || trimmed.starts_with('#') {
                 out.push_str(text);
                 out.push('\n');
                 continue;
+            }
+            if !in_function
+                && line.indent == 0
+                && matches!(
+                    line.tokens.first().map(|token| &token.tok),
+                    Some(rustpython_parser::Tok::Def)
+                )
+            {
+                saved_main_scope = Some(std::mem::take(&mut declared));
+                in_function = true;
             }
             if let Some(diag) = emit_python_line(
                 &mut out,

@@ -84,6 +84,12 @@ fn functions_over_scalars_compile_natively() {
 }
 
 #[test]
+fn function_locals_do_not_leak_into_main() {
+    let source = "def local_value(n):\n    local = n + 1\n    return local\n\nlocal = 100\nshow local\nshow local_value(2)\n";
+    assert_eq!(native_run(source).unwrap(), "100\n3\n");
+}
+
+#[test]
 fn generated_functions_are_file_scope_portable_c() {
     let source = "def twice(n):\n    return n * 2\n\nshow twice(5)\n";
     let c = nme_native::native_compile(source).unwrap();
