@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.68 — 2026-08-12
+
+- Extend the documentation parity check to validate local Markdown fragment
+  links against their target headings as well as checking target files.
+
 ## 0.0.1-beta.67 — 2026-08-12
 
 - Make the documentation parity check fail when a local Markdown link points

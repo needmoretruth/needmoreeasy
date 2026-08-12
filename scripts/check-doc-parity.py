@@ -6,6 +6,7 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
+from urllib.parse import unquote
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -53,6 +54,33 @@ def local_markdown_target(path: Path, raw_target: str) -> Path | None:
     return candidate if candidate.suffix == ".md" else None
 
 
+def markdown_anchor(text: str) -> str:
+    text = unquote(text).strip().lower()
+    text = re.sub(r"<[^>]+>", "", text)
+    text = re.sub(r"[^\w\s-]", "", text, flags=re.UNICODE)
+    return re.sub(r"\s+", "-", text)
+
+
+def markdown_anchors(path: Path) -> set[str]:
+    anchors: set[str] = set()
+    occurrences: dict[str, int] = {}
+    in_fence = False
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.strip().startswith(("```", "~~~")):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        match = re.match(r"^#{1,6}\s+(.+?)\s*#*\s*$", line)
+        if not match:
+            continue
+        base = markdown_anchor(match.group(1))
+        occurrence = occurrences.get(base, 0)
+        occurrences[base] = occurrence + 1
+        anchors.add(base if occurrence == 0 else f"{base}-{occurrence}")
+    return anchors
+
+
 def is_explicit_english_reference(
     line: str, previous_line: str, line_number: int
 ) -> bool:
@@ -88,6 +116,7 @@ def check_korean_links(problems: list[str]) -> None:
 
 
 def check_local_markdown_links(problems: list[str]) -> None:
+    anchor_cache: dict[Path, set[str]] = {}
     for path in ROOT.rglob("*.md"):
         if any(part in {".git", "target"} for part in path.parts):
             continue
@@ -99,6 +128,18 @@ def check_local_markdown_links(problems: list[str]) -> None:
                     problems.append(
                         f"{path.relative_to(ROOT)}:{line_number}: "
                         f"missing local Markdown link target {raw_target}"
+                    )
+                if candidate is None or not candidate.is_file() or "#" not in raw_target:
+                    continue
+                fragment = raw_target.split("#", 1)[1].strip()
+                if not fragment:
+                    continue
+                if candidate not in anchor_cache:
+                    anchor_cache[candidate] = markdown_anchors(candidate)
+                if markdown_anchor(fragment) not in anchor_cache[candidate]:
+                    problems.append(
+                        f"{path.relative_to(ROOT)}:{line_number}: "
+                        f"missing Markdown link anchor {raw_target}"
                     )
 
 
