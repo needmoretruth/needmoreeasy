@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.64 — 2026-08-12
+
+- Reject top-level native `return` with the stable `E0106` diagnostic instead
+  of emitting it as a return from `main`.
+
 ## 0.0.1-beta.63 — 2026-08-12
 
 - Reject native `break` statements outside a loop with the stable `E0102`

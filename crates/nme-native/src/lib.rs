@@ -593,17 +593,25 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                 in_function = true;
             }
             let output_before_line = out.len();
-            let diagnostic = emit_python_line(
-                &mut out,
-                &mut open_braces,
-                &mut declaration_slots,
-                &mut declared,
-                &line.tokens,
-                text,
-                source,
-                line.span,
-                &functions,
-            );
+            let diagnostic = if !in_function
+                && matches!(
+                    line.tokens.first().map(|token| &token.tok),
+                    Some(rustpython_parser::Tok::Return)
+                ) {
+                Some(native_return_outside_function(line.span))
+            } else {
+                emit_python_line(
+                    &mut out,
+                    &mut open_braces,
+                    &mut declaration_slots,
+                    &mut declared,
+                    &line.tokens,
+                    text,
+                    source,
+                    line.span,
+                    &functions,
+                )
+            };
             if let Some(diag) = diagnostic {
                 problems.push(diag);
             } else if is_function_header && out.len() > output_before_line {
@@ -1861,6 +1869,19 @@ fn native_break_outside_loop(span: Span) -> Diagnostic {
     .with_bilingual_hint(
         "put it inside a native `while ... end` or `times:` loop",
         "네이티브 `동안 ... 끝` 또는 `3번:` 반복 안에 넣어 주세요",
+    )
+}
+
+fn native_return_outside_function(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::ReturnOutsideFunction,
+        "`return` outside a native function",
+        "네이티브 함수 밖의 `return`",
+        span,
+    )
+    .with_bilingual_hint(
+        "move it inside a native `def` function, or remove it",
+        "네이티브 `def` 함수 안으로 옮기거나 지워 주세요",
     )
 }
 

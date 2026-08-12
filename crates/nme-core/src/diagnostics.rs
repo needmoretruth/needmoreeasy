@@ -54,6 +54,8 @@ pub enum DiagnosticCode {
     DuplicateElse,
     /// A block that never got its closing `end`/`끝`.
     MissingEnd,
+    /// `return` outside a function.
+    ReturnOutsideFunction,
     /// `say` value could not be understood.
     SayValueBroken,
     /// `say` expression is not valid.
@@ -195,6 +197,7 @@ impl DiagnosticCode {
             Self::BranchWithoutCondition => "E0103",
             Self::DuplicateElse => "E0104",
             Self::MissingEnd => "E0105",
+            Self::ReturnOutsideFunction => "E0106",
             Self::SayValueBroken => "E0201",
             Self::SayValueUnparseable => "E0202",
             Self::SaySentenceUnparseable => "E0203",
@@ -262,13 +265,14 @@ impl DiagnosticCode {
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 69] = [
+    pub const ALL: [DiagnosticCode; 70] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
         Self::BranchWithoutCondition,
         Self::DuplicateElse,
         Self::MissingEnd,
+        Self::ReturnOutsideFunction,
         Self::SayValueBroken,
         Self::SayValueUnparseable,
         Self::SaySentenceUnparseable,
@@ -399,6 +403,13 @@ impl DiagnosticCode {
                 "닫는 `end`가 없는 블록",
                 "This loop or condition block is still open at the end of the file. Add a closing `end` (or `끝`) line after the block's last line.",
                 "이 반복문·조건 블록이 파일 끝까지 열려 있습니다. 블록의 마지막 줄 뒤에 닫는 `end`(`끝`) 줄을 추가하세요.",
+            ),
+            Self::ReturnOutsideFunction => (
+                "E0106",
+                "`return` outside a function",
+                "함수 밖의 `return`",
+                "`return` sends a value back from a function, so it cannot appear at the top level. Move it inside a `def` function, or remove it.",
+                "`return`은 함수에서 값을 돌려주므로 파일 최상위에 쓸 수 없습니다. `def` 함수 안으로 옮기거나 지우세요.",
             ),
             Self::SayValueBroken => (
                 "E0201",

@@ -431,6 +431,29 @@ fn functions_over_scalars_compile_natively() {
 }
 
 #[test]
+fn return_outside_a_native_function_is_rejected_before_c_generation() {
+    let problems = nme_native::native_compile("return 1\n").unwrap_err();
+    assert!(
+        problems.iter().any(|problem| {
+            problem.code == DiagnosticCode::ReturnOutsideFunction
+                && problem
+                    .message
+                    .contains("outside a native function")
+        }),
+        "{problems:?}"
+    );
+    assert!(
+        problems.iter().any(|problem| {
+            problem
+                .message_ko
+                .as_deref()
+                .is_some_and(|message| message.contains("함수 밖의 `return`"))
+        }),
+        "{problems:?}"
+    );
+}
+
+#[test]
 fn function_locals_do_not_leak_into_main() {
     let source = "def local_value(n):\n    local = 0\n    if n\n        local = n + 1\n    end\n    return local\n\nlocal = 100\nshow local\nshow local_value(2)\n";
     assert_eq!(native_run(source).unwrap(), "100\n3\n");
