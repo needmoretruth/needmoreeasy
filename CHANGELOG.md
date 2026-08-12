@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.125 — 2026-08-12
+
+- Teach the native one-line NME output-body form in the English and Korean
+  native learning guides, including its CPython-only boundary.
+
 ## 0.0.1-beta.124 — 2026-08-12
 
 - Document beta123's native one-line NME control bodies in the backend design

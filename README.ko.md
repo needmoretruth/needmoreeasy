@@ -91,7 +91,7 @@ Cargo가 설치한 `bin` 폴더가 `PATH`에 없다고 경고하면 macOS/Linux�
 명령이 아닙니다. Windows PowerShell은
 [설치 안내](docs/install.ko.md#windows-11)의 PATH 단계를 사용하세요.
 
-표시될 버전은 `nme 0.0.1-beta.124`입니다.
+표시될 버전은 `nme 0.0.1-beta.125`입니다.
 
 Windows, macOS, Linux별 과정은 [설치 안내](docs/install.ko.md)에 있습니다.
 프로그래밍을 전혀 모른다면 [5분 시작 안내](docs/getting-started.ko.md)부터

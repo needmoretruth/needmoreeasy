@@ -19,7 +19,8 @@ into a native executable with your system's C compiler.
 1. Write a program that stays inside the native core. The core covers
    boolean, integer, and finite-float values, string literals, `while`/`if`/
    `else`, logical `and`/`or`, `break`, functions with integer `return`, and
-   `say`:
+   `say`/`show`/`말해`. A native `if`/`while` or branch body may also put one
+   NME output statement after `then`/`그러면` on the same line:
 
    ```text
    score = 0
@@ -28,6 +29,14 @@ into a native executable with your system's C compiler.
    end
    show score
    ```
+
+   ```text
+   ready save true
+   if ready then show "ready"
+   ```
+
+   Python inline bodies and inline value changes remain outside this restricted
+   native subset; use the CPython path for those forms.
 
    Native string variables use a checked 8192-byte buffer. If a stored or
    concatenated value is larger than 8191 UTF-8 bytes, the native program stops
@@ -173,5 +182,6 @@ print `square(7)`, then run it with `nme native`.
 - The native core compiles to C and to a native executable with `cc` on
   macOS/Linux or MSVC `cl` on Windows.
 - `nme native run` runs it; `nme native build` keeps the C and executable.
-- Functions, loops, branches, and `say` all work inside the core.
+- Functions, loops, branches, and `say`/`show`/`말해` output all work inside
+  the core, including the documented one-line NME output form.
 - Outside the core, the backend rejects the program instead of miscompiling.
