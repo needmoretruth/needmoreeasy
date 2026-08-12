@@ -6,6 +6,12 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.52 — 2026-08-12
+
+- Validate native function calls against integer function definitions and their
+  declared arity before emitting C, with bilingual diagnostics for unknown or
+  mismatched calls.
+
 ## 0.0.1-beta.51 — 2026-08-12
 
 - Reject native functions that can fall through without an unconditional

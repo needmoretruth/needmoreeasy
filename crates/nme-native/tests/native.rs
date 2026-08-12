@@ -165,6 +165,51 @@ fn native_functions_require_a_return_on_every_path() {
 }
 
 #[test]
+fn unknown_native_function_calls_are_rejected_before_c_generation() {
+    let problems = nme_native::native_compile("show missing(1)\n").unwrap_err();
+    assert!(
+        problems
+            .iter()
+            .any(|problem| problem.message.contains("unknown native function")),
+        "{problems:?}"
+    );
+    assert!(
+        problems.iter().any(|problem| {
+            problem
+                .message_ko
+                .as_deref()
+                .is_some_and(|message| message.contains("알 수 없는 네이티브 함수"))
+        }),
+        "{problems:?}"
+    );
+}
+
+#[test]
+fn native_function_calls_require_the_declared_arity() {
+    for source in [
+        "def identity(value):\n    return value\n\nshow identity()\n",
+        "def identity(value):\n    return value\n\nshow identity(1, 2)\n",
+    ] {
+        let problems = nme_native::native_compile(source).unwrap_err();
+        assert!(
+            problems
+                .iter()
+                .any(|problem| problem.message.contains("expects 1 integer argument(s)")),
+            "{source:?}: {problems:?}"
+        );
+        assert!(
+            problems.iter().any(|problem| {
+                problem
+                    .message_ko
+                    .as_deref()
+                    .is_some_and(|message| message.contains("정수 인자 1개"))
+            }),
+            "{source:?}: {problems:?}"
+        );
+    }
+}
+
+#[test]
 fn a_string_literal_is_printed() {
     assert_eq!(
         native_run("show \"hello world\"\n").unwrap(),

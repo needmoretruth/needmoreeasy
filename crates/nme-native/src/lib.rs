@@ -23,7 +23,8 @@
 //!   by `end`/`끝`;
 //! - `break` inside a loop;
 //! - functions over integer parameters with an unconditional integer `return`
-//!   (recursion works).
+//!   (recursion works); calls must name a function in the file and use its
+//!   declared arity.
 //!
 //! Anything outside this core is rejected with a clear bilingual diagnostic;
 //! it is never silently miscompiled. The rest of NME keeps running on CPython.
@@ -238,6 +239,31 @@ const PREAMBLE: &str = concat!(
     "int main(void) {\n",
 );
 
+fn native_function_signatures(lines: &[lexer::LogicalLine]) -> HashMap<String, usize> {
+    let mut functions = HashMap::new();
+    for line in lines {
+        if !matches!(
+            line.tokens.first().map(|token| &token.tok),
+            Some(rustpython_parser::Tok::Def)
+        ) {
+            continue;
+        }
+        let Some(rustpython_parser::Tok::Name { name }) =
+            line.tokens.get(1).map(|token| &token.tok)
+        else {
+            continue;
+        };
+        let parameters = line
+            .tokens
+            .iter()
+            .filter(|token| matches!(&token.tok, rustpython_parser::Tok::Name { .. }))
+            .count()
+            .saturating_sub(1);
+        functions.insert(name.clone(), parameters);
+    }
+    functions
+}
+
 /// Compiles the native core subset of `source` to C source text.
 ///
 /// On failure returns every problem found, ready to render with
@@ -250,6 +276,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
     for nme_line in &program.nme_lines {
         by_index.insert(nme_line.line_index, nme_line);
     }
+    let functions = native_function_signatures(&lines);
 
     let mut out = String::from(PREAMBLE);
     let mut open_braces = 1usize; // the `main` body
@@ -304,7 +331,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
             }
             match &nme_line.stmt {
                 NmeStmt::Say { value } => {
-                    if let Err(diag) = emit_say(&mut out, value, source, &declared) {
+                    if let Err(diag) = emit_say(&mut out, value, source, &declared, &functions) {
                         problems.push(diag);
                     }
                 }
@@ -316,6 +343,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                         target,
                         value,
                         source,
+                        &functions,
                     ) {
                         problems.push(diag);
                     }
@@ -333,6 +361,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                         *operation,
                         source,
                         nme_line.span,
+                        &functions,
                     ) {
                         problems.push(diag);
                     }
@@ -340,7 +369,13 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                 NmeStmt::While {
                     condition,
                     inline: None,
-                } => match check_condition(condition, source, nme_line.span, &declared) {
+                } => match check_condition(
+                    condition,
+                    source,
+                    nme_line.span,
+                    &declared,
+                    &functions,
+                ) {
                     Ok(condition_text) => {
                         out.push_str(&format!("while ({condition_text}) {{\n"));
                         open_braces += 1;
@@ -355,7 +390,13 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                 NmeStmt::When {
                     condition,
                     inline: None,
-                } => match check_condition(condition, source, nme_line.span, &declared) {
+                } => match check_condition(
+                    condition,
+                    source,
+                    nme_line.span,
+                    &declared,
+                    &functions,
+                ) {
                     Ok(condition_text) => {
                         out.push_str(&format!("if ({condition_text}) {{\n"));
                         open_braces += 1;
@@ -370,13 +411,19 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                 NmeStmt::Break => out.push_str("break;\n"),
                 NmeStmt::Times { count, inline } => {
                     let count_text = code_text(count, source);
-                    match check_expr(count_text, nme_line.span, &declared) {
+                    match check_expr(count_text, nme_line.span, &declared, &functions) {
                         Ok((lowered, ExprType::Int)) => {
                             let header =
                                 format!("for (int _nme_i = 0; _nme_i < {lowered}; _nme_i++)");
                             match inline {
                                 Some(InlineStmt::Nme(inner)) => {
-                                    match lower_inline(inner, source, &declared, nme_line.span) {
+                                    match lower_inline(
+                                        inner,
+                                        source,
+                                        &declared,
+                                        &functions,
+                                        nme_line.span,
+                                    ) {
                                         Ok(text) => out.push_str(&format!("{header} {text}\n")),
                                         Err(diag) => problems.push(diag),
                                     }
@@ -402,7 +449,13 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                 NmeStmt::ElseIf {
                     condition,
                     inline: None,
-                } => match check_condition(condition, source, nme_line.span, &declared) {
+                } => match check_condition(
+                    condition,
+                    source,
+                    nme_line.span,
+                    &declared,
+                    &functions,
+                ) {
                     Ok(condition_text) => {
                         out.push_str(&format!("}} else if ({condition_text}) {{\n"));
                     }
@@ -443,6 +496,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                 text,
                 source,
                 line.span,
+                &functions,
             );
             if let Some(diag) = diagnostic {
                 problems.push(diag);
@@ -484,12 +538,13 @@ fn lower_inline(
     stmt: &NmeStmt,
     source: &str,
     declared: &HashMap<String, VarType>,
+    functions: &HashMap<String, usize>,
     span: Span,
 ) -> Result<String, Diagnostic> {
     match stmt {
         NmeStmt::Say { value } => {
             let mut out = String::new();
-            emit_say(&mut out, value, source, declared)?;
+            emit_say(&mut out, value, source, declared, functions)?;
             Ok(out.trim_end().to_string())
         }
         _ => Err(not_supported("this inline statement", span)),
@@ -583,9 +638,10 @@ fn check_expr(
     text: &str,
     span: Span,
     declared: &HashMap<String, VarType>,
+    functions: &HashMap<String, usize>,
 ) -> Result<(String, ExprType), Diagnostic> {
     let expr = Expr::parse(text, "<native>").map_err(|_| not_supported("this expression", span))?;
-    lower_expr(&expr, span, declared)
+    lower_expr(&expr, span, declared, functions)
 }
 
 fn native_integer_literal(
@@ -620,6 +676,7 @@ fn lower_expr(
     expr: &Expr,
     span: Span,
     declared: &HashMap<String, VarType>,
+    functions: &HashMap<String, usize>,
 ) -> Result<(String, ExprType), Diagnostic> {
     match expr {
         Expr::Constant(constant) => match &constant.value {
@@ -649,16 +706,17 @@ fn lower_expr(
             }
         }
         Expr::BinOp(binop) => match binop.op {
-            Operator::Add if binop_operands_are_string(binop, span, declared)? => {
+            Operator::Add if binop_operands_are_string(binop, span, declared, functions)? => {
                 // One binary `+` over string operands; the operands must be a
                 // name or a literal so the shared runtime buffer is safe.
-                let left = string_operand(&binop.left, span, declared)?;
-                let right = string_operand(&binop.right, span, declared)?;
+                let left = string_operand(&binop.left, span, declared, functions)?;
+                let right = string_operand(&binop.right, span, declared, functions)?;
                 Ok((format!("nme_cat({left}, {right})"), ExprType::Str))
             }
             Operator::Add | Operator::Sub | Operator::Mult | Operator::Mod => {
-                let (left, left_kind) = numeric_operand(&binop.left, span, declared)?;
-                let (right, right_kind) = numeric_operand(&binop.right, span, declared)?;
+                let (left, left_kind) = numeric_operand(&binop.left, span, declared, functions)?;
+                let (right, right_kind) =
+                    numeric_operand(&binop.right, span, declared, functions)?;
                 if matches!(binop.op, Operator::Mod)
                     && (matches!(left_kind, ExprType::Float)
                         || matches!(right_kind, ExprType::Float))
@@ -695,7 +753,7 @@ fn lower_expr(
                         ));
                     }
                 }
-                let (operand, kind) = numeric_operand(&unary.operand, span, declared)?;
+                let (operand, kind) = numeric_operand(&unary.operand, span, declared, functions)?;
                 Ok((
                     if kind == ExprType::Int && matches!(unary.op, UnaryOp::USub) {
                         format!("nme_neg_int({operand})")
@@ -720,7 +778,7 @@ fn lower_expr(
                 return Err(not_supported("this call", span));
             };
             if callee.id.as_str() == "len" && call.args.len() == 1 {
-                let (argument, kind) = lower_expr(&call.args[0], span, declared)?;
+                let (argument, kind) = lower_expr(&call.args[0], span, declared, functions)?;
                 if kind == ExprType::Str {
                     return Ok((format!("nme_len({argument})"), ExprType::Int));
                 }
@@ -733,9 +791,20 @@ fn lower_expr(
                     span,
                 ));
             }
+            let Some(expected_arguments) = functions.get(callee.id.as_str()).copied() else {
+                return Err(unknown_native_function(callee.id.as_str(), span));
+            };
+            if call.args.len() != expected_arguments {
+                return Err(native_function_arity(
+                    callee.id.as_str(),
+                    expected_arguments,
+                    call.args.len(),
+                    span,
+                ));
+            }
             let mut args = Vec::new();
             for argument in &call.args {
-                let (text, kind) = lower_expr(argument, span, declared)?;
+                let (text, kind) = lower_expr(argument, span, declared, functions)?;
                 if kind != ExprType::Int {
                     return Err(native_function_requires_integer(span));
                 }
@@ -751,9 +820,10 @@ fn binop_operands_are_string(
     binop: &rustpython_parser::ast::ExprBinOp,
     span: Span,
     declared: &HashMap<String, VarType>,
+    functions: &HashMap<String, usize>,
 ) -> Result<bool, Diagnostic> {
-    let left_kind = operand_kind(&binop.left, span, declared)?;
-    let right_kind = operand_kind(&binop.right, span, declared)?;
+    let left_kind = operand_kind(&binop.left, span, declared, functions)?;
+    let right_kind = operand_kind(&binop.right, span, declared, functions)?;
     match (left_kind, right_kind) {
         (ExprType::Str, ExprType::Str) => Ok(true),
         (ExprType::Int | ExprType::Float, ExprType::Int | ExprType::Float) => Ok(false),
@@ -765,8 +835,9 @@ fn operand_kind(
     expr: &Expr,
     span: Span,
     declared: &HashMap<String, VarType>,
+    functions: &HashMap<String, usize>,
 ) -> Result<ExprType, Diagnostic> {
-    let (_, kind) = lower_expr(expr, span, declared)?;
+    let (_, kind) = lower_expr(expr, span, declared, functions)?;
     Ok(kind)
 }
 
@@ -774,6 +845,7 @@ fn string_operand(
     expr: &Expr,
     span: Span,
     declared: &HashMap<String, VarType>,
+    _functions: &HashMap<String, usize>,
 ) -> Result<String, Diagnostic> {
     match expr {
         Expr::Constant(constant) => match &constant.value {
@@ -802,8 +874,9 @@ fn numeric_operand(
     expr: &Expr,
     span: Span,
     declared: &HashMap<String, VarType>,
+    functions: &HashMap<String, usize>,
 ) -> Result<(String, ExprType), Diagnostic> {
-    let (text, kind) = lower_expr(expr, span, declared)?;
+    let (text, kind) = lower_expr(expr, span, declared, functions)?;
     if matches!(kind, ExprType::Str) {
         return Err(not_supported("a text value in a numeric expression", span));
     }
@@ -839,6 +912,7 @@ fn check_condition(
     source: &str,
     span: Span,
     declared: &HashMap<String, VarType>,
+    functions: &HashMap<String, usize>,
 ) -> Result<String, Diagnostic> {
     match condition {
         Condition::Compare {
@@ -847,8 +921,9 @@ fn check_condition(
             right,
             negated,
         } => {
-            let (left, left_kind) = condition_operand(left, source, span, declared)?;
-            let (right, right_kind) = condition_operand(right, source, span, declared)?;
+            let (left, left_kind) = condition_operand(left, source, span, declared, functions)?;
+            let (right, right_kind) =
+                condition_operand(right, source, span, declared, functions)?;
             let comparison = match (left_kind, right_kind, operator) {
                 (
                     ExprType::Int | ExprType::Float,
@@ -892,7 +967,7 @@ fn check_condition(
             let text = code_text(code, source);
             let expr =
                 Expr::parse(text, "<native>").map_err(|_| not_supported("this condition", span))?;
-            lower_compare(&expr, span, declared)
+            lower_compare(&expr, span, declared, functions)
         }
         Condition::Truthy { value, negated } => {
             let (text, kind) = match value {
@@ -912,7 +987,7 @@ fn check_condition(
                     )
                 }
                 ConditionValue::Python(code) => {
-                    check_expr(code_text(code, source), span, declared)?
+                    check_expr(code_text(code, source), span, declared, functions)?
                 }
                 ConditionValue::Literal(literal) => match literal {
                     nme_core::syntax::Literal::True => ("(1)".to_string(), ExprType::Int),
@@ -943,9 +1018,12 @@ fn condition_operand(
     source: &str,
     span: Span,
     declared: &HashMap<String, VarType>,
+    functions: &HashMap<String, usize>,
 ) -> Result<(String, ExprType), Diagnostic> {
     match value {
-        ConditionValue::Python(code) => check_expr(code_text(code, source), span, declared),
+        ConditionValue::Python(code) => {
+            check_expr(code_text(code, source), span, declared, functions)
+        }
         ConditionValue::Name(name) => {
             if is_native_reserved_name(name) {
                 return Err(reserved_name("a variable named", "변수 이름", name, span));
@@ -975,6 +1053,7 @@ fn lower_compare(
     expr: &Expr,
     span: Span,
     declared: &HashMap<String, VarType>,
+    functions: &HashMap<String, usize>,
 ) -> Result<String, Diagnostic> {
     let Expr::Compare(compare) = expr else {
         return Err(not_supported("this condition", span));
@@ -982,8 +1061,9 @@ fn lower_compare(
     if compare.ops.len() != 1 || compare.comparators.len() != 1 {
         return Err(not_supported("this condition", span));
     }
-    let (left, left_kind) = lower_expr(&compare.left, span, declared)?;
-    let (right, right_kind) = lower_expr(&compare.comparators[0], span, declared)?;
+    let (left, left_kind) = lower_expr(&compare.left, span, declared, functions)?;
+    let (right, right_kind) =
+        lower_expr(&compare.comparators[0], span, declared, functions)?;
     match (left_kind, right_kind) {
         (ExprType::Int | ExprType::Float, ExprType::Int | ExprType::Float) => {
             let op = match compare.ops[0] {
@@ -1020,12 +1100,13 @@ fn emit_say(
     value: &Value,
     source: &str,
     declared: &HashMap<String, VarType>,
+    functions: &HashMap<String, usize>,
 ) -> Result<(), Diagnostic> {
     match value {
         Value::Python(code) => {
             let text = code_text(code, source);
             let span = code_span(code);
-            let (lowered, kind) = check_expr(text, span, declared)?;
+            let (lowered, kind) = check_expr(text, span, declared, functions)?;
             match kind {
                 ExprType::Int => {
                     out.push_str(&format!("printf(\"%d\\n\", {lowered});\n"));
@@ -1097,6 +1178,7 @@ fn emit_set(
     target: &str,
     value: &Value,
     source: &str,
+    functions: &HashMap<String, usize>,
 ) -> Result<(), Diagnostic> {
     if is_native_reserved_name(target) {
         return Err(reserved_name(
@@ -1110,7 +1192,7 @@ fn emit_set(
         Value::Python(code) => {
             let text = code_text(code, source);
             let span = code_span(code);
-            let (lowered, kind) = check_expr(text, span, declared)?;
+            let (lowered, kind) = check_expr(text, span, declared, functions)?;
             let is_new = assignment_type(declared, target, kind, span)?;
             match kind {
                 ExprType::Int => {
@@ -1160,6 +1242,7 @@ fn emit_update(
     operation: nme_core::syntax::UpdateOp,
     source: &str,
     span: Span,
+    functions: &HashMap<String, usize>,
 ) -> Result<(), Diagnostic> {
     if is_native_reserved_name(target) {
         return Err(reserved_name(
@@ -1178,7 +1261,7 @@ fn emit_update(
         _ => {}
     }
     let amount_text = code_text(amount, source);
-    let (lowered, kind) = check_expr(amount_text, span, declared)?;
+    let (lowered, kind) = check_expr(amount_text, span, declared, functions)?;
     if kind != ExprType::Int {
         return Err(not_supported("a non-integer value change amount", span));
     }
@@ -1217,6 +1300,7 @@ fn emit_python_line(
     text: &str,
     _source: &str,
     line_span: Span,
+    functions: &HashMap<String, usize>,
 ) -> Option<Diagnostic> {
     let span = Span::new(line_span.start, line_span.start + text.len());
     match tokens.first().map(|token| &token.tok) {
@@ -1268,7 +1352,7 @@ fn emit_python_line(
                 .strip_prefix("return")
                 .map(str::trim)
                 .unwrap_or_default();
-            match check_expr(expression, span, declared) {
+            match check_expr(expression, span, declared, functions) {
                 Ok((lowered, ExprType::Int)) => {
                     out.push_str(&format!("return {lowered};\n"));
                     None
@@ -1293,7 +1377,7 @@ fn emit_python_line(
                 return Some(reserved_name("a variable named", "변수 이름", &name, span));
             }
             let expression = text.split_once('=').map_or(text, |(_, right)| right.trim());
-            match check_expr(expression, span, declared) {
+            match check_expr(expression, span, declared, functions) {
                 Ok((lowered, ExprType::Int)) => {
                     let is_new = match assignment_type(declared, &name, ExprType::Int, span) {
                         Ok(is_new) => is_new,
@@ -1581,6 +1665,41 @@ fn native_function_requires_return(span: Span) -> Diagnostic {
     .with_bilingual_hint(
         "add a top-level integer return after conditional blocks, or run the program with CPython",
         "조건부 블록 뒤에 최상위 정수 반환을 추가하거나 프로그램을 CPython으로 실행하세요",
+    )
+}
+
+fn unknown_native_function(name: &str, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::UnsupportedModule,
+        format!("unknown native function `{name}`"),
+        format!("알 수 없는 네이티브 함수 `{name}`입니다"),
+        span,
+    )
+    .with_bilingual_hint(
+        "define the integer function in this file, or run the program with CPython",
+        "이 파일에 정수 함수를 정의하거나 프로그램을 CPython으로 실행하세요",
+    )
+}
+
+fn native_function_arity(
+    name: &str,
+    expected: usize,
+    actual: usize,
+    span: Span,
+) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::UnsupportedModule,
+        format!(
+            "native function `{name}` expects {expected} integer argument(s), but got {actual}"
+        ),
+        format!(
+            "네이티브 함수 `{name}`은(는) 정수 인자 {expected}개를 필요로 하지만 {actual}개를 받았습니다"
+        ),
+        span,
+    )
+    .with_bilingual_hint(
+        "call the function with exactly the integer parameters in its definition",
+        "함수 정의에 있는 정수 매개변수 개수와 똑같이 호출하세요",
     )
 }
 
