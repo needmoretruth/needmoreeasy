@@ -18,9 +18,9 @@
 
    ```text
    점수는 0
-   동안 점수 < 3
-   show 점수
-   add 1 to 점수
+   점수가 3보다 작을 동안
+       점수 말해줘
+       점수에 1 더해
    끝
    ```
 
@@ -32,8 +32,8 @@
    ```text
    score = 0
    while score < 3
-   show score
-   add 1 to score
+       show score
+       add 1 to score
    end
    ```
 
@@ -43,8 +43,8 @@
    ```text
    점수는 0
    while 점수가 3보다 작을 동안
-   show 점수
-   add 1 to 점수
+   점수 말해줘
+   점수에 1 더해
    end
    ```
 
@@ -61,10 +61,10 @@
 이름이 비어 있는 동안 계속 물어보는 반복을 만들어 보세요:
 
 ```text
-name = ""
-while name == ""
-    ask name What is your name?
-end
+이름은 ""
+동안 이름 == ""
+    이름을 물어봐 이름이 뭐예요?
+끝
 ```
 
 ## 배운 것

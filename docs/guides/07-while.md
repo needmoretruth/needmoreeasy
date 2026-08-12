@@ -62,9 +62,9 @@ Loop while a name is missing, asking until one appears:
 
 ```text
 name = ""
-동안 name == ""
-    name을 물어봐 이름이 뭐예요?
-끝
+while name == ""
+    ask name What is your name?
+end
 ```
 
 ## What you learned

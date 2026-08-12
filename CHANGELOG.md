@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.88 — 2026-08-12
+
+- Align the English and Korean while-loop guide examples with their named
+  language paths, while retaining a separate mixed-language example.
+
 ## 0.0.1-beta.87 — 2026-08-12
 
 - Align the Korean Python-packages guide with `birthday.ko.nme`, Korean
