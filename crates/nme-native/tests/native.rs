@@ -66,6 +66,38 @@ fn native_run(source: &str) -> Result<String, String> {
     Ok(String::from_utf8_lossy(&output.stdout).replace("\r\n", "\n"))
 }
 
+#[cfg(not(windows))]
+#[test]
+fn minimal_generated_c_compiles_with_warnings_as_errors() {
+    if Command::new("cc").arg("--version").output().is_err() {
+        eprintln!("cc not available; skipping strict generated-C test");
+        return;
+    }
+    let c_source = nme_native::native_compile("show 1\n").unwrap();
+    let id = COUNTER.fetch_add(1, Ordering::SeqCst);
+    let dir = std::env::temp_dir().join(format!(
+        "nme-native-strict-{}-{id}",
+        std::process::id()
+    ));
+    std::fs::create_dir_all(&dir).unwrap();
+    let c_path = dir.join("program.c");
+    let exe = dir.join("program");
+    std::fs::write(&c_path, c_source).unwrap();
+    let result = Command::new("cc")
+        .args(["-Wall", "-Wextra", "-Werror", "-O2"])
+        .arg(&c_path)
+        .arg("-o")
+        .arg(&exe)
+        .output()
+        .unwrap();
+    let _ = std::fs::remove_dir_all(&dir);
+    assert!(
+        result.status.success(),
+        "strict generated C failed: {}",
+        String::from_utf8_lossy(&result.stderr)
+    );
+}
+
 fn native_rejects(source: &str) -> bool {
     nme_native::native_compile(source).is_err()
 }
@@ -826,6 +858,7 @@ fn c_implementation_reserved_names_are_rejected_not_miscompiled() {
 #[test]
 fn native_runtime_names_are_rejected_not_miscompiled() {
     for name in [
+        "NME_UNUSED",
         "NME_STRING_CAPACITY",
         "_nme_i",
         "INT_MAX",
@@ -872,7 +905,14 @@ fn native_runtime_names_are_rejected_not_miscompiled() {
 
 #[test]
 fn native_runtime_names_are_rejected_in_function_parameters() {
-    for name in ["NME_STRING_CAPACITY", "_nme_i", "nme_copy", "printf", "len"] {
+    for name in [
+        "NME_UNUSED",
+        "NME_STRING_CAPACITY",
+        "_nme_i",
+        "nme_copy",
+        "printf",
+        "len",
+    ] {
         let source = format!("def identity({name}):\n    return 1\n\nshow identity(1)\n");
         let problems = nme_native::native_compile(&source).unwrap_err();
         assert!(

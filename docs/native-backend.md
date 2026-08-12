@@ -102,8 +102,8 @@ Implemented so far:
   beginning `__`, names beginning `_` followed by an uppercase letter, and
   file-scope function names beginning `_` are reserved; an ordinary local name
   such as `_value` remains usable. Runtime names also include `nme_copy`,
-  `nme_cat`, `NME_STRING_CAPACITY`, `_nme_i`, the checked integer helpers, and
-  the C library symbols exposed by the generated headers;
+  `nme_cat`, `NME_STRING_CAPACITY`, `NME_UNUSED`, `_nme_i`, the checked integer
+  helpers, and the C library symbols exposed by the generated headers;
 - source comments are emitted as inert C comments, so comment text cannot turn
   into a C preprocessor directive or change native function hoisting;
 - native expressions require a prior binding or a declared function call;

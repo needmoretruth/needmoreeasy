@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.80 — 2026-08-12
+
+- Make generated native C runtime helpers warning-safe for GCC, Clang, and
+  MSVC, and reserve the generated `NME_UNUSED` macro from user identifiers.
+
 ## 0.0.1-beta.79 — 2026-08-12
 
 - Select MSVC `cl` with Windows-compatible flags for `nme native`, keep `cc`
