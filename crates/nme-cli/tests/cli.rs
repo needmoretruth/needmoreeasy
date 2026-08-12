@@ -2446,6 +2446,31 @@ fn a_real_error_reports_its_lookup_code() {
 }
 
 #[test]
+fn top_level_return_reports_the_shared_function_diagnostic() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-return-code-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("return.nme");
+    std::fs::write(&file, "return 1\n").unwrap();
+
+    let english = nme(&["check", &file.to_string_lossy()]);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(english_error.contains("error[E0106]:"), "{english_error}");
+    assert!(
+        english_error.contains("inside a function"),
+        "{english_error}"
+    );
+
+    let korean = nme(&["검사", &file.to_string_lossy()]);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(korean_error.contains("오류[E0106]:"), "{korean_error}");
+    assert!(korean_error.contains("함수 안에서만"), "{korean_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn cli_errors_carry_lookup_codes() {
     let unknown_command = nme(&["this-command-does-not-exist"]);
     assert!(!unknown_command.status.success());

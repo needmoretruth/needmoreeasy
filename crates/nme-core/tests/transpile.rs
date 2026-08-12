@@ -1715,6 +1715,18 @@ fn inline_breaks_keep_python_and_nme_loop_contexts_valid() {
 }
 
 #[test]
+fn inline_returns_keep_python_function_contexts_valid() {
+    assert_eq!(
+        ok("def choose():\n    if True then return 1\n"),
+        "def choose():\n    if (True): return 1\n"
+    );
+    assert_eq!(
+        ok("def choose():\n    만약 참 그러면 return 1\n"),
+        "def choose():\n    if (True): return 1\n"
+    );
+}
+
+#[test]
 fn attached_korean_else_if_is_supported() {
     let source = concat!(
         "만약 준비\n",

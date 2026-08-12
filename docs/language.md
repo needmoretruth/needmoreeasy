@@ -647,6 +647,8 @@ See [the conversion guide](converting-python.md).
   `nme ko <CODE>` (English: `nme en <CODE>`); `nme ko` alone lists every code.
   Compiler codes run from `E0001`; command-line errors (missing file, unknown
   command, Python startup) use `E9xxx` and are explained the same way.
+- A top-level or inline `return` outside a Python `def` function gets `E0106`
+  with a bilingual hint; valid returns inside functions remain Python.
 - Independent problems are collected when possible.
 - Korean-led CLI commands receive Korean-first explanations and recovery examples
   such as `nme 실행`, `nme 컴파일`, and `nme 설치`; English command invocations

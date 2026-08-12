@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.138 — 2026-08-12
+
+- Report top-level and inline `return` outside a Python function with the
+  shared bilingual `E0106` diagnostic while preserving valid function bodies.
+
 ## 0.0.1-beta.137 — 2026-08-12
 
 - Clarify bilingual `E0102` recovery guidance so it covers NME `repeat` and

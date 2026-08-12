@@ -369,6 +369,14 @@ pub fn parse_program(
                     problems.push(break_outside_loop_diagnostic(line.span));
                     continue;
                 }
+                if inline_return_is_outside_function(
+                    &stmt,
+                    &line.tokens,
+                    bindings.inside_function(),
+                ) {
+                    problems.push(return_outside_function_diagnostic(line.span));
+                    continue;
+                }
                 if matches!(stmt, NmeStmt::End) {
                     if blocks.is_empty() {
                         problems.push(unmatched_end_diagnostic(line.span));
@@ -429,6 +437,10 @@ pub fn parse_program(
                 }
             }
             Ok(None) => {
+                if is_python_return_line(&line.tokens) && !bindings.inside_function() {
+                    problems.push(return_outside_function_diagnostic(line.span));
+                    continue;
+                }
                 bindings.remember_python(&line.tokens, parse_line.indent);
                 if depth > 0 && is_valid_python_header(token_text(source, &line.tokens)) {
                     python_header_indents.push((line.indent, is_python_loop_header(&line.tokens)));
@@ -663,6 +675,19 @@ fn break_outside_loop_diagnostic(span: Span) -> Diagnostic {
     )
 }
 
+fn return_outside_function_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::ReturnOutsideFunction,
+        "`return` can only be used inside a function",
+        "`return`은 함수 안에서만 쓸 수 있어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "put it inside a `def` function, or remove it",
+        "`def` 함수 안에 넣거나 지워 주세요",
+    )
+}
+
 fn branch_without_condition_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
         DiagnosticCode::BranchWithoutCondition,
@@ -713,6 +738,47 @@ fn inline_break_is_outside_loop_in_body(
         InlineStmt::Nme(inner) => inline_break_is_outside_loop(inner, source, inside_loop),
         InlineStmt::Python(span) => source[span.start..span.end].trim() == "break" && !inside_loop,
     }
+}
+
+fn inline_return_is_outside_function(
+    stmt: &NmeStmt,
+    tokens: &[Token],
+    inside_function: bool,
+) -> bool {
+    match stmt {
+        NmeStmt::Times { inline, .. }
+        | NmeStmt::While { inline, .. }
+        | NmeStmt::When { inline, .. }
+        | NmeStmt::ElseIf { inline, .. }
+        | NmeStmt::Else { inline } => inline.as_ref().is_some_and(|body| {
+            inline_return_is_outside_function_in_body(body, tokens, inside_function)
+        }),
+        _ => false,
+    }
+}
+
+fn inline_return_is_outside_function_in_body(
+    body: &InlineStmt,
+    tokens: &[Token],
+    inside_function: bool,
+) -> bool {
+    match body {
+        InlineStmt::Nme(inner) => inline_return_is_outside_function(inner, tokens, inside_function),
+        InlineStmt::Python(span) => {
+            first_token_in_span(tokens, *span).is_some_and(|token| matches!(token.tok, Tok::Return))
+                && !inside_function
+        }
+    }
+}
+
+fn first_token_in_span(tokens: &[Token], span: Span) -> Option<&Token> {
+    tokens
+        .iter()
+        .find(|token| token.span.start >= span.start && token.span.end <= span.end)
+}
+
+fn is_python_return_line(tokens: &[Token]) -> bool {
+    matches!(tokens.first().map(|token| &token.tok), Some(Tok::Return))
 }
 
 fn missing_end_diagnostic(block: &ExplicitBlock, offset: usize) -> Diagnostic {
@@ -5080,14 +5146,23 @@ fn body_diagnostic(_kind: SuiteKind, span: Span) -> Diagnostic {
 
 // --------------------------------------------------------------- helpers
 
+#[derive(Clone, Copy)]
+enum BindingScopeKind {
+    Root,
+    Function,
+    Other,
+}
+
 struct BindingScope {
     body_indent: usize,
     names: HashSet<String>,
+    kind: BindingScopeKind,
 }
 
 struct PendingScope {
     header_indent: usize,
     names: HashSet<String>,
+    kind: BindingScopeKind,
 }
 
 struct BindingEnv {
@@ -5101,6 +5176,7 @@ impl BindingEnv {
             scopes: vec![BindingScope {
                 body_indent: 0,
                 names: HashSet::new(),
+                kind: BindingScopeKind::Root,
             }],
             pending: None,
         }
@@ -5112,6 +5188,7 @@ impl BindingEnv {
                 self.scopes.push(BindingScope {
                     body_indent: indent,
                     names: pending.names,
+                    kind: pending.kind,
                 });
             }
         }
@@ -5132,7 +5209,14 @@ impl BindingEnv {
         self.scopes.push(BindingScope {
             body_indent,
             names: HashSet::new(),
+            kind: BindingScopeKind::Other,
         });
+    }
+
+    fn inside_function(&self) -> bool {
+        self.scopes
+            .iter()
+            .any(|scope| matches!(scope.kind, BindingScopeKind::Function))
     }
 
     fn remember_nme(&mut self, stmt: &NmeStmt) {
@@ -5153,6 +5237,11 @@ impl BindingEnv {
             self.pending = Some(PendingScope {
                 header_indent: indent,
                 names: parameters,
+                kind: if is_python_function_header(tokens) {
+                    BindingScopeKind::Function
+                } else {
+                    BindingScopeKind::Other
+                },
             });
         }
     }
@@ -5928,6 +6017,12 @@ fn is_python_loop_header(tokens: &[Token]) -> bool {
         Some(Tok::For | Tok::While)
     ) || (matches!(tokens.first().map(|token| &token.tok), Some(Tok::Async))
         && matches!(tokens.get(1).map(|token| &token.tok), Some(Tok::For)))
+}
+
+fn is_python_function_header(tokens: &[Token]) -> bool {
+    matches!(tokens.first().map(|token| &token.tok), Some(Tok::Def))
+        || (matches!(tokens.first().map(|token| &token.tok), Some(Tok::Async))
+            && matches!(tokens.get(1).map(|token| &token.tok), Some(Tok::Def)))
 }
 
 fn is_valid_python_expression(text: &str) -> bool {

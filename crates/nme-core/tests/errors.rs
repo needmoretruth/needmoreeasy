@@ -194,6 +194,44 @@ fn inline_break_outside_a_loop_gets_the_stable_bilingual_diagnostic() {
 }
 
 #[test]
+fn return_outside_a_function_gets_the_stable_bilingual_diagnostic() {
+    let cases = [
+        ("top-level", "return 1\n"),
+        ("sentence-en", "when true then return 1\n"),
+        ("sentence-ko", "만약 참 그러면 return 1\n"),
+        ("beginner-en", "if True then return 1\n"),
+        ("beginner-ko", "만약 True 그러면 return 1\n"),
+        ("advanced-en", "if (True) then return 1\n"),
+        ("advanced-ko", "만약 ((참 그리고 참)) 그러면 return 1\n"),
+    ];
+
+    for (label, source) in cases {
+        let problems = match transpile(source) {
+            Ok(output) => panic!("expected return diagnostic for {label}, got {output:?}"),
+            Err(problems) => problems,
+        };
+        assert_eq!(problems.len(), 1, "core case: {label}: {problems:?}");
+        let problem = &problems[0];
+        assert_eq!(
+            problem.code,
+            DiagnosticCode::ReturnOutsideFunction,
+            "core case: {label}"
+        );
+        assert!(
+            problem.message.contains("inside a function"),
+            "{label}: {problem:?}"
+        );
+        assert!(
+            problem
+                .message_ko
+                .as_deref()
+                .is_some_and(|message| message.contains("함수 안에서만")),
+            "{label}: {problem:?}"
+        );
+    }
+}
+
+#[test]
 fn only_the_bundled_modules_are_available() {
     let message = err("use math\n");
     assert!(

@@ -515,7 +515,7 @@ fn return_outside_a_native_function_is_rejected_before_c_generation() {
     assert!(
         problems.iter().any(|problem| {
             problem.code == DiagnosticCode::ReturnOutsideFunction
-                && problem.message.contains("outside a native function")
+                && problem.message.contains("inside a function")
         }),
         "{problems:?}"
     );
@@ -524,7 +524,7 @@ fn return_outside_a_native_function_is_rejected_before_c_generation() {
             problem
                 .message_ko
                 .as_deref()
-                .is_some_and(|message| message.contains("함수 밖의 `return`"))
+                .is_some_and(|message| message.contains("함수 안에서만"))
         }),
         "{problems:?}"
     );
