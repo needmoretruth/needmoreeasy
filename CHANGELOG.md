@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.49 — 2026-08-12
+
+- Track conditional native bindings and reject reads or value changes after a
+  possibly skipped block unless the name was initialized beforehand.
+- Keep statically true `if true` blocks usable while reporting a precise
+  bilingual diagnostic for uncertain initialization.
+
 ## 0.0.1-beta.48 — 2026-08-12
 
 - Reject native assignments that change a binding from integer, float, or

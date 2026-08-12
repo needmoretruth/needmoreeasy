@@ -58,6 +58,9 @@ Implemented so far:
 - function-local scalar assignments remain scoped to their function;
 - value changes require an existing integer or float binding, and assignments
   cannot change a native name from one type to another;
+- a name first assigned in a possibly skipped control block must be assigned
+  before that block or used after assignment inside it; a literal `if true`
+  branch is known to run;
 - `say`/`show`/`말해` of an integer expression, a float, a string variable,
   or a string literal;
 - Korean and English spellings both lower to the same C;

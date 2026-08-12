@@ -15,6 +15,8 @@
 //!   native string variables use checked 8192-byte buffers;
 //! - value changes on an existing integer or float binding:
 //!   `x add N` / `x = x + N` / `점수에 N 더해`;
+//! - bindings first assigned in a possibly skipped control block must be
+//!   initialized before the block or used after assignment within it;
 //! - `while`/`if`/`else`/`else if` blocks over integer comparisons, closed
 //!   by `end`/`끝`;
 //! - `break` inside a loop;
@@ -39,6 +41,9 @@ enum VarType {
     Int,
     Float,
     Str,
+    MaybeInt,
+    MaybeFloat,
+    MaybeStr,
 }
 
 /// The static type of an expression.
@@ -84,6 +89,63 @@ impl DeclarationSlots {
             if *slot >= offset {
                 *slot += delta;
             }
+        }
+    }
+}
+
+/// A native control block may assign a name on a path that does not execute.
+/// Keep the pre-block types so those names can be rejected after the block
+/// unless the block is statically known to run.
+#[derive(Debug)]
+struct NativeBlockFrame {
+    body_depth: usize,
+    bindings_before: HashMap<String, VarType>,
+    definitely_runs: bool,
+}
+
+fn concrete_type(kind: VarType) -> VarType {
+    match kind {
+        VarType::Int | VarType::MaybeInt => VarType::Int,
+        VarType::Float | VarType::MaybeFloat => VarType::Float,
+        VarType::Str | VarType::MaybeStr => VarType::Str,
+    }
+}
+
+fn maybe_type(kind: VarType) -> VarType {
+    match concrete_type(kind) {
+        VarType::Int => VarType::MaybeInt,
+        VarType::Float => VarType::MaybeFloat,
+        VarType::Str => VarType::MaybeStr,
+        VarType::MaybeInt | VarType::MaybeFloat | VarType::MaybeStr => unreachable!(),
+    }
+}
+
+fn is_maybe_type(kind: VarType) -> bool {
+    matches!(kind, VarType::MaybeInt | VarType::MaybeFloat | VarType::MaybeStr)
+}
+
+fn condition_definitely_true(condition: &Condition) -> bool {
+    matches!(
+        condition,
+        Condition::Truthy {
+            value: ConditionValue::Literal(nme_core::syntax::Literal::True),
+            negated: false,
+        }
+    )
+}
+
+fn finish_native_block(frame: NativeBlockFrame, declared: &mut HashMap<String, VarType>) {
+    if frame.definitely_runs {
+        return;
+    }
+    let names = declared.keys().cloned().collect::<Vec<_>>();
+    for name in names {
+        if let Some(previous) = frame.bindings_before.get(&name).copied() {
+            if is_maybe_type(previous) {
+                declared.insert(name, previous);
+            }
+        } else if let Some(current) = declared.get(&name).copied() {
+            declared.insert(name, maybe_type(current));
         }
     }
 }
@@ -136,6 +198,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
     let mut open_braces = 1usize; // the `main` body
     let mut declaration_slots = DeclarationSlots::new(&out);
     let mut declared = HashMap::new();
+    let mut native_blocks = Vec::<NativeBlockFrame>::new();
     let mut saved_main_scope = None;
     let mut in_function = false;
     let mut problems = Vec::new();
@@ -144,6 +207,23 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
         let line_text = &source[line.span.start..line.span.end];
         let is_significant_line = !line_text.trim().is_empty()
             && !line_text.trim_start().starts_with('#');
+        let nme_line = by_index.get(&index);
+        let current_depth = nme_line.map_or(
+            line.indent + program.virtual_indents[index],
+            |nme_line| line.indent + nme_line.virtual_indent,
+        );
+        let is_branch = nme_line.is_some_and(|nme_line| {
+            matches!(nme_line.stmt, NmeStmt::ElseIf { .. } | NmeStmt::Else { .. })
+        });
+        if !is_branch {
+            while native_blocks
+                .last()
+                .is_some_and(|frame| current_depth < frame.body_depth)
+            {
+                let frame = native_blocks.pop().expect("native block frame exists");
+                finish_native_block(frame, &mut declared);
+            }
+        }
         if in_function && line.indent == 0 && is_significant_line {
             if let Some(main_scope) = saved_main_scope.take() {
                 declared = main_scope;
@@ -151,13 +231,11 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
             declaration_slots.use_main();
             in_function = false;
         }
-        if let Some(nme_line) = by_index.get(&index) {
+        if let Some(nme_line) = nme_line {
             // `else`/`else if` lines emit their own closing `}` before the
             // next branch, so the generic brace closing must not run first.
-            let is_branch = matches!(nme_line.stmt, NmeStmt::ElseIf { .. } | NmeStmt::Else { .. });
             if !is_branch {
-                let total_depth = line.indent + nme_line.virtual_indent;
-                close_braces(&mut out, &mut open_braces, total_depth + 1);
+                close_braces(&mut out, &mut open_braces, current_depth + 1);
             }
             match &nme_line.stmt {
                 NmeStmt::Say { value } => {
@@ -201,6 +279,11 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                     Ok(condition_text) => {
                         out.push_str(&format!("while ({condition_text}) {{\n"));
                         open_braces += 1;
+                        native_blocks.push(NativeBlockFrame {
+                            body_depth: current_depth + 1,
+                            bindings_before: declared.clone(),
+                            definitely_runs: false,
+                        });
                     }
                     Err(diag) => problems.push(diag),
                 },
@@ -211,6 +294,11 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                     Ok(condition_text) => {
                         out.push_str(&format!("if ({condition_text}) {{\n"));
                         open_braces += 1;
+                        native_blocks.push(NativeBlockFrame {
+                            body_depth: current_depth + 1,
+                            bindings_before: declared.clone(),
+                            definitely_runs: condition_definitely_true(condition),
+                        });
                     }
                     Err(diag) => problems.push(diag),
                 },
@@ -234,6 +322,11 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                                 None => {
                                     out.push_str(&format!("{header} {{\n"));
                                     open_braces += 1;
+                                    native_blocks.push(NativeBlockFrame {
+                                        body_depth: current_depth + 1,
+                                        bindings_before: declared.clone(),
+                                        definitely_runs: false,
+                                    });
                                 }
                             }
                         }
@@ -433,7 +526,10 @@ fn lower_expr(
             if is_native_reserved_name(id) {
                 return Err(reserved_name("a variable named", "변수 이름", id, span));
             }
-            match declared.get(id) {
+            match declared.get(id).copied() {
+                Some(VarType::MaybeInt | VarType::MaybeFloat | VarType::MaybeStr) => {
+                    Err(uninitialized_name(id, span))
+                }
                 Some(VarType::Str) => Ok((id.to_string(), ExprType::Str)),
                 Some(VarType::Float) => Ok((id.to_string(), ExprType::Float)),
                 Some(VarType::Int) | None => Ok((id.to_string(), ExprType::Int)),
@@ -561,10 +657,10 @@ fn string_operand(
             if is_native_reserved_name(id) {
                 return Err(reserved_name("a variable named", "변수 이름", id, span));
             }
-            if matches!(declared.get(id), Some(VarType::Str)) {
-                Ok(id.to_string())
-            } else {
-                Err(not_supported("this operand", span))
+            match declared.get(id).copied() {
+                Some(VarType::MaybeStr) => Err(uninitialized_name(id, span)),
+                Some(VarType::Str) => Ok(id.to_string()),
+                _ => Err(not_supported("this operand", span)),
             }
         }
         _ => Err(not_supported("nested string concatenation", span)),
@@ -664,7 +760,10 @@ fn check_condition(
                     }
                     (
                         name.clone(),
-                        match declared.get(name) {
+                        match declared.get(name).copied() {
+                            Some(VarType::MaybeInt | VarType::MaybeFloat | VarType::MaybeStr) => {
+                                return Err(uninitialized_name(name, span));
+                            }
                             Some(VarType::Float) => ExprType::Float,
                             _ => ExprType::Int,
                         },
@@ -709,7 +808,10 @@ fn condition_operand(
             if is_native_reserved_name(name) {
                 return Err(reserved_name("a variable named", "변수 이름", name, span));
             }
-            let kind = match declared.get(name) {
+            let kind = match declared.get(name).copied() {
+                Some(VarType::MaybeInt | VarType::MaybeFloat | VarType::MaybeStr) => {
+                    return Err(uninitialized_name(name, span));
+                }
                 Some(VarType::Str) => ExprType::Str,
                 Some(VarType::Float) => ExprType::Float,
                 _ => ExprType::Int,
@@ -836,8 +938,9 @@ fn assignment_type(
         ExprType::Str => VarType::Str,
     };
     if let Some(existing) = declared.get(name).copied() {
-        if existing != incoming {
-            return Err(type_change(name, existing, incoming, span));
+        let existing_concrete = concrete_type(existing);
+        if existing_concrete != incoming {
+            return Err(type_change(name, existing_concrete, incoming, span));
         }
         Ok(false)
     } else {
@@ -885,13 +988,13 @@ fn emit_set(
                     Ok(())
                 }
                 ExprType::Str => {
-                    declared.insert(target.to_string(), VarType::Str);
                     if is_new {
                         declaration_slots.declare(
                             out,
                             &format!("char {target}[NME_STRING_CAPACITY];\n"),
                         );
                     }
+                    declared.insert(target.to_string(), VarType::Str);
                     out.push_str(&format!(
                         "nme_copy({target}, sizeof {target}, {lowered});\n"
                     ));
@@ -927,8 +1030,10 @@ fn emit_update(
     if !declared.contains_key(target) {
         return Err(value_change_without_binding(target, span));
     }
-    if matches!(declared.get(target), Some(VarType::Str)) {
-        return Err(string_value_change(span));
+    match declared.get(target).copied() {
+        Some(kind) if is_maybe_type(kind) => return Err(uninitialized_name(target, span)),
+        Some(VarType::Str) => return Err(string_value_change(span)),
+        _ => {}
     }
     let amount_text = code_text(amount, source);
     let (lowered, kind) = check_expr(amount_text, span, declared)?;
@@ -1040,8 +1145,8 @@ fn emit_python_line(
                     };
                     if is_new {
                         declaration_slots.declare(out, &format!("int {name};\n"));
-                        declared.insert(name.clone(), VarType::Int);
                     }
+                    declared.insert(name.clone(), VarType::Int);
                     out.push_str(&format!("{name} = {lowered};\n"));
                     None
                 }
@@ -1052,8 +1157,8 @@ fn emit_python_line(
                     };
                     if is_new {
                         declaration_slots.declare(out, &format!("double {name};\n"));
-                        declared.insert(name.clone(), VarType::Float);
                     }
+                    declared.insert(name.clone(), VarType::Float);
                     out.push_str(&format!("{name} = {lowered};\n"));
                     None
                 }
@@ -1067,8 +1172,8 @@ fn emit_python_line(
                             out,
                             &format!("char {name}[NME_STRING_CAPACITY];\n"),
                         );
-                        declared.insert(name.clone(), VarType::Str);
                     }
+                    declared.insert(name.clone(), VarType::Str);
                     out.push_str(&format!(
                         "nme_copy({name}, sizeof {name}, {lowered});\n"
                     ));
@@ -1206,10 +1311,11 @@ fn type_change(name: &str, from: VarType, to: VarType, span: Span) -> Diagnostic
 }
 
 fn native_type_names(kind: VarType) -> (&'static str, &'static str) {
-    match kind {
+    match concrete_type(kind) {
         VarType::Int => ("integer", "정수"),
         VarType::Float => ("float", "실수"),
         VarType::Str => ("string", "문자열"),
+        VarType::MaybeInt | VarType::MaybeFloat | VarType::MaybeStr => unreachable!(),
     }
 }
 
@@ -1240,6 +1346,23 @@ fn string_value_change(span: Span) -> Diagnostic {
     .with_bilingual_hint(
         "use add/subtract with an existing integer or float binding",
         "이미 대입된 정수·실수 바인딩에 더하기/빼기를 사용하세요",
+    )
+}
+
+fn uninitialized_name(name: &str, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::UnsupportedModule,
+        format!(
+            "the native backend cannot use `{name}` before a conditional assignment has run"
+        ),
+        format!(
+            "네이티브 백엔드는 조건부 대입이 실행되기 전에 `{name}`을(를) 사용할 수 없습니다"
+        ),
+        span,
+    )
+    .with_bilingual_hint(
+        "assign the name before the control block, or use it inside the block after assignment",
+        "제어 블록 전에 이름에 대입하거나 대입한 뒤 블록 안에서 사용하세요",
     )
 }
 
