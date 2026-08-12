@@ -541,6 +541,17 @@ pub fn parse_program(
             Ok(None) => {
                 let valid_python_header = is_valid_python_header(token_text(source, &line.tokens));
                 let python_loop_header = is_python_loop_header(&line.tokens);
+                let inline_python_function_body = python_inline_function_body(&line.tokens);
+                let (context_tokens, inside_function, inside_async_function) =
+                    if let Some(body) = inline_python_function_body {
+                        (body, true, is_python_async_function_header(&line.tokens))
+                    } else {
+                        (
+                            line.tokens.as_slice(),
+                            bindings.inside_function(),
+                            bindings.inside_async_function(),
+                        )
+                    };
                 if let Some(kind) = remember_python_declaration_context(
                     &mut python_declaration_contexts,
                     &line.tokens,
@@ -592,31 +603,41 @@ pub fn parse_program(
                     continue;
                 }
                 if contains_async_comprehension_outside_async_function(
-                    &line.tokens,
-                    bindings.inside_async_function(),
+                    context_tokens,
+                    inside_async_function,
                 ) {
                     problems.push(async_comprehension_outside_async_function_diagnostic(
                         line.span,
                     ));
                     continue;
                 }
-                remember_async_generator_context(
-                    &mut async_function_contexts,
-                    &line.tokens,
-                    python_scope_depth,
-                    line.span,
-                );
-                if contains_yield_outside_lambda(&line.tokens) && !bindings.inside_function() {
+                if let Some(body) = inline_python_function_body {
+                    let has_direct_yield = contains_yield_outside_lambda(body)
+                        && !contains_yield_inside_comprehension(body);
+                    if is_python_async_function_header(&line.tokens)
+                        && has_direct_yield
+                        && contains_return_with_value(body)
+                    {
+                        problems.push(return_value_in_async_generator_diagnostic(line.span));
+                        continue;
+                    }
+                } else {
+                    remember_async_generator_context(
+                        &mut async_function_contexts,
+                        &line.tokens,
+                        python_scope_depth,
+                        line.span,
+                    );
+                }
+                if contains_yield_outside_lambda(context_tokens) && !inside_function {
                     problems.push(yield_outside_function_diagnostic(line.span));
                     continue;
                 }
-                if contains_invalid_await(&line.tokens, bindings.inside_async_function()) {
+                if contains_invalid_await(context_tokens, inside_async_function) {
                     problems.push(await_outside_async_function_diagnostic(line.span));
                     continue;
                 }
-                if contains_yield_from_outside_lambda(&line.tokens)
-                    && bindings.inside_async_function()
-                {
+                if contains_yield_from_outside_lambda(context_tokens) && inside_async_function {
                     problems.push(yield_from_async_function_diagnostic(line.span));
                 }
                 if is_python_try_header(&line.tokens) {
@@ -1435,9 +1456,9 @@ fn remember_async_generator_context(
 fn contains_return_with_value(tokens: &[Token]) -> bool {
     tokens.iter().enumerate().any(|(index, token)| {
         matches!(token.tok, Tok::Return)
-            && tokens[index + 1..]
-                .iter()
-                .any(|next| !matches!(next.tok, Tok::Semi))
+            && tokens
+                .get(index + 1)
+                .is_some_and(|next| !matches!(next.tok, Tok::Semi))
     })
 }
 
@@ -6366,19 +6387,21 @@ impl BindingEnv {
                 .expect("root scope")
                 .names
                 .insert(name);
-            self.pending = Some(PendingScope {
-                header_indent: indent,
-                names: parameters,
-                kind: if is_python_async_function_header(tokens) {
-                    BindingScopeKind::AsyncFunction
-                } else if is_python_function_header(tokens) {
-                    BindingScopeKind::Function
-                } else if is_python_class_header(tokens) {
-                    BindingScopeKind::Class
-                } else {
-                    BindingScopeKind::Other
-                },
-            });
+            if python_inline_suite_body(tokens).is_none() {
+                self.pending = Some(PendingScope {
+                    header_indent: indent,
+                    names: parameters,
+                    kind: if is_python_async_function_header(tokens) {
+                        BindingScopeKind::AsyncFunction
+                    } else if is_python_function_header(tokens) {
+                        BindingScopeKind::Function
+                    } else if is_python_class_header(tokens) {
+                        BindingScopeKind::Class
+                    } else {
+                        BindingScopeKind::Other
+                    },
+                });
+            }
         }
     }
 }
@@ -6412,6 +6435,20 @@ fn python_scope_header(tokens: &[Token]) -> Option<(String, HashSet<String>)> {
         }
     }
     Some((name, parameters))
+}
+
+fn python_inline_suite_body(tokens: &[Token]) -> Option<&[Token]> {
+    python_scope_header(tokens)?;
+    let depths = token_depths(tokens);
+    let colon_index = tokens.iter().enumerate().find_map(|(index, token)| {
+        (depths[index] == 0 && matches!(token.tok, Tok::Colon)).then_some(index)
+    })?;
+    let body = tokens.get(colon_index + 1..)?;
+    (!body.is_empty()).then_some(body)
+}
+
+fn python_inline_function_body(tokens: &[Token]) -> Option<&[Token]> {
+    is_python_function_header(tokens).then(|| python_inline_suite_body(tokens))?
 }
 
 fn remember_python_binding(tokens: &[Token], names: &mut HashSet<String>) {

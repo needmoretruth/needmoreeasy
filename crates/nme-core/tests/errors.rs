@@ -804,6 +804,10 @@ fn return_value_inside_async_generator_gets_a_stable_diagnostic() {
             "async def stream():\n    return 2\n    yield 1\n",
         ),
         (
+            "one-line Python suite",
+            "async def stream(): yield 1; return 2\n",
+        ),
+        (
             "sentence-en",
             "async def stream():\n    yield 1\n    when True then return 2\n",
         ),
@@ -849,6 +853,38 @@ fn return_value_inside_async_generator_gets_a_stable_diagnostic() {
     assert_eq!(
         transpile(nested_async_function).unwrap(),
         nested_async_function
+    );
+}
+
+#[test]
+fn one_line_python_function_suites_keep_contextual_keywords_in_scope() {
+    let valid_cases = [
+        ("normal generator", "def stream(): yield 1\n"),
+        ("async generator", "async def stream(): yield 1\n"),
+        ("async await", "async def wait(): await value\n"),
+        (
+            "bare return after yield",
+            "async def stream(): yield 1; return\n",
+        ),
+        (
+            "nested normal generator",
+            "async def outer():\n    def inner(): yield 1\n    return 2\n",
+        ),
+        (
+            "nested async generator",
+            "async def outer():\n    async def inner(): yield 1; return\n",
+        ),
+    ];
+    for (label, source) in valid_cases {
+        assert_eq!(transpile(source).unwrap(), source, "{label}");
+    }
+
+    let nested_invalid = "async def outer():\n    async def inner(): yield 1; return 2\n";
+    let problems = transpile(nested_invalid).expect_err("nested async generator return value");
+    assert_eq!(problems.len(), 1, "{problems:?}");
+    assert_eq!(
+        problems[0].code,
+        DiagnosticCode::ReturnValueInAsyncGenerator
     );
 }
 

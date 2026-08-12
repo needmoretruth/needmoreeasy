@@ -674,8 +674,10 @@ See [the conversion guide](converting-python.md).
   outside an `async def` function gets `E0117`. Move the comprehension into an
   async function; valid async comprehensions remain unchanged.
 - An async generator cannot return a value; NME reports `E0118` even when the
-  return appears before the first `yield`. A bare `return` and returns in
-  nested functions remain valid.
+  return appears before the first `yield`. One-line Python suites such as
+  `async def stream(): yield 1; return 2` use the same function context as a
+  normally indented body, while a bare `return` and returns in nested
+  functions remain valid.
 - A `global` or `nonlocal` declaration after an earlier use or assignment in
   the same scope gets `E0119` or `E0120`; parameters cannot use either
   declaration. Put the declaration first. Valid module, nested-function, and

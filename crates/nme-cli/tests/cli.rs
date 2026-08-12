@@ -2810,7 +2810,7 @@ fn return_value_inside_async_generator_reports_the_shared_context_diagnostic() {
     ));
     std::fs::create_dir_all(&dir).unwrap();
     let file = dir.join("async-generator-return.nme");
-    std::fs::write(&file, "async def stream():\n    yield 1\n    return 2\n").unwrap();
+    std::fs::write(&file, "async def stream(): yield 1; return 2\n").unwrap();
 
     let english = nme(&["check", &file.to_string_lossy()]);
     assert!(!english.status.success());

@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.154 — 2026-08-12
+
+- Preserve valid contextual keywords in one-line Python function suites and
+  report async-generator value returns there with the shared `E0118` diagnostic.
+
 ## 0.0.1-beta.153 — 2026-08-12
 
 - Correct `E0119` handling for names used in Python annotations while keeping

@@ -156,7 +156,9 @@ An `async for` inside a comprehension outside an `async def` receives `E0117`;
 the same token-depth path distinguishes it from an ordinary `async for` header.
 An async generator's value-bearing `return` receives `E0118`; the parser
 tracks direct yields and defers the decision so a return before the first yield
-is diagnosed without inheriting nested function or class scopes.
+is diagnosed without inheriting nested function or class scopes. One-line
+Python function suites use their body tokens as the same function context, so
+valid inline `yield`, `await`, and bare `return` statements are preserved.
 Conflicting `global`/`nonlocal` declarations receive `E0119`/`E0120`; the
 scope tracker excludes nested function parameters and comprehension-local names
 so valid Python remains byte-identical.
