@@ -579,6 +579,7 @@ comparisons (including `<=`/`>=` and the natural-language "or equal"
   connectors), over integer and finite-float truthiness (`if ready`, `while turns`;
   zero is false), and over boolean literals and bindings (`if ready`, `while ready`;
   `False` is false); boolean equality/inequality; the beginner `times:` loop; `break`;
+  logical `and`/`or` conditions use Python precedence and short-circuiting;
   names assigned on every possible fall-through path of an `if`/`else` block
   are available after it, and a branch that returns early or breaks its
   enclosing loop does not need to assign them, including a terminating path

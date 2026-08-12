@@ -1,0 +1,10 @@
+# Native logical conditions — sentence-first native core
+# Learning goal: combine supported conditions with and/or.
+ready save true
+score save 3
+when ready and score is greater than 2
+    show "ready"
+end
+if False or ready
+    show "or"
+end

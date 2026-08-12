@@ -28,7 +28,7 @@
 //!   initialized before the block or used after assignment within it;
 //! - `while`/`if`/`else`/`else if` blocks over integer, finite-float, string,
 //!   and boolean comparisons or truthiness, closed by `end`/`끝`, plus
-//!   `times:`/`번:` loops;
+//!   documented logical `and`/`or` conditions and `times:`/`번:` loops;
 //! - `break` inside a loop;
 //! - functions over integer parameters with an unconditional integer `return`
 //!   (recursion works); calls must name a function in the file and use its
@@ -41,7 +41,9 @@
 use std::collections::HashMap;
 
 use nme_core::diagnostics::{Diagnostic, DiagnosticCode, Span};
-use nme_core::syntax::{CompareOp, Condition, ConditionValue, InlineStmt, NmeStmt, Value};
+use nme_core::syntax::{
+    CompareOp, Condition, ConditionValue, InlineStmt, LogicalOp, NmeStmt, Value,
+};
 use nme_core::{lexer, parser};
 
 use rustpython_parser::ast::{CmpOp, Constant, Expr, Operator, UnaryOp};
@@ -1364,7 +1366,19 @@ fn check_condition(
                 format!("({text})")
             })
         }
-        Condition::Logical { .. } => Err(not_supported("this condition", span)),
+        Condition::Logical {
+            left,
+            operator,
+            right,
+        } => {
+            let left = check_condition(left, source, span, declared, functions)?;
+            let right = check_condition(right, source, span, declared, functions)?;
+            let operator = match operator {
+                LogicalOp::And => "&&",
+                LogicalOp::Or => "||",
+            };
+            Ok(format!("({left} {operator} {right})"))
+        }
     }
 }
 

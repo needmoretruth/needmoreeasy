@@ -1131,6 +1131,65 @@ fn boolean_bindings_work_through_native_loops_and_branch_merges() {
 }
 
 #[test]
+fn logical_conditions_compile_across_the_native_surface_matrix() {
+    let cases = [
+        (
+            "sentence-en",
+            "ready save true\nscore save 3\nwhen ready and score is greater than 2\n    show \"yes\"\nend\nwhen false or ready\n    show \"or\"\nend\n",
+            "yes\nor\n",
+        ),
+        (
+            "sentence-ko",
+            "준비는 참\n점수는 3\n만약 준비 그리고 점수가 2보다 크면\n    말해 \"예\"\n끝\n만약 거짓 또는 준비\n    말해 \"또는\"\n끝\n",
+            "예\n또는\n",
+        ),
+        (
+            "beginner-en",
+            "set ready to True\nscore = 3\nif ready and score > 2\n    show \"yes\"\nend\nif False or ready\n    show \"or\"\nend\n",
+            "yes\nor\n",
+        ),
+        (
+            "beginner-ko",
+            "저장 준비 True\n점수 = 3\n만약 준비 그리고 점수 > 2\n    말해 \"예\"\n끝\n만약 거짓 또는 준비\n    말해 \"또는\"\n끝\n",
+            "예\n또는\n",
+        ),
+        (
+            "advanced-en",
+            "ready = True\nscore = 3\nwhen ready and score > 2\n    show \"yes\"\nend\nwhen False or ready\n    show \"or\"\nend\n",
+            "yes\nor\n",
+        ),
+        (
+            "advanced-ko",
+            "준비 = True\n점수 = 3\n만약 준비 그리고 점수 > 2\n    말해 \"예\"\n끝\n만약 거짓 또는 준비\n    말해 \"또는\"\n끝\n",
+            "예\n또는\n",
+        ),
+    ];
+
+    for (label, source, expected) in cases {
+        assert_eq!(
+            native_run(source).unwrap(),
+            expected,
+            "native case: {label}"
+        );
+    }
+}
+
+#[test]
+fn logical_conditions_keep_short_circuit_evaluation() {
+    let english = "def mark():\n    show \"called\"\n    return 1\n\nif true or false and false\n    show \"precedence\"\nend\nif false and mark() == 1\n    show \"bad and\"\nend\nif true or mark() == 1\n    show \"short\"\nend\n";
+    assert_eq!(native_run(english).unwrap(), "precedence\nshort\n");
+
+    let korean = "def 표시():\n    말해 \"호출\"\n    return 1\n\n만약 참 또는 거짓 그리고 거짓\n    말해 \"우선순위\"\n끝\n만약 거짓 그리고 표시() == 1\n    말해 \"잘못된 그리고\"\n끝\n만약 참 또는 표시() == 1\n    말해 \"짧게\"\n끝\n";
+    assert_eq!(native_run(korean).unwrap(), "우선순위\n짧게\n");
+}
+
+#[test]
+fn logical_conditions_mix_languages_and_syntax_levels() {
+    let mixed = "ready save true\nscore = 3\n만약 ready and score > 2 또는 거짓\n    show \"혼합 우선순위\"\n끝\nwhen true or false 그리고 false\n    말해 \"precedence\"\nend\n";
+    assert_eq!(native_run(mixed).unwrap(), "혼합 우선순위\nprecedence\n");
+}
+
+#[test]
 fn truthy_conditions_compile_natively() {
     let source = "ready = 1\nif ready\n    show \"ready yes\"\nend\nready = 0\nif ready\n    show \"no\"\nend\nturns = 3\nwhile turns\n    show turns\n    turns add -1\nend\n";
     assert_eq!(native_run(source).unwrap(), "ready yes\n3\n2\n1\n");

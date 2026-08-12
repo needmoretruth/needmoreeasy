@@ -18,7 +18,8 @@ into a native executable with your system's C compiler.
 
 1. Write a program that stays inside the native core. The core covers
    boolean, integer, and finite-float values, string literals, `while`/`if`/
-   `else`, `break`, functions with integer `return`, and `say`:
+   `else`, logical `and`/`or`, `break`, functions with integer `return`, and
+   `say`:
 
    ```text
    score = 0

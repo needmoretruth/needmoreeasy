@@ -6,6 +6,16 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.112 — 2026-08-12
+
+- Add native logical conditions with `and`/`or` and the Korean spellings
+  `그리고`/`또는`, preserving Python precedence and short-circuit evaluation.
+- Lower the shared condition tree recursively while keeping unsupported
+  Python-colon conditions and native operands outside the restricted subset.
+- Cover the six English/Korean sentence, beginner, and advanced surfaces with
+  short-circuit regression tests, paired examples, and synchronized native
+  documentation.
+
 ## 0.0.1-beta.111 — 2026-08-12
 
 - Fix native fall-through analysis for a terminating nested conditional, so a

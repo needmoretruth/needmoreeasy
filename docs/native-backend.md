@@ -81,8 +81,9 @@ Implemented so far:
   the natural-language "or equal" connectors), over integer and finite-float
   truthiness (`if ready`, `while turns`; zero is false), over boolean literals
   and bindings (`if ready`, `while ready`; `False` is false); boolean equality
-  and inequality comparisons; the beginner
-  `times:` loop; and `break` inside a native loop, including an `if` nested
+  and inequality comparisons; logical `and`/`or` over supported conditions with
+  Python precedence and short-circuit evaluation; the beginner `times:` loop;
+  and `break` inside a native loop, including an `if` nested
   inside that loop. A `break` outside a loop is rejected with `E0102` before C
   is emitted;
 - functions over integer scalar parameters with a required top-level integer

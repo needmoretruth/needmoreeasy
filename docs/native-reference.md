@@ -106,6 +106,11 @@ Integer, finite-float, and boolean values may also be used directly as
 conditions: zero, `False`, and `false` are false; nonzero values, `True`, and
 `true` are true.
 
+NME block conditions can combine supported conditions with `and` and `or`.
+They keep Python's precedence (`and` binds more tightly than `or`) and
+short-circuit evaluation. The Korean spellings `그리고` and `또는` have the
+same behavior. Python-colon conditions remain outside this native subset.
+
 Use `say`, `show`, or `말해` to output an integer, float, boolean, string, or
 supported expression. A native expression may use a literal, a name assigned
 earlier, a supported comparison, or a call to a declared native function.
@@ -123,7 +128,8 @@ can be used directly in `if` or `while`. Reassigning `False` keeps the same
 boolean type.
 
 Run the paired examples with `nme native run examples/native-boolean` and
-`nme native run examples/native-boolean.ko`.
+`nme native run examples/native-boolean.ko`. The logical-condition pair is
+available as `examples/native-logical` and `examples/native-logical.ko`.
 
 ## Statements and blocks
 

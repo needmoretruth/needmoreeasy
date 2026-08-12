@@ -17,8 +17,8 @@
 ## 단계
 
 1. 네이티브 코어 안에 머무는 프로그램을 쓰세요. 코어는 불리언·정수·유한
-   실수 값과 문자열 리터럴, `while`/`if`/`else`, `break`, 정수 `return` 함수,
-   `say`를 다룹니다:
+   실수 값과 문자열 리터럴, `while`/`if`/`else`, 논리 `and`/`or`, `break`,
+   정수 `return` 함수, `say`를 다룹니다:
 
    ```text
    score = 0
