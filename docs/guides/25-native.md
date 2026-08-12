@@ -50,8 +50,10 @@ into a native executable with your system's C compiler.
    function name for a variable or parameter are rejected; use the CPython path for
    dynamic Python name behavior.
    A name assigned only in an unreachable `else` or `else if` after `if true`
-   is not available after the block, and one branch cannot read a name first
-   assigned in a sibling branch.
+   is not available after the block. A name assigned in every branch of an
+   `if`/`else` chain is available afterward; one branch cannot read a name first
+   assigned in a sibling branch, and a loop-created name remains conditional if
+   the loop may not run.
 
 2. Compile and run it natively:
 

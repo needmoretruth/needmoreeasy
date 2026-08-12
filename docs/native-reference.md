@@ -116,8 +116,10 @@ a call to a declared native function.
 - `break` works inside a native loop, including an `if` nested in that loop.
   A break outside a loop is rejected before C is emitted.
 - Bindings created only in a possibly skipped branch are not available before
-  they are definitely assigned. Function-local bindings stay inside their
-  function.
+  they are definitely assigned. A name assigned in every branch of an
+  `if`/`else` chain is available after the block; a name assigned in only one
+  branch, or inside a loop that may not run, remains conditional. Function-local
+  bindings stay inside their function.
 
 Use the NME sentence block forms for native control flow. Python-colon control
 headers such as `while score < 10:` are outside this core; use the CPython path

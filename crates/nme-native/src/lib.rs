@@ -105,7 +105,7 @@ impl DeclarationSlots {
 
 /// A native control block may assign a name on a path that does not execute.
 /// Keep the pre-block types so those names can be rejected after the block
-/// unless the block is statically known to run.
+/// unless the block is statically known to run or every branch initializes it.
 #[derive(Debug)]
 struct NativeBlockFrame {
     body_depth: usize,
@@ -113,6 +113,8 @@ struct NativeBlockFrame {
     is_loop: bool,
     definitely_runs: bool,
     branch_bindings: HashMap<String, VarType>,
+    bindings_in_all_branches: Option<HashMap<String, VarType>>,
+    has_else: bool,
     bindings_after_reachable_branch: Option<HashMap<String, VarType>>,
 }
 
@@ -158,9 +160,19 @@ fn finish_native_block(mut frame: NativeBlockFrame, declared: &mut HashMap<Strin
     if frame.definitely_runs {
         return;
     }
-    record_branch_bindings(&mut frame, declared);
+    record_completed_branch(&mut frame, declared);
     let mut merged = frame.bindings_before;
     for (name, kind) in frame.branch_bindings {
+        if !frame.is_loop && frame.has_else {
+            if let Some(all_branch_kind) = frame
+                .bindings_in_all_branches
+                .as_ref()
+                .and_then(|bindings| bindings.get(&name))
+            {
+                merged.insert(name, *all_branch_kind);
+                continue;
+            }
+        }
         merged.entry(name).or_insert_with(|| maybe_type(kind));
     }
     *declared = merged;
@@ -169,6 +181,23 @@ fn finish_native_block(mut frame: NativeBlockFrame, declared: &mut HashMap<Strin
 fn record_branch_bindings(frame: &mut NativeBlockFrame, declared: &HashMap<String, VarType>) {
     for (name, kind) in declared {
         frame.branch_bindings.entry(name.clone()).or_insert(*kind);
+    }
+}
+
+fn record_completed_branch(frame: &mut NativeBlockFrame, declared: &HashMap<String, VarType>) {
+    record_branch_bindings(frame, declared);
+    let completed = declared
+        .iter()
+        .filter(|(name, kind)| !frame.bindings_before.contains_key(*name) && !is_maybe_type(**kind))
+        .map(|(name, kind)| (name.clone(), concrete_type(*kind)))
+        .collect::<HashMap<_, _>>();
+    match &mut frame.bindings_in_all_branches {
+        Some(bindings) => bindings.retain(|name, kind| {
+            completed
+                .get(name)
+                .is_some_and(|completed_kind| completed_kind == kind)
+        }),
+        None => frame.bindings_in_all_branches = Some(completed),
     }
 }
 
@@ -460,7 +489,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                     if frame.definitely_runs && frame.bindings_after_reachable_branch.is_none() {
                         frame.bindings_after_reachable_branch = Some(declared.clone());
                     }
-                    record_branch_bindings(frame, &declared);
+                    record_completed_branch(frame, &declared);
                     declared = reset_for_next_branch(frame);
                 }
             }
@@ -520,6 +549,8 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                             is_loop: true,
                             definitely_runs: false,
                             branch_bindings: HashMap::new(),
+                            bindings_in_all_branches: None,
+                            has_else: false,
                             bindings_after_reachable_branch: None,
                         });
                     }
@@ -539,6 +570,8 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                             is_loop: false,
                             definitely_runs: condition_definitely_true(condition),
                             branch_bindings: HashMap::new(),
+                            bindings_in_all_branches: None,
+                            has_else: false,
                             bindings_after_reachable_branch: None,
                         });
                     }
@@ -582,6 +615,8 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                                         is_loop: true,
                                         definitely_runs: false,
                                         branch_bindings: HashMap::new(),
+                                        bindings_in_all_branches: None,
+                                        has_else: false,
                                         bindings_after_reachable_branch: None,
                                     });
                                 }
@@ -601,7 +636,12 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                     }
                     Err(diag) => problems.push(diag),
                 },
-                NmeStmt::Else { inline: None } => out.push_str("} else {\n"),
+                NmeStmt::Else { inline: None } => {
+                    if let Some(frame) = native_blocks.last_mut() {
+                        frame.has_else = true;
+                    }
+                    out.push_str("} else {\n");
+                }
                 NmeStmt::End => {}
                 other => problems.push(unsupported_statement(other, nme_line.span)),
             }

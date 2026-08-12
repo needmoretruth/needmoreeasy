@@ -6,6 +6,14 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.106 — 2026-08-12
+
+- Treat a name assigned in every `if`/`else` branch as definitely initialized
+  after the block while keeping one-sided and possibly skipped loop bindings
+  conditional.
+- Cover the shared English and Korean branch-merge behavior in native tests and
+  references.
+
 ## 0.0.1-beta.105 — 2026-08-12
 
 - Fix native comparisons of two string concatenations so each operand keeps

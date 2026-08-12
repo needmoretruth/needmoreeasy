@@ -97,8 +97,10 @@ Implemented so far:
 - a name first assigned in a possibly skipped control block must be assigned
   before that block or used after assignment inside it; a literal `if true`
   branch is known to run, while names assigned only in its unreachable
-  `else`/`else if` alternatives are not exported; sibling branches do not
-  make each other's new bindings visible;
+  `else`/`else if` alternatives are not exported. A name assigned in every
+  branch of an `if`/`else` chain is available after the block; a name assigned
+  in only one branch, or inside a loop that may not run, remains conditional,
+  and sibling branches do not make each other's new bindings visible;
 - `say`/`show`/`말해` of an integer expression, a float, a string variable,
   or a string literal;
 - Korean and English spellings both lower to the same C;

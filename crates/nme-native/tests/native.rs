@@ -624,6 +624,21 @@ fn conditional_bindings_are_rejected_after_a_maybe_skipped_branch() {
 }
 
 #[test]
+fn bindings_assigned_in_both_if_else_branches_are_available_afterward() {
+    let source = "ready = 1\nif ready\n    result = 2\nelse\n    result = 3\nend\nshow result\n";
+    assert_eq!(native_run(source).unwrap(), "2\n");
+
+    let korean = "준비 = 1\n만약 준비\n    결과 = 2\n아니면\n    결과 = 3\n끝\n말해 결과\n";
+    assert_eq!(native_run(korean).unwrap(), "2\n");
+
+    let function_source = "def choose(value):\n    if value\n        result = 2\n    else\n        result = 3\n    end\n    return result\n\nshow choose(1)\n";
+    assert_eq!(native_run(function_source).unwrap(), "2\n");
+
+    let korean_function = "def 선택(값):\n    만약 값\n        결과 = 2\n    아니면\n        결과 = 3\n    끝\n    return 결과\n\n말해 선택(1)\n";
+    assert_eq!(native_run(korean_function).unwrap(), "2\n");
+}
+
+#[test]
 fn generated_functions_are_file_scope_portable_c() {
     let source = "def twice(n):\n    return n * 2\n\nshow twice(5)\n";
     let c = nme_native::native_compile(source).unwrap();
