@@ -865,6 +865,17 @@ fn emit_python_line(
                 })
                 .skip(1) // the function name itself
                 .collect::<Vec<_>>();
+            if let Some(parameter) = parameters
+                .iter()
+                .find(|parameter| is_native_reserved_name(parameter))
+            {
+                return Some(reserved_name(
+                    "a function parameter named",
+                    "함수 매개변수",
+                    parameter,
+                    span,
+                ));
+            }
             if parameters.is_empty() {
                 out.push_str(&format!("int {name}() {{\n"));
             } else {

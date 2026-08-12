@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.45 — 2026-08-12
+
+- Reject generated native-runtime names in function parameters before emitting C,
+  including unused parameters that would otherwise shadow runtime helpers.
+- Keep the same precise bilingual diagnostic used for native variables and
+  function names.
+
 ## 0.0.1-beta.44 — 2026-08-12
 
 - Reject C keywords and generated native-runtime names before C lowering, with

@@ -269,6 +269,29 @@ fn native_runtime_names_are_rejected_not_miscompiled() {
 }
 
 #[test]
+fn native_runtime_names_are_rejected_in_function_parameters() {
+    for name in ["NME_STRING_CAPACITY", "_nme_i", "nme_copy", "printf", "len"] {
+        let source = format!("def identity({name}):\n    return 1\n\nshow identity(1)\n");
+        let problems = nme_native::native_compile(&source).unwrap_err();
+        assert!(
+            problems
+                .iter()
+                .any(|problem| problem.message.contains("reserved native runtime name")),
+            "{name}: {problems:?}"
+        );
+        assert!(
+            problems.iter().any(|problem| {
+                problem
+                    .message_ko
+                    .as_deref()
+                    .is_some_and(|message| message.contains("네이티브 런타임 예약 이름"))
+            }),
+            "{name}: {problems:?}"
+        );
+    }
+}
+
+#[test]
 fn a_flat_block_body_gets_virtual_indentation() {
     let source = "x = 0\nwhile x is less than 2\nx add 1\nend\nshow x\n";
     assert_eq!(native_run(source).unwrap(), "2\n");
