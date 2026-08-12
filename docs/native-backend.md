@@ -21,10 +21,13 @@ sentence, beginner, and advanced levels to ordinary Python, preserving one
 physical line per source line, and CPython runs the result. `nme compile`
 asks the installed Nuitka to build that Python into an executable. Nuitka is a
 mature Python-to-C compiler, but it is **not** an NME-native backend: NME
-still has no compiler that turns NME source into machine code itself, and the
-native artifact remains Python in disguise.
+uses that path for the full Python-compatible pipeline, so its artifact still
+has Python runtime semantics. The separate `nme native` backend compiles its
+documented restricted NME subset to C and a system-compiler executable; it does
+not claim to compile all NME or all Python.
 
-The goal of this document is to plan that missing backend honestly.
+The goal of this document is to define and extend that restricted backend
+honestly while keeping the full language on CPython.
 
 For the current CLI, `nme native run <file>` compiles and runs a temporary
 executable without saving artifacts. Use `nme native build <file> -o <path>`

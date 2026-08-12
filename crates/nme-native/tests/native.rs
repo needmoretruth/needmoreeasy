@@ -431,6 +431,15 @@ fn functions_over_scalars_compile_natively() {
 }
 
 #[test]
+fn blank_lines_between_native_function_header_and_body_keep_function_scope() {
+    let source = "def identity(value):\n\n    return value\n\nshow identity(7)\n";
+    assert_eq!(native_run(source).unwrap(), "7\n");
+
+    let commented = "def identity(value):\n# keep this comment\n    return value\n\nshow identity(7)\n";
+    assert_eq!(native_run(commented).unwrap(), "7\n");
+}
+
+#[test]
 fn return_outside_a_native_function_is_rejected_before_c_generation() {
     let problems = nme_native::native_compile("return 1\n").unwrap_err();
     assert!(

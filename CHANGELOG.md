@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.73 — 2026-08-12
+
+- Correct the native-backend memo so its description matches the implemented
+  restricted NME-to-C path and the separate Python/Nuitka path.
+- Cover blank-line and comment layouts between native function headers and
+  bodies in the backend regression suite.
+
 ## 0.0.1-beta.72 — 2026-08-12
 
 - Make the documentation parity check verify that both sequential guide indexes
