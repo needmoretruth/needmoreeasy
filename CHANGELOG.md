@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.122 — 2026-08-12
+
+- Add shared-parser and native regression coverage for Korean comparison endings
+  before mixed-language `and`/`or` connectors inside wrapped conditions.
+
 ## 0.0.1-beta.121 — 2026-08-12
 
 - Fix parenthesized Korean `while` conditions when a comparison ending comes

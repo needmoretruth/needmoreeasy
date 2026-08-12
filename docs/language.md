@@ -291,7 +291,8 @@ Python byte-for-byte. Korean sentence endings can stay inside the same wrapper,
 as in `만약 (점수가 2보다 작으면)`. A comparison ending may also precede a
 logical connector inside the wrapper, as in `만약 (점수가 2보다 크면 그리고
 준비)`. The same placement works for a Korean `while` ending, as in
-`동안 (횟수가 2보다 작을 동안 그리고 준비)`.
+`동안 (횟수가 2보다 작을 동안 그리고 준비)`. The connector spellings can be
+mixed too, as in `만약 (점수가 2보다 크면 and 준비)`.
 
 ### Random without code punctuation
 

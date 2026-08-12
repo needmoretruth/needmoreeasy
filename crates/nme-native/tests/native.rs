@@ -1273,9 +1273,16 @@ fn parenthesized_korean_comparison_endings_compile_natively() {
         "점수는 3\n준비는 참\n만약 (점수가 2보다 크면 그리고 준비)\n    성공 말해줘\n끝\n";
     assert_eq!(native_run(logical).unwrap(), "성공\n");
 
+    let mixed = "점수는 3\n준비는 참\n만약 (점수가 2보다 크면 and 준비)\n    성공 말해줘\n끝\n";
+    assert_eq!(native_run(mixed).unwrap(), "성공\n");
+
     let disjunction =
         "점수는 3\n준비는 거짓\n만약 (점수가 2보다 작으면 또는 준비)\n    실패 말해줘\n끝\n";
     assert_eq!(native_run(disjunction).unwrap(), "");
+
+    let mixed_disjunction =
+        "점수는 3\n준비는 거짓\n만약 (점수가 2보다 작으면 or 준비)\n    실패 말해줘\n끝\n";
+    assert_eq!(native_run(mixed_disjunction).unwrap(), "");
 }
 
 #[test]

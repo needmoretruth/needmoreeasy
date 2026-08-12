@@ -484,6 +484,22 @@ fn parenthesized_korean_comparisons_can_precede_logical_connectors() {
         "# end\n",
     );
     assert_eq!(ok(source), expected);
+
+    let mixed = concat!(
+        "점수는 3\n",
+        "준비는 참\n",
+        "만약 (점수가 2보다 크면 and 준비)\n",
+        "성공 말해줘\n",
+        "끝\n",
+    );
+    let mixed_expected = concat!(
+        "점수 = 3\n",
+        "준비 = True\n",
+        "if ((점수 > 2 and 준비)):\n",
+        "    print(\"성공\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(mixed), mixed_expected);
 }
 
 #[test]
@@ -503,6 +519,22 @@ fn parenthesized_korean_comparisons_can_precede_or_connectors() {
         "# end\n",
     );
     assert_eq!(ok(source), expected);
+
+    let mixed = concat!(
+        "점수는 3\n",
+        "준비는 거짓\n",
+        "만약 (점수가 2보다 작으면 or 준비)\n",
+        "실패 말해줘\n",
+        "끝\n",
+    );
+    let mixed_expected = concat!(
+        "점수 = 3\n",
+        "준비 = False\n",
+        "if ((점수 < 2 or 준비)):\n",
+        "    print(\"실패\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(mixed), mixed_expected);
 }
 
 #[test]
