@@ -270,6 +270,46 @@ fn continue_outside_a_loop_gets_a_stable_diagnostic() {
 }
 
 #[test]
+fn inline_branches_without_an_open_condition_get_a_stable_diagnostic() {
+    let cases = [
+        ("sentence-en", "when true then else show no\n"),
+        ("sentence-ko", "만약 참 그러면 아니면 말해 아니요\n"),
+        ("beginner-en", "if True then else show no\n"),
+        ("beginner-ko", "만약 True 그러면 아니면 말해 아니요\n"),
+        ("advanced-en", "if (True) then else show no\n"),
+        (
+            "advanced-ko",
+            "만약 ((참 그리고 참)) 그러면 아니면 말해 아니요\n",
+        ),
+    ];
+
+    for (label, source) in cases {
+        let problems = match transpile(source) {
+            Ok(output) => panic!("expected inline branch diagnostic for {label}, got {output:?}"),
+            Err(problems) => problems,
+        };
+        assert_eq!(problems.len(), 1, "core case: {label}: {problems:?}");
+        let problem = &problems[0];
+        assert_eq!(
+            problem.code,
+            DiagnosticCode::BranchWithoutCondition,
+            "core case: {label}"
+        );
+        assert!(
+            problem.message.contains("open condition"),
+            "{label}: {problem:?}"
+        );
+        assert!(
+            problem
+                .message_ko
+                .as_deref()
+                .is_some_and(|message| message.contains("열린 조건")),
+            "{label}: {problem:?}"
+        );
+    }
+}
+
+#[test]
 fn only_the_bundled_modules_are_available() {
     let message = err("use math\n");
     assert!(

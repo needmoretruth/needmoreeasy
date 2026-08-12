@@ -5122,6 +5122,9 @@ fn parse_suite_body(
     if has_top_level_semicolon(body) {
         return Err(one_statement_diagnostic(kind, body_span));
     }
+    if branch_shape(body).is_some() {
+        return Err(branch_without_condition_diagnostic(body_span));
+    }
     // Korean `멈춰` is a valid Python identifier, so the Python-wins check in
     // `classify` intentionally leaves a bare top-level name alone. Inside an
     // already recognized NME suite, however, the documented Korean break
@@ -5131,6 +5134,9 @@ fn parse_suite_body(
         return Ok(Some(InlineStmt::Nme(Box::new(NmeStmt::Break))));
     }
     if let Some(inner) = classify(source, body, &BlockCtx::Inline, known_names)? {
+        if matches!(&inner, NmeStmt::ElseIf { .. } | NmeStmt::Else { .. }) {
+            return Err(branch_without_condition_diagnostic(body_span));
+        }
         return Ok(Some(InlineStmt::Nme(Box::new(inner))));
     }
     if !is_valid_python_statement(&source[body_span.start..body_span.end]) {

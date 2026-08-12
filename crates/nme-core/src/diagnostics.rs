@@ -399,8 +399,8 @@ impl DiagnosticCode {
                 "E0103",
                 "an `else` or `elif` with no open condition",
                 "열린 조건이 없는 `아니면`",
-                "`else`, `else if`, `elif`, `아니면` are branches of an `if` (or `만약`) block. Write the `if` line first and keep the `else` inside the same block, before its `end`.",
-                "`else`, `else if`, `elif`, `아니면`은 `if`(`만약`) 블록의 가지입니다. 먼저 `if` 줄을 쓰고, `else`는 같은 블록 안에서 `끝`보다 앞에 두세요.",
+                "`else`, `else if`, `elif`, `아니면` are branches of an `if` (or `만약`) block. Write the `if` line first and keep the branch inside the same block, before its `end`; an inline body must contain a statement, not a branch.",
+                "`else`, `else if`, `elif`, `아니면`은 `if`(`만약`) 블록의 가지입니다. 먼저 `if` 줄을 쓰고, 가지는 같은 블록 안에서 `끝`보다 앞에 두세요. 인라인 본문에는 가지가 아니라 실행 문장을 적어야 합니다.",
             ),
             Self::DuplicateElse => (
                 "E0104",

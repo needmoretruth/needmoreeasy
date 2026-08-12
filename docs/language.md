@@ -651,6 +651,9 @@ See [the conversion guide](converting-python.md).
   with a bilingual hint; valid returns inside functions remain Python.
 - A top-level or inline Python `continue` outside a loop gets `E0107` with a
   bilingual hint; valid `continue` statements inside loops remain Python.
+- An inline body must contain one statement; an inline `else`/`elif` without an
+  open condition gets `E0103`. Put branch lines in the same explicit condition
+  block before its `end`.
 - Independent problems are collected when possible.
 - Korean-led CLI commands receive Korean-first explanations and recovery examples
   such as `nme 실행`, `nme 컴파일`, and `nme 설치`; English command invocations

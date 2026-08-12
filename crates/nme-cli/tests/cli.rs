@@ -2525,6 +2525,31 @@ fn top_level_continue_reports_the_shared_loop_diagnostic() {
 }
 
 #[test]
+fn inline_branch_without_a_condition_reports_the_shared_branch_diagnostic() {
+    let dir =
+        std::env::temp_dir().join(format!("nme-cli-inline-branch-code-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let english_file = dir.join("english.nme");
+    let korean_file = dir.join("korean.nme");
+    std::fs::write(&english_file, "if True then else show no\n").unwrap();
+    std::fs::write(&korean_file, "만약 참 그러면 아니면 말해 아니요\n").unwrap();
+
+    let english = nme(&["check", &english_file.to_string_lossy()]);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(english_error.contains("error[E0103]:"), "{english_error}");
+    assert!(english_error.contains("open condition"), "{english_error}");
+
+    let korean = nme(&["검사", &korean_file.to_string_lossy()]);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(korean_error.contains("오류[E0103]:"), "{korean_error}");
+    assert!(korean_error.contains("열린 조건"), "{korean_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn cli_errors_carry_lookup_codes() {
     let unknown_command = nme(&["this-command-does-not-exist"]);
     assert!(!unknown_command.status.success());

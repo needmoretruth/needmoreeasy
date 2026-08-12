@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.140 — 2026-08-12
+
+- Reject inline `else`/`elif` bodies without an open condition with the shared
+  bilingual `E0103` diagnostic instead of lowering invalid Python.
+
 ## 0.0.1-beta.139 — 2026-08-12
 
 - Report top-level and inline Python `continue` outside a loop with the shared
