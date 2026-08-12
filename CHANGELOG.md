@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.91 — 2026-08-12
+
+- Align the Korean check/build and conversion guide commands with the Korean
+  CLI paths, and document the Korean-first bilingual diagnostic output.
+
 ## 0.0.1-beta.90 — 2026-08-12
 
 - Align the English and Korean condition/random guide examples with their

@@ -57,8 +57,8 @@
 4. 변환된 프로그램을 확인하고 실행합니다:
 
    ```sh
-   nme c easy
-   nme run easy
+   nme 검사 easy.ko
+   nme 실행 easy.ko
    ```
 
    변환기는 절대 추측하지 않습니다. 뜻이 바뀔 수 있는 것은 일반 Python으로
