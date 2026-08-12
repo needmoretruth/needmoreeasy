@@ -110,6 +110,7 @@ struct NativeBlockFrame {
     body_depth: usize,
     bindings_before: HashMap<String, VarType>,
     definitely_runs: bool,
+    branch_bindings: HashMap<String, VarType>,
     bindings_after_reachable_branch: Option<HashMap<String, VarType>>,
 }
 
@@ -144,7 +145,7 @@ fn condition_definitely_true(condition: &Condition) -> bool {
     )
 }
 
-fn finish_native_block(frame: NativeBlockFrame, declared: &mut HashMap<String, VarType>) {
+fn finish_native_block(mut frame: NativeBlockFrame, declared: &mut HashMap<String, VarType>) {
     if let Some(bindings) = frame.bindings_after_reachable_branch {
         *declared = bindings;
         return;
@@ -152,16 +153,30 @@ fn finish_native_block(frame: NativeBlockFrame, declared: &mut HashMap<String, V
     if frame.definitely_runs {
         return;
     }
-    let names = declared.keys().cloned().collect::<Vec<_>>();
-    for name in names {
-        if let Some(previous) = frame.bindings_before.get(&name).copied() {
-            if is_maybe_type(previous) {
-                declared.insert(name, previous);
-            }
-        } else if let Some(current) = declared.get(&name).copied() {
-            declared.insert(name, maybe_type(current));
+    record_branch_bindings(&mut frame, declared);
+    let mut merged = frame.bindings_before;
+    for (name, kind) in frame.branch_bindings {
+        if !merged.contains_key(&name) {
+            merged.insert(name, maybe_type(kind));
         }
     }
+    *declared = merged;
+}
+
+fn record_branch_bindings(frame: &mut NativeBlockFrame, declared: &HashMap<String, VarType>) {
+    for (name, kind) in declared {
+        frame.branch_bindings.entry(name.clone()).or_insert(*kind);
+    }
+}
+
+fn reset_for_next_branch(frame: &NativeBlockFrame) -> HashMap<String, VarType> {
+    let mut declared = frame.bindings_before.clone();
+    for (name, kind) in &frame.branch_bindings {
+        if !declared.contains_key(name) {
+            declared.insert(name.clone(), maybe_type(*kind));
+        }
+    }
+    declared
 }
 
 const PREAMBLE: &str = concat!(
@@ -376,6 +391,8 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                     if frame.definitely_runs && frame.bindings_after_reachable_branch.is_none() {
                         frame.bindings_after_reachable_branch = Some(declared.clone());
                     }
+                    record_branch_bindings(frame, &declared);
+                    declared = reset_for_next_branch(frame);
                 }
             }
             // `else`/`else if` lines emit their own closing `}` before the
@@ -437,6 +454,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                             body_depth: current_depth + 1,
                             bindings_before: declared.clone(),
                             definitely_runs: false,
+                            branch_bindings: HashMap::new(),
                             bindings_after_reachable_branch: None,
                         });
                     }
@@ -459,6 +477,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                             body_depth: current_depth + 1,
                             bindings_before: declared.clone(),
                             definitely_runs: condition_definitely_true(condition),
+                            branch_bindings: HashMap::new(),
                             bindings_after_reachable_branch: None,
                         });
                     }
@@ -494,6 +513,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                                         body_depth: current_depth + 1,
                                         bindings_before: declared.clone(),
                                         definitely_runs: false,
+                                        branch_bindings: HashMap::new(),
                                         bindings_after_reachable_branch: None,
                                     });
                                 }

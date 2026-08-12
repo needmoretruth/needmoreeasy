@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.60 — 2026-08-12
+
+- Isolate native binding analysis between sibling branches so a read in one
+  branch cannot use a name assigned only in another branch.
+- Preserve C declaration reuse and conservative maybe-initialized tracking after
+  uncertain control blocks.
+
 ## 0.0.1-beta.59 — 2026-08-12
 
 - Keep bindings from unreachable `else`/`else if` alternatives after `if true`

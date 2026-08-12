@@ -776,6 +776,31 @@ fn unreachable_true_branch_alternatives_do_not_export_bindings() {
 }
 
 #[test]
+fn sibling_native_branches_do_not_share_bindings() {
+    for source in [
+        "ready = 0\nif ready\n    hidden = 1\nelse\n    value = hidden\nend\nshow value\n",
+        "준비 = 0\n만약 준비 하면\n    숨김 = 1\n아니면\n    값 = 숨김\n끝\n말해 값\n",
+    ] {
+        let problems = nme_native::native_compile(source).unwrap_err();
+        assert!(
+            problems
+                .iter()
+                .any(|problem| problem.message.contains("without a prior native binding")),
+            "{source:?}: {problems:?}"
+        );
+        assert!(
+            problems.iter().any(|problem| {
+                problem
+                    .message_ko
+                    .as_deref()
+                    .is_some_and(|message| message.contains("먼저 네이티브 바인딩"))
+            }),
+            "{source:?}: {problems:?}"
+        );
+    }
+}
+
+#[test]
 fn a_python_colon_while_header_is_rejected_not_miscompiled() {
     // `while x < 3:` is valid Python, so it stays Python (Python-wins) and
     // the native core, which lowers the sentence `while` form, rejects it.
