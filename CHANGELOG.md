@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.123 — 2026-08-12
+
+- Extend the native backend to lower one-line NME `say`/`show` bodies after
+  `then`/`그러면` for `if`/`while` and branch chains.
+- Preserve native branch-flow tracking across inline `elif`/`else` bodies while
+  keeping unsupported Python inline statements rejected.
+
 ## 0.0.1-beta.122 — 2026-08-12
 
 - Add shared-parser and native regression coverage for Korean comparison endings

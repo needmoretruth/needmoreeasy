@@ -597,7 +597,9 @@ comparisons (including `<=`/`>=` and the natural-language "or equal"
   parameters with a required top-level
   integer `return` (recursion works); `say`/`show`/`말해` of
   integers, floats, booleans, and strings. Boolean arithmetic, value changes,
-  and boolean function arguments/returns remain outside the native core. Float arithmetic that would produce a
+  boolean function arguments/returns, and Python inline bodies remain outside
+  the native core. One-line NME `say`/`show`/`말해` bodies after `then`/`그러면`
+  are supported for these control statements and branch chains. Float arithmetic that would produce a
 non-finite result stops with a bilingual runtime error. Everything else — input, modules, files,
 classes, packages — is rejected with a clear diagnostic and still runs on
 CPython with `nme run`. Identifiers that collide with C keywords are rejected,

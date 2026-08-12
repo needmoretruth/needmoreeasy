@@ -10,7 +10,7 @@ AI 코딩 도우미에게 다음 문장 하나를 전달하세요.
 NME 코드를 작성하기 전에 이 문서를 읽고 따르세요.
 https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.ko.md
 
-먼저 `nme --version`으로 지원되는 베타(현재 `0.0.1-beta.122`)를 확인하세요. 그다음 요청한 프로그램을 .nme 파일로 작성하세요. 초보자에게는 문장형을 우선하고,
+먼저 `nme --version`으로 지원되는 베타(현재 `0.0.1-beta.123`)를 확인하세요. 그다음 요청한 프로그램을 .nme 파일로 작성하세요. 초보자에게는 문장형을 우선하고,
 더 분명할 때만 초급 문법이나 고급 Python을 섞으며, nme 검사로 확인하세요.
 ```
 
@@ -203,7 +203,10 @@ use random
 이름을 쓰고 지원되는 조건은 단락 평가 `and`/`or`로 묶으며 `show`는 `True` 또는
 `False`를 출력하세요. 네이티브 코드에서는
 불리언 산술이나 `더해`/`빼` 값 변경을 쓰지 말고, 사용자가 네이티브 코어
-진단을 원하지 않는 한 CPython으로 안내하세요. 전체 경계는
+진단을 원하지 않는 한 CPython으로 안내하세요.
+네이티브 `if`/`while`/분기 본문에서는 `then`/`그러면` 뒤에 한 줄 NME
+`say`/`show`/`말해`를 쓸 수 있지만, Python 인라인 본문과 인라인 값 변경은
+네이티브 부분집합 밖입니다. 전체 경계는
 [네이티브 코어 레퍼런스](https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/native-reference.ko.md)에
 있습니다.
 

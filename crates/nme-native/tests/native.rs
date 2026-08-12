@@ -1262,6 +1262,65 @@ fn parenthesized_logical_conditions_compile_across_the_native_surface_matrix() {
 }
 
 #[test]
+fn one_line_nme_control_bodies_compile_across_the_native_surface_matrix() {
+    let cases = [
+        (
+            "sentence-en",
+            "ready save true\nif ready then show \"yes\"\n",
+            "yes\n",
+        ),
+        (
+            "sentence-ko",
+            "준비는 참\n만약 준비 그러면 말해 \"예\"\n",
+            "예\n",
+        ),
+        (
+            "beginner-en",
+            "set ready to True\nif ready then show \"yes\"\n",
+            "yes\n",
+        ),
+        (
+            "beginner-ko",
+            "저장 준비 True\n만약 준비 그러면 말해 \"예\"\n",
+            "예\n",
+        ),
+        (
+            "advanced-en",
+            "ready = True\nif (ready) then show \"yes\"\n",
+            "yes\n",
+        ),
+        (
+            "advanced-ko",
+            "준비 = True\n만약 (준비) 그러면 말해 \"예\"\n",
+            "예\n",
+        ),
+    ];
+
+    for (label, source, expected) in cases {
+        let actual = native_run(source).unwrap_or_else(|error| {
+            panic!("native case failed: {label}: {error}");
+        });
+        assert_eq!(actual, expected, "native case: {label}");
+    }
+}
+
+#[test]
+fn native_control_bodies_reject_python_inline_statements() {
+    for source in [
+        "ready = True\nif ready then print(\"yes\")\n",
+        "준비 = True\n만약 준비 그러면 print(\"예\")\n",
+    ] {
+        let problems = nme_native::native_compile(source).unwrap_err();
+        assert!(
+            problems
+                .iter()
+                .any(|problem| problem.message.contains("this inline body")),
+            "{source:?}: {problems:?}"
+        );
+    }
+}
+
+#[test]
 fn parenthesized_korean_comparison_endings_compile_natively() {
     let source = "점수는 1\n만약 (점수가 2보다 작으면)\n    작아요 말해줘\n끝\n";
     assert_eq!(native_run(source).unwrap(), "작아요\n");
@@ -1269,12 +1328,21 @@ fn parenthesized_korean_comparison_endings_compile_natively() {
     let branch = "점수는 3\n만약 거짓\n    안 돼 말해줘\n아니면 만약에 (점수가 4보다 작으면)\n    작아요 말해줘\n끝\n";
     assert_eq!(native_run(branch).unwrap(), "작아요\n");
 
+    let logical_branch = "점수는 3\n준비는 참\n만약 거짓\n    안 돼 말해줘\n아니면 만약에 (점수가 2보다 크면 그리고 준비)\n    성공 말해줘\n끝\n";
+    assert_eq!(native_run(logical_branch).unwrap(), "성공\n");
+
     let logical =
         "점수는 3\n준비는 참\n만약 (점수가 2보다 크면 그리고 준비)\n    성공 말해줘\n끝\n";
     assert_eq!(native_run(logical).unwrap(), "성공\n");
 
     let mixed = "점수는 3\n준비는 참\n만약 (점수가 2보다 크면 and 준비)\n    성공 말해줘\n끝\n";
     assert_eq!(native_run(mixed).unwrap(), "성공\n");
+
+    let inline = "점수는 3\n준비는 참\n만약 (점수가 2보다 크면 그리고 준비) 그러면 성공 말해줘\n";
+    assert_eq!(native_run(inline).unwrap(), "성공\n");
+
+    let inline_branch = "점수는 3\n준비는 참\n만약 거짓\n    안 돼 말해줘\n아니면 만약에 (점수가 2보다 크면 그리고 준비) 그러면 성공 말해줘\n아니면 끝났어 말해줘\n끝\n";
+    assert_eq!(native_run(inline_branch).unwrap(), "성공\n");
 
     let disjunction =
         "점수는 3\n준비는 거짓\n만약 (점수가 2보다 작으면 또는 준비)\n    실패 말해줘\n끝\n";
@@ -1295,6 +1363,9 @@ fn parenthesized_korean_while_endings_compile_natively() {
 
     let disjunction = "준비는 거짓\n횟수는 0\n동안 (횟수가 2보다 작을 동안 또는 준비)\n    횟수에 1 더해\n끝\n횟수 말해줘\n";
     assert_eq!(native_run(disjunction).unwrap(), "2\n");
+
+    let inline = "횟수는 0\n동안 횟수가 0보다 크면 횟수 말해줘\n횟수 말해줘\n";
+    assert_eq!(native_run(inline).unwrap(), "0\n");
 }
 
 #[test]

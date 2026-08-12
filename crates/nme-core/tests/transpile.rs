@@ -465,6 +465,26 @@ fn parenthesized_korean_comparison_endings_keep_the_condition_body_boundary() {
         "# end\n",
     );
     assert_eq!(ok(branch), branch_expected);
+
+    let logical_branch = concat!(
+        "점수는 3\n",
+        "준비는 참\n",
+        "만약 거짓\n",
+        "    안 돼 말해줘\n",
+        "아니면 만약에 (점수가 2보다 크면 그리고 준비)\n",
+        "    성공 말해줘\n",
+        "끝\n",
+    );
+    let logical_branch_expected = concat!(
+        "점수 = 3\n",
+        "준비 = True\n",
+        "if (False):\n",
+        "    print(\"안 돼\")\n",
+        "elif ((점수 > 2 and 준비)):\n",
+        "    print(\"성공\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(logical_branch), logical_branch_expected);
 }
 
 #[test]
@@ -500,6 +520,11 @@ fn parenthesized_korean_comparisons_can_precede_logical_connectors() {
         "# end\n",
     );
     assert_eq!(ok(mixed), mixed_expected);
+
+    assert_eq!(
+        ok("만약 (점수가 2보다 크면 그리고 준비) 그러면 성공 말해줘\n"),
+        "if ((점수 > 2 and 준비)): print(\"성공\")\n",
+    );
 }
 
 #[test]

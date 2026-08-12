@@ -91,7 +91,7 @@ Cargo가 설치한 `bin` 폴더가 `PATH`에 없다고 경고하면 macOS/Linux�
 명령이 아닙니다. Windows PowerShell은
 [설치 안내](docs/install.ko.md#windows-11)의 PATH 단계를 사용하세요.
 
-표시될 버전은 `nme 0.0.1-beta.122`입니다.
+표시될 버전은 `nme 0.0.1-beta.123`입니다.
 
 Windows, macOS, Linux별 과정은 [설치 안내](docs/install.ko.md)에 있습니다.
 프로그래밍을 전혀 모른다면 [5분 시작 안내](docs/getting-started.ko.md)부터
@@ -159,7 +159,7 @@ program` 모두 실행됩니다. NME가 운영체제에 맞는 Python 명령을 
 program`은 Nuitka로 컴파일, `nme conv app.py`는 Python을 NME로 변환하며,
 `nme 설치 requests`는 Python 패키지를 pip으로 설치합니다.
 
-NME의 코어 부분집합은 `nme 네이티브 실행 hello`로 바로 네이티브 기계어로 컴파일할 수 있습니다(불리언·정수·유한 실수 값, 문자열, 문장형 `while`/`if`/`else`, 논리 `and`/`or`, 초급 `번:` 반복, `break`, 정수 매개변수와 모든 경로의 정수 `return`을 쓰는 함수, `say` — [`native-factorial.ko.nme`](examples/native-factorial.ko.nme), [`native-boolean.ko.nme`](examples/native-boolean.ko.nme), [`native-logical.ko.nme`](examples/native-logical.ko.nme)(영어 쌍 [`native-factorial.nme`](examples/native-factorial.nme), [`native-boolean.nme`](examples/native-boolean.nme), [`native-logical.nme`](examples/native-logical.nme))를 시도; 불리언 산술과 지원하지 않는 기능은 CPython으로 실행). [네이티브 코어 레퍼런스](docs/native-reference.ko.md)와 [네이티브 백엔드 조사](docs/native-backend.ko.md)를 보세요.
+NME의 코어 부분집합은 `nme 네이티브 실행 hello`로 바로 네이티브 기계어로 컴파일할 수 있습니다(불리언·정수·유한 실수 값, 문자열, 문장형 `while`/`if`/`else`, `then`/`그러면` 뒤의 한 줄 NME 출력 본문, 논리 `and`/`or`, 초급 `번:` 반복, `break`, 정수 매개변수와 모든 경로의 정수 `return`을 쓰는 함수, `say` — [`native-factorial.ko.nme`](examples/native-factorial.ko.nme), [`native-boolean.ko.nme`](examples/native-boolean.ko.nme), [`native-logical.ko.nme`](examples/native-logical.ko.nme)(영어 쌍 [`native-factorial.nme`](examples/native-factorial.nme), [`native-boolean.nme`](examples/native-boolean.nme), [`native-logical.nme`](examples/native-logical.nme))를 시도; 불리언 산술과 지원하지 않는 기능은 CPython으로 실행). [네이티브 코어 레퍼런스](docs/native-reference.ko.md)와 [네이티브 백엔드 조사](docs/native-backend.ko.md)를 보세요.
 
 프로그램 이름도 겹치지 않는 범위에서 줄여 쓸 수 있습니다: `nme r gue`는
 `guessing-game.nme`를 실행합니다. 여러 프로그램이 일치하면 추측하지 않고

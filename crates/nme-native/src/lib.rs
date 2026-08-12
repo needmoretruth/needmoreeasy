@@ -28,7 +28,8 @@
 //!   initialized before the block or used after assignment within it;
 //! - `while`/`if`/`else`/`else if` blocks over integer, finite-float, string,
 //!   and boolean comparisons or truthiness, closed by `end`/`끝`, plus
-//!   documented logical `and`/`or` conditions and `times:`/`번:` loops;
+//!   documented logical `and`/`or` conditions, one-line NME output bodies, and
+//!   `times:`/`번:` loops;
 //! - `break` inside a loop;
 //! - functions over integer parameters with an unconditional integer `return`
 //!   (recursion works); calls must name a function in the file and use its
@@ -132,6 +133,16 @@ struct NativeBlockFrame {
     bindings_after_reachable_branch: Option<HashMap<String, VarType>>,
     reachable_branch_flow: Option<NativeBranchFlow>,
     branch_flow: NativeBranchFlow,
+}
+
+struct NativeControlContext<'a> {
+    out: &'a mut String,
+    open_braces: &'a mut usize,
+    native_blocks: &'a mut Vec<NativeBlockFrame>,
+    source: &'a str,
+    span: Span,
+    declared: &'a HashMap<String, VarType>,
+    functions: &'a HashMap<String, usize>,
 }
 
 fn concrete_type(kind: VarType) -> VarType {
@@ -586,52 +597,50 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                         problems.push(diag);
                     }
                 }
-                NmeStmt::While {
-                    condition,
-                    inline: None,
-                } => match check_condition(condition, source, nme_line.span, &declared, &functions)
-                {
-                    Ok(condition_text) => {
-                        out.push_str(&format!("while ({condition_text}) {{\n"));
-                        open_braces += 1;
-                        native_blocks.push(NativeBlockFrame {
-                            body_depth: current_depth + 1,
-                            bindings_before: declared.clone(),
-                            is_loop: true,
-                            definitely_runs: false,
-                            branch_bindings: HashMap::new(),
-                            bindings_in_all_branches: None,
-                            has_else: false,
-                            bindings_after_reachable_branch: None,
-                            reachable_branch_flow: None,
-                            branch_flow: NativeBranchFlow::FallThrough,
-                        });
+                NmeStmt::While { condition, inline } => {
+                    let mut control = NativeControlContext {
+                        out: &mut out,
+                        open_braces: &mut open_braces,
+                        native_blocks: &mut native_blocks,
+                        source,
+                        span: nme_line.span,
+                        declared: &declared,
+                        functions: &functions,
+                    };
+                    if let Err(diag) = emit_native_condition_block(
+                        &mut control,
+                        "while",
+                        condition,
+                        inline.as_ref(),
+                        current_depth + 1,
+                        true,
+                        false,
+                    ) {
+                        problems.push(diag);
                     }
-                    Err(diag) => problems.push(diag),
-                },
-                NmeStmt::When {
-                    condition,
-                    inline: None,
-                } => match check_condition(condition, source, nme_line.span, &declared, &functions)
-                {
-                    Ok(condition_text) => {
-                        out.push_str(&format!("if ({condition_text}) {{\n"));
-                        open_braces += 1;
-                        native_blocks.push(NativeBlockFrame {
-                            body_depth: current_depth + 1,
-                            bindings_before: declared.clone(),
-                            is_loop: false,
-                            definitely_runs: condition_definitely_true(condition),
-                            branch_bindings: HashMap::new(),
-                            bindings_in_all_branches: None,
-                            has_else: false,
-                            bindings_after_reachable_branch: None,
-                            reachable_branch_flow: None,
-                            branch_flow: NativeBranchFlow::FallThrough,
-                        });
+                }
+                NmeStmt::When { condition, inline } => {
+                    let mut control = NativeControlContext {
+                        out: &mut out,
+                        open_braces: &mut open_braces,
+                        native_blocks: &mut native_blocks,
+                        source,
+                        span: nme_line.span,
+                        declared: &declared,
+                        functions: &functions,
+                    };
+                    if let Err(diag) = emit_native_condition_block(
+                        &mut control,
+                        "if",
+                        condition,
+                        inline.as_ref(),
+                        current_depth + 1,
+                        false,
+                        condition_definitely_true(condition),
+                    ) {
+                        problems.push(diag);
                     }
-                    Err(diag) => problems.push(diag),
-                },
+                }
                 NmeStmt::Break => {
                     if native_blocks.iter().any(|frame| frame.is_loop) {
                         out.push_str("break;\n");
@@ -688,21 +697,38 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                         Ok(_) => problems.push(not_supported("this repeat count", nme_line.span)),
                     }
                 }
-                NmeStmt::ElseIf {
-                    condition,
-                    inline: None,
-                } => match check_condition(condition, source, nme_line.span, &declared, &functions)
-                {
-                    Ok(condition_text) => {
-                        out.push_str(&format!("}} else if ({condition_text}) {{\n"));
+                NmeStmt::ElseIf { condition, inline } => {
+                    match lower_native_control(
+                        "} else if",
+                        Some(condition),
+                        inline.as_ref(),
+                        source,
+                        nme_line.span,
+                        &declared,
+                        &functions,
+                    ) {
+                        Ok(text) => out.push_str(&text),
+                        Err(diag) => problems.push(diag),
                     }
-                    Err(diag) => problems.push(diag),
-                },
-                NmeStmt::Else { inline: None } => {
-                    if let Some(frame) = native_blocks.last_mut() {
-                        frame.has_else = true;
+                }
+                NmeStmt::Else { inline } => {
+                    match lower_native_control(
+                        "} else",
+                        None,
+                        inline.as_ref(),
+                        source,
+                        nme_line.span,
+                        &declared,
+                        &functions,
+                    ) {
+                        Ok(text) => {
+                            if let Some(frame) = native_blocks.last_mut() {
+                                frame.has_else = true;
+                            }
+                            out.push_str(&text);
+                        }
+                        Err(diag) => problems.push(diag),
                     }
-                    out.push_str("} else {\n");
                 }
                 NmeStmt::End => {}
                 other => problems.push(unsupported_statement(other, nme_line.span)),
@@ -826,6 +852,75 @@ fn lower_inline(
         }
         _ => Err(not_supported("this inline statement", span)),
     }
+}
+
+/// Lowers a native control header and, when present, its supported one-line
+/// body. Inline output keeps the C block open so the next source line closes it
+/// at normal virtual indentation and inline `elif`/`else` branches share the
+/// same branch frame as their multi-line forms.
+fn lower_native_control(
+    prefix: &str,
+    condition: Option<&Condition>,
+    inline: Option<&InlineStmt>,
+    source: &str,
+    span: Span,
+    declared: &HashMap<String, VarType>,
+    functions: &HashMap<String, usize>,
+) -> Result<String, Diagnostic> {
+    let header = if let Some(condition) = condition {
+        format!(
+            "{prefix} ({})",
+            check_condition(condition, source, span, declared, functions)?
+        )
+    } else {
+        prefix.to_string()
+    };
+    let body = match inline {
+        Some(InlineStmt::Nme(inner)) => {
+            Some(lower_inline(inner, source, declared, functions, span)?)
+        }
+        Some(InlineStmt::Python(_)) => return Err(not_supported("this inline body", span)),
+        None => None,
+    };
+    Ok(format!(
+        "{header} {{\n{}",
+        body.map(|body| format!("{body}\n")).unwrap_or_default()
+    ))
+}
+
+fn emit_native_condition_block(
+    context: &mut NativeControlContext<'_>,
+    prefix: &str,
+    condition: &Condition,
+    inline: Option<&InlineStmt>,
+    body_depth: usize,
+    is_loop: bool,
+    definitely_runs: bool,
+) -> Result<(), Diagnostic> {
+    let text = lower_native_control(
+        prefix,
+        Some(condition),
+        inline,
+        context.source,
+        context.span,
+        context.declared,
+        context.functions,
+    )?;
+    context.out.push_str(&text);
+    *context.open_braces += 1;
+    context.native_blocks.push(NativeBlockFrame {
+        body_depth,
+        bindings_before: context.declared.clone(),
+        is_loop,
+        definitely_runs,
+        branch_bindings: HashMap::new(),
+        bindings_in_all_branches: None,
+        has_else: false,
+        bindings_after_reachable_branch: None,
+        reachable_branch_flow: None,
+        branch_flow: NativeBranchFlow::FallThrough,
+    });
+    Ok(())
 }
 
 fn close_braces(out: &mut String, open: &mut usize, target: usize) {

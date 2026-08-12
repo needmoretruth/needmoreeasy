@@ -148,6 +148,10 @@ available as `examples/native-logical` and `examples/native-logical.ko`.
   Beginner `times:` and `번:` loops are supported.
 - `break` works inside a native loop, including an `if` nested in that loop.
   A break outside a loop is rejected before C is emitted.
+- A one-line NME output body after `then`/`그러면` is supported for native
+  `if`/`while` and `else if`/`else` branches when it uses `say`, `show`, or
+  `말해`, for example `if ready then show "ready"`. Python inline bodies and
+  inline value updates remain outside this restricted subset.
 - Bindings created only in a possibly skipped branch are not available before
   they are definitely assigned. A name assigned on every possible fall-through
   path of an `if`/`else` chain is available after the block; a branch that
