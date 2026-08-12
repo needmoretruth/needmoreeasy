@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.124 — 2026-08-12
+
+- Document beta123's native one-line NME control bodies in the backend design
+  memo so the architecture notes match the implemented subset.
+
 ## 0.0.1-beta.123 — 2026-08-12
 
 - Extend the native backend to lower one-line NME `say`/`show` bodies after

@@ -8,7 +8,8 @@ English | [한국어](native-backend.ko.md)
 > statically typed core subset — boolean, integer, and finite-float values,
 > strings, and arithmetic,
 > sentence `while`/`if`/`else`/`else if` over comparisons and logical `and`/`or`
-> conditions, beginner `times:` loops, `break`, functions over integer
+> conditions, one-line NME `say`/`show`/`말해` bodies after `then`/`그러면`,
+> beginner `times:` loops, `break`, functions over integer
 > scalar parameters with an unconditional integer `return` (recursion works),
 > and `say` — compiles to
 > C and then to a native executable through the system C compiler. Everything
@@ -84,9 +85,11 @@ Implemented so far:
   and bindings (`if ready`, `while ready`; `False` is false); boolean equality
   and inequality comparisons; logical `and`/`or` over supported conditions with
   Python precedence and short-circuit evaluation; the beginner `times:` loop;
-  and `break` inside a native loop, including an `if` nested
-  inside that loop. A `break` outside a loop is rejected with `E0102` before C
-  is emitted;
+  one-line NME `say`/`show`/`말해` bodies after `then`/`그러면` for these
+  condition blocks and their branches; and `break` inside a native loop,
+  including an `if` nested inside that loop. Python inline bodies and inline
+  value changes remain outside the native subset. A `break` outside a loop is
+  rejected with `E0102` before C is emitted;
 - functions over integer scalar parameters with a required top-level integer
   `return` (recursion works); calls may target any function in the file,
   including one defined later, with its declared arity and positional
