@@ -185,7 +185,13 @@ pub fn parse_program(
     // The source indent is retained as the unambiguous signal for a real
     // Python dedent; explicit NME `break`/`end`/branch lines also close a
     // flat Python suite when they are at the header's level.
-    let mut python_header_indents = Vec::<usize>::new();
+    let mut python_header_indents = Vec::<(usize, bool)>::new();
+    // Top-level Python headers are intentionally not virtualized, but their
+    // loop kind still matters when an NME inline body appears in their
+    // physically indented suite. This keeps `for ...:`/`while ...:` bodies
+    // valid while allowing inline `break` diagnostics in ordinary Python
+    // conditional suites.
+    let mut top_level_python_loop_indents = Vec::<usize>::new();
 
     for (index, line) in lines.iter().enumerate() {
         let is_end = exact_end(line.tokens.as_slice());
@@ -229,10 +235,16 @@ pub fn parse_program(
         if depth == 0 {
             python_header_indents.clear();
         }
+        while top_level_python_loop_indents
+            .last()
+            .is_some_and(|header_indent| line.indent <= *header_indent)
+        {
+            top_level_python_loop_indents.pop();
+        }
         let closes_flat_python_suite = is_end.is_some() || is_break || branch_shape.is_some();
         while python_header_indents.last().is_some_and(|header_indent| {
-            line.indent < *header_indent
-                || (closes_flat_python_suite && line.indent <= *header_indent)
+            line.indent < header_indent.0
+                || (closes_flat_python_suite && line.indent <= header_indent.0)
         }) {
             python_header_indents.pop();
         }
@@ -348,6 +360,15 @@ pub fn parse_program(
         match classified {
             Ok(Some(stmt)) => {
                 saw_nme = true;
+                let inside_loop = blocks
+                    .iter()
+                    .any(|block| matches!(block, ExplicitBlock::Loop { .. }))
+                    || python_header_indents.iter().any(|(_, is_loop)| *is_loop)
+                    || !top_level_python_loop_indents.is_empty();
+                if inline_break_is_outside_loop(&stmt, source, inside_loop) {
+                    problems.push(break_outside_loop_diagnostic(line.span));
+                    continue;
+                }
                 if matches!(stmt, NmeStmt::End) {
                     if blocks.is_empty() {
                         problems.push(unmatched_end_diagnostic(line.span));
@@ -410,7 +431,12 @@ pub fn parse_program(
             Ok(None) => {
                 bindings.remember_python(&line.tokens, parse_line.indent);
                 if depth > 0 && is_valid_python_header(token_text(source, &line.tokens)) {
-                    python_header_indents.push(line.indent);
+                    python_header_indents.push((line.indent, is_python_loop_header(&line.tokens)));
+                } else if depth == 0
+                    && is_valid_python_header(token_text(source, &line.tokens))
+                    && is_python_loop_header(&line.tokens)
+                {
+                    top_level_python_loop_indents.push(line.indent);
                 }
             }
             Err(problem) => problems.push(problem),
@@ -661,6 +687,32 @@ fn duplicate_else_diagnostic(span: Span) -> Diagnostic {
         "put another condition before `else`, or close the block",
         "`아니면` 전에 조건을 더 쓰거나 블록을 닫아 주세요",
     )
+}
+
+fn inline_break_is_outside_loop(stmt: &NmeStmt, source: &str, inside_loop: bool) -> bool {
+    match stmt {
+        NmeStmt::Break => !inside_loop,
+        NmeStmt::Times { inline, .. } | NmeStmt::While { inline, .. } => inline
+            .as_ref()
+            .is_some_and(|body| inline_break_is_outside_loop_in_body(body, source, true)),
+        NmeStmt::When { inline, .. }
+        | NmeStmt::ElseIf { inline, .. }
+        | NmeStmt::Else { inline } => inline
+            .as_ref()
+            .is_some_and(|body| inline_break_is_outside_loop_in_body(body, source, inside_loop)),
+        _ => false,
+    }
+}
+
+fn inline_break_is_outside_loop_in_body(
+    body: &InlineStmt,
+    source: &str,
+    inside_loop: bool,
+) -> bool {
+    match body {
+        InlineStmt::Nme(inner) => inline_break_is_outside_loop(inner, source, inside_loop),
+        InlineStmt::Python(span) => source[span.start..span.end].trim() == "break" && !inside_loop,
+    }
 }
 
 fn missing_end_diagnostic(block: &ExplicitBlock, offset: usize) -> Diagnostic {
@@ -5868,6 +5920,14 @@ fn is_valid_python_statement(text: &str) -> bool {
 
 fn is_valid_python_header(text: &str) -> bool {
     parse_python(&format!("{text}\n    pass"), Mode::Module, "<nme>").is_ok()
+}
+
+fn is_python_loop_header(tokens: &[Token]) -> bool {
+    matches!(
+        tokens.first().map(|token| &token.tok),
+        Some(Tok::For | Tok::While)
+    ) || (matches!(tokens.first().map(|token| &token.tok), Some(Tok::Async))
+        && matches!(tokens.get(1).map(|token| &token.tok), Some(Tok::For)))
 }
 
 fn is_valid_python_expression(text: &str) -> bool {

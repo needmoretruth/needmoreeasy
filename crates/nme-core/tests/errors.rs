@@ -1,7 +1,7 @@
 //! Broken input must produce friendly, beginner-oriented diagnostics —
 //! never silently broken Python output.
 
-use nme_core::diagnostics::{render_all, render_all_bilingual};
+use nme_core::diagnostics::{render_all, render_all_bilingual, DiagnosticCode};
 use nme_core::transpile;
 
 /// Transpiles and expects exactly one diagnostic; returns message + hint.
@@ -140,6 +140,43 @@ fn korean_forms_return_korean_guidance() {
     let when = bilingual_err("만약 준비됨\n");
     assert!(when.contains("필요해요"), "{when}");
     assert!(when.contains("needs `:`"), "{when}");
+}
+
+#[test]
+fn inline_break_outside_a_loop_gets_the_stable_bilingual_diagnostic() {
+    let cases = [
+        ("sentence-en", "when true then break here\n"),
+        ("sentence-ko", "만약 참 그러면 멈춰\n"),
+        ("beginner-en", "if True then break\n"),
+        ("beginner-ko", "만약 True 그러면 멈춰\n"),
+        ("advanced-en", "if (True) then break\n"),
+        ("advanced-ko", "만약 ((참 그리고 참)) 그러면 멈춰\n"),
+    ];
+
+    for (label, source) in cases {
+        let problems = match transpile(source) {
+            Ok(output) => panic!("expected inline break diagnostic for {label}, got {output:?}"),
+            Err(problems) => problems,
+        };
+        assert_eq!(problems.len(), 1, "core case: {label}: {problems:?}");
+        let problem = &problems[0];
+        assert_eq!(
+            problem.code,
+            DiagnosticCode::BreakOutsideLoop,
+            "core case: {label}"
+        );
+        assert!(
+            problem.message.contains("inside a loop"),
+            "{label}: {problem:?}"
+        );
+        assert!(
+            problem
+                .message_ko
+                .as_deref()
+                .is_some_and(|message| message.contains("반복문 안에서만")),
+            "{label}: {problem:?}"
+        );
+    }
 }
 
 #[test]

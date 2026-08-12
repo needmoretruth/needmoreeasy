@@ -1703,6 +1703,18 @@ fn korean_break_alias_is_lowered_inside_an_inline_condition() {
 }
 
 #[test]
+fn inline_breaks_keep_python_and_nme_loop_contexts_valid() {
+    assert_eq!(
+        ok("for value in [1]:\n    if True then break\n"),
+        "for value in [1]:\n    if (True): break\n"
+    );
+    assert_eq!(
+        ok("while True\n    if False then break\nend\n"),
+        "while (True):\n    if (False): break\n# end\n"
+    );
+}
+
+#[test]
 fn attached_korean_else_if_is_supported() {
     let source = concat!(
         "만약 준비\n",

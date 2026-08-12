@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.136 — 2026-08-12
+
+- Report one-line `break` outside a loop with the stable bilingual `E0102`
+  diagnostic in the shared parser while preserving valid Python loop bodies.
+
 ## 0.0.1-beta.135 — 2026-08-12
 
 - Extend documentation parity checks to validate local example and directory
