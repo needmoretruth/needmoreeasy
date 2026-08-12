@@ -409,6 +409,10 @@ pub fn parse_program(
                     problems.push(return_outside_function_diagnostic(line.span));
                     continue;
                 }
+                if inline_yield_inside_comprehension(&stmt, &line.tokens) {
+                    problems.push(yield_inside_comprehension_diagnostic(line.span));
+                    continue;
+                }
                 if inline_yield_is_outside_function(&stmt, &line.tokens, bindings.inside_function())
                 {
                     problems.push(yield_outside_function_diagnostic(line.span));
@@ -535,6 +539,10 @@ pub fn parse_program(
                 }
                 if inside_python_except_star && is_python_except_star_control_line(&line.tokens) {
                     problems.push(except_star_control_flow_diagnostic(line.span));
+                    continue;
+                }
+                if contains_yield_inside_comprehension(&line.tokens) {
+                    problems.push(yield_inside_comprehension_diagnostic(line.span));
                     continue;
                 }
                 if contains_yield_outside_lambda(&line.tokens) && !bindings.inside_function() {
@@ -915,6 +923,19 @@ fn except_star_control_flow_diagnostic(span: Span) -> Diagnostic {
     )
 }
 
+fn yield_inside_comprehension_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::YieldInsideComprehension,
+        "`yield` cannot be used inside a comprehension",
+        "컴프리헨션 안에서는 `yield`를 쓸 수 없어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "replace the comprehension with an explicit loop, or move `yield` outside it",
+        "컴프리헨션을 명시적인 반복문으로 바꾸거나 `yield`를 밖으로 옮겨 주세요",
+    )
+}
+
 fn branch_without_condition_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
         DiagnosticCode::BranchWithoutCondition,
@@ -1051,6 +1072,26 @@ fn inline_return_is_outside_function_in_body(
     }
 }
 
+fn inline_yield_inside_comprehension(stmt: &NmeStmt, tokens: &[Token]) -> bool {
+    match stmt {
+        NmeStmt::Times { inline, .. }
+        | NmeStmt::While { inline, .. }
+        | NmeStmt::When { inline, .. }
+        | NmeStmt::ElseIf { inline, .. }
+        | NmeStmt::Else { inline } => inline
+            .as_ref()
+            .is_some_and(|body| inline_yield_inside_comprehension_in_body(body, tokens)),
+        _ => false,
+    }
+}
+
+fn inline_yield_inside_comprehension_in_body(body: &InlineStmt, tokens: &[Token]) -> bool {
+    match body {
+        InlineStmt::Nme(inner) => inline_yield_inside_comprehension(inner, tokens),
+        InlineStmt::Python(span) => contains_yield_inside_comprehension_in_span(tokens, *span),
+    }
+}
+
 fn inline_yield_is_outside_function(
     stmt: &NmeStmt,
     tokens: &[Token],
@@ -1151,6 +1192,58 @@ fn first_token_in_span(tokens: &[Token], span: Span) -> Option<&Token> {
         .find(|token| token.span.start >= span.start && token.span.end <= span.end)
 }
 
+fn contains_yield_inside_comprehension(tokens: &[Token]) -> bool {
+    tokens.iter().enumerate().any(|(index, token)| {
+        matches!(token.tok, Tok::Yield) && yield_is_inside_comprehension(tokens, index)
+    })
+}
+
+fn contains_yield_inside_comprehension_in_span(tokens: &[Token], span: Span) -> bool {
+    tokens.iter().enumerate().any(|(index, token)| {
+        token.span.start >= span.start
+            && token.span.end <= span.end
+            && matches!(token.tok, Tok::Yield)
+            && yield_is_inside_comprehension(tokens, index)
+    })
+}
+
+fn yield_is_inside_comprehension(tokens: &[Token], target_index: usize) -> bool {
+    let depths = token_depths(tokens);
+    let closes = matching_bracket_closes(tokens);
+    let lambda_body_start = enclosing_lambda_body_start(tokens, target_index);
+    (0..target_index).any(|open_index| {
+        let is_open = matches!(tokens[open_index].tok, Tok::Lpar | Tok::Lsqb | Tok::Lbrace);
+        let Some(close_index) = closes[open_index] else {
+            return false;
+        };
+        if !is_open || target_index >= close_index {
+            return false;
+        }
+        let body_depth = depths[open_index] + 1;
+        let has_comprehension_for = (open_index + 1..close_index)
+            .any(|index| depths[index] == body_depth && matches!(tokens[index].tok, Tok::For));
+        has_comprehension_for
+            && lambda_body_start.is_none_or(|lambda_start| open_index >= lambda_start)
+    })
+}
+
+fn matching_bracket_closes(tokens: &[Token]) -> Vec<Option<usize>> {
+    let mut stack = Vec::new();
+    let mut closes = vec![None; tokens.len()];
+    for (index, token) in tokens.iter().enumerate() {
+        match token.tok {
+            Tok::Lpar | Tok::Lsqb | Tok::Lbrace => stack.push(index),
+            Tok::Rpar | Tok::Rsqb | Tok::Rbrace => {
+                if let Some(open_index) = stack.pop() {
+                    closes[open_index] = Some(index);
+                }
+            }
+            _ => {}
+        }
+    }
+    closes
+}
+
 fn contains_yield_outside_lambda(tokens: &[Token]) -> bool {
     tokens.iter().enumerate().any(|(index, token)| {
         matches!(token.tok, Tok::Yield) && !token_is_inside_lambda(tokens, index)
@@ -1205,20 +1298,19 @@ fn contains_yield_from_outside_lambda_in_span(tokens: &[Token], span: Span) -> b
 }
 
 fn token_is_inside_lambda(tokens: &[Token], target_index: usize) -> bool {
+    enclosing_lambda_body_start(tokens, target_index).is_some()
+}
+
+fn enclosing_lambda_body_start(tokens: &[Token], target_index: usize) -> Option<usize> {
     let depths = token_depths(tokens);
-    for lambda_index in 0..target_index {
+    (0..target_index).rev().find_map(|lambda_index| {
         if !matches!(tokens[lambda_index].tok, Tok::Lambda) {
-            continue;
+            return None;
         }
         let lambda_depth = depths[lambda_index];
-        let Some(colon_index) = (lambda_index + 1..tokens.len()).find(|&index| {
+        let colon_index = (lambda_index + 1..target_index).find(|&index| {
             depths[index] == lambda_depth && matches!(tokens[index].tok, Tok::Colon)
-        }) else {
-            continue;
-        };
-        if colon_index >= target_index {
-            continue;
-        }
+        })?;
         let body_ends_before_target = (colon_index + 1..target_index).any(|index| {
             depths[index] == lambda_depth
                 && matches!(
@@ -1226,11 +1318,8 @@ fn token_is_inside_lambda(tokens: &[Token], target_index: usize) -> bool {
                     Tok::Comma | Tok::Semi | Tok::Rpar | Tok::Rsqb | Tok::Rbrace
                 )
         });
-        if !body_ends_before_target {
-            return true;
-        }
-    }
-    false
+        (!body_ends_before_target).then_some(colon_index + 1)
+    })
 }
 
 fn token_depths(tokens: &[Token]) -> Vec<usize> {

@@ -686,6 +686,55 @@ fn control_flow_inside_except_star_gets_a_stable_diagnostic() {
 }
 
 #[test]
+fn yield_inside_comprehension_gets_a_stable_diagnostic() {
+    let cases = [
+        (
+            "list comprehension",
+            "def collect(values):\n    return [(yield value) for value in values]\n",
+        ),
+        (
+            "generator expression",
+            "def collect(values):\n    return (yield value for value in values)\n",
+        ),
+        (
+            "set comprehension",
+            "def collect(values):\n    return {(yield value) for value in values}\n",
+        ),
+        (
+            "dictionary comprehension",
+            "def collect(values):\n    return {value: (yield value) for value in values}\n",
+        ),
+        (
+            "comprehension inside a generator lambda",
+            "def collect(values):\n    return (lambda: [(yield value) for value in values])\n",
+        ),
+        (
+            "inline body",
+            "def collect(values):\n    when True then [(yield value) for value in values]\n",
+        ),
+    ];
+    for (label, source) in cases {
+        let problems = transpile(source)
+            .expect_err("yield inside a comprehension must be rejected by the shared parser");
+        assert_eq!(problems.len(), 1, "{label}: {problems:?}");
+        assert_eq!(
+            problems[0].code,
+            DiagnosticCode::YieldInsideComprehension,
+            "{label}: {problems:?}"
+        );
+    }
+
+    let yield_group = "def collect():\n    return (yield value)\n";
+    assert_eq!(transpile(yield_group).unwrap(), yield_group);
+    let lambda_inside_comprehension =
+        "def collect(values):\n    return [(lambda: (yield value)) for value in values]\n";
+    assert_eq!(
+        transpile(lambda_inside_comprehension).unwrap(),
+        lambda_inside_comprehension
+    );
+}
+
+#[test]
 fn inline_branches_without_an_open_condition_get_a_stable_diagnostic() {
     let cases = [
         ("sentence-en", "when true then else show no\n"),

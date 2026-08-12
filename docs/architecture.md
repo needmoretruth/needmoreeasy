@@ -150,6 +150,8 @@ outer function. A valid module-level `from ... import *` remains unchanged,
 while the same star import inside a function or class receives `E0114`.
 `break`/`continue`/`return` inside an `except*` suite receive `E0115`; the
 tracker resets across nested Python function/class scopes and after the suite.
+`yield` inside a comprehension receives `E0116`; token-depth matching keeps
+ordinary `yield` expressions and lambdas nested inside comprehensions intact.
 
 ### 7. Bundled modules are local and versioned
 

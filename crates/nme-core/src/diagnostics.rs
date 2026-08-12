@@ -74,6 +74,8 @@ pub enum DiagnosticCode {
     ImportStarOutsideModule,
     /// Control flow inside an `except*` block.
     ControlFlowInExceptStar,
+    /// `yield` inside a comprehension.
+    YieldInsideComprehension,
     /// `say` value could not be understood.
     SayValueBroken,
     /// `say` expression is not valid.
@@ -229,6 +231,7 @@ impl DiagnosticCode {
             Self::NonlocalOutsideFunction => "E0113",
             Self::ImportStarOutsideModule => "E0114",
             Self::ControlFlowInExceptStar => "E0115",
+            Self::YieldInsideComprehension => "E0116",
             Self::SayValueBroken => "E0201",
             Self::SayValueUnparseable => "E0202",
             Self::SaySentenceUnparseable => "E0203",
@@ -298,7 +301,7 @@ impl DiagnosticCode {
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 81] = [
+    pub const ALL: [DiagnosticCode; 82] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -315,6 +318,7 @@ impl DiagnosticCode {
         Self::NonlocalOutsideFunction,
         Self::ImportStarOutsideModule,
         Self::ControlFlowInExceptStar,
+        Self::YieldInsideComprehension,
         Self::SayValueBroken,
         Self::SayValueUnparseable,
         Self::SaySentenceUnparseable,
@@ -517,6 +521,13 @@ impl DiagnosticCode {
                 "`except*` 블록 안의 제어 흐름",
                 "Python does not allow `break`, `continue`, or `return` inside an `except*` block. Move the control-flow statement outside the block, or use a normal `except` block when its semantics are appropriate.",
                 "Python은 `except*` 블록 안에서 `break`, `continue`, `return`을 허용하지 않습니다. 제어 흐름 문장을 블록 밖으로 옮기거나, 의미가 맞을 때 일반 `except` 블록을 사용하세요.",
+            ),
+            Self::YieldInsideComprehension => (
+                "E0116",
+                "`yield` inside a comprehension",
+                "컴프리헨션 안의 `yield`",
+                "Python does not allow `yield` inside a list, set, dictionary, or generator comprehension. Replace the comprehension with an explicit loop, or move `yield` outside the comprehension.",
+                "Python은 리스트·집합·딕셔너리·제너레이터 컴프리헨션 안의 `yield`를 허용하지 않습니다. 컴프리헨션을 명시적인 반복문으로 바꾸거나 `yield`를 컴프리헨션 밖으로 옮기세요.",
             ),
             Self::SayValueBroken => (
                 "E0201",

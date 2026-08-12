@@ -2746,6 +2746,35 @@ fn control_flow_inside_except_star_reports_the_shared_context_diagnostic() {
 }
 
 #[test]
+fn yield_inside_comprehension_reports_the_shared_context_diagnostic() {
+    let dir = std::env::temp_dir().join(format!(
+        "nme-cli-yield-comprehension-code-{}",
+        std::process::id()
+    ));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("yield-comprehension.nme");
+    std::fs::write(
+        &file,
+        "def collect(values):\n    return [(yield value) for value in values]\n",
+    )
+    .unwrap();
+
+    let english = nme(&["check", &file.to_string_lossy()]);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(english_error.contains("error[E0116]:"), "{english_error}");
+    assert!(english_error.contains("comprehension"), "{english_error}");
+
+    let korean = nme(&["검사", &file.to_string_lossy()]);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(korean_error.contains("오류[E0116]:"), "{korean_error}");
+    assert!(korean_error.contains("컴프리헨션"), "{korean_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn inline_branch_without_a_condition_reports_the_shared_branch_diagnostic() {
     let dir =
         std::env::temp_dir().join(format!("nme-cli-inline-branch-code-{}", std::process::id()));

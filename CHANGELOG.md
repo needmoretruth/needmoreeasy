@@ -6,6 +6,12 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.149 — 2026-08-12
+
+- Add shared bilingual `E0116` for `yield` inside Python comprehensions,
+  while preserving ordinary `yield` expressions and generator lambdas where
+  Python permits them.
+
 ## 0.0.1-beta.148 — 2026-08-12
 
 - Add shared bilingual `E0115` for `break`, `continue`, and `return` inside

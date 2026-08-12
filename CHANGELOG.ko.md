@@ -6,6 +6,11 @@ NME의 중요한 변경 사항을 이 문서에 기록합니다.
 
 ## 미출시 (Unreleased)
 
+## 0.0.1-beta.149 — 2026-08-12
+
+- Python 컴프리헨션 안의 `yield`에 공유 이중 언어 `E0116` 진단을 추가하고,
+  Python이 허용하는 일반 `yield` 표현식과 제너레이터 람다는 보존합니다.
+
 ## 0.0.1-beta.148 — 2026-08-12
 
 - Python `except*` 블록 안의 `break`, `continue`, `return`에 공유 이중 언어
