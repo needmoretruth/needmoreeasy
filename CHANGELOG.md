@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.117 — 2026-08-12
+
+- Preserve the closing parenthesis and body boundary when Korean sentence
+  comparison endings appear inside parenthesized `if`/`elif`/`while` conditions.
+- Cover the corrected form in core transpilation and native execution while
+  keeping the shared English/Korean condition path.
+
 ## 0.0.1-beta.116 — 2026-08-12
 
 - Fix Korean sentence `while`/`동안` headers whose natural ending appears

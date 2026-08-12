@@ -287,7 +287,8 @@ if ready or waiting then show Please wait
 Parentheses may surround a whole NME condition in an `if` or `while` header,
 for example `if (ready and score > 2)`. Keep the header colon-free so NME owns
 the line; a valid Python call such as `when(ready and score > 2)` remains
-Python byte-for-byte.
+Python byte-for-byte. Korean sentence endings can stay inside the same wrapper,
+as in `만약 (점수가 2보다 작으면)`.
 
 ### Random without code punctuation
 

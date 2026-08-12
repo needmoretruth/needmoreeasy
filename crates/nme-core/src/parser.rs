@@ -2527,6 +2527,13 @@ fn condition_tokens_before(
             };
         }
     }
+    while tokens
+        .get(body_start)
+        .is_some_and(|token| matches!(token.tok, Tok::Rpar | Tok::Rsqb | Tok::Rbrace))
+    {
+        condition.push(tokens[body_start].clone());
+        body_start += 1;
+    }
     (condition, body_start, connector)
 }
 

@@ -433,6 +433,23 @@ fn parenthesized_logical_conditions_keep_the_shared_condition_shape() {
 }
 
 #[test]
+fn parenthesized_korean_comparison_endings_keep_the_condition_body_boundary() {
+    let source = concat!(
+        "점수는 1\n",
+        "만약 (점수가 2보다 작으면)\n",
+        "작아요 말해줘\n",
+        "끝\n",
+    );
+    let expected = concat!(
+        "점수 = 1\n",
+        "if (점수 < 2):\n",
+        "    print(\"작아요\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+#[test]
 fn short_korean_condition_endings_accept_natural_equality_and_literals() {
     let source = concat!(
         "이름은 철수\n",
