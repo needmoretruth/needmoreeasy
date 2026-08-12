@@ -29,6 +29,11 @@ not claim to compile all NME or all Python.
 The goal of this document is to define and extend that restricted backend
 honestly while keeping the full language on CPython.
 
+The CLI uses `cc` on macOS and Linux, and Microsoft's `cl` on Windows. On
+Windows, start a Developer PowerShell for Visual Studio (or another shell
+where `cl.exe` is on `PATH`) before using `nme native`; the CPython commands do
+not need that compiler shell.
+
 For the current CLI, `nme native run <file>` compiles and runs a temporary
 executable without saving artifacts. Use `nme native build <file> -o <path>`
 to keep the executable and generated C source; passing `-o` to `run` is
@@ -118,13 +123,14 @@ is the honest separation the language needs.
 
 ### 1. C backend (generate C, compile with a system C compiler)
 
-Lower the core subset to C and call `cc`/`clang`. This is the approach taken
-by Cython (for typed regions), Nuitka, and many small language experiments.
+Lower the core subset to C and call `cc`/`clang` on Unix-like systems or
+Microsoft's `cl` on Windows. This is the approach taken by Cython (for typed
+regions), Nuitka, and many small language experiments.
 
 | | |
 | --- | --- |
 | Maturity | C optimizers (gcc, clang) are the most mature compilers in existence |
-| Dependencies | none beyond a system C compiler (already required for Nuitka) |
+| Dependencies | none beyond a system C compiler (already required for Nuitka); use `cl` from a Windows developer shell |
 | Build-time model | classic AOT: C source is an artifact the learner can read |
 | Runtime | small: string/collection helpers, integer policy; written once |
 | Verification | fully testable in this environment (gcc is present) |

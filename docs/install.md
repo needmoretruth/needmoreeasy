@@ -4,7 +4,7 @@ English | [한국어](install.ko.md)
 
 [Home](../README.md) | [Getting started](getting-started.md) | [Tutorial](tutorial.md) | [Language reference](language.md)
 
-NME `0.0.1-beta.78` currently installs from the beta branch. You need Git,
+NME `0.0.1-beta.79` currently installs from the beta branch. You need Git,
 stable Rust with Cargo, and Python 3.8 or newer. Use the official
 [Rust installer](https://www.rust-lang.org/tools/install),
 [Python downloads](https://www.python.org/downloads/), and
@@ -18,7 +18,9 @@ below; each section is complete on its own.
 3. Download and run `rustup-init.exe` from the official Rust install page.
    Accept the stable MSVC toolchain. If asked, install Visual Studio C++ Build
    Tools (free Microsoft components Cargo needs to build).
-4. Close and reopen PowerShell, then run:
+4. Close and reopen PowerShell, then run. To use `nme native`, open the
+   Developer PowerShell for Visual Studio so `cl.exe` is on `PATH`; ordinary
+   PowerShell is enough for the CPython commands:
 
 ```powershell
 git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
@@ -28,7 +30,7 @@ $env:Path = "$HOME\.cargo\bin;$env:Path"
 nme --version
 ```
 
-Expected NME version: `0.0.1-beta.78`. The `$env:Path` line makes the
+Expected NME version: `0.0.1-beta.79`. The `$env:Path` line makes the
 just-installed command available in the current PowerShell session.
 
 **Set up PATH for future terminals.** If a new PowerShell still cannot find
@@ -63,7 +65,9 @@ repeated here so this section can be followed on its own:
 3. Download and run `rustup-init.exe` from the official Rust install page.
    Accept the stable MSVC toolchain. If asked, install Visual Studio C++ Build
    Tools (free Microsoft components Cargo needs to build).
-4. Close and reopen PowerShell, then run:
+4. Close and reopen PowerShell, then run. To use `nme native`, open the
+   Developer PowerShell for Visual Studio so `cl.exe` is on `PATH`; ordinary
+   PowerShell is enough for the CPython commands:
 
 ```powershell
 git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
@@ -73,7 +77,7 @@ $env:Path = "$HOME\.cargo\bin;$env:Path"
 nme --version
 ```
 
-Expected NME version: `0.0.1-beta.78`. The `$env:Path` line makes the
+Expected NME version: `0.0.1-beta.79`. The `$env:Path` line makes the
 just-installed command available in the current PowerShell session.
 
 **Set up PATH for future terminals.** If a new PowerShell still cannot find
@@ -132,7 +136,7 @@ export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 ```
 
-Expected NME version: `0.0.1-beta.78`. The `export` line must run before the
+Expected NME version: `0.0.1-beta.79`. The `export` line must run before the
 first `nme` command when Cargo warns that its binary directory is not on
 `PATH`.
 
@@ -179,7 +183,7 @@ export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 ```
 
-Expected NME version: `0.0.1-beta.78`. The `export` line is deliberately
+Expected NME version: `0.0.1-beta.79`. The `export` line is deliberately
 before `nme --version`.
 
 **First NME run:**
@@ -226,7 +230,7 @@ export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 ```
 
-Expected NME version: `0.0.1-beta.78`. The `export` line is deliberately
+Expected NME version: `0.0.1-beta.79`. The `export` line is deliberately
 before `nme --version`.
 
 **First NME run:**
@@ -273,7 +277,7 @@ export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 ```
 
-Expected NME version: `0.0.1-beta.78`. The `export` line is deliberately
+Expected NME version: `0.0.1-beta.79`. The `export` line is deliberately
 before `nme --version`.
 
 **First NME run:**
@@ -307,7 +311,7 @@ nme check examples/three-levels
 nme run examples/hello-sentence
 ```
 
-Expected NME version: `0.0.1-beta.78`. Expected random adapter: `0.0.1`.
+Expected NME version: `0.0.1-beta.79`. Expected random adapter: `0.0.1`.
 
 ## Advanced: choose a different Python command
 

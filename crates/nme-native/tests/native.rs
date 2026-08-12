@@ -10,6 +10,14 @@ use nme_core::diagnostics::DiagnosticCode;
 
 static COUNTER: AtomicUsize = AtomicUsize::new(0);
 
+fn native_compiler() -> &'static str {
+    if cfg!(windows) {
+        "cl"
+    } else {
+        "cc"
+    }
+}
+
 fn native_run(source: &str) -> Result<String, String> {
     let c_source = nme_native::native_compile(source).map_err(|problems| {
         problems
@@ -23,14 +31,25 @@ fn native_run(source: &str) -> Result<String, String> {
     std::fs::create_dir_all(&dir).unwrap();
     let c_path = dir.join("program.c");
     std::fs::write(&c_path, c_source).unwrap();
-    let exe = dir.join("program");
-    let status = Command::new("cc")
-        .arg("-O2")
-        .arg(&c_path)
-        .arg("-o")
-        .arg(&exe)
+    let exe = if cfg!(windows) {
+        dir.join("program.exe")
+    } else {
+        dir.join("program")
+    };
+    let mut compiler = Command::new(native_compiler());
+    if cfg!(windows) {
+        compiler
+            .arg("/nologo")
+            .arg("/O2")
+            .arg(format!("/Fe:{}", exe.display()))
+            .arg(&c_path);
+    } else {
+        compiler.arg("-O2").arg(&c_path).arg("-o").arg(&exe);
+    }
+    let status = compiler
+        .current_dir(&dir)
         .status()
-        .map_err(|error| format!("could not start cc: {error}"))?;
+        .map_err(|error| format!("could not start {}: {error}", native_compiler()))?;
     if !status.success() {
         return Err("the generated C did not compile".to_string());
     }

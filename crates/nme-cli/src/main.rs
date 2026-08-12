@@ -128,6 +128,7 @@ const HELP_KOREAN: &str = r"nme — NeedMoreEasy: 더 쉽게 시작해서 Python
 ";
 
 const DEFAULT_PYTHON: &str = if cfg!(windows) { "py" } else { "python3" };
+const NATIVE_C_COMPILER: &str = if cfg!(windows) { "cl" } else { "cc" };
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum MessageLanguage {
@@ -482,12 +483,17 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
     if cfg!(windows) {
         exe.set_extension("exe");
     }
-    let compile_status = std::process::Command::new("cc")
-        .arg("-O2")
-        .arg(&c_path)
-        .arg("-o")
-        .arg(&exe)
-        .status();
+    let mut compiler = std::process::Command::new(NATIVE_C_COMPILER);
+    if cfg!(windows) {
+        compiler
+            .arg("/nologo")
+            .arg("/O2")
+            .arg(format!("/Fe:{}", exe.display()))
+            .arg(&c_path);
+    } else {
+        compiler.arg("-O2").arg(&c_path).arg("-o").arg(&exe);
+    }
+    let compile_status = compiler.current_dir(dir.path()).status();
     match compile_status {
         Ok(status) if status.success() => {}
         Ok(status) => {
@@ -495,11 +501,11 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
                 nme_core::diagnostics::DiagnosticCode::CliNativeCompileFailed,
                 language,
                 &format!(
-                    "the native compiler (cc) failed with {status}\n\
+                    "the native compiler ({NATIVE_C_COMPILER}) failed with {status}\n\
                           hint: install a C compiler, or run this program with `nme run`"
                 ),
                 &format!(
-                    "네이티브 컴파일러(cc)가 실패했습니다: {status}\n\
+                    "네이티브 컴파일러({NATIVE_C_COMPILER})가 실패했습니다: {status}\n\
                           도움말: C 컴파일러를 설치하거나 `nme run`으로 실행하세요"
                 ),
             );
@@ -509,11 +515,11 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
                 nme_core::diagnostics::DiagnosticCode::CliNativeCompileStartFailed,
                 language,
                 &format!(
-                    "couldn't start the C compiler: {error}\n\
+                    "couldn't start the native C compiler ({NATIVE_C_COMPILER}): {error}\n\
                           hint: install a C compiler, or run this program with `nme run`"
                 ),
                 &format!(
-                    "C 컴파일러를 시작할 수 없습니다: {error}\n\
+                    "네이티브 C 컴파일러({NATIVE_C_COMPILER})를 시작할 수 없습니다: {error}\n\
                           도움말: C 컴파일러를 설치하거나 `nme run`으로 실행하세요"
                 ),
             );

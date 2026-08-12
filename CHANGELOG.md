@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.79 — 2026-08-12
+
+- Select MSVC `cl` with Windows-compatible flags for `nme native`, keep `cc`
+  on macOS/Linux, and document the required Windows developer shell.
+
 ## 0.0.1-beta.78 — 2026-08-12
 
 - Allow default native builds for source stems ending in `.c`, while keeping

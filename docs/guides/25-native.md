@@ -116,8 +116,9 @@ into a native executable with your system's C compiler.
 ## How it works
 
 `nme-native` (a Rust crate) takes the same frontend AST as the Python path,
-checks every statement against the documented core, and emits C. The system
-C compiler (`cc`) turns that into machine code with `-O2`. The
+checks every statement against the documented core, and emits C. On macOS and
+Linux, `cc` turns that into machine code with `-O2`; on Windows, Microsoft's
+`cl` does the same from a Developer PowerShell for Visual Studio. The
 [architecture memo](../native-backend.md) compares this C backend with LLVM
 and Cranelift and explains why C is the first backend.
 
@@ -132,7 +133,8 @@ print `square(7)`, then run it with `nme native`.
 
 ## What you learned
 
-- The native core compiles to C and to a native executable with `cc`.
+- The native core compiles to C and to a native executable with `cc` on
+  macOS/Linux or MSVC `cl` on Windows.
 - `nme native run` runs it; `nme native build` keeps the C and executable.
 - Functions, loops, branches, and `say` all work inside the core.
 - Outside the core, the backend rejects the program instead of miscompiling.

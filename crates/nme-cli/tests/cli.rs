@@ -59,6 +59,22 @@ fn python_available() -> bool {
         .is_ok_and(|out| out.status.success())
 }
 
+fn native_compiler() -> &'static str {
+    if cfg!(windows) {
+        "cl"
+    } else {
+        "cc"
+    }
+}
+
+fn native_compiler_available() -> bool {
+    let probe = if cfg!(windows) { "/?" } else { "--version" };
+    Command::new(native_compiler())
+        .arg(probe)
+        .output()
+        .is_ok()
+}
+
 #[test]
 fn build_prints_transpiled_python() {
     let output = nme(&["build", &example("hello.nme")]);
@@ -553,8 +569,8 @@ fn korean_compile_staging_failures_are_bilingual_and_precise() {
 
 #[test]
 fn the_native_example_matches_the_python_path_output() {
-    if Command::new("cc").arg("--version").output().is_err() || !python_available() {
-        eprintln!("cc or Python not available; skipping native parity test");
+    if !native_compiler_available() || !python_available() {
+        eprintln!("native C compiler or Python not available; skipping native parity test");
         return;
     }
     let python_output = nme(&["run", &example("native-count.nme")]);
@@ -575,8 +591,8 @@ fn the_native_example_matches_the_python_path_output() {
 
 #[test]
 fn the_native_command_compiles_and_runs_a_core_program() {
-    if Command::new("cc").arg("--version").output().is_err() {
-        eprintln!("cc not available; skipping native test");
+    if !native_compiler_available() {
+        eprintln!("native C compiler not available; skipping native test");
         return;
     }
     let dir = temporary_dir("native-command");
@@ -608,8 +624,8 @@ fn the_native_command_compiles_and_runs_a_core_program() {
 
 #[test]
 fn native_build_keeps_korean_twin_c_sources_separate() {
-    if Command::new("cc").arg("--version").output().is_err() {
-        eprintln!("cc not available; skipping native twin build test");
+    if !native_compiler_available() {
+        eprintln!("native C compiler not available; skipping native twin build test");
         return;
     }
     let dir = temporary_dir("native-korean-twin-build");
@@ -645,8 +661,8 @@ fn native_build_keeps_korean_twin_c_sources_separate() {
 
 #[test]
 fn native_build_default_output_allows_a_c_source_stem() {
-    if Command::new("cc").arg("--version").output().is_err() {
-        eprintln!("cc not available; skipping native C-stem build test");
+    if !native_compiler_available() {
+        eprintln!("native C compiler not available; skipping native C-stem build test");
         return;
     }
     let dir = temporary_dir("native-c-stem-build");
@@ -733,8 +749,8 @@ fn native_rejects_repeated_run_and_build_actions() {
 
 #[test]
 fn native_build_refuses_to_overwrite_existing_artifacts() {
-    if Command::new("cc").arg("--version").output().is_err() {
-        eprintln!("cc not available; skipping native overwrite test");
+    if !native_compiler_available() {
+        eprintln!("native C compiler not available; skipping native overwrite test");
         return;
     }
     let dir = temporary_dir("native-overwrite");

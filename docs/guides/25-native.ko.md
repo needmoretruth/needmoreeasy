@@ -115,8 +115,9 @@
 ## 어떻게 동작하나요
 
 `nme-native`(Rust 크레이트)는 Python 경로와 같은 프론트엔드 AST를 받아
-모든 문장을 문서화된 코어와 대조한 뒤 C를 만듭니다. 시스템 C 컴파일러
-(`cc`)가 그것을 `-O2`로 기계어로 만듭니다.
+모든 문장을 문서화된 코어와 대조한 뒤 C를 만듭니다. macOS와 Linux에서는
+`cc`가 그것을 `-O2`로 기계어로 만들고, Windows에서는 Visual Studio
+Developer PowerShell의 Microsoft `cl`이 같은 일을 합니다.
 [구조 메모](../native-backend.ko.md)는 이 C 백엔드를 LLVM·Cranelift와 비교하고
 왜 C가 첫 백엔드인지 설명합니다.
 
@@ -131,7 +132,8 @@
 
 ## 배운 것
 
-- 네이티브 코어는 C로, 그리고 `cc`로 네이티브 실행 파일로 컴파일됩니다.
+- 네이티브 코어는 C로, macOS·Linux에서는 `cc`로, Windows에서는 MSVC `cl`로
+  네이티브 실행 파일로 컴파일됩니다.
 - `nme native 실행`이 실행하고 `nme native 빌드`가 C와 실행 파일을 남깁니다.
 - 함수, 반복, 조건, `say`가 모두 코어 안에서 동작합니다.
 - 코어 밖에서는 잘못 컴파일하는 대신 프로그램을 거부합니다.
