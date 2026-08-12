@@ -709,6 +709,14 @@ fn star_import_inside_python_scope_gets_a_stable_diagnostic() {
     assert_eq!(function.len(), 1, "{function:?}");
     assert_eq!(function[0].code, DiagnosticCode::ImportStarOutsideModule);
 
+    let inline_function = transpile("def load(): value = 1; from helper import *\n")
+        .expect_err("star imports after an inline statement must be rejected");
+    assert_eq!(inline_function.len(), 1, "{inline_function:?}");
+    assert_eq!(
+        inline_function[0].code,
+        DiagnosticCode::ImportStarOutsideModule
+    );
+
     let inline_function = transpile("def load(): from helper import *\n")
         .expect_err("star imports inside inline functions must be rejected");
     assert_eq!(inline_function.len(), 1, "{inline_function:?}");
@@ -727,6 +735,12 @@ fn star_import_inside_python_scope_gets_a_stable_diagnostic() {
     assert_eq!(inline_class.len(), 1, "{inline_class:?}");
     assert_eq!(
         inline_class[0].code,
+        DiagnosticCode::ImportStarOutsideModule
+    );
+    let inline_class_after_statement = transpile("class Loader: value = 1; from helper import *\n")
+        .expect_err("star imports after an inline class statement must be rejected");
+    assert_eq!(
+        inline_class_after_statement[0].code,
         DiagnosticCode::ImportStarOutsideModule
     );
 }
@@ -753,6 +767,18 @@ fn control_flow_inside_except_star_gets_a_stable_diagnostic() {
         (
             "inline break",
             "while True:\n    try:\n        pass\n    except* Exception:\n        when ready then break\n",
+        ),
+        (
+            "break after statement",
+            "while True:\n    try:\n        pass\n    except* Exception:\n        value = 1; break\n",
+        ),
+        (
+            "continue after statement",
+            "while True:\n    try:\n        pass\n    except* Exception:\n        value = 1; continue\n",
+        ),
+        (
+            "return after statement",
+            "def load():\n    try:\n        pass\n    except* Exception:\n        value = 1; return\n",
         ),
     ];
     for (label, source) in cases {

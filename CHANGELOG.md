@@ -6,6 +6,12 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.158 — 2026-08-12
+
+- Detect star imports and `except*` control-flow statements after earlier
+  semicolon-separated statements, preserving the shared `E0114` and `E0115`
+  diagnostics in one-line Python suites.
+
 ## 0.0.1-beta.157 — 2026-08-12
 
 - Detect `return`, `break`, and `continue` after earlier semicolon-separated

@@ -10,7 +10,7 @@ Give an AI coding assistant this one prompt:
 Read and follow this NME language handoff before writing code:
 https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
 
-Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.157`), then write the requested program as a .nme file, prefer sentence syntax for a
+Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.158`), then write the requested program as a .nme file, prefer sentence syntax for a
 beginner, mix beginner or advanced Python only where it makes the result
 clearer, and verify it with nme check.
 ```
@@ -239,11 +239,13 @@ non-nested-function, and one-line-suite placements receive `E0113`. Nested
 functions and classes under an outer function remain valid, while CPython
 checks whether the named outer binding exists.
 Python star imports (`from ... import *`) are module-level only; using one
-inside a function or class, including a one-line suite, receives `E0114`.
-Import names explicitly there.
+inside a function or class, including a one-line suite or a star import after
+an earlier semicolon-separated statement, receives `E0114`. Import names
+explicitly there.
 Python also rejects `break`, `continue`, and `return` inside `except*`; NME
-reports `E0115`. Keep those controls outside the handler or use a normal
-`except` block when its semantics fit.
+reports `E0115`, including when the control follows an earlier semicolon-
+separated statement in the handler. Keep those controls outside the handler or
+use a normal `except` block when its semantics fit.
 Python rejects `yield` inside list, set, dictionary, and generator
 comprehensions; NME reports `E0116`. Replace the comprehension with an explicit
 loop, while keeping ordinary generator lambdas unchanged.

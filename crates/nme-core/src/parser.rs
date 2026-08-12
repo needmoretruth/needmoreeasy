@@ -7339,23 +7339,35 @@ fn contains_python_nonlocal(tokens: &[Token]) -> bool {
 }
 
 fn is_python_import_star_line(tokens: &[Token]) -> bool {
-    let Some(import_index) = tokens
-        .iter()
-        .position(|token| matches!(token.tok, Tok::Import))
-    else {
-        return false;
-    };
-    matches!(tokens.first().map(|token| &token.tok), Some(Tok::From))
-        && tokens[import_index + 1..]
+    let depths = token_depths(tokens);
+    tokens.iter().enumerate().any(|(start, token)| {
+        if depths[start] != 0
+            || !matches!(token.tok, Tok::From)
+            || (start > 0
+                && !(depths[start - 1] == 0 && matches!(tokens[start - 1].tok, Tok::Semi)))
+        {
+            return false;
+        }
+        let end = (start + 1..tokens.len())
+            .find(|&index| depths[index] == 0 && matches!(tokens[index].tok, Tok::Semi))
+            .unwrap_or(tokens.len());
+        let statement = &tokens[start..end];
+        let Some(import_index) = statement
+            .iter()
+            .position(|token| matches!(token.tok, Tok::Import))
+        else {
+            return false;
+        };
+        statement[import_index + 1..]
             .iter()
             .any(|token| matches!(token.tok, Tok::Star))
+    })
 }
 
 fn is_python_except_star_control_line(tokens: &[Token]) -> bool {
-    matches!(
-        tokens.first().map(|token| &token.tok),
-        Some(Tok::Break | Tok::Continue | Tok::Return)
-    )
+    has_direct_python_statement(tokens, |tok| {
+        matches!(tok, Tok::Break | Tok::Continue | Tok::Return)
+    })
 }
 
 fn is_python_except_star_header(tokens: &[Token]) -> bool {

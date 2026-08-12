@@ -669,11 +669,13 @@ See [the conversion guide](converting-python.md).
   function remains unchanged; CPython separately checks whether the requested
   name is bound in that outer function.
 - Python `from ... import *` inside a function or class gets `E0114`, including
-  one-line suites; import the names explicitly there. Module-level star
-  imports, including ones under a module-level conditional, remain unchanged.
+  one-line suites and a star import after an earlier semicolon-separated
+  statement; import the names explicitly there. Module-level star imports,
+  including ones under a module-level conditional, remain unchanged.
 - Python does not allow `break`, `continue`, or `return` inside an `except*`
-  block; NME reports `E0115`. Nested function bodies and control flow after the
-  handler suite remain unchanged.
+  block; NME reports `E0115`, including when the control follows an earlier
+  semicolon-separated statement in the handler. Nested function bodies and
+  control flow after the handler suite remain unchanged.
 - Python does not allow `yield` inside a list, set, dictionary, or generator
   comprehension; NME reports `E0116`. A plain `yield` expression and a
   generator lambda remain unchanged when Python permits them.

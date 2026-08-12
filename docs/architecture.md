@@ -149,9 +149,11 @@ in `async def` receives `E0110`, while
 function/class bodies and generator lambdas remain byte-identical. CPython
 still owns validation of whether a requested `nonlocal` name is bound in an
 outer function. A valid module-level `from ... import *` remains unchanged,
-while the same star import inside a function or class receives `E0114`.
-`break`/`continue`/`return` inside an `except*` suite receive `E0115`; the
-tracker resets across nested Python function/class scopes and after the suite.
+while the same star import inside a function or class receives `E0114`,
+including after an earlier semicolon-separated statement in a one-line suite.
+`break`/`continue`/`return` inside an `except*` suite receive `E0115`, including
+after an earlier semicolon-separated statement; the tracker resets across
+nested Python function/class scopes and after the suite.
 `yield` inside a comprehension receives `E0116`; token-depth matching keeps
 ordinary `yield` expressions and lambdas nested inside comprehensions intact.
 An `async for` inside a comprehension outside an `async def` receives `E0117`;
