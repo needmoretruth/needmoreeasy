@@ -77,7 +77,7 @@ Implemented so far:
 - identifiers that collide with C keywords or generated runtime names are
   rejected, never silently renamed. Runtime names include `nme_copy`,
   `nme_cat`, `NME_STRING_CAPACITY`, `_nme_i`, the checked integer helpers, and
-  the C library helpers used by generated code;
+  the C library symbols exposed by the generated headers;
 - source comments are emitted as inert C comments, so comment text cannot turn
   into a C preprocessor directive or change native function hoisting;
 - native expressions require a prior binding or a declared function call;

@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.62 — 2026-08-12
+
+- Reserve macros, typedefs, and declarations exposed by generated C headers so
+  native identifiers cannot be changed by preprocessing or C library clashes.
+
 ## 0.0.1-beta.61 — 2026-08-12
 
 - Make native `len` count UTF-8 Unicode characters rather than storage bytes,
