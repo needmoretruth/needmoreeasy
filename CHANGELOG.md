@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.130 — 2026-08-12
+
+- Document native one-line NME output bodies for sentence repeats alongside
+  `times:`/`번:` loops, and add six-surface support/boundary regression coverage.
+
 ## 0.0.1-beta.129 — 2026-08-12
 
 - Add native six-surface regression coverage for one-line `say` output bodies,

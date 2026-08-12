@@ -150,13 +150,16 @@ available as `examples/native-logical` and `examples/native-logical.ko`.
 - Sentence `while`, `if`, `else`, and `else if` blocks use `end` or `끝`.
   Comparisons may use symbolic operators or the documented natural-language
   connectors, and supported conditions may combine with logical `and`/`or`.
-  Beginner `times:` and `번:` loops are supported.
+  Beginner `times:` and `번:` loops are supported, as are one-line NME output
+  bodies for sentence repeats such as `repeat 2 times and show Hi`.
 - `break` works inside a native loop, including an `if` nested in that loop.
   A break outside a loop is rejected before C is emitted.
 - A one-line NME output body after `then`/`그러면` is supported for native
   `if`/`while` and `else if`/`else` branches when it uses `say`, `show`, or
   `말해`, for example `if ready then show "ready"`. Python inline bodies and
   inline value updates remain outside this restricted subset.
+- Ordinary Python `for` loops remain outside the native subset; use the CPython
+  path for unrestricted Python loop syntax.
 - Bindings created only in a possibly skipped branch are not available before
   they are definitely assigned. A name assigned on every possible fall-through
   path of an `if`/`else` chain is available after the block; a branch that

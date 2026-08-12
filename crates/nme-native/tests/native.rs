@@ -953,6 +953,66 @@ fn the_beginner_times_loop_compiles_natively() {
 }
 
 #[test]
+fn one_line_nme_repeat_bodies_cover_supported_surfaces_and_reject_python_loops() {
+    let cases = [
+        (
+            "sentence-en",
+            "repeat 2 times and show Hi\n",
+            Some("Hi\nHi\n"),
+        ),
+        (
+            "sentence-ko",
+            "2번 반복해서 안녕 말해줘\n",
+            Some("안녕\n안녕\n"),
+        ),
+        (
+            "beginner-en",
+            "2 times: say \"beginner\"\n",
+            Some("beginner\nbeginner\n"),
+        ),
+        ("beginner-ko", "2번: 말해 \"초급\"\n", Some("초급\n초급\n")),
+        (
+            "advanced-en",
+            "for _ in range(2):\n    print(\"advanced\")\n",
+            None,
+        ),
+        (
+            "advanced-ko",
+            "for _ in range(2):\n    print(\"고급\")\n",
+            None,
+        ),
+    ];
+
+    for (label, source, expected) in cases {
+        if let Some(expected) = expected {
+            let actual = native_run(source).unwrap_or_else(|error| {
+                panic!("native case failed: {label}: {error}");
+            });
+            assert_eq!(actual, expected, "native case: {label}");
+        } else {
+            let problems = nme_native::native_compile(source).unwrap_err();
+            assert!(
+                problems.iter().any(|problem| {
+                    problem
+                        .message
+                        .contains("the native backend does not support")
+                }),
+                "native case should stay outside the subset: {label}: {problems:?}"
+            );
+            assert!(
+                problems.iter().any(|problem| {
+                    problem
+                        .message_ko
+                        .as_deref()
+                        .is_some_and(|message| message.contains("네이티브 백엔드는 아직"))
+                }),
+                "native case should have Korean guidance: {label}: {problems:?}"
+            );
+        }
+    }
+}
+
+#[test]
 fn boolean_literals_in_truthy_conditions_compile_natively() {
     let source = "if true\n    show \"always\"\nend\nif false\n    show \"never\"\nend\n";
     assert_eq!(native_run(source).unwrap(), "always\n");
