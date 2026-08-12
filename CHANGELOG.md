@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.105 — 2026-08-12
+
+- Fix native comparisons of two string concatenations so each operand keeps
+  its own checked runtime buffer instead of comparing the second result with
+  itself.
+- Cover the corrected behavior in English and Korean native sentence syntax.
+
 ## 0.0.1-beta.104 — 2026-08-12
 
 - Correct the native-backend contract to document that `break` works inside an

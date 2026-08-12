@@ -200,7 +200,8 @@ const PREAMBLE: &str = concat!(
     "#error \"NME native backend requires a 32-bit C int\"\n",
     "#endif\n",
     "#define NME_STRING_CAPACITY 8192\n",
-    "static char nme_cat_buf[NME_STRING_CAPACITY];\n",
+    "static char nme_cat_buf[2][NME_STRING_CAPACITY];\n",
+    "static int nme_cat_index;\n",
     "NME_UNUSED static void nme_integer_overflow(void) {\n",
     "    fputs(\"nme native: integer overflow / 정수 오버플로가 발생했습니다\\n\", stderr);\n",
     "    exit(1);\n",
@@ -296,9 +297,11 @@ const PREAMBLE: &str = concat!(
     "        || b_length >= NME_STRING_CAPACITY - a_length) {\n",
     "        nme_string_overflow();\n",
     "    }\n",
-    "    memcpy(nme_cat_buf, a, a_length);\n",
-    "    memcpy(nme_cat_buf + a_length, b, b_length + 1);\n",
-    "    return nme_cat_buf;\n",
+    "    char *destination = nme_cat_buf[nme_cat_index];\n",
+    "    nme_cat_index = (nme_cat_index + 1) % 2;\n",
+    "    memcpy(destination, a, a_length);\n",
+    "    memcpy(destination + a_length, b, b_length + 1);\n",
+    "    return destination;\n",
     "}\n",
 );
 
@@ -1857,6 +1860,7 @@ fn is_native_runtime_name(name: &str) -> bool {
                 | "memcpy"
                 | "nme_cat"
                 | "nme_cat_buf"
+                | "nme_cat_index"
                 | "nme_copy"
                 | "nme_float_result"
                 | "nme_integer_division_by_zero"

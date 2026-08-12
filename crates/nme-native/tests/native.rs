@@ -704,6 +704,15 @@ fn string_comparison_and_len_compile_natively() {
 }
 
 #[test]
+fn comparing_two_string_concats_does_not_reuse_one_runtime_buffer() {
+    let source = "left = \"a\"\nright = \"b\"\nif left + \"x\" == right + \"y\"\n    show \"wrong\"\nelse\n    show \"correct\"\nend\n";
+    assert_eq!(native_run(source).unwrap(), "correct\n");
+
+    let korean = "왼쪽 = \"a\"\n오른쪽 = \"b\"\n만약 왼쪽 + \"x\" == 오른쪽 + \"y\"\n    말해 \"틀림\"\n아니면\n    말해 \"맞음\"\n끝\n";
+    assert_eq!(native_run(korean).unwrap(), "맞음\n");
+}
+
+#[test]
 fn modulo_arithmetic_compiles_natively() {
     let source = "x = 7\nshow x % 3\nshow 10 % 4\nshow 2 + 10 % 4\n";
     assert_eq!(native_run(source).unwrap(), "1\n2\n4\n");
@@ -902,6 +911,7 @@ fn native_runtime_names_are_rejected_not_miscompiled() {
         "nme_add_float",
         "nme_cat",
         "nme_copy",
+        "nme_cat_index",
         "nme_float_result",
         "nme_integer_division_by_zero",
         "nme_integer_overflow",
