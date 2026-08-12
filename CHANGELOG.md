@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.96 — 2026-08-12
+
+- Align Korean reference, installation, and native-backend workflows with the
+  Korean CLI commands, while labeling intentional English command spellings.
+
 ## 0.0.1-beta.95 — 2026-08-12
 
 - Align Korean example-authoring, example-template, and calculator verification

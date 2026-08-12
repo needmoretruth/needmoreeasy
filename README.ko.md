@@ -91,7 +91,7 @@ Cargo가 설치한 `bin` 폴더가 `PATH`에 없다고 경고하면 macOS/Linux�
 명령이 아닙니다. Windows PowerShell은
 [설치 안내](docs/install.ko.md#windows-11)의 PATH 단계를 사용하세요.
 
-표시될 버전은 `nme 0.0.1-beta.95`입니다.
+표시될 버전은 `nme 0.0.1-beta.96`입니다.
 
 Windows, macOS, Linux별 과정은 [설치 안내](docs/install.ko.md)에 있습니다.
 프로그래밍을 전혀 모른다면 [5분 시작 안내](docs/getting-started.ko.md)부터
@@ -295,8 +295,8 @@ nme 변환 app.py --level 문장형 --language 한국어 -o app.nme
 NME는 별도의 Python 인터프리터가 아니라 컴파일러입니다. Rust로 만든 순수
 코어가 NME 소스를 평범한 Python 소스로 컴파일합니다. Python 토큰화와 파싱은
 `rustpython-parser`가 담당하며, Python 호환 경로는 CPython에서 실행하고
-`nme compile`은 선택적으로 Nuitka를 호출할 수 있습니다. 별도의 `nme native`
-명령은 제한된 NME 부분집합을 C로 내린 뒤 시스템 C 컴파일러로 실행 파일을
+`nme 컴파일`(영어 명령 `nme compile`)은 선택적으로 Nuitka를 호출할 수 있습니다.
+별도의 `nme 네이티브`(영어 명령 `nme native`)는 제한된 NME 부분집합을 C로 내린 뒤 시스템 C 컴파일러로 실행 파일을
 만듭니다. 컴파일 전후 실제 줄 수를 같게 유지해서 오류의 줄 번호가 원본
 `.nme` 파일과 맞습니다.
 

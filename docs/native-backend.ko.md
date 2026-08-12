@@ -4,7 +4,7 @@
 
 [README](../README.ko.md) | [설치](install.ko.md) | [시작하기](getting-started.ko.md) | [학습 과정](tutorial.ko.md) | [문법 안내](language.ko.md) | [가이드](guides/index.ko.md)
 
-> 상태: v0이 구현되었습니다(`nme native 실행`/`nme native 빌드`). 정적 타입
+> 상태: v0이 구현되었습니다(`nme 네이티브 실행`/`nme 네이티브 빌드`). 정적 타입
 > 코어 부분집합 — 정수·유한 실수 값과 산술, 비교 조건의 문장형 `while`/`if`/`else`/
 > `else if`, `break`, 스칼라 매개변수 함수와 `return`(재귀 동작), `say` —
 > 을 C로 내리고 시스템 C 컴파일러로 네이티브 실행 파일을 만듭니다. 코어
@@ -16,10 +16,10 @@
 
 NME 컴파일러(`nme-core`)는 소스 대 소스 변환기입니다. 문장·초급·고급 단계를
 일반 Python으로 내리고(줄마다 하나의 물리 줄 유지), CPython이 그 결과를
-실행합니다. `nme compile`은 설치된 Nuitka로 그 Python을 실행 파일로
+실행합니다. `nme 컴파일`(영어 `nme compile`)은 설치된 Nuitka로 그 Python을 실행 파일로
 만듭니다. Nuitka는 성숙한 Python-to-C 컴파일러이지만 **NME 네이티브
 백엔드가 아닙니다**: 이 경로는 전체 Python 호환 파이프라인을 위한 것이므로
-결과물도 Python 런타임 의미를 유지합니다. 별도의 `nme native` 백엔드는
+결과물도 Python 런타임 의미를 유지합니다. 별도의 `nme 네이티브`(영어 `nme native`) 백엔드는
 문서에 정의한 제한된 NME 부분집합을 C와 시스템 컴파일러 실행 파일로
 컴파일하지만, 모든 NME나 모든 Python을 컴파일한다고 주장하지 않습니다.
 
@@ -27,12 +27,12 @@ NME 컴파일러(`nme-core`)는 소스 대 소스 변환기입니다. 문장·�
 정의하고 확장하는 것입니다.
 
 CLI는 macOS와 Linux에서 `cc`를 사용하고 Windows에서는 Microsoft의 `cl`을
-사용합니다. Windows에서 `nme native`를 사용하기 전에는 Developer PowerShell
+사용합니다. Windows에서 `nme 네이티브`(영어 `nme native`)를 사용하기 전에는 Developer PowerShell
 for Visual Studio(또는 `cl.exe`가 `PATH`에 있는 다른 셸)를 시작하세요. NME는
 `/utf-8`을 전달하여 생성된 C의 한국어·영어 문자열이 UTF-8 의미를 유지하게
 합니다. CPython 명령에는 이 컴파일러 셸이 필요하지 않습니다.
 
-현재 CLI에서 `nme native 실행 <파일>`은 임시 실행 파일을 컴파일해 실행하고
+현재 CLI에서 `nme 네이티브 실행 <파일>`은 임시 실행 파일을 컴파일해 실행하고
 결과물을 저장하지 않습니다. 실행 파일과 생성된 C 소스를 보관하려면
 `nme 네이티브 빌드 <파일> -o <경로>`를 사용하세요. `실행`에 `-o`를 붙이면
 E9031으로 거부됩니다. `-o` 없이 빌드하면 원본 전체 줄기 뒤에 `.c`를 붙이므로
@@ -172,7 +172,7 @@ LLVM/Cranelift는 나중에 측정된 업그레이드로 남겨 둡니다.**
 2. **여기서 테스트 가능.** gcc가 있습니다. 네이티브 스모크 테스트(`say`·
    산술·반복을 실행 파일로 컴파일해 실행하고 출력을 비교)를 워크스페이스
    게이트에 즉시 추가할 수 있습니다.
-3. **읽을 수 있는 산출물.** `nme native build hello`가 `hello.c`와 실행
+3. **읽을 수 있는 산출물.** `nme 네이티브 빌드 hello`가 `hello.c`와 실행
    파일을 만듭니다. 초보자는 C를 보고 기계어가 어디서 오는지 배웁니다.
    "문장 → 초급 → 고급 → 네이티브 코어 → C" 이야기와 맞습니다.
 4. **코어에 대해 LLVM/Cranelift가 더해 줄 것이 적음.** 둘 다 같은
@@ -204,7 +204,7 @@ LLVM/Cranelift는 나중에 측정된 업그레이드로 남겨 둡니다.**
 ## 현재 상태와 다음 마일스톤
 
 v0 기준선은 구현되었습니다. 제한된 `nme-native` 컴파일러, UTF-8 문자열과
-검사하는 정수 런타임, `nme native 실행`/`빌드` CLI 진입점, 이중 언어 진단,
+검사하는 정수 런타임, `nme 네이티브 실행`/`nme 네이티브 빌드` CLI 진입점, 이중 언어 진단,
 종단 간 테스트가 모두 워크스페이스에 있습니다. 다음 마일스톤은 다음과
 같습니다.
 
