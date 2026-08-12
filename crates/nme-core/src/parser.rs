@@ -658,8 +658,8 @@ fn break_outside_loop_diagnostic(span: Span) -> Diagnostic {
         span,
     )
     .with_bilingual_hint(
-        "put it inside `while ... end` or `repeat ... end`",
-        "`동안 ... 끝` 또는 `반복 ... 끝` 안에 넣어 주세요",
+        "put it inside `while ... end`, `repeat ... end`, or a Python `for`/`while` loop",
+        "`동안 ... 끝`, `반복 ... 끝`, 또는 Python `for`/`while` 반복문 안에 넣어 주세요",
     )
 }
 

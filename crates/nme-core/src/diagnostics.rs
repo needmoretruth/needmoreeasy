@@ -388,8 +388,8 @@ impl DiagnosticCode {
                 "E0102",
                 "`break` outside a loop",
                 "반복문 밖의 `break`",
-                "`break` (or `멈춰`) stops the nearest loop, so it can only be written inside a `while` loop. Move it inside the loop, or remove it.",
-                "`break`(`멈춰`)는 가장 가까운 반복문을 멈추므로 `while` 반복문 안에서만 쓸 수 있습니다. 반복문 안으로 옮기거나 지우세요.",
+                "`break` (or `멈춰`) stops the nearest loop, so it must be written inside an NME `while`/`repeat` block or a valid Python loop. Move it inside the loop, or remove it.",
+                "`break`(`멈춰`)는 가장 가까운 반복문을 멈추므로 NME `while`/`repeat` 블록이나 올바른 Python 반복문 안에서만 쓸 수 있습니다. 반복문 안으로 옮기거나 지우세요.",
             ),
             Self::BranchWithoutCondition => (
                 "E0103",

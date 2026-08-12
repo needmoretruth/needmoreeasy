@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.137 — 2026-08-12
+
+- Clarify bilingual `E0102` recovery guidance so it covers NME `repeat` and
+  valid Python loops alongside NME `while`.
+
 ## 0.0.1-beta.136 — 2026-08-12
 
 - Report one-line `break` outside a loop with the stable bilingual `E0102`

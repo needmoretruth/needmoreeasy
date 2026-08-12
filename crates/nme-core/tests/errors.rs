@@ -176,6 +176,20 @@ fn inline_break_outside_a_loop_gets_the_stable_bilingual_diagnostic() {
                 .is_some_and(|message| message.contains("반복문 안에서만")),
             "{label}: {problem:?}"
         );
+        assert!(
+            problem
+                .hint
+                .as_deref()
+                .is_some_and(|hint| hint.contains("Python") && hint.contains("for")),
+            "{label}: {problem:?}"
+        );
+        assert!(
+            problem
+                .hint_ko
+                .as_deref()
+                .is_some_and(|hint| hint.contains("Python") && hint.contains("for")),
+            "{label}: {problem:?}"
+        );
     }
 }
 

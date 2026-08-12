@@ -2225,6 +2225,30 @@ fn error_lookup_commands_print_the_requested_explanation() {
     );
     assert!(!english_out.contains("열린 블록"), "{english_out}");
 
+    let break_english = nme(&["en", "E0102"]);
+    assert!(break_english.status.success(), "{}", stderr(&break_english));
+    let break_english_out = stdout(&break_english);
+    assert!(
+        break_english_out.contains("`while`/`repeat`"),
+        "{break_english_out}"
+    );
+    assert!(
+        break_english_out.contains("Python loop"),
+        "{break_english_out}"
+    );
+
+    let break_korean = nme(&["ko", "E0102"]);
+    assert!(break_korean.status.success(), "{}", stderr(&break_korean));
+    let break_korean_out = stdout(&break_korean);
+    assert!(
+        break_korean_out.contains("`while`/`repeat`"),
+        "{break_korean_out}"
+    );
+    assert!(
+        break_korean_out.contains("Python 반복문"),
+        "{break_korean_out}"
+    );
+
     let korean_alias = nme(&["에러", "E0101"]);
     assert!(korean_alias.status.success(), "{}", stderr(&korean_alias));
     assert!(
