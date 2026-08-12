@@ -1132,6 +1132,43 @@ fn one_line_nme_break_bodies_work_across_the_native_surface_matrix() {
 }
 
 #[test]
+fn one_line_nme_else_if_break_bodies_work_across_the_native_surface_matrix() {
+    let cases = [
+        (
+            "sentence-en",
+            "count = 0\nwhile true\n    count add 1\n    when false\n        show \"never\"\n    else if count == 2 then break here\n    end\nend\nshow count\n",
+        ),
+        (
+            "sentence-ko",
+            "횟수는 0\n동안 참\n    횟수에 1 더해\n    만약 거짓\n        말해 \"안 돼\"\n    아니면 만약에 횟수가 2와 같으면 여기서 멈춰\n    끝\n끝\n횟수 말해줘\n",
+        ),
+        (
+            "beginner-en",
+            "set count to 0\nwhile True\n    count add 1\n    if False\n        show \"never\"\n    else if count == 2 then break\n    end\nend\nshow count\n",
+        ),
+        (
+            "beginner-ko",
+            "저장 횟수 0\n동안 True\n    횟수에 1 더해\n    만약 거짓\n        말해 \"안 돼\"\n    아니면 만약 횟수 == 2 그러면 멈춰\n    끝\n끝\n말해 횟수\n",
+        ),
+        (
+            "advanced-en",
+            "count = 0\nwhile (True)\n    count = count + 1\n    if (False)\n        show \"never\"\n    else if (count == 2) then break\n    end\nend\nshow count\n",
+        ),
+        (
+            "advanced-ko",
+            "횟수 = 0\n동안 ((참 그리고 참))\n    횟수 = 횟수 + 1\n    만약 ((거짓 그리고 참))\n        말해 \"안 돼\"\n    아니면 만약에 ((횟수 == 2 그리고 참)) 그러면 멈춰\n    끝\n끝\n말해 횟수\n",
+        ),
+    ];
+
+    for (label, source) in cases {
+        let actual = native_run(source).unwrap_or_else(|error| {
+            panic!("native case failed: {label}: {error}");
+        });
+        assert_eq!(actual, "2\n", "native case: {label}");
+    }
+}
+
+#[test]
 fn boolean_literals_in_truthy_conditions_compile_natively() {
     let source = "if true\n    show \"always\"\nend\nif false\n    show \"never\"\nend\n";
     assert_eq!(native_run(source).unwrap(), "always\n");
