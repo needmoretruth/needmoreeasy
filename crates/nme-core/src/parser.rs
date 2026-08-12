@@ -703,7 +703,7 @@ fn classify(
     // Future Python grammar may be newer than rustpython-parser. A
     // call/attribute/subscript shape is never NME's whitespace-led beginner
     // form, so preserve it for the selected CPython instead of hijacking it.
-    if looks_like_python_invocation(tokens) {
+    if looks_like_python_invocation(tokens) && !is_header_shape(tokens) {
         return Ok(None);
     }
     // rustpython-parser can lag behind the CPython selected by the CLI (for
@@ -2524,6 +2524,13 @@ fn parse_natural_condition(
     if tokens.is_empty() {
         return Err(condition_missing(spelling, Span::new(0, 0)));
     }
+    // Parentheses around a whole NME condition should not turn its logical
+    // connectors into an opaque Python expression. Keep the token-based
+    // logical grammar active while still allowing parentheses inside an
+    // operand, such as `if (ready) and score > 2`.
+    if let Some(inner) = strip_outer_condition_parentheses(tokens) {
+        return parse_natural_condition(source, inner, connector, known_names, spelling);
+    }
     // `or` has lower precedence than `and`, just like Python.  Splitting on
     // tokens (rather than source text) keeps strings and nested expressions
     // out of the easy-language grammar. A split that would produce an empty
@@ -2566,6 +2573,30 @@ fn parse_natural_condition(
         }
     }
     parse_natural_condition_atom(source, tokens, connector, known_names, spelling)
+}
+
+fn strip_outer_condition_parentheses(tokens: &[Token]) -> Option<&[Token]> {
+    if tokens.len() < 2
+        || !tokens
+            .first()
+            .is_some_and(|token| matches!(&token.tok, Tok::Lpar))
+    {
+        return None;
+    }
+    let mut depth = 0usize;
+    for (index, token) in tokens.iter().enumerate() {
+        match token.tok {
+            Tok::Lpar => depth += 1,
+            Tok::Rpar => {
+                depth = depth.checked_sub(1)?;
+                if depth == 0 && index + 1 != tokens.len() {
+                    return None;
+                }
+            }
+            _ => {}
+        }
+    }
+    (depth == 0).then(|| &tokens[1..tokens.len() - 1])
 }
 
 fn logical_operator_at(tokens: &[Token], operator: LogicalOp) -> Option<usize> {

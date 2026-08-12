@@ -86,6 +86,12 @@ fn new_english_spellings_are_still_ordinary_python_names() {
 }
 
 #[test]
+fn when_calls_with_parenthesized_conditions_are_python() {
+    unchanged("when (ready and score > 2)\n");
+    unchanged("when(ready and score > 2)\n");
+}
+
+#[test]
 fn korean_spellings_are_still_ordinary_python_names() {
     unchanged("말해 = print\n말해('안녕')\n");
     unchanged("물어봐 = input\n물어봐('이름?')\n");

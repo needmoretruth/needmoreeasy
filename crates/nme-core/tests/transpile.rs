@@ -389,6 +389,50 @@ fn subject_first_korean_conditions_can_use_flat_end_blocks() {
 }
 
 #[test]
+fn parenthesized_logical_conditions_keep_the_shared_condition_shape() {
+    let english = concat!(
+        "ready = True\n",
+        "score = 3\n",
+        "if (ready and score > 2)\n",
+        "    show yes\n",
+        "end\n",
+    );
+    let english_expected = concat!(
+        "ready = True\n",
+        "score = 3\n",
+        "if ((ready and score > 2)):\n",
+        "    print(\"yes\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(english), english_expected);
+
+    let korean = concat!(
+        "준비는 참\n",
+        "점수는 3\n",
+        "만약 (준비 그리고 점수 > 2)\n",
+        "    성공 말해줘\n",
+        "끝\n",
+    );
+    let korean_expected = concat!(
+        "준비 = True\n",
+        "점수 = 3\n",
+        "if ((준비 and 점수 > 2)):\n",
+        "    print(\"성공\")\n",
+        "# end\n",
+    );
+    assert_eq!(ok(korean), korean_expected);
+
+    assert_eq!(
+        ok("if (ready and score > 2) then show yes\n"),
+        "if ((ready and score > 2)): print(\"yes\")\n",
+    );
+    assert_eq!(
+        ok("만약 (준비 그리고 점수 > 2) 그러면 성공 말해줘\n"),
+        "if ((준비 and 점수 > 2)): print(\"성공\")\n",
+    );
+}
+
+#[test]
 fn short_korean_condition_endings_accept_natural_equality_and_literals() {
     let source = concat!(
         "이름은 철수\n",

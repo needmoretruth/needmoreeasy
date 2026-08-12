@@ -1219,6 +1219,49 @@ fn logical_conditions_work_in_native_while_loops_across_the_surface_matrix() {
 }
 
 #[test]
+fn parenthesized_logical_conditions_compile_across_the_native_surface_matrix() {
+    let cases = [
+        (
+            "sentence-en",
+            "ready save true\nscore save 3\nif (ready and score > 2)\n    show \"yes\"\nend\n",
+            "yes\n",
+        ),
+        (
+            "sentence-ko",
+            "준비는 참\n점수는 3\n만약 (준비 그리고 점수 > 2)\n    말해 \"예\"\n끝\n",
+            "예\n",
+        ),
+        (
+            "beginner-en",
+            "set ready to True\nscore = 3\nif (ready and score > 2)\n    show \"yes\"\nend\n",
+            "yes\n",
+        ),
+        (
+            "beginner-ko",
+            "저장 준비 True\n점수 = 3\n만약 (준비 그리고 점수 > 2)\n    말해 \"예\"\n끝\n",
+            "예\n",
+        ),
+        (
+            "advanced-en",
+            "ready = True\nscore = 3\nif ((ready and score > 2))\n    show \"yes\"\nend\n",
+            "yes\n",
+        ),
+        (
+            "advanced-ko",
+            "준비 = True\n점수 = 3\n만약 ((준비 그리고 점수 > 2))\n    말해 \"예\"\n끝\n",
+            "예\n",
+        ),
+    ];
+
+    for (label, source, expected) in cases {
+        let actual = native_run(source).unwrap_or_else(|error| {
+            panic!("native case failed: {label}: {error}");
+        });
+        assert_eq!(actual, expected, "native case: {label}");
+    }
+}
+
+#[test]
 fn logical_conditions_keep_short_circuit_evaluation() {
     let english = "def mark():\n    show \"called\"\n    return 1\n\nif true or false and false\n    show \"precedence\"\nend\nif false and mark() == 1\n    show \"bad and\"\nend\nif true or mark() == 1\n    show \"short\"\nend\n";
     assert_eq!(native_run(english).unwrap(), "precedence\nshort\n");

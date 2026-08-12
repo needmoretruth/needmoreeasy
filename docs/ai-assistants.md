@@ -10,7 +10,7 @@ Give an AI coding assistant this one prompt:
 Read and follow this NME language handoff before writing code:
 https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
 
-Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.114`), then write the requested program as a .nme file, prefer sentence syntax for a
+Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.115`), then write the requested program as a .nme file, prefer sentence syntax for a
 beginner, mix beginner or advanced Python only where it makes the result
 clearer, and verify it with nme check.
 ```
@@ -166,7 +166,9 @@ end
 
 The same block supports `break`/`멈춰`, `and`/`그리고`, `or`/`또는`,
 `elif`/`아니면 만약에`, and `else`/`아니면`. Indented bodies and ordinary Python
-remain valid when a learner is ready to use them.
+remain valid when a learner is ready to use them. A whole NME condition may be
+parenthesized in a colon-free header, such as `if (ready and score > 2)`;
+valid Python calls such as `when(ready and score > 2)` remain Python.
 
 ### Use beginner syntax when precision matters
 

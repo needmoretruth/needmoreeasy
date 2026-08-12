@@ -6,6 +6,16 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.115 — 2026-08-12
+
+- Accept parentheses around a whole colon-free NME logical condition, such as
+  `if (ready and score > 2)`, while preserving the shared English/Korean
+  condition tree.
+- Keep valid Python calls such as `when(ready and score > 2)` byte-identical
+  instead of treating them as NME headers.
+- Cover the English/Korean sentence, beginner, and advanced surfaces in the
+  native matrix and synchronize the language, native-reference, and AI guides.
+
 ## 0.0.1-beta.114 — 2026-08-12
 
 - Extend native logical-condition regression coverage to `while` blocks across
