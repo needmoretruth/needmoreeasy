@@ -73,6 +73,8 @@ into a native executable with your system's C compiler.
    is how you see what your program really becomes.
    The `-o` option belongs to `build`; `nme native run count -o count` is
    rejected with E9031 because `run` does not save an artifact.
+   Choose one action word: writing both `run` and `build` is rejected with
+   E9032 instead of letting the last word silently win.
 
 4. Functions and recursion work inside the core — the example
    `examples/native-factorial.nme` (Korean twin

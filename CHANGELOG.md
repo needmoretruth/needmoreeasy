@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.71 — 2026-08-12
+
+- Reject repeated `run`/`build` action words in `nme native` with stable
+  bilingual diagnostic E9032, and make native CLI test directories unique.
+
 ## 0.0.1-beta.70 — 2026-08-12
 
 - Reject `-o` on `nme native run` with stable bilingual diagnostic E9031;

@@ -269,13 +269,36 @@ fn command_modules(args: &[String], language: MessageLanguage) -> ExitCode {
 #[allow(clippy::too_many_lines)]
 fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
     let mut action = "run";
+    let mut action_seen = false;
     let mut file = None;
     let mut output = None;
     let mut rest = args.iter();
     while let Some(arg) = rest.next() {
         match arg.as_str() {
-            "run" | "실행" => action = "run",
-            "build" | "빌드" => action = "build",
+            "run" | "실행" => {
+                if action_seen {
+                    return fail(
+                        nme_core::diagnostics::DiagnosticCode::CliNativeActionRepeated,
+                        language,
+                        "choose only one native action: `run` or `build`",
+                        "네이티브 동작은 `실행` 또는 `빌드` 중 하나만 선택하세요",
+                    );
+                }
+                action = "run";
+                action_seen = true;
+            }
+            "build" | "빌드" => {
+                if action_seen {
+                    return fail(
+                        nme_core::diagnostics::DiagnosticCode::CliNativeActionRepeated,
+                        language,
+                        "choose only one native action: `run` or `build`",
+                        "네이티브 동작은 `실행` 또는 `빌드` 중 하나만 선택하세요",
+                    );
+                }
+                action = "build";
+                action_seen = true;
+            }
             "-o" | "--output" => match rest.next() {
                 Some(path) => output = Some(path.clone()),
                 None => {

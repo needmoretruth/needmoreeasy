@@ -188,6 +188,8 @@ pub enum DiagnosticCode {
     CliInstallPackageMissing,
     /// `nme native run` was given an output path intended for `build`.
     CliNativeRunOutput,
+    /// `nme native` was given more than one action word.
+    CliNativeActionRepeated,
 }
 
 impl DiagnosticCode {
@@ -264,11 +266,12 @@ impl DiagnosticCode {
             Self::CliCompileModuleImportsUnsupported => "E9029",
             Self::CliInstallPackageMissing => "E9030",
             Self::CliNativeRunOutput => "E9031",
+            Self::CliNativeActionRepeated => "E9032",
         }
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 71] = [
+    pub const ALL: [DiagnosticCode; 72] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -340,6 +343,7 @@ impl DiagnosticCode {
         Self::CliCompileModuleImportsUnsupported,
         Self::CliInstallPackageMissing,
         Self::CliNativeRunOutput,
+        Self::CliNativeActionRepeated,
     ];
 
     pub fn from_code(code: &str) -> Option<Self> {
@@ -862,6 +866,13 @@ impl DiagnosticCode {
                 "`-o`는 `nme 네이티브 빌드`에서만 사용할 수 있습니다",
                 "`nme native run` executes the program without saving an artifact. Use `nme native build <file> -o <path>` when you want to keep the executable and generated C source.",
                 "`nme 네이티브 실행`은 결과 파일을 저장하지 않고 프로그램을 실행합니다. 실행 파일과 생성된 C 소스를 보관하려면 `nme 네이티브 빌드 <파일> -o <경로>`를 사용하세요.",
+            ),
+            Self::CliNativeActionRepeated => (
+                "E9032",
+                "more than one native action was given",
+                "네이티브 동작을 두 개 이상 적었습니다",
+                "Choose exactly one native action: `run` or `build`. Write `nme native run <file>` to execute, or `nme native build <file>` to keep artifacts.",
+                "네이티브 동작은 `실행` 또는 `빌드` 중 하나만 선택하세요. 실행하려면 `nme 네이티브 실행 <파일>`, 결과물을 보관하려면 `nme 네이티브 빌드 <파일>`을 사용하세요.",
             ),
         };
         CodeExplanation {

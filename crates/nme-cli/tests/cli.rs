@@ -579,8 +579,7 @@ fn the_native_command_compiles_and_runs_a_core_program() {
         eprintln!("cc not available; skipping native test");
         return;
     }
-    let dir = std::env::temp_dir().join(format!("nme-cli-native-{}", std::process::id()));
-    std::fs::create_dir_all(&dir).unwrap();
+    let dir = temporary_dir("native-command");
     std::fs::write(
         dir.join("count.nme"),
         "score = 0\nwhile score is less than 3\n    score add 1\nend\nshow score\nshow \"done\"\n",
@@ -641,6 +640,34 @@ fn native_run_rejects_an_output_path_in_both_command_languages() {
         "{korean_error}"
     );
     assert!(!dir.join("saved-ko").exists(), "{korean_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn native_rejects_repeated_run_and_build_actions() {
+    let dir = temporary_dir("native-repeated-action");
+    write_nme(&dir, "hello.nme", "say 1\n");
+
+    let english = run_in(&dir, &["native", "run", "build", "hello"], None);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(
+        english_error.contains("error[E9032]: choose only one native action: `run` or `build`"),
+        "{english_error}"
+    );
+
+    let korean = run_in(&dir, &["네이티브", "실행", "빌드", "hello"], None);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(
+        korean_error.contains("오류[E9032]: 네이티브 동작은 `실행` 또는 `빌드` 중 하나만 선택하세요"),
+        "{korean_error}"
+    );
+    assert!(
+        korean_error.contains("error[E9032]: choose only one native action: `run` or `build`"),
+        "{korean_error}"
+    );
 
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -1188,8 +1215,7 @@ fn convert_can_write_beginner_nme_to_a_file() {
 fn compile_invokes_the_native_backend_and_creates_the_requested_artifact() {
     use std::os::unix::fs::PermissionsExt as _;
 
-    let dir = std::env::temp_dir().join(format!("nme-cli-native-{}", std::process::id()));
-    std::fs::create_dir_all(&dir).unwrap();
+    let dir = temporary_dir("compile-native-artifact");
     let input = dir.join("hello.nme");
     let output_file = dir.join("hello-app");
     let fake_python = dir.join("fake-python");
