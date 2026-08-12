@@ -2122,6 +2122,8 @@ fn match_subject_when(
     // a comparison word somewhere in its body.
     if when_action_at(tokens, 0, MatchMode::Recover).is_some()
         || repeat_action_at(tokens, 0, MatchMode::Recover).is_some()
+        || attached_korean_times_sentence(source, tokens).is_some()
+        || find_count_marker(tokens, MatchMode::Exact).is_some()
         || ask_action_at(tokens, 0, MatchMode::Recover).is_some()
         || output_action_at(tokens, 0, MatchMode::Recover).is_some()
         || set_action_at(tokens, 0, MatchMode::Recover).is_some()
@@ -3606,6 +3608,9 @@ fn parse_sentence_repeat_body(
     header_span: Span,
     known_names: &HashSet<String>,
 ) -> Result<Option<InlineStmt>, Diagnostic> {
+    if branch_shape(body).is_some() {
+        return Err(branch_without_condition_diagnostic(span_of(body)));
+    }
     if let Some(inner) = match_break(source, body, known_names, MatchMode::Exact)? {
         return Ok(Some(InlineStmt::Nme(Box::new(inner))));
     }
@@ -3622,6 +3627,9 @@ fn parse_sentence_repeat_body(
         || find_ask_shape(body, MatchMode::Recover).is_some();
     if !body.is_empty() && (!plain_words || has_action) {
         if let Some(inner) = classify(source, body, &BlockCtx::Inline, known_names)? {
+            if matches!(&inner, NmeStmt::ElseIf { .. } | NmeStmt::Else { .. }) {
+                return Err(branch_without_condition_diagnostic(span_of(body)));
+            }
             return Ok(Some(InlineStmt::Nme(Box::new(inner))));
         }
     }

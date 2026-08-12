@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.141 — 2026-08-12
+
+- Extend the shared inline-branch `E0103` guard to sentence-repeat bodies and
+  keep Korean repeat shapes ahead of subject-first condition recovery.
+
 ## 0.0.1-beta.140 — 2026-08-12
 
 - Reject inline `else`/`elif` bodies without an open condition with the shared

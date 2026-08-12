@@ -310,6 +310,28 @@ fn inline_branches_without_an_open_condition_get_a_stable_diagnostic() {
 }
 
 #[test]
+fn sentence_repeat_inline_branches_without_a_condition_get_a_stable_diagnostic() {
+    let cases = [
+        ("sentence-en", "repeat 3 times and else show no\n"),
+        ("sentence-ko", "3번 반복해서 아니면 말해 아니요\n"),
+    ];
+
+    for (label, source) in cases {
+        let problems = match transpile(source) {
+            Ok(output) => panic!("expected repeat branch diagnostic for {label}, got {output:?}"),
+            Err(problems) => problems,
+        };
+        assert_eq!(problems.len(), 1, "core case: {label}: {problems:?}");
+        let problem = &problems[0];
+        assert_eq!(
+            problem.code,
+            DiagnosticCode::BranchWithoutCondition,
+            "core case: {label}"
+        );
+    }
+}
+
+#[test]
 fn only_the_bundled_modules_are_available() {
     let message = err("use math\n");
     assert!(
