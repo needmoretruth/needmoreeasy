@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.87 — 2026-08-12
+
+- Align the Korean Python-packages guide with `birthday.ko.nme`, Korean
+  beginner spellings, and the equivalent English learning path.
+
 ## 0.0.1-beta.86 — 2026-08-12
 
 - Run the Windows CLI install smoke test under PowerShell so Git Bash's

@@ -11,19 +11,20 @@
 
 Python에는 준비된 패키지가 많이 들어 있습니다. 고급 NME는 일반 Python이므로
 그중 아무 패키지나 `.nme` 파일 안에서 쓸 수 있습니다. 그것이 바로 세 번째
-문법 계층입니다. `examples/birthday.nme`는 `datetime` 패키지로 생일까지
-남은 날을 셉니다.
+문법 계층입니다. 한국어 예제 `examples/birthday.ko.nme`는 `datetime` 패키지로
+생일까지 남은 날을 셉니다. 영어판 `examples/birthday.nme`는 같은 계산을 영어
+초급 표기로 보여 줍니다.
 
 ## 단계
 
 1. 필요한 패키지 부분을 Python import 줄로 가져옵니다:
 
    ```text
-   # part of examples/birthday.nme
+   # examples/birthday.ko.nme의 일부
    from datetime import date
 
    today = date.today()
-   show today.year
+   말해 today.year
    ```
 
    `date`는 이제 다른 값처럼 쓸 수 있습니다: `date(2026, 12, 25)`는 날짜를
@@ -32,27 +33,29 @@ Python에는 준비된 패키지가 많이 들어 있습니다. 고급 NME는 �
 2. 입력은 초급 문법으로, 계산은 패키지로:
 
    ```text
-   # part of examples/birthday.nme
-   ask month, "your birth month (1-12): "
-   ask day, "your birth day (1-31): "
+   # examples/birthday.ko.nme의 일부
+   물어봐 월, "생일 월(1-12): "
+   물어봐 일, "생일 일(1-31): "
 
    today = date.today()
-   this_year = date(today.year, int(month), int(day))
+   this_year = date(today.year, int(월), int(일))
 
    if this_year < today:
-       this_year = date(today.year + 1, int(month), int(day))
+       this_year = date(today.year + 1, int(월), int(일))
 
-   show "your next birthday is in " + str((this_year - today).days) + " days"
+   말해 "다음 생일까지 " + str((this_year - today).days) + "일 남았어요"
    ```
 
    실행하고 태어난 월과 일을 입력하세요:
 
    ```sh
-   nme run birthday
+   nme 실행 birthday.ko
    ```
 
+   일수는 오늘 날짜와 입력에 따라 달라집니다:
+
    ```text
-   your next birthday is in 136 days
+   다음 생일까지 <일수>일 남았어요
    ```
 
 3. 다른 표준 패키지도 같은 방식입니다. `statistics`는 목록의 평균을,
@@ -93,5 +96,5 @@ Python에는 준비된 패키지가 많이 들어 있습니다. 고급 NME는 �
 
 - `from datetime import date`가 프로그램에 패키지 이름을 가져옵니다.
 - 표준 라이브러리는 NME 안에서 언제나 쓸 수 있습니다.
-- 초급 `ask`와 Python 패키지 호출이 한 파일에서 자유롭게 섞입니다.
+- 초급 `물어봐`와 Python 패키지 호출이 한 파일에서 자유롭게 섞입니다.
 - `nme 설치` / `nme install`이 pip을 감싸며, 써드파티 패키지는 똑같이 가져옵니다.

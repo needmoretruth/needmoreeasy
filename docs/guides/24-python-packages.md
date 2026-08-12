@@ -12,7 +12,8 @@ English | [한국어](24-python-packages.ko.md)
 Python ships with many ready-made packages. Because advanced NME is ordinary
 Python, any of them is available inside a `.nme` file — that is the third
 syntax level. The example `examples/birthday.nme` uses the `datetime` package
-to count down to a birthday.
+to count down to a birthday. Its Korean twin, `examples/birthday.ko.nme`, uses
+Korean beginner spellings over the same calculation.
 
 ## Steps
 
@@ -51,8 +52,10 @@ to count down to a birthday.
    nme run birthday
    ```
 
+   The number changes with today's date and your answers:
+
    ```text
-   your next birthday is in 136 days
+   your next birthday is in <number> days
    ```
 
 3. Other standard packages work the same way. `statistics` can average a
