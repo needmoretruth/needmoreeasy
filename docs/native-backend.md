@@ -55,8 +55,9 @@ Implemented so far:
   the natural-language "or equal" connectors), over integer truthiness
   (`if ready`, `while turns`), and over boolean literals; the beginner
   `times:` loop; `break`;
-- functions over integer scalar parameters with integer `return` (recursion
-  works); float or string function values are rejected rather than converted;
+- functions over integer scalar parameters with an unconditional integer
+  `return` (recursion works); float or string function values and branch-only
+  returns are rejected rather than converted or left to C fallthrough;
 - function-local scalar assignments remain scoped to their function;
 - value changes require an existing integer or float binding, and assignments
   cannot change a native name from one type to another;

@@ -140,6 +140,31 @@ fn native_functions_reject_float_arguments_and_returns() {
 }
 
 #[test]
+fn native_functions_require_a_return_on_every_path() {
+    for source in [
+        "def missing(value):\n    value = value + 1\n\nshow missing(1)\n",
+        "def conditional(value):\n    if value\n        return 1\n    end\n\nshow conditional(0)\n",
+    ] {
+        let problems = nme_native::native_compile(source).unwrap_err();
+        assert!(
+            problems
+                .iter()
+                .any(|problem| problem.message.contains("return an integer on every path")),
+            "{source:?}: {problems:?}"
+        );
+        assert!(
+            problems.iter().any(|problem| {
+                problem
+                    .message_ko
+                    .as_deref()
+                    .is_some_and(|message| message.contains("모든 경로"))
+            }),
+            "{source:?}: {problems:?}"
+        );
+    }
+}
+
+#[test]
 fn a_string_literal_is_printed() {
     assert_eq!(
         native_run("show \"hello world\"\n").unwrap(),

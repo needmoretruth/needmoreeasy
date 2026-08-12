@@ -6,6 +6,12 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.51 — 2026-08-12
+
+- Reject native functions that can fall through without an unconditional
+  integer return, preventing undefined C return values after conditional-only
+  branches.
+
 ## 0.0.1-beta.50 — 2026-08-12
 
 - Check native signed 32-bit integer literals and arithmetic instead of

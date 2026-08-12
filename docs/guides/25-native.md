@@ -33,7 +33,8 @@ into a native executable with your system's C compiler.
    with a bilingual runtime error; use the CPython path for unrestricted text.
    Native integers are signed 32-bit values (`-2147483648` through
    `2147483647`); overflow and modulo by zero stop with a bilingual runtime
-   error. Native functions currently accept and return integers only.
+   error. Native functions currently accept and return integers only, and each
+   function needs an unconditional top-level integer `return`.
 
 2. Compile and run it natively:
 

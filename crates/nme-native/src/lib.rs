@@ -22,8 +22,8 @@
 //! - `while`/`if`/`else`/`else if` blocks over integer comparisons, closed
 //!   by `end`/`끝`;
 //! - `break` inside a loop;
-//! - functions over integer parameters with an integer `return` (recursion
-//!   works).
+//! - functions over integer parameters with an unconditional integer `return`
+//!   (recursion works).
 //!
 //! Anything outside this core is rejected with a clear bilingual diagnostic;
 //! it is never silently miscompiled. The rest of NME keeps running on CPython.
@@ -258,6 +258,8 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
     let mut native_blocks = Vec::<NativeBlockFrame>::new();
     let mut saved_main_scope = None;
     let mut in_function = false;
+    let mut function_span = None;
+    let mut function_returned = false;
     let mut problems = Vec::new();
 
     for (index, line) in lines.iter().enumerate() {
@@ -282,11 +284,17 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
             }
         }
         if in_function && line.indent == 0 && is_significant_line {
+            if let Some(span) = function_span.take() {
+                if !function_returned {
+                    problems.push(native_function_requires_return(span));
+                }
+            }
             if let Some(main_scope) = saved_main_scope.take() {
                 declared = main_scope;
             }
             declaration_slots.use_main();
             in_function = false;
+            function_returned = false;
         }
         if let Some(nme_line) = nme_line {
             // `else`/`else if` lines emit their own closing `}` before the
@@ -440,7 +448,23 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                 problems.push(diag);
             } else if is_function_header && out.len() > output_before_line {
                 declaration_slots.start_function(&out);
+                function_span = Some(line.span);
+                function_returned = false;
+            } else if in_function
+                && function_span.is_some()
+                && matches!(
+                    line.tokens.first().map(|token| &token.tok),
+                    Some(rustpython_parser::Tok::Return)
+                )
+                && open_braces == 2
+            {
+                function_returned = true;
             }
+        }
+    }
+    if let Some(span) = function_span.take() {
+        if !function_returned {
+            problems.push(native_function_requires_return(span));
         }
     }
     close_braces(&mut out, &mut open_braces, 1);
@@ -1544,6 +1568,19 @@ fn native_function_requires_integer(span: Span) -> Diagnostic {
     .with_bilingual_hint(
         "pass and return integers in native functions, or run the program with CPython",
         "네이티브 함수에는 정수를 전달하고 반환하거나 프로그램을 CPython으로 실행하세요",
+    )
+}
+
+fn native_function_requires_return(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::UnsupportedModule,
+        "the native backend requires every function to return an integer on every path",
+        "네이티브 백엔드는 모든 경로에서 함수가 정수를 반환해야 합니다",
+        span,
+    )
+    .with_bilingual_hint(
+        "add a top-level integer return after conditional blocks, or run the program with CPython",
+        "조건부 블록 뒤에 최상위 정수 반환을 추가하거나 프로그램을 CPython으로 실행하세요",
     )
 }
 
