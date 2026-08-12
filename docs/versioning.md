@@ -9,12 +9,12 @@ prereleases while the language is still being designed.
 
 ## Current release line
 
-The current release is `0.0.1-beta.107`; the public line began at
+The current release is `0.0.1-beta.108`; the public line began at
 `0.0.1-beta.1`. Later public beta releases increase the last number by one.
 A Git commit or a branch push is not automatically a release, so development
 commits can share the version of the beta they are preparing.
 
-Read the [beta.107 release notes](release-beta.107.md) for the current checkpoint;
+Read the [beta.108 release notes](release-beta.108.md) for the current checkpoint;
 older beta notes remain available beside it.
 
 Each release must update these together:

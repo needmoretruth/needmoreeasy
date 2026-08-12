@@ -83,14 +83,15 @@ Implemented so far:
   `times:` loop; and `break` inside a native loop, including an `if` nested
   inside that loop. A `break` outside a loop is rejected with `E0102` before C
   is emitted;
-- functions over integer scalar parameters with an unconditional integer
+- functions over integer scalar parameters with a required top-level integer
   `return` (recursion works); calls may target any function in the file,
   including one defined later, with its declared arity and positional
-  arguments. Simple positional integer
-  parameters only are accepted in headers; duplicate definitions, defaults,
-  varargs, nested definitions, keyword arguments, float or string function
-  values, branch-only returns, and top-level `return` (`E0106`) are rejected
-  rather than converted or left to C fallthrough;
+  arguments. An early `return` in a branch is allowed when every path that
+  continues past the block reaches that top-level return. Simple positional
+  integer parameters only are accepted in headers; duplicate definitions,
+  defaults, varargs, nested definitions, keyword arguments, float or string
+  function values, functions with only branch returns, and top-level `return`
+  (`E0106`) are rejected rather than converted or left to C fallthrough;
 - function-local scalar assignments remain scoped to their function;
 - value changes require an existing integer or float binding, and assignments
   cannot change a native name from one type to another;
@@ -98,9 +99,11 @@ Implemented so far:
   before that block or used after assignment inside it; a literal `if true`
   branch is known to run, while names assigned only in its unreachable
   `else`/`else if` alternatives are not exported. A name assigned in every
-  branch of an `if`/`else` chain is available after the block; a name assigned
-  in only one branch, or inside a loop that may not run, remains conditional,
-  and sibling branches do not make each other's new bindings visible;
+  possible fall-through path of an `if`/`else` chain is available after the
+  block; a branch that returns early does not need to initialize that name. A
+  name assigned in only one continuing branch, or inside a loop that may not
+  run, remains conditional, and sibling branches do not make each other's new
+  bindings visible;
 - `say`/`show`/`말해` of an integer expression, a float, a string variable,
   or a string literal;
 - Korean and English spellings both lower to the same C;

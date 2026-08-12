@@ -642,6 +642,50 @@ fn bindings_assigned_in_both_if_else_branches_are_available_afterward() {
 
     let korean_maybe = "준비 = 1\n만약 준비\n    결과 = 2\n끝\n만약 준비\n    결과 = 3\n아니면\n    결과 = 4\n끝\n말해 결과\n";
     assert_eq!(native_run(korean_maybe).unwrap(), "3\n");
+
+    let returning_branch = "def choose(value):\n    if value\n        result = 2\n    else\n        return 3\n    end\n    return result\n\nshow choose(1)\nshow choose(0)\n";
+    assert_eq!(native_run(returning_branch).unwrap(), "2\n3\n");
+
+    let korean_returning_branch = "def 선택(값):\n    만약 값\n        결과 = 2\n    아니면\n        return 3\n    끝\n    return 결과\n\n말해 선택(1)\n말해 선택(0)\n";
+    assert_eq!(native_run(korean_returning_branch).unwrap(), "2\n3\n");
+}
+
+#[test]
+fn early_return_branch_works_across_the_native_surface_matrix() {
+    let cases = [
+        (
+            "sentence-en",
+            "def choose(value):\n    when value exists\n        set result to 2\n    else\n        return 3\n    end\n    return result\n\nshow choose(1)\nshow choose(0)\n",
+        ),
+        (
+            "sentence-ko",
+            "def 선택(값):\n    만약에 값이 있으면\n        저장 결과 2\n    아니면\n        return 3\n    끝\n    return 결과\n\n말해 선택(1)\n말해 선택(0)\n",
+        ),
+        (
+            "beginner-en",
+            "def choose(value):\n    if value\n        result = 2\n    else\n        return 3\n    end\n    return result\n\nshow choose(1)\nshow choose(0)\n",
+        ),
+        (
+            "beginner-ko",
+            "def 선택(값):\n    만약 값\n        결과 = 2\n    아니면\n        return 3\n    끝\n    return 결과\n\n말해 선택(1)\n말해 선택(0)\n",
+        ),
+        (
+            "advanced-en",
+            "def choose(value):\n    when value exists\n        result = 2\n    else\n        return 3\n    end\n    return result\n\nshow choose(1)\nshow choose(0)\n",
+        ),
+        (
+            "advanced-ko",
+            "def 선택(값):\n    만약에 값이 있으면\n        결과 = 2\n    아니면\n        return 3\n    끝\n    return 결과\n\n말해 선택(1)\n말해 선택(0)\n",
+        ),
+    ];
+
+    for (label, source) in cases {
+        assert_eq!(
+            native_run(source).unwrap(),
+            "2\n3\n",
+            "native case: {label}"
+        );
+    }
 }
 
 #[test]

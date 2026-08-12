@@ -105,7 +105,14 @@ impl DeclarationSlots {
 
 /// A native control block may assign a name on a path that does not execute.
 /// Keep the pre-block types so those names can be rejected after the block
-/// unless the block is statically known to run or every branch initializes it.
+/// unless the block is statically known to run or every reachable branch
+/// initializes it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum NativeBranchFlow {
+    FallThrough,
+    Terminated,
+}
+
 #[derive(Debug)]
 struct NativeBlockFrame {
     body_depth: usize,
@@ -116,6 +123,7 @@ struct NativeBlockFrame {
     bindings_in_all_branches: Option<HashMap<String, VarType>>,
     has_else: bool,
     bindings_after_reachable_branch: Option<HashMap<String, VarType>>,
+    branch_flow: NativeBranchFlow,
 }
 
 fn concrete_type(kind: VarType) -> VarType {
@@ -160,7 +168,10 @@ fn finish_native_block(mut frame: NativeBlockFrame, declared: &mut HashMap<Strin
     if frame.definitely_runs {
         return;
     }
-    record_completed_branch(&mut frame, declared);
+    record_branch_bindings(&mut frame, declared);
+    if frame.branch_flow == NativeBranchFlow::FallThrough {
+        record_completed_branch(&mut frame, declared);
+    }
     let mut merged = frame.bindings_before;
     for (name, kind) in frame.branch_bindings {
         if !frame.is_loop && frame.has_else {
@@ -185,7 +196,6 @@ fn record_branch_bindings(frame: &mut NativeBlockFrame, declared: &HashMap<Strin
 }
 
 fn record_completed_branch(frame: &mut NativeBlockFrame, declared: &HashMap<String, VarType>) {
-    record_branch_bindings(frame, declared);
     let completed = declared
         .iter()
         .filter(|(name, kind)| {
@@ -496,7 +506,11 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                     if frame.definitely_runs && frame.bindings_after_reachable_branch.is_none() {
                         frame.bindings_after_reachable_branch = Some(declared.clone());
                     }
-                    record_completed_branch(frame, &declared);
+                    record_branch_bindings(frame, &declared);
+                    if frame.branch_flow == NativeBranchFlow::FallThrough {
+                        record_completed_branch(frame, &declared);
+                    }
+                    frame.branch_flow = NativeBranchFlow::FallThrough;
                     declared = reset_for_next_branch(frame);
                 }
             }
@@ -559,6 +573,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                             bindings_in_all_branches: None,
                             has_else: false,
                             bindings_after_reachable_branch: None,
+                            branch_flow: NativeBranchFlow::FallThrough,
                         });
                     }
                     Err(diag) => problems.push(diag),
@@ -580,6 +595,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                             bindings_in_all_branches: None,
                             has_else: false,
                             bindings_after_reachable_branch: None,
+                            branch_flow: NativeBranchFlow::FallThrough,
                         });
                     }
                     Err(diag) => problems.push(diag),
@@ -625,6 +641,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                                         bindings_in_all_branches: None,
                                         has_else: false,
                                         bindings_after_reachable_branch: None,
+                                        branch_flow: NativeBranchFlow::FallThrough,
                                     });
                                 }
                             }
@@ -711,15 +728,30 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                 declaration_slots.start_function(&out);
                 function_span = Some(line.span);
                 function_returned = false;
-            } else if in_function
-                && function_span.is_some()
-                && matches!(
-                    line.tokens.first().map(|token| &token.tok),
-                    Some(rustpython_parser::Tok::Return)
-                )
-                && open_braces == 2
-            {
-                function_returned = true;
+            } else {
+                if in_function
+                    && matches!(
+                        line.tokens.first().map(|token| &token.tok),
+                        Some(rustpython_parser::Tok::Return)
+                    )
+                    && native_blocks
+                        .last()
+                        .is_some_and(|frame| !frame.is_loop && current_depth == frame.body_depth)
+                {
+                    if let Some(frame) = native_blocks.last_mut() {
+                        frame.branch_flow = NativeBranchFlow::Terminated;
+                    }
+                }
+                if in_function
+                    && function_span.is_some()
+                    && matches!(
+                        line.tokens.first().map(|token| &token.tok),
+                        Some(rustpython_parser::Tok::Return)
+                    )
+                    && open_braces == 2
+                {
+                    function_returned = true;
+                }
             }
         }
     }

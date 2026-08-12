@@ -37,9 +37,10 @@ into a native executable with your system's C compiler.
    Native integers are signed 32-bit values (`-2147483648` through
    `2147483647`); overflow and modulo by zero stop with a bilingual runtime
    error. Native functions currently accept and return integers only, and each
-   function needs an unconditional top-level integer `return`; calls may name a
-   function defined later in the same file, with the declared number of
-   positional arguments.
+   function needs a top-level integer `return`; an arm may return early, but
+   every path that continues after a control block must reach that final
+   return. Calls may name a function defined later in the same file, with the
+   declared number of positional arguments.
    Use simple integer parameters in the header; defaults, varargs, and keyword
    arguments are outside the native core, as are nested function definitions.
    Float literals must be finite. Native float arithmetic uses C `double`; an
@@ -51,9 +52,10 @@ into a native executable with your system's C compiler.
    dynamic Python name behavior.
    A name assigned only in an unreachable `else` or `else if` after `if true`
    is not available after the block. A name assigned in every branch of an
-   `if`/`else` chain is available afterward; one branch cannot read a name first
-   assigned in a sibling branch, and a loop-created name remains conditional if
-   the loop may not run.
+   `if`/`else` chain is available afterward; a branch that returns early does not
+   need to assign it. One continuing branch cannot read a name first assigned in
+   a sibling branch, and a loop-created name remains conditional if the loop may
+   not run.
 
 2. Compile and run it natively:
 

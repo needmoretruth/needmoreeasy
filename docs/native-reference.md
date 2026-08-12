@@ -116,10 +116,11 @@ a call to a declared native function.
 - `break` works inside a native loop, including an `if` nested in that loop.
   A break outside a loop is rejected before C is emitted.
 - Bindings created only in a possibly skipped branch are not available before
-  they are definitely assigned. A name assigned in every branch of an
-  `if`/`else` chain is available after the block; a name assigned in only one
-  branch, or inside a loop that may not run, remains conditional. Function-local
-  bindings stay inside their function.
+  they are definitely assigned. A name assigned on every possible fall-through
+  path of an `if`/`else` chain is available after the block; a branch that
+  returns early does not need to assign it. A name assigned in only one
+  continuing branch, or inside a loop that may not run, remains conditional.
+  Function-local bindings stay inside their function.
 
 Use the NME sentence block forms for native control flow. Python-colon control
 headers such as `while score < 10:` are outside this core; use the CPython path
@@ -141,12 +142,26 @@ show fact(5)
 ```
 
 Functions may have zero or more simple positional integer parameters and must
-return an integer on every path with an unconditional top-level `return`.
-Calls may use a function defined later in the file, including recursive calls,
-but must use the declared number of positional arguments. Defaults, varargs,
-keyword arguments, nested function definitions, float or string function
-values, branch-only returns, and top-level `return` are outside the native
-core.
+have a top-level integer `return`. An early `return` may terminate one branch;
+every path that continues after a control block must still reach the top-level
+return. Calls may use a function defined later in the file, including recursive
+calls, but must use the declared number of positional arguments. Defaults,
+varargs, keyword arguments, nested function definitions, float or string
+function values, functions with only branch returns, and top-level `return` are
+outside the native core.
+
+For example, the `else` path below returns before the block ends, so `result` is
+required only on the path that reaches the final return:
+
+```text
+def choose(value):
+    if value
+        result = 2
+    else
+        return 3
+    end
+    return result
+```
 
 ## What stays on CPython
 

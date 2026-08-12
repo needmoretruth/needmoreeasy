@@ -6,6 +6,14 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.108 — 2026-08-12
+
+- Allow a native `if`/`else` branch that returns early to be excluded from
+  fall-through binding analysis, so a later return can use a name assigned on
+  every path that reaches it.
+- Cover the behavior across English and Korean sentence, beginner, and mixed
+  advanced native surfaces, and align the native reference and guides.
+
 ## 0.0.1-beta.107 — 2026-08-12
 
 - Upgrade a previously conditional binding when every arm of a later
