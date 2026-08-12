@@ -180,6 +180,56 @@ def check_numbered_guide_pairs(problems: list[str]) -> None:
             )
 
 
+def check_numbered_guide_indexes(problems: list[str]) -> None:
+    guides = ROOT / "docs" / "guides"
+    numbered_paths = sorted(
+        (
+            path
+            for path in guides.iterdir()
+            if path.is_file()
+            and re.match(r"\d+-", path.name)
+            and not path.name.endswith(".ko.md")
+        ),
+        key=lambda path: int(path.name.split("-", 1)[0]),
+    )
+    numbers = [int(path.name.split("-", 1)[0]) for path in numbered_paths]
+    if numbers != list(range(1, len(numbers) + 1)):
+        problems.append(
+            "docs/guides: numbered English guides must use each number from "
+            f"1 through {len(numbers)} exactly once"
+        )
+
+    for index, section, suffix in (
+        (guides / "index.md", "## Learn in order", ".md"),
+        (guides / "index.ko.md", "## 순서대로 배우기", ".ko.md"),
+    ):
+        if not index.is_file():
+            problems.append(f"{index.relative_to(ROOT)}: missing guide index")
+            continue
+        expected = [
+            path.name if suffix == ".md" else f"{path.stem}.ko.md"
+            for path in numbered_paths
+        ]
+        lines = index.read_text(encoding="utf-8").splitlines()
+        try:
+            start = lines.index(section) + 1
+        except ValueError:
+            problems.append(f"{index.relative_to(ROOT)}: missing {section} section")
+            continue
+        actual: list[str] = []
+        for line in lines[start:]:
+            if line.startswith("## "):
+                break
+            match = re.match(r"^\d+\.\s+\[[^\]]+\]\(([^)#]+)", line)
+            if match:
+                actual.append(match.group(1))
+        if actual != expected:
+            problems.append(
+                f"{index.relative_to(ROOT)}: sequential guide links do not match "
+                f"numbered guide files ({len(actual)}/{len(expected)})"
+            )
+
+
 def check_guide_metadata(problems: list[str]) -> None:
     guides = ROOT / "docs" / "guides"
     for path in guides.iterdir():
@@ -239,6 +289,7 @@ check_local_markdown_links(problems)
 check_korean_links(problems)
 check_guide_navigation(problems)
 check_numbered_guide_pairs(problems)
+check_numbered_guide_indexes(problems)
 check_guide_metadata(problems)
 check_guide_code_block_parity(problems)
 check_example_template_loop(problems)

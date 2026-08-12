@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.72 — 2026-08-12
+
+- Make the documentation parity check verify that both sequential guide indexes
+  list every numbered English/Korean guide exactly once and in order.
+
 ## 0.0.1-beta.71 — 2026-08-12
 
 - Reject repeated `run`/`build` action words in `nme native` with stable
