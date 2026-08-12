@@ -805,10 +805,10 @@ fn c_brace_delta(line: &str) -> isize {
 }
 
 /// Validates and lowers a Python expression to C for the native core,
-/// returning the C text and its static type. Integer expressions pass through
-/// Integer expressions use checked native runtime helpers; string expressions
-/// lower to a name, a literal, or one `+` concatenation through the small
-/// runtime helper.
+/// returning the C text and its static type. Integer expressions use checked
+/// native runtime helpers; finite-float expressions use checked `double`
+/// helpers; string expressions lower to a name, a literal, or one `+`
+/// concatenation through the small runtime helper.
 fn check_expr(
     text: &str,
     span: Span,

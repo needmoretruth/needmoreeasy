@@ -80,8 +80,9 @@ Implemented so far:
   the natural-language "or equal" connectors), over integer and finite-float
   truthiness (`if ready`, `while turns`; zero is false), and over boolean
   literals; the beginner
-  `times:` loop; `break` inside a native loop only. A `break` nested only in
-  an `if` is rejected with `E0102` before C is emitted;
+  `times:` loop; and `break` inside a native loop, including an `if` nested
+  inside that loop. A `break` outside a loop is rejected with `E0102` before C
+  is emitted;
 - functions over integer scalar parameters with an unconditional integer
   `return` (recursion works); calls may target any function in the file,
   including one defined later, with its declared arity and positional

@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.104 — 2026-08-12
+
+- Correct the native-backend contract to document that `break` works inside an
+  `if` nested in a native loop and is rejected only outside loops.
+- Clarify the native expression-lowering comment for checked integer and
+  finite-float helpers.
+
 ## 0.0.1-beta.103 — 2026-08-12
 
 - Reject non-finite results from native finite-float arithmetic with a bilingual
