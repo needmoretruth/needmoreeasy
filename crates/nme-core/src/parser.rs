@@ -198,6 +198,8 @@ pub fn parse_program(
     // Python headers so nested functions and classes still use BindingEnv.
     let mut python_except_star_indents = Vec::<(usize, usize)>::new();
     let mut python_try_indents = Vec::<usize>::new();
+    let mut async_function_contexts = Vec::<AsyncFunctionContext>::new();
+    let mut completed_async_functions = Vec::<AsyncFunctionContext>::new();
 
     for (index, line) in lines.iter().enumerate() {
         let is_end = exact_end(line.tokens.as_slice());
@@ -328,6 +330,15 @@ pub fn parse_program(
         let next_indent = force_suite.then_some(parse_line.indent + 1).or(next_indent);
 
         bindings.enter_line(parse_line.indent);
+        let python_scope_depth = bindings.python_scope_depth();
+        while async_function_contexts
+            .last()
+            .is_some_and(|context| context.body_scope_depth > python_scope_depth)
+        {
+            if let Some(context) = async_function_contexts.pop() {
+                completed_async_functions.push(context);
+            }
+        }
         let inside_python_except_star = python_except_star_indents
             .last()
             .is_some_and(|(_, scope_depth)| *scope_depth == bindings.python_scope_depth());
@@ -423,6 +434,12 @@ pub fn parse_program(
                     ));
                     continue;
                 }
+                remember_async_generator_context(
+                    &mut async_function_contexts,
+                    &line.tokens,
+                    python_scope_depth,
+                    line.span,
+                );
                 if inline_yield_is_outside_function(&stmt, &line.tokens, bindings.inside_function())
                 {
                     problems.push(yield_outside_function_diagnostic(line.span));
@@ -564,6 +581,12 @@ pub fn parse_program(
                     ));
                     continue;
                 }
+                remember_async_generator_context(
+                    &mut async_function_contexts,
+                    &line.tokens,
+                    python_scope_depth,
+                    line.span,
+                );
                 if contains_yield_outside_lambda(&line.tokens) && !bindings.inside_function() {
                     problems.push(yield_outside_function_diagnostic(line.span));
                     continue;
@@ -589,6 +612,15 @@ pub fn parse_program(
                 }
             }
             Err(problem) => problems.push(problem),
+        }
+    }
+
+    completed_async_functions.extend(async_function_contexts);
+    for context in completed_async_functions {
+        if context.has_yield {
+            for span in context.return_value_spans {
+                problems.push(return_value_in_async_generator_diagnostic(span));
+            }
         }
     }
 
@@ -968,6 +1000,19 @@ fn async_comprehension_outside_async_function_diagnostic(span: Span) -> Diagnost
     )
 }
 
+fn return_value_in_async_generator_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::ReturnValueInAsyncGenerator,
+        "an async generator cannot return a value",
+        "비동기 제너레이터에서는 값을 반환할 수 없어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "use a bare `return`, or move the value-returning statement into a separate async function",
+        "값이 없는 `return`을 사용하거나 값을 반환하는 문장을 별도의 비동기 함수로 옮겨 주세요",
+    )
+}
+
 fn branch_without_condition_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
         DiagnosticCode::BranchWithoutCondition,
@@ -1313,6 +1358,42 @@ fn async_for_is_inside_comprehension(tokens: &[Token], async_index: usize) -> bo
             return false;
         };
         is_open && async_index < close_index && depths[async_index] == depths[open_index] + 1
+    })
+}
+
+fn remember_async_generator_context(
+    contexts: &mut Vec<AsyncFunctionContext>,
+    tokens: &[Token],
+    python_scope_depth: usize,
+    span: Span,
+) {
+    let has_direct_yield =
+        contains_yield_outside_lambda(tokens) && !contains_yield_inside_comprehension(tokens);
+    let has_return_value = contains_return_with_value(tokens);
+    if let Some(context) = contexts
+        .last_mut()
+        .filter(|context| context.body_scope_depth == python_scope_depth)
+    {
+        context.has_yield |= has_direct_yield;
+        if has_return_value {
+            context.return_value_spans.push(span);
+        }
+    }
+    if is_python_async_function_header(tokens) {
+        contexts.push(AsyncFunctionContext {
+            body_scope_depth: python_scope_depth + 1,
+            has_yield: false,
+            return_value_spans: Vec::new(),
+        });
+    }
+}
+
+fn contains_return_with_value(tokens: &[Token]) -> bool {
+    tokens.iter().enumerate().any(|(index, token)| {
+        matches!(token.tok, Tok::Return)
+            && tokens[index + 1..]
+                .iter()
+                .any(|next| !matches!(next.tok, Tok::Semi))
     })
 }
 
@@ -5849,6 +5930,12 @@ struct BindingScope {
     body_indent: usize,
     names: HashSet<String>,
     kind: BindingScopeKind,
+}
+
+struct AsyncFunctionContext {
+    body_scope_depth: usize,
+    has_yield: bool,
+    return_value_spans: Vec<Span>,
 }
 
 struct PendingScope {

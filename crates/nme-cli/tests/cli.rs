@@ -2803,6 +2803,31 @@ fn async_comprehension_outside_async_function_reports_the_shared_context_diagnos
 }
 
 #[test]
+fn return_value_inside_async_generator_reports_the_shared_context_diagnostic() {
+    let dir = std::env::temp_dir().join(format!(
+        "nme-cli-async-generator-return-code-{}",
+        std::process::id()
+    ));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("async-generator-return.nme");
+    std::fs::write(&file, "async def stream():\n    yield 1\n    return 2\n").unwrap();
+
+    let english = nme(&["check", &file.to_string_lossy()]);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(english_error.contains("error[E0118]:"), "{english_error}");
+    assert!(english_error.contains("async generator"), "{english_error}");
+
+    let korean = nme(&["검사", &file.to_string_lossy()]);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(korean_error.contains("오류[E0118]:"), "{korean_error}");
+    assert!(korean_error.contains("비동기 제너레이터"), "{korean_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn inline_branch_without_a_condition_reports_the_shared_branch_diagnostic() {
     let dir =
         std::env::temp_dir().join(format!("nme-cli-inline-branch-code-{}", std::process::id()));

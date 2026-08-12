@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.151 — 2026-08-12
+
+- Add shared bilingual `E0118` for return values inside async generators,
+  while preserving bare returns and nested function scopes.
+
 ## 0.0.1-beta.150 — 2026-08-12
 
 - Add shared bilingual `E0117` for asynchronous comprehensions outside an

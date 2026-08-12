@@ -78,6 +78,8 @@ pub enum DiagnosticCode {
     YieldInsideComprehension,
     /// An async comprehension outside an async function.
     AsyncComprehensionOutsideAsyncFunction,
+    /// A return value inside an async generator.
+    ReturnValueInAsyncGenerator,
     /// `say` value could not be understood.
     SayValueBroken,
     /// `say` expression is not valid.
@@ -235,6 +237,7 @@ impl DiagnosticCode {
             Self::ControlFlowInExceptStar => "E0115",
             Self::YieldInsideComprehension => "E0116",
             Self::AsyncComprehensionOutsideAsyncFunction => "E0117",
+            Self::ReturnValueInAsyncGenerator => "E0118",
             Self::SayValueBroken => "E0201",
             Self::SayValueUnparseable => "E0202",
             Self::SaySentenceUnparseable => "E0203",
@@ -304,7 +307,7 @@ impl DiagnosticCode {
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 83] = [
+    pub const ALL: [DiagnosticCode; 84] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -323,6 +326,7 @@ impl DiagnosticCode {
         Self::ControlFlowInExceptStar,
         Self::YieldInsideComprehension,
         Self::AsyncComprehensionOutsideAsyncFunction,
+        Self::ReturnValueInAsyncGenerator,
         Self::SayValueBroken,
         Self::SayValueUnparseable,
         Self::SaySentenceUnparseable,
@@ -539,6 +543,13 @@ impl DiagnosticCode {
                 "비동기 함수 밖의 비동기 컴프리헨션",
                 "Python only allows a comprehension with `async for` inside an `async def` function. Move it into an async function, or use an ordinary `for` comprehension for a synchronous iterable.",
                 "Python은 `async for`가 있는 컴프리헨션을 `async def` 함수 안에서만 허용합니다. 컴프리헨션을 비동기 함수 안으로 옮기거나 동기 반복자에는 일반 `for` 컴프리헨션을 사용하세요.",
+            ),
+            Self::ReturnValueInAsyncGenerator => (
+                "E0118",
+                "return value inside an async generator",
+                "비동기 제너레이터 안의 반환값",
+                "Python does not allow an async generator to return a value. Use a bare `return`, or move the value-returning statement into a separate async function.",
+                "Python은 비동기 제너레이터에서 반환값을 허용하지 않습니다. 값이 없는 `return`을 사용하거나 값을 반환하는 문장을 별도의 비동기 함수로 옮기세요.",
             ),
             Self::SayValueBroken => (
                 "E0201",

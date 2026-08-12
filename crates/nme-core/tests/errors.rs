@@ -793,6 +793,66 @@ fn async_comprehension_outside_async_function_gets_a_stable_diagnostic() {
 }
 
 #[test]
+fn return_value_inside_async_generator_gets_a_stable_diagnostic() {
+    let cases = [
+        (
+            "return after yield",
+            "async def stream():\n    yield 1\n    return 2\n",
+        ),
+        (
+            "return before yield",
+            "async def stream():\n    return 2\n    yield 1\n",
+        ),
+        (
+            "sentence-en",
+            "async def stream():\n    yield 1\n    when True then return 2\n",
+        ),
+        (
+            "sentence-ko",
+            "async def stream():\n    yield 1\n    만약 참 그러면 return 2\n",
+        ),
+        (
+            "beginner-en",
+            "async def stream():\n    yield 1\n    if True then return 2\n",
+        ),
+        (
+            "beginner-ko",
+            "async def stream():\n    yield 1\n    만약 True 그러면 return 2\n",
+        ),
+        (
+            "advanced-en",
+            "async def stream():\n    yield 1\n    if (True) then return 2\n",
+        ),
+        (
+            "advanced-ko",
+            "async def stream():\n    yield 1\n    만약 ((참 그리고 참)) 그러면 return 2\n",
+        ),
+    ];
+    for (label, source) in cases {
+        let problems = transpile(source).expect_err("an async generator cannot return a value");
+        assert_eq!(problems.len(), 1, "{label}: {problems:?}");
+        assert_eq!(
+            problems[0].code,
+            DiagnosticCode::ReturnValueInAsyncGenerator,
+            "{label}: {problems:?}"
+        );
+    }
+
+    let async_function = "async def compute():\n    return 2\n";
+    assert_eq!(transpile(async_function).unwrap(), async_function);
+    let bare_return = "async def stream():\n    yield 1\n    return\n";
+    assert_eq!(transpile(bare_return).unwrap(), bare_return);
+    let nested_function = "async def outer():\n    yield 1\n    def inner():\n        return 2\n";
+    assert_eq!(transpile(nested_function).unwrap(), nested_function);
+    let nested_async_function =
+        "async def outer():\n    yield 1\n    async def inner():\n        return 2\n";
+    assert_eq!(
+        transpile(nested_async_function).unwrap(),
+        nested_async_function
+    );
+}
+
+#[test]
 fn inline_branches_without_an_open_condition_get_a_stable_diagnostic() {
     let cases = [
         ("sentence-en", "when true then else show no\n"),
