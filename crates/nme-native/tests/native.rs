@@ -751,6 +751,31 @@ fn korean_spellings_compile_natively() {
 }
 
 #[test]
+fn unreachable_true_branch_alternatives_do_not_export_bindings() {
+    for source in [
+        "if true\n    show \"yes\"\nelse\n    hidden = 1\nend\nvalue = hidden\nshow value\n",
+        "만약 True라면\n    말해 \"예\"\n아니면\n    숨김 = 1\n끝\n값 = 숨김\n말해 값\n",
+    ] {
+        let problems = nme_native::native_compile(source).unwrap_err();
+        assert!(
+            problems
+                .iter()
+                .any(|problem| problem.message.contains("without a prior native binding")),
+            "{source:?}: {problems:?}"
+        );
+        assert!(
+            problems.iter().any(|problem| {
+                problem
+                    .message_ko
+                    .as_deref()
+                    .is_some_and(|message| message.contains("먼저 네이티브 바인딩"))
+            }),
+            "{source:?}: {problems:?}"
+        );
+    }
+}
+
+#[test]
 fn a_python_colon_while_header_is_rejected_not_miscompiled() {
     // `while x < 3:` is valid Python, so it stays Python (Python-wins) and
     // the native core, which lowers the sentence `while` form, rejects it.

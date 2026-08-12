@@ -67,7 +67,8 @@ Implemented so far:
   cannot change a native name from one type to another;
 - a name first assigned in a possibly skipped control block must be assigned
   before that block or used after assignment inside it; a literal `if true`
-  branch is known to run;
+  branch is known to run, while names assigned only in its unreachable
+  `else`/`else if` alternatives are not exported;
 - `say`/`show`/`말해` of an integer expression, a float, a string variable,
   or a string literal;
 - Korean and English spellings both lower to the same C;

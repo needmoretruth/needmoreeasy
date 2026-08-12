@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.59 — 2026-08-12
+
+- Keep bindings from unreachable `else`/`else if` alternatives after `if true`
+  out of the definite native scope, preventing reads of uninitialized C values.
+
 ## 0.0.1-beta.58 — 2026-08-12
 
 - Reject unresolved native names, bare native function values, duplicate

@@ -110,6 +110,7 @@ struct NativeBlockFrame {
     body_depth: usize,
     bindings_before: HashMap<String, VarType>,
     definitely_runs: bool,
+    bindings_after_reachable_branch: Option<HashMap<String, VarType>>,
 }
 
 fn concrete_type(kind: VarType) -> VarType {
@@ -144,6 +145,10 @@ fn condition_definitely_true(condition: &Condition) -> bool {
 }
 
 fn finish_native_block(frame: NativeBlockFrame, declared: &mut HashMap<String, VarType>) {
+    if let Some(bindings) = frame.bindings_after_reachable_branch {
+        *declared = bindings;
+        return;
+    }
     if frame.definitely_runs {
         return;
     }
@@ -366,6 +371,13 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
             function_returned = false;
         }
         if let Some(nme_line) = nme_line {
+            if is_branch {
+                if let Some(frame) = native_blocks.last_mut() {
+                    if frame.definitely_runs && frame.bindings_after_reachable_branch.is_none() {
+                        frame.bindings_after_reachable_branch = Some(declared.clone());
+                    }
+                }
+            }
             // `else`/`else if` lines emit their own closing `}` before the
             // next branch, so the generic brace closing must not run first.
             if !is_branch {
@@ -425,6 +437,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                             body_depth: current_depth + 1,
                             bindings_before: declared.clone(),
                             definitely_runs: false,
+                            bindings_after_reachable_branch: None,
                         });
                     }
                     Err(diag) => problems.push(diag),
@@ -446,6 +459,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                             body_depth: current_depth + 1,
                             bindings_before: declared.clone(),
                             definitely_runs: condition_definitely_true(condition),
+                            bindings_after_reachable_branch: None,
                         });
                     }
                     Err(diag) => problems.push(diag),
@@ -480,6 +494,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                                         body_depth: current_depth + 1,
                                         bindings_before: declared.clone(),
                                         definitely_runs: false,
+                                        bindings_after_reachable_branch: None,
                                     });
                                 }
                             }

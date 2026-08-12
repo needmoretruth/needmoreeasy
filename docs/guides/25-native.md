@@ -46,6 +46,8 @@ into a native executable with your system's C compiler.
    function. Function values, duplicate parameters, and reusing a function
    name for a variable or parameter are rejected; use the CPython path for
    dynamic Python name behavior.
+   A name assigned only in an unreachable `else` or `else if` after `if true`
+   is not available after the block.
 
 2. Compile and run it natively:
 
