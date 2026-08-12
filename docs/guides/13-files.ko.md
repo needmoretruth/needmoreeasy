@@ -28,7 +28,7 @@
 2. 실행합니다:
 
    ```sh
-   nme run diary
+   nme 실행 diary
    ```
 
    콘솔에 `오늘은 좋은 날이에요`가 출력됩니다. 폴더를 보면 프로그램 옆에
@@ -57,9 +57,9 @@
 좋아하는 음식을 `food.txt`에 저장하고 다시 읽어 보세요:
 
 ```text
-use file latest
-file_write("food.txt", "Kimchi stew")
-show file_read("food.txt")
+파일 사용 최신
+파일쓰기("food.txt", "김치찌개")
+말해 파일읽기("food.txt")
 ```
 
 ## 배운 것
