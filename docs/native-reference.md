@@ -89,7 +89,8 @@ The native core currently supports these values:
 - Finite floating-point values represented by C `double`. Float literals must
   be finite. `+`, `-`, and `*` work for floats; `%` is integer-only. Whole
   floats use C-style `%g` output, so `5.0` may print as `5` and `-0.0` keeps
-  its sign.
+  its sign. Arithmetic that would produce a non-finite result stops with a
+  bilingual native-runtime error.
 - String literals and string variables. A stored or concatenated value may be
   at most 8191 UTF-8 bytes. Escaped newlines and tabs work, embedded NUL
   characters and ordering comparisons do not. `len` counts Unicode characters.

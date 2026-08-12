@@ -65,7 +65,8 @@ Implemented so far:
 - integers and finite floats with `+ - * %` arithmetic (checked signed 32-bit native
   integers from `-2147483648` through `2147483647`; integer modulo only, with
   overflow and zero-divisor errors reported by the bilingual native runtime;
-  float literals must be finite, float arithmetic uses C `double`, and whole
+  float literals must be finite, float arithmetic uses C `double`, non-finite
+  arithmetic results stop with a bilingual native-runtime error, and whole
   floats print with C's `%g`, which may differ cosmetically from Python's `5.0`);
 - string variables with `+` concatenation into variables (checked fixed
   8192-byte buffers), escaped string output, string `==`/`!=` comparisons
@@ -109,7 +110,7 @@ Implemented so far:
   helpers, and the C library symbols exposed by the generated headers;
 - source comments are emitted as inert C comments, so comment text cannot turn
   into a C preprocessor directive or change native function hoisting;
-- native expressions require a prior binding or a declared function call;
+- native expressions require a literal, a prior binding, or a declared function call;
   bare function values, duplicate parameters, and bindings or parameters that
   shadow a native function name are rejected before C emission;
 

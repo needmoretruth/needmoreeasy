@@ -42,11 +42,12 @@ into a native executable with your system's C compiler.
    positional arguments.
    Use simple integer parameters in the header; defaults, varargs, and keyword
    arguments are outside the native core, as are nested function definitions.
-   Float literals must be finite. Native float arithmetic uses C `double`, and
-   `%g` output may print `5.0` as `5`; `-0.0` retains its sign as `-0`.
-   Native expressions must use a name assigned earlier or call a declared
-   function. Function values, duplicate parameters, and reusing a function
-   name for a variable or parameter are rejected; use the CPython path for
+   Float literals must be finite. Native float arithmetic uses C `double`; an
+   arithmetic result outside the finite range stops with a bilingual runtime
+   error. `%g` output may print `5.0` as `5`; `-0.0` retains its sign as `-0`.
+   Native expressions may use a literal, a name assigned earlier, or call a
+   declared function. Function values, duplicate parameters, and reusing a
+   function name for a variable or parameter are rejected; use the CPython path for
    dynamic Python name behavior.
    A name assigned only in an unreachable `else` or `else if` after `if true`
    is not available after the block, and one branch cannot read a name first

@@ -6,6 +6,15 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.103 — 2026-08-12
+
+- Reject non-finite results from native finite-float arithmetic with a bilingual
+  runtime error instead of allowing C `double` overflow to produce `inf`.
+- Cover the runtime boundary across sentence, beginner, and advanced English
+  and Korean native surfaces.
+- Align native reference, guide, language-reference, and backend comments with
+  the checked finite-float result policy.
+
 ## 0.0.1-beta.102 — 2026-08-12
 
 - Add a dedicated English/Korean native-core reference and link it from the

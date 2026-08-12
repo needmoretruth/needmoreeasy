@@ -13,19 +13,20 @@
 //! - signed 32-bit integer literals and arithmetic with explicit overflow and
 //!   zero-divisor checks;
 //! - finite float literals and arithmetic as C `double` values; non-finite
-//!   float literals are rejected before C emission;
+//!   float literals are rejected before C emission and non-finite arithmetic
+//!   results stop with a bilingual native-runtime error;
 //! - escaped native string literals; embedded NUL characters are rejected
 //!   because the C string runtime cannot preserve them;
 //! - source comments are emitted as inert C comments, never as C directives;
-//! - `set x to ...` / `x은 ...` / `x = ...` assignments of integers and
-//!   string literals (including the Python-looking form);
+//! - `set x to ...` / `x은 ...` / `x = ...` assignments of integers, finite
+//!   floats, and string literals (including the Python-looking form);
 //!   native string variables use checked 8192-byte buffers;
 //! - value changes on an existing integer or float binding:
 //!   `x add N` / `x = x + N` / `점수에 N 더해`;
 //! - bindings first assigned in a possibly skipped control block must be
 //!   initialized before the block or used after assignment within it;
-//! - `while`/`if`/`else`/`else if` blocks over integer comparisons, closed
-//!   by `end`/`끝`;
+//! - `while`/`if`/`else`/`else if` blocks over integer, finite-float, and
+//!   string comparisons, closed by `end`/`끝`, plus `times:`/`번:` loops;
 //! - `break` inside a loop;
 //! - functions over integer parameters with an unconditional integer `return`
 //!   (recursion works); calls must name a function in the file and use its
@@ -183,6 +184,7 @@ fn reset_for_next_branch(frame: &NativeBlockFrame) -> HashMap<String, VarType> {
 
 const PREAMBLE: &str = concat!(
     "#include <limits.h>\n",
+    "#include <float.h>\n",
     "#include <stdio.h>\n",
     "#include <stdlib.h>\n",
     "#include <string.h>\n",
@@ -242,6 +244,25 @@ const PREAMBLE: &str = concat!(
     "        nme_integer_overflow();\n",
     "    }\n",
     "    return -value;\n",
+    "}\n",
+    "NME_UNUSED static void nme_non_finite_float(void) {\n",
+    "    fputs(\"nme native: non-finite float result / 유한하지 않은 실수 결과가 발생했습니다\\n\", stderr);\n",
+    "    exit(1);\n",
+    "}\n",
+    "NME_UNUSED static double nme_float_result(double value) {\n",
+    "    if (value != value || value > DBL_MAX || value < -DBL_MAX) {\n",
+    "        nme_non_finite_float();\n",
+    "    }\n",
+    "    return value;\n",
+    "}\n",
+    "NME_UNUSED static double nme_add_float(double left, double right) {\n",
+    "    return nme_float_result(left + right);\n",
+    "}\n",
+    "NME_UNUSED static double nme_sub_float(double left, double right) {\n",
+    "    return nme_float_result(left - right);\n",
+    "}\n",
+    "NME_UNUSED static double nme_mul_float(double left, double right) {\n",
+    "    return nme_float_result(left * right);\n",
     "}\n",
     "NME_UNUSED static int nme_len(const char *value) {\n",
     "    size_t length = strlen(value);\n",
@@ -925,7 +946,7 @@ fn lower_expr(
                 let lowered = if kind == ExprType::Int {
                     format!("{}({left}, {right})", integer_operator_text(&binop.op))
                 } else {
-                    format!("({left} {} {right})", operator_text(&binop.op))
+                    format!("{}({left}, {right})", float_operator_text(&binop.op))
                 };
                 Ok((lowered, kind))
             }
@@ -1071,12 +1092,12 @@ fn numeric_operand(
 }
 
 #[allow(clippy::trivially_copy_pass_by_ref)]
-fn operator_text(operator: &Operator) -> &'static str {
+fn float_operator_text(operator: &Operator) -> &'static str {
     match operator {
-        Operator::Add => "+",
-        Operator::Sub => "-",
-        Operator::Mult => "*",
-        Operator::Mod => "%",
+        Operator::Add => "nme_add_float",
+        Operator::Sub => "nme_sub_float",
+        Operator::Mult => "nme_mul_float",
+        Operator::Mod => unreachable!("float modulo is checked by the caller"),
         _ => unreachable!("checked by the caller"),
     }
 }
@@ -1466,11 +1487,11 @@ fn emit_update(
         };
         out.push_str(&format!("{target} = {helper}({target}, {lowered});\n"));
     } else {
-        let op = match operation {
-            nme_core::syntax::UpdateOp::Add => "+=",
-            nme_core::syntax::UpdateOp::Subtract => "-=",
+        let helper = match operation {
+            nme_core::syntax::UpdateOp::Add => "nme_add_float",
+            nme_core::syntax::UpdateOp::Subtract => "nme_sub_float",
         };
-        out.push_str(&format!("{target} {op} {lowered};\n"));
+        out.push_str(&format!("{target} = {helper}({target}, {lowered});\n"));
     }
     Ok(())
 }
@@ -1697,6 +1718,7 @@ const NATIVE_C_HEADER_NAMES: &[&str] = &[
     "LLONG_MIN",
     "LLONG_MAX",
     "ULLONG_MAX",
+    "DBL_MAX",
     "EOF",
     "NULL",
     "FILE",
@@ -1831,16 +1853,21 @@ fn is_native_runtime_name(name: &str) -> bool {
                 | "INT_MIN"
                 | "main"
                 | "nme_add_int"
+                | "nme_add_float"
                 | "memcpy"
                 | "nme_cat"
                 | "nme_cat_buf"
                 | "nme_copy"
+                | "nme_float_result"
                 | "nme_integer_division_by_zero"
                 | "nme_integer_overflow"
                 | "nme_len"
                 | "nme_mod_int"
                 | "nme_mul_int"
+                | "nme_mul_float"
                 | "nme_neg_int"
+                | "nme_non_finite_float"
+                | "nme_sub_float"
                 | "nme_sub_int"
                 | "nme_string_overflow"
                 | "printf"

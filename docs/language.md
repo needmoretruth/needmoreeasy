@@ -571,7 +571,7 @@ machine code, independent of CPython. `nme native run hello` compiles to C
 with the system C compiler and runs the executable; `nme native build hello
 -o hello` keeps the C source and the executable.
 
-The native core covers: integer and float values with `+ - * %` arithmetic
+The native core covers: integer and finite-float values with `+ - * %` arithmetic
 (integer modulo; float modulo is rejected); string literals and string
 variables with one binary `+` concatenation, `len`, and `==`/`!=` string
 comparisons; `while`/`if`/`else`/`else if` over integer, float, and string
@@ -580,7 +580,8 @@ comparisons (including `<=`/`>=` and the natural-language "or equal"
   zero is false), and over boolean literals; the beginner `times:` loop; `break`;
   functions over integer scalar parameters with an unconditional integer
   `return` (recursion works); `say`/`show`/`말해` of
-integers, floats, and strings. Everything else — input, modules, files,
+integers, floats, and strings. Float arithmetic that would produce a
+non-finite result stops with a bilingual runtime error. Everything else — input, modules, files,
 classes, packages — is rejected with a clear diagnostic and still runs on
 CPython with `nme run`. Identifiers that collide with C keywords are rejected,
 never renamed. See the [native core reference](native-reference.md) for the

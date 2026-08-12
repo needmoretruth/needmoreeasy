@@ -727,6 +727,33 @@ fn float_literals_arithmetic_and_conditions_compile_natively() {
 }
 
 #[test]
+fn non_finite_float_results_fail_in_all_six_native_surfaces() {
+    let cases = [
+        ("sentence-en", "set value to 1e308\nshow value * value\n"),
+        ("sentence-ko", "저장 값 1e308\n말해 값 * 값\n"),
+        (
+            "beginner-en",
+            "value = 1e308\n1 times:\n    show value * value\n",
+        ),
+        ("beginner-ko", "값 = 1e308\n1번:\n    말해 값 * 값\n"),
+        ("advanced-en", "value = 1e308\nshow value * value\n"),
+        ("advanced-ko", "값 = 1e308\n말해 값 * 값\n"),
+    ];
+
+    for (label, source) in cases {
+        let error = native_run(source).expect_err("float overflow must fail at runtime");
+        assert!(
+            error.contains("non-finite float result"),
+            "native case {label}: {error}"
+        );
+        assert!(
+            error.contains("유한하지 않은 실수 결과"),
+            "native case {label}: {error}"
+        );
+    }
+}
+
+#[test]
 fn non_finite_native_float_literals_are_rejected() {
     let problems = nme_native::native_compile("show 1e309\n").unwrap_err();
     assert!(
@@ -863,6 +890,7 @@ fn native_runtime_names_are_rejected_not_miscompiled() {
         "_nme_i",
         "INT_MAX",
         "INT_MIN",
+        "DBL_MAX",
         "EOF",
         "NULL",
         "FILE",
@@ -871,14 +899,19 @@ fn native_runtime_names_are_rejected_not_miscompiled() {
         "strncat",
         "abs",
         "nme_add_int",
+        "nme_add_float",
         "nme_cat",
         "nme_copy",
+        "nme_float_result",
         "nme_integer_division_by_zero",
         "nme_integer_overflow",
         "nme_len",
         "nme_mod_int",
         "nme_mul_int",
+        "nme_mul_float",
         "nme_neg_int",
+        "nme_non_finite_float",
+        "nme_sub_float",
         "nme_sub_int",
         "printf",
         "len",
