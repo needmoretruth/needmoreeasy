@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.83 — 2026-08-12
+
+- Configure the Windows CI job with a Visual Studio developer environment so
+  native C tests can find `cl.exe` and exercise the real MSVC path.
+
 ## 0.0.1-beta.82 — 2026-08-12
 
 - Reject blank package names before invoking pip so `nme install` cannot report
