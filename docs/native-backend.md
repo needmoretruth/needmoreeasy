@@ -57,8 +57,10 @@ Implemented so far:
   `times:` loop; `break`;
 - functions over integer scalar parameters with an unconditional integer
   `return` (recursion works); calls must target a function in the file with its
-  declared arity. Float or string function values and branch-only returns are
-  rejected rather than converted or left to C fallthrough;
+  declared arity and use positional arguments. Simple positional integer
+  parameters only are accepted in headers; duplicate definitions, defaults,
+  varargs, keyword arguments, float or string function values, and branch-only
+  returns are rejected rather than converted or left to C fallthrough;
 - function-local scalar assignments remain scoped to their function;
 - value changes require an existing integer or float binding, and assignments
   cannot change a native name from one type to another;

@@ -35,7 +35,9 @@ into a native executable with your system's C compiler.
    `2147483647`); overflow and modulo by zero stop with a bilingual runtime
    error. Native functions currently accept and return integers only, and each
    function needs an unconditional top-level integer `return`; calls must name
-   a function in the file with the declared number of arguments.
+   a function in the file with the declared number of positional arguments.
+   Use simple integer parameters in the header; defaults, varargs, and keyword
+   arguments are outside the native core.
 
 2. Compile and run it natively:
 

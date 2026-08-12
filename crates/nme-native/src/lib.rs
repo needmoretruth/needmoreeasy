@@ -24,7 +24,7 @@
 //! - `break` inside a loop;
 //! - functions over integer parameters with an unconditional integer `return`
 //!   (recursion works); calls must name a function in the file and use its
-//!   declared arity.
+//!   declared arity; headers use simple positional integer parameters only.
 //!
 //! Anything outside this core is rejected with a clear bilingual diagnostic;
 //! it is never silently miscompiled. The rest of NME keeps running on CPython.
@@ -239,8 +239,47 @@ const PREAMBLE: &str = concat!(
     "int main(void) {\n",
 );
 
-fn native_function_signatures(lines: &[lexer::LogicalLine]) -> HashMap<String, usize> {
+fn native_function_header(tokens: &[lexer::Token]) -> Option<(String, Vec<String>)> {
+    let name = match tokens.get(1).map(|token| &token.tok) {
+        Some(rustpython_parser::Tok::Name { name }) => name.clone(),
+        _ => return None,
+    };
+    if !matches!(
+        tokens.get(2).map(|token| &token.tok),
+        Some(rustpython_parser::Tok::Lpar)
+    ) {
+        return None;
+    }
+    let closing = tokens
+        .iter()
+        .position(|token| matches!(token.tok, rustpython_parser::Tok::Rpar))?;
+    if closing + 2 != tokens.len()
+        || !matches!(
+            tokens.last().map(|token| &token.tok),
+            Some(rustpython_parser::Tok::Colon)
+        ) {
+        return None;
+    }
+    let parameter_tokens = &tokens[3..closing];
+    let mut parameters = Vec::new();
+    for (index, token) in parameter_tokens.iter().enumerate() {
+        if index % 2 == 0 {
+            let rustpython_parser::Tok::Name { name } = &token.tok else {
+                return None;
+            };
+            parameters.push(name.clone());
+        } else if !matches!(token.tok, rustpython_parser::Tok::Comma) {
+            return None;
+        }
+    }
+    Some((name, parameters))
+}
+
+fn native_function_signatures(
+    lines: &[lexer::LogicalLine],
+) -> (HashMap<String, usize>, Vec<Diagnostic>) {
     let mut functions = HashMap::new();
+    let mut problems = Vec::new();
     for line in lines {
         if !matches!(
             line.tokens.first().map(|token| &token.tok),
@@ -248,20 +287,17 @@ fn native_function_signatures(lines: &[lexer::LogicalLine]) -> HashMap<String, u
         ) {
             continue;
         }
-        let Some(rustpython_parser::Tok::Name { name }) =
-            line.tokens.get(1).map(|token| &token.tok)
-        else {
+        let Some((name, parameters)) = native_function_header(&line.tokens) else {
             continue;
         };
-        let parameters = line
-            .tokens
-            .iter()
-            .filter(|token| matches!(&token.tok, rustpython_parser::Tok::Name { .. }))
-            .count()
-            .saturating_sub(1);
-        functions.insert(name.clone(), parameters);
+        if functions
+            .insert(name.clone(), parameters.len())
+            .is_some()
+        {
+            problems.push(duplicate_native_function(&name, line.span));
+        }
     }
-    functions
+    (functions, problems)
 }
 
 /// Compiles the native core subset of `source` to C source text.
@@ -276,7 +312,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
     for nme_line in &program.nme_lines {
         by_index.insert(nme_line.line_index, nme_line);
     }
-    let functions = native_function_signatures(&lines);
+    let (functions, signature_problems) = native_function_signatures(&lines);
 
     let mut out = String::from(PREAMBLE);
     let mut open_braces = 1usize; // the `main` body
@@ -287,7 +323,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
     let mut in_function = false;
     let mut function_span = None;
     let mut function_returned = false;
-    let mut problems = Vec::new();
+    let mut problems = signature_problems;
 
     for (index, line) in lines.iter().enumerate() {
         let line_text = &source[line.span.start..line.span.end];
@@ -777,6 +813,9 @@ fn lower_expr(
             let Expr::Name(callee) = call.func.as_ref() else {
                 return Err(not_supported("this call", span));
             };
+            if !call.keywords.is_empty() {
+                return Err(native_keyword_arguments(span));
+            }
             if callee.id.as_str() == "len" && call.args.len() == 1 {
                 let (argument, kind) = lower_expr(&call.args[0], span, declared, functions)?;
                 if kind == ExprType::Str {
@@ -1307,19 +1346,14 @@ fn emit_python_line(
         Some(rustpython_parser::Tok::Def) => {
             let name = match tokens.get(1).map(|token| &token.tok) {
                 Some(rustpython_parser::Tok::Name { name }) => name.clone(),
-                _ => return Some(not_supported("this function header", span)),
+                _ => return Some(native_function_header_not_supported(span)),
             };
             if is_native_reserved_name(&name) {
                 return Some(reserved_name("a function named", "함수 이름", &name, span));
             }
-            let parameters = tokens
-                .iter()
-                .filter_map(|token| match &token.tok {
-                    rustpython_parser::Tok::Name { name } => Some(name.clone()),
-                    _ => None,
-                })
-                .skip(1) // the function name itself
-                .collect::<Vec<_>>();
+            let Some((_, parameters)) = native_function_header(tokens) else {
+                return Some(native_function_header_not_supported(span));
+            };
             if let Some(parameter) = parameters
                 .iter()
                 .find(|parameter| is_native_reserved_name(parameter))
@@ -1700,6 +1734,45 @@ fn native_function_arity(
     .with_bilingual_hint(
         "call the function with exactly the integer parameters in its definition",
         "함수 정의에 있는 정수 매개변수 개수와 똑같이 호출하세요",
+    )
+}
+
+fn native_keyword_arguments(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::UnsupportedModule,
+        "the native backend does not support keyword arguments in function calls",
+        "네이티브 백엔드는 함수 호출의 키워드 인자를 지원하지 않습니다",
+        span,
+    )
+    .with_bilingual_hint(
+        "pass the declared integer parameters positionally, or run the program with CPython",
+        "선언된 정수 매개변수를 위치 인자로 전달하거나 프로그램을 CPython으로 실행하세요",
+    )
+}
+
+fn duplicate_native_function(name: &str, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::UnsupportedModule,
+        format!("native function `{name}` is defined more than once"),
+        format!("네이티브 함수 `{name}`이(가) 두 번 이상 정의되었습니다"),
+        span,
+    )
+    .with_bilingual_hint(
+        "keep one definition for each native function name",
+        "네이티브 함수 이름마다 정의 하나만 남기세요",
+    )
+}
+
+fn native_function_header_not_supported(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::UnsupportedModule,
+        "the native backend does not support this function header",
+        "네이티브 백엔드는 이 함수 헤더를 지원하지 않습니다",
+        span,
+    )
+    .with_bilingual_hint(
+        "use a simple def name(integer, ...) header without defaults, annotations, or varargs",
+        "기본값·주석·가변 인자 없이 단순한 def 이름(정수, ...) 함수 헤더를 사용하세요",
     )
 }
 

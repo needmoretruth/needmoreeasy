@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.53 — 2026-08-12
+
+- Reject duplicate native function definitions and unsupported default or
+  varargs headers before C generation.
+- Reject keyword arguments in native calls so no AST arguments are silently
+  dropped.
+
 ## 0.0.1-beta.52 — 2026-08-12
 
 - Validate native function calls against integer function definitions and their

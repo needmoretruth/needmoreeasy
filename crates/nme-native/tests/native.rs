@@ -210,6 +210,73 @@ fn native_function_calls_require_the_declared_arity() {
 }
 
 #[test]
+fn native_function_calls_reject_keyword_arguments() {
+    let source = "def identity(value):\n    return value\n\nshow identity(1, value=2)\n";
+    let problems = nme_native::native_compile(source).unwrap_err();
+    assert!(
+        problems
+            .iter()
+            .any(|problem| problem.message.contains("keyword arguments")),
+        "{problems:?}"
+    );
+    assert!(
+        problems.iter().any(|problem| {
+            problem
+                .message_ko
+                .as_deref()
+                .is_some_and(|message| message.contains("키워드 인자"))
+        }),
+        "{problems:?}"
+    );
+}
+
+#[test]
+fn duplicate_native_function_definitions_are_rejected() {
+    let source = "def identity(value):\n    return value\n\ndef identity(value):\n    return value + 1\n\nshow identity(1)\n";
+    let problems = nme_native::native_compile(source).unwrap_err();
+    assert!(
+        problems
+            .iter()
+            .any(|problem| problem.message.contains("defined more than once")),
+        "{problems:?}"
+    );
+    assert!(
+        problems.iter().any(|problem| {
+            problem
+                .message_ko
+                .as_deref()
+                .is_some_and(|message| message.contains("두 번 이상 정의"))
+        }),
+        "{problems:?}"
+    );
+}
+
+#[test]
+fn unsupported_native_function_headers_are_rejected() {
+    for source in [
+        "def identity(value=1):\n    return value\n\nshow identity(2)\n",
+        "def collect(*values):\n    return values\n\nshow collect(1)\n",
+    ] {
+        let problems = nme_native::native_compile(source).unwrap_err();
+        assert!(
+            problems
+                .iter()
+                .any(|problem| problem.message.contains("function header")),
+            "{source:?}: {problems:?}"
+        );
+        assert!(
+            problems.iter().any(|problem| {
+                problem
+                    .message_ko
+                    .as_deref()
+                    .is_some_and(|message| message.contains("함수 헤더"))
+            }),
+            "{source:?}: {problems:?}"
+        );
+    }
+}
+
+#[test]
 fn a_string_literal_is_printed() {
     assert_eq!(
         native_run("show \"hello world\"\n").unwrap(),
