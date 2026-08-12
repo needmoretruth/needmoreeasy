@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.44 — 2026-08-12
+
+- Reject C keywords and generated native-runtime names before C lowering, with
+  precise bilingual diagnostics instead of allowing namespace collisions.
+- Reserve helper names such as `nme_copy`, `nme_cat`, `len`, and `_nme_i`
+  without silently renaming user identifiers.
+
 ## 0.0.1-beta.43 — 2026-08-12
 
 - Replace unbounded native string copies and concatenation with checked helpers.

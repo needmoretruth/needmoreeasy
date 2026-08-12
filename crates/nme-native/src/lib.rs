@@ -349,11 +349,8 @@ fn lower_expr(
         },
         Expr::Name(name) => {
             let id = name.id.as_str();
-            if is_c_keyword(id) {
-                return Err(not_supported(
-                    &format!("a variable named `{id}` (C keyword)"),
-                    span,
-                ));
+            if is_native_reserved_name(id) {
+                return Err(reserved_name("a variable named", "변수 이름", id, span));
             }
             match declared.get(id) {
                 Some(VarType::Str) => Ok((id.to_string(), ExprType::Str)),
@@ -420,9 +417,11 @@ fn lower_expr(
                     return Ok((format!("strlen({argument})"), ExprType::Int));
                 }
             }
-            if is_c_keyword(callee.id.as_str()) {
-                return Err(not_supported(
-                    &format!("a call to `{}` (C keyword)", callee.id),
+            if is_native_reserved_name(callee.id.as_str()) {
+                return Err(reserved_name(
+                    "a call to",
+                    "호출",
+                    callee.id.as_str(),
                     span,
                 ));
             }
@@ -478,11 +477,8 @@ fn string_operand(
         },
         Expr::Name(name) => {
             let id = name.id.as_str();
-            if is_c_keyword(id) {
-                return Err(not_supported(
-                    &format!("a variable named `{id}` (C keyword)"),
-                    span,
-                ));
+            if is_native_reserved_name(id) {
+                return Err(reserved_name("a variable named", "변수 이름", id, span));
             }
             if matches!(declared.get(id), Some(VarType::Str)) {
                 Ok(id.to_string())
@@ -582,11 +578,8 @@ fn check_condition(
         Condition::Truthy { value, negated } => {
             let (text, kind) = match value {
                 ConditionValue::Name(name) => {
-                    if is_c_keyword(name) {
-                        return Err(not_supported(
-                            &format!("a variable named `{name}` (C keyword)"),
-                            span,
-                        ));
+                    if is_native_reserved_name(name) {
+                        return Err(reserved_name("a variable named", "변수 이름", name, span));
                     }
                     (
                         name.clone(),
@@ -632,11 +625,8 @@ fn condition_operand(
     match value {
         ConditionValue::Python(code) => check_expr(code_text(code, source), span, declared),
         ConditionValue::Name(name) => {
-            if is_c_keyword(name) {
-                return Err(not_supported(
-                    &format!("a variable named `{name}` (C keyword)"),
-                    span,
-                ));
+            if is_native_reserved_name(name) {
+                return Err(reserved_name("a variable named", "변수 이름", name, span));
             }
             let kind = match declared.get(name) {
                 Some(VarType::Str) => ExprType::Str,
@@ -760,9 +750,11 @@ fn emit_set(
     value: &Value,
     source: &str,
 ) -> Result<(), Diagnostic> {
-    if is_c_keyword(target) {
-        return Err(not_supported(
-            &format!("a variable named `{target}` (C keyword)"),
+    if is_native_reserved_name(target) {
+        return Err(reserved_name(
+            "a variable named",
+            "변수 이름",
+            target,
             span_of_value(value),
         ));
     }
@@ -813,9 +805,11 @@ fn emit_update(
     operation: nme_core::syntax::UpdateOp,
     source: &str,
 ) -> Result<(), Diagnostic> {
-    if is_c_keyword(target) {
-        return Err(not_supported(
-            &format!("a variable named `{target}` (C keyword)"),
+    if is_native_reserved_name(target) {
+        return Err(reserved_name(
+            "a variable named",
+            "변수 이름",
+            target,
             Span::new(0, 0),
         ));
     }
@@ -860,11 +854,8 @@ fn emit_python_line(
                 Some(rustpython_parser::Tok::Name { name }) => name.clone(),
                 _ => return Some(not_supported("this function header", span)),
             };
-            if is_c_keyword(&name) {
-                return Some(not_supported(
-                    &format!("a function named `{name}` (C keyword)"),
-                    span,
-                ));
+            if is_native_reserved_name(&name) {
+                return Some(reserved_name("a function named", "함수 이름", &name, span));
             }
             let parameters = tokens
                 .iter()
@@ -916,11 +907,8 @@ fn emit_python_line(
                 rustpython_parser::Tok::Name { name } => name.clone(),
                 _ => return Some(not_supported("this Python line", span)),
             };
-            if is_c_keyword(&name) {
-                return Some(not_supported(
-                    &format!("a variable named `{name}` (C keyword)"),
-                    span,
-                ));
+            if is_native_reserved_name(&name) {
+                return Some(reserved_name("a variable named", "변수 이름", &name, span));
             }
             let expression = text.split_once('=').map_or(text, |(_, right)| right.trim());
             match check_expr(expression, span, declared) {
@@ -960,9 +948,7 @@ fn emit_python_line(
     }
 }
 
-/// C reserved words that a Python identifier must not collide with in the
-/// generated C. The native backend rejects them instead of silently
-/// renaming, so the C artifact always matches the NME source.
+/// C keywords that a Python identifier must not collide with in generated C.
 fn is_c_keyword(name: &str) -> bool {
     matches!(
         name,
@@ -1000,6 +986,70 @@ fn is_c_keyword(name: &str) -> bool {
             | "void"
             | "volatile"
             | "while"
+    )
+}
+
+/// Names emitted by the native runtime that user identifiers must not shadow.
+fn is_native_reserved_name(name: &str) -> bool {
+    is_c_keyword(name)
+        || matches!(
+            name,
+            "NME_STRING_CAPACITY"
+                | "_nme_i"
+                | "main"
+                | "memcpy"
+                | "nme_cat"
+                | "nme_cat_buf"
+                | "nme_copy"
+                | "nme_string_overflow"
+                | "printf"
+                | "strcmp"
+                | "stderr"
+                | "strlen"
+                | "fputs"
+                | "exit"
+                | "len"
+                | "size_t"
+        )
+}
+
+fn native_name_reason(name: &str) -> &'static str {
+    if is_c_keyword(name) {
+        "C keyword"
+    } else {
+        "reserved native runtime name"
+    }
+}
+
+fn native_name_reason_ko(name: &str) -> &'static str {
+    if is_c_keyword(name) {
+        "C 키워드"
+    } else {
+        "네이티브 런타임 예약 이름"
+    }
+}
+
+fn reserved_name(
+    english_kind: &str,
+    korean_kind: &str,
+    name: &str,
+    span: Span,
+) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::UnsupportedModule,
+        format!(
+            "the native backend does not support {english_kind} `{name}` ({}) yet",
+            native_name_reason(name)
+        ),
+        format!(
+            "네이티브 백엔드는 아직 {korean_kind} `{name}` ({})을(를) 지원하지 않습니다",
+            native_name_reason_ko(name)
+        ),
+        span,
+    )
+    .with_bilingual_hint(
+        "use only the documented native core: integer and string values, while/if over comparisons, functions, and say",
+        "문서에 있는 네이티브 코어만 쓰세요: 정수·문자열 값, 비교 조건의 while/if, 함수, say",
     )
 }
 

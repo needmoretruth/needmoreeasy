@@ -58,8 +58,10 @@ Implemented so far:
 - `say`/`show`/`말해` of an integer expression, a float, a string variable,
   or a string literal;
 - Korean and English spellings both lower to the same C;
-- identifiers that collide with C keywords are rejected, never silently
-  renamed.
+- identifiers that collide with C keywords or generated runtime names are
+  rejected, never silently renamed. Runtime names include `nme_copy`,
+  `nme_cat`, `NME_STRING_CAPACITY`, `_nme_i`, and the C library helpers used by
+  generated code;
 
 Still planned: real boolean variables as a distinct type from integer
 truthiness, and the `native.nme` surface document.
