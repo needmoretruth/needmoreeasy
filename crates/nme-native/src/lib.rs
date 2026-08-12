@@ -48,6 +48,45 @@ enum ExprType {
     Str,
 }
 
+/// Tracks declaration insertion points for the main function and generated
+/// native functions. Python bindings are function-scoped even when an
+/// assignment appears inside an `if` or `while`, so declarations must not be
+/// emitted inside a narrower C block.
+#[derive(Debug)]
+struct DeclarationSlots {
+    offsets: Vec<usize>,
+    active: usize,
+}
+
+impl DeclarationSlots {
+    fn new(output: &str) -> Self {
+        Self {
+            offsets: vec![output.len()],
+            active: 0,
+        }
+    }
+
+    fn start_function(&mut self, output: &str) {
+        self.offsets.push(output.len());
+        self.active = self.offsets.len() - 1;
+    }
+
+    fn use_main(&mut self) {
+        self.active = 0;
+    }
+
+    fn declare(&mut self, output: &mut String, declaration: &str) {
+        let offset = self.offsets[self.active];
+        output.insert_str(offset, declaration);
+        let delta = declaration.len();
+        for slot in &mut self.offsets {
+            if *slot >= offset {
+                *slot += delta;
+            }
+        }
+    }
+}
+
 const PREAMBLE: &str = concat!(
     "#include <stdio.h>\n",
     "#include <stdlib.h>\n",
@@ -94,6 +133,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
 
     let mut out = String::from(PREAMBLE);
     let mut open_braces = 1usize; // the `main` body
+    let mut declaration_slots = DeclarationSlots::new(&out);
     let mut declared = HashMap::new();
     let mut saved_main_scope = None;
     let mut in_function = false;
@@ -107,6 +147,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
             if let Some(main_scope) = saved_main_scope.take() {
                 declared = main_scope;
             }
+            declaration_slots.use_main();
             in_function = false;
         }
         if let Some(nme_line) = by_index.get(&index) {
@@ -124,7 +165,14 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                     }
                 }
                 NmeStmt::Set { target, value } => {
-                    if let Err(diag) = emit_set(&mut out, &mut declared, target, value, source) {
+                    if let Err(diag) = emit_set(
+                        &mut out,
+                        &mut declaration_slots,
+                        &mut declared,
+                        target,
+                        value,
+                        source,
+                    ) {
                         problems.push(diag);
                     }
                 }
@@ -133,9 +181,14 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                     amount,
                     operation,
                 } => {
-                    if let Err(diag) =
-                        emit_update(&mut out, &mut declared, target, amount, *operation, source)
-                    {
+                    if let Err(diag) = emit_update(
+                        &mut out,
+                        &mut declared,
+                        target,
+                        amount,
+                        *operation,
+                        source,
+                    ) {
                         problems.push(diag);
                     }
                 }
@@ -210,26 +263,31 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                 out.push('\n');
                 continue;
             }
-            if !in_function
+            let is_function_header = !in_function
                 && line.indent == 0
                 && matches!(
                     line.tokens.first().map(|token| &token.tok),
                     Some(rustpython_parser::Tok::Def)
-                )
-            {
+                );
+            if is_function_header {
                 saved_main_scope = Some(std::mem::take(&mut declared));
                 in_function = true;
             }
-            if let Some(diag) = emit_python_line(
+            let output_before_line = out.len();
+            let diagnostic = emit_python_line(
                 &mut out,
                 &mut open_braces,
+                &mut declaration_slots,
                 &mut declared,
                 &line.tokens,
                 text,
                 source,
                 line.span,
-            ) {
+            );
+            if let Some(diag) = diagnostic {
                 problems.push(diag);
+            } else if is_function_header && out.len() > output_before_line {
+                declaration_slots.start_function(&out);
             }
         }
     }
@@ -766,6 +824,7 @@ fn emit_say(
 
 fn emit_set(
     out: &mut String,
+    declaration_slots: &mut DeclarationSlots,
     declared: &mut HashMap<String, VarType>,
     target: &str,
     value: &Value,
@@ -787,21 +846,28 @@ fn emit_set(
             let is_new = !declared.contains_key(target);
             match kind {
                 ExprType::Int => {
-                    let prefix = if is_new { "int " } else { "" };
+                    if is_new {
+                        declaration_slots.declare(out, &format!("int {target};\n"));
+                    }
                     declared.insert(target.to_string(), VarType::Int);
-                    out.push_str(&format!("{prefix}{target} = {lowered};\n"));
+                    out.push_str(&format!("{target} = {lowered};\n"));
                     Ok(())
                 }
                 ExprType::Float => {
-                    let prefix = if is_new { "double " } else { "" };
+                    if is_new {
+                        declaration_slots.declare(out, &format!("double {target};\n"));
+                    }
                     declared.insert(target.to_string(), VarType::Float);
-                    out.push_str(&format!("{prefix}{target} = {lowered};\n"));
+                    out.push_str(&format!("{target} = {lowered};\n"));
                     Ok(())
                 }
                 ExprType::Str => {
                     declared.insert(target.to_string(), VarType::Str);
                     if is_new {
-                        out.push_str(&format!("char {target}[NME_STRING_CAPACITY];\n"));
+                        declaration_slots.declare(
+                            out,
+                            &format!("char {target}[NME_STRING_CAPACITY];\n"),
+                        );
                     }
                     out.push_str(&format!(
                         "nme_copy({target}, sizeof {target}, {lowered});\n"
@@ -862,6 +928,7 @@ fn emit_update(
 fn emit_python_line(
     out: &mut String,
     open_braces: &mut usize,
+    declaration_slots: &mut DeclarationSlots,
     declared: &mut HashMap<String, VarType>,
     tokens: &[lexer::Token],
     text: &str,
@@ -947,26 +1014,29 @@ fn emit_python_line(
                 Ok((lowered, ExprType::Int)) => {
                     let is_new = !declared.contains_key(&name);
                     if is_new {
+                        declaration_slots.declare(out, &format!("int {name};\n"));
                         declared.insert(name.clone(), VarType::Int);
                     }
-                    let prefix = if is_new { "int " } else { "" };
-                    out.push_str(&format!("{prefix}{name} = {lowered};\n"));
+                    out.push_str(&format!("{name} = {lowered};\n"));
                     None
                 }
                 Ok((lowered, ExprType::Float)) => {
                     let is_new = !declared.contains_key(&name);
                     if is_new {
+                        declaration_slots.declare(out, &format!("double {name};\n"));
                         declared.insert(name.clone(), VarType::Float);
                     }
-                    let prefix = if is_new { "double " } else { "" };
-                    out.push_str(&format!("{prefix}{name} = {lowered};\n"));
+                    out.push_str(&format!("{name} = {lowered};\n"));
                     None
                 }
                 Ok((lowered, ExprType::Str)) => {
                     let is_new = !declared.contains_key(&name);
                     declared.insert(name.clone(), VarType::Str);
                     if is_new {
-                        out.push_str(&format!("char {name}[NME_STRING_CAPACITY];\n"));
+                        declaration_slots.declare(
+                            out,
+                            &format!("char {name}[NME_STRING_CAPACITY];\n"),
+                        );
                     }
                     out.push_str(&format!(
                         "nme_copy({name}, sizeof {name}, {lowered});\n"

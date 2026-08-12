@@ -85,8 +85,14 @@ fn functions_over_scalars_compile_natively() {
 
 #[test]
 fn function_locals_do_not_leak_into_main() {
-    let source = "def local_value(n):\n    local = n + 1\n    return local\n\nlocal = 100\nshow local\nshow local_value(2)\n";
+    let source = "def local_value(n):\n    if n\n        local = n + 1\n    end\n    return local\n\nlocal = 100\nshow local\nshow local_value(2)\n";
     assert_eq!(native_run(source).unwrap(), "100\n3\n");
+}
+
+#[test]
+fn block_bindings_remain_available_after_native_block() {
+    let source = "ready = 1\nif ready\n    y = 2\n    text = \"hi\"\nend\nshow y + 0\nshow text + \"!\"\n";
+    assert_eq!(native_run(source).unwrap(), "2\nhi!\n");
 }
 
 #[test]

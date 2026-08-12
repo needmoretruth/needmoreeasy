@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.47 — 2026-08-12
+
+- Hoist native scalar and string declarations to the active function scope when
+  assignments occur inside control blocks, while preserving source control
+  flow and later binding use.
+- Prevent nested-block assignments from producing out-of-scope C declarations.
+
 ## 0.0.1-beta.46 — 2026-08-12
 
 - Keep native function-local scalar bindings separate from main-program
