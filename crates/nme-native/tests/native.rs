@@ -1175,6 +1175,50 @@ fn logical_conditions_compile_across_the_native_surface_matrix() {
 }
 
 #[test]
+fn logical_conditions_work_in_native_while_loops_across_the_surface_matrix() {
+    let cases = [
+        (
+            "sentence-en",
+            "ready save true\nturns save 0\nwhile ready and turns is less than 2\n    turns add 1\n    if turns equals 2\n        ready save false\n    end\nend\nshow turns\n",
+            "2\n",
+        ),
+        (
+            "sentence-ko",
+            "준비는 참\n횟수는 0\n동안 준비 그리고 횟수가 2보다 작을 동안\n    횟수에 1 더해\n    만약 횟수가 2와 같으면\n        준비는 거짓\n    끝\n끝\n횟수 말해줘\n",
+            "2\n",
+        ),
+        (
+            "beginner-en",
+            "set ready to True\nturns = 0\nwhile ready and turns < 2\n    turns add 1\n    if turns == 2\n        set ready to False\n    end\nend\nshow turns\n",
+            "2\n",
+        ),
+        (
+            "beginner-ko",
+            "저장 준비 True\n횟수 = 0\n동안 준비 그리고 횟수 < 2\n    횟수에 1 더해\n    만약 횟수 == 2\n        저장 준비 False\n    끝\n끝\n말해 횟수\n",
+            "2\n",
+        ),
+        (
+            "advanced-en",
+            "ready = True\nturns = 0\nwhile ready and turns < 2\n    turns add 1\n    if turns == 2\n        ready = False\n    end\nend\nshow turns\n",
+            "2\n",
+        ),
+        (
+            "advanced-ko",
+            "준비 = True\n횟수 = 0\n동안 준비 그리고 횟수 < 2\n    횟수에 1 더해\n    만약 횟수 == 2\n        준비 = False\n    끝\n끝\n말해 횟수\n",
+            "2\n",
+        ),
+    ];
+
+    for (label, source, expected) in cases {
+        assert_eq!(
+            native_run(source).unwrap(),
+            expected,
+            "native case: {label}"
+        );
+    }
+}
+
+#[test]
 fn logical_conditions_keep_short_circuit_evaluation() {
     let english = "def mark():\n    show \"called\"\n    return 1\n\nif true or false and false\n    show \"precedence\"\nend\nif false and mark() == 1\n    show \"bad and\"\nend\nif true or mark() == 1\n    show \"short\"\nend\n";
     assert_eq!(native_run(english).unwrap(), "precedence\nshort\n");

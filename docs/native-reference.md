@@ -138,7 +138,8 @@ available as `examples/native-logical` and `examples/native-logical.ko`.
   an existing integer or float binding and cannot change a boolean.
 - Sentence `while`, `if`, `else`, and `else if` blocks use `end` or `끝`.
   Comparisons may use symbolic operators or the documented natural-language
-  connectors. Beginner `times:` and `번:` loops are supported.
+  connectors, and supported conditions may combine with logical `and`/`or`.
+  Beginner `times:` and `번:` loops are supported.
 - `break` works inside a native loop, including an `if` nested in that loop.
   A break outside a loop is rejected before C is emitted.
 - Bindings created only in a possibly skipped branch are not available before

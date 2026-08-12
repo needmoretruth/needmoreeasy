@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.114 — 2026-08-12
+
+- Extend native logical-condition regression coverage to `while` blocks across
+  English and Korean sentence, beginner, and advanced surfaces.
+- Document that the native reference covers logical conditions in both `if` and
+  `while` control flow.
+
 ## 0.0.1-beta.113 — 2026-08-12
 
 - Align the native-backend status summary with the implemented logical
