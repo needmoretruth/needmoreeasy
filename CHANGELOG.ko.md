@@ -6,6 +6,11 @@ NME의 중요한 변경 사항을 이 문서에 기록합니다.
 
 ## 미출시 (Unreleased)
 
+## 0.0.1-beta.86 — 2026-08-12
+
+- Windows CLI 설치 스모크 테스트를 PowerShell에서 실행하여 Git Bash의
+  `link.exe`가 CI가 설정한 MSVC 링커를 가리지 않게 합니다.
+
 ## 0.0.1-beta.85 — 2026-08-12
 
 - Python 패키지 안내에서 써드파티 라이브러리를 한영 `nme install` / `nme 설치`

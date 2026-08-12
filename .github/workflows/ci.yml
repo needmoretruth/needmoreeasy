@@ -67,8 +67,17 @@ jobs:
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - name: Test
         run: cargo test --workspace --locked
-      - name: Install the CLI and smoke test it
+      - name: Install the CLI and smoke test it (Unix)
+        if: runner.os != 'Windows'
         shell: bash
+        run: |
+          cargo install --path crates/nme-cli --locked
+          nme --version
+          nme check examples/three-levels
+          nme run examples/hello-sentence
+      - name: Install the CLI and smoke test it (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
         run: |
           cargo install --path crates/nme-cli --locked
           nme --version
