@@ -138,9 +138,10 @@ Run the paired examples with `nme native run examples/native-boolean` and
 - Bindings created only in a possibly skipped branch are not available before
   they are definitely assigned. A name assigned on every possible fall-through
   path of an `if`/`else` chain is available after the block; a branch that
-  returns early or breaks out of its enclosing loop does not need to assign it.
-  A name assigned in only one continuing branch, or inside a loop that may not
-  run, remains conditional. Function-local bindings stay inside their function.
+  returns early or breaks out of its enclosing loop does not need to assign it,
+  including a terminating path that contains a nested conditional. A name
+  assigned in only one continuing branch, or inside a loop that may not run,
+  remains conditional. Function-local bindings stay inside their function.
 
 Use the NME sentence block forms for native control flow. Python-colon control
 headers such as `while score < 10:` are outside this core; use the CPython path

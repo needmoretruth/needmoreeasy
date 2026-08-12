@@ -191,6 +191,8 @@ fn native_functions_require_a_return_on_every_path() {
     for source in [
         "def missing(value):\n    value = value + 1\n\nshow missing(1)\n",
         "def conditional(value):\n    if value\n        return 1\n    end\n\nshow conditional(0)\n",
+        "def branches(value):\n    if value\n        return 1\n    else\n        return 2\n    end\n\nshow branches(1)\n",
+        "def 분기(값):\n    만약 값\n        return 1\n    아니면\n        return 2\n    끝\n\n말해 분기(1)\n",
     ] {
         let problems = nme_native::native_compile(source).unwrap_err();
         assert!(
@@ -683,6 +685,44 @@ fn early_return_branch_works_across_the_native_surface_matrix() {
         assert_eq!(
             native_run(source).unwrap(),
             "2\n3\n",
+            "native case: {label}"
+        );
+    }
+}
+
+#[test]
+fn nested_always_terminating_branches_keep_bindings_reachable_afterward() {
+    let cases = [
+        (
+            "sentence-en",
+            "def choose(value):\n    when value exists\n        when true\n            return 1\n        end\n    else\n        set result to 2\n    end\n    return result\n\nshow choose(1)\nshow choose(0)\n",
+        ),
+        (
+            "sentence-ko",
+            "def 선택(값):\n    만약에 값이 있으면\n        만약 True라면\n            return 1\n        끝\n    아니면\n        저장 결과 2\n    끝\n    return 결과\n\n말해 선택(1)\n말해 선택(0)\n",
+        ),
+        (
+            "beginner-en",
+            "def choose(value):\n    if value\n        if True\n            return 1\n        end\n    else\n        result = 2\n    end\n    return result\n\nshow choose(1)\nshow choose(0)\n",
+        ),
+        (
+            "beginner-ko",
+            "def 선택(값):\n    만약 값\n        만약 True\n            return 1\n        끝\n    아니면\n        결과 = 2\n    끝\n    return 결과\n\n말해 선택(1)\n말해 선택(0)\n",
+        ),
+        (
+            "advanced-en",
+            "def choose(value):\n    when value exists\n        if True\n            return 1\n        end\n    else\n        result = 2\n    end\n    return result\n\nshow choose(1)\nshow choose(0)\n",
+        ),
+        (
+            "advanced-ko",
+            "def 선택(값):\n    만약에 값이 있으면\n        if True\n            return 1\n        끝\n    아니면\n        결과 = 2\n    끝\n    return 결과\n\n말해 선택(1)\n말해 선택(0)\n",
+        ),
+    ];
+
+    for (label, source) in cases {
+        assert_eq!(
+            native_run(source).unwrap(),
+            "1\n2\n",
             "native case: {label}"
         );
     }

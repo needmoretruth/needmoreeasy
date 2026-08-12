@@ -128,6 +128,7 @@ struct NativeBlockFrame {
     bindings_in_all_branches: Option<HashMap<String, VarType>>,
     has_else: bool,
     bindings_after_reachable_branch: Option<HashMap<String, VarType>>,
+    reachable_branch_flow: Option<NativeBranchFlow>,
     branch_flow: NativeBranchFlow,
 }
 
@@ -169,13 +170,18 @@ fn condition_definitely_true(condition: &Condition) -> bool {
     )
 }
 
-fn finish_native_block(mut frame: NativeBlockFrame, declared: &mut HashMap<String, VarType>) {
+fn finish_native_block(
+    mut frame: NativeBlockFrame,
+    declared: &mut HashMap<String, VarType>,
+) -> NativeBranchFlow {
     if let Some(bindings) = frame.bindings_after_reachable_branch {
         *declared = bindings;
-        return;
+        return frame
+            .reachable_branch_flow
+            .unwrap_or(NativeBranchFlow::FallThrough);
     }
     if frame.definitely_runs {
-        return;
+        return frame.branch_flow;
     }
     record_branch_bindings(&mut frame, declared);
     if frame.branch_flow == NativeBranchFlow::FallThrough {
@@ -196,6 +202,11 @@ fn finish_native_block(mut frame: NativeBlockFrame, declared: &mut HashMap<Strin
         merged.entry(name).or_insert_with(|| maybe_type(kind));
     }
     *declared = merged;
+    if frame.is_loop || !frame.has_else || frame.bindings_in_all_branches.is_some() {
+        NativeBranchFlow::FallThrough
+    } else {
+        NativeBranchFlow::Terminated
+    }
 }
 
 fn record_branch_bindings(frame: &mut NativeBlockFrame, declared: &HashMap<String, VarType>) {
@@ -493,7 +504,14 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                 .is_some_and(|frame| current_depth < frame.body_depth)
             {
                 let frame = native_blocks.pop().expect("native block frame exists");
-                finish_native_block(frame, &mut declared);
+                let block_flow = finish_native_block(frame, &mut declared);
+                if block_flow == NativeBranchFlow::Terminated {
+                    if let Some(parent) = native_blocks.last_mut() {
+                        if !parent.is_loop {
+                            parent.branch_flow = NativeBranchFlow::Terminated;
+                        }
+                    }
+                }
             }
         }
         if in_function && line.indent == 0 && is_significant_line {
@@ -514,6 +532,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                 if let Some(frame) = native_blocks.last_mut() {
                     if frame.definitely_runs && frame.bindings_after_reachable_branch.is_none() {
                         frame.bindings_after_reachable_branch = Some(declared.clone());
+                        frame.reachable_branch_flow = Some(frame.branch_flow);
                     }
                     record_branch_bindings(frame, &declared);
                     if frame.branch_flow == NativeBranchFlow::FallThrough {
@@ -582,6 +601,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                             bindings_in_all_branches: None,
                             has_else: false,
                             bindings_after_reachable_branch: None,
+                            reachable_branch_flow: None,
                             branch_flow: NativeBranchFlow::FallThrough,
                         });
                     }
@@ -604,6 +624,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                             bindings_in_all_branches: None,
                             has_else: false,
                             bindings_after_reachable_branch: None,
+                            reachable_branch_flow: None,
                             branch_flow: NativeBranchFlow::FallThrough,
                         });
                     }
@@ -655,6 +676,7 @@ pub fn native_compile(source: &str) -> Result<String, Vec<Diagnostic>> {
                                         bindings_in_all_branches: None,
                                         has_else: false,
                                         bindings_after_reachable_branch: None,
+                                        reachable_branch_flow: None,
                                         branch_flow: NativeBranchFlow::FallThrough,
                                     });
                                 }

@@ -6,6 +6,16 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.111 — 2026-08-12
+
+- Fix native fall-through analysis for a terminating nested conditional, so a
+  name assigned on every path that can actually reach a later return is not
+  rejected as conditionally initialized.
+- Preserve conservative loop analysis and the required top-level integer
+  return for native functions.
+- Cover English and Korean sentence, beginner, and mixed advanced native
+  forms, with synchronized native references, guides, and language docs.
+
 ## 0.0.1-beta.110 — 2026-08-12
 
 - Add real native boolean bindings as a static type distinct from integers;

@@ -581,7 +581,8 @@ comparisons (including `<=`/`>=` and the natural-language "or equal"
   `False` is false); boolean equality/inequality; the beginner `times:` loop; `break`;
   names assigned on every possible fall-through path of an `if`/`else` block
   are available after it, and a branch that returns early or breaks its
-  enclosing loop does not need to assign them; functions over integer scalar
+  enclosing loop does not need to assign them, including a terminating path
+  that contains a nested conditional; functions over integer scalar
   parameters with a required top-level
   integer `return` (recursion works); `say`/`show`/`말해` of
   integers, floats, booleans, and strings. Boolean arithmetic, value changes,

@@ -90,7 +90,9 @@ Implemented so far:
   including one defined later, with its declared arity and positional
   arguments. An early `return`, or a `break` that exits the enclosing native
   loop, may terminate a branch; every path that continues past the block must
-  reach the required top-level return. Simple positional integer parameters
+  reach the required top-level return. This is recursive: a nested conditional
+  with no reachable fall-through arm also terminates the enclosing branch.
+  Simple positional integer parameters
   only are accepted in headers; duplicate definitions,
   defaults, varargs, nested definitions, keyword arguments, float or string
   function values, functions with only branch returns, and top-level `return`
@@ -108,9 +110,10 @@ Implemented so far:
   `else`/`else if` alternatives are not exported. A name assigned in every
   possible fall-through path of an `if`/`else` chain is available after the
   block; a branch that returns early or breaks out of its enclosing loop does
-  not need to initialize that name. A name assigned in only one continuing
-  branch, or inside a loop that may not run, remains conditional, and sibling
-  branches do not make each other's new bindings visible;
+  not need to initialize that name, including when the terminating path contains
+  a nested conditional. A name assigned in only one continuing branch, or inside
+  a loop that may not run, remains conditional, and sibling branches do not make
+  each other's new bindings visible;
 - `say`/`show`/`말해` of an integer, float, boolean, or string expression;
 - Korean and English spellings both lower to the same C;
 - identifiers that collide with C keywords, C implementation-reserved forms,
