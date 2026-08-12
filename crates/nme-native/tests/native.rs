@@ -1348,6 +1348,49 @@ fn one_line_nme_while_bodies_compile_across_the_native_surface_matrix() {
 }
 
 #[test]
+fn one_line_nme_branch_bodies_compile_across_the_native_surface_matrix() {
+    let cases = [
+        (
+            "sentence-en",
+            "when false\n    show \"no\"\nelse if true then show \"middle\"\nelse show \"fallback\"\nend\nwhen false\n    show \"no\"\nelse if false then show \"never\"\nelse show \"fallback\"\nend\n",
+            "middle\nfallback\n",
+        ),
+        (
+            "sentence-ko",
+            "만약 거짓\n    안 돼 말해줘\n아니면 만약에 참 그러면 중간 말해줘\n아니면 대체 말해줘\n끝\n만약 거짓\n    안 돼 말해줘\n아니면 만약에 거짓 그러면 안 돼 말해줘\n아니면 대체 말해줘\n끝\n",
+            "중간\n대체\n",
+        ),
+        (
+            "beginner-en",
+            "set ready to False\nif ready\n    show \"no\"\nelse if True then show \"middle\"\nelse show \"fallback\"\nend\nif ready\n    show \"no\"\nelse if False then show \"never\"\nelse show \"fallback\"\nend\n",
+            "middle\nfallback\n",
+        ),
+        (
+            "beginner-ko",
+            "저장 준비 거짓\n만약 준비\n    말해 \"아니\"\n아니면 만약에 참 그러면 말해 \"중간\"\n아니면 말해 \"대체\"\n끝\n만약 준비\n    말해 \"아니\"\n아니면 만약에 거짓 그러면 말해 \"안 돼\"\n아니면 말해 \"대체\"\n끝\n",
+            "중간\n대체\n",
+        ),
+        (
+            "advanced-en",
+            "ready = False\nif (ready)\n    show \"no\"\nelse if (True) then show \"middle\"\nelse show \"fallback\"\nend\nif (ready)\n    show \"no\"\nelse if (False) then show \"never\"\nelse show \"fallback\"\nend\n",
+            "middle\nfallback\n",
+        ),
+        (
+            "advanced-ko",
+            "준비 = False\n만약 ((준비 그리고 참))\n    말해 \"아니\"\n아니면 만약에 (True) 그러면 말해 \"중간\"\n아니면 말해 \"대체\"\n끝\n만약 ((준비 그리고 참))\n    말해 \"아니\"\n아니면 만약에 (False) 그러면 말해 \"안 돼\"\n아니면 말해 \"대체\"\n끝\n",
+            "중간\n대체\n",
+        ),
+    ];
+
+    for (label, source, expected) in cases {
+        let actual = native_run(source).unwrap_or_else(|error| {
+            panic!("native case failed: {label}: {error}");
+        });
+        assert_eq!(actual, expected, "native case: {label}");
+    }
+}
+
+#[test]
 fn native_control_bodies_reject_python_inline_statements() {
     for source in [
         "ready = True\nif ready then print(\"yes\")\n",

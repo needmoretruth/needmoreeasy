@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.127 — 2026-08-12
+
+- Add native regression coverage for one-line NME `else if`/`else` bodies across
+  sentence, beginner, and advanced syntax in both English and Korean.
+- Exercise both branch outcomes while keeping the Python-wins boundary explicit
+  for the advanced Korean condition fixture.
+
 ## 0.0.1-beta.126 — 2026-08-12
 
 - Add native regression coverage for one-line NME `while` output bodies across
