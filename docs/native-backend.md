@@ -31,8 +31,9 @@ honestly while keeping the full language on CPython.
 
 The CLI uses `cc` on macOS and Linux, and Microsoft's `cl` on Windows. On
 Windows, start a Developer PowerShell for Visual Studio (or another shell
-where `cl.exe` is on `PATH`) before using `nme native`; the CPython commands do
-not need that compiler shell.
+where `cl.exe` is on `PATH`) before using `nme native`. NME passes `/utf-8` so
+Korean and English strings in generated C keep their UTF-8 meaning. The CPython
+commands do not need that compiler shell.
 
 For the current CLI, `nme native run <file>` compiles and runs a temporary
 executable without saving artifacts. Use `nme native build <file> -o <path>`

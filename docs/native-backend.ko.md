@@ -28,8 +28,9 @@ NME 컴파일러(`nme-core`)는 소스 대 소스 변환기입니다. 문장·�
 
 CLI는 macOS와 Linux에서 `cc`를 사용하고 Windows에서는 Microsoft의 `cl`을
 사용합니다. Windows에서 `nme native`를 사용하기 전에는 Developer PowerShell
-for Visual Studio(또는 `cl.exe`가 `PATH`에 있는 다른 셸)를 시작하세요. CPython
-명령에는 이 컴파일러 셸이 필요하지 않습니다.
+for Visual Studio(또는 `cl.exe`가 `PATH`에 있는 다른 셸)를 시작하세요. NME는
+`/utf-8`을 전달하여 생성된 C의 한국어·영어 문자열이 UTF-8 의미를 유지하게
+합니다. CPython 명령에는 이 컴파일러 셸이 필요하지 않습니다.
 
 현재 CLI에서 `nme native 실행 <파일>`은 임시 실행 파일을 컴파일해 실행하고
 결과물을 저장하지 않습니다. 실행 파일과 생성된 C 소스를 보관하려면

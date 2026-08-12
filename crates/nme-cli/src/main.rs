@@ -488,6 +488,7 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
         compiler
             .arg("/nologo")
             .arg("/O2")
+            .arg("/utf-8")
             .arg(format!("/Fe:{}", exe.display()))
             .arg(&c_path);
     } else {

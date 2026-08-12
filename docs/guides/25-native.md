@@ -118,7 +118,8 @@ into a native executable with your system's C compiler.
 `nme-native` (a Rust crate) takes the same frontend AST as the Python path,
 checks every statement against the documented core, and emits C. On macOS and
 Linux, `cc` turns that into machine code with `-O2`; on Windows, Microsoft's
-`cl` does the same from a Developer PowerShell for Visual Studio. The
+`cl` does the same with `/O2` and `/utf-8` from a Developer PowerShell for
+Visual Studio. The
 [architecture memo](../native-backend.md) compares this C backend with LLVM
 and Cranelift and explains why C is the first backend.
 

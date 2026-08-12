@@ -41,6 +41,7 @@ fn native_run(source: &str) -> Result<String, String> {
         compiler
             .arg("/nologo")
             .arg("/O2")
+            .arg("/utf-8")
             .arg(format!("/Fe:{}", exe.display()))
             .arg(&c_path);
     } else {

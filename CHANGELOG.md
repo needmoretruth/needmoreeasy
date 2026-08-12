@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.81 — 2026-08-12
+
+- Pass MSVC `/utf-8` for Windows native builds and tests so generated Korean
+  and English C strings retain their intended text.
+
 ## 0.0.1-beta.80 — 2026-08-12
 
 - Make generated native C runtime helpers warning-safe for GCC, Clang, and
