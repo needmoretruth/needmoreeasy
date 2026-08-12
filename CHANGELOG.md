@@ -6,6 +6,12 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.160 — 2026-08-12
+
+- Fetch the pull-request parent commit before checking changed Rust files, so
+  the platform Format jobs can run their scoped rustfmt gate in a shallow CI
+  checkout.
+
 ## 0.0.1-beta.159 — 2026-08-12
 
 - Keep full-tree formatting checks on branch pushes while pull-request checks

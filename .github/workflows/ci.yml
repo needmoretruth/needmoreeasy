@@ -48,6 +48,8 @@ jobs:
     steps:
       - name: Check out NME
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
       - name: Install stable Rust with required tools
         uses: dtolnay/rust-toolchain@stable
         with:

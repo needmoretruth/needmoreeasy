@@ -6,6 +6,12 @@ NME의 중요한 변경 사항을 이 문서에 기록합니다.
 
 ## 미출시 (Unreleased)
 
+## 0.0.1-beta.160 — 2026-08-12
+
+- 변경한 Rust 파일을 검사하기 전에 pull request의 부모 커밋도 가져와
+  얕은 CI checkout에서도 플랫폼 Format 작업이 범위가 지정된 rustfmt
+  검사를 실행할 수 있도록 합니다.
+
 ## 0.0.1-beta.159 — 2026-08-12
 
 - 브랜치 push에서는 전체 파일 형식 검사를 유지하고, pull request에서는
