@@ -544,6 +544,8 @@ pub fn parse_program(
                 let python_loop_header = is_python_loop_header(&line.tokens);
                 let inline_python_scope_body = python_inline_suite_body(&line.tokens);
                 let inline_python_function_body = python_inline_function_body(&line.tokens);
+                let inline_python_class_body =
+                    inline_python_scope_body.filter(|_| is_python_class_header(&line.tokens));
                 let (context_tokens, inside_function, inside_async_function) =
                     if let Some(body) = inline_python_function_body {
                         (body, true, is_python_async_function_header(&line.tokens))
@@ -557,6 +559,8 @@ pub fn parse_program(
                         )
                     };
                 let inline_python_scope = inline_python_scope_body.is_some();
+                let inside_inline_python_class = inline_python_class_body.is_some();
+                let contextual_function = inside_function && !inside_inline_python_class;
                 let has_enclosing_function = if inline_python_scope {
                     bindings.has_function_scope()
                 } else {
@@ -591,7 +595,7 @@ pub fn parse_program(
                 {
                     problems.push(import_star_outside_module_diagnostic(line.span));
                 }
-                if is_python_return_line(&line.tokens) && !bindings.inside_function() {
+                if is_python_return_line(context_tokens) && !contextual_function {
                     problems.push(return_outside_function_diagnostic(line.span));
                     continue;
                 }
@@ -600,8 +604,13 @@ pub fn parse_program(
                     .any(|block| matches!(block, ExplicitBlock::Loop { .. }))
                     || python_header_indents.iter().any(|(_, is_loop)| *is_loop)
                     || !top_level_python_loop_indents.is_empty();
-                if is_python_continue_line(&line.tokens) && !inside_loop {
+                if is_python_continue_line(context_tokens) && (!inside_loop || inline_python_scope)
+                {
                     problems.push(continue_outside_loop_diagnostic(line.span));
+                    continue;
+                }
+                if inline_python_scope && is_python_break_line(context_tokens) {
+                    problems.push(break_outside_loop_diagnostic(line.span));
                     continue;
                 }
                 if inside_python_except_star && is_python_except_star_control_line(&line.tokens) {
@@ -1908,7 +1917,11 @@ fn is_python_return_line(tokens: &[Token]) -> bool {
 }
 
 fn is_python_continue_line(tokens: &[Token]) -> bool {
-    tokens.len() == 1 && matches!(tokens.first().map(|token| &token.tok), Some(Tok::Continue))
+    matches!(tokens.first().map(|token| &token.tok), Some(Tok::Continue))
+}
+
+fn is_python_break_line(tokens: &[Token]) -> bool {
+    matches!(tokens.first().map(|token| &token.tok), Some(Tok::Break))
 }
 
 fn missing_end_diagnostic(block: &ExplicitBlock, offset: usize) -> Diagnostic {

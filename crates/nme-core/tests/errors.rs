@@ -352,6 +352,58 @@ fn python_context_diagnostics_follow_nested_function_and_class_scopes() {
     assert_eq!(class_return.len(), 1, "{class_return:?}");
     assert_eq!(class_return[0].code, DiagnosticCode::ReturnOutsideFunction);
 
+    let inline_class_return = transpile("class Inner: return 1\n")
+        .expect_err("return in an inline class body must be rejected");
+    assert_eq!(inline_class_return.len(), 1, "{inline_class_return:?}");
+    assert_eq!(
+        inline_class_return[0].code,
+        DiagnosticCode::ReturnOutsideFunction
+    );
+
+    let inline_function_continue = transpile("def inner(): continue\n")
+        .expect_err("continue in an inline function body needs a loop");
+    assert_eq!(
+        inline_function_continue.len(),
+        1,
+        "{inline_function_continue:?}"
+    );
+    assert_eq!(
+        inline_function_continue[0].code,
+        DiagnosticCode::ContinueOutsideLoop
+    );
+    let inline_function_continue_with_tail = transpile("def inner(): continue; value = 1\n")
+        .expect_err("a direct inline continue with a tail still needs a loop");
+    assert_eq!(
+        inline_function_continue_with_tail[0].code,
+        DiagnosticCode::ContinueOutsideLoop
+    );
+
+    let inline_function_break = transpile("def inner(): break\n")
+        .expect_err("break in an inline function body needs a loop");
+    assert_eq!(inline_function_break.len(), 1, "{inline_function_break:?}");
+    assert_eq!(
+        inline_function_break[0].code,
+        DiagnosticCode::BreakOutsideLoop
+    );
+    let inline_function_break_with_tail = transpile("def inner(): break; value = 1\n")
+        .expect_err("a direct inline break with a tail still needs a loop");
+    assert_eq!(
+        inline_function_break_with_tail[0].code,
+        DiagnosticCode::BreakOutsideLoop
+    );
+
+    let nested_inline_continue = transpile("for item in values:\n    def inner(): continue\n")
+        .expect_err("an inline function must not inherit an outer loop");
+    assert_eq!(
+        nested_inline_continue.len(),
+        1,
+        "{nested_inline_continue:?}"
+    );
+    assert_eq!(
+        nested_inline_continue[0].code,
+        DiagnosticCode::ContinueOutsideLoop
+    );
+
     let class_yield = transpile("def outer():\n    class Inner:\n        yield 1\n")
         .expect_err("yield in a class body must not inherit the outer function scope");
     assert_eq!(class_yield.len(), 1, "{class_yield:?}");

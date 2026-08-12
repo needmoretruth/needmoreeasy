@@ -648,9 +648,14 @@ See [the conversion guide](converting-python.md).
   Compiler codes run from `E0001`; command-line errors (missing file, unknown
   command, Python startup) use `E9xxx` and are explained the same way.
 - A top-level or inline `return` outside a Python `def` function gets `E0106`
-  with a bilingual hint; valid returns inside functions remain Python.
+  with a bilingual hint; one-line class suites do not inherit an outer
+  function, and valid returns inside functions remain Python.
 - A top-level or inline Python `continue` outside a loop gets `E0107` with a
-  bilingual hint; valid `continue` statements inside loops remain Python.
+  bilingual hint; one-line function/class suites do not inherit an outer loop,
+  while valid `continue` statements inside loops remain Python.
+- A Python `break` outside a loop gets `E0102`; one-line function/class suites
+  do not inherit an outer loop, while valid `break` statements inside loops
+  remain Python.
 - A top-level or inline Python `yield` outside a function gets `E0108`, and
   `await` outside an `async def` function gets `E0109`; valid generator and
   asynchronous function bodies remain Python.

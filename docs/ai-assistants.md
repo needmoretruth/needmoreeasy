@@ -10,7 +10,7 @@ Give an AI coding assistant this one prompt:
 Read and follow this NME language handoff before writing code:
 https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
 
-Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.155`), then write the requested program as a .nme file, prefer sentence syntax for a
+Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.156`), then write the requested program as a .nme file, prefer sentence syntax for a
 beginner, mix beginner or advanced Python only where it makes the result
 clearer, and verify it with nme check.
 ```
@@ -226,9 +226,11 @@ handling, installed Python packages, and every other valid Python feature may
 remain Python.
 
 Python context rules still apply: `return` and `yield` belong inside a function,
-while `await` belongs inside `async def`. `nme check` reports these invalid
-top-level or inline cases with stable bilingual codes `E0106`–`E0110`; in an
-`async def`, use `async for` instead of `yield from`.
+while `await` belongs inside `async def`, and `break`/`continue` belong inside
+loops. `nme check` reports invalid top-level, inline, and one-line
+function/class cases with stable bilingual codes `E0102`, `E0106`–`E0110`; a
+one-line function or class does not inherit an outer loop. In an `async def`, use
+`async for` instead of `yield from`.
 `async for` and `async with` also belong inside `async def`; invalid placements
 receive `E0111` and `E0112`.
 `nonlocal` needs an enclosing function; invalid top-level, top-level-class,

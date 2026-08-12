@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.156 — 2026-08-12
+
+- Extend Python control-flow diagnostics to one-line function and class suites,
+  so `return`, `break`, and `continue` do not inherit invalid outer contexts.
+
 ## 0.0.1-beta.155 — 2026-08-12
 
 - Extend shared Python scope diagnostics to one-line function and class suites,
