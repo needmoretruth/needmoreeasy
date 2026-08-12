@@ -2828,6 +2828,53 @@ fn return_value_inside_async_generator_reports_the_shared_context_diagnostic() {
 }
 
 #[test]
+fn conflicting_global_and_nonlocal_declarations_report_shared_diagnostics() {
+    let dir = std::env::temp_dir().join(format!(
+        "nme-cli-declaration-conflict-code-{}",
+        std::process::id()
+    ));
+    std::fs::create_dir_all(&dir).unwrap();
+    let global_file = dir.join("global-conflict.nme");
+    let nonlocal_file = dir.join("nonlocal-conflict.nme");
+    std::fs::write(
+        &global_file,
+        "def update():\n    value = 1\n    global value\n",
+    )
+    .unwrap();
+    std::fs::write(
+        &nonlocal_file,
+        "def outer():\n    value = 1\n    def update():\n        value = 2\n        nonlocal value\n",
+    )
+    .unwrap();
+
+    let global_english = nme(&["check", &global_file.to_string_lossy()]);
+    assert!(!global_english.status.success());
+    let global_english_error = stderr(&global_english);
+    assert!(
+        global_english_error.contains("error[E0119]:"),
+        "{global_english_error}"
+    );
+    assert!(
+        global_english_error.contains("`global` conflicts"),
+        "{global_english_error}"
+    );
+
+    let nonlocal_korean = nme(&["검사", &nonlocal_file.to_string_lossy()]);
+    assert!(!nonlocal_korean.status.success());
+    let nonlocal_korean_error = stderr(&nonlocal_korean);
+    assert!(
+        nonlocal_korean_error.contains("오류[E0120]:"),
+        "{nonlocal_korean_error}"
+    );
+    assert!(
+        nonlocal_korean_error.contains("`nonlocal` 선언이"),
+        "{nonlocal_korean_error}"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn inline_branch_without_a_condition_reports_the_shared_branch_diagnostic() {
     let dir =
         std::env::temp_dir().join(format!("nme-cli-inline-branch-code-{}", std::process::id()));

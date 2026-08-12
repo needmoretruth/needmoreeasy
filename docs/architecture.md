@@ -157,6 +157,9 @@ the same token-depth path distinguishes it from an ordinary `async for` header.
 An async generator's value-bearing `return` receives `E0118`; the parser
 tracks direct yields and defers the decision so a return before the first yield
 is diagnosed without inheriting nested function or class scopes.
+Conflicting `global`/`nonlocal` declarations receive `E0119`/`E0120`; the
+scope tracker excludes nested function parameters and comprehension-local names
+so valid Python remains byte-identical.
 
 ### 7. Bundled modules are local and versioned
 

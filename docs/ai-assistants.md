@@ -10,7 +10,7 @@ Give an AI coding assistant this one prompt:
 Read and follow this NME language handoff before writing code:
 https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
 
-Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.151`), then write the requested program as a .nme file, prefer sentence syntax for a
+Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.152`), then write the requested program as a .nme file, prefer sentence syntax for a
 beginner, mix beginner or advanced Python only where it makes the result
 clearer, and verify it with nme check.
 ```
@@ -249,6 +249,9 @@ preserving valid async comprehensions.
 An async generator cannot return a value; NME reports `E0118`, including when
 the return appears before its first `yield`. Use a bare `return`; nested
 function returns remain valid.
+`global` and `nonlocal` must precede uses or assignments in their scope, and
+cannot name parameters; NME reports `E0119`/`E0120` for those conflicts. Put the
+declaration first and keep comprehension-local names separate.
 Generator lambdas such as `lambda: (yield value)` are valid advanced Python
 and must remain unchanged.
 

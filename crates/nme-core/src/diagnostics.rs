@@ -80,6 +80,10 @@ pub enum DiagnosticCode {
     AsyncComprehensionOutsideAsyncFunction,
     /// A return value inside an async generator.
     ReturnValueInAsyncGenerator,
+    /// A `global` declaration conflicts with an earlier name use.
+    GlobalDeclarationConflict,
+    /// A `nonlocal` declaration conflicts with an earlier name use.
+    NonlocalDeclarationConflict,
     /// `say` value could not be understood.
     SayValueBroken,
     /// `say` expression is not valid.
@@ -238,6 +242,8 @@ impl DiagnosticCode {
             Self::YieldInsideComprehension => "E0116",
             Self::AsyncComprehensionOutsideAsyncFunction => "E0117",
             Self::ReturnValueInAsyncGenerator => "E0118",
+            Self::GlobalDeclarationConflict => "E0119",
+            Self::NonlocalDeclarationConflict => "E0120",
             Self::SayValueBroken => "E0201",
             Self::SayValueUnparseable => "E0202",
             Self::SaySentenceUnparseable => "E0203",
@@ -307,7 +313,7 @@ impl DiagnosticCode {
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 84] = [
+    pub const ALL: [DiagnosticCode; 86] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -327,6 +333,8 @@ impl DiagnosticCode {
         Self::YieldInsideComprehension,
         Self::AsyncComprehensionOutsideAsyncFunction,
         Self::ReturnValueInAsyncGenerator,
+        Self::GlobalDeclarationConflict,
+        Self::NonlocalDeclarationConflict,
         Self::SayValueBroken,
         Self::SayValueUnparseable,
         Self::SaySentenceUnparseable,
@@ -550,6 +558,20 @@ impl DiagnosticCode {
                 "비동기 제너레이터 안의 반환값",
                 "Python does not allow an async generator to return a value. Use a bare `return`, or move the value-returning statement into a separate async function.",
                 "Python은 비동기 제너레이터에서 반환값을 허용하지 않습니다. 값이 없는 `return`을 사용하거나 값을 반환하는 문장을 별도의 비동기 함수로 옮기세요.",
+            ),
+            Self::GlobalDeclarationConflict => (
+                "E0119",
+                "conflicting `global` declaration",
+                "충돌하는 `global` 선언",
+                "Python requires `global` to appear before the name is used or assigned in the same scope, and a parameter cannot be declared global. Move the declaration earlier or choose another name.",
+                "Python에서는 같은 범위에서 이름을 사용하거나 대입하기 전에 `global`을 적어야 하며, 매개변수는 global로 선언할 수 없습니다. 선언을 앞에 적거나 다른 이름을 사용하세요.",
+            ),
+            Self::NonlocalDeclarationConflict => (
+                "E0120",
+                "conflicting `nonlocal` declaration",
+                "충돌하는 `nonlocal` 선언",
+                "Python requires `nonlocal` to appear before the name is used or assigned in the same scope, and a parameter cannot be declared nonlocal. Move the declaration earlier or choose another name.",
+                "Python에서는 같은 범위에서 이름을 사용하거나 대입하기 전에 `nonlocal`을 적어야 하며, 매개변수는 nonlocal로 선언할 수 없습니다. 선언을 앞에 적거나 다른 이름을 사용하세요.",
             ),
             Self::SayValueBroken => (
                 "E0201",

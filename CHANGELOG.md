@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.152 — 2026-08-12
+
+- Add shared bilingual `E0119`/`E0120` for conflicting `global` and `nonlocal`
+  declarations, while preserving declarations placed before valid uses.
+
 ## 0.0.1-beta.151 — 2026-08-12
 
 - Add shared bilingual `E0118` for return values inside async generators,

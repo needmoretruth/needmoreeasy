@@ -676,6 +676,10 @@ See [the conversion guide](converting-python.md).
 - An async generator cannot return a value; NME reports `E0118` even when the
   return appears before the first `yield`. A bare `return` and returns in
   nested functions remain valid.
+- A `global` or `nonlocal` declaration after an earlier use or assignment in
+  the same scope gets `E0119` or `E0120`; parameters cannot use either
+  declaration. Put the declaration first. Valid module, nested-function, and
+  comprehension scopes remain unchanged.
 - Generator lambdas remain valid advanced Python: a `yield` inside
   `lambda: ...` is checked against the lambda's own function context.
 - An inline body must contain one statement; an inline `else`/`elif` without an

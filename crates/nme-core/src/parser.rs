@@ -5,7 +5,7 @@
 //! Easier forms are matched only from lexer tokens; strings and comments are
 //! never searched or rewritten as text.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use rustpython_parser::{parse as parse_python, Mode, Tok};
 
@@ -200,6 +200,11 @@ pub fn parse_program(
     let mut python_try_indents = Vec::<usize>::new();
     let mut async_function_contexts = Vec::<AsyncFunctionContext>::new();
     let mut completed_async_functions = Vec::<AsyncFunctionContext>::new();
+    let mut python_declaration_contexts = vec![PythonDeclarationContext {
+        body_scope_depth: 0,
+        seen_names: HashSet::new(),
+        declarations: HashMap::new(),
+    }];
 
     for (index, line) in lines.iter().enumerate() {
         let is_end = exact_end(line.tokens.as_slice());
@@ -338,6 +343,12 @@ pub fn parse_program(
             if let Some(context) = async_function_contexts.pop() {
                 completed_async_functions.push(context);
             }
+        }
+        while python_declaration_contexts
+            .last()
+            .is_some_and(|context| context.body_scope_depth > python_scope_depth)
+        {
+            python_declaration_contexts.pop();
         }
         let inside_python_except_star = python_except_star_indents
             .last()
@@ -530,6 +541,14 @@ pub fn parse_program(
             Ok(None) => {
                 let valid_python_header = is_valid_python_header(token_text(source, &line.tokens));
                 let python_loop_header = is_python_loop_header(&line.tokens);
+                if let Some(kind) = remember_python_declaration_context(
+                    &mut python_declaration_contexts,
+                    &line.tokens,
+                    python_scope_depth,
+                ) {
+                    problems.push(python_declaration_conflict_diagnostic(kind, line.span));
+                    continue;
+                }
                 bindings.remember_python(&line.tokens, parse_line.indent);
                 if depth > 0 && valid_python_header {
                     python_header_indents.push((line.indent, python_loop_header));
@@ -1013,6 +1032,31 @@ fn return_value_in_async_generator_diagnostic(span: Span) -> Diagnostic {
     )
 }
 
+fn python_declaration_conflict_diagnostic(kind: PythonDeclarationKind, span: Span) -> Diagnostic {
+    match kind {
+        PythonDeclarationKind::Global => Diagnostic::bilingual(
+            DiagnosticCode::GlobalDeclarationConflict,
+            "`global` conflicts with an earlier name use or assignment",
+            "`global` 선언이 앞선 이름 사용이나 대입과 충돌해요",
+            span,
+        )
+        .with_bilingual_hint(
+            "move `global` before the first use or assignment, and do not declare a parameter global",
+            "첫 사용이나 대입보다 `global`을 먼저 적고, 매개변수를 global로 선언하지 말아 주세요",
+        ),
+        PythonDeclarationKind::Nonlocal => Diagnostic::bilingual(
+            DiagnosticCode::NonlocalDeclarationConflict,
+            "`nonlocal` conflicts with an earlier name use or assignment",
+            "`nonlocal` 선언이 앞선 이름 사용이나 대입과 충돌해요",
+            span,
+        )
+        .with_bilingual_hint(
+            "move `nonlocal` before the first use or assignment, and do not declare a parameter nonlocal",
+            "첫 사용이나 대입보다 `nonlocal`을 먼저 적고, 매개변수를 nonlocal로 선언하지 말아 주세요",
+        ),
+    }
+}
+
 fn branch_without_condition_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
         DiagnosticCode::BranchWithoutCondition,
@@ -1394,6 +1438,240 @@ fn contains_return_with_value(tokens: &[Token]) -> bool {
             && tokens[index + 1..]
                 .iter()
                 .any(|next| !matches!(next.tok, Tok::Semi))
+    })
+}
+
+fn remember_python_declaration_context(
+    contexts: &mut Vec<PythonDeclarationContext>,
+    tokens: &[Token],
+    python_scope_depth: usize,
+) -> Option<PythonDeclarationKind> {
+    let declarations = if python_scope_header(tokens).is_some() {
+        Vec::new()
+    } else {
+        python_declarations(tokens)
+    };
+    let conflict = contexts
+        .last_mut()
+        .filter(|context| context.body_scope_depth == python_scope_depth)
+        .and_then(|context| {
+            let conflict = declarations.iter().find_map(|declaration| {
+                declaration.names.iter().find_map(|(name, _)| {
+                    let has_other_declaration = context
+                        .declarations
+                        .get(name)
+                        .is_some_and(|previous| *previous != declaration.kind);
+                    (has_other_declaration || context.seen_names.contains(name))
+                        .then_some(declaration.kind)
+                })
+            });
+            for declaration in &declarations {
+                for (name, _) in &declaration.names {
+                    context
+                        .declarations
+                        .entry(name.clone())
+                        .or_insert(declaration.kind);
+                }
+            }
+            for name in python_names_seen_in_scope(tokens, &declarations) {
+                context.seen_names.insert(name);
+            }
+            conflict
+        });
+
+    if let Some((_, parameters)) = python_scope_header(tokens) {
+        contexts.push(PythonDeclarationContext {
+            body_scope_depth: python_scope_depth + 1,
+            seen_names: parameters,
+            declarations: HashMap::new(),
+        });
+    }
+    conflict
+}
+
+fn python_declarations(tokens: &[Token]) -> Vec<PythonDeclaration> {
+    let mut declarations = Vec::new();
+    let mut index = 0;
+    while index < tokens.len() {
+        let kind = match tokens[index].tok {
+            Tok::Global => PythonDeclarationKind::Global,
+            Tok::Nonlocal => PythonDeclarationKind::Nonlocal,
+            _ => {
+                index += 1;
+                continue;
+            }
+        };
+        if index > 0 && !matches!(tokens[index - 1].tok, Tok::Semi | Tok::Colon | Tok::Newline) {
+            index += 1;
+            continue;
+        }
+        let mut names = Vec::new();
+        let mut cursor = index + 1;
+        while cursor < tokens.len() && !matches!(tokens[cursor].tok, Tok::Semi) {
+            if let Tok::Name { name } = &tokens[cursor].tok {
+                let previous_is_separator =
+                    cursor == index + 1 || matches!(tokens[cursor - 1].tok, Tok::Comma);
+                if previous_is_separator {
+                    names.push((name.clone(), cursor));
+                }
+            }
+            cursor += 1;
+        }
+        if !names.is_empty() {
+            declarations.push(PythonDeclaration { kind, names });
+        }
+        index = cursor;
+    }
+    declarations
+}
+
+fn python_names_seen_in_scope(tokens: &[Token], declarations: &[PythonDeclaration]) -> Vec<String> {
+    let declared_indices: HashSet<usize> = declarations
+        .iter()
+        .flat_map(|declaration| declaration.names.iter().map(|(_, index)| *index))
+        .collect();
+    if let Some((name, _)) = python_scope_header(tokens) {
+        return vec![name];
+    }
+    tokens
+        .iter()
+        .enumerate()
+        .filter_map(|(index, token)| {
+            let Tok::Name { name } = &token.tok else {
+                return None;
+            };
+            if declared_indices.contains(&index)
+                || index > 0 && matches!(tokens[index - 1].tok, Tok::Dot)
+                || is_python_keyword_argument_name(tokens, index)
+                || token_is_inside_lambda(tokens, index)
+                || is_lambda_parameter_name(tokens, index)
+                || is_python_annotation_name(tokens, index)
+                || is_comprehension_local_name(tokens, index)
+            {
+                None
+            } else {
+                Some(name.clone())
+            }
+        })
+        .collect()
+}
+
+fn is_python_keyword_argument_name(tokens: &[Token], index: usize) -> bool {
+    tokens
+        .get(index + 1)
+        .is_some_and(|token| matches!(token.tok, Tok::Equal))
+        && tokens
+            .get(index.wrapping_sub(1))
+            .is_some_and(|token| matches!(token.tok, Tok::Lpar | Tok::Comma))
+}
+
+fn is_lambda_parameter_name(tokens: &[Token], index: usize) -> bool {
+    let depths = token_depths(tokens);
+    let Some(lambda_index) = (0..index).rev().find(|&candidate| {
+        if !matches!(tokens[candidate].tok, Tok::Lambda) {
+            return false;
+        }
+        (candidate + 1..tokens.len()).any(|colon| {
+            depths[colon] == depths[candidate]
+                && matches!(tokens[colon].tok, Tok::Colon)
+                && index < colon
+        })
+    }) else {
+        return false;
+    };
+    let Some(colon_index) = (lambda_index + 1..tokens.len()).find(|&candidate| {
+        depths[candidate] == depths[lambda_index] && matches!(tokens[candidate].tok, Tok::Colon)
+    }) else {
+        return false;
+    };
+    if index >= colon_index || !matches!(tokens[index].tok, Tok::Name { .. }) {
+        return false;
+    }
+    let mut in_default = false;
+    for candidate in lambda_index + 1..index {
+        if depths[candidate] != depths[lambda_index] {
+            continue;
+        }
+        match tokens[candidate].tok {
+            Tok::Equal => in_default = true,
+            Tok::Comma => in_default = false,
+            _ => {}
+        }
+    }
+    !in_default
+}
+
+fn is_python_annotation_name(tokens: &[Token], index: usize) -> bool {
+    let depths = token_depths(tokens);
+    let Some(colon_index) = (0..index).rev().find(|&candidate| {
+        depths[candidate] == depths[index] && matches!(tokens[candidate].tok, Tok::Colon)
+    }) else {
+        return false;
+    };
+    if colon_index == 0
+        || !matches!(tokens[0].tok, Tok::Name { .. })
+        || (0..colon_index).any(|candidate| {
+            depths[candidate] == depths[colon_index] && matches!(tokens[candidate].tok, Tok::Equal)
+        })
+    {
+        return false;
+    }
+    !(0..colon_index).any(|candidate| {
+        matches!(
+            tokens[candidate].tok,
+            Tok::If | Tok::For | Tok::While | Tok::With | Tok::Match | Tok::Case
+        )
+    })
+}
+
+fn is_comprehension_local_name(tokens: &[Token], index: usize) -> bool {
+    let depths = token_depths(tokens);
+    let closes = matching_bracket_closes(tokens);
+    (0..index).any(|open_index| {
+        if !matches!(tokens[open_index].tok, Tok::Lpar | Tok::Lsqb | Tok::Lbrace) {
+            return false;
+        }
+        let Some(close_index) = closes[open_index] else {
+            return false;
+        };
+        if index >= close_index {
+            return false;
+        }
+        let body_depth = depths[open_index] + 1;
+        let for_indices: Vec<usize> = (open_index + 1..close_index)
+            .filter(|&candidate| {
+                depths[candidate] == body_depth && matches!(tokens[candidate].tok, Tok::For)
+            })
+            .collect();
+        let Some(first_for) = for_indices.first().copied() else {
+            return false;
+        };
+        if index > open_index && index < first_for && depths[index] >= body_depth {
+            return true;
+        }
+        for for_index in for_indices {
+            let Some(in_index) = (for_index + 1..close_index).find(|&candidate| {
+                depths[candidate] == body_depth && matches!(tokens[candidate].tok, Tok::In)
+            }) else {
+                continue;
+            };
+            if (for_index + 1..in_index).contains(&index) && depths[index] >= body_depth {
+                return true;
+            }
+            let next_for = (in_index + 1..close_index).find(|&candidate| {
+                depths[candidate] == body_depth && matches!(tokens[candidate].tok, Tok::For)
+            });
+            let segment_end = next_for.unwrap_or(close_index);
+            if index > in_index
+                && index < segment_end
+                && (in_index + 1..index).any(|candidate| {
+                    depths[candidate] == body_depth && matches!(tokens[candidate].tok, Tok::If)
+                })
+            {
+                return true;
+            }
+        }
+        false
     })
 }
 
@@ -5936,6 +6214,23 @@ struct AsyncFunctionContext {
     body_scope_depth: usize,
     has_yield: bool,
     return_value_spans: Vec<Span>,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum PythonDeclarationKind {
+    Global,
+    Nonlocal,
+}
+
+struct PythonDeclaration {
+    kind: PythonDeclarationKind,
+    names: Vec<(String, usize)>,
+}
+
+struct PythonDeclarationContext {
+    body_scope_depth: usize,
+    seen_names: HashSet<String>,
+    declarations: HashMap<String, PythonDeclarationKind>,
 }
 
 struct PendingScope {

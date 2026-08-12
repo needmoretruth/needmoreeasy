@@ -853,6 +853,59 @@ fn return_value_inside_async_generator_gets_a_stable_diagnostic() {
 }
 
 #[test]
+fn conflicting_global_and_nonlocal_declarations_are_rejected_before_cpython() {
+    let global_cases = [
+        "def update():\n    value = 1\n    global value\n",
+        "def read():\n    print(value)\n    global value\n",
+        "def parameter(value):\n    global value\n",
+    ];
+    for source in global_cases {
+        let problems =
+            transpile(source).expect_err("global declaration conflict should not reach CPython");
+        assert_eq!(problems.len(), 1, "global case: {problems:?}");
+        assert_eq!(
+            problems[0].code,
+            DiagnosticCode::GlobalDeclarationConflict,
+            "global case: {problems:?}"
+        );
+    }
+
+    let nonlocal_cases = [
+        "def outer():\n    value = 1\n    def update():\n        value = 2\n        nonlocal value\n",
+        "def outer():\n    value = 1\n    def read():\n        print(value)\n        nonlocal value\n",
+        "def outer():\n    value = 1\n    def parameter(value):\n        nonlocal value\n",
+    ];
+    for source in nonlocal_cases {
+        let problems =
+            transpile(source).expect_err("nonlocal declaration conflict should not reach CPython");
+        assert_eq!(problems.len(), 1, "nonlocal case: {problems:?}");
+        assert_eq!(
+            problems[0].code,
+            DiagnosticCode::NonlocalDeclarationConflict,
+            "nonlocal case: {problems:?}"
+        );
+    }
+
+    let valid_global = "def update():\n    global value\n    value = 1\n";
+    assert_eq!(transpile(valid_global).unwrap(), valid_global);
+    let valid_nonlocal =
+        "def outer():\n    value = 1\n    def update():\n        nonlocal value\n        value = 2\n";
+    assert_eq!(transpile(valid_nonlocal).unwrap(), valid_nonlocal);
+    let valid_comprehension =
+        "def collect():\n    values = [value for value in items]\n    global value\n";
+    assert_eq!(transpile(valid_comprehension).unwrap(), valid_comprehension);
+    let valid_one_line_function = "value = 1\ndef read(): global value\n";
+    assert_eq!(
+        transpile(valid_one_line_function).unwrap(),
+        valid_one_line_function
+    );
+    let valid_lambda = "def read():\n    fn = lambda value: value\n    global value\n";
+    assert_eq!(transpile(valid_lambda).unwrap(), valid_lambda);
+    let valid_annotation = "def read():\n    fn: value = 1\n    global value\n";
+    assert_eq!(transpile(valid_annotation).unwrap(), valid_annotation);
+}
+
+#[test]
 fn inline_branches_without_an_open_condition_get_a_stable_diagnostic() {
     let cases = [
         ("sentence-en", "when true then else show no\n"),
