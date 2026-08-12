@@ -6,6 +6,12 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.128 — 2026-08-12
+
+- Add a Python-wins regression for the valid Korean call shape `만약 (준비)`.
+- Clarify in the English and Korean language, native-reference, and AI guides
+  how to select an NME block when a Korean keyword-like identifier is bound.
+
 ## 0.0.1-beta.127 — 2026-08-12
 
 - Add native regression coverage for one-line NME `else if`/`else` bodies across

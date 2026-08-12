@@ -117,6 +117,11 @@ They may also precede a logical connector inside the wrapper, for example
 Korean `while` ending such as `동안 (횟수가 2보다 작을 동안 그리고 준비)`, and
 the connector spellings may be mixed, as in `만약 (점수가 2보다 크면 and 준비)`.
 
+Korean NME words can also be valid Python identifiers. If `만약` is bound,
+`만약 (준비)` is a valid Python call shape and remains Python; use a spoken NME
+ending such as `만약 준비라면`, or an NME connector such as
+`만약 ((준비 그리고 참))`, when a native NME block is intended.
+
 Use `say`, `show`, or `말해` to output an integer, float, boolean, string, or
 supported expression. A native expression may use a literal, a name assigned
 earlier, a supported comparison, or a call to a declared native function.

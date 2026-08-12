@@ -294,6 +294,12 @@ logical connector inside the wrapper, as in `만약 (점수가 2보다 크면 �
 `동안 (횟수가 2보다 작을 동안 그리고 준비)`. The connector spellings can be
 mixed too, as in `만약 (점수가 2보다 크면 and 준비)`.
 
+Korean NME words can also be valid Python identifiers. For example,
+`만약 (준비)` is a valid Python call shape when `만약` is bound, so it stays
+byte-identical Python. To make the line an NME block instead, use a spoken
+condition ending such as `만약 준비라면`, or include an NME connector such as
+`만약 ((준비 그리고 참))`.
+
 ### Random without code punctuation
 
 ```text

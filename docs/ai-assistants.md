@@ -10,7 +10,7 @@ Give an AI coding assistant this one prompt:
 Read and follow this NME language handoff before writing code:
 https://raw.githubusercontent.com/needmoretruth/needmoreeasy/beta/docs/ai-assistants.md
 
-Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.127`), then write the requested program as a .nme file, prefer sentence syntax for a
+Then confirm that `nme --version` is the supported beta (currently `0.0.1-beta.128`), then write the requested program as a .nme file, prefer sentence syntax for a
 beginner, mix beginner or advanced Python only where it makes the result
 clearer, and verify it with nme check.
 ```
@@ -175,6 +175,10 @@ The same shared rule applies to a Korean `while` ending, such as
 `동안 (횟수가 2보다 작을 동안 그리고 준비)`.
 The connector spellings can be mixed in the same wrapper, for example
 `만약 (점수가 2보다 크면 and 준비)`.
+Korean NME words can also be valid Python identifiers: if `만약` is bound,
+`만약 (준비)` is a Python call shape and must stay byte-identical. Use a spoken
+ending such as `만약 준비라면`, or an NME connector such as
+`만약 ((준비 그리고 참))`, when an NME block is intended.
 
 ### Use beginner syntax when precision matters
 

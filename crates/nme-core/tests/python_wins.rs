@@ -106,6 +106,11 @@ fn korean_spellings_are_still_ordinary_python_names() {
 }
 
 #[test]
+fn korean_condition_word_call_with_parentheses_is_python() {
+    unchanged("만약 = lambda value: value\n준비 = True\n만약 (준비)\n");
+}
+
+#[test]
 fn future_python_call_shapes_are_left_for_the_selected_cpython() {
     // CPython 3.14 accepts template strings. rustpython-parser 0.4 does not
     // know that grammar yet, so the invocation shape is the compatibility
