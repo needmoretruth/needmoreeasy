@@ -69,10 +69,7 @@ fn native_compiler() -> &'static str {
 
 fn native_compiler_available() -> bool {
     let probe = if cfg!(windows) { "/?" } else { "--version" };
-    Command::new(native_compiler())
-        .arg(probe)
-        .output()
-        .is_ok()
+    Command::new(native_compiler()).arg(probe).output().is_ok()
 }
 
 #[test]
@@ -676,7 +673,10 @@ fn native_build_default_output_allows_a_c_source_stem() {
         dir.join("count.c")
     };
     assert!(executable.exists(), "no default executable written");
-    assert!(dir.join("count.c.c").exists(), "no generated C source written");
+    assert!(
+        dir.join("count.c.c").exists(),
+        "no generated C source written"
+    );
 
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -686,11 +686,7 @@ fn native_run_rejects_an_output_path_in_both_command_languages() {
     let dir = temporary_dir("native-run-output");
     write_nme(&dir, "hello.nme", "say 1\n");
 
-    let english = run_in(
-        &dir,
-        &["native", "run", "hello", "-o", "saved"],
-        None,
-    );
+    let english = run_in(&dir, &["native", "run", "hello", "-o", "saved"], None);
     assert!(!english.status.success());
     let english_error = stderr(&english);
     assert!(
@@ -699,11 +695,7 @@ fn native_run_rejects_an_output_path_in_both_command_languages() {
     );
     assert!(!dir.join("saved").exists(), "{english_error}");
 
-    let korean = run_in(
-        &dir,
-        &["네이티브", "실행", "hello", "-o", "saved-ko"],
-        None,
-    );
+    let korean = run_in(&dir, &["네이티브", "실행", "hello", "-o", "saved-ko"], None);
     assert!(!korean.status.success());
     let korean_error = stderr(&korean);
     assert!(
@@ -736,7 +728,8 @@ fn native_rejects_repeated_run_and_build_actions() {
     assert!(!korean.status.success());
     let korean_error = stderr(&korean);
     assert!(
-        korean_error.contains("오류[E9032]: 네이티브 동작은 `실행` 또는 `빌드` 중 하나만 선택하세요"),
+        korean_error
+            .contains("오류[E9032]: 네이티브 동작은 `실행` 또는 `빌드` 중 하나만 선택하세요"),
         "{korean_error}"
     );
     assert!(
@@ -771,10 +764,17 @@ fn native_build_refuses_to_overwrite_existing_artifacts() {
         error.contains("error[E9009]: refusing to overwrite"),
         "{error}"
     );
-    assert_eq!(std::fs::read_to_string(&executable).unwrap(), "keep executable");
+    assert_eq!(
+        std::fs::read_to_string(&executable).unwrap(),
+        "keep executable"
+    );
     assert_eq!(std::fs::read_to_string(&c_source).unwrap(), "keep C source");
 
-    let korean = run_in(&dir, &["네이티브", "빌드", "count", "-o", "count_out"], None);
+    let korean = run_in(
+        &dir,
+        &["네이티브", "빌드", "count", "-o", "count_out"],
+        None,
+    );
     assert!(!korean.status.success());
     let korean_error = stderr(&korean);
     assert!(
@@ -785,7 +785,10 @@ fn native_build_refuses_to_overwrite_existing_artifacts() {
         korean_error.contains("error[E9009]: refusing to overwrite"),
         "{korean_error}"
     );
-    assert_eq!(std::fs::read_to_string(&executable).unwrap(), "keep executable");
+    assert_eq!(
+        std::fs::read_to_string(&executable).unwrap(),
+        "keep executable"
+    );
     assert_eq!(std::fs::read_to_string(&c_source).unwrap(), "keep C source");
 
     let source_only = dir.join("source-only.c");
@@ -827,14 +830,18 @@ fn native_build_refuses_to_overwrite_existing_artifacts() {
     assert!(!korean_collision.status.success());
     let korean_collision_error = stderr(&korean_collision);
     assert!(
-        korean_collision_error.contains("오류[E9003]: -o에는 생성되는 C 소스 경로를 사용할 수 없습니다"),
+        korean_collision_error
+            .contains("오류[E9003]: -o에는 생성되는 C 소스 경로를 사용할 수 없습니다"),
         "{korean_collision_error}"
     );
     assert!(
         korean_collision_error.contains("error[E9003]: -o cannot use the generated C source path"),
         "{korean_collision_error}"
     );
-    assert!(!dir.join("kollision.c").exists(), "{korean_collision_error}");
+    assert!(
+        !dir.join("kollision.c").exists(),
+        "{korean_collision_error}"
+    );
 
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -930,12 +937,12 @@ fn install_requires_a_package_and_explains_pip_failures() {
         stderr(&no_package)
     );
 
-    // An empty requirement is rejected by pip before it can contact a package
-    // index, so this checks the failure code without a network dependency.
+    // NME rejects an empty package before invoking pip, so this stays
+    // deterministic even when pip changes how it handles empty requirements.
     let invalid_package = nme(&["install", ""]);
     assert!(!invalid_package.status.success());
     assert!(
-        stderr(&invalid_package).contains("error[E9025]: pip failed to install"),
+        stderr(&invalid_package).contains("error[E9025]: pip cannot install an empty package name"),
         "{}",
         stderr(&invalid_package)
     );
@@ -944,11 +951,11 @@ fn install_requires_a_package_and_explains_pip_failures() {
     assert!(!invalid_korean_package.status.success());
     let korean_error = stderr(&invalid_korean_package);
     assert!(
-        korean_error.contains("오류[E9025]: pip이"),
+        korean_error.contains("오류[E9025]: pip은 빈 패키지 이름을 설치할 수 없습니다"),
         "{korean_error}"
     );
     assert!(
-        korean_error.contains("error[E9025]: pip failed to install"),
+        korean_error.contains("error[E9025]: pip cannot install an empty package name"),
         "{korean_error}"
     );
 
@@ -1183,9 +1190,7 @@ fn command_errors_follow_the_command_language() {
     let native_korean_position = native_error
         .find("오류[E9004]: 알 수 없는 옵션입니다")
         .unwrap();
-    let native_english_position = native_error
-        .find("error[E9004]: unknown option")
-        .unwrap();
+    let native_english_position = native_error.find("error[E9004]: unknown option").unwrap();
     assert!(
         native_korean_position < native_english_position,
         "{native_error}"
@@ -1927,10 +1932,7 @@ fn a_directory_argument_explains_that_it_is_a_folder() {
     let native = nme(&["native", &dir.to_string_lossy()]);
     assert!(!native.status.success());
     let native_error = stderr(&native);
-    assert!(
-        native_error.contains("error[E9014]:"),
-        "{native_error}"
-    );
+    assert!(native_error.contains("error[E9014]:"), "{native_error}");
     assert!(
         native_error.contains("is a folder, not a program"),
         "{native_error}"
@@ -1957,7 +1959,10 @@ fn a_directory_argument_explains_that_it_is_a_folder() {
         korean_native_error.contains("is a folder, not a program"),
         "{korean_native_error}"
     );
-    assert!(!korean_native_error.contains("E9007"), "{korean_native_error}");
+    assert!(
+        !korean_native_error.contains("E9007"),
+        "{korean_native_error}"
+    );
 
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -2272,11 +2277,7 @@ fn error_lookup_commands_print_the_requested_explanation() {
     );
 
     let native_start = nme(&["ko", "E9011"]);
-    assert!(
-        native_start.status.success(),
-        "{}",
-        stderr(&native_start)
-    );
+    assert!(native_start.status.success(), "{}", stderr(&native_start));
     let native_start_out = stdout(&native_start);
     assert!(
         native_start_out.contains("nme 컴파일"),

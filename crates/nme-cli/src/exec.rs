@@ -248,8 +248,8 @@ pub fn compile_native(
         .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidInput, "output needs a file name"))
         .map_err(CompileNativeError::Other)?;
 
-    let dir = TemporaryDirectory::new("nme-compile")
-        .map_err(CompileNativeError::TemporaryFolder)?;
+    let dir =
+        TemporaryDirectory::new("nme-compile").map_err(CompileNativeError::TemporaryFolder)?;
     let program = dir.path().join(format!("{stem}.py"));
     std::fs::write(&program, python_source).map_err(CompileNativeError::TemporarySource)?;
 

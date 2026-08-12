@@ -417,9 +417,9 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
         }
         if !default_output
             && out
-            .extension()
-            .and_then(|extension| extension.to_str())
-            .is_some_and(|extension| extension.eq_ignore_ascii_case("c"))
+                .extension()
+                .and_then(|extension| extension.to_str())
+                .is_some_and(|extension| extension.eq_ignore_ascii_case("c"))
         {
             return fail(
                 nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
@@ -581,6 +581,16 @@ fn command_install(args: &[String], language: MessageLanguage) -> ExitCode {
         );
     }
     let package = &args[0];
+    if package.trim().is_empty() {
+        return fail(
+            nme_core::diagnostics::DiagnosticCode::CliPackageInstallFailed,
+            language,
+            "pip cannot install an empty package name.\n\
+             hint: provide a package name, e.g. `nme install requests`",
+            "pip은 빈 패키지 이름을 설치할 수 없습니다.\n\
+             도움말: 패키지 이름을 입력하세요. 예: `nme 설치 requests`",
+        );
+    }
     let python = DEFAULT_PYTHON;
     let status = std::process::Command::new(python)
         .arg("-m")
@@ -1178,7 +1188,10 @@ fn command_build(args: &[String], language: MessageLanguage) -> ExitCode {
                 nme_core::diagnostics::DiagnosticCode::CliRefuseOverwrite,
                 language,
                 &format!("refusing to overwrite existing output: {}", path.display()),
-                &format!("이미 있는 결과 파일을 덮어쓰지 않습니다: {}", path.display()),
+                &format!(
+                    "이미 있는 결과 파일을 덮어쓰지 않습니다: {}",
+                    path.display()
+                ),
             );
         }
     }

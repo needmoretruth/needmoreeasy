@@ -76,10 +76,7 @@ fn minimal_generated_c_compiles_with_warnings_as_errors() {
     }
     let c_source = nme_native::native_compile("show 1\n").unwrap();
     let id = COUNTER.fetch_add(1, Ordering::SeqCst);
-    let dir = std::env::temp_dir().join(format!(
-        "nme-native-strict-{}-{id}",
-        std::process::id()
-    ));
+    let dir = std::env::temp_dir().join(format!("nme-native-strict-{}-{id}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let c_path = dir.join("program.c");
     let exe = dir.join("program");
@@ -154,10 +151,7 @@ fn native_integer_boundaries_and_literal_range_are_checked() {
 fn other_integer_runtime_errors_are_explicit() {
     for (source, expected) in [
         ("show 46341 * 46341\n", "integer overflow"),
-        (
-            "x = -2147483648\nshow x - 1\n",
-            "integer overflow",
-        ),
+        ("x = -2147483648\nshow x - 1\n", "integer overflow"),
         ("show 1 % 0\n", "integer modulo by zero"),
     ] {
         let error = native_run(source).expect_err("invalid native integer arithmetic");
@@ -174,11 +168,9 @@ fn native_functions_reject_float_arguments_and_returns() {
     ] {
         let problems = nme_native::native_compile(source).unwrap_err();
         assert!(
-            problems.iter().any(|problem| {
-                problem
-                    .message
-                    .contains("accept and return integer values")
-            }),
+            problems
+                .iter()
+                .any(|problem| { problem.message.contains("accept and return integer values") }),
             "{source:?}: {problems:?}"
         );
         assert!(
@@ -265,7 +257,7 @@ fn native_function_calls_require_the_declared_arity() {
 
 #[test]
 fn mutually_recursive_native_functions_have_forward_declarations() {
-    let source = r#"def is_even(value):
+    let source = r"def is_even(value):
     if value is less than 1
         return 1
     end
@@ -278,7 +270,7 @@ def is_odd(value):
     return is_even(value - 1)
 
 show is_even(6)
-"#;
+";
     assert_eq!(native_run(source).unwrap(), "1\n");
 }
 
@@ -392,7 +384,9 @@ fn native_names_and_function_values_are_checked_before_c_generation() {
     for (source, english, korean) in cases {
         let problems = nme_native::native_compile(source).unwrap_err();
         assert!(
-            problems.iter().any(|problem| problem.message.contains(english)),
+            problems
+                .iter()
+                .any(|problem| problem.message.contains(english)),
             "{source:?}: {problems:?}"
         );
         assert!(
@@ -445,11 +439,9 @@ fn escaped_native_strings_remain_valid_c_literals() {
 
     let problems = nme_native::native_compile("show \"a\\0b\"\n").unwrap_err();
     assert!(
-        problems.iter().any(|problem| {
-            problem
-                .message
-                .contains("embedded NUL characters")
-        }),
+        problems
+            .iter()
+            .any(|problem| { problem.message.contains("embedded NUL characters") }),
         "{problems:?}"
     );
     assert!(
@@ -477,10 +469,7 @@ fn an_if_break_loop_works() {
 
 #[test]
 fn break_inside_a_non_loop_native_block_is_rejected_bilingually() {
-    for source in [
-        "if true\n    break\nend\n",
-        "만약 True라면\n    멈춰\n끝\n",
-    ] {
+    for source in ["if true\n    break\nend\n", "만약 True라면\n    멈춰\n끝\n"] {
         let problems = nme_native::native_compile(source).unwrap_err();
         assert!(
             problems.iter().any(|problem| {
@@ -512,7 +501,8 @@ fn blank_lines_between_native_function_header_and_body_keep_function_scope() {
     let source = "def identity(value):\n\n    return value\n\nshow identity(7)\n";
     assert_eq!(native_run(source).unwrap(), "7\n");
 
-    let commented = "def identity(value):\n# keep this comment\n    return value\n\nshow identity(7)\n";
+    let commented =
+        "def identity(value):\n# keep this comment\n    return value\n\nshow identity(7)\n";
     assert_eq!(native_run(commented).unwrap(), "7\n");
 }
 
@@ -522,9 +512,7 @@ fn return_outside_a_native_function_is_rejected_before_c_generation() {
     assert!(
         problems.iter().any(|problem| {
             problem.code == DiagnosticCode::ReturnOutsideFunction
-                && problem
-                    .message
-                    .contains("outside a native function")
+                && problem.message.contains("outside a native function")
         }),
         "{problems:?}"
     );

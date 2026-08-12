@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.82 — 2026-08-12
+
+- Reject blank package names before invoking pip so `nme install` cannot report
+  a successful no-op when a newer pip ignores an empty requirement.
+- Apply the stable Rust formatter used by CI to the workspace.
+- Keep the native backend and its tests clean under the current Clippy gate.
+
 ## 0.0.1-beta.81 — 2026-08-12
 
 - Pass MSVC `/utf-8` for Windows native builds and tests so generated Korean
