@@ -6,6 +6,11 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.147 — 2026-08-12
+
+- Add shared bilingual `E0114` for `from ... import *` inside Python functions
+  and classes, while preserving valid module-level star imports.
+
 ## 0.0.1-beta.146 — 2026-08-12
 
 - Add shared bilingual `E0113` for Python `nonlocal` without an enclosing

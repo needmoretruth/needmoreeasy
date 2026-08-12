@@ -146,7 +146,8 @@ context is invalid, and `yield from` in `async def` receives `E0110`, while
 `nonlocal` without an enclosing function receives `E0113`; valid nested
 function/class bodies and generator lambdas remain byte-identical. CPython
 still owns validation of whether a requested `nonlocal` name is bound in an
-outer function.
+outer function. A valid module-level `from ... import *` remains unchanged,
+while the same star import inside a function or class receives `E0114`.
 
 ### 7. Bundled modules are local and versioned
 

@@ -479,6 +479,12 @@ pub fn parse_program(
                 if is_python_nonlocal_line(&line.tokens) && !bindings.has_enclosing_function() {
                     problems.push(nonlocal_outside_function_diagnostic(line.span));
                 }
+                if is_python_import_star_line(&line.tokens)
+                    && is_valid_python_statement(token_text(source, &line.tokens))
+                    && bindings.inside_non_module_scope()
+                {
+                    problems.push(import_star_outside_module_diagnostic(line.span));
+                }
                 if is_python_return_line(&line.tokens) && !bindings.inside_function() {
                     problems.push(return_outside_function_diagnostic(line.span));
                     continue;
@@ -831,6 +837,19 @@ fn nonlocal_outside_function_diagnostic(span: Span) -> Diagnostic {
     .with_bilingual_hint(
         "put it in a nested function or class under another function, or remove it",
         "다른 함수 아래의 중첩 함수나 클래스에 넣거나 지워 주세요",
+    )
+}
+
+fn import_star_outside_module_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::ImportStarOutsideModule,
+        "`from ... import *` can only be used at module scope",
+        "`from ... import *`은 모듈 범위에서만 쓸 수 있어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "import the names explicitly here, or move the star import to the module level",
+        "여기서는 이름을 명시적으로 import하거나 별표 import를 모듈 수준으로 옮겨 주세요",
     )
 }
 
@@ -5624,6 +5643,19 @@ impl BindingEnv {
         false
     }
 
+    fn inside_non_module_scope(&self) -> bool {
+        for scope in self.scopes.iter().rev() {
+            match scope.kind {
+                BindingScopeKind::Root => return false,
+                BindingScopeKind::Function
+                | BindingScopeKind::AsyncFunction
+                | BindingScopeKind::Class => return true,
+                BindingScopeKind::Other => {}
+            }
+        }
+        false
+    }
+
     fn has_enclosing_function(&self) -> bool {
         let Some((current_index, current_scope)) = self
             .scopes
@@ -6475,6 +6507,19 @@ fn is_python_async_with_header(tokens: &[Token]) -> bool {
 
 fn is_python_nonlocal_line(tokens: &[Token]) -> bool {
     matches!(tokens.first().map(|token| &token.tok), Some(Tok::Nonlocal))
+}
+
+fn is_python_import_star_line(tokens: &[Token]) -> bool {
+    let Some(import_index) = tokens
+        .iter()
+        .position(|token| matches!(token.tok, Tok::Import))
+    else {
+        return false;
+    };
+    matches!(tokens.first().map(|token| &token.tok), Some(Tok::From))
+        && tokens[import_index + 1..]
+            .iter()
+            .any(|token| matches!(token.tok, Tok::Star))
 }
 
 fn is_python_class_header(tokens: &[Token]) -> bool {

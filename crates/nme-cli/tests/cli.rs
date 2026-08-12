@@ -2698,6 +2698,28 @@ fn top_level_nonlocal_reports_the_shared_function_diagnostic() {
 }
 
 #[test]
+fn star_import_inside_python_scope_reports_the_shared_import_diagnostic() {
+    let dir = std::env::temp_dir().join(format!("nme-cli-import-star-code-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("import-star.nme");
+    std::fs::write(&file, "def load():\n    from helper import *\n").unwrap();
+
+    let english = nme(&["check", &file.to_string_lossy()]);
+    assert!(!english.status.success());
+    let english_error = stderr(&english);
+    assert!(english_error.contains("error[E0114]:"), "{english_error}");
+    assert!(english_error.contains("module scope"), "{english_error}");
+
+    let korean = nme(&["검사", &file.to_string_lossy()]);
+    assert!(!korean.status.success());
+    let korean_error = stderr(&korean);
+    assert!(korean_error.contains("오류[E0114]:"), "{korean_error}");
+    assert!(korean_error.contains("모듈 범위"), "{korean_error}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn inline_branch_without_a_condition_reports_the_shared_branch_diagnostic() {
     let dir =
         std::env::temp_dir().join(format!("nme-cli-inline-branch-code-{}", std::process::id()));

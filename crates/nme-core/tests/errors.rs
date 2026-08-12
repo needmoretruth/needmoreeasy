@@ -612,6 +612,25 @@ fn nonlocal_without_an_enclosing_function_gets_a_stable_diagnostic() {
 }
 
 #[test]
+fn star_import_inside_python_scope_gets_a_stable_diagnostic() {
+    let module_level = "from helper import *\n";
+    assert_eq!(transpile(module_level).unwrap(), module_level);
+
+    let module_condition = "if ready:\n    from helper import *\n";
+    assert_eq!(transpile(module_condition).unwrap(), module_condition);
+
+    let function = transpile("def load():\n    from helper import *\n")
+        .expect_err("star imports inside functions must be rejected by the shared parser");
+    assert_eq!(function.len(), 1, "{function:?}");
+    assert_eq!(function[0].code, DiagnosticCode::ImportStarOutsideModule);
+
+    let class = transpile("class Loader:\n    from helper import *\n")
+        .expect_err("star imports inside classes must be rejected by the shared parser");
+    assert_eq!(class.len(), 1, "{class:?}");
+    assert_eq!(class[0].code, DiagnosticCode::ImportStarOutsideModule);
+}
+
+#[test]
 fn inline_branches_without_an_open_condition_get_a_stable_diagnostic() {
     let cases = [
         ("sentence-en", "when true then else show no\n"),
