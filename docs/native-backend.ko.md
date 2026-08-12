@@ -38,8 +38,9 @@ for Visual Studio(또는 `cl.exe`가 `PATH`에 있는 다른 셸)를 시작하�
 E9031으로 거부됩니다. `-o` 없이 빌드하면 원본 전체 줄기 뒤에 `.c`를 붙이므로
 `count.ko.nme`는 `count.c`와 충돌하지 않는 `count.ko.c`를 만듭니다. Windows의
 기본 출력은 원본 줄기가 `.ko`로 끝나도 `.exe`를 붙입니다. `count.c.nme` 같은
-원본은 기본 실행 파일 `count.c`와 생성 C 소스 `count.c.c`를 사용하며, 명시적인
-`-o count.c`만 C 소스 충돌로 거부합니다. 동작 단어는 하나만 선택해야 하며
+원본은 Unix에서 기본 실행 파일 `count.c`, Windows에서 `count.c.exe`를 사용하고,
+생성 C 소스는 `count.c.c`입니다. 명시적인 `-o count.c`만 C 소스 충돌로 거부합니다.
+동작 단어는 하나만 선택해야 하며
 `실행`과 `빌드`를 함께 적으면 E9032로 거부됩니다.
 
 ## 핵심 설계 결정: "모든 NME"가 아니라 제한된 네이티브 코어

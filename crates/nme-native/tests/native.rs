@@ -49,6 +49,7 @@ fn native_run(source: &str) -> Result<String, String> {
     }
     let status = compiler
         .current_dir(&dir)
+        .stdout(std::process::Stdio::null())
         .status()
         .map_err(|error| format!("could not start {}: {error}", native_compiler()))?;
     if !status.success() {

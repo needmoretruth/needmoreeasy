@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.0.1-beta.84 — 2026-08-12
+
+- Keep MSVC compiler banners out of successful `nme native` output and preserve
+  `.c`/`.ko` source stems in Windows default executable names (`.c.exe` and
+  `.ko.exe`).
+- Align native-backend documentation with the corrected cross-platform names.
+
 ## 0.0.1-beta.83 — 2026-08-12
 
 - Configure the Windows CI job with a Visual Studio developer environment so

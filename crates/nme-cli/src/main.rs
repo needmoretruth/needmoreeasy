@@ -411,8 +411,17 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
         .unwrap_or("program");
     let build_output = if action == "build" {
         let default_output = output.is_none();
-        let mut out = output.map_or_else(|| PathBuf::from(stem), PathBuf::from);
-        if cfg!(windows) && (default_output || out.extension().is_none()) {
+        let mut out = output.map_or_else(
+            || {
+                if cfg!(windows) {
+                    PathBuf::from(format!("{stem}.exe"))
+                } else {
+                    PathBuf::from(stem)
+                }
+            },
+            PathBuf::from,
+        );
+        if cfg!(windows) && !default_output && out.extension().is_none() {
             out.set_extension("exe");
         }
         if !default_output
@@ -479,10 +488,11 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
             &format!("C 소스를 저장할 수 없습니다: {err}"),
         );
     }
-    let mut exe = dir.path().join(stem);
-    if cfg!(windows) {
-        exe.set_extension("exe");
-    }
+    let exe = if cfg!(windows) {
+        dir.path().join(format!("{stem}.exe"))
+    } else {
+        dir.path().join(stem)
+    };
     let mut compiler = std::process::Command::new(NATIVE_C_COMPILER);
     if cfg!(windows) {
         compiler
@@ -494,7 +504,10 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
     } else {
         compiler.arg("-O2").arg(&c_path).arg("-o").arg(&exe);
     }
-    let compile_status = compiler.current_dir(dir.path()).status();
+    let compile_status = compiler
+        .current_dir(dir.path())
+        .stdout(std::process::Stdio::null())
+        .status();
     match compile_status {
         Ok(status) if status.success() => {}
         Ok(status) => {
