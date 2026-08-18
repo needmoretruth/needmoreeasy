@@ -1,0 +1,30 @@
+# A short story in sentence syntax alone.
+# It tidies the screen, sends the letters out one at a time, and ends
+# differently depending on which way you go.
+
+clear the screen
+draw a line
+say in the middle A winter night
+draw a line
+
+say slowly The door opened slowly.
+wait 1 second
+say very slowly Outside there was nobody at all.
+
+say in a box Will you step out?
+ask answer yes or no
+
+if answer equals yes
+    say slowly Snow was falling without a sound.
+    start the timer
+    put door on cooldown for 2 seconds
+    wait for door
+    say slowly The door closed behind you.
+else
+    say slowly You closed the door again.
+    say slowly And nothing happened until morning.
+end
+
+draw a line
+say in the middle The end
+draw a line

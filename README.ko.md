@@ -117,6 +117,11 @@ nme 모듈
 랜덤 숫자, 값 변경을 하나의 초보자용 프로그램에서 함께 연습할 수 있습니다.
 같은 내용을 영어로 쓴 [`roulette.en.nme`](examples/roulette.en.nme)도 있습니다.
 
+글자가 하나씩 나타나는 이야기를 만들고 싶다면
+[`story-sentence.ko.nme`](examples/story-sentence.ko.nme)를 실행해 보세요. 화면 지우기,
+가로줄, 가운데 맞춤, 상자, 천천히 말하기, 시간 재기, 쿨타임을 문장형만으로 씁니다.
+영어판은 [`story-sentence.en.nme`](examples/story-sentence.en.nme)입니다.
+
 실제 암호 계산과 작업증명을 포함한 작은 암호화폐를 만들고 싶다면 `NeedMoreCoin`
 예제 여섯 개를 비교해 보세요. 문장형 한국어
 [`needmorecoin-sentence.ko.nme`](examples/needmorecoin-sentence.ko.nme), 문장형 영어

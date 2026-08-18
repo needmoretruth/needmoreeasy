@@ -1075,9 +1075,11 @@ fn is_header_shape(tokens: &[Token]) -> bool {
                 word.len() > TIMES_KEYWORD_KO.len() && word.ends_with(TIMES_KEYWORD_KO)
             })
         })
-        || tokens
-            .last()
-            .is_some_and(|token| token_matches_exact(token, WHILE_WORDS_KO) && tokens.len() > 1)
+        || tokens.last().is_some_and(|token| {
+            token_matches_exact(token, WHILE_WORDS_KO)
+                && tokens.len() > 1
+                && !output_word_before(tokens, tokens.len() - 1)
+        })
         || subject_condition_shape(tokens)
 }
 
@@ -5523,6 +5525,11 @@ fn korean_while_connector(tokens: &[Token]) -> Option<(Vec<Token>, usize)> {
         if !token_matches_exact(token, &["동안"]) {
             continue;
         }
+        // Everything after an output word is the message, so a `동안` that
+        // follows one is ordinary Korean, not the end of a loop condition.
+        if output_word_before(tokens, index) {
+            continue;
+        }
         let mut condition = tokens[condition_start..index]
             .iter()
             .filter(|token| !token_matches_exact(token, &["동안"]))
@@ -9355,9 +9362,24 @@ fn condition_word_matches(actual: &str, expected: &[&str]) -> bool {
     })
 }
 
+/// True when an exact output action word stands before `index` on this line.
+///
+/// Korean writes the action last, so a block word that *follows* an output
+/// word is part of the message (`안녕 말해줘 동안`, `천천히 말해줘 커서가
+/// 깜빡이는 동안`), never a loop header. The rule is positional, not lexical:
+/// `커서가 깜빡이는 동안 말해줘` still opens nothing and prints, because there
+/// the output word comes after the block word. English needs no such rule,
+/// because its output word already opens the line.
+fn output_word_before(tokens: &[Token], index: usize) -> bool {
+    (0..index.min(tokens.len()))
+        .any(|start| output_action_at(tokens, start, MatchMode::Exact).is_some())
+}
+
 fn output_action_ending(tokens: &[Token], mode: MatchMode) -> Option<(usize, Spelling, usize)> {
     let mut end = tokens.len();
-    if tokens.last().is_some_and(is_command_ending) {
+    while end > 1
+        && (is_command_ending(&tokens[end - 1]) || matches!(tokens[end - 1].tok, Tok::Comma))
+    {
         end -= 1;
     }
     let start_at = end.saturating_sub(3);

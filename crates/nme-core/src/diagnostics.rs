@@ -152,10 +152,18 @@ pub enum DiagnosticCode {
     OneStatementPerLine,
     /// The block body is not a statement the parser knows.
     BodyUnparseable,
+    /// A line starts with a space or tab but nothing above it opens a block.
+    UnexpectedIndent,
     /// The sentence could mean more than one action.
     AmbiguousAction,
     /// No known action found on the line.
     MissingAction,
+    /// A word stands where an action word should be, and NME does not know it.
+    UnknownActionWord,
+    /// The whole line is valid Python that cannot do anything.
+    StatementDoesNothing,
+    /// A curly quote or another character NME cannot read as a quote mark.
+    CurlyQuote,
     /// A sentence-style statement across several physical lines.
     MultilineSentence,
     /// The Python source given to the converter is not valid.
@@ -288,8 +296,12 @@ impl DiagnosticCode {
             Self::BlockWithoutStatement => "E0503",
             Self::OneStatementPerLine => "E0504",
             Self::BodyUnparseable => "E0505",
+            Self::UnexpectedIndent => "E0506",
             Self::AmbiguousAction => "E0601",
             Self::MissingAction => "E0602",
+            Self::UnknownActionWord => "E0603",
+            Self::StatementDoesNothing => "E0604",
+            Self::CurlyQuote => "E0605",
             Self::MultilineSentence => "E0701",
             Self::ConvertInvalidPython => "E0702",
             Self::CliUnknownCommand => "E9001",
@@ -328,7 +340,7 @@ impl DiagnosticCode {
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 91] = [
+    pub const ALL: [DiagnosticCode; 95] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -384,8 +396,12 @@ impl DiagnosticCode {
         Self::BlockWithoutStatement,
         Self::OneStatementPerLine,
         Self::BodyUnparseable,
+        Self::UnexpectedIndent,
         Self::AmbiguousAction,
         Self::MissingAction,
+        Self::UnknownActionWord,
+        Self::StatementDoesNothing,
+        Self::CurlyQuote,
         Self::MultilineSentence,
         Self::ConvertInvalidPython,
         Self::CliUnknownCommand,
@@ -831,6 +847,13 @@ impl DiagnosticCode {
                 "The indented body of this block is neither ordinary Python nor an NME form. Check the spelling of the sentence, or write it as Python.",
                 "이 블록의 들여쓴 본문은 일반 Python도 NME 형식도 아닙니다. 문장 철자를 확인하거나 Python으로 쓰세요.",
             ),
+            Self::UnexpectedIndent => (
+                "E0506",
+                "this line starts with a space",
+                "이 줄이 공백으로 시작합니다",
+                "A line may only start with spaces or a tab when the line above it opens a block (`if ...`, `repeat 3 times`, `def ...:`). Nothing above this line opens one, so delete the spaces at the start of the line.",
+                "줄 앞에 공백이나 탭을 두려면 바로 위의 줄이 블록을 열어야 합니다(`만약 ...`, `3번 반복해`, `def ...:`). 이 줄 위에는 블록을 여는 줄이 없으니 줄 앞의 공백을 지우세요.",
+            ),
             Self::AmbiguousAction => (
                 "E0601",
                 "the sentence could mean more than one action",
@@ -844,6 +867,27 @@ impl DiagnosticCode {
                 "이 줄에서 NME 동작을 찾지 못했습니다",
                 "This line is not valid Python and does not start with a known NME action. Start with a documented action word such as `show`, `say`, `ask`, `말해`, `물어봐`, or write the line as Python.",
                 "이 줄은 올바른 Python도 아니고 알려진 NME 동작으로 시작하지도 않습니다. `show`, `say`, `ask`, `말해`, `물어봐` 같은 문서에 있는 동작 단어로 시작하거나 Python으로 쓰세요.",
+            ),
+            Self::UnknownActionWord => (
+                "E0603",
+                "this word is not an action NME knows",
+                "이 단어는 NME가 아는 동작이 아닙니다",
+                "The line is not Python, and the word standing where the action belongs is not one of NME's action words. NME never guesses which action you meant, so it names the word and suggests the closest one it does know. Replace the word with the suggested spelling, or write the line as Python.",
+                "이 줄은 Python이 아니고, 동작이 와야 할 자리의 단어가 NME의 동작 단어가 아닙니다. NME는 어떤 동작인지 짐작하지 않으므로, 그 단어를 짚고 가장 가까운 동작 단어를 알려 줍니다. 알려 준 표기로 바꾸거나 이 줄을 Python으로 쓰세요.",
+            ),
+            Self::StatementDoesNothing => (
+                "E0604",
+                "this line cannot do anything",
+                "이 줄은 아무 일도 하지 않습니다",
+                "The whole line is a name on its own, a `name: type` note, or a comparison whose answer is thrown away. Python accepts all three, but none of them shows, asks, or saves anything. Add the action you meant, for example `show hello` instead of `hello`.",
+                "이 줄 전체가 이름 하나이거나, `이름: 형` 표기이거나, 결과를 버리는 비교입니다. Python은 셋 다 받아들이지만 어느 것도 보여 주거나 묻거나 저장하지 않습니다. 하려던 동작을 적어 주세요. 예를 들어 `안녕`이 아니라 `안녕 말해줘`입니다.",
+            ),
+            Self::CurlyQuote => (
+                "E0605",
+                "this line uses a curly quote",
+                "이 줄에 둥근 따옴표가 있습니다",
+                "Word processors turn `\"` into `\u{201c}` and `\u{201d}`, and `'` into `\u{2018}` and `\u{2019}`. Python and NME read only the straight marks, so replace the curly quotes with `\"` or `'`. NME does not swap them for you, because inside a Python string a curly quote is ordinary text that must be kept exactly.",
+                "워드프로세서는 `\"`를 `\u{201c}`와 `\u{201d}`로, `'`를 `\u{2018}`와 `\u{2019}`로 바꿉니다. Python과 NME는 곧은 따옴표만 읽으므로 둥근 따옴표를 `\"`나 `'`로 바꿔 주세요. Python 문자열 안의 둥근 따옴표는 그대로 두어야 할 보통 글자라서 NME가 대신 바꾸지 않습니다.",
             ),
             Self::MultilineSentence => (
                 "E0701",

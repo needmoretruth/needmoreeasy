@@ -100,24 +100,21 @@ fn logical_lines_once(
         let (tok, range) = match result {
             Ok(token) => token,
             Err(err) => {
-                if let LexicalErrorType::UnrecognizedToken {
-                    tok: punctuation @ ('?' | '!'),
-                } = err.error
-                {
-                    let reported = usize::from(err.location);
-                    let width = punctuation.len_utf8();
-                    let start = if source[reported.min(source.len())..].starts_with(punctuation) {
-                        reported
-                    } else {
-                        reported.saturating_sub(width)
-                    };
-                    current.push(Token {
-                        tok: Tok::Name {
-                            name: punctuation.to_string(),
-                        },
-                        span: Span::new(start, start + width),
-                    });
-                    continue;
+                if let LexicalErrorType::UnrecognizedToken { tok: character } = err.error {
+                    if is_curly_quote(character) {
+                        return Err(LexAttemptError::Diagnostic(curly_quote_diagnostic(
+                            source, character, &err,
+                        )));
+                    }
+                    if let Some(tok) = sentence_text_token(character) {
+                        if let Some(start) = character_offset(source, character, &err) {
+                            current.push(Token {
+                                tok,
+                                span: Span::new(start, start + character.len_utf8()),
+                            });
+                            continue;
+                        }
+                    }
                 }
                 if let Some(offset) = sentence_apostrophe(lexer_source, &current, &err) {
                     return Err(LexAttemptError::SentenceApostrophe(offset));
@@ -164,6 +161,96 @@ fn logical_lines_once(
         lines.push(finish_line(source, &line_starts, indent, &mut current));
     }
     Ok(lines)
+}
+
+/// Characters a word processor or a Korean IME writes where the writer meant
+/// a quote mark. Python and NME read only the straight marks, and a curly one
+/// inside a Python string must stay exactly as written, so these are reported
+/// rather than swapped.
+const CURLY_QUOTES: &[(char, char)] = &[
+    ('\u{201c}', '"'),
+    ('\u{201d}', '"'),
+    ('\u{201e}', '"'),
+    ('\u{201f}', '"'),
+    ('\u{00ab}', '"'),
+    ('\u{00bb}', '"'),
+    ('\u{2018}', '\''),
+    ('\u{2019}', '\''),
+    ('\u{201a}', '\''),
+    ('\u{201b}', '\''),
+];
+
+fn is_curly_quote(character: char) -> bool {
+    CURLY_QUOTES.iter().any(|(curly, _)| *curly == character)
+}
+
+fn straight_quote(character: char) -> char {
+    CURLY_QUOTES
+        .iter()
+        .find_map(|(curly, straight)| (*curly == character).then_some(*straight))
+        .unwrap_or('"')
+}
+
+/// A character Python has no meaning for at all becomes ordinary sentence
+/// text, so a message can contain the separator, dash, or mark the writer
+/// typed (`\u{b7}`, `\u{2014}`, `\u{ff01}`, an emoji). Full-width marks are read as
+/// their ASCII twins so the sentence grammar sees the punctuation it knows,
+/// while the span still covers the original character and prints unchanged.
+fn sentence_text_token(character: char) -> Option<Tok> {
+    match character {
+        '\\' => None,
+        '\u{ff0c}' | '\u{3001}' => Some(Tok::Comma),
+        '\u{3002}' => Some(Tok::Name { name: ".".to_string() }),
+        '\u{ff1f}' => Some(Tok::Name { name: "?".to_string() }),
+        '\u{ff01}' => Some(Tok::Name { name: "!".to_string() }),
+        _ => Some(Tok::Name {
+            name: character.to_string(),
+        }),
+    }
+}
+
+/// Byte offset of the character the lexer stopped on. The reported location
+/// may sit either side of a multi-byte character, so the nearby boundaries
+/// are checked before giving up.
+fn character_offset(
+    source: &str,
+    character: char,
+    err: &rustpython_parser::lexer::LexicalError,
+) -> Option<usize> {
+    let reported = usize::from(err.location).min(source.len());
+    let width = character.len_utf8();
+    let mut candidates = vec![reported, reported.saturating_sub(width)];
+    for back in 1..=4 {
+        candidates.push(reported.saturating_sub(back));
+    }
+    for forward in 1..=4 {
+        candidates.push(reported + forward);
+    }
+    candidates.into_iter().find(|offset| {
+        *offset <= source.len()
+            && source.is_char_boundary(*offset)
+            && source[*offset..].starts_with(character)
+    })
+}
+
+fn curly_quote_diagnostic(
+    source: &str,
+    character: char,
+    err: &rustpython_parser::lexer::LexicalError,
+) -> Diagnostic {
+    let straight = straight_quote(character);
+    let start = character_offset(source, character, err)
+        .unwrap_or_else(|| usize::from(err.location).min(source.len().saturating_sub(1)));
+    Diagnostic::bilingual(
+        DiagnosticCode::CurlyQuote,
+        format!("this line has the curly quote `{character}`, which NME cannot read"),
+        format!("이 줄에 NME가 읽을 수 없는 둥근 따옴표 `{character}`가 있어요"),
+        Span::new(start, start + character.len_utf8()),
+    )
+    .with_bilingual_hint(
+        format!("replace `{character}` with the straight mark `{straight}`"),
+        format!("`{character}`를 곧은 따옴표 `{straight}`로 바꿔 주세요"),
+    )
 }
 
 fn sentence_apostrophe(
