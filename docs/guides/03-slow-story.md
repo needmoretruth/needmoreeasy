@@ -50,7 +50,8 @@ arriving one at a time read better. `say slowly` does that.
    say slowly Then someone knocked.
    ```
 
-5. Mix in a question and a condition, and the reader chooses the story:
+5. Come back to this step after [04 — Ask](04-ask.md) and [08 — If](08-if.md).
+   Mixing the two lets the reader choose the story:
 
    ```nme
    say slowly Do you open the door?
