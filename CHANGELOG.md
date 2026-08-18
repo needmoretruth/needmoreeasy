@@ -6,6 +6,35 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+- **Far more of what a beginner actually types is accepted, and what cannot be
+  read is said out loud instead of guessed at.** Measured against a 566-mistake
+  corpus (`scripts/mistake-probes/`), the number that compiled to something the
+  writer plainly did not mean **fell from 141 to 11**. Raw CPython syntax errors
+  reaching the reader fell from 27 to 2, and all thirty sentences in the prose
+  corpus now print themselves.
+- **Ordinary Korean sentences no longer become variable assignments in silence.**
+  `좋은 아침입니다` ("good morning") compiled to `좋 = "아침입니다"` and said
+  nothing. A value that ends in a Korean sentence ending is now read as prose.
+  `이름은 민수`, `점수는 0` and `점수는 0이다` still assign, as before.
+- One-character typo repair now covers waiting, appending, break, skip and the
+  list loop. Number words (`three times`, `세 번`, `일초`) and counters
+  (`times`, `번`, `회`, `차례`) are understood, Korean has as many ways to store
+  a value as English, word order may vary (`to score add 1`), and politeness
+  words are ignored wherever they appear.
+- Loop-control synonyms (`stop`, `quit`, `keep going`, `그만해`, `계속해`) and
+  block-closing words (`finish`, `done`, `종료`, `마침`) are accepted.
+  `add Mina to friends` becomes an append when `friends` is a list, and is
+  refused pointing at `append` when it is not.
+- A word the compiler does not understand never reaches `range()`. A line that
+  opens with a word no one writes in prose (`output hello`) is refused with the
+  action it probably meant; ordinary prose keeps printing.
+- An `end` with nothing to close names the header it could not read.
+- A middle dot, an em dash, full-width punctuation and emoji are ordinary
+  characters in a message. Curly quotes are refused, naming the straight quote
+  to use instead.
+- A random pick no longer accepts a typo, which is what turned
+  `강을 따라 집으로 갑니다` into a random choice.
+
 - Sentence syntax gained **story, screen and time** statements: `say slowly`
   (one letter at a time), `say very slowly`, `say slowly every 0.2 seconds`,
   `clear the screen`, `draw a line`, `say in a box`, `say in the middle`,
