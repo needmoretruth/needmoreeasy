@@ -47,8 +47,8 @@ guide.
 
 For someone who has finished Part 1 and wants games, menus and small projects
 to keep. **From here on the programs mix in beginner syntax and Python.** The
-guides written in sentences alone are Part 1 — its 231 lines of code contain no
-quote, no bracket and no equals sign.
+guides written in sentences alone are Part 1 — its code contains no quote, no
+bracket and no equals sign, which `scripts/report-guide-tier.py` measures.
 
 17. [17 — Word guess: a hidden-word game](17-word-guess.md)
 18. [18 — Adventure — a small text game](18-adventure.md)

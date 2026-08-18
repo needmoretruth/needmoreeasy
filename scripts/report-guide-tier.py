@@ -28,6 +28,11 @@ GUIDES = ROOT / "docs/guides"
 # English NME genuinely uses the words `for` and `while`, and English prose in a
 # `say` line may hold an apostrophe, so only punctuation and Python-only
 # keywords count against a line here.
+#
+# The trailing colon is a proxy for a Python block header (`while True:`). One
+# sentence form ends in a colon on purpose — the story block — so it is exempt,
+# and it really does keep the promise: no quote, no bracket, no equals sign.
+STORY_HEADER = re.compile(r"^.*\b(?:이야기|story)\b.*[:：]$|^.*(?:이야기|story).*[:：]$")
 NOT_SENTENCE = re.compile(
     r'["()\[\]{}]|(?<![<>!=])=|:\s*$|\bdef\b|\bimport\b|\breturn\b|\blambda\b|\.\w+\('
 )
@@ -61,6 +66,8 @@ def measure(path: Path) -> tuple[int, int, list[str]]:
             if not stripped or stripped.startswith("#"):
                 continue
             total += 1
+            if STORY_HEADER.match(stripped):
+                continue
             if NOT_SENTENCE.search(stripped):
                 hard += 1
                 if len(samples) < 2:
