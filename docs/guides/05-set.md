@@ -68,6 +68,10 @@ takes it out later.
    show jobs
    ```
 
+   **A name cannot contain a space.** `set my jobs to list of` does not make a
+   name called *my jobs* — the line is read as ordinary words and printed as it
+   stands. Use one word, or join them: `myjobs`.
+
    The Korean forms are `친구들은 목록 민수, 지안` and `친구들에 서준 넣어`.
 
 ## Try it yourself
