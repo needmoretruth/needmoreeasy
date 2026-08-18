@@ -201,7 +201,7 @@ want a more conversational phrase.
 
 ## Where to continue
 
-- [Learning guides](guides/index.md): 88 small progressive guides, each with
+- [Learning guides](guides/index.md): 90 small progressive guides, each with
   difficulty, prerequisites, topic, and result
 - [Learning path](tutorial.md): seven projects from Hello World to a compiler
 - [Language reference](language.md): exact rules for all three levels

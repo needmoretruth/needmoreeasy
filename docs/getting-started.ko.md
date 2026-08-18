@@ -197,7 +197,7 @@ nme 변환 old_program.py --level 초급 --language 한국어 -o easier.nme
 ## 다음에 볼 문서
 
 - [학습 가이드](guides/index.ko.md): 난이도·선수 지식·주제·결과물을 표시한
-  작은 점진적 가이드 88개
+  작은 점진적 가이드 90개
 - [학습 과정](tutorial.ko.md): Hello World부터 컴파일러까지 일곱 프로젝트
 - [문법 레퍼런스](language.ko.md): 세 단계의 정확한 규칙
 - [편집기](editors.ko.md): VS Code, Cursor, Zed
