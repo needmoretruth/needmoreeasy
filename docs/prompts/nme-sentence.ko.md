@@ -172,6 +172,29 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 | 문장형 | `아주 천천히 말해줘 안녕` | `[print(_ch, end="", flush=True) or __import__("time").sleep(0.12) for _ch in "안녕"]; print()` |
 | 문장형 | `3초씩 천천히 말해줘 안녕` | `[print(_ch, end="", flush=True) or __import__("time").sleep(3) for _ch in "안녕"]; print()` |
 
+### 이야기 묶음 — 여러 줄을 한 번에
+
+| 단계 | NME | 만들어지는 Python |
+| --- | --- | --- |
+| 문장형 | `이야기:` | `if True:` |
+| 문장형 | `천천히 이야기:` | `if True:` |
+| 문장형 | `아주 천천히 이야기:` | `if True:` |
+| 문장형 | `3초씩 천천히 이야기:` | `if True:` |
+| 문장형 | `문이 열렸습니다.` | `print("문이 열렸습니다.")` |
+| 문장형 | `3초 기다려` | (이야기 안에서는 print("3초 기다려")) |
+
+### 확률 — 백 번에 몇 번
+
+| 단계 | NME | 만들어지는 Python |
+| --- | --- | --- |
+| 문장형 | `30% 확률로 말해줘 당첨` | `if __import__("random").randrange(1000) < 300: print("당첨")` |
+| 문장형 | `30.5% 확률로 말해줘 당첨` | `if __import__("random").randrange(1000) < 305: print("당첨")` |
+| 문장형 | `30%의 확률로 말해줘 당첨` | `if __import__("random").randrange(1000) < 300: print("당첨")` |
+| 문장형 | `30퍼센트 확률로 말해줘 당첨` | `if __import__("random").randrange(1000) < 300: print("당첨")` |
+| 문장형 | `확률 30%로 말해줘 당첨` | `if __import__("random").randrange(1000) < 300: print("당첨")` |
+| 문장형 | `30% 확률로` | `if __import__("random").randrange(1000) < 300:` |
+| 문장형 | `운은 30% 확률` | `운 = __import__("random").randrange(1000) < 300` |
+
 ### 화면 — 지우기·줄·상자·가운데
 
 | 단계 | NME | 만들어지는 Python |
@@ -270,6 +293,13 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 | 쿨타임 끝남 / Ready | `ready` | `끝났으면` |
 | 쿨타임 남음 / On cooldown | — | `남았으면` |
 | 쿨타임 끝날 때까지 / Until ready | — | `끝날때까지` |
+| 이야기 / Story | `story` · `tale` | `이야기` · `얘기` |
+| 이야기 천천히 / Story, slowly | `slow` · `slowly` | `천천히` |
+| 확률 / Chance | `chance` · `chances` · `probability` | `확률로` · `확률` |
+| 퍼센트 / Percent | `percent` · `percentage` | `퍼센트` · `프로` |
+| 확률 앞뒤 말 / Chance connector | `with` | `의` · `로` · `으로` |
+| 확률의 다른 말 / Chance, other wording | `time` | — |
+| 확률 저장 / Chance saved in a name | `is` · `equals` | — |
 | 군말 / Filler | `please` | `좀` · `혹시` · `제발` |
 
 같은 칸에 있는 낱말은 서로 바꿔 써도 뜻이 같습니다. 이 표는 **동작을 나타내는 낱말**만 모은 것입니다. `부터`·`까지`·`초`·`마다`·`보다 크면`·`랜덤정수`처럼 문장을 이루는 나머지 말은 위 표들에 나온 모양 그대로 쓰면 됩니다.
@@ -324,6 +354,30 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 안녕하세요 이름! 말해줘
 ```
 
+**이야기 묶음 / a story in one block**
+
+```nme
+이야기:
+문이 천천히 열렸습니다.
+방 안은 비어 있었습니다.
+끝
+천천히 이야기:
+탁자 위에 편지가 한 장 있었습니다.
+끝
+```
+
+**확률 / chance**
+
+```nme
+비는 40% 확률
+만약에 비가 있으면
+우산을 챙기세요 말해줘
+아니면
+오늘은 맑습니다 말해줘
+끝
+10% 확률로 말해줘 무지개가 떴습니다
+```
+
 **숫자 맞히기 / guessing game**
 
 ```nme
@@ -347,26 +401,6 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 점수에 1 더해
 끝
 점수 말해줘
-```
-
-**목록 하나씩 / going through a list**
-
-```nme
-친구들은 목록 민수, 지안, 서준
-친구들의 친구마다 반복해
-안녕하세요 친구! 말해줘
-끝
-```
-
-**목록에 넣기 / building a list**
-
-```nme
-이름들은 목록
-3번 반복해
-이름을 물어봐 이름을 알려 주세요
-이름들에 이름 넣어
-끝
-이름들 말해줘
 ```
 
 ## 설치하지 않고 바로 써 보기

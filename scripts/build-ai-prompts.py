@@ -71,6 +71,20 @@ EXAMPLES = [
         "What is your name?\nshow Hello name!\n",
     ),
     (
+        "이야기 묶음 / a story in one block",
+        "이야기:\n문이 천천히 열렸습니다.\n방 안은 비어 있었습니다.\n끝\n"
+        "천천히 이야기:\n탁자 위에 편지가 한 장 있었습니다.\n끝\n",
+        "story:\nThe door opened slowly.\nThe room was empty.\nend\n"
+        "slow story:\nOne letter lay on the table.\nend\n",
+    ),
+    (
+        "확률 / chance",
+        "비는 40% 확률\n만약에 비가 있으면\n우산을 챙기세요 말해줘\n아니면\n"
+        "오늘은 맑습니다 말해줘\n끝\n10% 확률로 말해줘 무지개가 떴습니다\n",
+        "rain is a 40% chance\nif rain\nshow Take an umbrella\nelse\n"
+        "show It is clear today\nend\n10% chance show A rainbow appeared\n",
+    ),
+    (
         "숫자 맞히기 / guessing game",
         "정답은 1부터 10까지 랜덤정수\n추측을 숫자로 물어봐 1부터 10까지 골라 보세요\n"
         "만약에 추측이 정답과 같으면\n맞았어요 말해줘\n아니면 만약에 추측이 정답보다 작으면\n"
@@ -204,6 +218,8 @@ def sentence_tables(korean: bool) -> str:
         "random": ("무작위", "Randomness"),
         "file": ("파일 읽기·쓰기", "Reading and writing files"),
         "slow": ("이야기 — 글자를 하나씩 내보내기", "Story — letters one at a time"),
+        "story": ("이야기 묶음 — 여러 줄을 한 번에", "Story blocks — several lines at once"),
+        "chance": ("확률 — 백 번에 몇 번", "Chance — how often out of a hundred"),
         "screen": ("화면 — 지우기·줄·상자·가운데", "Screen — clearing, ruling, boxing, centring"),
         "timer": ("시간 재기", "The stopwatch"),
         "cooldown": ("쿨타임", "Cooldowns"),
@@ -223,7 +239,8 @@ def sentence_tables(korean: bool) -> str:
     title = heads["compare"][0] if korean else heads["compare"][1]
     parts.append(f"### {title}\n\n{S.compare_table(korean)}")
     for key, rows in [("control", S.LOOP_CONTROL), ("list", S.LISTS),
-                      ("slow", S.SLOW_TEXT), ("screen", S.SCREEN),
+                      ("slow", S.SLOW_TEXT), ("story", S.STORY),
+                      ("chance", S.CHANCE), ("screen", S.SCREEN),
                       ("timer", S.TIMER), ("cooldown", S.COOLDOWN),
                       ("random", S.RANDOM), ("file", S.FILES)]:
         title = heads[key][0] if korean else heads[key][1]

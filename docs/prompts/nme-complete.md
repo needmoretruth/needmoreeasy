@@ -173,6 +173,29 @@ on one line. This document describes version `0.0.1-beta.160`.
 | Sentence | `say very slowly Hello` | `[print(_ch, end="", flush=True) or __import__("time").sleep(0.12) for _ch in "Hello"]; print()` |
 | Sentence | `say slowly every 3 seconds Hello` | `[print(_ch, end="", flush=True) or __import__("time").sleep(3) for _ch in "Hello"]; print()` |
 
+### Story blocks — several lines at once
+
+| Level | NME | Python produced |
+| --- | --- | --- |
+| Sentence | `story:` | `if True:` |
+| Sentence | `slow story:` | `if True:` |
+| Sentence | `very slow story:` | `if True:` |
+| Sentence | `slow story every 3 seconds:` | `if True:` |
+| Sentence | `The door opened.` | `print("The door opened.")` |
+| Sentence | `wait 3 seconds` | (inside a story: print("wait 3 seconds")) |
+
+### Chance — how often out of a hundred
+
+| Level | NME | Python produced |
+| --- | --- | --- |
+| Sentence | `30% chance show You win` | `if __import__("random").randrange(1000) < 300: print("You win")` |
+| Sentence | `30.5% chance show You win` | `if __import__("random").randrange(1000) < 305: print("You win")` |
+| Sentence | `with a 30% chance show You win` | `if __import__("random").randrange(1000) < 300: print("You win")` |
+| Sentence | `30 percent chance show You win` | `if __import__("random").randrange(1000) < 300: print("You win")` |
+| Sentence | `30% of the time show You win` | `if __import__("random").randrange(1000) < 300: print("You win")` |
+| Sentence | `30% chance` | `if __import__("random").randrange(1000) < 300:` |
+| Sentence | `luck is a 30% chance` | `luck = __import__("random").randrange(1000) < 300` |
+
 ### Screen — clearing, ruling, boxing, centring
 
 | Level | NME | Python produced |
@@ -395,6 +418,13 @@ One import binds **both** the English and the Korean names.
 | 쿨타임 끝남 / Ready | `ready` | `끝났으면` |
 | 쿨타임 남음 / On cooldown | — | `남았으면` |
 | 쿨타임 끝날 때까지 / Until ready | — | `끝날때까지` |
+| 이야기 / Story | `story` · `tale` | `이야기` · `얘기` |
+| 이야기 천천히 / Story, slowly | `slow` · `slowly` | `천천히` |
+| 확률 / Chance | `chance` · `chances` · `probability` | `확률로` · `확률` |
+| 퍼센트 / Percent | `percent` · `percentage` | `퍼센트` · `프로` |
+| 확률 앞뒤 말 / Chance connector | `with` | `의` · `로` · `으로` |
+| 확률의 다른 말 / Chance, other wording | `time` | — |
+| 확률 저장 / Chance saved in a name | `is` · `equals` | — |
 | 군말 / Filler | `please` | `좀` · `혹시` · `제발` |
 
 ## Error codes
@@ -435,6 +465,8 @@ One import binds **both** the English and the Korean names.
 | `E0224` | the wait length could not be understood |
 | `E0225` | the list addition could not be understood |
 | `E0226` | the timer has not been started yet |
+| `E0227` | a chance can only go to one decimal place |
+| `E0228` | a chance must be between 0% and 100% |
 | `E0301` | the condition is missing |
 | `E0302` | the condition could not be understood |
 | `E0303` | the repeated body could not be understood |
@@ -562,6 +594,54 @@ The Python it becomes:
 ```python
 name = input("What is your name?" + " ")
 print("Hello " + str(name) + "!")
+```
+
+### 이야기 묶음 / a story in one block
+
+```nme
+story:
+The door opened slowly.
+The room was empty.
+end
+slow story:
+One letter lay on the table.
+end
+```
+
+The Python it becomes:
+
+```python
+if True:
+    print("The door opened slowly.")
+    print("The room was empty.")
+# end
+if True:
+    [print(_ch, end="", flush=True) or __import__("time").sleep(0.04) for _ch in "One letter lay on the table."]; print()
+# end
+```
+
+### 확률 / chance
+
+```nme
+rain is a 40% chance
+if rain
+show Take an umbrella
+else
+show It is clear today
+end
+10% chance show A rainbow appeared
+```
+
+The Python it becomes:
+
+```python
+rain = __import__("random").randrange(1000) < 400
+if (rain):
+    print("Take an umbrella")
+else:
+    print("It is clear today")
+# end
+if __import__("random").randrange(1000) < 100: print("A rainbow appeared")
 ```
 
 ### 숫자 맞히기 / guessing game

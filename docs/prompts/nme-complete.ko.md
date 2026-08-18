@@ -172,6 +172,29 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 | 문장형 | `아주 천천히 말해줘 안녕` | `[print(_ch, end="", flush=True) or __import__("time").sleep(0.12) for _ch in "안녕"]; print()` |
 | 문장형 | `3초씩 천천히 말해줘 안녕` | `[print(_ch, end="", flush=True) or __import__("time").sleep(3) for _ch in "안녕"]; print()` |
 
+### 이야기 묶음 — 여러 줄을 한 번에
+
+| 단계 | NME | 만들어지는 Python |
+| --- | --- | --- |
+| 문장형 | `이야기:` | `if True:` |
+| 문장형 | `천천히 이야기:` | `if True:` |
+| 문장형 | `아주 천천히 이야기:` | `if True:` |
+| 문장형 | `3초씩 천천히 이야기:` | `if True:` |
+| 문장형 | `문이 열렸습니다.` | `print("문이 열렸습니다.")` |
+| 문장형 | `3초 기다려` | (이야기 안에서는 print("3초 기다려")) |
+
+### 확률 — 백 번에 몇 번
+
+| 단계 | NME | 만들어지는 Python |
+| --- | --- | --- |
+| 문장형 | `30% 확률로 말해줘 당첨` | `if __import__("random").randrange(1000) < 300: print("당첨")` |
+| 문장형 | `30.5% 확률로 말해줘 당첨` | `if __import__("random").randrange(1000) < 305: print("당첨")` |
+| 문장형 | `30%의 확률로 말해줘 당첨` | `if __import__("random").randrange(1000) < 300: print("당첨")` |
+| 문장형 | `30퍼센트 확률로 말해줘 당첨` | `if __import__("random").randrange(1000) < 300: print("당첨")` |
+| 문장형 | `확률 30%로 말해줘 당첨` | `if __import__("random").randrange(1000) < 300: print("당첨")` |
+| 문장형 | `30% 확률로` | `if __import__("random").randrange(1000) < 300:` |
+| 문장형 | `운은 30% 확률` | `운 = __import__("random").randrange(1000) < 300` |
+
 ### 화면 — 지우기·줄·상자·가운데
 
 | 단계 | NME | 만들어지는 Python |
@@ -393,6 +416,13 @@ Python이므로, NME 문장으로 읽히지 않습니다.
 | 쿨타임 끝남 / Ready | `ready` | `끝났으면` |
 | 쿨타임 남음 / On cooldown | — | `남았으면` |
 | 쿨타임 끝날 때까지 / Until ready | — | `끝날때까지` |
+| 이야기 / Story | `story` · `tale` | `이야기` · `얘기` |
+| 이야기 천천히 / Story, slowly | `slow` · `slowly` | `천천히` |
+| 확률 / Chance | `chance` · `chances` · `probability` | `확률로` · `확률` |
+| 퍼센트 / Percent | `percent` · `percentage` | `퍼센트` · `프로` |
+| 확률 앞뒤 말 / Chance connector | `with` | `의` · `로` · `으로` |
+| 확률의 다른 말 / Chance, other wording | `time` | — |
+| 확률 저장 / Chance saved in a name | `is` · `equals` | — |
 | 군말 / Filler | `please` | `좀` · `혹시` · `제발` |
 
 ## 오류 코드
@@ -433,6 +463,8 @@ Python이므로, NME 문장으로 읽히지 않습니다.
 | `E0224` | 기다릴 시간을 이해하지 못했습니다 |
 | `E0225` | 목록에 넣는 줄을 이해하지 못했습니다 |
 | `E0226` | 시간 재기를 아직 시작하지 않았습니다 |
+| `E0227` | 확률은 소수점 첫째 자리까지만 정할 수 있습니다 |
+| `E0228` | 확률은 0%부터 100% 사이여야 합니다 |
 | `E0301` | 조건이 비어 있습니다 |
 | `E0302` | 조건을 이해하지 못했습니다 |
 | `E0303` | 반복할 내용을 이해하지 못했습니다 |
@@ -559,6 +591,54 @@ for _ in range(3): print("반가워요")
 ```python
 이름 = input("이름이 뭐예요?" + " ")
 print("안녕하세요 " + str(이름) + "!")
+```
+
+### 이야기 묶음 / a story in one block
+
+```nme
+이야기:
+문이 천천히 열렸습니다.
+방 안은 비어 있었습니다.
+끝
+천천히 이야기:
+탁자 위에 편지가 한 장 있었습니다.
+끝
+```
+
+되는 Python:
+
+```python
+if True:
+    print("문이 천천히 열렸습니다.")
+    print("방 안은 비어 있었습니다.")
+# end
+if True:
+    [print(_ch, end="", flush=True) or __import__("time").sleep(0.04) for _ch in "탁자 위에 편지가 한 장 있었습니다."]; print()
+# end
+```
+
+### 확률 / chance
+
+```nme
+비는 40% 확률
+만약에 비가 있으면
+우산을 챙기세요 말해줘
+아니면
+오늘은 맑습니다 말해줘
+끝
+10% 확률로 말해줘 무지개가 떴습니다
+```
+
+되는 Python:
+
+```python
+비 = __import__("random").randrange(1000) < 400
+if (비):
+    print("우산을 챙기세요")
+else:
+    print("오늘은 맑습니다")
+# end
+if __import__("random").randrange(1000) < 100: print("무지개가 떴습니다")
 ```
 
 ### 숫자 맞히기 / guessing game
