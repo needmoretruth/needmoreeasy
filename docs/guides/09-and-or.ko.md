@@ -27,23 +27,26 @@
 2. 영어는 `and`와 `or`로 이어 붙입니다:
 
    ```nme
-   ready = True
-   score = 5
-   if ready and score > 2 then show Go
+   set ready to True
+   set score to 5
+   if ready and score is greater than 2 then show Go
    ```
 
    `or`는 한쪽만 참이면 됩니다:
 
    ```nme
-   ready = True
-   waiting = False
+   set ready to True
+   set waiting to False
    if ready or waiting then show Please wait
    ```
 
 3. `그리고`가 `또는`보다 먼저 묶입니다. Python과 똑같습니다:
 
    ```nme
-   만약 준비 그리고 기다림 또는 점수 > 2 그러면 성공 말해줘
+   준비는 참
+   기다림은 거짓
+   점수는 5
+   만약 준비 그리고 기다림 또는 점수가 2보다 크면 성공 말해줘
    ```
 
    이 조건은 `(준비 그리고 기다림) 또는 (점수 > 2)`를 뜻합니다.
@@ -51,11 +54,11 @@
 4. 합친 조건은 반복에서도 쓸 수 있습니다:
 
    ```nme
-   준비 = True
-   기다림 = False
-   동안 준비 또는 기다림
-       기다려 말해줘
-       멈춰
+   준비는 참
+   기다림은 거짓
+   준비 또는 기다림 동안
+   기다려 말해줘
+   멈춰
    끝
    ```
 

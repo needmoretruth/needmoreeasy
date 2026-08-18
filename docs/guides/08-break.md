@@ -31,10 +31,10 @@ immediately and continues with the lines after it.
 2. Korean uses `동안`, `멈춰`, and `끝`:
 
    ```nme
-   준비 = True
-   동안 준비
-       작동 중이에요 말해줘
-       멈춰
+   준비는 참
+   준비인 동안
+   작동 중이에요 말해줘
+   멈춰
    끝
    ```
 
