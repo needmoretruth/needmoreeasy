@@ -1,0 +1,57 @@
+# Mistake probes — how forgiving is the compiler?
+
+566 short programs a beginner would plausibly write **wrongly**, in English and
+Korean: keyword typos, a different word order, missing or extra spaces, a full
+stop at the end, Korean particles and endings, number words, capitals, and the
+synonyms someone guesses before they have read anything.
+
+This is a **measurement**, not a pass/fail gate. Run it, read the three numbers,
+and decide whether the direction is right:
+
+```sh
+cargo build --release -p nme-cli --locked
+python scripts/mistake-probes/probe.py           # writes results.tsv + results.json
+python scripts/mistake-probes/analyse.py         # prints the totals
+```
+
+Three numbers come out, and the third is the one that matters:
+
+| | meaning |
+| --- | --- |
+| accepted | the compiler read the line and produced Python |
+| rejected | the compiler said no — with an error the writer can act on, one hopes |
+| **mis-compiled** | **accepted, but the Python does something the writer plainly did not mean** |
+
+A rejection is a bad minute. A mis-compile is a bad afternoon: the program runs,
+prints the wrong thing or dies later with a `NameError` pointing at a line that
+is not the mistake. Watch that number above the other two.
+
+There is a second corpus beside this one, `prose_corpus.py`: thirty ordinary
+sentences — a greeting, a line of a story, a message — that must print
+themselves and nothing else. It is the other half of the same question. Making
+the compiler stricter is easy if you are allowed to refuse prose; that file is
+what stops you.
+
+```sh
+python scripts/mistake-probes/prose_corpus.py     # must say 30/30
+python scripts/check-prose-blocks.py              # and no guide line may drift
+```
+
+### The record so far
+
+| date | accepted | rejected | mis-compiled | prose |
+| --- | --- | --- | --- | --- |
+| 2026-08-18, start | 442 | 124 | 141 | — |
+| 2026-08-18, after accepting more | 496 | 70 | 46 | 20/30 |
+| 2026-08-18, after refusing loudly | 461 | 105 | 11 | 30/30 |
+
+Accepting more and refusing loudly pull in opposite directions, which is why
+both numbers are here: the second round gave back 35 acceptances to remove 35
+silent mis-compiles, and that was the right trade.
+
+### Adding a probe
+
+Append to `probes3.py`: `(id, family, lang, source, intent, expect_regex)`.
+`expect_regex` is searched against the generated Python; `None` means "I only
+care whether it was accepted". Keep each probe to one mistake, so a failure
+names one thing.

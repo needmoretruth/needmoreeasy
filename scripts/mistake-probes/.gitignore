@@ -1,0 +1,7 @@
+# Written by probe.py on every run: the raw verdicts and the temporary
+# programs it compiles. The corpus and the harness are the source; these are
+# the measurement, and the measurement belongs to whoever ran it.
+results.tsv
+results.json
+probes/
+__pycache__/

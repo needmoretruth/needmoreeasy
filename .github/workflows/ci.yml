@@ -98,6 +98,16 @@ jobs:
           cargo build --release -p nme-cli --locked
           python scripts/check-syntax-reference.py
           python scripts/check-guide-code.py
+      # A program that fails to compile announces itself; one that compiles into
+      # a different program does not. These two guard the quiet half: thirty
+      # ordinary sentences must print themselves, and no documented line may
+      # drift into an assignment.
+      - name: Check that ordinary sentences still print themselves
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          python scripts/mistake-probes/prose_corpus.py
+          python scripts/check-prose-blocks.py
       - name: Install the CLI and smoke test it (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
