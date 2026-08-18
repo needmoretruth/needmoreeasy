@@ -160,8 +160,10 @@ show friends
 ```
 
 Nothing above needed quotes, brackets, colons or `=`. **Sentence syntax is
-not a beginner's toy that you leave behind — it is the language.** You can
-write whole programs, start to finish, without ever learning Python.
+not a beginner's toy that you leave behind — it is the language.** Guides 01–12
+and 86–88 are written this way from start to finish, and they cover output,
+questions, lists, loops, conditions, files of your own making, stories, the
+screen, a stopwatch and cooldowns.
 
 Two more levels exist for the day you want them: a shorter beginner syntax,
 and ordinary Python, which NME keeps exactly as you typed it. Neither is
