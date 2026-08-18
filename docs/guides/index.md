@@ -4,12 +4,13 @@ English | [한국어](index.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-85 short guides, written to be read in order. Each one teaches a single
+88 short guides, written to be read in order. Each one teaches a single
 idea, ends with something to try and a summary of what it taught, and every
 piece of code in them passes `nme check`.
 
 - **01–04** Your first day. Sentence syntax only — no quotes, no equals signs, no colons.
-- **05–12** Repeating, choosing, randomness, and the command-line tools. This is all of sentence syntax.
+- **05–12** Repeating, choosing, randomness, and the command-line tools.
+- **86–88** Stories, the screen, the stopwatch and cooldowns. Still sentence syntax — read these straight after 12, not last. They carry high numbers only because they were written later.
 - **13–22** Files, JSON, small projects, a blockchain, the network. Beginner syntax starts to appear.
 - **23–52** Modules, games, a calculator, data, strings, grids. More than half of it is Python.
 - **53–85** Statistics, search, algorithms, compilers. Effectively Python programs.
@@ -111,6 +112,9 @@ The number *is* the difficulty. Read them in order and no single step is a jump.
 83. [83 — Game: Mastermind, guessing a secret code](83-mastermind.md)
 84. [84 — Web: extracting links from a page](84-links.md)
 85. [85 — Compiler tier: from tree to bytecode](85-bytecode-compiler.md)
+86. [86 — Story: letters arriving one at a time](86-story.md)
+87. [87 — Screen: clearing, ruling and boxing](87-screen.md)
+88. [88 — Time: a stopwatch and cooldowns](88-timer.md)
 
 ## Topic lookup
 
@@ -181,6 +185,9 @@ The number *is* the difficulty. Read them in order and no single step is a jump.
 - game & logic: [83](83-mastermind.md)
 - web & text: [84](84-links.md)
 - compiler & bytecode: [85](85-bytecode-compiler.md)
+- stories and slow output: [86](86-story.md)
+- arranging the screen: [87](87-screen.md)
+- stopwatch and cooldowns: [88](88-timer.md)
 
 ## All guides
 
@@ -271,6 +278,9 @@ The number *is* the difficulty. Read them in order and no single step is a jump.
 | 83 | ★★★★★ | game & logic | [Game: Mastermind, guessing a secret code](83-mastermind.md) | a Mastermind-style game that hides a 4-color code and gives black/white feedback for each guess |
 | 84 | ★★★★★ | web & text | [Web: extracting links from a page](84-links.md) | fetching an HTML page from a local server and listing every link on it as a full URL |
 | 85 | ★★★★★ | compiler & bytecode | [Compiler tier: from tree to bytecode](85-bytecode-compiler.md) | a compiler that flattens an expression tree into instruction lines and runs them on a stack machine |
+| 86 | ★★☆☆☆ | stories and slow output | [Story: letters arriving one at a time](86-story.md) | a program whose text appears one letter at a time, the way a novel unfolds |
+| 87 | ★★☆☆☆ | arranging the screen | [Screen: clearing, ruling and boxing](87-screen.md) | a program that clears the screen, centres a title and draws a box |
+| 88 | ★★☆☆☆ | stopwatch and cooldowns | [Time: a stopwatch and cooldowns](88-timer.md) | a program that times itself and stops an action from repeating too soon |
 
 ## Where to continue
 
