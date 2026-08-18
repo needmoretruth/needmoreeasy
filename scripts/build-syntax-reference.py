@@ -225,6 +225,28 @@ SLOW_TEXT = [
     ('문장형', 'Sentence', 'say slowly every 3 seconds Hello', '3초씩 천천히 말해줘 안녕', '[print(_ch, end="", flush=True) or __import__("time").sleep(3) for _ch in "Hello"]; print()', '[print(_ch, end="", flush=True) or __import__("time").sleep(3) for _ch in "안녕"]; print()'),
 ]
 
+CHANCE = [
+    ("문장형", "Sentence", "30% chance show You win", "30% 확률로 말해줘 당첨", 'if __import__("random").randrange(1000) < 300: print("You win")', 'if __import__("random").randrange(1000) < 300: print("당첨")'),
+    ("문장형", "Sentence", "30.5% chance show You win", "30.5% 확률로 말해줘 당첨", 'if __import__("random").randrange(1000) < 305: print("You win")', 'if __import__("random").randrange(1000) < 305: print("당첨")'),
+    ("문장형", "Sentence", "with a 30% chance show You win", "30%의 확률로 말해줘 당첨", 'if __import__("random").randrange(1000) < 300: print("You win")', 'if __import__("random").randrange(1000) < 300: print("당첨")'),
+    ("문장형", "Sentence", "30 percent chance show You win", "30퍼센트 확률로 말해줘 당첨", 'if __import__("random").randrange(1000) < 300: print("You win")', 'if __import__("random").randrange(1000) < 300: print("당첨")'),
+    ("문장형", "Sentence", "30% of the time show You win", "확률 30%로 말해줘 당첨", 'if __import__("random").randrange(1000) < 300: print("You win")', 'if __import__("random").randrange(1000) < 300: print("당첨")'),
+    ("문장형", "Sentence", "30% chance", "30% 확률로", 'if __import__("random").randrange(1000) < 300:'),
+    ("문장형", "Sentence", "luck is a 30% chance", "운은 30% 확률", 'luck = __import__("random").randrange(1000) < 300', '운 = __import__("random").randrange(1000) < 300'),
+]
+
+# Every line inside a story block is text. The block header is the only NME
+# form with a colon, because a bare `story:` is a syntax error in Python and
+# can therefore be claimed without disturbing the Python-wins rule.
+STORY = [
+    ("문장형", "Sentence", "story:", "이야기:", "if True:"),
+    ("문장형", "Sentence", "slow story:", "천천히 이야기:", "if True:"),
+    ("문장형", "Sentence", "very slow story:", "아주 천천히 이야기:", "if True:"),
+    ("문장형", "Sentence", "slow story every 3 seconds:", "3초씩 천천히 이야기:", "if True:"),
+    ("문장형", "Sentence", "The door opened.", "문이 열렸습니다.", 'print("The door opened.")', 'print("문이 열렸습니다.")'),
+    ("문장형", "Sentence", "wait 3 seconds", "3초 기다려", '(inside a story: print("wait 3 seconds"))', '(이야기 안에서는 print("3초 기다려"))'),
+]
+
 SCREEN = [
     ('문장형', 'Sentence', 'clear the screen', '화면 지워', 'print("\\033[2J\\033[3J\\033[H", end="")', 'print("\\033[2J\\033[3J\\033[H", end="")'),
     ('문장형', 'Sentence', 'clear screen', '화면 비워줘', 'print("\\033[2J\\033[3J\\033[H", end="")', 'print("\\033[2J\\033[3J\\033[H", end="")'),
@@ -355,6 +377,13 @@ def spelling_table(korean: bool) -> str:
         ("쿨타임 끝남 / Ready", "COOLDOWN_READY_WORDS_EN", "COOLDOWN_READY_WORDS_KO"),
         ("쿨타임 남음 / On cooldown", "COOLDOWN_BUSY_WORDS_KO", None),
         ("쿨타임 끝날 때까지 / Until ready", "COOLDOWN_UNTIL_WORDS_KO", None),
+        ("이야기 / Story", "STORY_WORDS_EN", "STORY_WORDS_KO"),
+        ("이야기 천천히 / Story, slowly", "STORY_SLOW_WORDS_EN", "STORY_SLOW_WORDS_KO"),
+        ("확률 / Chance", "CHANCE_WORDS_EN", "CHANCE_WORDS_KO"),
+        ("퍼센트 / Percent", "CHANCE_PERCENT_WORDS_EN", "CHANCE_PERCENT_WORDS_KO"),
+        ("확률 앞뒤 말 / Chance connector", "CHANCE_LEAD_WORDS_EN", "CHANCE_PARTICLES_KO"),
+        ("확률의 다른 말 / Chance, other wording", "CHANCE_TIME_WORDS_EN", None),
+        ("확률 저장 / Chance saved in a name", "CHANCE_IS_WORDS_EN", None),
         ("군말 / Filler", "SENTENCE_FILLERS", None),
     ]
     lines = ["| " + " | ".join(header) + " |", "| --- | --- | --- |"]
@@ -498,24 +527,49 @@ NME 명령이 됩니다. 블록 밖에서는 Python 그대로 남습니다.
 
 숫자로 적은 선택지는 숫자로 남습니다(`1 또는 2 중에서 랜덤선택` → `choice((1, 2,))`).
 
-## 15. 파일
+## 15. 확률
+
+{level_table(CHANCE, True)}
+
+`30%`는 천 번 중 300번입니다. 소수점은 첫째 자리까지만 쓸 수 있고(`30.5%`),
+그보다 잘게 적으면 반올림하지 않고 `E0227`로 알려 줍니다. 쓴 사람이 적지 않은
+뜻으로 프로그램이 돌아가는 일은 없어야 하기 때문입니다. 범위는 `0%`부터
+`100%`까지이며 벗어나면 `E0228`입니다. `100%`는 항상 일어나고 `0%`는 절대
+일어나지 않습니다. 비교는 천분율 정수로만 하므로 소수 비교에서 생기는 오차가
+없습니다.
+
+이름에 저장한 확률은 참·거짓 값이라서 `만약에 운이 있으면`처럼 그대로 물어볼 수
+있습니다.
+
+## 16. 파일
 
 {level_table(FILES, True)}
 
 파일 경로는 항상 따옴표로 감쌉니다. 이것만은 문장형에서도 예외입니다.
 
-## 16. 모듈
+## 17. 모듈
 
 {level_table(MODULES, True)}
 
-## 17. 천천히 말하기
+## 18. 천천히 말하기
 
 {level_table(SLOW_TEXT, True)}
 
 글자를 하나씩 내보내고 사이에 잠깐 쉽니다. 쉬는 시간은 기본 0.04초, `아주`를
 붙이면 0.12초이며, `3초씩`처럼 직접 정할 수도 있습니다.
 
-## 18. 화면
+## 19. 이야기
+
+{level_table(STORY, True)}
+
+`이야기:` 안에서는 **모든 줄이 글**입니다. `3초 기다려`도 `만약에`도 명령이
+아니라 그대로 출력됩니다. 소설처럼 쓰는 것이 목적이라서, 글 한 줄이 조용히
+명령으로 바뀌는 일을 아예 막아 두었습니다. 블록은 `끝`/`end`으로 닫고, 들여쓰기로
+열었으면 들여쓰기가 끝나는 곳에서도 닫힙니다. 빈 줄은 `print()`가 되어 한 줄을
+띄우고, 앞에서 만든 이름은 글 안에서 값으로 바뀝니다. 콜론은 반각 `:`과 전각
+`：` 둘 다 됩니다.
+
+## 20. 화면
 
 {level_table(SCREEN, True)}
 
@@ -523,7 +577,7 @@ NME 명령이 됩니다. 블록 밖에서는 Python 그대로 남습니다.
 그대로 보일 수 있습니다. 상자와 가운데 맞춤은 한글을 두 칸으로 세기 때문에
 한국어 문장도 반듯하게 나오며, 가로 폭은 40칸입니다.
 
-## 19. 시간 재기
+## 21. 시간 재기
 
 {level_table(TIMER, True)}
 
@@ -532,7 +586,7 @@ NME 명령이 됩니다. 블록 밖에서는 Python 그대로 남습니다.
 있습니다(`만약 잰시간이 3보다 크면`). 켜지 않고 읽으면 컴파일할 때 `E0226`으로
 알려 줍니다. 프로그램이 `잰시간`이라는 이름을 직접 만들었으면 그 이름이 이깁니다.
 
-## 20. 쿨타임
+## 22. 쿨타임
 
 {level_table(COOLDOWN, True)}
 
@@ -542,26 +596,26 @@ NME 명령이 됩니다. 블록 밖에서는 Python 그대로 남습니다.
 `wait for door`는 영어 문장으로도 읽히므로, 그 이름이 이미 다른 값으로 저장돼
 있으면 쿨타임으로 읽지 않습니다.
 
-## 21. 동작 단어 전수 목록
+## 23. 동작 단어 전수 목록
 
 같은 뜻으로 받아들이는 표기를 하나도 빠뜨리지 않고 적은 표입니다.
 
 {spelling_table(True)}
 
-## 22. 조사 부록
+## 24. 조사 부록
 
 이름 뒤에 붙어도 이름의 일부로 보지 않는 조사입니다.
 
 {spellings(words("KOREAN_PARTICLES"))}
 
-## 23. 오타 복구
+## 25. 오타 복구
 
 동작 단어와 연결어에 한해, Python이 그 줄을 거부한 다음에만 한 글자 오타를
 고쳐서 다시 읽어 봅니다(넣기·빼기·바꾸기·이웃 자리 바꿈 한 번). 고칠 방법이
 둘 이상이면 고치지 않고 그 자리를 짚어 알려 줍니다. **문자열과 주석은 절대
 건드리지 않습니다.**
 
-## 24. 오류 코드
+## 26. 오류 코드
 
 {diagnostics_table(True)}
 
@@ -694,18 +748,32 @@ commands and keep their own meanings.
 A choice written as a number stays a number (`pick from 1 or 2` →
 `choice((1, 2,))`).
 
-## 15. Files
+## 15. Chance
+
+{level_table(CHANCE, False)}
+
+`30%` means 300 times in a thousand. One decimal place is the finest you may
+write (`30.5%`); anything finer is reported as `E0227` rather than rounded,
+because a program must never quietly mean something you did not write. The
+range is `0%` to `100%`, and outside it you get `E0228`. `100%` always happens
+and `0%` never does. The comparison is between whole thousandths, so no
+floating-point rounding can creep in.
+
+A chance saved in a name is an ordinary true/false value, so the usual
+condition words can ask about it: `if luck then show You win`.
+
+## 16. Files
 
 {level_table(FILES, False)}
 
 A file path is always quoted. This is the one place the sentence level asks for
 a quote character.
 
-## 16. Modules
+## 17. Modules
 
 {level_table(MODULES, False)}
 
-## 17. Slow text
+## 18. Slow text
 
 {level_table(SLOW_TEXT, False)}
 
@@ -713,7 +781,19 @@ Each character is printed on its own with a short pause after it. The pause is
 0.04 seconds by default, 0.12 with `very`, and whatever you name with
 `every 3 seconds` / `3초씩`.
 
-## 18. Screen
+## 19. Stories
+
+{level_table(STORY, False)}
+
+Inside `story:` **every line is text**. `wait 3 seconds` and `if ready` are not
+commands there; they print, exactly as written. Writing something novel-like is
+the whole point of the form, so a line of prose can never quietly turn into a
+statement. Close the block with `end` / `끝`, or, if you opened it by
+indenting, by ending the indentation. A blank line prints an empty line, names
+you made earlier are still substituted into the text, and the colon may be the
+plain `:` or the full-width `：` a Korean keyboard writes.
+
+## 20. Screen
 
 {level_table(SCREEN, False)}
 
@@ -722,7 +802,7 @@ a terminal it may show up as text. The box and the centred line count a Korean
 character as two columns, so a Korean sentence comes out straight; the width is
 40 columns.
 
-## 19. The stopwatch
+## 21. The stopwatch
 
 {level_table(TIMER, False)}
 
@@ -732,7 +812,7 @@ in output, in a saved name, and in a condition (`if elapsed is greater than 3`).
 Reading it without starting the clock is reported at compile time as `E0226`. A
 name the program made itself always wins over the word.
 
-## 20. Cooldowns
+## 22. Cooldowns
 
 {level_table(COOLDOWN, False)}
 
@@ -743,19 +823,19 @@ whether that moment has passed. They are conditions, so they work with `when`,
 reads as an ordinary English sentence, so a name the program already saved as
 something else is not read as a cooldown.
 
-## 21. Every action word
+## 23. Every action word
 
 Every spelling accepted for each action, with nothing left out.
 
 {spelling_table(False)}
 
-## 22. Korean particles
+## 24. Korean particles
 
 These endings are not treated as part of the name they follow.
 
 {spellings(words("KOREAN_PARTICLES"))}
 
-## 23. Typo recovery
+## 25. Typo recovery
 
 For action words and connectors only, and only after Python has rejected the
 line, NME retries once with a single edit repaired (one insertion, deletion,
@@ -763,7 +843,7 @@ substitution, or adjacent swap). If more than one repair is possible it repairs
 nothing and points at the exact span instead. **Strings and comments are never
 touched.**
 
-## 24. Error codes
+## 26. Error codes
 
 {diagnostics_table(False)}
 

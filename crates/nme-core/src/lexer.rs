@@ -336,7 +336,7 @@ fn finish_line(
 }
 
 /// Byte offsets at which each physical line starts (offset 0 included).
-fn line_start_offsets(source: &str) -> Vec<usize> {
+pub(crate) fn line_start_offsets(source: &str) -> Vec<usize> {
     let mut starts = vec![0];
     for (offset, byte) in source.bytes().enumerate() {
         if byte == b'\n' {

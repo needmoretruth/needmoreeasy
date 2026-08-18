@@ -234,7 +234,29 @@ commands and keep their own meanings.
 A choice written as a number stays a number (`pick from 1 or 2` →
 `choice((1, 2,))`).
 
-## 15. Files
+## 15. Chance
+
+| Level | NME | Python produced |
+| --- | --- | --- |
+| Sentence | `30% chance show You win` | `if __import__("random").randrange(1000) < 300: print("You win")` |
+| Sentence | `30.5% chance show You win` | `if __import__("random").randrange(1000) < 305: print("You win")` |
+| Sentence | `with a 30% chance show You win` | `if __import__("random").randrange(1000) < 300: print("You win")` |
+| Sentence | `30 percent chance show You win` | `if __import__("random").randrange(1000) < 300: print("You win")` |
+| Sentence | `30% of the time show You win` | `if __import__("random").randrange(1000) < 300: print("You win")` |
+| Sentence | `30% chance` | `if __import__("random").randrange(1000) < 300:` |
+| Sentence | `luck is a 30% chance` | `luck = __import__("random").randrange(1000) < 300` |
+
+`30%` means 300 times in a thousand. One decimal place is the finest you may
+write (`30.5%`); anything finer is reported as `E0227` rather than rounded,
+because a program must never quietly mean something you did not write. The
+range is `0%` to `100%`, and outside it you get `E0228`. `100%` always happens
+and `0%` never does. The comparison is between whole thousandths, so no
+floating-point rounding can creep in.
+
+A chance saved in a name is an ordinary true/false value, so the usual
+condition words can ask about it: `if luck then show You win`.
+
+## 16. Files
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -246,7 +268,7 @@ A choice written as a number stays a number (`pick from 1 or 2` →
 A file path is always quoted. This is the one place the sentence level asks for
 a quote character.
 
-## 16. Modules
+## 17. Modules
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -257,7 +279,7 @@ a quote character.
 | Beginner | `use random version "0.0.1"` | (that exact adapter) |
 | Advanced | `from "helper.nme" import greet` | (from helper import greet — needs helper.nme next to the program) |
 
-## 17. Slow text
+## 18. Slow text
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -270,7 +292,26 @@ Each character is printed on its own with a short pause after it. The pause is
 0.04 seconds by default, 0.12 with `very`, and whatever you name with
 `every 3 seconds` / `3초씩`.
 
-## 18. Screen
+## 19. Stories
+
+| Level | NME | Python produced |
+| --- | --- | --- |
+| Sentence | `story:` | `if True:` |
+| Sentence | `slow story:` | `if True:` |
+| Sentence | `very slow story:` | `if True:` |
+| Sentence | `slow story every 3 seconds:` | `if True:` |
+| Sentence | `The door opened.` | `print("The door opened.")` |
+| Sentence | `wait 3 seconds` | (inside a story: print("wait 3 seconds")) |
+
+Inside `story:` **every line is text**. `wait 3 seconds` and `if ready` are not
+commands there; they print, exactly as written. Writing something novel-like is
+the whole point of the form, so a line of prose can never quietly turn into a
+statement. Close the block with `end` / `끝`, or, if you opened it by
+indenting, by ending the indentation. A blank line prints an empty line, names
+you made earlier are still substituted into the text, and the colon may be the
+plain `:` or the full-width `：` a Korean keyboard writes.
+
+## 20. Screen
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -286,7 +327,7 @@ a terminal it may show up as text. The box and the centred line count a Korean
 character as two columns, so a Korean sentence comes out straight; the width is
 40 columns.
 
-## 19. The stopwatch
+## 21. The stopwatch
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -301,7 +342,7 @@ in output, in a saved name, and in a condition (`if elapsed is greater than 3`).
 Reading it without starting the clock is reported at compile time as `E0226`. A
 name the program made itself always wins over the word.
 
-## 20. Cooldowns
+## 22. Cooldowns
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -319,7 +360,7 @@ whether that moment has passed. They are conditions, so they work with `when`,
 reads as an ordinary English sentence, so a name the program already saved as
 something else is not read as a cooldown.
 
-## 21. Every action word
+## 23. Every action word
 
 Every spelling accepted for each action, with nothing left out.
 
@@ -373,15 +414,22 @@ Every spelling accepted for each action, with nothing left out.
 | 쿨타임 끝남 / Ready | `ready` | `끝났으면` |
 | 쿨타임 남음 / On cooldown | — | `남았으면` |
 | 쿨타임 끝날 때까지 / Until ready | — | `끝날때까지` |
+| 이야기 / Story | `story` · `tale` | `이야기` · `얘기` |
+| 이야기 천천히 / Story, slowly | `slow` · `slowly` | `천천히` |
+| 확률 / Chance | `chance` · `chances` · `probability` | `확률로` · `확률` |
+| 퍼센트 / Percent | `percent` · `percentage` | `퍼센트` · `프로` |
+| 확률 앞뒤 말 / Chance connector | `with` | `의` · `로` · `으로` |
+| 확률의 다른 말 / Chance, other wording | `time` | — |
+| 확률 저장 / Chance saved in a name | `is` · `equals` | — |
 | 군말 / Filler | `please` | `좀` · `혹시` · `제발` |
 
-## 22. Korean particles
+## 24. Korean particles
 
 These endings are not treated as part of the name they follow.
 
 `에게서는` · `한테서는` · `에게서` · `한테서` · `으로는` · `로는` · `에게` · `한테` · `에서` · `으로` · `까지` · `부터` · `처럼` · `보다` · `이라도` · `라도` · `에는` · `에서` · `은` · `는` · `이` · `가` · `을` · `를` · `와` · `과` · `도` · `의` · `에` · `로` · `아` · `야` · `랑` · `이랑` · `예요` · `이에요`
 
-## 23. Typo recovery
+## 25. Typo recovery
 
 For action words and connectors only, and only after Python has rejected the
 line, NME retries once with a single edit repaired (one insertion, deletion,
@@ -389,7 +437,7 @@ substitution, or adjacent swap). If more than one repair is possible it repairs
 nothing and points at the exact span instead. **Strings and comments are never
 touched.**
 
-## 24. Error codes
+## 26. Error codes
 
 | Code | Meaning |
 | --- | --- |
@@ -427,6 +475,8 @@ touched.**
 | `E0224` | the wait length could not be understood |
 | `E0225` | the list addition could not be understood |
 | `E0226` | the timer has not been started yet |
+| `E0227` | a chance can only go to one decimal place |
+| `E0228` | a chance must be between 0% and 100% |
 | `E0301` | the condition is missing |
 | `E0302` | the condition could not be understood |
 | `E0303` | the repeated body could not be understood |

@@ -46,11 +46,90 @@ All notable changes to NME are recorded here.
   with `E0226`.
 - The box and the centred line count a Korean letter as two columns wide, so
   neither comes out crooked.
-- Three new guides: 86 (story), 87 (screen), 88 (time). All three are sentence
-  syntax at ★★, so they follow guides 05–12 rather than the guides before them.
+- Three new guides. The reordering below made them 03 (letters one at a time),
+  14 (screen) and 15 (time), all inside Part 1.
+- **The guides were reordered from scratch for a beginner.** Eight parts, and
+  all 88 guides renumbered and renamed. The old order carried the repository
+  README's shape — files at 13, a cryptocurrency ledger at 17, writing a story
+  at 86. Every cross-guide link, title and prerequisite was rewritten, and no
+  prerequisite points forward any more. Part 1 (01–16) is sentences only: its
+  296 lines of code contain no quote, no bracket and no equals sign.
+- **Two guides were written**: 02 (story blocks) and 13 (chance). Ninety in all.
+- **Part 1 no longer assumes an installation.** It used to open with "create a
+  file and run `nme run hello`"; it now opens in the writing box on
+  needmoreeasy.com. The command line is kept, marked "skip this for now", at the
+  end of guides 01 and 16. The five-minute guide and the tutorial match.
+- **A list example guide 05 taught was really being printed as words.** A name
+  cannot contain a space, so `할 일은 목록` came out as its own sentence. It is
+  `할일` now, and the rule is stated.
+- Three new checks. `scripts/check-guide-silent.py` finds a line meant as a
+  command that quietly became text, across every guide;
+  `scripts/report-guide-tier.py` measures how much of each part is really
+  sentence grammar; `scripts/check-tier-parity.py` compiles 480 cells across 80
+  capabilities (sentence/beginner/advanced × English/Korean) and compares them,
+  including whether a refusal carries the same code in both languages.
+- The three prompts for an AI now carry story blocks and chance.
+
 - The five-minute guide and the tutorial no longer teach beginner syntax or
   Python in their early sections; a sentence-level project on lists and waiting
   takes that place.
+
+- Sentence syntax gained a **story block**. `story:` / `이야기:` opens a block
+  in which **every line is text**, so a page of prose needs no output word on
+  every line. Nothing inside it is a command — `wait 3 seconds` prints those
+  words, and so does `if ready` — because a line of a story that quietly became
+  a statement is the worst mistake this compiler can make. A blank line prints
+  an empty line, names saved earlier are still put into the text, and
+  `slow story:`, `very slow story:` and `slow story every 0.2 seconds:` tell the
+  whole block one character at a time. The block closes at `end` / `끝`, or
+  where its indentation ends. Korean writes `천천히 이야기:`,
+  `아주 천천히 이야기:` and `0.2초씩 천천히 이야기:`, and the colon may be the
+  full-width `：` a Korean keyboard produces.
+- Sentence syntax gained a **chance in percent**: `30% chance show You win` /
+  `30% 확률로 말해줘 당첨`, the same words alone opening a block, and
+  `luck is a 30% chance` / `운은 30% 확률` saving a true/false value that the
+  ordinary conditions can ask about (`if luck then ...`). `with a 30% chance`,
+  `a 30% chance`, `30 percent chance`, `30% of the time`, `30%의 확률로`,
+  `확률 30%로` and `30퍼센트 확률로` all mean the same thing.
+- A chance is counted in thousandths, so `30.5%` is exactly 305 out of 1000 and
+  nothing is decided by comparing two nearly equal decimal numbers. One decimal
+  place is the finest anyone may write: `30.25%` is refused as `E0227` rather
+  than rounded, because a program must never quietly mean something its writer
+  did not write. Outside `0%` to `100%` is `E0228`.
+- A percentage on its own is still not a chance and a sentence about a story is
+  still a sentence: `I am 100% sure`, `전체의 30%가 왔습니다`, `story time`,
+  `tell me a story` and `옛날 이야기` are unchanged.
+- **A sentence with a percentage in it is a sentence.** `%` is Python's modulo
+  operator and a Korean word is a valid Python name, so `100% 확신합니다` really
+  is a valid Python expression: it was handed to Python and answered with a
+  `NameError` at run time. `전체의 30%가 왔습니다` reached CPython as a syntax
+  error, and `나는 100% 동의합니다` was quietly saved under the name `나`. All
+  three print now, and `합니다` and `됩니다` joined the Korean sentence endings
+  the compiler knows.
+- **The words after a chance have to be a command.** `a 30% chance of rain` and
+  `확률 30%는 낮습니다` no longer run their own tail three times in ten, and
+  `a 20% chance remains` no longer compiles to `if …: remains`. The word-first
+  Korean spelling needs its particle — `확률 30%로` — which is the whole
+  difference between a command and a remark about a percentage.
+- **A label and the words after it prints.** `재미있는 이야기: 시작` was being
+  saved under the name `재미있`, because its first word ends in the Korean
+  topic particle. A value NME cannot read that carries a colon is writing, not
+  a value; a colon Python can read (a dict, a slice, a lambda) is still a value.
+- **A number with a unit after it is a sentence, not a value.**
+  `할인율은 30%입니다` was saved as `할인율 = 30%입니다`, which Python reads as
+  `30 % 입니다`: a modulo against a name nothing ever bound. It compiled and
+  then raised `NameError` the moment it ran. `점수는 30점입니다`,
+  `가격은 1000원입니다` and `거리는 3km입니다` print for the same reason. A bare
+  number still saves: `정답은 7입니다` is the number seven, spoken as a
+  sentence.
+- One Korean noun one edit away from the file-reading word — `경고`, `참고`,
+  `보고` — crashed the compiler outright. It no longer does; those lines are
+  ordinary writing and print.
+- `scripts/check-prose-blocks.py` now compiles a documented line together with
+  the story block it is shown inside, which is the program the document
+  actually shows. The mistake-probe corpus gained twenty-one lines about
+  percentages, labels, and units (566 → 587); the count of programs that
+  compile to something their writer plainly did not mean is unchanged at 11.
 
 ## 0.0.1-beta.160 — 2026-08-12
 

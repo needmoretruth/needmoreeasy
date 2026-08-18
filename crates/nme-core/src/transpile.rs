@@ -58,6 +58,17 @@ pub fn transpile_with_modules(
         })
         .collect();
     let mut edits = lower::lower_lines(nme_lines, source);
+    // A blank line inside a story block prints an empty line. It has no
+    // tokens, so the parser reports its exact place instead of a statement.
+    edits.extend(
+        program
+            .story_blank_lines
+            .iter()
+            .map(|(span, replacement)| lower::Edit {
+                span: *span,
+                replacement: replacement.clone(),
+            }),
+    );
     let nme_indexes = nme_lines
         .iter()
         .map(|line| line.line_index)

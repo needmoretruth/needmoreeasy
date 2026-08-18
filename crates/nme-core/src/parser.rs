@@ -14,9 +14,10 @@ use crate::lexer::{LogicalLine, Token};
 use crate::syntax::{
     BundledModuleId, Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, Literal,
     LogicalOp, ModuleVersion, NmeLine, NmeStmt, Spelling, TextPart, TextTemplate, UpdateOp, Value,
-    COOLDOWN_PREFIX, ELAPSED_PYTHON, FILE_MODULE, FILE_MODULE_KO, FILE_READ_WORDS_EN,
-    FILE_READ_WORDS_KO, FILE_WRITE_WORDS_EN, FILE_WRITE_WORDS_KO, RANDOM_MODULE, RANDOM_MODULE_KO,
-    SAY_KEYWORD, SAY_KEYWORD_KO, SAY_WORDS_EN, TIMER_NAME, TIMES_KEYWORD, TIMES_KEYWORD_KO,
+    CHANCE_MAX_PERMILLE, COOLDOWN_PREFIX, ELAPSED_PYTHON, FILE_MODULE, FILE_MODULE_KO,
+    FILE_READ_WORDS_EN, FILE_READ_WORDS_KO, FILE_WRITE_WORDS_EN, FILE_WRITE_WORDS_KO,
+    RANDOM_MODULE, RANDOM_MODULE_KO, SAY_KEYWORD, SAY_KEYWORD_KO, SAY_WORDS_EN, TIMER_NAME,
+    TIMES_KEYWORD, TIMES_KEYWORD_KO,
 };
 
 const SAY_WORDS_KO: &[&str] = &[
@@ -242,6 +243,37 @@ const SLOW_EVERY_WORDS_KO: &[&str] = &["초씩"];
 /// Seconds between characters for the plain and the very slow spelling.
 const SLOW_SECONDS: &str = "0.04";
 const VERY_SLOW_SECONDS: &str = "0.12";
+/// `story:` / `이야기:` — the block in which every line is text.
+///
+/// The trailing colon is required, and it is the whole safety argument for
+/// this form: `story:` and `이야기:` are not valid Python, while the ordinary
+/// sentences that mention the same word — `옛날 이야기`, `story time`,
+/// `tell me a story`, `이야기를 들려줘` — carry no colon and stay sentences.
+const STORY_WORDS_EN: &[&str] = &["story", "tale"];
+const STORY_WORDS_KO: &[&str] = &["이야기", "얘기"];
+/// `slow story:` / `천천히 이야기:` — a story told one character at a time.
+const STORY_SLOW_WORDS_EN: &[&str] = &["slow", "slowly"];
+const STORY_SLOW_WORDS_KO: &[&str] = &["천천히"];
+/// The full-width colon a Korean IME writes. Python has no meaning for it at
+/// all, so the lexer hands it over as ordinary sentence text and only the
+/// block headers that ask for a colon accept it.
+const FULL_WIDTH_COLON: &str = "\u{ff1a}";
+/// `30% 확률로` / `30% chance` — the words that turn a percentage into a
+/// chance. A percentage on its own is never one, which is what keeps
+/// `전체의 30%가 왔습니다` and `I am 100% sure` ordinary sentences.
+const CHANCE_WORDS_EN: &[&str] = &["chance", "chances", "probability"];
+const CHANCE_WORDS_KO: &[&str] = &["확률로", "확률"];
+/// The written spelling of `%`: `30 percent chance` / `30 퍼센트 확률로`.
+const CHANCE_PERCENT_WORDS_EN: &[&str] = &["percent", "percentage"];
+const CHANCE_PERCENT_WORDS_KO: &[&str] = &["퍼센트", "프로"];
+/// `30% of the time` — the other English way to say the same thing.
+const CHANCE_TIME_WORDS_EN: &[&str] = &["time"];
+/// `with a 30% chance` — a word that may lead the phrase.
+const CHANCE_LEAD_WORDS_EN: &[&str] = &["with"];
+/// Particles that may sit inside a Korean chance: `30%의 확률로`, `확률 30%로`.
+const CHANCE_PARTICLES_KO: &[&str] = &["의", "로", "으로"];
+/// `luck is a 30% chance` — the English shape that saves a chance in a name.
+const CHANCE_IS_WORDS_EN: &[&str] = &["is", "equals"];
 /// `clear the screen` / `화면 지워`.
 const CLEAR_SCREEN_WORDS_EN: &[&str] = &["clear"];
 const CLEAR_SCREEN_WORDS_KO: &[&str] = &["화면"];
@@ -327,6 +359,10 @@ enum MatchMode {
 pub struct ParsedProgram {
     pub nme_lines: Vec<NmeLine>,
     pub virtual_indents: Vec<usize>,
+    /// Blank lines inside a story block, and the `print()` that each one
+    /// becomes. They hold no tokens, so they are not logical lines and the
+    /// replacement has to name its own place in the source.
+    pub story_blank_lines: Vec<(Span, String)>,
 }
 
 /// Parse all logical lines, collecting independent beginner-facing errors.
@@ -347,6 +383,11 @@ pub fn parse_program(
     let mut bindings = BindingEnv::new();
     let mut virtual_indents = vec![0; lines.len()];
     let mut blocks = Vec::<ExplicitBlock>::new();
+    // Where every physical line starts, so a blank line inside a story block
+    // can be given a `print()` of its own. Blank lines carry no tokens and so
+    // never become logical lines.
+    let line_starts = crate::lexer::line_start_offsets(source);
+    let mut story_blank_lines = Vec::<(Span, String)>::new();
     // Tracks whether any NME statement has been seen. A lone `end`/`끝`
     // after that is almost always a leftover block terminator, so it gets a
     // friendly diagnostic instead of silently staying Python (where it would
@@ -403,6 +444,75 @@ pub fn parse_program(
         previous_indent = line.indent;
         previous_opens_suite = opens_suite;
 
+        // ------------------------------------------------------- a story
+        //
+        // Inside `이야기:` / `story:` every line is text. Not `3초 기다려`,
+        // not `만약에 …`, not even a line of ordinary Python: a story is
+        // prose, and a line of prose that silently turns into a statement is
+        // the worst thing this compiler can do to a program. The one line
+        // that still means what it says is the closing `end`/`끝`, because
+        // without it a flat story could never be closed at all.
+        if let Some(story) = blocks.last().and_then(ExplicitBlock::as_story).cloned() {
+            let ends_here = match story.close_on_dedent {
+                // An `end` written further out closes a block further out, so
+                // the story finishes first and leaves that `end` alone.
+                Some(header_indent) if is_end.is_some() => line.indent < header_indent,
+                Some(header_indent) => line.indent <= header_indent,
+                None => false,
+            };
+            if !ends_here && is_end.is_none() {
+                let depth = blocks.len();
+                bindings.enter_line(line.indent + depth);
+                let virtual_indent = depth.saturating_sub(line.indent);
+                let prefix = story_prefix(source, &line_starts, line, virtual_indent);
+                push_story_blanks(
+                    &mut story_blank_lines,
+                    source,
+                    &line_starts,
+                    &prefix,
+                    story.last_line,
+                    line.number,
+                );
+                let value = Value::Text(make_text_template(
+                    source,
+                    &line.tokens,
+                    &bindings.visible_names(),
+                ));
+                let stmt = match &story.seconds {
+                    Some(seconds) => NmeStmt::SaySlowly {
+                        value,
+                        seconds: seconds.clone(),
+                    },
+                    None => NmeStmt::Say { value },
+                };
+                if let Some(ExplicitBlock::Story(open)) = blocks.last_mut() {
+                    open.prefix = prefix;
+                    open.last_line = last_physical_line(source, line);
+                }
+                virtual_indents[index] = virtual_indent;
+                found.push(NmeLine {
+                    line_index: index,
+                    span: line.span,
+                    stmt,
+                    virtual_indent,
+                });
+                saw_nme = true;
+                continue;
+            }
+            // The story is over. The blank lines it still owed belong to it.
+            push_story_blanks(
+                &mut story_blank_lines,
+                source,
+                &line_starts,
+                &story.prefix,
+                story.last_line,
+                line.number,
+            );
+            if ends_here {
+                blocks.pop();
+            }
+        }
+
         // An indented-suite sentence block (whose first body line was
         // physically indented) may end at the physical dedent, like ordinary
         // Python, but only when the remaining `end`/`끝` lines cannot close
@@ -419,7 +529,7 @@ pub fn parse_program(
             let remaining_ends = count_remaining_ends(lines, index);
             loop {
                 let open = blocks.len();
-                let Some(close_on_dedent) = blocks.last().and_then(|block| block.close_on_dedent())
+                let Some(close_on_dedent) = blocks.last().and_then(ExplicitBlock::close_on_dedent)
                 else {
                     break;
                 };
@@ -750,11 +860,26 @@ pub fn parse_program(
                     stmt,
                     virtual_indent,
                 });
+                // A story always opens its block: prose has no other way
+                // of saying where it ends, and the lines below it must not
+                // be read as commands.
+                if let Some(NmeStmt::Story { seconds }) = found.last().map(|line| &line.stmt) {
+                    let seconds = seconds.clone();
+                    bindings.push_explicit_scope(parse_line.indent + 1);
+                    block_header_lines.insert(index);
+                    blocks.push(ExplicitBlock::Story(StoryBlock {
+                        close_on_dedent: (!flat_body_follows).then_some(line.indent),
+                        seconds,
+                        prefix: story_prefix(source, &line_starts, line, virtual_indent + 1),
+                        last_line: last_physical_line(source, line),
+                    }));
+                }
                 if let Some(
                     NmeStmt::Times { inline: None, .. }
                     | NmeStmt::ForEach { inline: None, .. }
                     | NmeStmt::When { inline: None, .. }
-                    | NmeStmt::While { inline: None, .. },
+                    | NmeStmt::While { inline: None, .. }
+                    | NmeStmt::Chance { inline: None, .. },
                 ) = found.last().map(|line| &line.stmt)
                 {
                     if force_suite {
@@ -925,22 +1050,28 @@ pub fn parse_program(
     }
 
     if !blocks.is_empty() {
-        problems.extend(blocks.iter().map(|block| {
-            missing_end_diagnostic(block, lines.last().map_or(0, |line| line.span.end))
-        }));
+        problems.extend(
+            blocks
+                .iter()
+                .filter(|block| !block.ends_at_the_end_of_the_file())
+                .map(|block| {
+                    missing_end_diagnostic(block, lines.last().map_or(0, |line| line.span.end))
+                }),
+        );
     }
 
     if problems.is_empty() {
         Ok(ParsedProgram {
             nme_lines: found,
             virtual_indents,
+            story_blank_lines,
         })
     } else {
         Err(problems)
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 enum ExplicitBlock {
     Loop {
         /// When the block's body started physically indented, the suite
@@ -952,15 +1083,36 @@ enum ExplicitBlock {
         else_seen: bool,
         close_on_dedent: Option<usize>,
     },
+    /// `이야기:` / `story:`. Kept apart from the other two because nothing
+    /// inside it is ever read as a command.
+    Story(StoryBlock),
+}
+
+/// One open story block: how it closes, how its lines are told, and what the
+/// compiler needs in order to write a line of its own inside it.
+#[derive(Debug, Clone)]
+struct StoryBlock {
+    /// Indentation of the `이야기:` line, when the body below it was written
+    /// indented. `None` when the body is flat, and then only `end`/`끝`
+    /// closes the story.
+    close_on_dedent: Option<usize>,
+    /// The pause between two characters, when the story is told slowly.
+    seconds: Option<Code>,
+    /// Indentation for a line the compiler writes itself — the `print()`
+    /// that stands in for a blank line.
+    prefix: String,
+    /// Physical line the story has been read up to.
+    last_line: usize,
 }
 
 impl ExplicitBlock {
-    fn close_on_dedent(self) -> Option<usize> {
+    fn close_on_dedent(&self) -> Option<usize> {
         match self {
             ExplicitBlock::Loop { close_on_dedent }
             | ExplicitBlock::Conditional {
                 close_on_dedent, ..
-            } => close_on_dedent,
+            } => *close_on_dedent,
+            ExplicitBlock::Story(story) => story.close_on_dedent,
         }
     }
 
@@ -974,7 +1126,22 @@ impl ExplicitBlock {
             } => {
                 *close_on_dedent = None;
             }
+            ExplicitBlock::Story(story) => story.close_on_dedent = None,
         }
+    }
+
+    fn as_story(&self) -> Option<&StoryBlock> {
+        match self {
+            ExplicitBlock::Story(story) => Some(story),
+            _ => None,
+        }
+    }
+
+    /// A story whose body was written indented ends where that indentation
+    /// ends, and the end of the file is the plainest dedent there is. Every
+    /// other block, and a flat story, still needs its `end`/`끝`.
+    fn ends_at_the_end_of_the_file(&self) -> bool {
+        matches!(self, ExplicitBlock::Story(story) if story.close_on_dedent.is_some())
     }
 }
 
@@ -1112,6 +1279,8 @@ fn is_header_shape(tokens: &[Token]) -> bool {
                 && !output_word_before(tokens, tokens.len() - 1)
         })
         || subject_condition_shape(tokens)
+        || story_colon_shape(tokens)
+        || chance_prefix(tokens).is_some_and(|prefix| prefix.consumed == tokens.len())
 }
 
 fn has_future_end(lines: &[LogicalLine], index: usize) -> bool {
@@ -2337,6 +2506,10 @@ fn missing_end_diagnostic(block: &ExplicitBlock, offset: usize) -> Diagnostic {
             "this condition is missing its closing `end`",
             "이 조건문에는 닫는 `끝`이 필요해요",
         ),
+        ExplicitBlock::Story(_) => (
+            "this story is missing its closing `end`",
+            "이 이야기에는 닫는 `끝`이 필요해요",
+        ),
     };
     Diagnostic::bilingual(
         DiagnosticCode::MissingEnd,
@@ -2394,6 +2567,19 @@ fn classify(
     if let Some((index, split)) = glued_count_and_repeat(tokens) {
         let word = name_word(&tokens[index]).unwrap_or("");
         return Err(glued_word_diagnostic(&tokens[index], word, &split));
+    }
+
+    // A story block and a chance are read before every other sentence
+    // matcher. Both hang on punctuation the rest of the grammar never uses —
+    // a closing colon, and a `%` — so no ordinary sentence can reach them.
+    if let Some(stmt) = match_story(source, tokens) {
+        return Ok(Some(stmt));
+    }
+    if let Some(stmt) = match_chance_set(source, tokens, known_names)? {
+        return Ok(Some(stmt));
+    }
+    if let Some(stmt) = match_chance(source, tokens, block, known_names)? {
+        return Ok(Some(stmt));
     }
 
     // A natural condition may start with its subject (`색이 빨강과 같으면
@@ -2676,7 +2862,7 @@ fn classify(
     if candidates.len() == 1 && recovery_problems.is_empty() {
         return Ok(candidates.pop());
     }
-    let report_recovery = !prose_beats_recovery(tokens);
+    let report_recovery = !prose_beats_recovery(tokens, known_names);
     if report_recovery
         && (candidates.len() > 1 || (!candidates.is_empty() && !recovery_problems.is_empty()))
     {
@@ -2687,6 +2873,23 @@ fn classify(
     }
     if report_recovery && recovery_problems.len() > 1 {
         return Err(ambiguous_action_diagnostic(tokens));
+    }
+
+    // `재미있는 이야기: 시작` — a label and its text. Every block header that
+    // uses a colon has had its turn above, so what is left is writing.
+    if is_written_label(source, tokens) {
+        return Ok(Some(NmeStmt::Say {
+            value: Value::Text(make_text_template(source, tokens, known_names)),
+        }));
+    }
+
+    // A written Korean sentence is a sentence even with a number or a `%` in
+    // it. Every matcher above has had its turn, so nothing that is a command
+    // reaches here.
+    if is_written_korean_sentence(tokens, known_names) {
+        return Ok(Some(NmeStmt::Say {
+            value: Value::Text(make_text_template(source, tokens, known_names)),
+        }));
     }
 
     // Invalid Python led by another Python keyword belongs to Python. This
@@ -3347,10 +3550,7 @@ fn match_update(
     // whatever its free text happens to say. Without this, the arithmetic
     // words inside a message quietly rewrite the whole line: `show I will
     // multiply by 2` used to become `show = show * 2`.
-    if tokens
-        .first()
-        .is_some_and(|token| starts_a_different_statement(token))
-    {
+    if tokens.first().is_some_and(starts_a_different_statement) {
         return Ok(None);
     }
     // `to score add 1` / `by 1 increase score` — the connector moved to the
@@ -3826,7 +4026,7 @@ fn match_wait(
     let action_at = leading_sentence_fillers(tokens);
     if tokens
         .get(action_at)
-        .is_some_and(|token| starts_a_different_statement(token))
+        .is_some_and(starts_a_different_statement)
     {
         return Ok(None);
     }
@@ -3996,10 +4196,7 @@ fn match_append(
 ) -> Result<Option<NmeStmt>, Diagnostic> {
     // `… then show Time to sleep` ends in a waiting word but is a condition
     // with a message, not a wait. The opening word decides the line.
-    if tokens
-        .first()
-        .is_some_and(|token| starts_a_different_statement(token))
-    {
+    if tokens.first().is_some_and(starts_a_different_statement) {
         return Ok(None);
     }
     // `to friends append Mina` — the connector moved to the front. `to` is
@@ -4149,6 +4346,548 @@ fn append_diagnostic(span: Span) -> Diagnostic {
         "write `append Mina to friends` or `친구들에 민수 넣어`",
         "`친구들에 민수 넣어` 또는 `append Mina to friends`처럼 적어 주세요",
     )
+}
+
+// ------------------------------------------------- a chance, and a story
+
+/// The `30%` that opens a chance, and how much of the line it takes.
+///
+/// The shape only: the number is checked where a diagnostic can be reported,
+/// because a header check has no source text to quote and nowhere to put a
+/// problem.
+#[derive(Debug, Clone, Copy)]
+struct ChancePrefix {
+    /// Tokens consumed, so the caller knows where the body starts.
+    consumed: usize,
+    /// Index of the number token.
+    number_at: usize,
+    /// Whether a `-` stands in front of the number.
+    negative: bool,
+}
+
+/// `30% 확률로 …` / `30% chance …` — the head of every chance form.
+///
+/// `None` unless the whole phrase is there: a number, a percent mark, and a
+/// word that can only mean a chance. A percentage on its own is never a
+/// chance, which is what keeps `전체의 30%가 왔습니다`, `I am 100% sure`, and
+/// `100% 확신합니다` the ordinary lines they are.
+fn chance_prefix(tokens: &[Token]) -> Option<ChancePrefix> {
+    korean_chance_prefix(tokens).or_else(|| english_chance_prefix(tokens))
+}
+
+/// `[with] [a] 30[%|percent] chance` and `30% of the time`.
+fn english_chance_prefix(tokens: &[Token]) -> Option<ChancePrefix> {
+    // `with` is a Python keyword, so it never arrives as a plain word.
+    let leads = matches!(tokens.first().map(|token| &token.tok), Some(Tok::With))
+        || token_matches_exact_at(tokens, 0, CHANCE_LEAD_WORDS_EN);
+    let mut cursor = usize::from(leads);
+    if is_english_article(tokens.get(cursor)) {
+        cursor += 1;
+    }
+    let number_at = cursor
+        + usize::from(matches!(
+            tokens.get(cursor).map(|t| &t.tok),
+            Some(Tok::Minus)
+        ));
+    if !is_chance_number(tokens.get(number_at)) {
+        return None;
+    }
+    cursor = number_at + 1;
+    cursor += chance_percent_mark(tokens, cursor, CHANCE_PERCENT_WORDS_EN)?;
+    if token_matches_exact_at(tokens, cursor, CHANCE_WORDS_EN) {
+        cursor += 1;
+    } else if token_matches_exact_at(tokens, cursor, &["of"]) {
+        // `30% of the time` says the same thing without the noun.
+        cursor += 1;
+        if is_english_article(tokens.get(cursor)) {
+            cursor += 1;
+        }
+        if !token_matches_exact_at(tokens, cursor, CHANCE_TIME_WORDS_EN) {
+            return None;
+        }
+        cursor += 1;
+    } else {
+        return None;
+    }
+    Some(ChancePrefix {
+        consumed: cursor,
+        number_at,
+        negative: number_at > 0 && matches!(tokens[number_at - 1].tok, Tok::Minus),
+    })
+}
+
+/// `30[%|퍼센트][의] 확률로` and the word-first `확률 30%로`.
+fn korean_chance_prefix(tokens: &[Token]) -> Option<ChancePrefix> {
+    let leads = token_matches_exact_at(tokens, 0, CHANCE_WORDS_KO);
+    let start = usize::from(leads);
+    let number_at = start
+        + usize::from(matches!(
+            tokens.get(start).map(|t| &t.tok),
+            Some(Tok::Minus)
+        ));
+    if !is_chance_number(tokens.get(number_at)) {
+        return None;
+    }
+    let mut cursor = number_at + 1;
+    cursor += chance_percent_mark(tokens, cursor, CHANCE_PERCENT_WORDS_KO)?;
+    if leads {
+        // `확률 30%로` — the particle is what makes this a command. Without
+        // it, `확률 30%는 낮습니다` and `확률 30% 정도입니다` are remarks about
+        // a percentage, and a remark must never become a program.
+        if !token_matches_exact_at(tokens, cursor, CHANCE_PARTICLES_KO) {
+            return None;
+        }
+        cursor += 1;
+    } else {
+        // `30%의 확률로` — the particle sits between the two halves.
+        if token_matches_exact_at(tokens, cursor, &["의"]) {
+            cursor += 1;
+        }
+        if !token_matches_exact_at(tokens, cursor, CHANCE_WORDS_KO) {
+            return None;
+        }
+        cursor += 1;
+    }
+    Some(ChancePrefix {
+        consumed: cursor,
+        number_at,
+        negative: number_at > start,
+    })
+}
+
+fn is_chance_number(token: Option<&Token>) -> bool {
+    token.is_some_and(|token| matches!(token.tok, Tok::Int { .. } | Tok::Float { .. }))
+}
+
+/// The `%` between the number and the chance word, written as the mark or as
+/// a word. Returns how many tokens it took.
+fn chance_percent_mark(tokens: &[Token], at: usize, words: &[&str]) -> Option<usize> {
+    if matches!(tokens.get(at).map(|token| &token.tok), Some(Tok::Percent)) {
+        return Some(1);
+    }
+    token_matches_exact_at(tokens, at, words).then_some(1)
+}
+
+/// How often the chance happens, in thousandths.
+///
+/// A percentage may name one decimal place and nothing finer, and it has to
+/// sit between 0 and 100. Both are reported rather than repaired: rounding
+/// `30.25%` to `30.3%` would make the program mean something its writer did
+/// not write, and that is the one thing this compiler never does.
+fn chance_permille(
+    source: &str,
+    tokens: &[Token],
+    prefix: &ChancePrefix,
+) -> Result<u32, Diagnostic> {
+    let token = &tokens[prefix.number_at];
+    let written = &source[token.span.start..token.span.end];
+    let span = Span::new(
+        tokens[prefix.number_at - usize::from(prefix.negative)]
+            .span
+            .start,
+        token.span.end,
+    );
+    let (whole, fraction) = written.split_once('.').unwrap_or((written, ""));
+    if !whole.chars().all(|digit| digit.is_ascii_digit())
+        || !fraction.chars().all(|digit| digit.is_ascii_digit())
+    {
+        // `1_000`, `0x40`, `1e3`: not a percentage anybody wrote by hand.
+        return Err(chance_out_of_range_diagnostic(span));
+    }
+    if fraction.chars().count() > 1 {
+        return Err(chance_too_precise_diagnostic(whole, fraction, span));
+    }
+    let tenths = fraction
+        .chars()
+        .next()
+        .and_then(|digit| digit.to_digit(10))
+        .unwrap_or(0);
+    let whole_value = if whole.is_empty() {
+        Some(0)
+    } else {
+        whole.parse::<u32>().ok()
+    };
+    let permille = whole_value
+        .filter(|value| *value <= 100)
+        .map(|value| value * 10 + tenths)
+        .filter(|permille| *permille <= CHANCE_MAX_PERMILLE)
+        .filter(|permille| !prefix.negative || *permille == 0);
+    permille.ok_or_else(|| chance_out_of_range_diagnostic(span))
+}
+
+fn chance_too_precise_diagnostic(whole: &str, fraction: &str, span: Span) -> Diagnostic {
+    let written = format!("{whole}.{fraction}");
+    let rounded = nearest_tenth(whole, fraction);
+    Diagnostic::bilingual(
+        DiagnosticCode::ChanceTooPrecise,
+        "a chance can only go to one decimal place",
+        "확률은 소수점 첫째 자리까지만 정할 수 있어요",
+        span,
+    )
+    .with_bilingual_hint(
+        format!("write {rounded}% instead of {written}%"),
+        format!("{written}% 대신 {rounded}%처럼 적어 주세요"),
+    )
+}
+
+/// The nearest tenth of the number as written, so the hint can name a
+/// percentage the writer can actually use. Digits, not floating point: the
+/// answer has to be the one a reader gets on paper.
+fn nearest_tenth(whole: &str, fraction: &str) -> String {
+    let mut digits = fraction.chars().filter_map(|digit| digit.to_digit(10));
+    let tenths = u64::from(digits.next().unwrap_or(0));
+    let rounds_up = digits.next().is_some_and(|digit| digit >= 5);
+    let scaled = whole
+        .parse::<u64>()
+        .unwrap_or(0)
+        .saturating_mul(10)
+        .saturating_add(tenths)
+        .saturating_add(u64::from(rounds_up));
+    format!("{}.{}", scaled / 10, scaled % 10)
+}
+
+fn chance_out_of_range_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::ChanceOutOfRange,
+        "a chance must be between 0% and 100%",
+        "확률은 0%부터 100% 사이여야 해요",
+        span,
+    )
+    .with_bilingual_hint(
+        "`0%` never happens and `100%` always happens",
+        "`0%`는 절대 일어나지 않고 `100%`는 항상 일어나요",
+    )
+}
+
+/// `30% 확률로 말해줘 당첨` / `30% chance show You win`, and the block that
+/// opens with the same words and nothing after them.
+fn match_chance(
+    source: &str,
+    tokens: &[Token],
+    block: &BlockCtx<'_>,
+    known_names: &HashSet<String>,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    let Some(prefix) = chance_prefix(tokens) else {
+        return Ok(None);
+    };
+    let body = &tokens[prefix.consumed..];
+    let inline = match parse_suite_body(
+        source,
+        body,
+        block,
+        SuiteKind::Condition,
+        span_of(tokens),
+        known_names,
+    ) {
+        Ok(inline) => inline,
+        // A header with nothing under it is a real mistake and is reported.
+        // A body of ordinary words is not a mistake at all: `a 30% chance is
+        // small` is a sentence about a chance, so the line goes back to the
+        // matchers that print it.
+        Err(problem) if body.is_empty() || has_recoverable_sentence_shape(body) => {
+            return Err(problem)
+        }
+        Err(_) => return Ok(None),
+    };
+    if !chance_body_is_a_command(source, body, inline.as_ref()) {
+        return Ok(None);
+    }
+    // The number is only worth complaining about once the line is certainly
+    // a chance; `a 33.33% chance of winning` is a sentence, not a mistake.
+    let permille = chance_permille(source, tokens, &prefix)?;
+    Ok(Some(NmeStmt::Chance { permille, inline }))
+}
+
+/// True when what follows a chance is a command rather than more words.
+///
+/// `a 30% chance of rain` is a weather report and `확률 30%로 계산했습니다` is
+/// a remark; both would otherwise print their own tail three times in ten.
+/// The test is exact: the parser prints any line of ordinary words, so a
+/// printed body that still reads as the whole body was never a command.
+fn chance_body_is_a_command(source: &str, body: &[Token], inline: Option<&InlineStmt>) -> bool {
+    match inline {
+        None => true,
+        Some(InlineStmt::Nme(stmt)) => !is_bare_prose_say(stmt, source, body),
+        // Python that only names something does nothing: `a 20% chance
+        // remains` would compile to `if …: remains`, which is a NameError
+        // waiting on a dice roll.
+        Some(InlineStmt::Python(_)) => python_body_acts(body),
+    }
+}
+
+/// True when this statement is the body printed back word for word, which is
+/// what the parser does with any line it finds no action in.
+fn is_bare_prose_say(stmt: &NmeStmt, source: &str, body: &[Token]) -> bool {
+    let NmeStmt::Say {
+        value: Value::Text(template),
+    } = stmt
+    else {
+        return false;
+    };
+    template_source_text(template) == token_text(source, body)
+}
+
+/// The words a text template was built from, joined back together. A
+/// template is made of the source between its tokens, so this is the source
+/// again whenever nothing was dropped.
+fn template_source_text(template: &TextTemplate) -> String {
+    template
+        .parts
+        .iter()
+        .map(|part| match part {
+            TextPart::Literal(text) => text.as_str(),
+            TextPart::Variable(name) => name.as_str(),
+        })
+        .collect()
+}
+
+/// True when a line of Python does something: it calls, it assigns, or it is
+/// one of the statement keywords. A bare expression (`remains`, `he is late`)
+/// is a sentence somebody wrote, not a command.
+fn python_body_acts(tokens: &[Token]) -> bool {
+    tokens.iter().any(|token| {
+        matches!(
+            token.tok,
+            Tok::Lpar
+                | Tok::Equal
+                | Tok::PlusEqual
+                | Tok::MinusEqual
+                | Tok::StarEqual
+                | Tok::SlashEqual
+                | Tok::DoubleSlashEqual
+                | Tok::DoubleStarEqual
+                | Tok::PercentEqual
+                | Tok::Break
+                | Tok::Continue
+                | Tok::Pass
+                | Tok::Return
+                | Tok::Raise
+                | Tok::Del
+                | Tok::Assert
+                | Tok::Import
+                | Tok::From
+        )
+    })
+}
+
+/// `운은 30% 확률` / `luck is a 30% chance` — a chance saved in a name, so
+/// the rest of the program can ask about it with the ordinary condition
+/// words (`만약에 운이 있으면` / `if luck`).
+fn match_chance_set(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    let Some((target, value_at)) = chance_set_target(tokens, known_names) else {
+        return Ok(None);
+    };
+    let value = &tokens[value_at..];
+    let Some(prefix) = chance_prefix(value) else {
+        return Ok(None);
+    };
+    if prefix.consumed != value.len() {
+        return Ok(None);
+    }
+    let permille = chance_permille(source, value, &prefix)?;
+    Ok(Some(NmeStmt::Set {
+        target,
+        value: Value::Chance { permille },
+    }))
+}
+
+/// The name a chance is being saved into, and where the chance itself starts.
+fn chance_set_target(tokens: &[Token], known_names: &HashSet<String>) -> Option<(String, usize)> {
+    // `set luck to a 30% chance` / `luck save a 30% chance`.
+    if let Some((_, consumed)) = set_action_at(tokens, 0, MatchMode::Exact) {
+        let name_at = consumed;
+        let target = name_word(tokens.get(name_at)?)?;
+        let mut value_at = name_at + 1;
+        if is_update_connector(tokens.get(value_at)?, UPDATE_CONNECTOR_WORDS_EN) {
+            value_at += 1;
+        }
+        return update_target_name(target).map(|target| (target, value_at));
+    }
+    // `luck is a 30% chance`.
+    if token_matches_exact_at(tokens, 1, CHANCE_IS_WORDS_EN) {
+        let target = name_word(tokens.first()?)?;
+        return update_target_name(target).map(|target| (target, 2));
+    }
+    // `운은 30% 확률` — the Korean particle is the only marker there is.
+    let word = name_word(tokens.first()?)?;
+    let target =
+        resolve_known_particle(word, known_names).or_else(|| strip_assignment_particle(word))?;
+    Some((target.to_string(), 1))
+}
+
+/// `이야기:` / `story:`, with the speed each line inside is told at.
+///
+/// The line must be the phrase and its colon and nothing else. Every other
+/// line that mentions a story is an ordinary sentence and stays one.
+fn match_story(source: &str, tokens: &[Token]) -> Option<NmeStmt> {
+    let body = strip_story_colon(tokens)?;
+    if body.is_empty() {
+        return None;
+    }
+    korean_story_speed(source, body)
+        .or_else(|| english_story_speed(source, body))
+        .map(|StorySpeed(seconds)| NmeStmt::Story { seconds })
+}
+
+/// Drops the closing `:`, in either width. A Korean keyboard writes the
+/// full-width `：`, which Python cannot read at all and the lexer therefore
+/// hands over as ordinary sentence text.
+fn strip_story_colon(tokens: &[Token]) -> Option<&[Token]> {
+    let last = tokens.last()?;
+    let closed = matches!(last.tok, Tok::Colon) || token_matches_exact(last, &[FULL_WIDTH_COLON]);
+    closed.then(|| &tokens[..tokens.len() - 1])
+}
+
+/// True for a line shaped like a story header, which is all the block and
+/// indentation checks need to know before the line is read properly.
+fn story_colon_shape(tokens: &[Token]) -> bool {
+    let Some(body) = strip_story_colon(tokens) else {
+        return false;
+    };
+    let Some(last) = body.last() else {
+        return false;
+    };
+    token_matches_exact(last, STORY_WORDS_KO)
+        || token_matches_exact(last, STORY_WORDS_EN)
+        || (token_matches_exact(last, SECOND_WORDS_EN)
+            && body
+                .iter()
+                .any(|token| token_matches_exact(token, STORY_WORDS_EN)))
+}
+
+/// `story:` · `slow story:` · `very slow story:` · `slow story every 3 seconds:`
+fn english_story_speed(source: &str, tokens: &[Token]) -> Option<StorySpeed> {
+    let mut cursor = usize::from(is_english_article(tokens.first()));
+    let very = token_matches_exact_at(tokens, cursor, VERY_WORDS_EN);
+    cursor += usize::from(very);
+    let slow = token_matches_exact_at(tokens, cursor, STORY_SLOW_WORDS_EN);
+    cursor += usize::from(slow);
+    if very && !slow {
+        return None;
+    }
+    if is_english_article(tokens.get(cursor)) {
+        cursor += 1;
+    }
+    if !token_matches_exact_at(tokens, cursor, STORY_WORDS_EN) {
+        return None;
+    }
+    cursor += 1;
+    if cursor == tokens.len() {
+        return Some(story_fixed_speed(slow, very));
+    }
+    // `slow story every 3 seconds:` names the pause itself.
+    if !token_matches_exact_at(tokens, cursor, SLOW_EVERY_WORDS_EN) {
+        return None;
+    }
+    let amount_start = cursor + 1;
+    let unit = (amount_start..tokens.len())
+        .find(|&index| token_matches_exact(&tokens[index], SECOND_WORDS_EN))?;
+    if unit + 1 != tokens.len() {
+        return None;
+    }
+    Some(StorySpeed(Some(parse_wait_amount(
+        source,
+        &tokens[amount_start..=unit],
+    )?)))
+}
+
+/// `이야기:` · `천천히 이야기:` · `아주 천천히 이야기:` · `0.2초씩 천천히 이야기:`
+fn korean_story_speed(source: &str, tokens: &[Token]) -> Option<StorySpeed> {
+    let story_at = tokens.len() - 1;
+    if !token_matches_exact(&tokens[story_at], STORY_WORDS_KO) {
+        return None;
+    }
+    let speed = &tokens[..story_at];
+    let Some((slow, head)) = speed.split_last() else {
+        return Some(StorySpeed(None));
+    };
+    if !token_matches_exact(slow, STORY_SLOW_WORDS_KO) {
+        return None;
+    }
+    if head.is_empty() {
+        return Some(story_fixed_speed(true, false));
+    }
+    if head.len() == 1 && token_matches_exact(&head[0], VERY_WORDS_KO) {
+        return Some(story_fixed_speed(true, true));
+    }
+    // `0.2초씩 천천히` — the amount is everything before the marker.
+    let (marker, amount) = head.split_last()?;
+    if !token_matches_exact(marker, SLOW_EVERY_WORDS_KO) || amount.is_empty() {
+        return None;
+    }
+    Some(StorySpeed(Some(expression_code(source, amount)?)))
+}
+
+/// Indentation for a line the compiler writes itself inside a story: what
+/// the source already has in front of `line`, plus the levels an explicit
+/// block adds on top.
+fn story_prefix(
+    source: &str,
+    line_starts: &[usize],
+    line: &LogicalLine,
+    virtual_indent: usize,
+) -> String {
+    let start = line_starts.get(line.number - 1).copied().unwrap_or(0);
+    format!(
+        "{}{}",
+        &source[start..line.span.start],
+        "    ".repeat(virtual_indent)
+    )
+}
+
+/// The physical line a logical line ends on. Everything except a bracketed
+/// Python expression ends on the line it started.
+fn last_physical_line(source: &str, line: &LogicalLine) -> usize {
+    line.number + source[line.span.start..line.span.end].matches('\n').count()
+}
+
+/// A blank line inside a story is an empty line of the story, so it prints
+/// one. Blank lines hold no tokens and therefore never become logical lines,
+/// so the replacement has to name its own place in the source. A line with a
+/// comment on it is a comment, not an empty line, and is left alone.
+fn push_story_blanks(
+    out: &mut Vec<(Span, String)>,
+    source: &str,
+    line_starts: &[usize],
+    prefix: &str,
+    after: usize,
+    before: usize,
+) {
+    for number in (after + 1)..before {
+        let Some(start) = line_starts.get(number - 1).copied() else {
+            return;
+        };
+        let end = line_starts
+            .get(number)
+            .map_or(source.len(), |next| next.saturating_sub(1));
+        if end < start || !source[start..end].trim().is_empty() {
+            continue;
+        }
+        out.push((Span::new(start, end), format!("{prefix}print()")));
+    }
+}
+
+/// How fast one story is told: all at once, or one character at a time with
+/// a named pause between them.
+#[derive(Debug, Clone)]
+struct StorySpeed(Option<Code>);
+
+/// The pause between two characters when the story does not name one.
+fn story_fixed_speed(slow: bool, very: bool) -> StorySpeed {
+    StorySpeed(slow.then(|| {
+        Code::Generated(
+            if very {
+                VERY_SLOW_SECONDS
+            } else {
+                SLOW_SECONDS
+            }
+            .to_string(),
+        )
+    }))
 }
 
 // ------------------------------------------- slow text, screen, and timing
@@ -7140,6 +7879,13 @@ fn match_file_io(
         action_phrase_at(std::slice::from_ref(token), 0, FILE_READ_WORDS_EN, mode).is_some()
     });
     if let Some(action_at) = ko_read_at.or(en_read_at) {
+        // The name being read into is the first word, so the reading word
+        // cannot be the first word as well. Without this the slice below runs
+        // backwards and the compiler dies: one Korean noun one edit away from
+        // `읽고` — `경고`, `참고`, `보고` — was enough to crash it.
+        if action_at == 0 {
+            return Ok(None);
+        }
         let Some(target) = name_word(&tokens[0]).and_then(update_target_name) else {
             return Ok(None);
         };
@@ -7822,7 +8568,8 @@ fn match_set(
 
     if let Some(first) = name_word(&tokens[0]) {
         if let Some(target) = strip_assignment_particle(first) {
-            if korean_value_is_a_sentence(&tokens[1..]) {
+            if korean_value_is_a_sentence(&tokens[1..]) || is_labelled_phrase(source, &tokens[1..])
+            {
                 return Ok(None);
             }
             if tokens.len() == 1 {
@@ -7860,6 +8607,7 @@ fn match_set(
         && name_word(&tokens[0]).is_some()
         && token_matches_exact(&tokens[1], &["은", "는"])
         && !korean_value_is_a_sentence(&tokens[2..])
+        && !is_labelled_phrase(source, &tokens[2..])
     {
         let target = name_word(&tokens[0]).expect("checked name token");
         let value = set_value(source, &tokens[2..], known_names).map_err(|()| {
@@ -8020,6 +8768,10 @@ const SENTENCE_ENDINGS_KO: &[&str] = &[
     "습니다",
     "읍니다",
     "입니다",
+    // `확신합니다`, `동의합니다`, `할인합니다` — the ending most Korean
+    // sentences about doing something end in.
+    "합니다",
+    "됩니다",
     "이에요",
     "이었다",
     "였다",
@@ -8031,10 +8783,117 @@ const SENTENCE_ENDINGS_KO: &[&str] = &[
 ];
 
 /// True when what follows a Korean `은`/`는` is a sentence, not a value.
+/// True for a line that ends the way a written Korean sentence ends, even
+/// when it carries digits or a `%`.
+///
+/// `100% 확신합니다` is a valid Python expression — a number modulo a name —
+/// so without this the writer is handed a `NameError` at run time instead of
+/// their own sentence. `전체의 30%가 왔습니다` is not Python at all and would
+/// reach CPython as a syntax error. Both are sentences, and both print.
+/// A line of words with one `:` in it and nothing that could be code.
+///
+/// `제목: 오늘 할 일` and `재미있는 이야기: 시작` are headings somebody wrote.
+/// Python reads a colon as an annotation and needs a type after it, so these
+/// lines were reaching CPython as a syntax error.
+fn is_written_label(source: &str, tokens: &[Token]) -> bool {
+    if tokens.len() < 2 || !has_top_level_colon(tokens) {
+        return false;
+    }
+    if is_valid_python_statement(token_text(source, tokens)) {
+        return false;
+    }
+    let colons = tokens
+        .iter()
+        .filter(|token| matches!(token.tok, Tok::Colon))
+        .count();
+    colons == 1
+        && tokens.iter().enumerate().all(|(index, token)| {
+            matches!(token.tok, Tok::Colon)
+                || is_sentence_word_token(index, token)
+                || matches!(
+                    token.tok,
+                    Tok::Int { .. } | Tok::Float { .. } | Tok::String { .. } | Tok::Percent
+                )
+        })
+}
+
+fn is_written_korean_sentence(tokens: &[Token], known_names: &HashSet<String>) -> bool {
+    if tokens.len() < 2 {
+        return false;
+    }
+    let Some(word) = tokens.last().and_then(name_word) else {
+        return false;
+    };
+    if known_names.contains(word) || !is_hangul(word) {
+        return false;
+    }
+    let Some(ending) = SENTENCE_ENDINGS_KO
+        .iter()
+        .find(|ending| word.ends_with(*ending))
+    else {
+        return false;
+    };
+    // `점수는 0입니다` is the number zero spoken as a sentence, and that is a
+    // value someone is saving. `아침입니다` is a morning.
+    let stem = &word[..word.len() - ending.len()];
+    if !stem.is_empty() && stem.chars().all(|character| character.is_ascii_digit()) {
+        return false;
+    }
+    // Nothing on the line may be code: no assignment, no call, no subscript,
+    // no colon. Numbers and the percent sign are ordinary sentence writing.
+    tokens.iter().enumerate().all(|(index, token)| {
+        is_sentence_word_token(index, token)
+            || matches!(
+                token.tok,
+                Tok::Int { .. } | Tok::Float { .. } | Tok::String { .. } | Tok::Percent
+            )
+    })
+}
+
+/// `이야기: 시작` — a label, a colon, and the words after it.
+///
+/// Python cannot read it (an annotation needs a type after the colon) and no
+/// NME statement is shaped like it, so it is a line somebody wrote. Saving it
+/// under the first word of the line, which is what a Korean topic particle
+/// would otherwise ask for, is exactly the silent rewrite this compiler
+/// exists to avoid. A real Python value keeps its colon — a dict, a slice, a
+/// lambda — and those are still values.
+fn is_labelled_phrase(source: &str, value: &[Token]) -> bool {
+    if value.is_empty() || !has_top_level_colon(value) {
+        return false;
+    }
+    !is_valid_python_expression(token_text(source, value))
+}
+
+/// A `:` that is not inside brackets, where Python would read a dict, a
+/// slice, or a lambda instead.
+fn has_top_level_colon(tokens: &[Token]) -> bool {
+    let mut depth = 0usize;
+    tokens.iter().any(|token| match token.tok {
+        Tok::Lpar | Tok::Lsqb | Tok::Lbrace => {
+            depth += 1;
+            false
+        }
+        Tok::Rpar | Tok::Rsqb | Tok::Rbrace => {
+            depth = depth.saturating_sub(1);
+            false
+        }
+        Tok::Colon => depth == 0,
+        _ => false,
+    })
+}
+
 fn korean_value_is_a_sentence(value: &[Token]) -> bool {
     let Some(word) = value.last().and_then(name_word) else {
         return false;
     };
+    // `할인율은 30%입니다` — Python's lexer cuts `30%입니다` into a number, a
+    // percent sign, and the ending standing alone, so the ending is the whole
+    // last word. The line is still a sentence, and reading it as a value
+    // saved `30 % 입니다`: a modulo against a name nothing ever bound.
+    if SENTENCE_ENDINGS_KO.contains(&word) {
+        return !value_is_one_number(&value[..value.len() - 1]);
+    }
     let Some(ending) = SENTENCE_ENDINGS_KO
         .iter()
         .find(|ending| word.len() > ending.len() && word.ends_with(*ending))
@@ -8045,6 +8904,16 @@ fn korean_value_is_a_sentence(value: &[Token]) -> bool {
     // `0이다` is the number zero spoken as a sentence; `아침입니다` is a
     // morning. Only the first is a value.
     !stem.chars().all(|character| character.is_ascii_digit())
+}
+
+/// True when a value is one written number and nothing else.
+///
+/// `정답은 7입니다` saves the number seven: the number is the whole value and
+/// the ending is only how it was spoken. `할인율은 30%입니다` has a percent
+/// sign after the number, so the number is not the whole value and the line
+/// is a sentence.
+fn value_is_one_number(value: &[Token]) -> bool {
+    matches!(value, [token] if matches!(token.tok, Tok::Int { .. } | Tok::Float { .. }))
 }
 
 fn number_value_code(source: &str, tokens: &[Token]) -> Option<Code> {
@@ -10498,6 +11367,27 @@ fn bare_comparison(tokens: &[Token]) -> bool {
 /// (`끝입니다`) is a sentence, unless the program itself gave that name a
 /// value earlier.
 fn valid_python_is_a_sentence(tokens: &[Token], known_names: &HashSet<String>) -> bool {
+    // `30% chance` and `30% 확률로` are a modulo expression to Python: one
+    // number divided by one name, with the answer thrown away. Nothing else
+    // is on the line, so the writer meant the chance block. A program that
+    // really does keep a name spelled that way still wins, because then the
+    // line can be doing arithmetic with it.
+    if let Some(prefix) = chance_prefix(tokens) {
+        let claims_whole_line = prefix.consumed == tokens.len();
+        let uses_a_saved_name = tokens[..prefix.consumed]
+            .iter()
+            .filter_map(name_word)
+            .any(|word| known_names.contains(word));
+        if claims_whole_line && !uses_a_saved_name {
+            return true;
+        }
+    }
+    // `100% 확신합니다` is `100 % 확신합니다` to Python: one number divided by
+    // one name, with the answer thrown away and a `NameError` at the end of
+    // it. The writer wrote a sentence.
+    if is_written_korean_sentence(tokens, known_names) {
+        return true;
+    }
     if tokens.len() > 2 && looks_like_plain_prose(tokens) {
         let word_comparison = tokens
             .iter()
@@ -10524,8 +11414,11 @@ fn valid_python_is_a_sentence(tokens: &[Token], known_names: &HashSet<String>) -
 /// `내일 다시 해 보세요`, `입력해 주세요`. A line that ends in a question mark
 /// is excluded: there the writer is asking something, and a misspelled `ask`
 /// is worth reporting rather than printing.
-fn prose_beats_recovery(tokens: &[Token]) -> bool {
-    if !looks_like_plain_prose(tokens) {
+fn prose_beats_recovery(tokens: &[Token], known_names: &HashSet<String>) -> bool {
+    // A written Korean sentence counts as prose here even with a number or a
+    // `%` in it: `나는 100% 동의합니다` is agreement, and the nearest command
+    // to it is a one-letter guess at a value change.
+    if !looks_like_plain_prose(tokens) && !is_written_korean_sentence(tokens, known_names) {
         return false;
     }
     if tokens

@@ -236,6 +236,10 @@ pub enum DiagnosticCode {
     CliNativeRunOutput,
     /// `nme native` was given more than one action word.
     CliNativeActionRepeated,
+    /// A chance was written with more than one decimal place.
+    ChanceTooPrecise,
+    /// A chance was written outside 0% to 100%.
+    ChanceOutOfRange,
 }
 
 impl DiagnosticCode {
@@ -275,6 +279,8 @@ impl DiagnosticCode {
             Self::WaitAmountUnparseable => "E0224",
             Self::AppendUnparseable => "E0225",
             Self::TimerNotStarted => "E0226",
+            Self::ChanceTooPrecise => "E0227",
+            Self::ChanceOutOfRange => "E0228",
             Self::ConditionMissing => "E0301",
             Self::ConditionInvalid => "E0302",
             Self::RepeatBodyUnparseable => "E0303",
@@ -340,7 +346,7 @@ impl DiagnosticCode {
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 95] = [
+    pub const ALL: [DiagnosticCode; 97] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -436,6 +442,8 @@ impl DiagnosticCode {
         Self::CliInstallPackageMissing,
         Self::CliNativeRunOutput,
         Self::CliNativeActionRepeated,
+        Self::ChanceTooPrecise,
+        Self::ChanceOutOfRange,
     ];
 
     pub fn from_code(code: &str) -> Option<Self> {
@@ -699,6 +707,20 @@ impl DiagnosticCode {
                 "시간 재기를 아직 시작하지 않았습니다",
                 "`elapsed` / `잰시간` reads a stopwatch, so an earlier line has to start it: write `start the timer` or `시간 재기 시작해` before you read it.",
                 "`잰시간`/`elapsed`는 시계를 읽는 값이라서, 앞선 줄에서 시계를 켜 두어야 합니다. 읽기 전에 `시간 재기 시작해` 또는 `start the timer`라고 적으세요.",
+            ),
+            Self::ChanceTooPrecise => (
+                "E0227",
+                "a chance can only go to one decimal place",
+                "확률은 소수점 첫째 자리까지만 정할 수 있습니다",
+                "A chance is counted in tenths of a percent, so `30.5%` works and `30.25%` does not. NME refuses to round it for you: a program must never quietly mean something you did not write. Pick the nearest tenth yourself, for example `30.3%`.",
+                "확률은 0.1% 단위까지 셉니다. 그래서 `30.5%`는 되고 `30.25%`는 안 됩니다. NME는 대신 반올림하지 않습니다. 프로그램이 쓴 사람 몰래 다른 뜻이 되면 안 되기 때문입니다. 가까운 0.1% 값을 직접 골라 `30.3%`처럼 적으세요.",
+            ),
+            Self::ChanceOutOfRange => (
+                "E0228",
+                "a chance must be between 0% and 100%",
+                "확률은 0%부터 100% 사이여야 합니다",
+                "`0%` never happens and `100%` always happens, so every chance sits between them. A number above 100 or below 0 cannot mean anything: check for a stray digit, or write `100%` if you meant always.",
+                "`0%`는 절대 일어나지 않고 `100%`는 항상 일어나므로, 모든 확률은 그 사이에 있습니다. 100보다 크거나 0보다 작은 수는 뜻이 없습니다. 숫자를 잘못 적지 않았는지 확인하고, 항상 일어나게 하려면 `100%`라고 적으세요.",
             ),
             Self::ConditionMissing => (
                 "E0301",

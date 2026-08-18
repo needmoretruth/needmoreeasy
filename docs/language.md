@@ -313,6 +313,64 @@ show color
 These forms use Python's bundled `random` module directly, so a separate
 module line is unnecessary.
 
+### A chance in percent
+
+```nme
+30% chance show You win
+
+30% chance
+    show You win
+    score add 1
+end
+
+luck is a 30% chance
+if luck then show Lucky
+```
+
+`30%` means 300 times in a thousand, and the Python says exactly that:
+`if __import__("random").randrange(1000) < 300:`. Counting in thousandths
+keeps every chance a whole number, so nothing is ever decided by comparing two
+floating-point numbers that are nearly equal.
+
+A percentage may name one decimal place (`30.5%`) and nothing finer. `30.25%`
+is refused with `E0227` rather than rounded, because a program must never
+quietly mean something its writer did not write. Anything outside `0%` to
+`100%` is `E0228`; `100%` always happens and `0%` never does.
+
+The same phrase can be written `with a 30% chance`, `a 30% chance`,
+`30 percent chance`, or `30% of the time`; Korean also takes `30%의 확률로`
+and `확률 30%로`. A percentage on its own is never a chance, so `I am 100%
+sure` and `전체의 30%가 왔습니다` stay the ordinary lines they are.
+
+### A story block
+
+```nme
+story:
+    The door opened slowly.
+    Nobody was there.
+
+    A light came on.
+end
+```
+
+Inside a story block **every line is text**, so a page of prose needs no output
+word on every line. Nothing in there is a command: `wait 3 seconds` prints
+those words, and so does `if ready`. The rule has no exceptions, because a line
+of a story that quietly became a statement would be the worst mistake this
+compiler could make.
+
+A blank line prints an empty line. Names saved earlier are still put into the
+text, exactly as they are in `show Hello name!`. `slow story:` tells every line
+one character at a time, `very slow story:` more slowly still, and `slow story
+every 0.2 seconds:` at whatever pace you name. The block closes at `end` / `끝`
+or, when you opened it by indenting, where the indentation ends.
+
+`story:` is the first NME form written with a colon. That is deliberate: a bare
+`story:` is a syntax error in Python, so claiming it disturbs the
+Python-wins rule not at all, and the colon is the shape Python itself uses to
+open a block. It also keeps the form well away from ordinary sentences —
+`story time` and `tell me a story` carry no colon and stay sentences.
+
 ### Typo and connector recovery
 
 NME action words, logical connectors, and condition connectors accept their documented variants and recover one insertion,

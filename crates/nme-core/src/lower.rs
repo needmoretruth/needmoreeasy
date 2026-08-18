@@ -12,8 +12,8 @@
 use crate::syntax::{
     BundledModuleId, Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, Literal,
     LogicalOp, NmeLine, NmeStmt, TextPart, TextTemplate, UpdateOp, Value, ZeroKnowledgeValue,
-    COOLDOWN_PREFIX, ELAPSED_PYTHON, FILE_MODULE_VERSION, RANDOM_MODULE_VERSION, TIMER_NAME,
-    ZERO_KNOWLEDGE_MODULE_VERSION,
+    CHANCE_SCALE, COOLDOWN_PREFIX, ELAPSED_PYTHON, FILE_MODULE_VERSION, RANDOM_MODULE_VERSION,
+    TIMER_NAME, ZERO_KNOWLEDGE_MODULE_VERSION,
 };
 
 /// Counts one character's screen width the way a terminal does, so a Korean
@@ -218,6 +218,13 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
         NmeStmt::Append { target, value } => {
             format!("{target}.append({})", lower_value(value, source))
         }
+        NmeStmt::Chance { permille, inline } => {
+            lower_suite(format!("if {}:", chance_python(*permille)), inline.as_ref(), source)
+        }
+        // A story block holds nothing but `print(...)` lines, so the header
+        // only has to carry their indentation. `if True:` is the plainest
+        // suite Python has, and one NME line is still one Python line.
+        NmeStmt::Story { .. } => "if True:".to_string(),
         NmeStmt::When { condition, inline } => {
             let header = format!("if {}:", wrap_condition(condition, source));
             lower_suite(header, inline.as_ref(), source)
@@ -447,6 +454,7 @@ fn lower_value(value: &Value, source: &str) -> String {
             format!("[{values}]")
         }
         Value::Elapsed => ELAPSED_PYTHON.to_string(),
+        Value::Chance { permille } => chance_python(*permille),
         Value::ZeroKnowledge(value) => lower_zero_knowledge(value, source),
     }
 }
@@ -537,6 +545,17 @@ fn lower_zero_knowledge(value: &ZeroKnowledgeValue, source: &str) -> String {
             lower_code(challenge, source)
         ),
     }
+}
+
+/// `30% 확률` → `__import__("random").randrange(1000) < 300`.
+///
+/// Whole numbers only. A percentage may name one decimal place, and 30.5 out
+/// of 100 is exactly 305 out of 1000, so the comparison is between two
+/// integers and never between floating-point numbers that are almost equal.
+/// `100%` is then `< 1000`, which `randrange` can never reach from above, and
+/// `0%` is `< 0`, which it can never reach at all.
+fn chance_python(permille: u32) -> String {
+    format!("__import__(\"random\").randrange({CHANCE_SCALE}) < {permille}")
 }
 
 fn lower_literal(literal: Literal) -> &'static str {

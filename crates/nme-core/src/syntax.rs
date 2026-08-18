@@ -51,6 +51,13 @@ pub const COOLDOWN_PREFIX: &str = "_nme_cool_";
 /// `elapsed` / `잰시간`, rounded so a printed stopwatch stays readable.
 pub const ELAPSED_PYTHON: &str = "round(__import__(\"time\").time() - _nme_clock, 2)";
 
+/// How many parts one whole chance is counted in: `30%` is 300 of these,
+/// `30.5%` is 305. Percentages are exact to one decimal place, so permille
+/// arithmetic keeps every accepted chance a whole number.
+pub const CHANCE_SCALE: u32 = 1000;
+/// The largest chance anyone may write, in permille (`100%`).
+pub const CHANCE_MAX_PERMILLE: u32 = CHANCE_SCALE;
+
 /// Version of the easy random adapter bundled with this compiler.
 pub const RANDOM_MODULE_VERSION: &str = "0.0.1";
 /// Version of the easy file adapter bundled with this compiler.
@@ -156,6 +163,14 @@ pub enum Value {
     List(Vec<Value>),
     /// `elapsed` / `잰시간` — how many seconds the stopwatch has been running.
     Elapsed,
+    /// `30% 확률` / `a 30% chance` — true that share of the time.
+    ///
+    /// Kept as permille (thousandths, 0…1000) rather than a percentage, so
+    /// that one decimal place is an exact whole number and the lowered
+    /// Python never compares floating-point numbers.
+    Chance {
+        permille: u32,
+    },
     ZeroKnowledge(ZeroKnowledgeValue),
 }
 
@@ -348,6 +363,25 @@ pub enum NmeStmt {
     Append {
         target: String,
         value: Value,
+    },
+    /// `30% 확률로` / `30% chance` — a block, or one statement, that runs
+    /// only that share of the time.
+    Chance {
+        /// Thousandths, so `30%` is 300 and `30.5%` is 305.
+        permille: u32,
+        inline: Option<InlineStmt>,
+    },
+    /// `이야기:` / `story:` — opens a block in which every line is text.
+    ///
+    /// Nothing inside a story block is ever a command. That is the whole
+    /// point of the form: a story is prose, and a line of prose that
+    /// silently turns into a statement is the worst thing this compiler can
+    /// do to a program.
+    Story {
+        /// `None` for the plain block; `Some(seconds)` for the slow
+        /// spellings, and then every line inside is told one character at a
+        /// time with that pause between them.
+        seconds: Option<Code>,
     },
     When {
         condition: Condition,

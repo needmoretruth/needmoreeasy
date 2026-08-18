@@ -84,3 +84,61 @@ P("t2-en-01", "joined", "en", "wait2 seconds", "sleep", SLEEP2)
 P("t2-en-02", "joined", "en", "wait 2seconds", "sleep", SLEEP2)
 P("t2-en-03", "joined", "en", "repeat 3times and show hello", "loop", RANGE3)
 P("t2-en-04", "joined", "en", "repeat3 times and show hello", "loop", RANGE3)
+
+# --- U. an ordinary sentence that happens to contain a percentage ----------
+# `%` is Python's modulo operator and a Korean word is a valid Python name, so
+# `100% 확신합니다` is a syntactically valid Python expression. Without a rule
+# of its own it is handed straight to Python and the writer meets a NameError.
+P("u2-ko-01", "pctprose", "ko", "100% 확신합니다", "print the sentence",
+  r'print\("100% 확신합니다"\)')
+P("u2-ko-02", "pctprose", "ko", "나는 100% 동의합니다", "print the sentence",
+  r'print\("나는 100% 동의합니다"\)')
+P("u2-ko-03", "pctprose", "ko", "전체의 30%가 왔습니다", "print the sentence",
+  r'print\("전체의 30%가 왔습니다"\)')
+P("u2-ko-04", "pctprose", "ko", "오늘 30% 할인합니다", "print the sentence",
+  r'print\("오늘 30% 할인합니다"\)')
+P("u2-ko-05", "pctprose", "ko", "재미있는 이야기: 시작", "print the sentence",
+  r'print\("재미있는 이야기: 시작"\)')
+# English has no written sentence ending to key on, so these two are still
+# refused rather than printed. They are recorded so the day that changes is
+# visible, and so neither can quietly become a chance.
+P("u2-en-01", "pctprose", "en", "I am 100% sure", "print the sentence",
+  r'print\("I am 100% sure"\)')
+P("u2-en-02", "pctprose", "en", "the battery is at 50% now", "print the sentence",
+  r'print\("the battery is at 50% now"\)')
+
+# --- V. a sentence about a chance is not a chance --------------------------
+P("v2-ko-01", "pctprose", "ko", "확률 30%는 낮습니다", "print the sentence",
+  r'print\("확률 30%는 낮습니다"\)')
+P("v2-ko-02", "pctprose", "ko", "확률 30% 정도입니다", "print the sentence",
+  r'print\("확률 30% 정도입니다"\)')
+P("v2-en-01", "pctprose", "en", "a 30% chance of rain today", "not a chance", None)
+P("v2-en-02", "pctprose", "en", "a 20% chance remains", "not a chance", None)
+
+# --- W. a number followed by anything that is not a number -----------------
+# `할인율은 30%입니다` was saved as `할인율 = 30%입니다`, which Python reads as
+# `30 % 입니다`: a modulo against a name nothing ever bound. It compiled and
+# then raised NameError. The unit word after the number is what makes these
+# sentences rather than values.
+P("w2-ko-01", "pctprose", "ko", "할인율은 30%입니다", "print the sentence",
+  r'print\("할인율은 30%입니다"\)')
+P("w2-ko-02", "pctprose", "ko", "비율은 30%이다", "print the sentence",
+  r'print\("비율은 30%이다"\)')
+P("w2-ko-03", "pctprose", "ko", "점수는 30점입니다", "print the sentence",
+  r'print\("점수는 30점입니다"\)')
+P("w2-ko-04", "pctprose", "ko", "가격은 1000원입니다", "print the sentence",
+  r'print\("가격은 1000원입니다"\)')
+P("w2-ko-05", "pctprose", "ko", "나이는 12살입니다", "print the sentence",
+  r'print\("나이는 12살입니다"\)')
+P("w2-ko-06", "pctprose", "ko", "거리는 3km입니다", "print the sentence",
+  r'print\("거리는 3km입니다"\)')
+P("w2-ko-07", "pctprose", "ko", "온도는 25도입니다", "print the sentence",
+  r'print\("온도는 25도입니다"\)')
+P("w2-ko-08", "pctprose", "ko", "이름은 민수입니다", "print the sentence",
+  r'print\("이름은 민수입니다"\)')
+# The deliberate exception: the bare number is the whole value, and the
+# ending is only how it was spoken.
+P("w2-ko-09", "pctprose", "ko", "정답은 7입니다", "save the number seven",
+  r'^정답 = 7$')
+P("w2-ko-10", "pctprose", "ko", "점수는 0입니다", "save the number zero",
+  r'^점수 = 0$')

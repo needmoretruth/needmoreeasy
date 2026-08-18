@@ -1715,7 +1715,7 @@ fn emit_say(
             }
         },
         Value::Elapsed => Err(not_supported("the stopwatch", span_of_value(value))),
-        Value::RandomInteger { .. } | Value::RandomChoice { .. } => {
+        Value::RandomInteger { .. } | Value::RandomChoice { .. } | Value::Chance { .. } => {
             Err(not_supported("random values", span_of_value(value)))
         }
         Value::List(_) => Err(not_supported("list values", span_of_value(value))),
@@ -1833,6 +1833,7 @@ fn emit_set(
         | Value::Elapsed
         | Value::RandomInteger { .. }
         | Value::RandomChoice { .. }
+        | Value::Chance { .. }
         | Value::List(_)
         | Value::ZeroKnowledge(_) => Err(not_supported("this value", span_of_value(value))),
     }
