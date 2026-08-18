@@ -2,6 +2,11 @@
 
 English | [한국어](README.ko.md)
 
+> **Try it right now, with nothing installed — [needmoreeasy.com](https://needmoreeasy.com/).**
+> The compiler and a Python engine both run inside the browser, so you write a
+> sentence in the box and press Run. It works on a phone. All 90 guides and the
+> full syntax list are on that site too.
+
 **If Python still feels hard, start simpler and grow into Python one line at
 a time.** NME is a learning bridge: begin with ordinary sentences, mix in
 beginner syntax when you are ready, then replace pieces with Python inside the
