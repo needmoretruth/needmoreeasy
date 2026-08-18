@@ -17,7 +17,7 @@
 
 1. `record.nme` 파일을 만들고 기록을 저장합니다:
 
-   ```text
+   ```nme
    파일 사용 최신
    기록 = {"이름": "민수", "점수": 7}
    json저장("기록.json", 기록)
@@ -36,7 +36,7 @@
 
 3. 새 프로그램 `load.nme`에서 다시 불러옵니다:
 
-   ```text
+   ```nme
    파일 사용 최신
    기록 = json읽기("기록.json")
    말해 f"{기록['이름']}: {기록['점수']}점"
@@ -47,7 +47,7 @@
 
 4. 영어는 `json_save`와 `json_load`입니다:
 
-   ```text
+   ```nme
    use file latest
    record = {"name": "Mina", "score": 7}
    json_save("record.json", record)
@@ -60,7 +60,7 @@
 도시와 나이를 담은 딕셔너리를 저장하고, 한 프로그램에서 다시 불러와
 보세요:
 
-```text
+```nme
 파일 사용 최신
 내정보 = {"도시": "서울", "나이": 12}
 json저장("내정보.json", 내정보)

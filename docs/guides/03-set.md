@@ -16,7 +16,7 @@ takes it out later.
 
 1. Create `store.nme`:
 
-   ```text
+   ```nme
    set greeting to Hello
    show greeting
    ```
@@ -25,7 +25,7 @@ takes it out later.
 
 2. Numbers work the same way:
 
-   ```text
+   ```nme
    set answer to 7
    set answer to 10
    show answer
@@ -36,7 +36,7 @@ takes it out later.
 
 3. Korean puts the name first:
 
-   ```text
+   ```nme
    인사는 안녕하세요
    정답은 7
    ```
@@ -46,7 +46,7 @@ takes it out later.
 
 4. The action word can come after the name too:
 
-   ```text
+   ```nme
    name save Mina
    이름 저장 민수
    ```
@@ -55,7 +55,7 @@ takes it out later.
 
 Store your age as a number and a favorite place as text, then show both:
 
-```text
+```nme
 set age to 12
 set place to Seoul
 show place

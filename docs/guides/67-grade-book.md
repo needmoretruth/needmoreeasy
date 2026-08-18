@@ -21,7 +21,7 @@ grade list into an average.
 1. A grade book is one dict: each student name maps to a list of grades.
    `statistics.mean` averages the list:
 
-   ```text
+   ```nme
    from statistics import mean
    books = {"Mina": [88, 90], "Jun": [95]}
    show mean(books["Mina"])
@@ -33,7 +33,7 @@ grade list into an average.
    exactly like the bank module in guide [61](61-bank.md). `load()` returns an
    empty dict when no file exists yet:
 
-   ```text
+   ```nme
    # gradebook.nme — file storage for the grade book.
 
    import os
@@ -50,7 +50,7 @@ grade list into an average.
 
 3. The whole program. Save `grade-book.nme` next to `gradebook.nme`:
 
-   ```text
+   ```nme
    # grade-book.nme — a JSON-persisted grade book.
    # Run: nme r grade-book
    # Type add, grade, report, or quit.
@@ -129,7 +129,7 @@ grade list into an average.
 
 5. Look at `gradebook.json` — it holds the whole book:
 
-   ```text
+   ```nme
    {"Mina": [90]}
    ```
 

@@ -29,7 +29,7 @@ compiles a subset whose words are already NME words — `say`, `set`, `while`, `
 
 2. The whole compiler. Save `selfhost.nme`:
 
-   ```text
+   ```nme
    # selfhost.nme — NME compiling a tiny NME-like language.
    # The mini language uses NME words: say <text>, set <name> <int>,
    # add <name> <int>, while <name> <int>, end.

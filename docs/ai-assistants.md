@@ -107,7 +107,7 @@ NME has three levels that may be mixed line by line:
 
 Korean and English are equal aliases, not separate modes. Mixing is valid:
 
-```text
+```nme
 이름을 물어봐 이름이 뭐예요?
 show Hello 이름!
 3 times 반복해서 Welcome 말해줘
@@ -117,7 +117,7 @@ Hello name!
 
 ### Generate sentence syntax first
 
-```text
+```nme
 Hello world show
 안녕하세요 말해줘
 Hello everyone!
@@ -157,7 +157,7 @@ a trailing space automatically. Age questions such as `How old are you?` and
 For the gentlest start, close a
 flat block with `end`/`끝` instead of relying on indentation:
 
-```text
+```nme
 while score < 3
 show score
 add 1 to score
@@ -279,7 +279,7 @@ The bundled random adapter is version `0.0.1`. `use random latest` and
 
 Sentence random forms need no import:
 
-```text
+```nme
 set die to random number from 1 to 6
 set color to pick from red or green or blue
 

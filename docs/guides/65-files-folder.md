@@ -19,14 +19,14 @@ folder into a list you can loop over.
 
 1. Create two small text files next to your program. `one.txt`:
 
-   ```text
+   ```nme
    the cat sat on the mat
    the dog ran past the cat
    ```
 
    And `two.txt`:
 
-   ```text
+   ```nme
    a bird sang on the roof
    ```
 
@@ -34,7 +34,7 @@ folder into a list you can loop over.
    list of every name in the current folder — `.` means "this folder". Count
    the list with `len`:
 
-   ```text
+   ```nme
    import os
    names = os.listdir(".")
    show f"{len(names)} names in this folder"
@@ -48,7 +48,7 @@ folder into a list you can loop over.
    kept name with `file_read` and splits it into words, exactly as guide
    [36](36-word-count.md) did for one file:
 
-   ```text
+   ```nme
    import os
    use file latest
    for name in os.listdir("."):
@@ -65,7 +65,7 @@ folder into a list you can loop over.
 4. Letters count the same way per file: remove the spaces and the line breaks,
    then take `len`:
 
-   ```text
+   ```nme
    use file latest
    text = file_read("one.txt")
    letters = len(text.replace(" ", "").replace("\n", ""))
@@ -78,7 +78,7 @@ folder into a list you can loop over.
    then the totals and the biggest file across all of them. Save
    `files-folder.nme`:
 
-   ```text
+   ```nme
    # files-folder.nme — words and letters across every .txt file.
    # Run: nme r files-folder
    # Create one.txt and two.txt in the same folder first.

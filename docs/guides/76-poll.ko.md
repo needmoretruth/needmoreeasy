@@ -17,7 +17,7 @@
 
 1. 작업자가 바꿀 상태를 담은 `status.json`을 만드세요:
 
-   ```text
+   ```nme
    {"status": "working", "step": 1}
    ```
 
@@ -29,7 +29,7 @@
 
 3. 상태를 받는 것은 가이드 [55](55-net.ko.md)와 같은 `urlopen` 호출입니다:
 
-   ```text
+   ```nme
    from urllib.request import urlopen
    from json import loads
 
@@ -40,7 +40,7 @@
 4. 전체 프로그램은 루프로 폴링하며 각 상태를 보고하고, 서버가 `"done"`을
    알리면 멈춥니다. `poll.nme`로 저장하세요:
 
-   ```text
+   ```nme
    # poll.nme — status.json이 done이 될 때까지 지켜보기.
    # 실행: nme 실행 poll
    # 먼저 이 폴더를 서비스하세요: python3 -m http.server 8000

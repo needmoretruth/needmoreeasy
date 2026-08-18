@@ -18,7 +18,7 @@ and `stock`) plus a `money` balance, all in `shop.json`.
 1. The shop is one JSON object with two parts: an `items` dict mapping a name
    to `{"price": N, "stock": N}`, plus a `money` balance:
 
-   ```text
+   ```nme
    {
      "items": {
        "apple": {"price": 3, "stock": 10},
@@ -32,7 +32,7 @@ and `stock`) plus a `money` balance, all in `shop.json`.
 2. The whole store. Save `shop.nme` next to `shop.json`. `use file latest`
    loads `json_load`/`json_save`, and `os.path.exists` starts a fresh shop:
 
-   ```text
+   ```nme
    # shop.nme — a small store kept in a JSON file.
    # Run: nme r shop
    # Type list, buy, sell, or quit.

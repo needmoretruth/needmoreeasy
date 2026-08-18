@@ -17,7 +17,7 @@
 
 1. `text[start:end]`는 `start`부터 `end` **전까지** 자릅니다. 음수 인덱스는 끝에서 세므로 `text[-3:]`이 마지막 세 글자입니다. `hello`, `NME`, 그다음 `NME`와 ` NME`가 출력됩니다:
 
-   ```text
+   ```nme
    text = "hello NME"
    말해 text[0:5]
    말해 text[6:9]
@@ -27,26 +27,26 @@
 
 2. `.upper()`와 `.lower()`는 새 문자열로 대소문자를 바꾸고, `.replace("a", "o")`는 모든 글자를 맞바꿉니다 — 찾을 글자 먼저, 넣을 글자 그다음. `HELLO NME`, `hello nme`, `bononos`가 출력됩니다:
 
-   ```text
+   ```nme
    text = "hello NME"
    말해 text.upper()
    말해 text.lower()
    ```
-   ```text
+   ```nme
    text = "bananas"
    말해 text.replace("a", "o")
    ```
 
 3. `.strip()`은 양끝 공백을 제거해 입력을 깨끗하게 만듭니다. `hello`가 출력됩니다:
 
-   ```text
+   ```nme
    text = "  hello  "
    말해 text.strip()
    ```
 
 4. 전부 하나의 프로그램에 넣습니다. `strings.ko.nme`으로 저장합니다. 진짜 입력 줄은 양끝 공백을 지니므로, 프로그램이 공백을 제거하고 조각을 자르고 깨끗한 문장을 단어로 나눕니다:
 
-   ```text
+   ```nme
    # strings.ko.nme — 문장을 자르고 바꿉니다.
    # 실행: nme 실행 strings.ko
    # Python 문자열 도구: 자르기, 대소문자, 바꾸기, 공백 제거.

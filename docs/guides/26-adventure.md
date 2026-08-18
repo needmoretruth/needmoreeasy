@@ -18,7 +18,7 @@ a risky room. The whole game fits in one `.nme` file.
 
 1. Save the whole game in one file, `adventure.nme`:
 
-   ```text
+   ```nme
    # A small text adventure: walk through a cave and find the gold.
    # Run: nme r adventure
 
@@ -122,7 +122,7 @@ a risky room. The whole game fits in one `.nme` file.
    terminal menu from [22](22-terminal-menu.md). `while True:` never stops by
    itself, so the only way out of a room is answering `quit` or winning:
 
-   ```text
+   ```nme
    while True:
        ask action, "What now? (look, east, dice, quit) "
        if action == "quit":
@@ -145,7 +145,7 @@ a risky room. The whole game fits in one `.nme` file.
 4. The inventory is a list. `inventory.append("key")` adds an item, and the
    check `"key" not in inventory` makes sure you can take an item only once:
 
-   ```text
+   ```nme
    inventory = []
    if "key" not in inventory:
        inventory.append("key")
@@ -159,7 +159,7 @@ a risky room. The whole game fits in one `.nme` file.
    which rolls between `a` and `b`, and `if roll >= 4` splits success from
    failure:
 
-   ```text
+   ```nme
    use random latest
    roll = random_number(1, 6)
    show f"The dice tumble: {roll}."
@@ -177,7 +177,7 @@ a risky room. The whole game fits in one `.nme` file.
    guide [09](09-and-or.md): the door opens only when both the key and the
    rope are in the inventory, and then `break` leaves the loop:
 
-   ```text
+   ```nme
    while True:
        ask move, "Go north, west, or back? "
        if move == "north":

@@ -30,7 +30,7 @@ NME가 NME를 실행하는 씨앗입니다.
 
 2. 컴파일러 전체입니다. `selfhost.ko.nme`로 저장합니다:
 
-   ```text
+   ```nme
    # selfhost.ko.nme — 아주 작은 NME형 언어를 컴파일하는 NME
    # 미니 언어는 NME 단어를 씁니다: say <글자>, set <이름> <정수>,
    # add <이름> <정수>, while <이름> <정수>, end

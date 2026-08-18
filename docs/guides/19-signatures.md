@@ -31,7 +31,7 @@ re-submitting the old nonce-1 transaction is rejected.
 
 The English sentence form keeps the signed context visible:
 
-```text
+```nme
 amountone save 25
 feeone save transactionfee
 nonceone save 1

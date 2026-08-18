@@ -16,26 +16,26 @@
 
 1. `repeat.nme` 파일을 만듭니다:
 
-   ```text
+   ```nme
    3번 반복해서 다시 말해줘
    ```
 
    `다시`가 세 번 출력됩니다. 영어도 똑같습니다:
 
-   ```text
+   ```nme
    repeat 3 times and show Again
    ```
 
 2. 횟수가 앞에 오면 나머지 줄이 반복 출력됩니다:
 
-   ```text
+   ```nme
    3번 안녕하세요
    3 times Welcome to NME
    ```
 
 3. 여러 줄은 들여쓰기만으로 묶습니다:
 
-   ```text
+   ```nme
    repeat 3 times
        show First sentence
        둘째 문장 말해줘
@@ -44,7 +44,7 @@
 4. 들여쓰기는 선택 사항입니다. 블록을 닫는 줄에 `끝`(또는 `end`)을
    쓰면 됩니다:
 
-   ```text
+   ```nme
    3번:
    한 줄 말해줘
    다른 줄 말해줘
@@ -57,7 +57,7 @@
 
 두 언어를 섞은 인사를 다섯 번 반복해 보세요:
 
-```text
+```nme
 5번:
 안녕하세요! 말해줘
 show Hello!

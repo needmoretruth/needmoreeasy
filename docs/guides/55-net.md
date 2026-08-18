@@ -19,7 +19,7 @@ accepts it.
 
 1. Create `messages.json` with a short chat log:
 
-   ```text
+   ```nme
    [
      {"who": "Mina", "text": "hello"},
      {"who": "Jun", "text": "hi Mina"},
@@ -36,7 +36,7 @@ accepts it.
 
 3. The program fetches the list and prints each message:
 
-   ```text
+   ```nme
    from urllib.request import urlopen
    from json import loads
 
@@ -53,7 +53,7 @@ accepts it.
 4. A reply is the same shape: a dict that would be added to the list. The
    full program builds the reply and prints exactly what it would send:
 
-   ```text
+   ```nme
    # chat.nme — fetch a chat log, then show the reply you would post.
    # Run: nme r chat
    # Serve this folder first: python3 -m http.server 8000

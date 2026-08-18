@@ -476,7 +476,7 @@ def examples_section(rows, korean: bool) -> str:
         source = korean_source if korean else english_source
         python = korean_python if korean else english_python
         parts.append(f"### {name}\n")
-        parts.append("```text\n" + source + "\n```\n")
+        parts.append("```nme\n" + source + "\n```\n")
         parts.append(("되는 Python:" if korean else "The Python it becomes:") + "\n")
         parts.append("```python\n" + python + "\n```\n")
     return "\n".join(parts)
@@ -488,7 +488,7 @@ def short_examples(rows, korean: bool, count: int) -> str:
     for name, korean_source, _, english_source, _ in rows[:count]:
         source = korean_source if korean else english_source
         parts.append(f"**{name}**\n")
-        parts.append("```text\n" + source + "\n```\n")
+        parts.append("```nme\n" + source + "\n```\n")
     return "\n".join(parts)
 
 

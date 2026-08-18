@@ -20,7 +20,7 @@ job, and the main program imports only the names it needs.
 1. The project needs data first. Create `weather.json` — a list of one-day
    records, each with a `day` and a `temp` (temperature):
 
-   ```text
+   ```nme
    [
      {"day": "Mon", "temp": 21},
      {"day": "Tue", "temp": 25},
@@ -33,7 +33,7 @@ job, and the main program imports only the names it needs.
 2. `fetch.nme` is the input module. Its only job is to read the file; the
    `use file` module from guide [14](14-json.md) does the reading:
 
-   ```text
+   ```nme
    # fetch.nme — loads the weather data.
 
    use file latest
@@ -48,7 +48,7 @@ job, and the main program imports only the names it needs.
    like guide [54](54-stats.md); `hottest` walks the days with an `if`,
    remembering the warmest one:
 
-   ```text
+   ```nme
    # analyze.nme — computes the average and the hottest day.
 
    def average(temps):
@@ -68,7 +68,7 @@ job, and the main program imports only the names it needs.
 4. `report.nme` is the output module. It knows how to print a report and
    nothing else — no file reading, no math:
 
-   ```text
+   ```nme
    # report.nme — prints the weather report.
 
    def print_report(days, avg, best):
@@ -83,7 +83,7 @@ job, and the main program imports only the names it needs.
    load, gather temperatures, compute, print. Save it next to the three
    modules:
 
-   ```text
+   ```nme
    # main.nme — the weather report project.
    # Run: nme r main
    # weather.json must be in the same folder.

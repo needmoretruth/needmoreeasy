@@ -22,7 +22,7 @@
    반복하며, `end`는 반복을 닫습니다. 프로그램은 줄들의 목록으로
    존재합니다:
 
-   ```text
+   ```nme
    [
        "set count 0",
        "while count 3",
@@ -45,7 +45,7 @@
    `exec`로 실행합니다 — [34](34-selfhost.ko.md)의 실행기가 이제 진짜 파일을
    읽는 것입니다. `capstone.ko.nme`로 저장합니다:
 
-   ```text
+   ```nme
    # capstone.ko.nme — Python으로 컴파일하는 언어.
    # 실행: nme 실행 capstone.ko
    # 미니 언어를 읽어 Python 소스로 컴파일하고,

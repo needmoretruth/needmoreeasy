@@ -19,7 +19,7 @@ matches text case-insensitively with `.lower()`.
 1. One record has a `name` and a `tags` list. The whole catalog is a list of
    those dicts, saved as `catalog.json`:
 
-   ```text
+   ```nme
    [
      {"name": "Red Apple", "tags": ["fruit", "sweet"]},
      {"name": "Red Rose", "tags": ["flower", "garden"]},
@@ -33,7 +33,7 @@ matches text case-insensitively with `.lower()`.
    branch is the `urlopen` line from guide [55](55-net.md). Both `json_load`
    and `loads` return the same shape — a list of dicts:
 
-   ```text
+   ```nme
    import os
    use file latest
    from json import loads
@@ -52,7 +52,7 @@ matches text case-insensitively with `.lower()`.
    checks the whole tag list — the same `in` operator on a string and a list.
    It prints `Red Apple` twice:
 
-   ```text
+   ```nme
    name = "Red Apple"
    word = "red"
    if word.lower() in name.lower():
@@ -65,7 +65,7 @@ matches text case-insensitively with `.lower()`.
 
 4. A `found` counter turns "no matches" into a real answer instead of silence:
 
-   ```text
+   ```nme
    found = 0
    for item in items:
        if "red" in item["name"].lower():
@@ -77,7 +77,7 @@ matches text case-insensitively with `.lower()`.
 
 5. The whole program. Save `search.nme` next to `catalog.json`:
 
-   ```text
+   ```nme
    # search.nme — find items in a JSON catalog.
    # Run: nme r search
    # Type search, list, or quit.

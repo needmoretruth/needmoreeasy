@@ -20,7 +20,7 @@ real algorithm thinking.
 1. A secret code is four picks from the color list — the `random_pick`
    from guide [10](10-random.md), called four times:
 
-   ```text
+   ```nme
    use random latest
 
    colors = ["red", "blue", "green", "yellow"]
@@ -36,7 +36,7 @@ real algorithm thinking.
 2. Black counts exact matches — same color, same position. Compare each
    guess color with the secret color:
 
-   ```text
+   ```nme
    black = 0
    for i in range(4):
        if parts[i] == secret[i]:
@@ -47,7 +47,7 @@ real algorithm thinking.
    honest way counts every color that appears in both lists, then removes
    the black ones:
 
-   ```text
+   ```nme
    white = 0
    for color in colors:
        white = white + min(parts.count(color), secret.count(color))
@@ -62,7 +62,7 @@ real algorithm thinking.
 4. The full game asks for guesses, validates them, and stops on four
    blacks. Save `mastermind.nme`:
 
-   ```text
+   ```nme
    # mastermind.nme — guess a 4-color secret code.
    # Run: nme r mastermind
 

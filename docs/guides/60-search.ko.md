@@ -19,7 +19,7 @@
 1. 기록 하나는 `name`과 `tags` 목록을 담습니다. 목록 전체는 그런
    딕셔너리들의 모음이고 `catalog.json`으로 저장됩니다:
 
-   ```text
+   ```nme
    [
      {"name": "Red Apple", "tags": ["fruit", "sweet"]},
      {"name": "Red Rose", "tags": ["flower", "garden"]},
@@ -33,7 +33,7 @@
    [55](55-net.ko.md)의 `urlopen` 줄입니다. `json읽기`와 `loads` 모두 같은
    모양을 돌려줍니다 — 딕셔너리들의 목록:
 
-   ```text
+   ```nme
    import os
    파일 사용 최신
    from json import loads
@@ -52,7 +52,7 @@
    태그 목록 전체를 확인합니다 — 문자열과 목록에 쓰는 같은 `in` 연산자.
    `Red Apple`이 두 번 출력됩니다:
 
-   ```text
+   ```nme
    name = "Red Apple"
    word = "red"
    if word.lower() in name.lower():
@@ -65,7 +65,7 @@
 
 4. `found` 카운터가 "없음"을 침묵 대신 진짜 답으로 바꿉니다:
 
-   ```text
+   ```nme
    found = 0
    for 상품 in 상품들:
        if "red" in 상품["name"].lower():
@@ -78,7 +78,7 @@
 5. 프로그램 전체입니다. `catalog.json` 옆에 `search.ko.nme`으로
    저장합니다:
 
-   ```text
+   ```nme
    # search.ko.nme — JSON 목록에서 찾기.
    # 실행: nme 실행 search.ko
    # search, list, quit 중 하나를 입력하세요.

@@ -18,7 +18,7 @@
 1. 공용 함수를 모듈 파일에 둡니다. 모듈은 전체 프로그램을 실행하는 대신 값을
    정의하는 평범한 `.nme` 파일입니다:
 
-   ```text
+   ```nme
    # shapes.nme
    def rect(width, height):
        return width * height
@@ -30,7 +30,7 @@
 
 2. 주 프로그램에서 필요한 이름을 가져옵니다:
 
-   ```text
+   ```nme
    # area.nme
    from "shapes.nme" import rect, circle
 
@@ -56,7 +56,7 @@
    넘어오고, 모듈의 다른 것은 비공개로 남습니다. 가져온 이름도 다른 값처럼
    문장에서 쓸 수 있습니다:
 
-   ```text
+   ```nme
    from "shapes.nme" import rect
    말해 rect(3, 7)
    ```

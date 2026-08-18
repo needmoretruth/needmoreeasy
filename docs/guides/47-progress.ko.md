@@ -20,7 +20,7 @@
    `end="\r"`이 새 줄 대신 캐리지 리턴을 넣는데, 캐리지 리턴은 커서를 같은
    줄의 시작으로 보냅니다 — 다음 `print`가 그 위에 덮어씁니다:
 
-   ```text
+   ```nme
    print("Hello", end="\r")
    print("World")
    ```
@@ -30,7 +30,7 @@
 2. 같은 줄 덮어쓰기를 `for` 반복과 자라나는 `#` 줄로 반복합니다. `"#" * i`는
    `i`개의 해시로 된 문자열입니다 — `"#" * 3`은 `"###"`입니다:
 
-   ```text
+   ```nme
    for i in range(1, 11):
        print("#" * i, end="\r")
    print()
@@ -43,7 +43,7 @@
 3. 막대가 너무 빨리 움직여 보기 어렵습니다. `import time`이 시계를
    불러오고, `time.sleep(0.2)`가 한 번마다 0.2초 멈춥니다:
 
-   ```text
+   ```nme
    import time
 
    for i in range(1, 11):
@@ -54,7 +54,7 @@
 
 4. 전체 프로그램입니다. `progress.ko.nme`으로 저장합니다:
 
-   ```text
+   ```nme
    # progress.ko.nme — 한 줄을 채우는 터미널 진행 막대.
    # 실행: nme 실행 progress.ko
    #

@@ -106,7 +106,7 @@ result from the same chain.
 
 The English sentence version shows the smallest punctuation-free form:
 
-```text
+```nme
 use zeroknowledge latest
 alicesecret save zero knowledge secret make
 aliceaddress save alicesecret zero knowledge public make
@@ -130,7 +130,7 @@ The examples bind at least:
 
 The English sentence version constructs the context and proof like this:
 
-```text
+```nme
 contextone save aliceaddress sends amountone coins to bobaddress fee feeone nonce nonceone
 proofone save alicesecret contextone zero knowledge proof make
 signatureonevalid save aliceaddress proofone contextone zero knowledge verify
@@ -180,7 +180,7 @@ learning. Increasing it can make execution much slower.
 
 The English sentence version expresses the same mining loop without punctuation:
 
-```text
+```nme
 while blockonemining
 blockonerandom save zero knowledge nonce make
 blockonecandidatecommitment save blockonerandom zero knowledge commitment make

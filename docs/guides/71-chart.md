@@ -19,7 +19,7 @@ you can read at a glance.
 
 1. Create `chart.json` — a list of records, each with a `label` and a `value`:
 
-   ```text
+   ```nme
    [
      {"label": "Jan", "value": 12},
      {"label": "Feb", "value": 29},
@@ -35,7 +35,7 @@ you can read at a glance.
 2. Load the list with `json_load` from guide [14](14-json.md). Collecting the
    values into their own list makes `max` easy to call:
 
-   ```text
+   ```nme
    use file latest
    rows = json_load("chart.json")
    values = []
@@ -49,7 +49,7 @@ you can read at a glance.
 3. A bar is a fraction of the longest bar. `max_value` is the largest value;
    `int(value / max_value * 20)` is that value's share of 20 blocks:
 
-   ```text
+   ```nme
    value = 29
    max_value = 41
    length = int(value / max_value * 20)
@@ -61,7 +61,7 @@ you can read at a glance.
 4. `"#" * length` builds the bar itself — the string multiplication from guide
    [63](63-ascii-art.md):
 
-   ```text
+   ```nme
    length = 14
    show "#" * length
    ```
@@ -72,7 +72,7 @@ you can read at a glance.
 5. The full program loads the data, finds the scale, and draws one labeled bar
    per record. Save `chart.nme`:
 
-   ```text
+   ```nme
    # chart.nme — a horizontal bar chart in the terminal.
    # Run: nme r chart
    # chart.json must be in the same folder.

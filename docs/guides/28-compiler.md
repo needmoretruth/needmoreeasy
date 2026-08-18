@@ -21,7 +21,7 @@ guide builds the seed of a real compiler — a tiny language with `add` and
    read a line of text, split it into words, then interpret the words. Your
    language's only job is to answer each line:
 
-   ```text
+   ```nme
    # the pipeline: read, split, interpret
    line = "add 2 3"
    parts = line.split()
@@ -33,7 +33,7 @@ guide builds the seed of a real compiler — a tiny language with `add` and
 
 2. Save the whole interpreter in one file, `mini.nme`:
 
-   ```text
+   ```nme
    # A tiny calculator language: add 2 3, mul 4 5, or quit.
    # Run: nme r mini
 
@@ -84,7 +84,7 @@ guide builds the seed of a real compiler — a tiny language with `add` and
    `if` on the verb dispatches one branch per command. The second and third
    words become numbers with `int(parts[1])` and `int(parts[2])`:
 
-   ```text
+   ```nme
    def run_command(parts):
        verb = parts[0]
        if verb == "add":
@@ -102,7 +102,7 @@ guide builds the seed of a real compiler — a tiny language with `add` and
    with `.split()`, guard the shape with `len(parts) == 3`, then interpret and
    print:
 
-   ```text
+   ```nme
    while True:
        ask line, "Next line? "
        if line == "quit":
@@ -120,7 +120,7 @@ guide builds the seed of a real compiler — a tiny language with `add` and
    reads source lines from a list instead of the terminal, and it generates
    Python code as its output:
 
-   ```text
+   ```nme
    # part of examples/tiny-compiler.nme
    python_lines = []
    for line in tiny_source:
@@ -138,7 +138,7 @@ guide builds the seed of a real compiler — a tiny language with `add` and
 7. The Korean twin `mini.ko.nme` keeps the same `def` and writes the loop with
    `물어봐`, `만약`, and `말해`:
 
-   ```text
+   ```nme
    def run_command(parts):
        verb = parts[0]
        if verb == "add":

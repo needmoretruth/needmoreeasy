@@ -17,7 +17,7 @@
 
 1. 프로그램 옆에 작은 텍스트 파일 `story.txt`를 만듭니다:
 
-   ```text
+   ```nme
    the cat sat on the mat
    the dog ran past the cat
    a bird sang on the roof
@@ -26,7 +26,7 @@
 2. 파일 전체를 읽고 단어로 나눕니다. `파일읽기`가 글을 돌려주고
    ([13](13-files.ko.md) 가이드) `.split()`이 빈칸마다 잘라냅니다:
 
-   ```text
+   ```nme
    파일 사용 최신
    글 = 파일읽기("story.txt")
    단어들 = 글.split()
@@ -38,7 +38,7 @@
 3. dict로 직접 셉니다. 빈 dict `{}`와 `for` 반복 하나: 단어가 이미 있으면
    1을 더하고, 없으면 1에서 시작합니다. `셈표["the"]`가 개수를 읽습니다:
 
-   ```text
+   ```nme
    파일 사용 최신
    글 = 파일읽기("story.txt")
    단어들 = 글.split()
@@ -58,7 +58,7 @@
    흔한 다섯 단어를 더해 줍니다. [24](24-python-packages.ko.md) 가이드의
    `date` 가져오기처럼 불러옵니다:
 
-   ```text
+   ```nme
    파일 사용 최신
    from collections import Counter
    글 = 파일읽기("story.txt")
@@ -73,7 +73,7 @@
 5. 전체 프로그램은 파일을 읽고 두 방식으로 세고 작은 보고서를 출력합니다.
    `daneo.nme`로 저장하세요:
 
-   ```text
+   ```nme
    # 텍스트 파일에서 단어가 각각 몇 번 나오는지 셉니다.
    # 실행: nme 실행 daneo
 

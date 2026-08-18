@@ -21,7 +21,7 @@
    합니다: 글 줄을 읽고, 단어로 나누고, 단어를 해석합니다. 여러분 언어의
    유일한 일은 각 줄에 답하는 것입니다:
 
-   ```text
+   ```nme
    # 파이프라인: 읽기, 나누기, 해석
    line = "add 2 3"
    parts = line.split()
@@ -32,7 +32,7 @@
 
 2. 해석기 전체를 `mini.ko.nme` 한 파일로 저장합니다:
 
-   ```text
+   ```nme
    # 아주 작은 계산기 언어: add 2 3, mul 4 5, 또는 quit.
    # 실행: nme 실행 mini.ko
 
@@ -82,7 +82,7 @@
    대한 `if`가 명령마다 갈래 하나로 나눕니다. 둘째와 셋째 단어는
    `int(parts[1])`과 `int(parts[2])`로 숫자가 됩니다:
 
-   ```text
+   ```nme
    def run_command(parts):
        verb = parts[0]
        if verb == "add":
@@ -100,7 +100,7 @@
    `.split()`으로 나누고, `len(parts) == 3`으로 모양을 지키고, 해석해
    출력합니다:
 
-   ```text
+   ```nme
    while True:
        물어봐 line, "다음 줄? "
        만약 line == "quit":
@@ -117,7 +117,7 @@
 6. `examples/tiny-compiler.nme` 예제는 진짜 (아주 작은) 컴파일러입니다:
    터미널 대신 목록에서 소스 줄을 읽고, 출력으로 Python 코드를 만듭니다:
 
-   ```text
+   ```nme
    # examples/tiny-compiler.nme의 일부
    python_lines = []
    for line in tiny_source:
@@ -135,7 +135,7 @@
 7. 영어 쌍둥이 `mini.nme`는 같은 `def`를 쓰고 반복을 `ask`, `if`, `show`로
    씁니다:
 
-   ```text
+   ```nme
    def run_command(parts):
        verb = parts[0]
        if verb == "add":

@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""Compiles every NME code block in the guides.
+"""Compiles every NME program in the guides.
 
 A guide that shows a program which does not compile teaches the wrong thing, so
-every ```text block in `docs/guides/` is run through `nme check`.
+every ```nme block in `docs/guides/` is run through `nme check`. Blocks fenced
+as ```text are what the program prints, or a data file, or the mini-language a
+guide is building — never NME, and never checked.
 
     python scripts/check-guide-code.py [path/to/nme] [--only 01,02,…]
 
@@ -34,7 +36,7 @@ def blocks(path: Path):
     index = 0
     while index < len(lines):
         match = FENCE.match(lines[index])
-        if not match or match.group(1) not in ("text", "nme"):
+        if not match or match.group(1) != "nme":
             index += 1
             continue
         skipped = index > 0 and SKIP in lines[index - 1]
@@ -80,6 +82,11 @@ def main() -> None:
                     text=True,
                 )
                 checked += 1
+                # A program that imports a sibling `.nme` file cannot be
+                # compiled on its own; the guide shows the sibling in another
+                # block. Everything up to the import was still accepted.
+                if "error[E9007]" in result.stdout + result.stderr:
+                    continue
                 if result.returncode != 0:
                     message = (result.stdout + result.stderr).strip().splitlines()
                     first = next((m for m in message if "error" in m or "오류" in m), "")

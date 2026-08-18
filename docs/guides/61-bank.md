@@ -20,7 +20,7 @@ every transaction, saved to `account.json` by a `bank.nme` module.
    `history` is a list that grows with every deposit or withdrawal. It prints
    `100` and `['+100']`:
 
-   ```text
+   ```nme
    account = {"balance": 0, "history": []}
    account["balance"] = account["balance"] + 100
    account["history"].append("+100")
@@ -35,7 +35,7 @@ every transaction, saved to `account.json` by a `bank.nme` module.
    `load()` returns a fresh account when no file exists yet — the same pattern
    as the store module in guide [48](48-shop.md):
 
-   ```text
+   ```nme
    # bank.nme — file storage for the mini bank.
 
    import os
@@ -55,7 +55,7 @@ every transaction, saved to `account.json` by a `bank.nme` module.
 
 3. The whole bank. Save `account.nme` next to `bank.nme`:
 
-   ```text
+   ```nme
    # account.nme — a mini bank kept in a JSON file.
    # Run: nme r account
    # Type deposit, withdraw, balance, history, or quit.
@@ -127,7 +127,7 @@ every transaction, saved to `account.json` by a `bank.nme` module.
 
    Look at `account.json` — it now holds the whole state:
 
-   ```text
+   ```nme
    {"balance": 70, "history": ["+100", "-30"]}
    ```
 

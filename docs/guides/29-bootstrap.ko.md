@@ -33,7 +33,7 @@
    `set`은 대입이 되며, `while`은 블록을 엽니다. 들여쓰기가 블록 깊이를
    관리합니다:
 
-   ```text
+   ```nme
    # part of examples/bootstrap.nme
    lines = []
    indent = 0
@@ -54,7 +54,7 @@
 3. 번역한 줄을 이어 붙여 실행하세요. NME가 CPython 위에서 실행되므로
    컴파일러가 자신이 만든 결과를 실행할 수 있습니다:
 
-   ```text
+   ```nme
    # part of examples/bootstrap.nme
    source = "\n".join(lines)
    exec(source)

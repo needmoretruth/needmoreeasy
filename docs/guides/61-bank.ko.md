@@ -20,7 +20,7 @@
    `history`는 입금·출금마다 자라는 목록입니다. `100`과 `['+100']`이
    출력됩니다:
 
-   ```text
+   ```nme
    계좌 = {"balance": 0, "history": []}
    계좌["balance"] = 계좌["balance"] + 100
    계좌["history"].append("+100")
@@ -35,7 +35,7 @@
    `load()`는 파일이 없으면 새 계좌를 돌려줍니다 — [48](48-shop.ko.md)의
    상점 모듈과 같은 패턴입니다:
 
-   ```text
+   ```nme
    # bank_ko.nme — 미니 은행의 파일 저장 모듈.
 
    import os
@@ -55,7 +55,7 @@
 
 3. 은행 전체입니다. `bank_ko.nme` 옆에 `account.ko.nme`으로 저장합니다:
 
-   ```text
+   ```nme
    # account.ko.nme — JSON 파일에 보관하는 미니 은행.
    # 실행: nme 실행 account.ko
    # deposit, withdraw, balance, history, quit 중 하나를 입력하세요.
@@ -127,7 +127,7 @@
 
    `account.json`을 열어 보면 전체 상태가 들어 있습니다:
 
-   ```text
+   ```nme
    {"balance": 70, "history": ["+100", "-30"]}
    ```
 

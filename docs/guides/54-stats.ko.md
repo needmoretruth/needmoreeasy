@@ -17,14 +17,14 @@
 
 1. 점수 목록을 담은 `numbers.json`을 만드세요:
 
-   ```text
+   ```nme
    [5, 2, 9, 1, 7, 3, 5, 8]
    ```
 
 2. `statistics`가 라이브러리 버전을 제공합니다. 이 가이드는 평균을 손으로도
    계산해 그 의미를 보여 줍니다:
 
-   ```text
+   ```nme
    from statistics import mean, median, mode
    ```
 
@@ -34,7 +34,7 @@
 3. 전체 프로그램은 목록을 불러와 모든 통계를 출력합니다. `stats.nme`로
    저장하세요:
 
-   ```text
+   ```nme
    # stats.nme — 하나의 목록에 대한 여러 통계.
    # 실행: nme 실행 stats
    # 같은 폴더에 numbers.json이 있어야 합니다.

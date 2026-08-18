@@ -21,7 +21,7 @@ pipeline behind every real language.
    `2 + 3 * 4` compiles to five instructions: push both numbers, push
    the other two, multiply, then add:
 
-   ```text
+   ```nme
    ['PUSH 2', 'PUSH 3', 'PUSH 4', 'MUL', 'ADD']
    ```
 
@@ -34,7 +34,7 @@ pipeline behind every real language.
    A number becomes one `PUSH`; an operation compiles its left side, then
    its right side, then its operator:
 
-   ```text
+   ```nme
    def compile(node):
        if node[0] == "num":
            return ["PUSH " + str(node[1])]
@@ -52,7 +52,7 @@ pipeline behind every real language.
 3. The VM is a loop with a small stack. Save `bytecode.nme` with the
    tokenizer and parsers of guide [82](82-ast.md):
 
-   ```text
+   ```nme
    # bytecode.nme — the full pipeline: tokens -> tree -> instructions -> run.
    # Run: nme r bytecode
 
@@ -135,7 +135,7 @@ pipeline behind every real language.
 
 5. Try a line that exercises left-to-right chains:
 
-   ```text
+   ```nme
    show run(compile(parse_expr(tokenize("8 / 2 / 2"))))
    ```
 

@@ -17,7 +17,7 @@ only the unique values, so `set(words)` answers a different question: how many
 
 1. Create a small text file, `story.txt`, next to your program:
 
-   ```text
+   ```nme
    the quick brown fox jumps over the lazy dog
    the fox and the dog are friends
    quick and lazy are fun words to say
@@ -26,7 +26,7 @@ only the unique values, so `set(words)` answers a different question: how many
 2. Read it and split it (guide [36](36-word-count.md)); `set(words)` drops the
    repeats, so `len(set(words))` counts the different words:
 
-   ```text
+   ```nme
    use file latest
    text = file_read("story.txt")
    words = text.split()
@@ -41,7 +41,7 @@ only the unique values, so `set(words)` answers a different question: how many
    [39](39-sorting.md)) converts one back to an ordered list, and `in` checks
    membership:
 
-   ```text
+   ```nme
    unique_words = set(["the", "dog", "the", "cat"])
    for word in sorted(unique_words):
        show "  " + word
@@ -52,7 +52,7 @@ only the unique values, so `set(words)` answers a different question: how many
 
 4. Strings become sets of characters too, and the space counts as a member:
 
-   ```text
+   ```nme
    letters = set("hello world")
    show sorted(letters)
    ```
@@ -62,7 +62,7 @@ only the unique values, so `set(words)` answers a different question: how many
 5. The full program reads the story, builds both sets, and reports them. Save
    `sets.nme`:
 
-   ```text
+   ```nme
    # sets.nme — sets keep only unique values.
    # Run: nme r sets
    # The file story.txt must exist in the same folder.

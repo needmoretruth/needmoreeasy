@@ -32,7 +32,7 @@ nme 실행 examples/http-client.ko
 1. `urllib`은 Python 표준 라이브러리라 설치가 필요 없습니다. 프로그램은
    서버와 대화하는 부분을 가져오고 URL을 정합니다:
 
-   ```text
+   ```nme
    # examples/http-client.ko.nme의 일부
    import urllib.request
 
@@ -45,7 +45,7 @@ nme 실행 examples/http-client.ko
 2. `urlopen`은 그 URL에 연결을 열고 응답을 돌려줍니다. 응답은 아직
    글이 아니라 바이트이므로 읽고 디코딩해야 합니다:
 
-   ```text
+   ```nme
    # examples/http-client.ko.nme의 일부
    with urllib.request.urlopen(url) as response:
        body = response.read().decode("utf-8")
@@ -57,7 +57,7 @@ nme 실행 examples/http-client.ko
 3. 마지막 줄이 답을 보여 줍니다. `body.strip()`은 서버가 파일과 함께 보낸
    마지막 새 줄을 없앱니다:
 
-   ```text
+   ```nme
    # examples/http-client.ko.nme의 일부
    말해 "서버 응답: " + body.strip()
    ```

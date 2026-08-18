@@ -32,7 +32,7 @@ the server answered: hello from http!
 1. `urllib` is a standard Python library, so it needs no installation. The
    program imports the part that talks to servers and picks a URL:
 
-   ```text
+   ```nme
    # part of examples/http-client.nme
    import urllib.request
 
@@ -45,7 +45,7 @@ the server answered: hello from http!
 2. `urlopen` opens a connection to that URL and returns a response. The
    response is not text yet — it is bytes — so it must be read and decoded:
 
-   ```text
+   ```nme
    # part of examples/http-client.nme
    with urllib.request.urlopen(url) as response:
        body = response.read().decode("utf-8")
@@ -57,7 +57,7 @@ the server answered: hello from http!
 3. The last line shows the answer. `body.strip()` removes the newline the
    server sent with the file:
 
-   ```text
+   ```nme
    # part of examples/http-client.nme
    show "the server answered: " + body.strip()
    ```

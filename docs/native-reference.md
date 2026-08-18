@@ -17,7 +17,7 @@ the same `nme-native` lowering path; only the surface spelling changes.
 
 ### Sentence English
 
-```text
+```nme
 score = 5
 while score is less than 10
     score add 1
@@ -27,7 +27,7 @@ show score
 
 ### Sentence Korean
 
-```text
+```nme
 점수 = 5
 동안 점수가 10보다 작을 동안
     점수에 1 더해
@@ -37,7 +37,7 @@ show score
 
 ### Beginner English
 
-```text
+```nme
 score = 5
 5 times:
     score add 1
@@ -46,7 +46,7 @@ show score
 
 ### Beginner Korean
 
-```text
+```nme
 점수 = 5
 5번:
     점수에 1 더해
@@ -55,7 +55,7 @@ show score
 
 ### Advanced English
 
-```text
+```nme
 def twice(value):
     return value * 2
 
@@ -64,7 +64,7 @@ show twice(5)
 
 ### Advanced Korean usage
 
-```text
+```nme
 def 두배(값):
     return 값 * 2
 
@@ -75,7 +75,7 @@ Advanced Korean keeps Python keywords such as `def` and `return` unchanged.
 Korean identifiers and NME's `말해` output spelling can still be used in the
 same native program. All six examples print:
 
-```text
+```nme
 10
 ```
 
@@ -181,7 +181,7 @@ for unrestricted Python control flow.
 Native functions use ordinary Python-style `def` headers, but their native
 signature is intentionally small:
 
-```text
+```nme
 def fact(n):
     if n is less than 2
         return 1
@@ -203,7 +203,7 @@ outside the native core.
 For example, the `else` path below returns before the block ends, so `result` is
 required only on the path that reaches the final return:
 
-```text
+```nme
 def choose(value):
     if value
         result = 2

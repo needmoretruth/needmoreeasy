@@ -17,7 +17,7 @@ anything that looks like an email address.
 
 1. `\d` matches any digit and `{3}` means exactly three, so `\d{3}-\d{4}`
    is three digits, a hyphen, four digits. `re.findall` returns every match:
-   ```text
+   ```nme
    import re
    text = "Call 010-1234-5678 now"
    phones = re.findall(r"\d{3}-\d{4}", text)
@@ -28,7 +28,7 @@ anything that looks like an email address.
    ```
 2. An email is one-or-more allowed characters, `@`, then one-or-more more.
    `+` means one or more; brackets list the allowed characters:
-   ```text
+   ```nme
    import re
    text = "Write to mina@nme.kr or jun@example.com"
    emails = re.findall(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+", text)
@@ -45,7 +45,7 @@ anything that looks like an email address.
    ```
 4. The full program reads the file with `open(...).read()`. The `try` /
    `except` from guide [68](68-errors.md) reports a missing file:
-   ```text
+   ```nme
    # contacts.nme — find phone numbers and emails in a text file.
    # Run: nme r contacts
    # re.findall searches a whole file with one pattern.

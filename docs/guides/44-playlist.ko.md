@@ -16,7 +16,7 @@
 1. `songs.json`에 노래 다섯 곡을 저장합니다 — `title`과 `artist`를 가진
    딕셔너리들의 JSON 목록입니다:
 
-   ```text
+   ```nme
    [
      {"title": "Hello", "artist": "Adele"},
      {"title": "Dynamite", "artist": "BTS"},
@@ -29,7 +29,7 @@
 2. 목록을 `json읽기`로 불러오고 `섞기`로 섞으며, `랜덤선택`으로 곡을
    뛰어넘습니다. 전체 플레이어를 `playlist.ko.nme`으로 저장합니다:
 
-   ```text
+   ```nme
    # playlist.ko.nme — 랜덤 음악 플레이어.
    # 실행: nme 실행 playlist.ko
 

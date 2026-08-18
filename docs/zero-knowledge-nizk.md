@@ -2,7 +2,7 @@
 
 NME's bundled `zero_knowledge` adapter version 0.0.2 keeps the interactive Schnorr tools and adds a Fiat-Shamir non-interactive proof.
 
-```text
+```nme
 use zero_knowledge latest
 proof = zk_nizk_prove(secret, context)
 valid = zk_nizk_verify(public_key, proof, context)
@@ -14,7 +14,7 @@ Changing the context changes the challenge and makes the same proof fail. This i
 
 Korean sentence syntax is available without punctuation:
 
-```text
+```nme
 증명값은 비밀값과 문맥값으로 영지식 비대화 증명 만들기
 검증값은 공개값과 증명값과 문맥값으로 영지식 비대화 검증
 도전값은 공개값과 약속값과 문맥값으로 영지식 비대화 도전 만들기

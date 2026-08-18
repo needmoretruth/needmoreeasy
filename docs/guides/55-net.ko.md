@@ -18,7 +18,7 @@
 
 1. 짧은 채팅 기록을 담은 `messages.json`을 만드세요:
 
-   ```text
+   ```nme
    [
      {"who": "Mina", "text": "hello"},
      {"who": "Jun", "text": "hi Mina"},
@@ -35,7 +35,7 @@
 
 3. 프로그램이 목록을 받아 각 메시지를 출력합니다:
 
-   ```text
+   ```nme
    from urllib.request import urlopen
    from json import loads
 
@@ -52,7 +52,7 @@
 4. 답장도 같은 모양입니다: 목록에 추가될 dict. 전체 프로그램은 답장을
    만들고 보낼 내용을 그대로 출력합니다:
 
-   ```text
+   ```nme
    # chat.nme — 채팅 기록을 받아, 보낼 답장을 보여 줍니다.
    # 실행: nme 실행 chat
    # 먼저 이 폴더를 서비스하세요: python3 -m http.server 8000

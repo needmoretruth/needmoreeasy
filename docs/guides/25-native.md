@@ -24,7 +24,7 @@ into a native executable with your system's C compiler.
    branch body may put one NME output or `break` statement after
    `then`/`그러면` on the same line:
 
-   ```text
+   ```nme
    score = 0
    while score is less than 10
        score add 1
@@ -32,14 +32,14 @@ into a native executable with your system's C compiler.
    show score
    ```
 
-   ```text
+   ```nme
    ready save true
    if ready then show "ready"
    ```
 
    Here are the one-line repeat forms:
 
-   ```text
+   ```nme
    repeat 2 times and show Hi
    2번 반복해서 안녕 말해줘
    2 times: say "beginner"
@@ -48,7 +48,7 @@ into a native executable with your system's C compiler.
 
    A one-line `break` stops a native loop and must stay inside that loop:
 
-   ```text
+   ```nme
    count = 0
    while True
        count add 1
@@ -59,14 +59,14 @@ into a native executable with your system's C compiler.
 
    The sentence repeat spelling can use the same one-line body:
 
-   ```text
+   ```nme
    repeat 3 times and break here
    show "after"
    ```
 
    A loop itself may also use a one-line body:
 
-   ```text
+   ```nme
    while True then break here
    show "after"
    ```
@@ -111,7 +111,7 @@ into a native executable with your system's C compiler.
    stores both in an `int`. They can be assigned, compared with `==`/`!=`, used
    directly as conditions, and shown as `True` or `False`:
 
-   ```text
+   ```nme
    ready = True
    show ready
    if ready
@@ -123,7 +123,7 @@ into a native executable with your system's C compiler.
 
    The same value can be written through the easier English and Korean forms:
 
-   ```text
+   ```nme
    ready save true
    set ready to True
    준비는 참
@@ -168,7 +168,7 @@ into a native executable with your system's C compiler.
    `examples/native-factorial.nme` (Korean twin
    `examples/native-factorial.ko.nme`) computes factorials on both backends:
 
-   ```text
+   ```nme
    # part of examples/native-factorial.nme
    def fact(n):
        if n is less than 2

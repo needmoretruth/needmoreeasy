@@ -20,7 +20,7 @@
    `{"price": N, "stock": N}`에 연결하는 `items` 딕셔너리, 그리고
    `money` 잔액:
 
-   ```text
+   ```nme
    {
      "items": {
        "apple": {"price": 3, "stock": 10},
@@ -35,7 +35,7 @@
    `파일 사용 최신`이 `json읽기`/`json저장`을 불러오고, `os.path.exists`가
    첫 실행에 새 상점을 만듭니다:
 
-   ```text
+   ```nme
    # shop.ko.nme — JSON 파일에 보관하는 작은 상점.
    # 실행: nme 실행 shop.ko
    # list, buy, sell, quit 중 하나를 입력하세요.

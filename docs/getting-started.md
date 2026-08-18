@@ -29,7 +29,7 @@ Create a UTF-8 file named `hello.nme` (in the same folder where you ran
 `nme --version`; any text editor works — on Windows, Notepad saves UTF-8 by
 default):
 
-```text
+```nme
 show Hello world!
 ```
 
@@ -52,7 +52,7 @@ Python it turns into — add `-o hello.py` to save it as a file.
 
 Replace the file with (then run `nme run hello` again):
 
-```text
+```nme
 What is your name?
 Hello name!
 ```
@@ -63,7 +63,7 @@ the ordinary question is enough for a first program.
 
 The same ideas work in Korean and can be mixed immediately:
 
-```text
+```nme
 이름이 뭐예요?
 안녕하세요 이름!
 ```
@@ -73,7 +73,7 @@ The same ideas work in Korean and can be mixed immediately:
 For one repeated sentence, replace the file with (put both lines in one
 file — English and Korean mix freely):
 
-```text
+```nme
 3 times Welcome to NME
 3번 안녕하세요
 ```
@@ -81,7 +81,7 @@ file — English and Korean mix freely):
 For several sentences, replace the file with (indent the extra lines with
 four spaces):
 
-```text
+```nme
 repeat 3 times
     show First sentence
     둘째 문장 말해줘
@@ -90,7 +90,7 @@ repeat 3 times
 If indentation is still uncomfortable, replace the file with this version
 that uses an explicit closing word instead:
 
-```text
+```nme
 score = 0
 while score < 3
 show score
@@ -104,7 +104,7 @@ increases it — the same ideas as the sentence forms above.
 The compact beginner repeat form can use the same trick — replace the file
 with:
 
-```text
+```nme
 3 times:
 show one line
 show another line
@@ -118,7 +118,7 @@ spellings are `멈춰`, `그리고`/`또는`, `아니면 만약에`, and `아니
 
 Replace the file with:
 
-```text
+```nme
 set answer to random number from 1 to 10
 ask number guess Pick a number from 1 to 10
 
@@ -153,7 +153,7 @@ Python. No list literal, function call, equals sign, or colon was required.
 Sentence syntax is the easiest start. Beginner syntax is shorter and precise.
 Replace the file with:
 
-```text
+```nme
 ask name, "What is your name? "
 when name:
     say f"Hello, {name}!"
@@ -177,7 +177,7 @@ for number in range(1, 4):
 
 Mix all three whenever useful — replace the file with:
 
-```text
+```nme
 numbers = [1, 2, 3]
 
 for number in numbers:

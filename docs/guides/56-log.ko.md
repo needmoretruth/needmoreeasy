@@ -19,7 +19,7 @@
    이 순간이고, `strftime`(가이드 [24](24-python-packages.ko.md))이 형식을
    정합니다 — `%Y` 연도, `%m` 달, `%d` 날짜, `%H` 시, `%M` 분:
 
-   ```text
+   ```nme
    from datetime import datetime
    now = datetime.now()
    stamp = now.strftime("%Y-%m-%d %H:%M")
@@ -29,7 +29,7 @@
 2. 가이드 [13](13-files.ko.md)의 `file_write`는 파일 전체를 덮어씁니다. 그래서
    덧붙이기는 예전 로그를 읽고, 줄 하나를 더하고, 전부 다시 씁니다:
 
-   ```text
+   ```nme
    use file latest
    log = file_read("log.txt")
    file_write("log.txt", log + stamp + " - program started\n")
@@ -43,7 +43,7 @@
    첫 실행이 실패하면 안 되므로 `os.path.exists`로 빈 문자열에서 시작합니다.
    `log.ko.nme`로 저장하세요:
 
-   ```text
+   ```nme
    # log.ko.nme — 작은 사건 기록기.
    # 실행: nme 실행 log.ko
 

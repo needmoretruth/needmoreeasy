@@ -21,7 +21,7 @@ of directions.
    `question`, the `options`, and the `answer` as the position of the correct
    option, counting from 0:
 
-   ```text
+   ```nme
    [
      {"question": "What is 5 + 3?", "options": ["6", "7", "8", "9"], "answer": 2},
      {"question": "What color is the sky?", "options": ["Green", "Blue", "Red", "Yellow"], "answer": 1},
@@ -35,7 +35,7 @@ of directions.
 2. Load the questions with `json_load` from guide [14](14-json.md). The file
    holds a list, so `json_load` returns a list of dicts:
 
-   ```text
+   ```nme
    use file latest
    questions = json_load("questions.json")
    show f"Loaded {len(questions)} questions"
@@ -47,7 +47,7 @@ of directions.
    options for display. `ask` reads the answer, and the `if` compares it with
    the stored position:
 
-   ```text
+   ```nme
    use file latest
    questions = json_load("questions.json")
    score = 0
@@ -66,7 +66,7 @@ of directions.
 4. The full game wraps that loop in `while play_again == "yes":` so a finished
    quiz can start over, and counts the missed questions. Save it as `quiz.nme`:
 
-   ```text
+   ```nme
    # A multiple-choice quiz: the questions come from a JSON file.
    # Run: nme r quiz
    # The file questions.json must exist in the same folder.

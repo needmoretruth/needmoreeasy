@@ -19,7 +19,7 @@ from guide [35](35-diary.md).
 1. Create two data files. `scores.json` pairs each player with a score, and
    `players.json` pairs each player with a team:
 
-   ```text
+   ```nme
    [
      {"name": "Mina", "score": 7},
      {"name": "Sana", "score": 9},
@@ -42,7 +42,7 @@ from guide [35](35-diary.md).
 2. Load both files with `json_load` from guide [14](14-json.md). Two calls,
    two lists:
 
-   ```text
+   ```nme
    use file latest
    scores = json_load("scores.json")
    players = json_load("players.json")
@@ -54,7 +54,7 @@ from guide [35](35-diary.md).
 3. Walk the scores with a `for` loop to total them and find the top scorer. The
    `best_score` check remembers the biggest value seen so far:
 
-   ```text
+   ```nme
    total = 0
    best_name = ""
    best_score = -1
@@ -72,7 +72,7 @@ from guide [35](35-diary.md).
 4. Count players per team with a dict. A team seen for the first time starts at
    1; a team seen again goes up by one:
 
-   ```text
+   ```nme
    teams = {}
    for p in players:
        team = p["team"]
@@ -86,7 +86,7 @@ from guide [35](35-diary.md).
    `file_write("report.txt", text)` saves the whole text in one call — the same
    helper that saved each diary note in guide [35](35-diary.md):
 
-   ```text
+   ```nme
    lines = []
    lines.append("Match report")
    lines.append("Players: " + str(len(players)))
@@ -103,7 +103,7 @@ from guide [35](35-diary.md).
 
 6. The whole program in one file. Save `report.nme`:
 
-   ```text
+   ```nme
    # Report: read two JSON data files and write one text summary.
    # Run: nme r report
    # The files scores.json and players.json must exist in the same folder.

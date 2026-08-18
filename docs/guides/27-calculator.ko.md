@@ -18,7 +18,7 @@
 
 1. 계산기 전체를 `calculator.ko.nme` 한 파일로 저장하고 실행합니다:
 
-   ```text
+   ```nme
    # 명령줄 계산기: 3 + 4 를 입력하거나 quit.
    # 실행: nme 실행 calculator.ko
 
@@ -65,7 +65,7 @@
    명령을 담으며, `return`이 답을 돌려줍니다. `parts[1]`은 연산자이고
    `int(parts[0])`은 글자 `"3"`을 숫자 `3`으로 바꿉니다:
 
-   ```text
+   ```nme
    def calculate(parts):
        if parts[1] == "+":
            return int(parts[0]) + int(parts[2])
@@ -85,7 +85,7 @@
    `parts[2]`는 둘째 숫자입니다. `len(parts) == 3`은 형식에 맞지 않는
    명령을 거릅니다:
 
-   ```text
+   ```nme
    parts = command.split()
    if len(parts) == 3:
        answer = calculate(parts)
@@ -100,7 +100,7 @@
    `while True:`는 스스로 끝나지 않으므로 `quit`이 `break`로 나가야 합니다.
    그 사이가 계산기의 한 턴입니다:
 
-   ```text
+   ```nme
    while True:
        물어봐 command, "명령을 입력하세요? "
        만약 command == "quit":
@@ -117,7 +117,7 @@
 5. 함수가 작동하면 [23](23-modules.ko.md) 가이드처럼 함수를 자기 모듈로
    옮깁니다. `calc.nme`에 함수만 저장합니다:
 
-   ```text
+   ```nme
    # calc.nme — calculate 함수만
    def calculate(parts):
        if parts[1] == "+":
@@ -133,7 +133,7 @@
    그다음 `calculator.ko.nme` 맨 위에서 불러옵니다. 이제 주 파일은 반복만
    설명하고 계산은 `calc.nme`에 남습니다:
 
-   ```text
+   ```nme
    from "calc.nme" import calculate
 
    말해 "계산기 — 3 + 4 같은 명령을 입력하거나 quit."
@@ -157,7 +157,7 @@
 6. 영어 쌍둥이 `calculator.nme`는 같은 `def`를 쓰고 반복을 `ask`,
    `if`, `show`로 씁니다:
 
-   ```text
+   ```nme
    def calculate(parts):
        if parts[1] == "+":
            return int(parts[0]) + int(parts[2])

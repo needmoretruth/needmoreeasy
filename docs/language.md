@@ -37,7 +37,7 @@ sentence punctuation `?` and `!` is accepted without quotes.
 
 ### Show text and values
 
-```text
+```nme
 show Hello world!
 Hello world show
 보여줘 안녕하세요!
@@ -48,7 +48,7 @@ Please show me hello
 These print literal text. A name created earlier by an input or sentence
 assignment is inserted automatically:
 
-```text
+```nme
 ask name What is your name?
 show Hello name!
 
@@ -62,7 +62,7 @@ Korean particles following a known name remain in the output.
 If a line is clearly ordinary multi-word speech, NME can print it without an
 action word:
 
-```text
+```nme
 Hello everyone!
 오늘도 반가워요!
 ```
@@ -73,14 +73,14 @@ print.
 
 The shortest conversation does not need a prompt or punctuation:
 
-```text
+```nme
 name ask
 Hello name show
 ```
 
 For the gentlest possible first input, ask as a normal question:
 
-```text
+```nme
 What is your name?
 What's your city?
 Hello name!
@@ -100,7 +100,7 @@ expression as code.
 
 ### Ask for text or a number
 
-```text
+```nme
 ask name What is your name?
 ask name, What is your name?
 이름을 물어봐 이름이 뭐예요?
@@ -120,7 +120,7 @@ name.
 
 ### Save a value
 
-```text
+```nme
 인사는 안녕하세요
 정답은 7
 set greeting to Hello
@@ -144,7 +144,7 @@ Small value changes can also be written without `+`, `-`, or `=`. Use
 
 One sentence on one line:
 
-```text
+```nme
 repeat 3 times and show Again
 3번 반복해서 다시 말해줘
 3 times 반복해서 mixed 말해줘
@@ -158,7 +158,7 @@ visibly explicit.
 
 Several lines use indentation but no colon:
 
-```text
+```nme
 repeat 3 times
     show First
     둘째 말해줘
@@ -173,7 +173,7 @@ repeat 3 times
 The compact colon form can also use an explicit closing word, so indentation is
 optional while you are learning:
 
-```text
+```nme
 3 times:
 show First sentence
 둘째 문장 말해줘
@@ -190,7 +190,7 @@ Indentation is useful when you are ready for Python, but it is not required
 for the first programs. Put `end` (or `끝`) on its own line to close an easy
 block. This form also introduces the control flow needed to grow into Python:
 
-```text
+```nme
 score = 0
 while score < 3
 show score
@@ -225,7 +225,7 @@ may head a Korean sentence condition with the same ending, as in
 
 Colon-free blocks:
 
-```text
+```nme
 if ready
     show Go
 
@@ -235,14 +235,14 @@ if ready
 
 Inline sentences use `then` or a Korean connecting ending:
 
-```text
+```nme
 if score is greater than 10 then show You won
 만약에 점수가 10보다 크면 성공 말해줘
 ```
 
 You may also start with the subject when that reads more naturally:
 
-```text
+```nme
 score is greater than 5 then show high
 name exists then show Welcome name
 색이 빨강과 같으면 맞아요 말해줘
@@ -278,7 +278,7 @@ precision of an arbitrary Python expression.
 
 Logical conditions use normal Python precedence (`and` before `or`):
 
-```text
+```nme
 if ready and score > 2 then show Go
 만약 준비 그리고 점수가 2보다 크면 성공 말해줘
 if ready or waiting then show Please wait
@@ -302,7 +302,7 @@ condition ending such as `만약 준비라면`, or include an NME connector such
 
 ### Random without code punctuation
 
-```text
+```nme
 set die to random number from 1 to 6
 show die
 
@@ -378,7 +378,7 @@ use zero_knowledge
 
 Blocks may contain one inline statement after `:` or several indented lines:
 
-```text
+```nme
 3 times: say "Hi"
 3번:
     말해 "안녕"
@@ -430,7 +430,7 @@ proof-of-knowledge reference implementation). Random and file are bundled at
 `0.0.1`; zero knowledge is bundled at `0.0.2`. One `use` line per module is
 enough; importing the same module twice is a collision error:
 
-```text
+```nme
 use random
 use file
 use zero_knowledge
@@ -522,14 +522,14 @@ A program can import named values from another `.nme` file in the same folder.
 The explicit name list is the module's interface — only those names cross the
 file boundary, so there is no hidden global state:
 
-```text
+```nme
 from "helper.nme" import greet, score
 show greet
 ```
 
 The module file defines the values with ordinary NME or Python:
 
-```text
+```nme
 # helper.nme
 greet = "hello"
 score = 0
@@ -548,7 +548,7 @@ file cannot be opened, the CLI reports E9007 and names the module path.
 Sentence syntax can read and write files without the module line or Python
 punctuation. The path is always a quoted string:
 
-```text
+```nme
 read "notes.txt" into memo
 memo read "notes.txt"
 memo에 "notes.txt" 읽어서

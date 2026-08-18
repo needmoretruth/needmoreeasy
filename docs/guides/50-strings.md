@@ -16,7 +16,7 @@ and a few methods change the text — all ordinary Python, passed through unchan
 
 1. `text[start:end]` cuts from `start` up to but **not** including `end`; negative indexes count from the end, so `text[-3:]` is the last three. It prints `hello`, `NME`, then `NME` and ` NME`:
 
-   ```text
+   ```nme
    text = "hello NME"
    show text[0:5]
    show text[6:9]
@@ -26,26 +26,26 @@ and a few methods change the text — all ordinary Python, passed through unchan
 
 2. `.upper()` and `.lower()` change case into a new string; `.replace("a", "o")` swaps every occurrence, find first and replacement second. They print `HELLO NME`, `hello nme`, and `bononos`:
 
-   ```text
+   ```nme
    text = "hello NME"
    show text.upper()
    show text.lower()
    ```
-   ```text
+   ```nme
    text = "bananas"
    show text.replace("a", "o")
    ```
 
 3. `.strip()` removes spaces from both ends, which cleans up typed input; it prints `hello`:
 
-   ```text
+   ```nme
    text = "  hello  "
    show text.strip()
    ```
 
 4. All together, saved as `strings.nme`. A real typed line keeps edge spaces, so the program strips it, slices pieces, and splits the clean text into words:
 
-   ```text
+   ```nme
    # strings.nme — slice and change a sentence.
    # Run: nme r strings
    # Python string tools: slicing, case, replace, and strip.

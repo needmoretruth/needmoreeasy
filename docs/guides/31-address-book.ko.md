@@ -18,7 +18,7 @@ JSON으로 저장한 것입니다. 이 가이드는 메뉴로 움직이는 주�
 1. 연락처 하나는 `name`과 `phone`을 담은 딕셔너리입니다. 책 전체는 그런
    딕셔너리들의 목록입니다:
 
-   ```text
+   ```nme
    민아 = {"name": "Mina", "phone": "010-1234"}
    연락처 = [민아]
    말해 f"{연락처[0]['name']}: {연락처[0]['phone']}"
@@ -31,7 +31,7 @@ JSON으로 저장한 것입니다. 이 가이드는 메뉴로 움직이는 주�
    시작합니다. [15](15-high-score.ko.md)에서 `os.path.exists`를 같은 방식으로
    썼습니다:
 
-   ```text
+   ```nme
    import os
    파일 사용 최신
 
@@ -46,7 +46,7 @@ JSON으로 저장한 것입니다. 이 가이드는 메뉴로 움직이는 주�
 3. `add`는 `append`로 목록을 키우고 다시 씁니다. `json저장`은 딕셔너리
    하나뿐 아니라 목록도 받습니다:
 
-   ```text
+   ```nme
    연락처.append({"name": 이름, "phone": 전화})
    json저장("address.json", 연락처)
    ```
@@ -54,7 +54,7 @@ JSON으로 저장한 것입니다. 이 가이드는 메뉴로 움직이는 주�
 4. `list`는 `for` 반복으로 목록을 훑으며 기록의 두 필드를 모두
    출력합니다:
 
-   ```text
+   ```nme
    for contact in 연락처:
        말해 f"{contact['name']}: {contact['phone']}"
    ```
@@ -62,7 +62,7 @@ JSON으로 저장한 것입니다. 이 가이드는 메뉴로 움직이는 주�
 5. `search`는 같은 반복에서 거릅니다. `찾기 in contact["name"]`는 입력한
    글자가 이름 어디에든 있으면 참이므로 `Min`이 `Mina`를 찾습니다:
 
-   ```text
+   ```nme
    for contact in 연락처:
        if 찾기 in contact["name"]:
            말해 f"{contact['name']}: {contact['phone']}"
@@ -70,7 +70,7 @@ JSON으로 저장한 것입니다. 이 가이드는 메뉴로 움직이는 주�
 
 6. 메뉴 전체를 한 파일에 담습니다. `address.ko.nme`로 저장합니다:
 
-   ```text
+   ```nme
    # address.ko.nme — 작은 주소록 (JSON 파일에 저장)
    # 실행: nme 실행 address.ko
    # add, list, search, quit 중 하나를 입력합니다.
@@ -139,7 +139,7 @@ JSON으로 저장한 것입니다. 이 가이드는 메뉴로 움직이는 주�
    영어 프로그램은 [영어 가이드](31-address-book.md)에 있고, 이 조각은
    저장된 주소록을 불러옵니다:
 
-   ```text
+   ```nme
    use file latest
    if os.path.exists("address.json"):
        contacts = json_load("address.json")

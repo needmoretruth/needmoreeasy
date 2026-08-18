@@ -19,7 +19,7 @@ Python은 이것들을 `sys.argv` 목록에 넣습니다.
 1. `import sys`가 `sys.argv`를 줍니다: 프로그램 경로와 파일 뒤에 적은
    모든 단어. `greet.nme`로 저장하세요:
 
-   ```text
+   ```nme
    # greet.nme — 명령 줄에서 받은 이름으로 인사하기.
    # 실행: nme 실행 greet 미나
 
@@ -44,7 +44,7 @@ Python은 이것들을 `sys.argv` 목록에 넣습니다.
 2. 인자가 없을 때 혼란스러운 오류로 무너지면 안 됩니다. `len(sys.argv)`가
    단어 수를 세니, 읽기 전에 확인하세요. `dice.nme`로 저장하세요:
 
-   ```text
+   ```nme
    # dice.nme — 명령 줄에서 원하는 면 수의 주사위 굴리기.
    # 실행: nme 실행 dice 6
 
@@ -76,7 +76,7 @@ Python은 이것들을 `sys.argv` 목록에 넣습니다.
    목록은 항목을 `todo.json`에 저장하고([14](14-json.ko.md)) `add`, `done`,
    `list` 명령을 받습니다. `todo.nme`로 저장하세요:
 
-   ```text
+   ```nme
    # todo.nme — 명령 줄로 명령을 받는 할 일 도구.
    # 실행: nme 실행 todo add "buy milk"
    #       nme 실행 todo list

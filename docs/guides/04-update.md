@@ -16,7 +16,7 @@ changes it without `+` or `=`.
 
 1. Create `score.nme`:
 
-   ```text
+   ```nme
    set score to 0
    score add 1
    show score
@@ -27,7 +27,7 @@ changes it without `+` or `=`.
 
 2. The value can be changed in several natural word orders:
 
-   ```text
+   ```nme
    add 1 to score
    score increase by 1
    subtract 1 from score
@@ -37,7 +37,7 @@ changes it without `+` or `=`.
 
 3. Korean works the same way:
 
-   ```text
+   ```nme
    점수는 0
    점수에 1 더해
    점수 보여줘
@@ -46,7 +46,7 @@ changes it without `+` or `=`.
 
 4. Multiplying and dividing work the same way:
 
-   ```text
+   ```nme
    multiply score by 2
    divide score by 2
    점수에 2 곱해
@@ -63,7 +63,7 @@ changes it without `+` or `=`.
 
 Count up to 5 by adding, then count back down by subtracting:
 
-```text
+```nme
 set score to 0
 score add 5
 score subtract 2

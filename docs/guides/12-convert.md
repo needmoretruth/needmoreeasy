@@ -31,7 +31,7 @@ level and language you choose. Lines it cannot convert safely stay Python.
 
    The result keeps the `if` (Python) but rewrites what it can:
 
-   ```text
+   ```nme
    show "hi"
    ask name "Name: "
    if name:
@@ -47,7 +47,7 @@ level and language you choose. Lines it cannot convert safely stay Python.
 
    The result:
 
-   ```text
+   ```nme
    말해 "hi"
    물어봐 name, "Name: "
    if name:

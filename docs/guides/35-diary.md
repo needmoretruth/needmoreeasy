@@ -19,7 +19,7 @@ note. Put the two together and every note lands in a file named after its day.
    (guide [24](24-python-packages.md)) knows the real date, and `str()` turns
    it into the text `2026-08-11`:
 
-   ```text
+   ```nme
    from datetime import date
    today = str(date.today())
    show today
@@ -31,7 +31,7 @@ note. Put the two together and every note lands in a file named after its day.
    fills `{today}` into the filename, then `file_write` and `file_read` from
    guide [13](13-files.md) store and load the note:
 
-   ```text
+   ```nme
    use file latest
    from datetime import date
    today = str(date.today())
@@ -45,7 +45,7 @@ note. Put the two together and every note lands in a file named after its day.
    [22](22-terminal-menu.md): `add` saves a note, `read` shows today or a past
    date, and `quit` breaks the loop. Save it as `diary.nme`:
 
-   ```text
+   ```nme
    # A diary: each day's note goes to its own dated file.
    # Run: nme r diary
 
@@ -91,7 +91,7 @@ note. Put the two together and every note lands in a file named after its day.
 5. A past date is read the same way in reverse: `ask` collects the date and
    `file_read` opens that exact file. That is the `read date` branch:
 
-   ```text
+   ```nme
    use file latest
    ask when, "which day (today, date): "
    if when == "today":
@@ -111,7 +111,7 @@ Add a `list` choice that shows every diary file in the folder. `from pathlib
 import Path` and a `for` loop over `Path(".").glob("diary-*.txt")` lists the
 dated files:
 
-```text
+```nme
 from pathlib import Path
 for p in sorted(Path(".").glob("diary-*.txt")):
     show p.name

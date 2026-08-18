@@ -18,7 +18,7 @@ into lists, one per value of a key.
 1. Create `data.json`, a list of dicts — each has a `name`, `category`,
    `price`:
 
-   ```text
+   ```nme
    [
      {"name": "Mina", "category": "fruit", "price": 3},
      {"name": "Jun", "category": "veggie", "price": 2},
@@ -32,7 +32,7 @@ into lists, one per value of a key.
    the `if word in tally` idea from guide [36](36-word-count.md) — a new
    category starts an empty list:
 
-   ```text
+   ```nme
    use file latest
    items = json_load("data.json")
    groups = {}
@@ -46,7 +46,7 @@ into lists, one per value of a key.
 3. `setdefault` does the "new key gets an empty list" step in one call, then
    `append` always works — the shorter spelling of the same loop:
 
-   ```text
+   ```nme
    quick = {}
    for item in items:
        quick.setdefault(item["category"], []).append(item)
@@ -55,7 +55,7 @@ into lists, one per value of a key.
 4. The full program groups, reports counts and totals, and proves `setdefault`
    agrees. Save it as `group.nme`:
 
-   ```text
+   ```nme
    # group.nme — group a list of dicts by category, then report counts.
    # Run: nme r group
 

@@ -21,7 +21,7 @@
 1. 성적부는 딕셔너리 하나입니다: 학생 이름마다 성적 목록이 연결됩니다.
    `statistics.mean`이 그 목록을 평균합니다:
 
-   ```text
+   ```nme
    from statistics import mean
    books = {"Mina": [88, 90], "Jun": [95]}
    show mean(books["Mina"])
@@ -33,7 +33,7 @@
    `gradebook_ko.nme`이 `load()`와 `save`를 내보냅니다. `load()`는 파일이
    없으면 빈 딕셔너리를 돌려줍니다:
 
-   ```text
+   ```nme
    # gradebook_ko.nme — 성적부의 파일 저장 모듈.
 
    import os
@@ -51,7 +51,7 @@
 3. 프로그램 전체입니다. `gradebook_ko.nme` 옆에 `grade-book.ko.nme`으로
    저장합니다:
 
-   ```text
+   ```nme
    # grade-book.ko.nme — JSON에 보관하는 성적부.
    # 실행: nme 실행 grade-book.ko
    # add, grade, report, quit 중 하나를 입력하세요.
@@ -131,7 +131,7 @@
 
 5. `gradebook.json`을 열어 보면 성적부 전체가 들어 있습니다:
 
-   ```text
+   ```nme
    {"Mina": [90]}
    ```
 

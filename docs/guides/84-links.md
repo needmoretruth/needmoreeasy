@@ -39,7 +39,7 @@ them with the server's address makes the full URLs a browser would use.
 3. Fetching the page is the same `urlopen` call that fetched JSON; a page
    is text, so `.decode("utf-8")` gives the HTML:
 
-   ```text
+   ```nme
    from urllib.request import urlopen
    import re
 
@@ -52,7 +52,7 @@ them with the server's address makes the full URLs a browser would use.
    characters that are not a quote", and `findall` returns just the
    captured parts, as in guide [69](69-patterns.md). Save `links.nme`:
 
-   ```text
+   ```nme
    # links.nme — find the links on a web page.
    # Run: nme r links
    # Serve this folder first: python3 -m http.server 8000

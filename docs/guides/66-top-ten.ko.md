@@ -20,7 +20,7 @@
 1. 기록이 열두 개 이상인 `records.json`을 만듭니다. 기록 하나는 `name`과
    숫자 `score`가 든 딕셔너리입니다:
 
-   ```text
+   ```nme
    [
      {"name": "Mina", "score": 88},
      {"name": "Jun", "score": 95},
@@ -39,7 +39,7 @@
 
 2. [14](14-json.ko.md)의 `json읽기`로 목록을 불러옵니다:
 
-   ```text
+   ```nme
    파일 사용 최신
    기록들 = json읽기("records.json")
    말해 f"기록 {len(기록들)}개를 불러왔습니다"
@@ -52,7 +52,7 @@
    `lambda r: r["score"]`는 기록 `r`을 받아 그 `score`를 돌려주는 아주
    작은 함수입니다. `reverse=True`가 높은 점수를 먼저 둡니다:
 
-   ```text
+   ```nme
    records = [{"name": "Mina", "score": 88}, {"name": "Jun", "score": 95}]
    top = sorted(records, key=lambda r: r["score"], reverse=True)
    show top
@@ -67,7 +67,7 @@
 4. `[:10]`은 목록의 첫 열 개를 남깁니다 — 상위 열입니다. 슬라이스는 숫자든
    기록이든 똑같이 됩니다:
 
-   ```text
+   ```nme
    scores = [5, 2, 9, 1, 7, 3]
    top = sorted(scores, reverse=True)[:3]
    show top
@@ -81,7 +81,7 @@
    열 개를 출력하며, 간발의 차로 들지 못한 기록도 보여 줍니다.
    `top-ten.ko.nme`로 저장합니다:
 
-   ```text
+   ```nme
    # top-ten.ko.nme — records.json에서 가장 높은 열 개 점수.
    # 실행: nme 실행 top-ten.ko
    # records.json 파일이 같은 폴더에 있어야 합니다.

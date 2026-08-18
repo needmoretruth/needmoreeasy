@@ -15,7 +15,7 @@ A missing file or a line that is not a number stops a program dead.
 ## Steps
 
 1. A missing file makes `file_read` raise `FileNotFoundError`; the `except` block runs instead of crashing:
-   ```text
+   ```nme
    use file latest
    try:
        text = file_read("notes.txt")
@@ -23,7 +23,7 @@ A missing file or a line that is not a number stops a program dead.
        show "notes.txt is not here yet."
    ```
 2. `int()` raises `ValueError` on bad input; `else` after `except` runs only when nothing went wrong:
-   ```text
+   ```nme
    ask answer, "A number to double: "
    try:
        number = int(answer)
@@ -33,7 +33,7 @@ A missing file or a line that is not a number stops a program dead.
        show f"Doubled, it is {number * 2}."
    ```
 3. The full program reads a file that may be missing, then asks for a number until the answer converts. Create `notes.txt` with two lines first:
-   ```text
+   ```nme
    # safe_read.nme — read a file that may be missing, safely.
    # Run: nme r safe_read
    # try / except keeps the program alive when the data is bad.

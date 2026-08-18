@@ -16,7 +16,7 @@ name.
 
 1. Create `greet.nme`:
 
-   ```text
+   ```nme
    ask name What is your name?
    show Hello name!
    ```
@@ -32,7 +32,7 @@ name.
 
 3. The same conversation works in Korean:
 
-   ```text
+   ```nme
    이름을 물어봐 이름이 뭐예요?
    안녕하세요 이름! 말해줘
    ```
@@ -40,7 +40,7 @@ name.
 4. For the gentlest first input, an ordinary question is enough — NME infers
    the name from the question:
 
-   ```text
+   ```nme
    What is your name?
    Hello name!
    ```
@@ -49,7 +49,7 @@ name.
 
 Ask for a city and show it in a sentence:
 
-```text
+```nme
 ask city Which city do you live in?
 show I love city!
 ```

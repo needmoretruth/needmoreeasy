@@ -33,7 +33,7 @@ bootstrapping, and it is how every real compiler grows. The example
    `show` instruction becomes a `print`, `set` becomes an assignment, and
    `while` opens a block. Indentation tracks the block depth:
 
-   ```text
+   ```nme
    # part of examples/bootstrap.nme
    lines = []
    indent = 0
@@ -54,7 +54,7 @@ bootstrapping, and it is how every real compiler grows. The example
 3. Join the translated lines and run them. Because NME itself runs on
    CPython, the compiler can execute what it produced:
 
-   ```text
+   ```nme
    # part of examples/bootstrap.nme
    source = "\n".join(lines)
    exec(source)

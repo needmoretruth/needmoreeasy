@@ -19,7 +19,7 @@
    ([24](24-python-packages.ko.md) 가이드)가 진짜 날짜를 알고, `str()`이
    그것을 `2026-08-11` 같은 글자로 바꿉니다:
 
-   ```text
+   ```nme
    from datetime import date
    오늘 = str(date.today())
    보여줘 오늘
@@ -31,7 +31,7 @@
    파일 이름에 채워 넣고, [13](13-files.ko.md) 가이드의 `파일쓰기`와
    `파일읽기`가 메모를 저장하고 불러옵니다:
 
-   ```text
+   ```nme
    파일 사용 최신
    from datetime import date
    오늘 = str(date.today())
@@ -45,7 +45,7 @@
    반복 하나입니다: `add`는 메모를 저장하고, `read`는 오늘이나 지난 날짜를
    보여 주며, `quit`는 반복을 끝냅니다. `ilgi.nme`로 저장하세요:
 
-   ```text
+   ```nme
    # 일기: 하루 메모가 날짜별 파일에 저장됩니다.
    # 실행: nme 실행 ilgi
 
@@ -92,7 +92,7 @@
 5. 지난 날짜를 읽는 것은 반대로 똑같습니다: `물어봐`가 날짜를 받고
    `파일읽기`가 그 정확한 파일을 엽니다. 그것이 `read date` 갈래입니다:
 
-   ```text
+   ```nme
    파일 사용 최신
    물어봐 when, "언제 글을 읽을까요? (today, date): "
    if when == "today":
@@ -111,7 +111,7 @@
 `from pathlib import Path`와 `Path(".").glob("일기-*.txt")`를 도는 `for`
 반복이 날짜별 파일을 나열합니다:
 
-```text
+```nme
 from pathlib import Path
 for p in sorted(Path(".").glob("일기-*.txt")):
     보여줘 p.name

@@ -17,7 +17,7 @@
 
 1. 프로그램 옆에 작은 텍스트 파일 `story.txt`를 만드세요:
 
-   ```text
+   ```nme
    the quick brown fox jumps over the lazy dog
    the fox and the dog are friends
    quick and lazy are fun words to say
@@ -26,7 +26,7 @@
 2. 읽고 나누세요([36](36-word-count.ko.md) 참고). `set(words)`가 반복을
    제거하므로 `len(set(words))`가 서로 다른 단어 수를 셉니다:
 
-   ```text
+   ```nme
    use file latest
    text = file_read("story.txt")
    words = text.split()
@@ -41,7 +41,7 @@
    [39](39-sorting.ko.md))는 집합을 순서 있는 목록으로 되돌려 주고, `in`은
    포함 여부를 확인합니다:
 
-   ```text
+   ```nme
    unique_words = set(["the", "dog", "the", "cat"])
    for word in sorted(unique_words):
        show "  " + word
@@ -53,7 +53,7 @@
 
 4. 문자열도 글자 집합이 됩니다. 공백도 멤버로 셉니다:
 
-   ```text
+   ```nme
    letters = set("hello world")
    show sorted(letters)
    ```
@@ -63,7 +63,7 @@
 5. 전체 프로그램은 이야기를 읽고 두 집합을 만든 뒤 보고합니다. `sets.nme`로
    저장하세요:
 
-   ```text
+   ```nme
    # sets.nme — 집합은 고유한 값만 남깁니다.
    # 실행: nme 실행 sets
    # 같은 폴더에 story.txt가 있어야 합니다.

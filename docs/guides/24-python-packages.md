@@ -19,7 +19,7 @@ Korean beginner spellings over the same calculation.
 
 1. Import the part of the package you need with a Python import line:
 
-   ```text
+   ```nme
    # part of examples/birthday.nme
    from datetime import date
 
@@ -32,7 +32,7 @@ Korean beginner spellings over the same calculation.
 
 2. Ask for input with beginner syntax and combine it with the package:
 
-   ```text
+   ```nme
    # part of examples/birthday.nme
    ask month, "your birth month (1-12): "
    ask day, "your birth day (1-31): "
@@ -80,7 +80,7 @@ Korean beginner spellings over the same calculation.
    the package name, your connection, and that pip is installed before trying
    again. After a successful install, import the package the same way:
 
-   ```text
+   ```nme
    import requests
    ```
 

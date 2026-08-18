@@ -16,7 +16,7 @@ with one `use` line.
 
 1. Create `dice.nme`:
 
-   ```text
+   ```nme
    use random latest
    set die to random number from 1 to 6
    show die
@@ -26,7 +26,7 @@ with one `use` line.
 
 2. Picking one of several choices works the same way:
 
-   ```text
+   ```nme
    use random latest
    set color to pick from red or green or blue
    show color
@@ -34,7 +34,7 @@ with one `use` line.
 
 3. Korean loads the helper with `랜덤 사용 최신` and uses sentence endings:
 
-   ```text
+   ```nme
    랜덤 사용 최신
    주사위는 1부터 6까지 랜덤정수
    주사위 보여줘
@@ -45,7 +45,7 @@ with one `use` line.
 4. The helper names work in expressions too: `랜덤정수(a, b)` is a random
    number and `랜덤선택(values)` picks from a list.
 
-   ```text
+   ```nme
    use random latest
    set roll to random number from 1 to 6
    show roll
@@ -55,7 +55,7 @@ with one `use` line.
 
 Roll two dice and show both:
 
-```text
+```nme
 use random latest
 set first to random number from 1 to 6
 set second to random number from 1 to 6

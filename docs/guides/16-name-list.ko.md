@@ -17,7 +17,7 @@
 1. `names.txt` 파일을 만들고 이름을 줄마다 하나씩 프로그램 옆에
    저장합니다:
 
-   ```text
+   ```nme
    Mina
    Sana
    준호
@@ -26,7 +26,7 @@
 
 2. 파일 전체를 읽고 줄로 나눕니다:
 
-   ```text
+   ```nme
    파일 사용 최신
    이름들 = 파일읽기("names.txt").splitlines()
    이름들 보여줘
@@ -39,7 +39,7 @@
 3. `for` 블록으로 목록을 차례로 훑습니다. 그 안에서도 문장형 NME가
    됩니다:
 
-   ```text
+   ```nme
    파일 사용 최신
    이름들 = 파일읽기("names.txt").splitlines()
    for 이름 in 이름들:
@@ -51,7 +51,7 @@
 4. `랜덤선택`으로 이름 하나를 무작위로 고릅니다. `랜덤 사용 최신`이
    선택기를 불러오고, `3번:`이 선택을 반복합니다:
 
-   ```text
+   ```nme
    파일 사용 최신
    랜덤 사용 최신
    이름들 = 파일읽기("names.txt").splitlines()
@@ -62,7 +62,7 @@
 
 5. 영어는 `file_read(...).splitlines()`로 읽고 `random_pick`으로 고릅니다:
 
-   ```text
+   ```nme
    use file latest
    use random latest
    names = file_read("names.txt").splitlines()

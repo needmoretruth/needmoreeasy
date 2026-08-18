@@ -37,7 +37,7 @@ choose: bye
 1. The `use random latest` line loads the dice function, and a text value holds
    the menu. `\n` means "new line" — it is how one string becomes three rows:
 
-   ```text
+   ```nme
    # part of examples/terminal-menu.nme
    use random latest
 
@@ -47,7 +47,7 @@ choose: bye
 2. `while True:` makes an endless loop; `show menu` prints the choices and
    `ask choice, "choose: "` stores your answer:
 
-   ```text
+   ```nme
    # part of examples/terminal-menu.nme
    while True:
        show menu
@@ -60,7 +60,7 @@ choose: bye
    answer. The plain Python headers `if choice == "1":` mix freely with the
    NME lines `show`/`break` inside the same block:
 
-   ```text
+   ```nme
    # part of examples/terminal-menu.nme
    while True:
        show menu

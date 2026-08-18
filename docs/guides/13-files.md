@@ -16,7 +16,7 @@ A value lives until the program ends. A file lives on after it. NME's bundled
 
 1. Create `diary.nme`:
 
-   ```text
+   ```nme
    use file latest
    file_write("diary.txt", "Today is a good day")
    show file_read("diary.txt")
@@ -43,7 +43,7 @@ A value lives until the program ends. A file lives on after it. NME's bundled
 
 4. Korean loads the helper with `파일 사용 최신`:
 
-   ```text
+   ```nme
    파일 사용 최신
    파일쓰기("일기.txt", "오늘은 좋은 날이에요")
    말해 파일읽기("일기.txt")
@@ -56,7 +56,7 @@ A value lives until the program ends. A file lives on after it. NME's bundled
 
 Write your favorite food to `food.txt`, then read it back:
 
-```text
+```nme
 use file latest
 file_write("food.txt", "Kimchi stew")
 show file_read("food.txt")

@@ -19,7 +19,7 @@ Python에는 준비된 패키지가 많이 들어 있습니다. 고급 NME는 �
 
 1. 필요한 패키지 부분을 Python import 줄로 가져옵니다:
 
-   ```text
+   ```nme
    # examples/birthday.ko.nme의 일부
    from datetime import date
 
@@ -32,7 +32,7 @@ Python에는 준비된 패키지가 많이 들어 있습니다. 고급 NME는 �
 
 2. 입력은 초급 문법으로, 계산은 패키지로:
 
-   ```text
+   ```nme
    # examples/birthday.ko.nme의 일부
    물어봐 월, "생일 월(1-12): "
    물어봐 일, "생일 일(1-31): "
@@ -80,7 +80,7 @@ Python에는 준비된 패키지가 많이 들어 있습니다. 고급 NME는 �
    보여 주므로 패키지 이름, 인터넷 연결, pip 설치 여부를 확인한 뒤 다시
    시도하세요. 설치가 끝나면 같은 방식으로 가져옵니다:
 
-   ```text
+   ```nme
    import requests
    ```
 

@@ -16,26 +16,26 @@ or a block again and again.
 
 1. Create `repeat.nme`:
 
-   ```text
+   ```nme
    repeat 3 times and show Again
    ```
 
    This prints `Again` three times. Korean is equally valid:
 
-   ```text
+   ```nme
    3번 반복해서 다시 말해줘
    ```
 
 2. When the count comes first, the rest of the line is repeated output:
 
-   ```text
+   ```nme
    3 times Welcome to NME
    3번 안녕하세요
    ```
 
 3. Several lines use indentation and no colon:
 
-   ```text
+   ```nme
    repeat 3 times
        show First sentence
        둘째 문장 말해줘
@@ -44,7 +44,7 @@ or a block again and again.
 4. Indentation can be optional: put `end` (or `끝`) on its own line to close
    the block:
 
-   ```text
+   ```nme
    3 times:
    show one line
    show another line
@@ -57,7 +57,7 @@ or a block again and again.
 
 Repeat a greeting five times, mixing both languages:
 
-```text
+```nme
 5 times:
 show Hello!
 반가워요! 말해줘

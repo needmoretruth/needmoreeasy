@@ -15,7 +15,7 @@ A reaction test must know when GO appeared and when you pressed Enter; `time.tim
 
 1. `time.time()` returns seconds since a fixed moment; read it before and
    after `input()` and subtract:
-   ```text
+   ```nme
    import time
    start = time.time()
    input()
@@ -24,7 +24,7 @@ A reaction test must know when GO appeared and when you pressed Enter; `time.tim
    ```
    Piped Enter is instant, so a piped run reports about `0.00`.
 2. A fixed wait lets you time your click; a random delay fixes that:
-   ```text
+   ```nme
    use random latest
    import time
    show "waiting..."
@@ -34,7 +34,7 @@ A reaction test must know when GO appeared and when you pressed Enter; `time.tim
    `time.sleep(seconds)` pauses; `random_number(1, 3)` picks the wait.
 3. The full program runs three rounds and keeps the fastest, with a `0.1`
    sleep for fast piped tests. Use `random_number(1, 3)` for a real game:
-   ```text
+   ```nme
    # reaction.nme — measure your reaction time over rounds.
    # Run: nme r reaction
    # time.time() clocks the moment; the best round wins.

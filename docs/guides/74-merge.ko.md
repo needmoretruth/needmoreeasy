@@ -17,7 +17,7 @@
 
 1. 데이터 파일 두 개를 만드세요. `students.json`은 학생마다 dict 하나:
 
-   ```text
+   ```nme
    [
      {"name": "Mina", "class": "A"},
      {"name": "Jun", "class": "A"},
@@ -28,7 +28,7 @@
 
 2. `scores.json`은 같은 이름과 점수:
 
-   ```text
+   ```nme
    [
      {"name": "Mina", "score": 92},
      {"name": "Jun", "score": 88},
@@ -39,7 +39,7 @@
 3. 점수로 검색 dict를 만드세요: 이름이 점수로 이어지므로 학생 점수를 찾는
    것이 목록 전체를 훑는 대신 빠른 `[]` 조회 하나가 됩니다:
 
-   ```text
+   ```nme
    scores_by_name = {}
    for record in scores:
        scores_by_name[record["name"]] = record["score"]
@@ -48,7 +48,7 @@
 4. 전체 프로그램은 두 목록을 불러와 합치고 결합 보고서를 출력합니다.
    `merge.nme`로 저장하세요:
 
-   ```text
+   ```nme
    # merge.nme — 학생과 점수를 이름으로 합치기.
    # 실행: nme 실행 merge
    # students.json과 scores.json이 같은 폴더에 있어야 합니다.

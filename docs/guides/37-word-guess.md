@@ -18,7 +18,7 @@ fills the blanks, a wrong one costs a try. The word comes from `random_pick`
 
 1. Keep a list of secret words and pick one at random with `random_pick`:
 
-   ```text
+   ```nme
    use random latest
    words = ["apple", "grape", "melon", "mango", "orange"]
    secret = random_pick(words)
@@ -30,7 +30,7 @@ fills the blanks, a wrong one costs a try. The word comes from `random_pick`
 2. Show the word as one blank per letter. A list of `"_"` strings starts
    hidden, and `" ".join(shown)` prints them with spaces:
 
-   ```text
+   ```nme
    secret = "grape"
    shown = []
    for ch in secret:
@@ -44,7 +44,7 @@ fills the blanks, a wrong one costs a try. The word comes from `random_pick`
    the letter into the matching blank. `for i in range(len(secret))` visits
    every position, and `shown[i] = letter` fills the blank when it matches:
 
-   ```text
+   ```nme
    secret = "grape"
    shown = []
    for ch in secret:
@@ -63,7 +63,7 @@ fills the blanks, a wrong one costs a try. The word comes from `random_pick`
    every letter was found, and `break` leaves the loop. Save it as
    `word-guess.nme`:
 
-   ```text
+   ```nme
    # A hidden-word game: guess the letters of a secret word.
    # Run: nme r word-guess
 
@@ -139,7 +139,7 @@ fills the blanks, a wrong one costs a try. The word comes from `random_pick`
 Make the game accept capital letters. Right after `ask letter, ...` add
 `letter = letter.lower()` so typing `A` guesses the same as `a`:
 
-```text
+```nme
 secret = "grape"
 shown = []
 for ch in secret:

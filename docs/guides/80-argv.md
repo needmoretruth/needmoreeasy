@@ -19,7 +19,7 @@ arguments** — Python puts them in the list `sys.argv`.
 1. `import sys` gives you `sys.argv`: the program path plus every word
    typed after it. Save `greet.nme`:
 
-   ```text
+   ```nme
    # greet.nme — greet whoever is named on the command line.
    # Run: nme r greet Mina
 
@@ -43,7 +43,7 @@ arguments** — Python puts them in the list `sys.argv`.
 2. A missing argument must not crash confusingly. `len(sys.argv)` counts
    the words; check it before reading one. Save `dice.nme`:
 
-   ```text
+   ```nme
    # dice.nme — roll a die with the number of sides you ask for.
    # Run: nme r dice 6
 
@@ -75,7 +75,7 @@ arguments** — Python puts them in the list `sys.argv`.
    todo list stores its items in `todo.json` (guide [14](14-json.md)) and
    takes `add`, `done`, and `list` commands. Save `todo.nme`:
 
-   ```text
+   ```nme
    # todo.nme — a todo tool that takes commands on the command line.
    # Run: nme r todo add "buy milk"
    #      nme r todo list

@@ -17,7 +17,7 @@ does the same job in one call — including the five most common words.
 
 1. Make a small text file, `story.txt`, next to your program:
 
-   ```text
+   ```nme
    the cat sat on the mat
    the dog ran past the cat
    a bird sang on the roof
@@ -26,7 +26,7 @@ does the same job in one call — including the five most common words.
 2. Read the whole file and split it into words. `file_read` returns the text
    (guide [13](13-files.md)) and `.split()` cuts it at every space:
 
-   ```text
+   ```nme
    use file latest
    text = file_read("story.txt")
    words = text.split()
@@ -39,7 +39,7 @@ does the same job in one call — including the five most common words.
    the word is already in it, start at 1 otherwise. `tally["the"]` reads the
    count back:
 
-   ```text
+   ```nme
    use file latest
    text = file_read("story.txt")
    words = text.split()
@@ -59,7 +59,7 @@ does the same job in one call — including the five most common words.
    `most_common(5)` for the five most frequent words. Import it like the
    `date` import in guide [24](24-python-packages.md):
 
-   ```text
+   ```nme
    use file latest
    from collections import Counter
    text = file_read("story.txt")
@@ -74,7 +74,7 @@ does the same job in one call — including the five most common words.
 5. The full program reads the file, counts both ways, and prints a small
    report. Save it as `word-count.nme`:
 
-   ```text
+   ```nme
    # Count how often each word appears in a text file.
    # Run: nme r word-count
 

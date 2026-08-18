@@ -15,7 +15,7 @@ A CSV file is plain text — one row per line, fields separated by commas; a sma
 
 1. Create `data.csv` with one `name,score` row per line:
 
-   ```text
+   ```nme
    Mina,90
    Yuna,70
    Sora,85
@@ -25,7 +25,7 @@ A CSV file is plain text — one row per line, fields separated by commas; a sma
 2. Read the file and cut it into rows: `splitlines()` splits the text into
    lines, and `line.split(",")` splits one row into fields:
 
-   ```text
+   ```nme
    use file latest
    lines = file_read("data.csv").splitlines()
    parts = lines[0].split(",")
@@ -36,7 +36,7 @@ A CSV file is plain text — one row per line, fields separated by commas; a sma
 3. Total the scores and divide by the row count for the average. Save it as
    `scores.nme` — it collects every row and writes a summary:
 
-   ```text
+   ```nme
    # scores.nme — read a CSV, average the score column, write a summary.
    # Run: nme r scores
 

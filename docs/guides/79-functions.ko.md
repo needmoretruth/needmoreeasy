@@ -20,7 +20,7 @@
 1. 미니 언어에 동사가 두 개 늘어납니다. `def`는 함수 이름과 매개변수를
    정하고, `return`은 답을 돌려주며, `say`는 함수를 호출할 수 있습니다:
 
-   ```text
+   ```nme
    [
        "def double n",
        "    return n * 2",
@@ -40,7 +40,7 @@
    ([73](73-capstone.ko.md)), 새 dict `functions`는 함수 이름마다 매개변수
    목록을 담습니다:
 
-   ```text
+   ```nme
    functions = {}
    ```
 
@@ -86,7 +86,7 @@
 4. 전체 컴파일러는 캡스톤과 똑같이 `out.py`를 쓰고 `exec`로 실행합니다.
    `functions.nme`로 저장하세요:
 
-   ```text
+   ```nme
    # functions.nme — 함수가 있는 미니 언어를 Python으로 컴파일하기.
    # 실행: nme 실행 functions
    # 미니 언어를 읽어 Python 소스로 컴파일하고,

@@ -16,14 +16,14 @@ asks the same questions twice, then decides which group is bigger.
 
 1. Create and load the two data files, each holding one JSON list (the shape guide [14](14-json.md) saved with `json_save`):
 
-   ```text
+   ```nme
    # a.json
    [5, 2, 9, 1, 7, 3]
    # b.json
    [8, 4, 6, 10, 3]
    ```
 
-   ```text
+   ```nme
    use file latest
    a = json_load("a.json")
    b = json_load("b.json")
@@ -35,7 +35,7 @@ asks the same questions twice, then decides which group is bigger.
 
 2. Mean by hand, mean by library, and max. `sum(a) / len(a)` is the mean; `statistics.mean` (guide [30](30-data.md)) checks it; `max` is a builtin:
 
-   ```text
+   ```nme
    from statistics import mean
    a = [5, 2, 9, 1, 7, 3]
    a_mean = sum(a) / len(a)
@@ -49,7 +49,7 @@ asks the same questions twice, then decides which group is bigger.
 
 3. The comparison program. Save `compare.nme` with both JSON files, and run it:
 
-   ```text
+   ```nme
    # compare.nme — which group of numbers is bigger?
    # Run: nme r compare
    # The files a.json and b.json must exist in the same folder.

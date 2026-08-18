@@ -39,7 +39,7 @@
 3. 페이지를 받는 것은 JSON을 받은 것과 같은 `urlopen` 호출입니다.
    페이지는 텍스트라서 `.decode("utf-8")`이 HTML을 줍니다:
 
-   ```text
+   ```nme
    from urllib.request import urlopen
    import re
 
@@ -52,7 +52,7 @@
    하나 이상"이고, `findall`은 [69](69-patterns.ko.md)에서처럼 잡힌 부분만
    돌려줍니다. `links.nme`로 저장하세요:
 
-   ```text
+   ```nme
    # links.nme — 웹 페이지에서 링크 찾기.
    # 실행: nme 실행 links
    # 먼저 이 폴더에서 python3 -m http.server 8000 실행

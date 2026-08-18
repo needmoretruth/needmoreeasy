@@ -20,7 +20,7 @@ in the tree than addition, which is exactly how `*` wins.
 1. A node is a small list. A number is `["num", value]`; an operation is
    `["bin", op, left, right]`. The expression `2 + 3 * 4` becomes:
 
-   ```text
+   ```nme
    ['bin', '+', ['num', 2], ['bin', '*', ['num', 3], ['num', 4]]]
    ```
 
@@ -31,7 +31,7 @@ in the tree than addition, which is exactly how `*` wins.
    `+`. `parse_term` collects `*` and `/` chains; `parse_expr` collects
    `+` and `-` chains of terms. Save `ast.nme`:
 
-   ```text
+   ```nme
    # ast.nme — expressions as trees: parse, then evaluate the tree.
    # Run: nme r ast
 
@@ -98,7 +98,7 @@ in the tree than addition, which is exactly how `*` wins.
 
 4. Check the shape rules with two more lines:
 
-   ```text
+   ```nme
    show f"left-assoc: {evaluate(parse_expr(tokenize('8 / 2 / 2')))}"
    ```
 

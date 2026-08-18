@@ -15,7 +15,7 @@ Guide [33](33-todo.md) saved a todo list of dicts; guide [23](23-modules.md) spl
 
 1. Storage lives in a module, `store.nme`, exporting `load()` and `save(habits)`. A habit is a `{name: days}` dict entry; `load()` returns `{}` when no file exists yet:
 
-   ```text
+   ```nme
    # store.nme — file storage for the habit tracker.
    import os
    use file latest
@@ -30,7 +30,7 @@ Guide [33](33-todo.md) saved a todo list of dicts; guide [23](23-modules.md) spl
 
 2. The whole project. Save `habit.nme` next to `store.nme`:
 
-   ```text
+   ```nme
    # habit.nme — a habit tracker that survives between runs.
    # Run: nme r habit
 

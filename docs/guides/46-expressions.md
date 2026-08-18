@@ -16,7 +16,7 @@ Guides [28](28-compiler.md) and [29](29-bootstrap.md) dispatched lines and trans
 1. Turn the line into a mixed list of numbers and operators — the token list
    for `2 + 3 * 4` is `[2, "+", 3, "*", 4]`:
 
-   ```text
+   ```nme
    line = "2 + 3 * 4"
    values = []
    for word in line.split():
@@ -30,7 +30,7 @@ Guides [28](28-compiler.md) and [29](29-bootstrap.md) dispatched lines and trans
    tighter: `2 + (3 * 4) = 14`. The fix is two passes over the list —
    `multiply_pass` first, then `add_pass`. Save the calculator as `expr.nme`:
 
-   ```text
+   ```nme
    # expr.nme — evaluate arithmetic like 2 + 3 * 4.
    # Run: nme r expr
 

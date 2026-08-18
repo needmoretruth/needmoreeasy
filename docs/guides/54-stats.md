@@ -17,14 +17,14 @@ about the data.
 
 1. Create `numbers.json` with a list of scores:
 
-   ```text
+   ```nme
    [5, 2, 9, 1, 7, 3, 5, 8]
    ```
 
 2. `statistics` provides the library versions; the guide also computes the
    mean by hand so you can see what it means:
 
-   ```text
+   ```nme
    from statistics import mean, median, mode
    ```
 
@@ -35,7 +35,7 @@ about the data.
 3. The full program loads the list and prints every statistic. Save
    `stats.nme`:
 
-   ```text
+   ```nme
    # stats.nme — several statistics about one list.
    # Run: nme r stats
    # The file numbers.json must exist in the same folder.

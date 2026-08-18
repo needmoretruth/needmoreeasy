@@ -15,7 +15,7 @@
 
 1. 저장은 모듈에 둡니다. `store_ko.nme`이 `load()`와 `save(습관들)`을 내보냅니다. 습관은 `{이름: 날수}` 딕셔너리 항목이고, 파일이 없으면 `load()`가 `{}`를 돌려줍니다:
 
-   ```text
+   ```nme
    # store_ko.nme — 습관 추적기의 파일 저장 모듈
    import os
    파일 사용 최신
@@ -30,7 +30,7 @@
 
 2. 프로젝트 전체입니다. `store_ko.nme` 옆에 `habit.ko.nme`을 저장합니다:
 
-   ```text
+   ```nme
    # habit.ko.nme — 실행 사이에도 남는 습관 추적기
    # 실행: nme 실행 habit.ko
 

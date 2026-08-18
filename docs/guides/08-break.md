@@ -16,7 +16,7 @@ immediately and continues with the lines after it.
 
 1. Create `stop.nme`:
 
-   ```text
+   ```nme
    set ready to True
    set waiting to False
    while ready or waiting
@@ -30,7 +30,7 @@ immediately and continues with the lines after it.
 
 2. Korean uses `동안`, `멈춰`, and `끝`:
 
-   ```text
+   ```nme
    준비 = True
    동안 준비
        작동 중이에요 말해줘
@@ -41,7 +41,7 @@ immediately and continues with the lines after it.
 3. `break here` is the longer sentence spelling, and `skip` jumps straight to
    the next round instead of leaving the loop:
 
-   ```text
+   ```nme
    set score to 0
    while score is less than 10
    add 1 to score
@@ -59,7 +59,7 @@ immediately and continues with the lines after it.
 
 Stop a loop as soon as a name exists:
 
-```text
+```nme
 set name to empty
 while name equals empty
     ask name What is your name?

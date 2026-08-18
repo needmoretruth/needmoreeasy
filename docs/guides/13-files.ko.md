@@ -16,7 +16,7 @@
 
 1. `diary.nme` 파일을 만듭니다:
 
-   ```text
+   ```nme
    파일 사용 최신
    파일쓰기("일기.txt", "오늘은 좋은 날이에요")
    말해 파일읽기("일기.txt")
@@ -43,7 +43,7 @@
 
 4. 영어는 `use file latest`로 불러옵니다:
 
-   ```text
+   ```nme
    use file latest
    file_write("diary.txt", "Today is a good day")
    show file_read("diary.txt")
@@ -56,7 +56,7 @@
 
 좋아하는 음식을 `food.txt`에 저장하고 다시 읽어 보세요:
 
-```text
+```nme
 파일 사용 최신
 파일쓰기("food.txt", "김치찌개")
 말해 파일읽기("food.txt")

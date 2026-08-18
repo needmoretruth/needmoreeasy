@@ -91,6 +91,13 @@ jobs:
           nme --version
           nme check examples/three-levels
           nme run examples/hello-sentence
+      - name: Compile every documented row and every guide program
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          cargo build --release -p nme-cli --locked
+          python scripts/check-syntax-reference.py
+          python scripts/check-guide-code.py
       - name: Install the CLI and smoke test it (Windows)
         if: runner.os == 'Windows'
         shell: pwsh

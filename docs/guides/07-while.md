@@ -16,7 +16,7 @@ condition stays true — and stops when it becomes false.
 
 1. Create `count.nme`:
 
-   ```text
+   ```nme
    set score to 0
    while score is less than 3
    show score
@@ -29,7 +29,7 @@ condition stays true — and stops when it becomes false.
 
 2. Korean uses `동안` and `끝`:
 
-   ```text
+   ```nme
    점수는 0
    동안 점수 < 3
        점수 보여줘
@@ -40,7 +40,7 @@ condition stays true — and stops when it becomes false.
 3. English and Korean can mix in one condition. The Korean ending `동안`
    follows the subject:
 
-   ```text
+   ```nme
    점수는 0
    while 점수가 3보다 작을 동안
    show 점수
@@ -50,7 +50,7 @@ condition stays true — and stops when it becomes false.
 
 4. A spoken one-line loop puts the ending on the subject:
 
-   ```text
+   ```nme
    준비는 참
    준비하는동안 성공 말해줘
    준비는 거짓
@@ -63,7 +63,7 @@ condition stays true — and stops when it becomes false.
 
 Loop while a name is missing, asking until one appears:
 
-```text
+```nme
 set name to empty
 while name equals empty
     ask name What is your name?

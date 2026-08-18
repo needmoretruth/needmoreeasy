@@ -20,7 +20,7 @@
 1. 테스트는 한 줄의 데이터입니다: 이름, 함수, 인자들, 예상 결과.
    `add(2, 3)`은 `5`가 되어야 합니다:
 
-   ```text
+   ```nme
    ["adds numbers", add, 2, 3, 5]
    ```
 
@@ -28,7 +28,7 @@
    들어갑니다 — [10](10-random.ko.md)에서 `random_number`가 값이었던 것과
    같은 방식입니다. `testcalc.nme`로 저장하세요:
 
-   ```text
+   ```nme
    # testcalc.nme — 내가 쓴 함수를 작은 테스트 실행기로 확인하기.
    # 실행: nme 실행 testcalc
 
@@ -98,7 +98,7 @@
    ([23](23-modules.ko.md)), 테스트는 주 파일에 두고, 바꿀 때마다 테스트를
    실행하세요:
 
-   ```text
+   ```nme
    # from "calc.nme" import add, mul   (모듈 버전)
    ```
 

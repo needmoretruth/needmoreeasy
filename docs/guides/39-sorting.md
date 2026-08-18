@@ -18,7 +18,7 @@ and explains the difference between the two.
 
 1. Create `numbers.json` with one JSON list of numbers:
 
-   ```text
+   ```nme
    [5, 2, 9, 1, 7, 3]
    ```
 
@@ -27,7 +27,7 @@ and explains the difference between the two.
 
 2. Load the list with `json_load` from guide [14](14-json.md):
 
-   ```text
+   ```nme
    use file latest
    numbers = json_load("numbers.json")
    show f"Loaded {len(numbers)} numbers: {numbers}"
@@ -38,7 +38,7 @@ and explains the difference between the two.
 3. `sorted(numbers)` returns a NEW list in ascending order and leaves the
    original untouched:
 
-   ```text
+   ```nme
    numbers = [5, 2, 9, 1, 7, 3]
    ascending = sorted(numbers)
    show ascending
@@ -51,7 +51,7 @@ and explains the difference between the two.
 4. `numbers.sort()` changes the list ITSELF, in place. After the call the
    variable holds the sorted list and the old order is gone:
 
-   ```text
+   ```nme
    numbers = [5, 2, 9, 1, 7, 3]
    numbers.sort()
    show numbers
@@ -63,7 +63,7 @@ and explains the difference between the two.
 5. Descending order flips it, the largest first. `sorted(numbers, reverse=True)`
    makes a new list without touching `numbers`:
 
-   ```text
+   ```nme
    numbers = [1, 2, 3, 5, 7, 9]
    descending = sorted(numbers, reverse=True)
    show descending
@@ -73,7 +73,7 @@ and explains the difference between the two.
 
 6. Now the whole report in one file. Save `sorting.nme`:
 
-   ```text
+   ```nme
    # Sorting: putting a saved list of numbers in order.
    # Run: nme r sorting
    # The file numbers.json must exist in the same folder.

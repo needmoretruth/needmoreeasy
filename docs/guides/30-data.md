@@ -18,7 +18,7 @@ the math.
 
 1. Create the data file `numbers.json` with one JSON list:
 
-   ```text
+   ```nme
    [5, 2, 9, 1, 7, 3]
    ```
 
@@ -28,7 +28,7 @@ the math.
 2. Load the list with `use file latest` and `json_load`. The loaded value is a
    Python list, so `len(numbers)` counts it. Save this as `load.nme`:
 
-   ```text
+   ```nme
    use file latest
    numbers = json_load("numbers.json")
    show f"Loaded {len(numbers)} numbers"
@@ -41,7 +41,7 @@ the math.
    [24](24-python-packages.md) showed `from datetime import date`; importing
    two names at once works the same way:
 
-   ```text
+   ```nme
    use file latest
    from statistics import mean, median
 
@@ -55,7 +55,7 @@ the math.
 
 4. `max(...)` is a Python builtin, so no import is needed:
 
-   ```text
+   ```nme
    numbers = [5, 2, 9, 1, 7, 3]
    show f"Max: {max(numbers)}"
    ```
@@ -64,7 +64,7 @@ the math.
 
 5. Now the whole report in one file. Save `numbers.nme`:
 
-   ```text
+   ```nme
    # numbers.nme — statistics on a list of numbers saved as JSON.
    # Run: nme r numbers
    # The file numbers.json must exist in the same folder.
@@ -141,7 +141,7 @@ the math.
    Korean program is in the [Korean guide](30-data.ko.md); this snippet loads
    the list:
 
-   ```text
+   ```nme
    파일 사용 최신
    숫자들 = json읽기("numbers.json")
    말해 f"숫자 {len(숫자들)}개를 불러왔습니다"

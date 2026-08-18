@@ -28,7 +28,7 @@
 한 단계만 필요하면 한 파일로 시작합니다. 세 단계와 두 언어를 모두 비교할 가치가
 있다면 다음 틀을 사용합니다.
 
-```text
+```nme
 examples/프로젝트-sentence.ko.nme
 examples/프로젝트-sentence.en.nme
 examples/프로젝트-beginner.ko.nme
@@ -41,7 +41,7 @@ examples/프로젝트-advanced.en.nme
 
 아래는 구조 예시입니다. 프로젝트에 필요한 줄만 남기세요.
 
-```text
+```nme
 이름은 예제
 값은 0
 
@@ -61,7 +61,7 @@ examples/프로젝트-advanced.en.nme
 
 ## 4. 문장형 영어 뼈대
 
-```text
+```nme
 name save Example
 value save 0
 
@@ -83,7 +83,7 @@ end
 
 ## 5. 초급 한국어 뼈대
 
-```text
+```nme
 저장 이름 "예제"
 저장 값 0
 

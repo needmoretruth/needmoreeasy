@@ -230,21 +230,21 @@ word the message never uses — fixes it.
 
 **인사 / hello**
 
-```text
+```nme
 show Hello!
 repeat 3 times and show Nice to meet you
 ```
 
 **이름 묻기 / ask a name**
 
-```text
+```nme
 What is your name?
 show Hello name!
 ```
 
 **숫자 맞히기 / guessing game**
 
-```text
+```nme
 set answer to random number from 1 to 10
 ask number guess Pick a number from 1 to 10
 if guess equals answer
@@ -258,7 +258,7 @@ end
 
 **점수 세기 / counting**
 
-```text
+```nme
 set score to 0
 repeat 5 times
 multiply score by 2
@@ -269,7 +269,7 @@ show score
 
 **목록 하나씩 / going through a list**
 
-```text
+```nme
 set friends to list of Mina, Ada and Grace
 for each friend in friends
 show Hello friend!
@@ -278,7 +278,7 @@ end
 
 **목록에 넣기 / building a list**
 
-```text
+```nme
 set names to list of
 repeat 3 times
 ask name Tell me a name

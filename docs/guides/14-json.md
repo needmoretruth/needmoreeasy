@@ -16,7 +16,7 @@ so a name and a score come back later — even after the program closes.
 
 1. Create `record.nme` and save a record:
 
-   ```text
+   ```nme
    use file latest
    record = {"name": "Mina", "score": 7}
    json_save("record.json", record)
@@ -35,7 +35,7 @@ so a name and a score come back later — even after the program closes.
 
 3. Load it back in a fresh program, `load.nme`:
 
-   ```text
+   ```nme
    use file latest
    record = json_load("record.json")
    say f"{record['name']} scored {record['score']}"
@@ -46,7 +46,7 @@ so a name and a score come back later — even after the program closes.
 
 4. Korean uses `json저장` and `json읽기`:
 
-   ```text
+   ```nme
    파일 사용 최신
    기록 = {"이름": "민수", "점수": 7}
    json저장("기록.json", 기록)
@@ -58,7 +58,7 @@ so a name and a score come back later — even after the program closes.
 
 Save a dict with your city and age, then load it back in one program:
 
-```text
+```nme
 use file latest
 me = {"city": "Seoul", "age": 12}
 json_save("me.json", me)

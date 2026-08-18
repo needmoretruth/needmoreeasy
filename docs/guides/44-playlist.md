@@ -16,7 +16,7 @@ A music player walks a list of songs — load it from JSON, mix it with the rand
 1. Save five songs in `songs.json` — a JSON list of dicts with `title` and
    `artist`:
 
-   ```text
+   ```nme
    [
      {"title": "Hello", "artist": "Adele"},
      {"title": "Dynamite", "artist": "BTS"},
@@ -29,7 +29,7 @@ A music player walks a list of songs — load it from JSON, mix it with the rand
 2. Load the list with `json_load`, mix it with `shuffle`, and jump around with
    `random_pick`. Save the whole player as `playlist.nme`:
 
-   ```text
+   ```nme
    # playlist.nme — a random music player.
    # Run: nme r playlist
 

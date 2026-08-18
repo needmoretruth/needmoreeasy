@@ -76,7 +76,7 @@ be clearer when it introduces functions and data structures.
 
 For a new six-file project, prefer:
 
-```text
+```nme
 project-sentence.ko.nme
 project-sentence.en.nme
 project-beginner.ko.nme
@@ -142,13 +142,13 @@ remain true:
 
 A bad test asserts one accidental output:
 
-```text
+```nme
 assert observed_hash == "1234"
 ```
 
 A better test checks properties that survive changing random inputs:
 
-```text
+```nme
 assert mined_hash < work_target
 assert not validate(tampered_data)
 assert sum(balances) == total_supply

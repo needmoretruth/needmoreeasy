@@ -18,7 +18,7 @@
 1. `weather.json`을 만듭니다 — 다른 딕셔너리(`current`)와 딕셔너리 목록
    (`forecast`)을 담는 딕셔너리입니다:
 
-   ```text
+   ```nme
    {
      "city": "Seoul",
      "current": {"temperature": 21, "condition": "sunny", "humidity": 55},
@@ -40,7 +40,7 @@
 
 3. 프로그램 전체입니다. `weather.ko.nme`로 저장합니다:
 
-   ```text
+   ```nme
    # weather.ko.nme — 로컬 웹 서버에서 읽는 미니 날씨 보고서
    # 실행: nme 실행 weather.ko — 먼저 이 폴더를 서비스하세요: python3 -m http.server 8000
 

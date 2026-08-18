@@ -26,7 +26,7 @@ starts with `00`.
 
 The English sentence form exposes the mining loop directly:
 
-```text
+```nme
 while genesismining
 genesisrandom save zero knowledge nonce make
 genesiscandidatecommitment save genesisrandom zero knowledge commitment make

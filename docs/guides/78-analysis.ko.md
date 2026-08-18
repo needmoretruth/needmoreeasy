@@ -18,7 +18,7 @@
 
 1. 30일치 일일 최고 기온(섭씨)으로 `temps.json`을 만드세요:
 
-   ```text
+   ```nme
    [22, 24, 21, 25, 27, 26, 23, 20, 19, 24,
     26, 28, 29, 30, 27, 25, 24, 23, 22, 26,
     28, 31, 32, 29, 26, 24, 23, 21, 20, 25]
@@ -27,7 +27,7 @@
 2. `json_load`로 불러오고([14](14-json.ko.md)) [54](54-stats.ko.md)의 통계를
    계산합니다:
 
-   ```text
+   ```nme
    use file latest
 
    from statistics import mean, median
@@ -46,7 +46,7 @@
    들어가는지 세고, 구간마다 막대 하나를 문자열 곱셈으로 그립니다
    ([71](71-chart.ko.md)):
 
-   ```text
+   ```nme
    ranges = ["under 20", "20-24", "25-29", "30+"]
    counts = [0, 0, 0, 0]
    for t in temps:
@@ -69,7 +69,7 @@
 4. 전체 프로그램은 결과를 `report.txt`에도 씁니다. `analysis.nme`로
    저장하세요:
 
-   ```text
+   ```nme
    # analysis.nme — 한 달 온도를 분석해 보고서를 쓰기.
    # 실행: nme 실행 analysis
    # 같은 폴더에 temps.json이 있어야 합니다.

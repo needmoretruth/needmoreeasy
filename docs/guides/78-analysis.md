@@ -18,7 +18,7 @@ steps a data analysis project does at any size.
 
 1. Create `temps.json` with 30 daily high temperatures (Celsius):
 
-   ```text
+   ```nme
    [22, 24, 21, 25, 27, 26, 23, 20, 19, 24,
     26, 28, 29, 30, 27, 25, 24, 23, 22, 26,
     28, 31, 32, 29, 26, 24, 23, 21, 20, 25]
@@ -27,7 +27,7 @@ steps a data analysis project does at any size.
 2. Load it with `json_load` (guide [14](14-json.md)) and compute the
    statistics from guide [54](54-stats.md):
 
-   ```text
+   ```nme
    use file latest
 
    from statistics import mean, median
@@ -46,7 +46,7 @@ steps a data analysis project does at any size.
    each range, then draw one bar per range with string multiplication
    (guide [71](71-chart.md)):
 
-   ```text
+   ```nme
    ranges = ["under 20", "20-24", "25-29", "30+"]
    counts = [0, 0, 0, 0]
    for t in temps:
@@ -69,7 +69,7 @@ steps a data analysis project does at any size.
 4. The full program also writes the findings into `report.txt`. Save
    `analysis.nme`:
 
-   ```text
+   ```nme
    # analysis.nme — analyze a month of temperatures and write a report.
    # Run: nme r analysis
    # The file temps.json must exist in the same folder.

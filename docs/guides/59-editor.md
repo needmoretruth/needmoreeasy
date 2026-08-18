@@ -19,7 +19,7 @@ then `save` writes the whole buffer back to the file.
    `.splitlines()` is the exact opposite. It prints `Hello`, `World!`, then
    `['Hello', 'World!']`:
 
-   ```text
+   ```nme
    lines = ["Hello", "World!"]
    text = "\n".join(lines)
    show text
@@ -30,7 +30,7 @@ then `save` writes the whole buffer back to the file.
 2. The buffer lives in the file between runs. As in guide [13](13-files.md), a
    saved file becomes a list of lines, and a first run starts empty:
 
-   ```text
+   ```nme
    use file latest
    import os
 
@@ -45,7 +45,7 @@ then `save` writes the whole buffer back to the file.
    text for `add`. It prints `add`, then `Hello world`; guide
    [49](49-tokens.md) split tokens the same way:
 
-   ```text
+   ```nme
    line = "add Hello world"
    parts = line.split()
    show parts[0]
@@ -56,7 +56,7 @@ then `save` writes the whole buffer back to the file.
    integer, `- 1` makes it zero-based, and `buffer.pop(i)` deletes that row.
    It prints `['a', 'c']` — line 2 was removed:
 
-   ```text
+   ```nme
    buffer = ["a", "b", "c"]
    n = 2
    i = int(n) - 1
@@ -66,7 +66,7 @@ then `save` writes the whole buffer back to the file.
 
 5. The whole editor. Save `editor.nme`:
 
-   ```text
+   ```nme
    # editor.nme — a tiny line-based text editor.
    # Run: nme r editor
    # Type add <text>, list, remove <n>, save, or quit.

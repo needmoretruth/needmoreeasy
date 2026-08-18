@@ -18,7 +18,7 @@
 
 1. 게임 전체를 `adventure.ko.nme` 한 파일로 저장합니다:
 
-   ```text
+   ```nme
    # 작은 텍스트 모험: 동굴을 지나 금을 찾아라.
    # 실행: nme 실행 adventure.ko
 
@@ -122,7 +122,7 @@
    끝없는 반복 하나와 작은 메뉴로 이뤄집니다. `while True:`는 스스로 멈추지
    않으므로 방을 나가는 유일한 길은 `quit`에 답하거나 이기는 것입니다:
 
-   ```text
+   ```nme
    while True:
        물어봐 action, "무엇을 할까? (look, east, dice, quit) "
        만약 action == "quit":
@@ -145,7 +145,7 @@
 4. 인벤토리는 목록입니다. `inventory.append("key")`가 물건을 더하고,
    `"key" not in inventory` 확인이 물건을 한 번만 집게 해 줍니다:
 
-   ```text
+   ```nme
    inventory = []
    if "key" not in inventory:
        inventory.append("key")
@@ -158,7 +158,7 @@
    불러오고, `가`와 `나` 사이를 굴리며, `if roll >= 4`가 성공과 실패를
    나눕니다:
 
-   ```text
+   ```nme
    랜덤 사용 최신
    roll = 랜덤정수(1, 6)
    보여줘 f"주사위가 굴러간다: {roll}."
@@ -176,7 +176,7 @@
    가이드의 확인을 이어 붙여, 열쇠와 밧줄이 모두 인벤토리에 있을 때만 문이
    열리고 `break`가 반복을 떠납니다:
 
-   ```text
+   ```nme
    while True:
        물어봐 move, "북쪽, 서쪽, 아니면 돌아갈까? "
        if move == "north":

@@ -18,7 +18,7 @@
 1. dict 목록인 `data.json`을 만드세요 — 각 항목은 `name`, `category`,
    `price`를 가집니다:
 
-   ```text
+   ```nme
    [
      {"name": "Mina", "category": "fruit", "price": 3},
      {"name": "Jun", "category": "veggie", "price": 2},
@@ -32,7 +32,7 @@
    가이드 [36](36-word-count.ko.md)의 `if word in tally` 생각입니다 — 새 범주는
    빈 목록부터 시작합니다:
 
-   ```text
+   ```nme
    use file latest
    items = json_load("data.json")
    groups = {}
@@ -46,7 +46,7 @@
 3. `setdefault`는 "새 키는 빈 목록부터" 단계를 한 번에 합니다. 그다음
    `append`는 언제나 동작합니다 — 같은 반복의 짧은 표기입니다:
 
-   ```text
+   ```nme
    quick = {}
    for item in items:
        quick.setdefault(item["category"], []).append(item)
@@ -55,7 +55,7 @@
 4. 전체 프로그램은 묶고, 개수와 총 가격을 보고하며, `setdefault`가 같다고
    보여 줍니다. `group.ko.nme`로 저장하세요:
 
-   ```text
+   ```nme
    # group.ko.nme — 범주별로 묶고 개수를 보고하는 프로그램.
    # 실행: nme 실행 group.ko
 

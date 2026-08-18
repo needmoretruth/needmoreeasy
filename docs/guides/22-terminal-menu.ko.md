@@ -36,7 +36,7 @@ printf '1\n3\n' | nme 실행 examples/terminal-menu.ko
 1. `use random latest` 줄이 주사위 함수를 불러오고, 글자 값이 메뉴를
    담습니다. `\n`은 "새 줄"입니다 — 한 문자열이 세 줄이 되는 이유입니다:
 
-   ```text
+   ```nme
    # examples/terminal-menu.ko.nme의 일부
    use random latest
 
@@ -46,7 +46,7 @@ printf '1\n3\n' | nme 실행 examples/terminal-menu.ko
 2. `while True:`는 끝없는 반복을 만들고, `show menu`가 선택지를 출력하며
    `ask 선택, "고르세요: "`가 답을 저장합니다:
 
-   ```text
+   ```nme
    # examples/terminal-menu.ko.nme의 일부
    while True:
        show menu
@@ -59,7 +59,7 @@ printf '1\n3\n' | nme 실행 examples/terminal-menu.ko
    실행합니다. 순수 Python 헤더 `if 선택 == "1":`가 NME 줄
    `show`/`break`와 같은 블록 안에 자유롭게 섞입니다:
 
-   ```text
+   ```nme
    # examples/terminal-menu.ko.nme의 일부
    while True:
        show menu

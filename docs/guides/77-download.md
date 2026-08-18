@@ -36,7 +36,7 @@ the same call; the only new ideas are reading in chunks and writing to disk.
 3. `urlopen` gives you a response object. Its `.read()` call returns the
    whole body at once:
 
-   ```text
+   ```nme
    from urllib.request import urlopen
 
    url = "http://localhost:8000/story.txt"
@@ -50,7 +50,7 @@ the same call; the only new ideas are reading in chunks and writing to disk.
 4. Saving the text is one `file_write` call — guide [13](13-files.md).
    The full program downloads and saves. Save `download.nme`:
 
-   ```text
+   ```nme
    # download.nme — fetch a file from the local server and save it.
    # Run: nme r download
    # Serve this folder first: python3 -m http.server 8000
@@ -87,7 +87,7 @@ the same call; the only new ideas are reading in chunks and writing to disk.
    character fails. Keep bytes whole, decode once. Save
    `download-progress.nme`:
 
-   ```text
+   ```nme
    # download-progress.nme — download in chunks and report progress.
    # Run: nme r download-progress
    # Serve this folder first: python3 -m http.server 8000

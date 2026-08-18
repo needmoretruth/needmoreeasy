@@ -18,7 +18,7 @@
 
 1. 데이터 파일 `numbers.json`을 JSON 목록 하나로 만듭니다:
 
-   ```text
+   ```nme
    [5, 2, 9, 1, 7, 3]
    ```
 
@@ -30,7 +30,7 @@
    리스트이므로 `len(숫자들)`로 개수를 셀 수 있습니다. `load.ko.nme`로
    저장하세요:
 
-   ```text
+   ```nme
    파일 사용 최신
    숫자들 = json읽기("numbers.json")
    말해 f"숫자 {len(숫자들)}개를 불러왔습니다"
@@ -44,7 +44,7 @@
    [24](24-python-packages.ko.md)에서 `from datetime import date`를
    보았지요. 이름 두 개를 한 줄에 가져오는 방법도 같습니다:
 
-   ```text
+   ```nme
    파일 사용 최신
    from statistics import mean, median
 
@@ -58,7 +58,7 @@
 
 4. `max(...)`는 Python 내장 함수라 import가 필요 없습니다:
 
-   ```text
+   ```nme
    숫자들 = [5, 2, 9, 1, 7, 3]
    말해 f"최댓값: {max(숫자들)}"
    ```
@@ -67,7 +67,7 @@
 
 5. 이제 보고서 전체를 한 파일에 담습니다. `numbers.ko.nme`로 저장합니다:
 
-   ```text
+   ```nme
    # numbers.ko.nme — 저장된 숫자 목록의 통계
    # 실행: nme 실행 numbers.ko
    # numbers.json 파일이 같은 폴더에 있어야 합니다.
@@ -135,7 +135,7 @@
    프로그램은 [영어 가이드](30-data.md)에 있고, 이 조각은 목록을
    불러옵니다:
 
-   ```text
+   ```nme
    use file latest
    numbers = json_load("numbers.json")
    show f"Loaded {len(numbers)} numbers"

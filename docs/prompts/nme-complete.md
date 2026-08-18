@@ -449,7 +449,7 @@ Every program below was compiled by the real compiler while this file was writte
 
 ### 인사 / hello
 
-```text
+```nme
 show Hello!
 repeat 3 times and show Nice to meet you
 ```
@@ -463,7 +463,7 @@ for _ in range(3): print("Nice to meet you")
 
 ### 이름 묻기 / ask a name
 
-```text
+```nme
 What is your name?
 show Hello name!
 ```
@@ -477,7 +477,7 @@ print("Hello " + str(name) + "!")
 
 ### 숫자 맞히기 / guessing game
 
-```text
+```nme
 set answer to random number from 1 to 10
 ask number guess Pick a number from 1 to 10
 if guess equals answer
@@ -505,7 +505,7 @@ else:
 
 ### 점수 세기 / counting
 
-```text
+```nme
 set score to 0
 repeat 5 times
 multiply score by 2
@@ -527,7 +527,7 @@ print(score)
 
 ### 목록 하나씩 / going through a list
 
-```text
+```nme
 set friends to list of Mina, Ada and Grace
 for each friend in friends
 show Hello friend!
@@ -545,7 +545,7 @@ for friend in friends:
 
 ### 목록에 넣기 / building a list
 
-```text
+```nme
 set names to list of
 repeat 3 times
 ask name Tell me a name
@@ -567,7 +567,7 @@ print(names)
 
 ### 기다리기 / waiting
 
-```text
+```nme
 show Starting
 repeat 3 times
 wait 1 second
@@ -589,7 +589,7 @@ print("Done")
 
 ### 건너뛰기 / skipping a round
 
-```text
+```nme
 set score to 0
 repeat 5 times
 add 1 to score
@@ -615,7 +615,7 @@ for _ in range(5):
 
 ### 조건 반복 / repeating while
 
-```text
+```nme
 set score to 0
 while score is less than 3
 show score
@@ -635,7 +635,7 @@ while (score < 3):
 
 ### 두 조건 / two conditions
 
-```text
+```nme
 set ready to True
 set score to 5
 if ready and score is greater than 2 then show Go
@@ -651,7 +651,7 @@ if (ready and score > 2): print("Go")
 
 ### 두 언어 섞기 / mixing the two languages
 
-```text
+```nme
 ask name 이름이 뭐예요?
 안녕하세요 name! 말해줘
 repeat 3 times and show 환영합니다
@@ -667,7 +667,7 @@ for _ in range(3): print("환영합니다")
 
 ### 한 줄씩 Python으로 / growing into Python
 
-```text
+```nme
 set greeting to Hello
 print(greeting)
 for i in range(3):

@@ -20,7 +20,7 @@ are out of order, and repeats until a pass makes no swap.
    swap needs a third variable: `temp` holds the first value while
    `numbers[0]` takes the second value's place:
 
-   ```text
+   ```nme
    numbers = [5, 2, 9, 1, 7, 3]
    if numbers[0] > numbers[1]:
        temp = numbers[0]
@@ -35,7 +35,7 @@ are out of order, and repeats until a pass makes no swap.
    swapping when needed. This is one pass, and it moves the largest value to
    the end:
 
-   ```text
+   ```nme
    numbers = [5, 2, 9, 1, 7, 3]
    n = len(numbers)
    for j in range(0, n - 1):
@@ -53,7 +53,7 @@ are out of order, and repeats until a pass makes no swap.
    loop repeats the pass. After each pass the largest remaining value is
    already in place, so the inner loop stops one cell earlier — `n - i - 1`:
 
-   ```text
+   ```nme
    numbers = [5, 2, 9, 1, 7, 3]
    n = len(numbers)
    for i in range(n):
@@ -71,7 +71,7 @@ are out of order, and repeats until a pass makes no swap.
    whether a pass made any swap; if it made none, the list is done and the
    loop can `break`:
 
-   ```text
+   ```nme
    numbers = [5, 2, 9, 1, 7, 3]
    n = len(numbers)
    for i in range(n):
@@ -93,7 +93,7 @@ are out of order, and repeats until a pass makes no swap.
    every pass, and checks the result against Python's `sorted()`. Save
    `bubble.nme`:
 
-   ```text
+   ```nme
    # bubble.nme — bubble sort by hand, compared with the built-in sort.
    # Run: nme r bubble
    #

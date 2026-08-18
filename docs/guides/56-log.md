@@ -19,7 +19,7 @@ things happened.
    moment; `strftime` (guide [24](24-python-packages.md)) formats it — `%Y`
    year, `%m` month, `%d` day, `%H` hour, `%M` minute:
 
-   ```text
+   ```nme
    from datetime import datetime
    now = datetime.now()
    stamp = now.strftime("%Y-%m-%d %H:%M")
@@ -29,7 +29,7 @@ things happened.
 2. `file_write` from guide [13](13-files.md) replaces the whole file, so
    appending means read the old log, add one line, write it all back:
 
-   ```text
+   ```nme
    use file latest
    log = file_read("log.txt")
    file_write("log.txt", log + stamp + " - program started\n")
@@ -42,7 +42,7 @@ things happened.
    fail when `log.txt` does not exist, so `os.path.exists` starts empty. Save
    it as `log.nme`:
 
-   ```text
+   ```nme
    # log.nme — a small event logger.
    # Run: nme r log
 

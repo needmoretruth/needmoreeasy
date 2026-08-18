@@ -16,7 +16,7 @@ moved code into modules. This guide grows both into a todo list project.
 
 1. Storage lives in a module, `store.nme`, exporting `load()` and `save(todos)`:
 
-   ```text
+   ```nme
    # store.nme — file storage for the todo list.
 
    import os
@@ -33,7 +33,7 @@ moved code into modules. This guide grows both into a todo list project.
 
 2. The whole project. Save `todo.nme` next to `store.nme`:
 
-   ```text
+   ```nme
    # todo.nme — a todo list that survives between runs.
    # Run: nme r todo
 

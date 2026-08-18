@@ -16,7 +16,7 @@ parentheses.
 
 1. Create a file named `hello.nme` in an empty folder and write:
 
-   ```text
+   ```nme
    show Hello world!
    ```
 
@@ -32,7 +32,7 @@ parentheses.
 3. The same idea works in Korean, and English and Korean can share one file.
    Replace the file with:
 
-   ```text
+   ```nme
    안녕하세요! 말해줘
    ```
 
@@ -41,7 +41,7 @@ parentheses.
 4. NME also understands plain speech without an action word when the line is a
    natural sentence:
 
-   ```text
+   ```nme
    Hello everyone!
    오늘도 반가워요!
    ```

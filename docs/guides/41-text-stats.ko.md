@@ -15,13 +15,13 @@
 
 1. 프로그램 옆에 `story.txt`를 만들고 읽어 봅니다:
 
-   ```text
+   ```nme
    the sun rose over the quiet town
    the town woke and the birds sang
    the children ran to the playground
    ```
 
-   ```text
+   ```nme
    파일 사용 최신
    글 = 파일읽기("story.txt")
    단어들 = 글.split()
@@ -35,7 +35,7 @@
 2. 가장 긴 단어와 가장 흔한 단어. `max(단어들, key=len)`은 길이로 비교하고,
    `collections.Counter`([24](24-python-packages.ko.md))가 세며 `most_common(1)`이 최상위 짝을 돌려줍니다:
 
-   ```text
+   ```nme
    파일 사용 최신
    from collections import Counter
    글 = 파일읽기("story.txt")
@@ -50,7 +50,7 @@
 
 3. 이제 전체 보고서를 한 파일에 씁니다. `텍스트통계.nme`로 저장하고 실행합니다:
 
-   ```text
+   ```nme
    # 텍스트통계.nme — 텍스트 파일의 글자와 단어.
    # 실행: nme 실행 텍스트통계
    # story.txt 파일이 같은 폴더에 있어야 합니다.

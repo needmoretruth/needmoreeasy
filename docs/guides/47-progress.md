@@ -20,7 +20,7 @@ terminal shows one row filling up. This guide builds one with `print` and `\r`
    row. `end="\r"` replaces the newline with a carriage return, which sends the
    cursor back to the start of the same row — the next `print` overwrites it:
 
-   ```text
+   ```nme
    print("Hello", end="\r")
    print("World")
    ```
@@ -30,7 +30,7 @@ terminal shows one row filling up. This guide builds one with `print` and `\r`
 2. Repeat the overwrite with a `for` loop and a growing row of `#`. `"#" * i`
    is a string of `i` hashes — `"#" * 3` is `"###"`:
 
-   ```text
+   ```nme
    for i in range(1, 11):
        print("#" * i, end="\r")
    print()
@@ -43,7 +43,7 @@ terminal shows one row filling up. This guide builds one with `print` and `\r`
 3. The bar moves too fast to watch. `import time` loads the clock, and
    `time.sleep(0.2)` pauses for two tenths of a second each pass:
 
-   ```text
+   ```nme
    import time
 
    for i in range(1, 11):
@@ -54,7 +54,7 @@ terminal shows one row filling up. This guide builds one with `print` and `\r`
 
 4. The whole program. Save `progress.nme`:
 
-   ```text
+   ```nme
    # progress.nme — a terminal progress bar that fills a row.
    # Run: nme r progress
    #

@@ -18,7 +18,7 @@ module has a clear interface and nothing else leaks between files.
 1. Put shared functions in a module file. A module is an ordinary `.nme` file
    that defines values instead of running a whole program:
 
-   ```text
+   ```nme
    # shapes.nme
    def rect(width, height):
        return width * height
@@ -30,7 +30,7 @@ module has a clear interface and nothing else leaks between files.
 
 2. Import the names you need in the main program:
 
-   ```text
+   ```nme
    # area.nme
    from "shapes.nme" import rect, circle
 
@@ -57,7 +57,7 @@ module has a clear interface and nothing else leaks between files.
    `area.nme`; anything else in the module stays private. Imported names can
    be used in sentences like any other value:
 
-   ```text
+   ```nme
    from "shapes.nme" import rect
    show rect(3, 7)
    ```

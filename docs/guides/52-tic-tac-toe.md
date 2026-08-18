@@ -12,7 +12,7 @@ English | [한국어](52-tic-tac-toe.ko.md)
 Guide [51](51-grid.md) built a board; guide [26](26-adventure.md) showed how `ask`, `while True`, and `break` make a game loop. Tic-tac-toe joins them: two players take turns picking a row and a column, and after every move a function checks for three in a row.
 ## Steps
 1. The whole game in one file, `tictactoe.nme`. The board and `show_board` come from [51](51-grid.md); `check_winner` scans rows, columns, and both diagonals and returns the winning mark, or `None` while no line is complete; `ask number` reads a row and a column as integers, `continue` re-asks a taken square, and `moves == 9` declares a draw:
-   ```text
+   ```nme
    # tictactoe.nme — a two-player tic-tac-toe game.
    # Run: nme r tictactoe
    # The board is a list of rows (guide 51). A turn places a mark,

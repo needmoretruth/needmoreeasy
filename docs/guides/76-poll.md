@@ -17,7 +17,7 @@ the server says it is done.
 
 1. Create `status.json` with a state that a worker will change:
 
-   ```text
+   ```nme
    {"status": "working", "step": 1}
    ```
 
@@ -29,7 +29,7 @@ the server says it is done.
 
 3. Fetching the status is the same `urlopen` call as guide [55](55-net.md):
 
-   ```text
+   ```nme
    from urllib.request import urlopen
    from json import loads
 
@@ -40,7 +40,7 @@ the server says it is done.
 4. The full program polls in a loop, reports each state, and stops when the
    server reports `"done"`. Save `poll.nme`:
 
-   ```text
+   ```nme
    # poll.nme — watch status.json until it says done.
    # Run: nme r poll
    # Serve this folder first: python3 -m http.server 8000

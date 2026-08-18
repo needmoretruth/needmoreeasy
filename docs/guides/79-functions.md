@@ -20,7 +20,7 @@ parameters so it can emit real Python `def` lines.
 1. The mini language grows two verbs. `def` names a function and lists its
    parameters; `return` gives the answer; a `say` may call a function:
 
-   ```text
+   ```nme
    [
        "def double n",
        "    return n * 2",
@@ -40,7 +40,7 @@ parameters so it can emit real Python `def` lines.
    [73](73-capstone.md)); a new dict `functions` maps each function name to
    its parameter list:
 
-   ```text
+   ```nme
    functions = {}
    ```
 
@@ -87,7 +87,7 @@ parameters so it can emit real Python `def` lines.
 4. The full compiler writes `out.py` and runs it with `exec`, exactly like
    the capstone. Save `functions.nme`:
 
-   ```text
+   ```nme
    # functions.nme — a mini language with functions, compiled to Python.
    # Run: nme r functions
    # Reads the mini language, compiles it to Python source,

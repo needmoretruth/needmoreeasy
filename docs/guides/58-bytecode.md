@@ -20,7 +20,7 @@ Python runs its code.
 1. A compiled program is data: a list of instructions, each a list whose first
    element is the operation and the rest its arguments:
 
-   ```text
+   ```nme
    program = [
        ["set", "x", "0"],
        ["add", "x", "2"],
@@ -38,7 +38,7 @@ Python runs its code.
    not zero — that is how a bytecode loop is built. The full runner, saved as
    `bytecode.nme`:
 
-   ```text
+   ```nme
    # bytecode.nme — a tiny bytecode runner, a mini virtual machine.
    # Run: nme r bytecode
    # Each instruction is a list; run() steps through with a program counter.

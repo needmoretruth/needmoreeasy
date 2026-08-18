@@ -15,13 +15,13 @@ A story is a string first, then a list of words. This guide reads a text file, c
 
 1. Create `story.txt` next to your program and read it back:
 
-   ```text
+   ```nme
    the sun rose over the quiet town
    the town woke and the birds sang
    the children ran to the playground
    ```
 
-   ```text
+   ```nme
    use file latest
    text = file_read("story.txt")
    words = text.split()
@@ -35,7 +35,7 @@ A story is a string first, then a list of words. This guide reads a text file, c
 2. Longest and most common word. `max(words, key=len)` compares by length and
    `collections.Counter` (guide [24](24-python-packages.md)) counts every word, with `most_common(1)` for the top pair:
 
-   ```text
+   ```nme
    use file latest
    from collections import Counter
    text = file_read("story.txt")
@@ -50,7 +50,7 @@ A story is a string first, then a list of words. This guide reads a text file, c
 
 3. Now the whole report in one file. Save `text-stats.nme` and run it:
 
-   ```text
+   ```nme
    # text-stats.nme — letters and words in a text file.
    # Run: nme r text-stats
    # The file story.txt must exist in the same folder.

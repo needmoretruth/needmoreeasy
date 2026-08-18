@@ -17,7 +17,7 @@
 
 1. 저장은 모듈에 둡니다. `store_ko.nme`이 `load()`와 `save(할일)`을 내보냅니다:
 
-   ```text
+   ```nme
    # store_ko.nme — 할 일 목록의 파일 저장 모듈
 
    import os
@@ -34,7 +34,7 @@
 
 2. 프로젝트 전체입니다. `todo.ko.nme`을 `store_ko.nme` 옆에 저장합니다:
 
-   ```text
+   ```nme
    # todo.ko.nme — 실행 사이에도 남는 할 일 목록
    # 실행: nme 실행 todo.ko
 

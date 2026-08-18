@@ -20,7 +20,7 @@
    `2 + 3 * 4`는 다섯 명령으로 컴파일됩니다: 두 숫자를 넣고, 나머지
    두 개를 넣고, 곱하고, 더합니다:
 
-   ```text
+   ```nme
    ['PUSH 2', 'PUSH 3', 'PUSH 4', 'MUL', 'ADD']
    ```
 
@@ -32,7 +32,7 @@
 2. 컴파일은 [82](82-ast.ko.md) 트리의 재귀 순회입니다. 숫자는 `PUSH`
    하나가 되고, 연산은 왼쪽, 오른쪽, 연산자 순서로 컴파일됩니다:
 
-   ```text
+   ```nme
    def compile(node):
        if node[0] == "num":
            return ["PUSH " + str(node[1])]
@@ -49,7 +49,7 @@
 3. VM은 작은 스택을 가진 루프입니다. [82](82-ast.ko.md)의 토크나이저와
    파서와 함께 `bytecode.nme`로 저장하세요:
 
-   ```text
+   ```nme
    # bytecode.nme — 전체 파이프라인: 토큰 -> 트리 -> 명령 -> 실행.
    # 실행: nme 실행 bytecode
 
@@ -132,7 +132,7 @@
 
 5. 왼쪽에서 오른쪽 사슬을 시험하는 줄도 실행해 보세요:
 
-   ```text
+   ```nme
    show run(compile(parse_expr(tokenize("8 / 2 / 2"))))
    ```
 

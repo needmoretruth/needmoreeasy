@@ -21,7 +21,7 @@ compiler project in one NME program.
    stores a number, `add` adds, `while name N` repeats while `name < N`, and
    `end` closes the loop. The program lives as a list of lines:
 
-   ```text
+   ```nme
    [
        "set count 0",
        "while count 3",
@@ -44,7 +44,7 @@ compiler project in one NME program.
    — guide [34](34-selfhost.md)'s runner, now reading a real file. Save
    `capstone.nme`:
 
-   ```text
+   ```nme
    # capstone.nme — a language that compiles to Python.
    # Run: nme r capstone
    # Reads the mini language, compiles it to Python source,

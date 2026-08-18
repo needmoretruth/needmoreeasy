@@ -19,7 +19,7 @@ repeats a row. Nested loops turn those rows into triangles and a diamond.
 1. `"*" * 5` is one string with five stars, and `" " * 2 + "*" * 3` glues two
    spaces to three stars. Strings can multiply and add like numbers:
 
-   ```text
+   ```nme
    show "*" * 5
    show " " * 2 + "*" * 3
    ```
@@ -29,7 +29,7 @@ repeats a row. Nested loops turn those rows into triangles and a diamond.
 2. A `for` loop turns the repeated string into a triangle. Each pass prints
    one row, and the row grows with `i`:
 
-   ```text
+   ```nme
    for i in range(1, 6):
        show "*" * i
    ```
@@ -39,7 +39,7 @@ repeats a row. Nested loops turn those rows into triangles and a diamond.
 3. `range(5, 0, -1)` counts down, so the rows shrink. The same loop body
    draws an upside-down triangle:
 
-   ```text
+   ```nme
    for i in range(5, 0, -1):
        show "*" * i
    ```
@@ -50,7 +50,7 @@ repeats a row. Nested loops turn those rows into triangles and a diamond.
    `n - i` spaces push the stars to the middle, and `2 * i - 1` stars is an
    odd count — 1, 3, 5, and so on:
 
-   ```text
+   ```nme
    n = 5
    for i in range(1, n + 1):
        spaces = " " * (n - i)
@@ -64,7 +64,7 @@ repeats a row. Nested loops turn those rows into triangles and a diamond.
    twice — once counting up for the top, once counting down for the bottom.
    Save `ascii.nme`:
 
-   ```text
+   ```nme
    # ascii.nme — drawing shapes with characters.
    # Run: nme r ascii
    #

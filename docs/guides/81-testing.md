@@ -19,7 +19,7 @@ it once, and every later change gets re-checked by rerunning it.
 1. A test is a row of data: a name, a function, the arguments, and the
    expected result. `add(2, 3)` should return `5`:
 
-   ```text
+   ```nme
    ["adds numbers", add, 2, 3, 5]
    ```
 
@@ -27,7 +27,7 @@ it once, and every later change gets re-checked by rerunning it.
    function lives in the row as a value — the same way `random_number`
    was a value in guide [10](10-random.md). Save `testcalc.nme`:
 
-   ```text
+   ```nme
    # testcalc.nme — check the functions you wrote with a tiny test runner.
    # Run: nme r testcalc
 
@@ -96,7 +96,7 @@ it once, and every later change gets re-checked by rerunning it.
    (guide [23](23-modules.md)) and the tests in the main file, then run the
    tests after every change:
 
-   ```text
+   ```nme
    # from "calc.nme" import add, mul   (the module version)
    ```
 

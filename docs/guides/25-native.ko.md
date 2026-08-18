@@ -23,7 +23,7 @@
    `if`/`while`과 분기 본문은 `then`/`그러면` 뒤에 한 줄 NME 출력 문장이나
    `break`를 이어 쓸 수도 있습니다:
 
-   ```text
+   ```nme
    score = 0
    while score is less than 10
        score add 1
@@ -31,14 +31,14 @@
    show score
    ```
 
-   ```text
+   ```nme
    준비는 참
    만약 준비 그러면 말해 "준비됨"
    ```
 
    한 줄 반복은 다음처럼 씁니다:
 
-   ```text
+   ```nme
    repeat 2 times and show Hi
    2번 반복해서 안녕 말해줘
    2 times: say "beginner"
@@ -47,7 +47,7 @@
 
    한 줄 `break`는 네이티브 반복문을 멈추며 반복문 안에서만 쓸 수 있습니다:
 
-   ```text
+   ```nme
    횟수 = 0
    동안 참
        횟수에 1 더해
@@ -58,14 +58,14 @@
 
    문장형 반복도 같은 한 줄 본문을 사용할 수 있습니다:
 
-   ```text
+   ```nme
    3번 반복해서 여기서 멈춰
    말해 "끝"
    ```
 
    반복문 자체도 한 줄 본문을 사용할 수 있습니다:
 
-   ```text
+   ```nme
    동안 참 그러면 여기서 멈춰
    말해 "끝"
    ```
@@ -108,7 +108,7 @@
    구별됩니다. 대입하고 `==`/`!=`로 비교하고 조건에 바로 쓰며 `True` 또는
    `False`로 출력할 수 있습니다:
 
-   ```text
+   ```nme
    준비 = True
    말해 준비
    만약 준비
@@ -120,7 +120,7 @@
 
    같은 값은 더 쉬운 영어·한국어 표기로도 적을 수 있습니다:
 
-   ```text
+   ```nme
    ready save true
    set ready to True
    준비는 참
@@ -164,7 +164,7 @@
    `examples/native-factorial.ko.nme`(영어판 `examples/native-factorial.nme`)는
    두 백엔드에서 모두 팩토리얼을 계산합니다:
 
-   ```text
+   ```nme
    # part of examples/native-factorial.ko.nme
    def fact(n):
        만약에 n이 2보다 작으면

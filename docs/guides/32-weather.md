@@ -18,7 +18,7 @@ report.
 1. Create `weather.json` — a dict holding another dict (`current`) and a
    list of dicts (`forecast`):
 
-   ```text
+   ```nme
    {
      "city": "Seoul",
      "current": {"temperature": 21, "condition": "sunny", "humidity": 55},
@@ -40,7 +40,7 @@ report.
 
 3. The whole program. Save `weather.nme`:
 
-   ```text
+   ```nme
    # weather.nme — a mini weather report from a local web server.
    # Run: nme r weather — serve this folder first: python3 -m http.server 8000
 

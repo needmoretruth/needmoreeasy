@@ -14,7 +14,7 @@ row, and every cell is a text mark. Reading and writing a cell uses two
 indexes — first the row, then the column.
 ## Steps
 1. A 3x3 board is three rows, each a list of three marks. `board[0]` is the first row, `board[1]` the second. Reading a cell needs both indexes — row first, column second — and writing uses the same with `=`. All indexes start at `0`, so `board[0][0]` is the top-left corner:
-   ```text
+   ```nme
    board = [["-", "-", "-"], ["-", "-", "-"], ["-", "-", "-"]]
    show board[0]
    board[0][0] = "X"
@@ -24,7 +24,7 @@ indexes — first the row, then the column.
    ```
    It prints the first row, then `X` and `O`. A `-` means an empty cell.
 2. A `for` loop visits every row, so printing a whole board is three short lines:
-   ```text
+   ```nme
    board = [["X", "O", "-"], ["-", "-", "-"], ["-", "-", "-"]]
    for row in board:
        show row
@@ -32,7 +32,7 @@ indexes — first the row, then the column.
    The loop reads the outer list top to bottom; each `row` is one inner list.
 3. Now a program that builds the board, prints it, places marks, reads them back, and counts them. The counting loop uses a second, inner loop so every cell of every row is visited. Save it as `grid.nme`:
 
-   ```text
+   ```nme
    # grid.nme — a 3x3 board made of lists.
    # Run: nme r grid
    # A grid is a list of rows; each row is a list of cells.

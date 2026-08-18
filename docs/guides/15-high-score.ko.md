@@ -17,7 +17,7 @@
 
 1. `best.nme` 파일을 만들고 게임 전체를 한 파일로 저장합니다:
 
-   ```text
+   ```nme
    랜덤 사용 최신
    파일 사용 최신
    import os
@@ -69,7 +69,7 @@
    [영어 가이드](15-high-score.md)에 있습니다. 이 조각은 저장된 최고를
    읽어 보여 줍니다:
 
-   ```text
+   ```nme
    use file latest
    best = json_load("best.json")
    say f"Saved best score: {best['score']}"

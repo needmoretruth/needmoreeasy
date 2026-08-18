@@ -20,7 +20,7 @@ command, like a compiler reading input one token at a time.
 1. `split()` cuts a line at the spaces; each word is a token, in order —
    `"move 3"` becomes `["move", "3"]`:
 
-   ```text
+   ```nme
    line = "move 3"
    tokens = line.split()
    show f"{len(tokens)} tokens: {tokens}"
@@ -33,7 +33,7 @@ command, like a compiler reading input one token at a time.
    [06](06-if.md), comparing tokens instead of answers. `tokens[1]` is the
    first argument:
 
-   ```text
+   ```nme
    def run_tokens(tokens):
        command = tokens[0]
        if command == "move":
@@ -52,7 +52,7 @@ command, like a compiler reading input one token at a time.
    "steps": 0}` — and `move` adds to `robot["steps"]`. The whole program,
    saved as `tokens.nme`:
 
-   ```text
+   ```nme
    # tokens.nme — split a command line into tokens and dispatch them.
    # Run: nme r tokens
    # A token is one word of a line; split() makes the list.

@@ -18,7 +18,7 @@ the math, and NME `show` for output.
 
 1. Save the whole calculator in one file, `calculator.nme`, and run it:
 
-   ```text
+   ```nme
    # A command-line calculator: type 3 + 4, or quit.
    # Run: nme r calculator
 
@@ -65,7 +65,7 @@ the math, and NME `show` for output.
    command, and `return` sends the answer back. `parts[1]` is the operator and
    `int(parts[0])` turns the text `"3"` into the number `3`:
 
-   ```text
+   ```nme
    def calculate(parts):
        if parts[1] == "+":
            return int(parts[0]) + int(parts[2])
@@ -85,7 +85,7 @@ the math, and NME `show` for output.
    operator, `parts[2]` the second number. `len(parts) == 3` rejects anything
    that is not a well-formed command:
 
-   ```text
+   ```nme
    parts = command.split()
    if len(parts) == 3:
        answer = calculate(parts)
@@ -101,7 +101,7 @@ the math, and NME `show` for output.
    `while True:` never ends on its own, so `quit` must `break` out. Everything
    between is one turn of the calculator:
 
-   ```text
+   ```nme
    while True:
        ask command, "Your command? "
        if command == "quit":
@@ -118,7 +118,7 @@ the math, and NME `show` for output.
 5. Once the function works, move it into its own module as guide
    [23](23-modules.md) showed. Save the function in `calc.nme`:
 
-   ```text
+   ```nme
    # calc.nme — the calculate function only
    def calculate(parts):
        if parts[1] == "+":
@@ -134,7 +134,7 @@ the math, and NME `show` for output.
    Then import it at the top of `calculator.nme`. The main file now only
    describes the loop; the math stays in `calc.nme`:
 
-   ```text
+   ```nme
    from "calc.nme" import calculate
 
    show "Calculator — type a command like 3 + 4, or quit."
@@ -158,7 +158,7 @@ the math, and NME `show` for output.
 6. The Korean twin `calculator.ko.nme` keeps the same `def` and writes the
    loop with `물어봐`, `만약`, and `말해`:
 
-   ```text
+   ```nme
    def calculate(parts):
        if parts[1] == "+":
            return int(parts[0]) + int(parts[2])

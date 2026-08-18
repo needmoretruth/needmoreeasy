@@ -16,7 +16,7 @@ needs at least one.
 
 1. Create `combine.nme`:
 
-   ```text
+   ```nme
    set ready to True
    set score to 5
    if ready and score is greater than 2 then show Go
@@ -26,7 +26,7 @@ needs at least one.
 
 2. Korean connects conditions with `그리고` and `또는`:
 
-   ```text
+   ```nme
    준비는 참
    점수는 5
    만약 준비 그리고 점수가 2보다 크면 성공 말해줘
@@ -34,7 +34,7 @@ needs at least one.
 
    `or` only needs one true side:
 
-   ```text
+   ```nme
    준비는 참
    기다림은 거짓
    만약 준비 또는 기다림 그러면 기다려 말해줘
@@ -42,7 +42,7 @@ needs at least one.
 
 3. `and` binds before `or`, exactly like Python:
 
-   ```text
+   ```nme
    만약 준비 그리고 기다림 또는 점수 > 2 그러면 성공 말해줘
    ```
 
@@ -50,7 +50,7 @@ needs at least one.
 
 4. Combined conditions work in loops too:
 
-   ```text
+   ```nme
    set ready to True
    set waiting to False
    while ready or waiting
@@ -63,7 +63,7 @@ needs at least one.
 
 Show a welcome only when a name exists and the hour is late:
 
-```text
+```nme
 set name to Mina
 set hour to 21
 if name exists and hour is greater than 18 then show Good evening name!

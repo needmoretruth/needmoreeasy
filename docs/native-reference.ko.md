@@ -17,7 +17,7 @@
 
 ### 문장형 영어
 
-```text
+```nme
 score = 5
 while score is less than 10
     score add 1
@@ -27,7 +27,7 @@ show score
 
 ### 문장형 한국어
 
-```text
+```nme
 점수 = 5
 동안 점수가 10보다 작을 동안
     점수에 1 더해
@@ -37,7 +37,7 @@ show score
 
 ### 초급 영어
 
-```text
+```nme
 score = 5
 5 times:
     score add 1
@@ -46,7 +46,7 @@ show score
 
 ### 초급 한국어
 
-```text
+```nme
 점수 = 5
 5번:
     점수에 1 더해
@@ -55,7 +55,7 @@ show score
 
 ### 고급 영어
 
-```text
+```nme
 def twice(value):
     return value * 2
 
@@ -64,7 +64,7 @@ show twice(5)
 
 ### 고급 한국어 사용
 
-```text
+```nme
 def 두배(값):
     return 값 * 2
 
@@ -75,7 +75,7 @@ def 두배(값):
 한국어 식별자와 NME의 `말해` 출력 표기를 같은 네이티브 프로그램에서 사용할 수
 있습니다. 여섯 예제는 모두 다음을 출력합니다.
 
-```text
+```nme
 10
 ```
 
@@ -183,7 +183,7 @@ CPython 경로를 사용하세요.
 네이티브 함수는 보통 Python처럼 `def` 헤더를 쓰지만, 네이티브 시그니처는
 의도적으로 작습니다.
 
-```text
+```nme
 def fact(n):
     if n is less than 2
         return 1
@@ -203,7 +203,7 @@ show fact(5)
 다음 예제에서는 `else` 경로가 블록 끝 전에 반환하므로, 마지막 `return`까지
 도달하는 경로에서만 `결과`를 대입하면 됩니다.
 
-```text
+```nme
 def 선택(값):
     만약 값
         결과 = 2

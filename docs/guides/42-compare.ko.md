@@ -16,14 +16,14 @@
 
 1. 데이터 파일 두 개를 만들고 불러옵니다. 각 파일은 JSON 목록 하나를 담습니다 ([14](14-json.ko.md) 가이드가 `json저장`으로 저장한 모양):
 
-   ```text
+   ```nme
    # a.json
    [5, 2, 9, 1, 7, 3]
    # b.json
    [8, 4, 6, 10, 3]
    ```
 
-   ```text
+   ```nme
    파일 사용 최신
    a = json읽기("a.json")
    b = json읽기("b.json")
@@ -36,7 +36,7 @@
 2. 평균을 손으로, 라이브러리로, 그리고 최댓값. `sum(a) / len(a)`는 평균이고,
    `statistics.mean`([30](30-data.ko.md) 가이드)이 확인하며, `max`는 내장 함수입니다:
 
-   ```text
+   ```nme
    from statistics import mean
    a = [5, 2, 9, 1, 7, 3]
    a평균 = sum(a) / len(a)
@@ -49,7 +49,7 @@
 
 3. 비교 프로그램입니다. 두 JSON 파일과 함께 `비교.nme`로 저장하고 실행합니다:
 
-   ```text
+   ```nme
    # 비교.nme — 두 숫자 묶음 중 어느 쪽이 더 클까요?
    # 실행: nme 실행 비교
    # a.json과 b.json 파일이 같은 폴더에 있어야 합니다.

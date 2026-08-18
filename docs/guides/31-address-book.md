@@ -18,7 +18,7 @@ contact, lists everyone, and searches by name — each change saved to a file.
 1. One contact is a dict with a `name` and a `phone`. The whole book is a list
    of those dicts:
 
-   ```text
+   ```nme
    mina = {"name": "Mina", "phone": "010-1234"}
    contacts = [mina]
    show f"{contacts[0]['name']}: {contacts[0]['phone']}"
@@ -30,7 +30,7 @@ contact, lists everyone, and searches by name — each change saved to a file.
 2. A real book loads a saved file, or begins empty when the file does not exist
    yet. Guide [15](15-high-score.md) used `os.path.exists` the same way:
 
-   ```text
+   ```nme
    import os
    use file latest
 
@@ -45,7 +45,7 @@ contact, lists everyone, and searches by name — each change saved to a file.
 3. `add` grows the list with `append` and writes it back. `json_save` accepts a
    list, not just a dict:
 
-   ```text
+   ```nme
    contacts.append({"name": name, "phone": phone})
    json_save("address.json", contacts)
    ```
@@ -53,7 +53,7 @@ contact, lists everyone, and searches by name — each change saved to a file.
 4. `list` walks the list with a `for` loop and prints both fields of each
    record:
 
-   ```text
+   ```nme
    for contact in contacts:
        show f"{contact['name']}: {contact['phone']}"
    ```
@@ -61,7 +61,7 @@ contact, lists everyone, and searches by name — each change saved to a file.
 5. `search` filters the same loop. `find in contact["name"]` is true when the
    typed text appears anywhere in the name, so `Min` finds `Mina`:
 
-   ```text
+   ```nme
    for contact in contacts:
        if find in contact["name"]:
            show f"{contact['name']}: {contact['phone']}"
@@ -69,7 +69,7 @@ contact, lists everyone, and searches by name — each change saved to a file.
 
 6. The whole menu in one file. Save `address.nme`:
 
-   ```text
+   ```nme
    # address.nme — a small address book in a JSON file.
    # Run: nme r address
    # Type add, list, search, or quit.
@@ -139,7 +139,7 @@ contact, lists everyone, and searches by name — each change saved to a file.
    The full Korean program is in the [Korean guide](31-address-book.ko.md);
    this snippet loads the saved book:
 
-   ```text
+   ```nme
    파일 사용 최신
    if os.path.exists("address.json"):
        연락처 = json읽기("address.json")

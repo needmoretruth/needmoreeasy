@@ -228,21 +228,21 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 
 **인사 / hello**
 
-```text
+```nme
 안녕하세요! 말해줘
 3번 반복해서 반가워요 말해줘
 ```
 
 **이름 묻기 / ask a name**
 
-```text
+```nme
 이름이 뭐예요?
 안녕하세요 이름! 말해줘
 ```
 
 **숫자 맞히기 / guessing game**
 
-```text
+```nme
 정답은 1부터 10까지 랜덤정수
 추측을 숫자로 물어봐 1부터 10까지 골라 보세요
 만약에 추측이 정답과 같으면
@@ -256,7 +256,7 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 
 **점수 세기 / counting**
 
-```text
+```nme
 점수는 0
 5번 반복해
 점수에 2 곱해
@@ -267,7 +267,7 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 
 **목록 하나씩 / going through a list**
 
-```text
+```nme
 친구들은 목록 민수, 지안, 서준
 친구들의 친구마다 반복해
 안녕하세요 친구! 말해줘
@@ -276,7 +276,7 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 
 **목록에 넣기 / building a list**
 
-```text
+```nme
 이름들은 목록
 3번 반복해
 이름을 물어봐 이름을 알려 주세요

@@ -32,7 +32,7 @@
    `if`는 Python으로 남고, 바꿀 수 있는 부분만 다시 써집니다. 변환기는
    항상 따옴표를 그대로 둡니다:
 
-   ```text
+   ```nme
    말해 "hi"
    물어봐 name, "Name: "
    if name:
@@ -47,7 +47,7 @@
 
    결과:
 
-   ```text
+   ```nme
    show "hi"
    ask name "Name: "
    if name:

@@ -19,7 +19,7 @@
 1. 비밀 코드는 색 목록에서 네 번 고른 것입니다 — [10](10-random.ko.md)의
    `random_pick`을 네 번 부릅니다:
 
-   ```text
+   ```nme
    use random latest
 
    colors = ["red", "blue", "green", "yellow"]
@@ -35,7 +35,7 @@
 2. 검정은 정확히 일치하는 자리를 셉니다 — 같은 색, 같은 위치. 추측
    색마다 비밀 색과 비교하세요:
 
-   ```text
+   ```nme
    black = 0
    for i in range(4):
        if parts[i] == secret[i]:
@@ -45,7 +45,7 @@
 3. 하양이 더 까다롭습니다: 색은 맞지만 자리가 틀린 것들. 정직한
    방법은 두 목록에 모두 있는 색을 센 다음, 검정을 빼는 것입니다:
 
-   ```text
+   ```nme
    white = 0
    for color in colors:
        white = white + min(parts.count(color), secret.count(color))
@@ -60,7 +60,7 @@
 4. 전체 게임은 추측을 받고 검증하며, 검정 4개에서 멈춥니다.
    `mastermind.nme`로 저장하세요:
 
-   ```text
+   ```nme
    # mastermind.nme — 4색 비밀 코드 맞히기.
    # 실행: nme 실행 mastermind
 

@@ -20,7 +20,7 @@ the top ten with a slice.
 1. Create `records.json` with at least twelve records. Each record is a dict
    with a `name` and a numeric `score`:
 
-   ```text
+   ```nme
    [
      {"name": "Mina", "score": 88},
      {"name": "Jun", "score": 95},
@@ -39,7 +39,7 @@ the top ten with a slice.
 
 2. Load the list with `json_load` from guide [14](14-json.md):
 
-   ```text
+   ```nme
    use file latest
    records = json_load("records.json")
    show f"loaded {len(records)} records"
@@ -52,7 +52,7 @@ the top ten with a slice.
    r["score"]` is a tiny function that takes a record `r` and returns its
    `score`. `reverse=True` puts the highest score first:
 
-   ```text
+   ```nme
    records = [{"name": "Mina", "score": 88}, {"name": "Jun", "score": 95}]
    top = sorted(records, key=lambda r: r["score"], reverse=True)
    show top
@@ -68,7 +68,7 @@ the top ten with a slice.
 4. `[:10]` keeps the first ten entries of a list — the top ten. Slicing works
    on numbers and records alike:
 
-   ```text
+   ```nme
    scores = [5, 2, 9, 1, 7, 3]
    top = sorted(scores, reverse=True)[:3]
    show top
@@ -82,7 +82,7 @@ the top ten with a slice.
    with a rank number, and shows who barely missed the cut. Save
    `top-ten.nme`:
 
-   ```text
+   ```nme
    # top-ten.nme — the ten highest scores from records.json.
    # Run: nme r top-ten
    # The file records.json must exist in the same folder.

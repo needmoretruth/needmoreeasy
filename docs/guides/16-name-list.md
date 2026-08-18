@@ -16,7 +16,7 @@ A file can be a list. When each name sits on its own line, one Python method,
 
 1. Create `names.txt` with one name per line, next to your program:
 
-   ```text
+   ```nme
    Mina
    Sana
    준호
@@ -25,7 +25,7 @@ A file can be a list. When each name sits on its own line, one Python method,
 
 2. Read the whole file and split it into lines:
 
-   ```text
+   ```nme
    use file latest
    names = file_read("names.txt").splitlines()
    show names
@@ -37,7 +37,7 @@ A file can be a list. When each name sits on its own line, one Python method,
 
 3. Loop over the list with a `for` block. Sentence NME works inside it:
 
-   ```text
+   ```nme
    use file latest
    names = file_read("names.txt").splitlines()
    for name in names:
@@ -49,7 +49,7 @@ A file can be a list. When each name sits on its own line, one Python method,
 4. Pick a random name with `random_pick`. `use random latest` loads the
    picker; `3 times:` repeats the pick:
 
-   ```text
+   ```nme
    use file latest
    use random latest
    names = file_read("names.txt").splitlines()
@@ -59,7 +59,7 @@ A file can be a list. When each name sits on its own line, one Python method,
 
 5. Korean reads with `파일읽기(...).splitlines()` and picks with `랜덤선택`:
 
-   ```text
+   ```nme
    파일 사용 최신
    랜덤 사용 최신
    이름들 = 파일읽기("names.txt").splitlines()

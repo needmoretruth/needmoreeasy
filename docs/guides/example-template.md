@@ -29,7 +29,7 @@ External dependencies: none / name and reason
 Start with one file when one level is enough. When a six-way comparison is
 useful, prefer:
 
-```text
+```nme
 examples/project-sentence.ko.nme
 examples/project-sentence.en.nme
 examples/project-beginner.ko.nme
@@ -40,7 +40,7 @@ examples/project-advanced.en.nme
 
 ## 3. Korean sentence skeleton
 
-```text
+```nme
 이름은 예제
 값은 0
 
@@ -61,7 +61,7 @@ token set and enforce it in a regression test.
 
 ## 4. English sentence skeleton
 
-```text
+```nme
 name save Example
 value save 0
 
@@ -84,7 +84,7 @@ zeroknowledge latest` and `zero knowledge secret make`.
 
 ## 5. Korean beginner skeleton
 
-```text
+```nme
 저장 이름 "예제"
 저장 값 0
 

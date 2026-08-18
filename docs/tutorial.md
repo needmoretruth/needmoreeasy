@@ -12,7 +12,7 @@ before moving on; changing a word and observing the result is part of learning.
 Create `hello.nme` (in the same folder where you ran `nme --version`; any text
 editor works — on Windows, Notepad saves UTF-8 by default):
 
-```text
+```nme
 show Hello world!
 ```
 
@@ -23,7 +23,7 @@ nme run hello
 `show` is an action. Everything after it is the sentence to display. Korean is
 equally valid:
 
-```text
+```nme
 안녕하세요! 말해줘
 ```
 
@@ -35,7 +35,7 @@ Korean twin.
 
 ## Project 2: A greeting program
 
-```text
+```nme
 What is your name?
 Nice to meet you name!
 ```
@@ -44,7 +44,7 @@ The first line creates the name `name` from an ordinary question. The second
 line recognizes that known name and inserts its value. The Korean version needs
 no formatting syntax:
 
-```text
+```nme
 이름이 뭐예요?
 이름 만나서 반가워요!
 ```
@@ -55,14 +55,14 @@ Challenge: ask for a favorite color and show it in another sentence.
 
 Start with a random answer and numeric input:
 
-```text
+```nme
 set answer to random number from 1 to 10
 ask number guess Pick a number from 1 to 10
 ```
 
 Then compare them:
 
-```text
+```nme
 if guess equals answer
     show Correct!
 
@@ -95,7 +95,7 @@ input and conditions.
 If indentation is getting in the way, write the same control flow as one flat
 block and close it with `end`:
 
-```text
+```nme
 while guess != answer
 show Try again
 ask number guess Pick another number
@@ -112,7 +112,7 @@ spellings are `멈춰`, `그리고`/`또는`, `아니면 만약에`, and `아니
 Sentence syntax is not a cage. Use compact beginner syntax or Python whenever
 it says the idea more clearly:
 
-```text
+```nme
 people = ["Ada", "Grace"]
 
 2 times:
@@ -137,7 +137,7 @@ both and compare the identical output.
 
 Try adding a flat NME block beside the Python loop:
 
-```text
+```nme
 while person != "Grace"
 show Hello person
 break
@@ -186,7 +186,7 @@ it, make sure the earlier projects feel comfortable. If indexing, slices, or
 Python method calls are still new, leave this project for later and keep
 building small programs with sentence and beginner NME first:
 
-```text
+```nme
 count = 0
 while count < 2
 add 1 to count
@@ -200,7 +200,7 @@ the source directly. The example
 [`examples/tiny-compiler.en.nme`](../examples/tiny-compiler.en.nme) compiles this
 tiny two-sentence language:
 
-```text
+```nme
 say Hello
 3 times say I built a compiler in NME
 ```

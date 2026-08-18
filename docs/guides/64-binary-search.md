@@ -21,7 +21,7 @@ needs at most 10 guesses.
    the target. `mid` is the middle of that range, and `//` divides and rounds
    down:
 
-   ```text
+   ```nme
    numbers = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91]
    low = 0
    high = len(numbers) - 1
@@ -36,7 +36,7 @@ needs at most 10 guesses.
    `mid` is too small too — so `low` jumps past it. If it is too big, `high`
    jumps below it. Repeating this halves the range every loop:
 
-   ```text
+   ```nme
    numbers = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91]
    target = 23
    low = 0
@@ -75,7 +75,7 @@ needs at most 10 guesses.
 4. The whole program. It prints every step, the found index, the step count,
    and a left-to-right search for comparison. Save `binary.nme`:
 
-   ```text
+   ```nme
    # binary.nme — binary search: halving the guess.
    # Run: nme r binary
    #

@@ -20,7 +20,7 @@
 1. 받을 파일을 만드세요. `story.txt`는 실제 웹사이트에서 가져온다고
    상상하는 파일입니다:
 
-   ```text
+   ```nme
    옛날옛날에, 한 학습자가 터미널을 열었습니다.
    터미널은 한 번에 작은 프로그램 하나씩만 물었습니다.
    어느 날 학습자는 다운로더를 만들었고,
@@ -36,7 +36,7 @@
 3. `urlopen`은 응답 객체를 줍니다. `.read()`가 본문 전체를 한 번에
    돌려줍니다:
 
-   ```text
+   ```nme
    from urllib.request import urlopen
 
    url = "http://localhost:8000/story.txt"
@@ -50,7 +50,7 @@
 4. 저장은 `file_write` 한 번입니다 — [13](13-files.ko.md). 전체 프로그램이
    다운로드하고 저장합니다. `download.nme`로 저장하세요:
 
-   ```text
+   ```nme
    # download.nme — 서버에서 파일을 받아 저장하기.
    # 실행: nme 실행 download
    # 먼저 이 폴더에서 python3 -m http.server 8000 실행
@@ -87,7 +87,7 @@
    실패합니다. 바이트를 통째로 모은 뒤 한 번만 풉니다.
    `download-progress.nme`로 저장하세요:
 
-   ```text
+   ```nme
    # download-progress.nme — 조금씩 받으며 진행 상황 보여 주기.
    # 실행: nme 실행 download-progress
    # 먼저 이 폴더에서 python3 -m http.server 8000 실행

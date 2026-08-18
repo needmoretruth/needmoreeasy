@@ -17,7 +17,7 @@ second list — exactly what a dict is for.
 
 1. Create two data files. `students.json` has one dict per student:
 
-   ```text
+   ```nme
    [
      {"name": "Mina", "class": "A"},
      {"name": "Jun", "class": "A"},
@@ -28,7 +28,7 @@ second list — exactly what a dict is for.
 
 2. `scores.json` has the same names with a score:
 
-   ```text
+   ```nme
    [
      {"name": "Mina", "score": 92},
      {"name": "Jun", "score": 88},
@@ -39,7 +39,7 @@ second list — exactly what a dict is for.
 3. Build a lookup dict from the scores: each name maps to its score, so
    finding a student's score is one fast `[]` lookup instead of a scan:
 
-   ```text
+   ```nme
    scores_by_name = {}
    for record in scores:
        scores_by_name[record["name"]] = record["score"]
@@ -48,7 +48,7 @@ second list — exactly what a dict is for.
 4. The full program loads both lists, joins them, and prints the combined
    report. Save `merge.nme`:
 
-   ```text
+   ```nme
    # merge.nme — join students with scores by name.
    # Run: nme r merge
    # students.json and scores.json must be in the same folder.

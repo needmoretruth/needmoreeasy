@@ -16,7 +16,7 @@ its best score. `use random` rolls the die, `use file` saves the record.
 
 1. Create `best.nme` and save the whole game as one file:
 
-   ```text
+   ```nme
    use random latest
    use file latest
    import os
@@ -66,7 +66,7 @@ its best score. `use random` rolls the die, `use file` saves the record.
    `점수에 1 더해`, and `json저장`. The full Korean program is in the
    [Korean guide](15-high-score.ko.md); this snippet loads a saved best:
 
-   ```text
+   ```nme
    파일 사용 최신
    최고 = json읽기("best.json")
    말해 f"저장된 최고 점수: {최고['score']}점"
