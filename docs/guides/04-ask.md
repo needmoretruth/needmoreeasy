@@ -14,20 +14,17 @@ name.
 
 ## Steps
 
-1. Create `greet.nme`:
+1. Type this into the writing box:
 
    ```nme
    ask name What is your name?
    show Hello name!
    ```
 
-2. Run it and type a name when the program waits:
+2. Press **Run**. The program stops and waits. A box appears below it: type a
+   name and press **Answer**.
 
-   ```sh
-   nme run greet
-   ```
-
-   NME inserts the stored answer into the second sentence, so typing `Mina`
+   NME puts the answer it kept into the second sentence, so typing `Mina`
    prints `Hello Mina!`.
 
 3. The same conversation works in Korean:

@@ -6,54 +6,80 @@ English | [한국어](01-hello.ko.md)
 
 - Difficulty: ★☆☆☆☆ (1/5)
 - Prerequisites: none
-- Topic: first program and output
-- Result: a program that prints a message with `nme run`
+- Topic: your first program, and output
+- Result: a program that puts what you wrote on the screen
 
-Your first program. NME prints whatever follows `show` — no quotes, no
-parentheses.
+This is your first program. Nothing to install, and no knowledge of computers
+needed. NME puts whatever follows `show` on the screen. No quotes, no brackets.
 
 ## Steps
 
-1. Create a file named `hello.nme` in an empty folder and write:
+1. Open [needmoreeasy.com](https://needmoreeasy.com/). There is a writing box.
+   Type this into it:
 
    ```nme
    show Hello world!
    ```
 
-2. Run it:
+   Press **Run**. `Hello world!` appears below. That is all of it — you have
+   just written a program and run it.
 
-   ```sh
-   nme run hello
+   Nothing here can break anything, and what you write never leaves the tab.
+
+2. `show` is the thing to do, and the rest of the line is what to say. Change
+   the words:
+
+   ```nme
+   show I wrote my first program today
    ```
 
-   The console prints `Hello world!`. `show` is the action; the rest is the
-   message.
-
-3. The same idea works in Korean, and English and Korean can share one file.
-   Replace the file with:
+3. Korean works the same way, with the action at the end of the line instead:
 
    ```nme
    안녕하세요! 말해줘
    ```
 
-   `말해줘` is the Korean action for `show`.
+   You may mix the two languages in one file. There is nothing to set.
 
-4. NME also understands plain speech without an action word when the line is a
-   natural sentence:
+4. A line that reads as an ordinary sentence needs no action word at all:
 
    ```nme
    Hello everyone!
    오늘도 반가워요!
    ```
 
-## Try it yourself
+5. Several lines run from top to bottom, in order:
 
-Change the message to your own name or a favorite place, save, and run
-`nme r hello` again. The shortcut `nme r` is the same as `nme run`.
+   ```nme
+   show This is the first line
+   show This is the second line
+   ```
+
+## Try it
+
+Change the words to your own name, or a place you like, and press **Run**
+again. A three-line introduction of yourself is a good first program.
+
+To keep what you wrote, move it into **File 1** with the button above the
+writing box. That file stays in your browser, so opening an example to look at
+it will not take your work away.
+
+## If you installed it on your own computer (skip this for now)
+
+Once [install](../install.md) is done, the same program runs from a file. Put
+the lines in `hello.nme` and:
+
+```sh
+nme run hello
+```
+
+`nme r hello` is the short form of the same command. You do not need any of
+this while you are learning — the result is the same as on the site.
 
 ## What you learned
 
-- `nme run hello` runs `hello.nme`; `nme r hello` is the shortcut.
-- `show message` prints the rest of the line; `말해줘` is the Korean action.
-- No quotes, commas, or parentheses are needed for a sentence.
-- A natural one-line sentence prints by itself.
+- Whatever follows `show` appears on the screen; Korean puts `말해줘` at the end.
+- Sentences need no quotes, no commas and no brackets.
+- A line that reads as an ordinary sentence prints itself.
+- Several lines run from top to bottom.
+- Everything works on needmoreeasy.com with nothing installed.
