@@ -7,17 +7,16 @@ English | [한국어](tutorial.ko.md)
 This path starts with one sentence and ends with a compiler. Run every example
 before moving on; changing a word and observing the result is part of learning.
 
-## Project 1: Hello World
+**Nothing needs installing.** Type each program into the writing box on
+[needmoreeasy.com](https://needmoreeasy.com/) and press **Run**. If you have
+installed NME, put the same lines in a `.nme` file and use
+`nme run <name>` instead — the result is the same. The command line is not
+repeated below.
 
-Create `hello.nme` (in the same folder where you ran `nme --version`; any text
-editor works — on Windows, Notepad saves UTF-8 by default):
+## Project 1: Hello World
 
 ```nme
 show Hello world!
-```
-
-```sh
-nme run hello
 ```
 
 `show` is an action. Everything after it is the sentence to display. Korean is
