@@ -102,6 +102,12 @@ pub enum DiagnosticCode {
     UpdateUnparseable,
     /// A sentence `break` command could not be understood.
     BreakCommandUnparseable,
+    /// A sentence `skip` command could not be understood.
+    ContinueCommandUnparseable,
+    /// A wait amount (`wait 3 seconds`) could not be understood.
+    WaitAmountUnparseable,
+    /// An append line (`append Mina to friends`) could not be understood.
+    AppendUnparseable,
     /// `if`/`while`/`만약` with no condition.
     ConditionMissing,
     /// The condition could not be understood.
@@ -112,6 +118,8 @@ pub enum DiagnosticCode {
     RepeatCountUnparseable,
     /// `times` with no count.
     RepeatCountMissing,
+    /// A repeat-over-a-list line could not be understood.
+    ForEachUnparseable,
     /// `use` line asks for a module NME does not bundle.
     UnsupportedModule,
     /// `use random latest` and an exact version on one line.
@@ -253,11 +261,15 @@ impl DiagnosticCode {
             Self::AskTargetInvalid => "E0213",
             Self::UpdateUnparseable => "E0221",
             Self::BreakCommandUnparseable => "E0222",
+            Self::ContinueCommandUnparseable => "E0223",
+            Self::WaitAmountUnparseable => "E0224",
+            Self::AppendUnparseable => "E0225",
             Self::ConditionMissing => "E0301",
             Self::ConditionInvalid => "E0302",
             Self::RepeatBodyUnparseable => "E0303",
             Self::RepeatCountUnparseable => "E0304",
             Self::RepeatCountMissing => "E0305",
+            Self::ForEachUnparseable => "E0306",
             Self::UnsupportedModule => "E0401",
             Self::LatestAndVersion => "E0402",
             Self::ModuleVersionMissing => "E0403",
@@ -313,7 +325,7 @@ impl DiagnosticCode {
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 86] = [
+    pub const ALL: [DiagnosticCode; 90] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -344,11 +356,15 @@ impl DiagnosticCode {
         Self::AskTargetInvalid,
         Self::UpdateUnparseable,
         Self::BreakCommandUnparseable,
+        Self::ContinueCommandUnparseable,
+        Self::WaitAmountUnparseable,
+        Self::AppendUnparseable,
         Self::ConditionMissing,
         Self::ConditionInvalid,
         Self::RepeatBodyUnparseable,
         Self::RepeatCountUnparseable,
         Self::RepeatCountMissing,
+        Self::ForEachUnparseable,
         Self::UnsupportedModule,
         Self::LatestAndVersion,
         Self::ModuleVersionMissing,
@@ -636,6 +652,27 @@ impl DiagnosticCode {
                 "Inside a loop, write `break here`, `멈춰`, or just `break`. Nothing else belongs on that line.",
                 "반복문 안에서 `break here`, `멈춰` 또는 그냥 `break`라고 쓰세요. 그 줄에는 다른 내용이 들어가지 않아야 합니다.",
             ),
+            Self::ContinueCommandUnparseable => (
+                "E0223",
+                "the skip command could not be understood",
+                "건너뛰기 명령을 이해하지 못했습니다",
+                "Inside a loop, write `skip` or `건너뛰어` on its own line. It jumps straight to the next round of the loop, which is Python's `continue`.",
+                "반복문 안에서 `skip` 또는 `건너뛰어`만 한 줄에 쓰세요. 남은 줄을 건너뛰고 다음 반복으로 넘어가며, Python의 `continue`와 같습니다.",
+            ),
+            Self::WaitAmountUnparseable => (
+                "E0224",
+                "the wait length could not be understood",
+                "기다릴 시간을 이해하지 못했습니다",
+                "A wait looks like `wait 3 seconds`, `pause 3`, or `3초 기다려`. The amount must be a number or an expression that produces one; the unit word is optional.",
+                "기다리기는 `3초 기다려`, `wait 3 seconds`, `pause 3` 같은 형태입니다. 시간은 숫자이거나 숫자를 만드는 식이어야 하고, 단위 낱말은 생략해도 됩니다.",
+            ),
+            Self::AppendUnparseable => (
+                "E0225",
+                "the list addition could not be understood",
+                "목록에 넣는 줄을 이해하지 못했습니다",
+                "Adding to a list looks like `append Mina to friends` or `친구들에 민수 넣어`. `add 1 to score` is a different command: that changes a number.",
+                "목록에 넣기는 `친구들에 민수 넣어`, `append Mina to friends` 같은 형태입니다. `점수에 1 더해`(`add 1 to score`)는 숫자를 바꾸는 다른 명령입니다.",
+            ),
             Self::ConditionMissing => (
                 "E0301",
                 "the condition is missing",
@@ -670,6 +707,13 @@ impl DiagnosticCode {
                 "반복 횟수가 비어 있습니다",
                 "`times:` needs a count before the colon. Write the number of repetitions, for example `3 times: show Hello`.",
                 "`times:`는 콜론 앞에 횟수가 필요합니다. 반복할 횟수를 적으세요. 예: `3 times: show Hello`.",
+            ),
+            Self::ForEachUnparseable => (
+                "E0306",
+                "the repeat-over-a-list line could not be understood",
+                "목록 반복 줄을 이해하지 못했습니다",
+                "Repeating over a list looks like `for each name in names` or `이름들의 이름마다 반복해`. The name before `in`/`마다` holds each item in turn.",
+                "목록 반복은 `이름들의 이름마다 반복해`, `for each name in names` 같은 형태입니다. `마다`/`in` 앞의 이름이 항목을 하나씩 받는 이름입니다.",
             ),
             Self::UnsupportedModule => (
                 "E0401",

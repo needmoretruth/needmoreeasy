@@ -28,6 +28,14 @@ pub const FILE_MODULE_KO: &str = "파일";
 pub const ZERO_KNOWLEDGE_MODULE: &str = "zero_knowledge";
 pub const ZERO_KNOWLEDGE_MODULE_KO: &str = "영지식";
 pub const USE_KEYWORD_KO: &str = "사용";
+pub const WAIT_KEYWORD: &str = "wait";
+pub const WAIT_KEYWORD_KO: &str = "기다려";
+pub const SKIP_KEYWORD: &str = "skip";
+pub const SKIP_KEYWORD_KO: &str = "건너뛰어";
+pub const LIST_KEYWORD: &str = "list";
+pub const LIST_KEYWORD_KO: &str = "목록";
+pub const EACH_KEYWORD: &str = "each";
+pub const EACH_KEYWORD_KO: &str = "마다";
 pub(crate) const FILE_READ_WORDS_EN: &[&str] = &["read"];
 pub(crate) const FILE_WRITE_WORDS_EN: &[&str] = &["write"];
 pub(crate) const FILE_READ_WORDS_KO: &[&str] = &["읽어서", "읽고", "읽어"];
@@ -122,6 +130,10 @@ pub enum Value {
     Literal(Literal),
     RandomInteger { low: Code, high: Code },
     RandomChoice { choices: Vec<String> },
+    /// `list of Mina, Ada` / `목록 민수, 지안`. Each item is read the same way a
+    /// single sentence value is, so numbers stay numbers and words become text
+    /// without the writer choosing quotes.
+    List(Vec<Value>),
     ZeroKnowledge(ZeroKnowledgeValue),
 }
 
@@ -193,12 +205,17 @@ pub enum CompareOp {
     Less,
     LessOrEqual,
     GreaterOrEqual,
+    /// `if names contains Mina` / `만약에 이름들에 민수가 있으면`. The container is
+    /// on the left, so lowering emits `right in left`.
+    Contains,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum UpdateOp {
     Add,
     Subtract,
+    Multiply,
+    Divide,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -265,6 +282,22 @@ pub enum NmeStmt {
         count: Code,
         inline: Option<InlineStmt>,
     },
+    /// `for each name in names` / `이름들의 이름마다 반복해`. The loop name is the
+    /// only name this statement introduces, exactly like a Python `for` target.
+    ForEach {
+        name: String,
+        items: Code,
+        inline: Option<InlineStmt>,
+    },
+    /// `wait 3 seconds` / `3초 기다려`.
+    Wait {
+        seconds: Code,
+    },
+    /// `append Mina to friends` / `친구들에 민수 넣어`.
+    Append {
+        target: String,
+        value: Value,
+    },
     When {
         condition: Condition,
         inline: Option<InlineStmt>,
@@ -281,6 +314,9 @@ pub enum NmeStmt {
         inline: Option<InlineStmt>,
     },
     Break,
+    /// `skip` / `건너뛰어` — Python's `continue`, spelled the way a first-week
+    /// learner would say it.
+    Continue,
     End,
     UseModule {
         module: BundledModuleId,

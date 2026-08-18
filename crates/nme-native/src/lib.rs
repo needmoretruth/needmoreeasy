@@ -1716,6 +1716,7 @@ fn emit_say(
         Value::RandomInteger { .. } | Value::RandomChoice { .. } => {
             Err(not_supported("random values", span_of_value(value)))
         }
+        Value::List(_) => Err(not_supported("list values", span_of_value(value))),
         Value::ZeroKnowledge(_) => {
             Err(not_supported("zero-knowledge values", span_of_value(value)))
         }
@@ -1829,6 +1830,7 @@ fn emit_set(
         Value::Text(_)
         | Value::RandomInteger { .. }
         | Value::RandomChoice { .. }
+        | Value::List(_)
         | Value::ZeroKnowledge(_) => Err(not_supported("this value", span_of_value(value))),
     }
 }
@@ -1856,6 +1858,12 @@ fn emit_update(
         Some(VarType::Bool) => return Err(not_supported("changing a boolean value", span)),
         _ => {}
     }
+    if matches!(
+        operation,
+        nme_core::syntax::UpdateOp::Multiply | nme_core::syntax::UpdateOp::Divide
+    ) {
+        return Err(not_supported("multiplying or dividing a value", span));
+    }
     let amount_text = code_text(amount, source);
     let (lowered, kind) = check_expr(amount_text, span, declared, functions)?;
     if kind != ExprType::Int {
@@ -1871,12 +1879,16 @@ fn emit_update(
         let helper = match operation {
             nme_core::syntax::UpdateOp::Add => "nme_add_int",
             nme_core::syntax::UpdateOp::Subtract => "nme_sub_int",
+            // Rejected above: the native core has no overflow-checked
+            // multiply or divide helper yet.
+            _ => unreachable!("multiply and divide are rejected above"),
         };
         out.push_str(&format!("{target} = {helper}({target}, {lowered});\n"));
     } else {
         let helper = match operation {
             nme_core::syntax::UpdateOp::Add => "nme_add_float",
             nme_core::syntax::UpdateOp::Subtract => "nme_sub_float",
+            _ => unreachable!("multiply and divide are rejected above"),
         };
         out.push_str(&format!("{target} = {helper}({target}, {lowered});\n"));
     }
@@ -2647,6 +2659,12 @@ fn not_supported(what: &str, span: Span) -> Diagnostic {
         "ordering boolean values in a condition" => "조건에서 불리언 값의 순서 비교",
         "incompatible values in a condition" => "조건에서 호환되지 않는 값",
         "changing a boolean value" => "불리언 값 변경",
+        "multiplying or dividing a value" => "값의 곱하기·나누기",
+        "list values" => "목록 값",
+        "repeating over a list" => "목록 반복",
+        "waiting" => "기다리기",
+        "adding to a list" => "목록에 넣기",
+        "skipping to the next round" => "다음 반복으로 건너뛰기",
         _ => what,
     };
     Diagnostic::bilingual(
@@ -2665,6 +2683,10 @@ fn unsupported_statement(stmt: &NmeStmt, span: Span) -> Diagnostic {
     let what = match stmt {
         NmeStmt::Ask { .. } => "input (ask)",
         NmeStmt::Times { .. } => "repeat blocks",
+        NmeStmt::ForEach { .. } => "repeating over a list",
+        NmeStmt::Wait { .. } => "waiting",
+        NmeStmt::Append { .. } => "adding to a list",
+        NmeStmt::Continue => "skipping to the next round",
         NmeStmt::UseModule { .. } => "bundled modules",
         NmeStmt::FileRead { .. } | NmeStmt::FileWrite { .. } => "file operations",
         NmeStmt::ModuleImport { .. } => "module imports",

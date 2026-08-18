@@ -133,15 +133,41 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
             let operator = match operation {
                 UpdateOp::Add => "+",
                 UpdateOp::Subtract => "-",
+                UpdateOp::Multiply => "*",
+                UpdateOp::Divide => "/",
             };
-            format!(
-                "{target} = {target} {operator} {}",
-                lower_code(amount, source)
-            )
+            // `점수에서 1 + 2 빼줘` must mean `score - (1 + 2)`. Without the
+            // parentheses Python reads `score - 1 + 2`, which is a different
+            // number. Single atoms stay bare so the common case still looks
+            // like the arithmetic a learner would write by hand.
+            let amount = lower_code(amount, source);
+            if is_simple_atom(&amount) {
+                format!("{target} = {target} {operator} {amount}")
+            } else {
+                format!("{target} = {target} {operator} ({amount})")
+            }
         }
         NmeStmt::Times { count, inline } => {
             let header = format!("for _ in range({}):", lower_code(count, source));
             lower_suite(header, inline.as_ref(), source)
+        }
+        NmeStmt::ForEach {
+            name,
+            items,
+            inline,
+        } => {
+            let header = format!("for {name} in {}:", lower_code(items, source));
+            lower_suite(header, inline.as_ref(), source)
+        }
+        // `time` is imported inline for the same reason the file and random
+        // sentence forms import theirs: one NME line must stay one Python
+        // line, so there is nowhere to put a separate import statement.
+        NmeStmt::Wait { seconds } => format!(
+            "__import__(\"time\").sleep({})",
+            lower_code(seconds, source)
+        ),
+        NmeStmt::Append { target, value } => {
+            format!("{target}.append({})", lower_value(value, source))
         }
         NmeStmt::When { condition, inline } => {
             let header = format!("if ({}):", lower_condition(condition, source));
@@ -157,6 +183,7 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
         }
         NmeStmt::Else { inline } => lower_suite("else:".to_string(), inline.as_ref(), source),
         NmeStmt::Break => "break".to_string(),
+        NmeStmt::Continue => "continue".to_string(),
         NmeStmt::End => "# end".to_string(),
         NmeStmt::UseModule { module, .. } => match module {
             BundledModuleId::Random => {
@@ -196,6 +223,16 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
     }
 }
 
+/// True for an expression that cannot change meaning when an operator is put
+/// next to it: a name, a number, or a dotted name.
+fn is_simple_atom(text: &str) -> bool {
+    let text = text.trim();
+    !text.is_empty()
+        && text
+            .chars()
+            .all(|character| character.is_alphanumeric() || character == '_' || character == '.')
+}
+
 fn lower_code(code: &Code, source: &str) -> String {
     match code {
         Code::Source(span) => slice(source, *span).to_string(),
@@ -227,7 +264,22 @@ fn lower_condition(condition: &Condition, source: &str) -> String {
                 CompareOp::Less => "<",
                 CompareOp::LessOrEqual => "<=",
                 CompareOp::GreaterOrEqual => ">=",
+                CompareOp::Contains => "in",
             };
+            // NME puts the container first (`names contains Mina`); Python
+            // puts the member first.
+            if operator == "in" {
+                return if *negated {
+                    format!("{right} not in {left}")
+                } else {
+                    format!("{right} in {left}")
+                };
+            }
+            // A negated equality is `!=`, which is the operator the reference
+            // promises and the one a reader of the Python will recognize.
+            if *negated && operator == "==" {
+                return format!("{left} != {right}");
+            }
             let comparison = format!("{left} {operator} {right}");
             if *negated {
                 format!("not ({comparison})")
@@ -274,12 +326,28 @@ fn lower_value(value: &Value, source: &str) -> String {
             lower_code(high, source)
         ),
         Value::RandomChoice { choices } => {
+            // A choice written as a number stays a number, so the result can
+            // be compared with other numbers.
             let values = choices
                 .iter()
-                .map(|choice| python_string(choice))
+                .map(|choice| {
+                    if choice.parse::<i128>().is_ok() || choice.parse::<f64>().is_ok() {
+                        choice.clone()
+                    } else {
+                        python_string(choice)
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join(", ");
             format!("__import__(\"random\").choice(({values},))")
+        }
+        Value::List(items) => {
+            let values = items
+                .iter()
+                .map(|item| lower_value(item, source))
+                .collect::<Vec<_>>()
+                .join(", ");
+            format!("[{values}]")
         }
         Value::ZeroKnowledge(value) => lower_zero_knowledge(value, source),
     }
