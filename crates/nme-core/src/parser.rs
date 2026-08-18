@@ -3121,6 +3121,14 @@ fn match_wait(
     known_names: &HashSet<String>,
     mode: MatchMode,
 ) -> Result<Option<NmeStmt>, Diagnostic> {
+    // `… then show Time to sleep` ends in a waiting word but is a condition
+    // with a message, not a wait. The opening word decides the line.
+    if tokens
+        .first()
+        .is_some_and(|token| starts_a_different_statement(token))
+    {
+        return Ok(None);
+    }
     if let Some(consumed) = action_phrase_at(tokens, 0, WAIT_WORDS_EN, mode)
         .or_else(|| action_phrase_at(tokens, 0, WAIT_WORDS_KO, mode))
     {
@@ -3259,6 +3267,14 @@ fn match_append(
     known_names: &HashSet<String>,
     mode: MatchMode,
 ) -> Result<Option<NmeStmt>, Diagnostic> {
+    // `… then show Time to sleep` ends in a waiting word but is a condition
+    // with a message, not a wait. The opening word decides the line.
+    if tokens
+        .first()
+        .is_some_and(|token| starts_a_different_statement(token))
+    {
+        return Ok(None);
+    }
     if let Some(consumed) = action_phrase_at(tokens, 0, APPEND_WORDS_EN, mode) {
         let mut end = tokens.len();
         while end > consumed && is_command_ending(&tokens[end - 1]) {

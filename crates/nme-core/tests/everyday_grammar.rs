@@ -262,3 +262,11 @@ fn a_list_loop_needs_no_colon() {
         "친구들 = [\"민수\"]\nfor friend in 친구들: print(friend)\n"
     );
 }
+
+#[test]
+fn a_message_may_contain_a_waiting_word() {
+    assert_eq!(
+        ok("set tired to False\nif tired then show Time to sleep\n"),
+        "tired = False\nif (tired): print(\"Time to sleep\")\n"
+    );
+}
