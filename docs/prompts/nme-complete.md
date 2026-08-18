@@ -456,8 +456,12 @@ One import binds **both** the English and the Korean names.
 | `E0503` | a block that starts without a statement |
 | `E0504` | one statement per line |
 | `E0505` | the block body is not a statement NME knows |
+| `E0506` | this line starts with a space |
 | `E0601` | the sentence could mean more than one action |
 | `E0602` | no NME action was found on this line |
+| `E0603` | this word is not an action NME knows |
+| `E0604` | this line cannot do anything |
+| `E0605` | this line uses a curly quote |
 | `E0701` | a sentence-style line across several physical lines |
 | `E0702` | the Python source is not valid |
 | `E9001` | unknown command |
