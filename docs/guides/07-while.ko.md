@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★☆☆ (3/5)
-- 선수 지식 (Prerequisites): [06 — 조건](06-if.ko.md)
-- 주제 (Topic): 반복과 조건 / loops and conditions
-- 결과물 (Result): 조건이 참인 동안 반복하는 블록 / a block that loops while a condition is true
+- 난이도: ★★☆☆☆ (2/5)
+- 선수 지식: [06 — 조건](06-if.ko.md)
+- 주제: 반복과 조건
+- 결과물: 조건이 참인 동안 반복하는 블록
 
 `반복`은 정해진 횟수만큼 실행합니다. `동안`은 조건이 참인 동안 계속
 실행하고, 거짓이 되면 멈춥니다.

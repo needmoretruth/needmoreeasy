@@ -4,10 +4,10 @@ English | [한국어](42-compare.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [30 — Data](30-data.md), [14 — JSON](14-json.md)
-- 주제 (Topic): 데이터/비교 / data & comparison
-- 결과물 (Result): 두 JSON 숫자 목록을 불러와 평균과 최댓값을 비교하는 프로그램 / loading two JSON number lists and comparing their means and maxima
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [30 — Data](30-data.md), [14 — JSON](14-json.md)
+- Topic: data & comparison
+- Result: loading two JSON number lists and comparing their means and maxima
 
 Guide [30](30-data.md) summarized one list of numbers. Comparing two lists
 asks the same questions twice, then decides which group is bigger.

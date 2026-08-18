@@ -4,10 +4,10 @@ English | [한국어](71-chart.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [63 — ASCII art](63-ascii-art.md), [66 — Top ten](66-top-ten.md)
-- 주제 (Topic): 시각화/출력 / visualization
-- 결과물 (Result): JSON 목록에서 가장 큰 값에 맞춘 # 블록으로 가로 막대 그래프를 그리는 프로그램 / drawing a horizontal bar chart with # blocks from a JSON list, scaled to the largest value
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [63 — ASCII art](63-ascii-art.md), [66 — Top ten](66-top-ten.md)
+- Topic: visualization
+- Result: drawing a horizontal bar chart with # blocks from a JSON list, scaled to the largest value
 
 Guide [63](63-ascii-art.md) multiplied strings into rows, and guide
 [66](66-top-ten.md) sorted records by a score. A bar chart puts both

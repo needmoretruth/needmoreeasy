@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [68 — 예외](68-errors.ko.md), [50 — 문자열](50-strings.ko.md)
-- 주제 (Topic): 정규식 / regular expressions
-- 결과물 (Result): 텍스트 파일에서 전화번호와 이메일을 찾는 프로그램 / a program that finds phone numbers and email addresses in a text file
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [68 — 예외](68-errors.ko.md), [50 — 문자열](50-strings.ko.md)
+- 주제: 정규식
+- 결과물: 텍스트 파일에서 전화번호와 이메일을 찾는 프로그램
 
 "전화번호를 모두 찾아"는 고정된 단어가 아니라 패턴이 필요합니다. 표준
 `re` 라이브러리는 숫자 셋, 하이픈, 숫자 넷 같은 모양 — 그리고 이메일처럼
@@ -47,7 +47,7 @@
    [68](68-errors.ko.md)의 `try` / `except`가 없는 파일을 알려 줍니다:
    ```text
    # 연락처.nme — 텍스트 파일에서 전화번호와 이메일을 찾습니다.
-   # 실행: nme r 연락처
+   # 실행: nme 실행 연락처
    # re.findall은 패턴 하나로 파일 전체를 찾습니다.
 
    import re
@@ -77,7 +77,7 @@
    ```
 5. 실행합니다:
    ```sh
-   printf 'contacts.txt\n' | nme r 연락처
+   printf 'contacts.txt\n' | nme 실행 연락처
    ```
    ```text
    찾을 문서 이름: 전화번호 3개를 찾았어요:

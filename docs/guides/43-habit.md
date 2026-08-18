@@ -4,10 +4,10 @@ English | [한국어](43-habit.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [33 — Todo](33-todo.md), [23 — Modules](23-modules.md)
-- 주제 (Topic): 프로젝트 / a project
-- 결과물 (Result): add, check, streak, list, quit를 지원하고 저장 로직을 모듈 파일로 둔 JSON 저장 습관 추적기 / a JSON-persisted habit tracker with add, check, streak, list, quit, and a module file for the storage logic
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [33 — Todo](33-todo.md), [23 — Modules](23-modules.md)
+- Topic: a project
+- Result: a JSON-persisted habit tracker with add, check, streak, list, quit, and a module file for the storage logic
 
 Guide [33](33-todo.md) saved a todo list of dicts; guide [23](23-modules.md) split a project across files. A habit tracker is one dict — each habit's days in a row — saved to JSON.
 

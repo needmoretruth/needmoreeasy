@@ -4,10 +4,10 @@ English | [한국어](09-and-or.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★☆☆ (3/5)
-- 선수 지식 (Prerequisites): [08 — Break](08-break.md)
-- 주제 (Topic): 조건 / conditions
-- 결과물 (Result): 조건을 합쳐 판단하는 프로그램 / a program that judges combined conditions
+- Difficulty: ★★☆☆☆ (2/5)
+- Prerequisites: [08 — Break](08-break.md)
+- Topic: conditions
+- Result: a program that judges combined conditions
 
 Real conditions are often two questions. `and` needs both to be true; `or`
 needs at least one.

@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [46 — Expressions](46-expressions.ko.md), [49 — Tokens](49-tokens.ko.md)
-- 주제 (Topic): 컴파일러/AST / compiler & AST
-- 결과물 (Result): 식을 트리로 파싱하고 재귀로 평가해 우선순위를 지키는 계산기 / a calculator that parses an expression into a tree and evaluates the tree recursively, respecting precedence
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [46 — Expressions](46-expressions.ko.md), [49 — Tokens](49-tokens.ko.md)
+- 주제: 컴파일러/AST
+- 결과물: 식을 트리로 파싱하고 재귀로 평가해 우선순위를 지키는 계산기
 
 [46](46-expressions.ko.md)은 `2 + 3 * 4`를 한 번에 평가했고,
 [58](58-bytecode.ko.md)은 명령을 데이터로 납작하게 만들었습니다. 진짜
@@ -34,7 +34,7 @@
 
    ```text
    # ast.nme — 식을 트리로 만들고 트리를 평가하기.
-   # 실행: nme r ast
+   # 실행: nme 실행 ast
 
    def tokenize(line):
        return line.split()
@@ -85,7 +85,7 @@
 3. 실행하세요:
 
    ```sh
-   nme r ast
+   nme 실행 ast
    ```
 
    ```text
@@ -116,7 +116,7 @@
 `parse_term`의 while에 `"%"`를 넣고 `if op == "%"` 분기를 추가해 `%`
 연산자도 항(term) 수준에서 받아 보세요. 또는 한 줄 대신 들여쓰기로
 트리를 출력하는 `show_tree` 함수를 만들어 보세요. 그리고 소스를
-`sys.argv[1]`에서 읽게 바꿔 보세요([80](80-argv.ko.md)): `nme r ast "2 + 3 * 4"`.
+`sys.argv[1]`에서 읽게 바꿔 보세요([80](80-argv.ko.md)): `nme 실행 ast "2 + 3 * 4"`.
 
 ## 배운 것
 

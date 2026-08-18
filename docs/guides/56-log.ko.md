@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [13 — Files](13-files.ko.md), [35 — Diary](35-diary.ko.md)
-- 주제 (Topic): 파일/기록 / files & logging
-- 결과물 (Result): 프로그램이 실행될 때마다 datetime과 file_write로 로그 파일에 날짜 줄을 덧붙이기 / appending a dated line to a log file each time the program runs, using datetime and file_write
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [13 — Files](13-files.ko.md), [35 — Diary](35-diary.ko.md)
+- 주제: 파일/기록
+- 결과물: 프로그램이 실행될 때마다 datetime과 file_write로 로그 파일에 날짜 줄을 덧붙이기
 
 가이드 [35](35-diary.ko.md)의 일기는 날마다 파일 하나를 씁니다. **로그**는
 반대입니다: 사건마다 줄 하나가 쌓이는, 커지는 파일 하나. 언제 무슨 일이
@@ -45,7 +45,7 @@
 
    ```text
    # log.ko.nme — 작은 사건 기록기.
-   # 실행: nme r log.ko
+   # 실행: nme 실행 log.ko
 
    use file latest
    from datetime import datetime
@@ -76,8 +76,8 @@
    남아 있어 로그가 커지는 모습이 보입니다:
 
    ```sh
-   printf 'add\n물 주기\nshow\nquit\n' | nme r log.ko
-   printf 'add\n엄마에게 전화\nshow\nquit\n' | nme r log.ko
+   printf 'add\n물 주기\nshow\nquit\n' | nme 실행 log.ko
+   printf 'add\n엄마에게 전화\nshow\nquit\n' | nme 실행 log.ko
    ```
 
    ```text

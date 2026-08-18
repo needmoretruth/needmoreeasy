@@ -4,10 +4,10 @@ English | [한국어](44-playlist.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [10 — Random](10-random.md), [14 — JSON](14-json.md)
-- 주제 (Topic): 게임/랜덤 / game & random
-- 결과물 (Result): JSON에서 불러온 플레이리스트에 셔플·다음 곡·반복 재생을 더한 프로그램 / a playlist loaded from JSON with shuffle, next, and a loop of songs
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [10 — Random](10-random.md), [14 — JSON](14-json.md)
+- Topic: game & random
+- Result: a playlist loaded from JSON with shuffle, next, and a loop of songs
 
 A music player walks a list of songs — load it from JSON, mix it with the random helper, and loop a menu until you quit.
 

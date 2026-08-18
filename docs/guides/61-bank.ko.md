@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [43 — 습관 체크](43-habit.ko.md), [48 — 상점](48-shop.ko.md)
-- 주제 (Topic): 프로젝트 / a project
-- 결과물 (Result): 입금·출금·잔액·거래 내역을 모듈로 저장하는 JSON 은행 계좌 / a JSON-persisted bank account with deposit, withdraw, balance, history, and a storage module
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [43 — 습관 체크](43-habit.ko.md), [48 — 상점](48-shop.ko.md)
+- 주제: 프로젝트
+- 결과물: 입금·출금·잔액·거래 내역을 모듈로 저장하는 JSON 은행 계좌
 
 [48](48-shop.ko.md)은 상점의 돈을 딕셔너리에 담았고,
 [43](43-habit.ko.md)은 저장 로직을 모듈에 넣었습니다. 은행 계좌는 같은
@@ -57,7 +57,7 @@
 
    ```text
    # account.ko.nme — JSON 파일에 보관하는 미니 은행.
-   # 실행: nme r account.ko
+   # 실행: nme 실행 account.ko
    # deposit, withdraw, balance, history, quit 중 하나를 입력하세요.
 
    from "bank_ko.nme" import load, save
@@ -106,7 +106,7 @@
    70을 남기고, `history`가 두 거래를 보여 줍니다:
 
    ```sh
-   printf 'deposit\n100\nwithdraw\n30\nbalance\nhistory\nquit\n' | nme r account.ko
+   printf 'deposit\n100\nwithdraw\n30\nbalance\nhistory\nquit\n' | nme 실행 account.ko
    ```
 
    ```text
@@ -135,7 +135,7 @@
    않으므로 계좌는 마이너스가 되지 않습니다:
 
    ```sh
-   printf 'withdraw\n500\nbalance\nquit\n' | nme r account.ko
+   printf 'withdraw\n500\nbalance\nquit\n' | nme 실행 account.ko
    ```
 
    ```text

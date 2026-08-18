@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [54 — Stats](54-stats.ko.md), [45 — CSV](45-csv.ko.md)
-- 주제 (Topic): 데이터 분석 / data analysis
-- 결과물 (Result): 한 달치 온도를 읽어 통계와 히스토그램을 계산하고 보고서 파일로 저장하기 / loading a month of temperatures, computing statistics and a histogram, and saving a report file
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [54 — Stats](54-stats.ko.md), [45 — CSV](45-csv.ko.md)
+- 주제: 데이터 분석
+- 결과물: 한 달치 온도를 읽어 통계와 히스토그램을 계산하고 보고서 파일로 저장하기
 
 평균은 시작일 뿐, 이야기 전체는 아닙니다. 이번 가이드는 실제에 가까운
 데이터 — 30일치 일일 최고 기온을 분석합니다. 숫자가 데이터를 설명하고,
@@ -71,7 +71,7 @@
 
    ```text
    # analysis.nme — 한 달 온도를 분석해 보고서를 쓰기.
-   # 실행: nme r analysis
+   # 실행: nme 실행 analysis
    # 같은 폴더에 temps.json이 있어야 합니다.
 
    use file latest
@@ -119,7 +119,7 @@
 5. 실행하세요:
 
    ```sh
-   nme r analysis
+   nme 실행 analysis
    ```
 
    ```text

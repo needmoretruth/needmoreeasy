@@ -4,10 +4,10 @@ English | [한국어](12-convert.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [11 — Check & Build](11-check-build.md)
-- 주제 (Topic): 도구 사용 / using the tools
-- 결과물 (Result): 작은 Python 파일을 NME로 변환하기 / a small Python file converted into NME
+- Difficulty: ★★☆☆☆ (2/5)
+- Prerequisites: [11 — Check & Build](11-check-build.md)
+- Topic: using the tools
+- Result: a small Python file converted into NME
 
 `nme convert` goes the other way: it rewrites safe Python patterns into the
 level and language you choose. Lines it cannot convert safely stay Python.

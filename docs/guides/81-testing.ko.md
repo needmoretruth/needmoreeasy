@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [23 — Modules](23-modules.ko.md), [46 — Expressions](46-expressions.ko.md)
-- 주제 (Topic): 테스트 / testing
-- 결과물 (Result): 자기 함수를 예상값과 비교해 통과·실패를 보고하는 작은 테스트 실행기 / a tiny test runner that calls your own functions, compares each result with the expected value, and reports pass or fail
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [23 — Modules](23-modules.ko.md), [46 — Expressions](46-expressions.ko.md)
+- 주제: 테스트
+- 결과물: 자기 함수를 예상값과 비교해 통과·실패를 보고하는 작은 테스트 실행기
 
 "잠깐만요, 실제로는 테스트하지 않은 상태로 '작동합니다'라고 말하지
 않았나요?" — 대부분의 프로그래머가 스스로에게 묻는 질문입니다. 테스트가
@@ -30,7 +30,7 @@
 
    ```text
    # testcalc.nme — 내가 쓴 함수를 작은 테스트 실행기로 확인하기.
-   # 실행: nme r testcalc
+   # 실행: nme 실행 testcalc
 
    def add(a, b):
        return a + b
@@ -63,7 +63,7 @@
 3. 실행하세요:
 
    ```sh
-   nme r testcalc
+   nme 실행 testcalc
    ```
 
    ```text

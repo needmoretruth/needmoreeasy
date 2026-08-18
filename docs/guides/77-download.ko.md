@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [55 — Network](55-net.ko.md), [13 — Files](13-files.ko.md)
-- 주제 (Topic): 네트워크/파일 / network & files
-- 결과물 (Result): 로컬 HTTP 서버에서 파일을 받아 진행 상황을 보여 주며 저장하기 / downloading a file from a local HTTP server and saving it while showing progress
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [55 — Network](55-net.ko.md), [13 — Files](13-files.ko.md)
+- 주제: 네트워크/파일
+- 결과물: 로컬 HTTP 서버에서 파일을 받아 진행 상황을 보여 주며 저장하기
 
 [55](55-net.ko.md)는 데이터를 가져와 보여 주었고, [76](76-poll.ko.md)은 같은
 것을 반복해서 가져왔습니다. 이번 가이드는 파일을 한 번 받아서
@@ -52,7 +52,7 @@
 
    ```text
    # download.nme — 서버에서 파일을 받아 저장하기.
-   # 실행: nme r download
+   # 실행: nme 실행 download
    # 먼저 이 폴더에서 python3 -m http.server 8000 실행
 
    use file latest
@@ -69,7 +69,7 @@
 5. 서버가 켜져 있는 동안 실행하세요:
 
    ```sh
-   nme r download
+   nme 실행 download
    ```
 
    ```text
@@ -89,7 +89,7 @@
 
    ```text
    # download-progress.nme — 조금씩 받으며 진행 상황 보여 주기.
-   # 실행: nme r download-progress
+   # 실행: nme 실행 download-progress
    # 먼저 이 폴더에서 python3 -m http.server 8000 실행
 
    use file latest
@@ -125,7 +125,7 @@
 7. 실행하세요:
 
    ```sh
-   nme r download-progress
+   nme 실행 download-progress
    ```
 
    ```text

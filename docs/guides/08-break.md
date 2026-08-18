@@ -4,10 +4,10 @@ English | [한국어](08-break.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★☆☆ (3/5)
-- 선수 지식 (Prerequisites): [07 — While](07-while.md)
-- 주제 (Topic): 반복 / loops
-- 결과물 (Result): 반복을 일찍 끝내는 프로그램 / a program that leaves a loop early
+- Difficulty: ★★☆☆☆ (2/5)
+- Prerequisites: [07 — While](07-while.md)
+- Topic: loops
+- Result: a program that leaves a loop early
 
 Sometimes a loop should stop in the middle. `break` leaves the nearest loop
 immediately and continues with the lines after it.

@@ -4,10 +4,10 @@ English | [한국어](63-ascii-art.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [05 — Repeat](05-repeat.md), [47 — Progress](47-progress.md)
-- 주제 (Topic): 출력/루프 / output & loops
-- 결과물 (Result): 중첩 반복과 문자열 곱셈으로 직각 삼각형, 거꾸로 삼각형, 마름모를 그리는 프로그램 / building a right triangle, an upside-down triangle, and a diamond with nested loops and string multiplication
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [05 — Repeat](05-repeat.md), [47 — Progress](47-progress.md)
+- Topic: output & loops
+- Result: building a right triangle, an upside-down triangle, and a diamond with nested loops and string multiplication
 
 Guide [47](47-progress.md) drew one growing row of `#`. Here the rows keep
 their shape, so a picture appears: shapes built from `*` and spaces. Two

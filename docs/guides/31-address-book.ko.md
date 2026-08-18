@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [14 — JSON](14-json.ko.md), [23 — 모듈](23-modules.ko.md)
-- 주제 (Topic): 데이터/기록 / records
-- 결과물 (Result): 연락처를 추가·목록·검색하는 JSON 파일 주소록 / a JSON-file address book that adds, lists, and searches contacts
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [14 — JSON](14-json.ko.md), [23 — 모듈](23-modules.ko.md)
+- 주제: 데이터/기록
+- 결과물: 연락처를 추가·목록·검색하는 JSON 파일 주소록
 
 기록은 필드가 몇 개 든 딕셔너리 하나입니다. 주소록은 그 기록들의 목록을
 JSON으로 저장한 것입니다. 이 가이드는 메뉴로 움직이는 주소록을 만듭니다 —
@@ -72,7 +72,7 @@ JSON으로 저장한 것입니다. 이 가이드는 메뉴로 움직이는 주�
 
    ```text
    # address.ko.nme — 작은 주소록 (JSON 파일에 저장)
-   # 실행: nme r address.ko
+   # 실행: nme 실행 address.ko
    # add, list, search, quit 중 하나를 입력합니다.
 
    import os
@@ -112,7 +112,7 @@ JSON으로 저장한 것입니다. 이 가이드는 메뉴로 움직이는 주�
    파이프로 명령을 넣어 실행합니다:
 
    ```sh
-   printf 'add\nMina\n010-1234\nlist\nsearch\nMin\nquit\n' | nme r address.ko
+   printf 'add\nMina\n010-1234\nlist\nsearch\nMin\nquit\n' | nme 실행 address.ko
    ```
 
    ```text
@@ -130,7 +130,7 @@ JSON으로 저장한 것입니다. 이 가이드는 메뉴로 움직이는 주�
    ? 안녕!
    ```
 
-   `add`가 새 연락처를 `address.json`에 저장하고, 다음 `nme r address.ko`가
+   `add`가 새 연락처를 `address.json`에 저장하고, 다음 `nme 실행 address.ko`가
    그 파일을 다시 불러오므로 주소록은 실행 사이에도 연락처를 지킵니다.
    `while True:`는 스스로 끝나지 않으므로 `quit`이 `break`로 나가야
    합니다 — [22](22-terminal-menu.ko.md)의 메뉴 모양입니다.

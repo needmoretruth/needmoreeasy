@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [58 — 바이트코드](58-bytecode.ko.md), [34 — 셀프호스트](34-selfhost.ko.md)
-- 주제 (Topic): 컴파일러/캡스톤 / compiler capstone
-- 결과물 (Result): 아주 작은 언어(say/set/add/while/end)를 읽어 Python 소스로 컴파일하고 파일로 저장한 뒤 실행하는 NME 프로그램 / an NME program that reads a small custom language (say/set/add/while/end), compiles it to Python source, writes it to a file, and runs it
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [58 — 바이트코드](58-bytecode.ko.md), [34 — 셀프호스트](34-selfhost.ko.md)
+- 주제: 컴파일러/캡스톤
+- 결과물: 아주 작은 언어(say/set/add/while/end)를 읽어 Python 소스로 컴파일하고 파일로 저장한 뒤 실행하는 NME 프로그램
 
 [34](34-selfhost.ko.md)은 NME 단어를 Python으로 컴파일해 메모리에서
 실행했습니다. [58](58-bytecode.ko.md)은 명령을 데이터 단계로 바꾸었습니다.
@@ -47,7 +47,7 @@
 
    ```text
    # capstone.ko.nme — Python으로 컴파일하는 언어.
-   # 실행: nme r capstone.ko
+   # 실행: nme 실행 capstone.ko
    # 미니 언어를 읽어 Python 소스로 컴파일하고,
    # out.py로 저장한 뒤 exec로 실행합니다.
 
@@ -105,7 +105,7 @@
 3. 서버도 입력도 없이 실행합니다:
 
    ```sh
-   nme r capstone.ko
+   nme 실행 capstone.ko
    ```
 
    ```text

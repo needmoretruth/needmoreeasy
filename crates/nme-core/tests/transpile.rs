@@ -364,7 +364,7 @@ fn condition_and_logical_connector_typos_are_recovered() {
     let expected = concat!(
         "ready = True\n",
         "score = 3\n",
-        "if ((ready and score > 2)): print(\"go\")\n",
+        "if (ready and score > 2): print(\"go\")\n",
         "색 = \"빨강\"\n",
         "if (색 == \"빨강\"): print(\"맞아요\")\n",
     );
@@ -400,7 +400,7 @@ fn parenthesized_logical_conditions_keep_the_shared_condition_shape() {
     let english_expected = concat!(
         "ready = True\n",
         "score = 3\n",
-        "if ((ready and score > 2)):\n",
+        "if (ready and score > 2):\n",
         "    print(\"yes\")\n",
         "# end\n",
     );
@@ -416,7 +416,7 @@ fn parenthesized_logical_conditions_keep_the_shared_condition_shape() {
     let korean_expected = concat!(
         "준비 = True\n",
         "점수 = 3\n",
-        "if ((준비 and 점수 > 2)):\n",
+        "if (준비 and 점수 > 2):\n",
         "    print(\"성공\")\n",
         "# end\n",
     );
@@ -424,11 +424,11 @@ fn parenthesized_logical_conditions_keep_the_shared_condition_shape() {
 
     assert_eq!(
         ok("if (ready and score > 2) then show yes\n"),
-        "if ((ready and score > 2)): print(\"yes\")\n",
+        "if (ready and score > 2): print(\"yes\")\n",
     );
     assert_eq!(
         ok("만약 (준비 그리고 점수 > 2) 그러면 성공 말해줘\n"),
-        "if ((준비 and 점수 > 2)): print(\"성공\")\n",
+        "if (준비 and 점수 > 2): print(\"성공\")\n",
     );
 }
 
@@ -480,7 +480,7 @@ fn parenthesized_korean_comparison_endings_keep_the_condition_body_boundary() {
         "준비 = True\n",
         "if (False):\n",
         "    print(\"안 돼\")\n",
-        "elif ((점수 > 2 and 준비)):\n",
+        "elif (점수 > 2 and 준비):\n",
         "    print(\"성공\")\n",
         "# end\n",
     );
@@ -499,7 +499,7 @@ fn parenthesized_korean_comparisons_can_precede_logical_connectors() {
     let expected = concat!(
         "점수 = 3\n",
         "준비 = True\n",
-        "if ((점수 > 2 and 준비)):\n",
+        "if (점수 > 2 and 준비):\n",
         "    print(\"성공\")\n",
         "# end\n",
     );
@@ -515,7 +515,7 @@ fn parenthesized_korean_comparisons_can_precede_logical_connectors() {
     let mixed_expected = concat!(
         "점수 = 3\n",
         "준비 = True\n",
-        "if ((점수 > 2 and 준비)):\n",
+        "if (점수 > 2 and 준비):\n",
         "    print(\"성공\")\n",
         "# end\n",
     );
@@ -523,7 +523,7 @@ fn parenthesized_korean_comparisons_can_precede_logical_connectors() {
 
     assert_eq!(
         ok("만약 (점수가 2보다 크면 그리고 준비) 그러면 성공 말해줘\n"),
-        "if ((점수 > 2 and 준비)): print(\"성공\")\n",
+        "if (점수 > 2 and 준비): print(\"성공\")\n",
     );
 }
 
@@ -539,7 +539,7 @@ fn parenthesized_korean_comparisons_can_precede_or_connectors() {
     let expected = concat!(
         "점수 = 3\n",
         "준비 = False\n",
-        "if ((점수 < 2 or 준비)):\n",
+        "if (점수 < 2 or 준비):\n",
         "    print(\"실패\")\n",
         "# end\n",
     );
@@ -555,7 +555,7 @@ fn parenthesized_korean_comparisons_can_precede_or_connectors() {
     let mixed_expected = concat!(
         "점수 = 3\n",
         "준비 = False\n",
-        "if ((점수 < 2 or 준비)):\n",
+        "if (점수 < 2 or 준비):\n",
         "    print(\"실패\")\n",
         "# end\n",
     );
@@ -609,7 +609,7 @@ fn korean_then_connector_does_not_turn_the_subject_into_text() {
     let source = "만약 준비 그리고 점수 > 2 또는 기다림 그러면 성공 말해줘\n";
     assert_eq!(
         ok(source),
-        "if (((준비 and 점수 > 2) or 기다림)): print(\"성공\")\n"
+        "if ((준비 and 점수 > 2) or 기다림): print(\"성공\")\n"
     );
 }
 
@@ -1141,7 +1141,7 @@ fn natural_language_or_equal_conditions_lower_to_cmp_operators() {
     );
     assert_eq!(
         ok("if x is less than or equal to 3 and x is greater than or equal to 1\n    show \"in\"\nend\n"),
-        "if ((x <= 3 and x >= 1)):\n    print(\"in\")\n# end\n"
+        "if (x <= 3 and x >= 1):\n    print(\"in\")\n# end\n"
     );
 }
 
@@ -1332,7 +1332,7 @@ fn sentence_logical_conditions_and_branches_are_python_shaped() {
     let expected = concat!(
         "ready = True\n",
         "score = 3\n",
-        "if ((ready and score > 2)):\n",
+        "if (ready and score > 2):\n",
         "    print(\"yes\")\n",
         "elif (score == 0):\n",
         "    print(\"zero\")\n",
@@ -1365,7 +1365,7 @@ fn all_three_levels_and_both_languages_share_a_flat_control_block() {
         "while (점수 < 3):\n",
         "    print(점수)\n",
         "    score = score + 1\n",
-        "    if ((점수 and score == 2)):\n",
+        "    if (점수 and score == 2):\n",
         "        print(\"middle\")\n",
         "    elif (score == 3):\n",
         "        print(\"done\")\n",
@@ -1520,7 +1520,7 @@ fn parenthesized_korean_sentence_while_endings_keep_the_condition_shape() {
     let expected = concat!(
         "준비 = True\n",
         "횟수 = 0\n",
-        "while ((준비 and 횟수 < 2)):\n",
+        "while (준비 and 횟수 < 2):\n",
         "    횟수 = 횟수 + 1\n",
         "# end\n",
     );
@@ -1539,7 +1539,7 @@ fn parenthesized_korean_while_endings_can_precede_logical_connectors() {
     let expected = concat!(
         "준비 = True\n",
         "횟수 = 0\n",
-        "while ((횟수 < 2 and 준비)):\n",
+        "while (횟수 < 2 and 준비):\n",
         "    횟수 = 횟수 + 1\n",
         "# end\n",
     );
@@ -1555,7 +1555,7 @@ fn parenthesized_korean_while_endings_can_precede_logical_connectors() {
     let disjunction_expected = concat!(
         "준비 = False\n",
         "횟수 = 0\n",
-        "while ((횟수 < 2 or 준비)):\n",
+        "while (횟수 < 2 or 준비):\n",
         "    횟수 = 횟수 + 1\n",
         "# end\n",
     );
@@ -1616,13 +1616,13 @@ fn korean_comparison_endings_combine_with_logical_connectors() {
         "끝\n",
     );
     let expected = concat!(
-        "if ((점수 > 0 and 점수 < 3)):\n",
+        "if (점수 > 0 and 점수 < 3):\n",
         "    print(\"사이\")\n",
         "# end\n",
-        "if ((점수 != 5 and 점수 > 0)):\n",
+        "if (점수 != 5 and 점수 > 0):\n",
         "    print(\"둘 다\")\n",
         "# end\n",
-        "if ((준비 == False and 점수 > 0)):\n",
+        "if (준비 == False and 점수 > 0):\n",
         "    print(\"셋\")\n",
         "# end\n",
     );
@@ -1642,7 +1642,7 @@ fn korean_logical_conditions_never_panic() {
         "끝\n",
     );
     let expected = concat!(
-        "if ((점수 != 5 and 점수 != 5)):\n",
+        "if (점수 != 5 and 점수 != 5):\n",
         "    print(\"y\")\n",
         "# end\n",
     );
@@ -1656,14 +1656,14 @@ fn korean_logical_conditions_never_panic() {
     );
     let expected = concat!(
         "점수 = 0\n",
-        "while ((점수 != 5 and 점수 > 0)):\n",
+        "while (점수 != 5 and 점수 > 0):\n",
         "    점수 = 점수 + 1\n",
         "# end\n",
     );
     assert_eq!(ok(source), expected);
     assert_eq!(
         ok("while 점수가 5와 같지 않을 동안 그리고 점수가 0보다 클 동안 성공 말해줘\n"),
-        "while ((점수 != 5 and 점수 > 0)): print(\"성공\")\n"
+        "while (점수 != 5 and 점수 > 0): print(\"성공\")\n"
     );
 }
 

@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [55 — Network](55-net.ko.md), [69 — Patterns](69-patterns.ko.md)
-- 주제 (Topic): 웹/텍스트 / web & text
-- 결과물 (Result): 로컬 서버의 HTML 페이지를 받아 그 안의 링크를 모두 찾아 절대 주소로 보여 주기 / fetching an HTML page from a local server and listing every link on it as a full URL
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [55 — Network](55-net.ko.md), [69 — Patterns](69-patterns.ko.md)
+- 주제: 웹/텍스트
+- 결과물: 로컬 서버의 HTML 페이지를 받아 그 안의 링크를 모두 찾아 절대 주소로 보여 주기
 
 [55](55-net.ko.md)가 JSON을 가져왔고, [69](69-patterns.ko.md)가 정규식으로
 텍스트를 찾았습니다. 웹 페이지도 그냥 텍스트입니다 — 내용을 태그로
@@ -54,7 +54,7 @@
 
    ```text
    # links.nme — 웹 페이지에서 링크 찾기.
-   # 실행: nme r links
+   # 실행: nme 실행 links
    # 먼저 이 폴더에서 python3 -m http.server 8000 실행
 
    from urllib.request import urlopen
@@ -77,7 +77,7 @@
 5. 실행하세요:
 
    ```sh
-   nme r links
+   nme 실행 links
    ```
 
    ```text

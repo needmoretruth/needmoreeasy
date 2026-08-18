@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [32 — Weather](32-weather.ko.md), [44 — Playlist](44-playlist.ko.md)
-- 주제 (Topic): 네트워크 / network
-- 결과물 (Result): 로컬 HTTP 서버에서 메시지를 받아 미니 채팅처럼 보여 주기 / fetching messages from a local HTTP server and showing them like a mini chat
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [32 — Weather](32-weather.ko.md), [44 — Playlist](44-playlist.ko.md)
+- 주제: 네트워크
+- 결과물: 로컬 HTTP 서버에서 메시지를 받아 미니 채팅처럼 보여 주기
 
 채팅 클라이언트는 서버에서 메시지를 읽고 새 메시지를 보냅니다. 이 가이드는
 로컬 서버에서 JSON 메시지 목록을 받아 채팅 기록처럼 출력하고, 새 답장이
@@ -54,7 +54,7 @@
 
    ```text
    # chat.nme — 채팅 기록을 받아, 보낼 답장을 보여 줍니다.
-   # 실행: nme r chat.ko
+   # 실행: nme 실행 chat
    # 먼저 이 폴더를 서비스하세요: python3 -m http.server 8000
 
    from urllib.request import urlopen
@@ -77,7 +77,7 @@
    서버가 켜진 상태에서 실행하세요:
 
    ```sh
-   nme r chat.ko
+   nme 실행 chat
    ```
 
    ```text

@@ -4,10 +4,10 @@ English | [한국어](36-word-count.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [16 — Name list](16-name-list.md), [13 — Files](13-files.md)
-- 주제 (Topic): 데이터 / data
-- 결과물 (Result): 텍스트 파일을 읽어 단어가 각각 몇 번 나오는지 세는 프로그램 / reading a text file and counting how often each word appears, using a dict and collections.Counter
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [16 — Name list](16-name-list.md), [13 — Files](13-files.md)
+- Topic: data
+- Result: reading a text file and counting how often each word appears, using a dict and collections.Counter
 
 Counting words is the first step of many text programs. Read a file, split it
 into words, and count: a plain dict does it by hand, and `collections.Counter`

@@ -4,10 +4,10 @@ English | [한국어](72-project-files.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [67 — Grade book](67-grade-book.md), [23 — Modules](23-modules.md)
-- 주제 (Topic): 모듈/구조 / modules & structure
-- 결과물 (Result): fetch·analyze·report 세 .nme 모듈로 나누고 주 프로그램이 가져오는 작은 날씨 보고서 프로젝트 / a small weather-report project split into three .nme modules (fetch, analyze, report) with clear interfaces, imported by a main program
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [67 — Grade book](67-grade-book.md), [23 — Modules](23-modules.md)
+- Topic: modules & structure
+- Result: a small weather-report project split into three .nme modules (fetch, analyze, report) with clear interfaces, imported by a main program
 
 Guide [23](23-modules.md) split a helper out of a program, and guide
 [67](67-grade-book.md) used one storage module. A real project is bigger than

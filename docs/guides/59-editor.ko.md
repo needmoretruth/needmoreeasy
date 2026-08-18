@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [47 — 진행](47-progress.ko.md), [50 — 문자열](50-strings.ko.md)
-- 주제 (Topic): TUI/터미널 앱 / a terminal app
-- 결과물 (Result): 버퍼를 두고 줄을 추가·삭제·목록·저장하는 줄 단위 에디터 / a line-based editor with a buffer and add, list, remove, save, and quit commands
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [47 — 진행](47-progress.ko.md), [50 — 문자열](50-strings.ko.md)
+- 주제: TUI/터미널 앱
+- 결과물: 버퍼를 두고 줄을 추가·삭제·목록·저장하는 줄 단위 에디터
 
 텍스트 파일은 하나의 긴 문자열입니다. 에디터는 버퍼로 일합니다 — 같은
 글을 줄 목록으로 나눈 것, 각 줄이 한 행입니다. 그 행들을 추가하고,
@@ -68,7 +68,7 @@
 
    ```text
    # editor.ko.nme — 아주 작은 줄 단위 텍스트 에디터.
-   # 실행: nme r editor.ko
+   # 실행: nme 실행 editor.ko
    # add <글>, list, remove <번호>, save, quit 중 하나를 입력하세요.
 
    파일 사용 최신
@@ -121,7 +121,7 @@
    채우고, `remove 1`이 `안녕`을 지우며, `save`가 `세계!`를 남깁니다:
 
    ```sh
-   printf 'add 안녕\nadd 세계!\nlist\nremove 1\nlist\nsave\nquit\n' | nme r editor.ko
+   printf 'add 안녕\nadd 세계!\nlist\nremove 1\nlist\nsave\nquit\n' | nme 실행 editor.ko
    ```
 
    ```text

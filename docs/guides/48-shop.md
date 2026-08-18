@@ -4,10 +4,10 @@ English | [한국어](48-shop.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [33 — Todo](33-todo.md), [31 — Records](31-address-book.md)
-- 주제 (Topic): 프로젝트 / a project
-- 결과물 (Result): 사고팔고 재고를 확인하며 잔액이 남는 JSON 저장 상점 / a JSON-persisted store with buy/sell/stock/list and a money balance
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [33 — Todo](33-todo.md), [31 — Records](31-address-book.md)
+- Topic: a project
+- Result: a JSON-persisted store with buy/sell/stock/list and a money balance
 
 Guide [33](33-todo.md) saved a list and [31](31-address-book.md) saved
 records. A store grows that idea one step: a dict of items (each with `price`

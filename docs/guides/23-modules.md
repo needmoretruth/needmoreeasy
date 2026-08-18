@@ -4,10 +4,10 @@ English | [한국어](23-modules.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [15 — High score](15-high-score.md), [13 — Files](13-files.md)
-- 주제 (Topic): 모듈 / modules
-- 결과물 (Result): 프로그램을 여러 .nme 파일로 나누기 / splitting a program across .nme files
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [15 — High score](15-high-score.md), [13 — Files](13-files.md)
+- Topic: modules
+- Result: splitting a program across .nme files
 
 One file works for a small program. As a project grows, splitting it into
 modules keeps each file focused. NME imports only the names you list, so every

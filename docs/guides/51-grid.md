@@ -4,10 +4,10 @@ English | [한국어](51-grid.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [50 — Strings](50-strings.md), [16 — Name list](16-name-list.md)
-- 주제 (Topic): 중첩 데이터 / nested data
-- 결과물 (Result): 목록의 목록으로 만든 3x3 판, `board[row][col]`로 칸 읽고 쓰기 / a tic-tac-toe style 3x3 board stored as a list of lists, reading and writing cells with `board[row][col]`
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [50 — Strings](50-strings.md), [16 — Name list](16-name-list.md)
+- Topic: nested data
+- Result: a tic-tac-toe style 3x3 board stored as a list of lists, reading and writing cells with `board[row][col]`
 
 A list can hold lists. The outer list is the board, each inner list is one
 row, and every cell is a text mark. Reading and writing a cell uses two

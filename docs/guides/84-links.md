@@ -4,10 +4,10 @@ English | [한국어](84-links.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [55 — Network](55-net.md), [69 — Patterns](69-patterns.md)
-- 주제 (Topic): 웹/텍스트 / web & text
-- 결과물 (Result): 로컬 서버의 HTML 페이지를 받아 그 안의 링크를 모두 찾아 절대 주소로 보여 주기 / fetching an HTML page from a local server and listing every link on it as a full URL
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [55 — Network](55-net.md), [69 — Patterns](69-patterns.md)
+- Topic: web & text
+- Result: fetching an HTML page from a local server and listing every link on it as a full URL
 
 Guide [55](55-net.md) fetched JSON; guide [69](69-patterns.md) matched
 text with regex. A web page is just text too — HTML with tags around the

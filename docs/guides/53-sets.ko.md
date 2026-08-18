@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [36 — Word count](36-word-count.ko.md), [39 — Sorting](39-sorting.ko.md)
-- 주제 (Topic): 집합/데이터 / sets & data
-- 결과물 (Result): Python 집합으로 텍스트 파일의 고유 단어와 문장의 고유 글자 찾기 / using a Python set to find unique words in a text file, then unique letters in a sentence
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [36 — Word count](36-word-count.ko.md), [39 — Sorting](39-sorting.ko.md)
+- 주제: 집합/데이터
+- 결과물: Python 집합으로 텍스트 파일의 고유 단어와 문장의 고유 글자 찾기
 
 가이드 [36](36-word-count.ko.md)은 반복까지 포함해 모든 단어를 셌습니다. 집합은
 고유한 값만 남기므로 `set(words)`는 다른 질문에 답합니다: 서로 *다른* 단어가
@@ -65,7 +65,7 @@
 
    ```text
    # sets.nme — 집합은 고유한 값만 남깁니다.
-   # 실행: nme r sets.ko
+   # 실행: nme 실행 sets
    # 같은 폴더에 story.txt가 있어야 합니다.
 
    use file latest
@@ -98,7 +98,7 @@
    말해 f"  set length (no repeats):   {len(unique_words)}"
    ```
 
-   `story.txt`가 있는 폴더에서 `nme r sets.ko`를 실행하세요:
+   `story.txt`가 있는 폴더에서 `nme 실행 sets`를 실행하세요:
 
    ```text
    total words in story.txt: 24

@@ -4,10 +4,10 @@ English | [한국어](47-progress.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [22 — Terminal menu](22-terminal-menu.md), [05 — Repeat](05-repeat.md)
-- 주제 (Topic): TUI/출력 / terminal output
-- 결과물 (Result): 반복이 돌면서 한 줄을 채우는 터미널 진행 막대 / a terminal progress bar that fills a row as a loop runs
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [22 — Terminal menu](22-terminal-menu.md), [05 — Repeat](05-repeat.md)
+- Topic: terminal output
+- Result: a terminal progress bar that fills a row as a loop runs
 
 Long tasks deserve feedback. A progress bar is a row of `#` that grows while a
 loop runs. Instead of printing new lines, it redraws the same line — so the

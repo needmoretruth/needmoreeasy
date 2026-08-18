@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★☆☆☆ (2/5)
-- 선수 지식 (Prerequisites): [04 — 변경](04-update.ko.md)
-- 주제 (Topic): 반복 / loops
-- 결과물 (Result): 줄을 여러 번 실행하는 프로그램 / a program that runs lines several times
+- 난이도: ★★☆☆☆ (2/5)
+- 선수 지식: [04 — 변경](04-update.ko.md)
+- 주제: 반복
+- 결과물: 줄을 여러 번 실행하는 프로그램
 
 컴퓨터는 같은 일을 여러 번 하는 데 아주 능숙합니다. `반복`은 한 줄이나
 블록을 계속 실행합니다.

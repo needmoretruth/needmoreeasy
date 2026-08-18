@@ -4,10 +4,10 @@ English | [한국어](52-tic-tac-toe.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [51 — Grid](51-grid.md), [26 — Adventure](26-adventure.md)
-- 주제 (Topic): 게임 / game
-- 결과물 (Result): 승리 확인이 있는 두 명이 하는 틱택토 / a playable two-player tic-tac-toe with a win check
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [51 — Grid](51-grid.md), [26 — Adventure](26-adventure.md)
+- Topic: game
+- Result: a playable two-player tic-tac-toe with a win check
 
 Guide [51](51-grid.md) built a board; guide [26](26-adventure.md) showed how `ask`, `while True`, and `break` make a game loop. Tic-tac-toe joins them: two players take turns picking a row and a column, and after every move a function checks for three in a row.
 ## Steps

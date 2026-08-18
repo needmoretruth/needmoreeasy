@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [33 — 할 일](33-todo.ko.md), [31 — 기록](31-address-book.ko.md)
-- 주제 (Topic): 프로젝트 / a project
-- 결과물 (Result): 사고팔고 재고를 확인하며 잔액이 남는 JSON 저장 상점 / a JSON-persisted store with buy/sell/stock/list and a money balance
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [33 — 할 일](33-todo.ko.md), [31 — 기록](31-address-book.ko.md)
+- 주제: 프로젝트
+- 결과물: 사고팔고 재고를 확인하며 잔액이 남는 JSON 저장 상점
 
 [33](33-todo.ko.md)은 목록을 저장했고, [31](31-address-book.ko.md)은
 기록을 저장했습니다. 상점은 그 생각을 한 단계 키운 것입니다: 각 상품이
@@ -37,7 +37,7 @@
 
    ```text
    # shop.ko.nme — JSON 파일에 보관하는 작은 상점.
-   # 실행: nme r shop.ko
+   # 실행: nme 실행 shop.ko
    # list, buy, sell, quit 중 하나를 입력하세요.
 
    파일 사용 최신
@@ -91,7 +91,7 @@
    줄이며, `sell apple`은 돌려 줍니다:
 
    ```sh
-   printf 'list\nbuy\napple\nsell\napple\nquit\n' | nme r shop.ko
+   printf 'list\nbuy\napple\nsell\napple\nquit\n' | nme 실행 shop.ko
    ```
 
    ```text

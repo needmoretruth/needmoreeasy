@@ -4,10 +4,10 @@ English | [한국어](07-while.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★☆☆ (3/5)
-- 선수 지식 (Prerequisites): [06 — If](06-if.md)
-- 주제 (Topic): 반복과 조건 / loops and conditions
-- 결과물 (Result): 조건이 참인 동안 반복하는 블록 / a block that loops while a condition is true
+- Difficulty: ★★☆☆☆ (2/5)
+- Prerequisites: [06 — If](06-if.md)
+- Topic: loops and conditions
+- Result: a block that loops while a condition is true
 
 `repeat` runs a fixed number of times. `while` keeps running as long as a
 condition stays true — and stops when it becomes false.

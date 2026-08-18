@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★☆ (4/5)
-- 선수 지식 (Prerequisites): [10 — 랜덤](10-random.ko.md), [03 — 저장](03-set.ko.md)
-- 주제 (Topic): 파일 / files
-- 결과물 (Result): 글을 파일에 저장하고 다시 읽는 프로그램 / a program that saves text to a file and reads it back
+- 난이도: ★★★☆☆ (3/5)
+- 선수 지식: [10 — 랜덤](10-random.ko.md), [03 — 저장](03-set.ko.md)
+- 주제: 파일
+- 결과물: 글을 파일에 저장하고 다시 읽는 프로그램
 
 값은 프로그램이 끝나면 사라집니다. 파일은 그 후에도 남습니다. NME에 들어
 있는 `파일` 도우미는 두 줄로 파일에 글을 쓰고 다시 읽습니다.
@@ -38,7 +38,7 @@
    폴더에 두세요. `nme r`은 `nme 실행`의 짧은 명령입니다:
 
    ```sh
-   nme r diary
+   nme 실행 diary
    ```
 
 4. 영어는 `use file latest`로 불러옵니다:

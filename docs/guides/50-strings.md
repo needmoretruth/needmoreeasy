@@ -4,10 +4,10 @@ English | [한국어](50-strings.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★☆ (4/5)
-- 선수 지식 (Prerequisites): [01 — Hello](01-hello.md), [03 — Set](03-set.md)
-- 주제 (Topic): 문자열 / strings
-- 결과물 (Result): 문장에서 `text[start:end]` 자르기와 `.upper()/.lower()`, `.replace()`, `.strip()` / slicing `text[start:end]`, `.upper()/.lower()`, `.replace()`, and `.strip()` on a sentence
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [01 — Hello](01-hello.md), [03 — Set](03-set.md)
+- Topic: strings
+- Result: slicing `text[start:end]`, `.upper()/.lower()`, `.replace()`, and `.strip()` on a sentence
 
 A string is a row of characters counted from `0`; slicing cuts a piece out,
 and a few methods change the text — all ordinary Python, passed through unchanged.

@@ -4,10 +4,10 @@ English | [한국어](78-analysis.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [54 — Stats](54-stats.md), [45 — CSV](45-csv.md)
-- 주제 (Topic): 데이터 분석 / data analysis
-- 결과물 (Result): 한 달치 온도를 읽어 통계와 히스토그램을 계산하고 보고서 파일로 저장하기 / loading a month of temperatures, computing statistics and a histogram, and saving a report file
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [54 — Stats](54-stats.md), [45 — CSV](45-csv.md)
+- Topic: data analysis
+- Result: loading a month of temperatures, computing statistics and a histogram, and saving a report file
 
 Averages are a start, not the whole story. This guide analyzes a real-ish
 dataset: 30 daily temperatures. The numbers describe it, the histogram

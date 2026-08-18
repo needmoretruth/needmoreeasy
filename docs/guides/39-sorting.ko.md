@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [16 — 이름 목록](16-name-list.ko.md), [30 — 데이터](30-data.ko.md)
-- 주제 (Topic): 데이터 / data
-- 결과물 (Result): JSON 파일에서 숫자를 불러와 Python sort로 오름차순·내림차순 순서를 보여 주는 프로그램 / loading numbers from a JSON file and showing sorted ascending and descending orders with the Python sort method
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [16 — 이름 목록](16-name-list.ko.md), [30 — 데이터](30-data.ko.md)
+- 주제: 데이터
+- 결과물: JSON 파일에서 숫자를 불러와 Python sort로 오름차순·내림차순 순서를 보여 주는 프로그램
 
 불러온 목록은 적은 순서 그대로 오는데, 그 순서가 보여 주고 싶은 순서인
 경우는 드뭅니다. Python의 `sort` 메서드는 목록 자체를 순서대로 바꾸고,
@@ -75,7 +75,7 @@
 
    ```text
    # 정렬: 저장된 숫자 목록을 순서대로 정리하기
-   # 실행: nme r sorting.ko
+   # 실행: nme 실행 sorting.ko
    # numbers.json 파일이 같은 폴더에 있어야 합니다.
 
    파일 사용 최신
@@ -113,7 +113,7 @@
 7. 데이터 파일이 있는 상태에서 실행합니다:
 
    ```sh
-   nme r sorting.ko
+   nme 실행 sorting.ko
    ```
 
    ```text

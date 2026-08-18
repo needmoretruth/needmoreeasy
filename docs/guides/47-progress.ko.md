@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [22 — 터미널 메뉴](22-terminal-menu.ko.md), [05 — 반복](05-repeat.ko.md)
-- 주제 (Topic): TUI/출력 / terminal output
-- 결과물 (Result): 반복이 돌면서 한 줄을 채우는 터미널 진행 막대 / a terminal progress bar that fills a row as a loop runs
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [22 — 터미널 메뉴](22-terminal-menu.ko.md), [05 — 반복](05-repeat.ko.md)
+- 주제: TUI/출력
+- 결과물: 반복이 돌면서 한 줄을 채우는 터미널 진행 막대
 
 오래 걸리는 일에는 진행 상황이 필요합니다. 진행 막대는 반복이 도는 동안
 자라나는 `#` 한 줄입니다. 새 줄을 출력하는 대신 같은 줄을 다시 그리므로
@@ -56,7 +56,7 @@
 
    ```text
    # progress.ko.nme — 한 줄을 채우는 터미널 진행 막대.
-   # 실행: nme r progress.ko
+   # 실행: nme 실행 progress.ko
    #
    # # 한 줄이 1개에서 10개로 자랍니다. \r은 줄 시작으로 돌아가
    # 긴 줄이 그 자리에 덮어씁니다. time.sleep이 움직임을 보여 줍니다.
@@ -82,7 +82,7 @@
 5. 실행합니다:
 
    ```sh
-   nme r progress.ko
+   nme 실행 progress.ko
    ```
 
    ```text

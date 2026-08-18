@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [63 — 아스키 아트](63-ascii-art.ko.md), [66 — 상위 열](66-top-ten.ko.md)
-- 주제 (Topic): 시각화/출력 / visualization
-- 결과물 (Result): JSON 목록에서 가장 큰 값에 맞춘 # 블록으로 가로 막대 그래프를 그리는 프로그램 / drawing a horizontal bar chart with # blocks from a JSON list, scaled to the largest value
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [63 — 아스키 아트](63-ascii-art.ko.md), [66 — 상위 열](66-top-ten.ko.md)
+- 주제: 시각화/출력
+- 결과물: JSON 목록에서 가장 큰 값에 맞춘 # 블록으로 가로 막대 그래프를 그리는 프로그램
 
 [63](63-ascii-art.ko.md)은 문자열을 곱해 줄을 만들었고,
 [66](66-top-ten.ko.md)은 점수로 기록을 정렬했습니다. 막대 그래프는 둘을
@@ -73,7 +73,7 @@
 
    ```text
    # chart.ko.nme — 터미널 막대 그래프.
-   # 실행: nme r chart.ko
+   # 실행: nme 실행 chart.ko
    # chart.json이 같은 폴더에 있어야 합니다.
    # 각 막대는 가장 큰 값에 맞춘 # 블록입니다.
 
@@ -102,7 +102,7 @@
 6. 데이터 파일이 있는 상태에서 실행합니다:
 
    ```sh
-   nme r chart.ko
+   nme 실행 chart.ko
    ```
 
    ```text

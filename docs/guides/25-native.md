@@ -4,10 +4,10 @@ English | [한국어](25-native.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [23 — Modules](23-modules.md), [07 — While](07-while.md)
-- 주제 (Topic): 네이티브 컴파일 / native compilation
-- 결과물 (Result): CPython 없이 기계어로 실행하기 / running a program as machine code without CPython
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [23 — Modules](23-modules.md), [07 — While](07-while.md)
+- Topic: native compilation
+- Result: running a program as machine code without CPython
 
 So far every program ran on CPython: NME compiles to Python and Python runs
 it. A small part of the language — the native core — can go further and

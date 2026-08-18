@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★☆ (4/5)
-- 선수 지식 (Prerequisites): [08 — 멈춤](08-break.ko.md)
-- 주제 (Topic): 도구 사용 / using the tools
-- 결과물 (Result): 프로그램을 확인하고 생성된 Python을 읽는 습관 / the habit of verifying programs and reading the generated Python
+- 난이도: ★★☆☆☆ (2/5)
+- 선수 지식: [08 — 멈춤](08-break.ko.md)
+- 주제: 도구 사용
+- 결과물: 프로그램을 확인하고 생성된 Python을 읽는 습관
 
 `nme check`와 `nme build`는 NME가 실제로 무엇인지 보여 줍니다. `check`는
 Python에게 생성된 프로그램이 올바른지 물어보고, `build`는 생성된
@@ -19,7 +19,7 @@ Python 그 자체를 보여 줍니다.
 
    ```sh
    nme 검사 hello
-   nme c hello
+   nme 검사 hello
    ```
 
    프로그램이 정상이면 `check`는 아무것도 출력하지 않습니다. 조용함이

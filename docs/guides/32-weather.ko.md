@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [21 — HTTP](21-http.ko.md), [30 — 데이터](30-data.ko.md)
-- 주제 (Topic): 네트워크/데이터 / web data
-- 결과물 (Result): 로컬 HTTP 서버의 JSON을 가져와 미니 날씨 보고서 출력하기 / fetching a local HTTP server's JSON and printing a mini weather report
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [21 — HTTP](21-http.ko.md), [30 — 데이터](30-data.ko.md)
+- 주제: 네트워크/데이터
+- 결과물: 로컬 HTTP 서버의 JSON을 가져와 미니 날씨 보고서 출력하기
 
 [21](21-http.ko.md)은 HTTP로 텍스트 파일을 가져왔고, [30](30-data.ko.md)은
 디스크의 JSON을 불러왔습니다. 이 가이드는 HTTP로 JSON을 가져와
@@ -42,7 +42,7 @@
 
    ```text
    # weather.ko.nme — 로컬 웹 서버에서 읽는 미니 날씨 보고서
-   # 실행: nme r weather.ko — 먼저 이 폴더를 서비스하세요: python3 -m http.server 8000
+   # 실행: nme 실행 weather.ko — 먼저 이 폴더를 서비스하세요: python3 -m http.server 8000
 
    import urllib.request
    import json
@@ -81,7 +81,7 @@
 4. 서버가 켜진 상태에서 실행합니다:
 
    ```sh
-   nme r weather.ko
+   nme 실행 weather.ko
    ```
 
    ```text

@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [55 — 네트워크](55-net.ko.md), [13 — 파일](13-files.ko.md)
-- 주제 (Topic): 예외 / exceptions
-- 결과물 (Result): 없는 파일을 읽거나 숫자가 아닌 입력을 바꿔도 멈추지 않는 프로그램 / a program that reads a missing file and converts bad input without crashing
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [55 — 네트워크](55-net.ko.md), [13 — 파일](13-files.ko.md)
+- 주제: 예외
+- 결과물: 없는 파일을 읽거나 숫자가 아닌 입력을 바꿔도 멈추지 않는 프로그램
 
 파일이 없거나 숫자가 아닌 줄을 만나면 프로그램은 그 자리에서 멈춥니다.
 `try` / `except`가 그 문제를 잡아 친절한 대신 내용을 실행합니다.
@@ -35,7 +35,7 @@
 3. 전체 프로그램은 없을 수도 있는 파일을 읽고, 숫자를 물어봐 답이 바뀔 때까지 다시 묻습니다. 먼저 `notes.txt`를 두 줄로 만드세요:
    ```text
    # 안전읽기.nme — 없는 파일이어도 안전하게 읽습니다.
-   # 실행: nme r 안전읽기
+   # 실행: nme 실행 안전읽기
    # try / except는 데이터가 나빠도 프로그램이 멈추지 않게 합니다.
 
    파일 사용 최신
@@ -69,7 +69,7 @@
    ```
 4. 파일이 있는 상태에서 실행합니다:
    ```sh
-   printf 'notes.txt\n일곱\n12\n' | nme r 안전읽기
+   printf 'notes.txt\n일곱\n12\n' | nme 실행 안전읽기
    ```
    ```text
    읽을 문서 이름을 입력하세요: 30글자를 읽었어요.
@@ -85,7 +85,7 @@
    ```
    없는 파일 이름으로 실행합니다:
    ```sh
-   printf 'nope.txt\n12\n' | nme r 안전읽기
+   printf 'nope.txt\n12\n' | nme 실행 안전읽기
    ```
    ```text
    읽을 문서 이름을 입력하세요: 그 문서는 아직 없어요.

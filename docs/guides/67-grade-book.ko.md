@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [61 — 미니 은행](61-bank.ko.md), [48 — 상점](48-shop.ko.md)
-- 주제 (Topic): 프로젝트 / a capstone project
-- 결과물 (Result): 학생 추가·성적 추가·평균 보고를 저장 모듈과 함께 두는 JSON 성적부 / a JSON-persisted grade book with add-student, add-grade, report-averages, and a storage module
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [61 — 미니 은행](61-bank.ko.md), [48 — 상점](48-shop.ko.md)
+- 주제: 프로젝트
+- 결과물: 학생 추가·성적 추가·평균 보고를 저장 모듈과 함께 두는 JSON 성적부
 
 [61](61-bank.ko.md)의 은행은 저장 모듈로 딕셔너리를 보관했고,
 [48](48-shop.ko.md)의 상점은 명령 메뉴를 돌렸습니다. 성적부는 둘을 합친
@@ -53,7 +53,7 @@
 
    ```text
    # grade-book.ko.nme — JSON에 보관하는 성적부.
-   # 실행: nme r grade-book.ko
+   # 실행: nme 실행 grade-book.ko
    # add, grade, report, quit 중 하나를 입력하세요.
 
    from "gradebook_ko.nme" import load, save
@@ -109,7 +109,7 @@
 4. 파이프로 명령을 넣어 실행합니다:
 
    ```sh
-   printf 'add\nMina\nreport\nMina\ngrade\nMina\n90\nreport\nMina\nquit\n' | nme r grade-book.ko
+   printf 'add\nMina\nreport\nMina\ngrade\nMina\n90\nreport\nMina\nquit\n' | nme 실행 grade-book.ko
    ```
 
    ```text

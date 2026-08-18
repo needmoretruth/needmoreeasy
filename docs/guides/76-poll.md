@@ -4,10 +4,10 @@ English | [한국어](76-poll.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [55 — Network](55-net.md), [70 — Reaction](70-reaction.md)
-- 주제 (Topic): 네트워크/시간 / network & timing
-- 결과물 (Result): 로컬 서버의 status.json을 몇 초마다 다시 받아 변화를 보고하기 / repeatedly fetching a status.json from a local server every few seconds and reporting changes
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [55 — Network](55-net.md), [70 — Reaction](70-reaction.md)
+- Topic: network & timing
+- Result: repeatedly fetching a status.json from a local server every few seconds and reporting changes
 
 Programs that watch a server keep asking it for the latest state. This is
 called polling. The loop is simple: fetch, show, wait, repeat — and stop when

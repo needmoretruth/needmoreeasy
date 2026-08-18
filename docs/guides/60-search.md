@@ -4,10 +4,10 @@ English | [한국어](60-search.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [31 — Records](31-address-book.md), [55 — Network](55-net.md)
-- 주제 (Topic): 검색/데이터 / search & data
-- 결과물 (Result): 로컬 서버나 파일에서 JSON 목록을 불러와 대소문자 구분 없이 검색하기 / loading a JSON catalog from a local server or file and searching it by keyword, case-insensitively
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [31 — Records](31-address-book.md), [55 — Network](55-net.md)
+- Topic: search & data
+- Result: loading a JSON catalog from a local server or file and searching it by keyword, case-insensitively
 
 A catalog is a list of records — dicts with a `name` and `tags`. A search
 loop asks for a keyword, walks the list, and keeps every record whose name

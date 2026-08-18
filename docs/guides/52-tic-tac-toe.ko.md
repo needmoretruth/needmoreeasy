@@ -4,17 +4,17 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [51 — 격자](51-grid.ko.md), [26 — 모험](26-adventure.ko.md)
-- 주제 (Topic): 게임 / game
-- 결과물 (Result): 승리 확인이 있는 두 명이 하는 틱택토 / a playable two-player tic-tac-toe with a win check
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [51 — 격자](51-grid.ko.md), [26 — 모험](26-adventure.ko.md)
+- 주제: 게임
+- 결과물: 승리 확인이 있는 두 명이 하는 틱택토
 
 [51](51-grid.ko.md) 가이드가 판을 만들었고, [26](26-adventure.ko.md) 가이드가 `물어봐`, `while True`, `break`로 선택지를 게임 반복으로 바꾸는 법을 보여 주었습니다. 틱택토는 둘을 합칩니다: 두 플레이어가 돌아가며 행과 열을 고르고, 매 차례마다 함수가 세 개가 한 줄에 있는지 확인합니다.
 ## 단계
 1. 게임 전체가 파일 하나에 있습니다. `tictactoe.ko.nme`으로 저장합니다. 판과 `판보여줘`는 [51](51-grid.ko.md)에서 나오고, `승자확인`은 행·열·대각선을 살펴 승리 표시를 돌려주며 한 줄도 없으면 `None`을 돌려줍니다. `숫자로 물어봐`가 행과 열을 정수로 읽고, `continue`가 찬 칸을 거르며, `움직임 == 9`가 무승부를 선언합니다:
    ```text
    # tictactoe.ko.nme — 두 명이 하는 틱택토 게임.
-   # 실행: nme r tictactoe.ko
+   # 실행: nme 실행 tictactoe.ko
    # 판은 행들의 목록입니다(51 가이드). 차례마다 표시를 놓고,
    # 승자확인 함수가 가로·세로·대각선에서 세 개가 같은지 봅니다.
 
@@ -72,7 +72,7 @@
    ```
 2. 파이프로 게임 전체를 돌립니다 — 행·열을 다섯 차례 입력합니다. X가 한 행을 채우고 마지막 차례에 이깁니다:
    ```sh
-   printf '0\n0\n1\n0\n0\n1\n2\n0\n0\n2\n' | nme r tictactoe.ko
+   printf '0\n0\n1\n0\n0\n1\n2\n0\n0\n2\n' | nme 실행 tictactoe.ko
    ```
    ```text
    틱택토! 행과 열은 0, 1, 2입니다.

@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [36 — Word count](36-word-count.ko.md), [54 — Stats](54-stats.ko.md)
-- 주제 (Topic): 데이터 / data
-- 결과물 (Result): 범주 키로 dict 목록을 목록들의 dict로 묶고, 범주별 개수를 보고하기 / grouping a list of dicts by a category key into a dict of lists, then reporting counts per category
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [36 — Word count](36-word-count.ko.md), [54 — Stats](54-stats.ko.md)
+- 주제: 데이터
+- 결과물: 범주 키로 dict 목록을 목록들의 dict로 묶고, 범주별 개수를 보고하기
 
 세기(가이드 [36](36-word-count.ko.md), [54](54-stats.ko.md))는 *몇 개인지* 답합니다.
 묶기는 *범주별로 몇 개인지* 답합니다: dict 목록 하나를 키 값 하나당 하나의
@@ -57,7 +57,7 @@
 
    ```text
    # group.ko.nme — 범주별로 묶고 개수를 보고하는 프로그램.
-   # 실행: nme r group.ko
+   # 실행: nme 실행 group.ko
 
    use file latest
    items = json_load("data.json")
@@ -95,7 +95,7 @@
 5. 같은 폴더에 `data.json`을 두고 실행하세요:
 
    ```sh
-   nme r group.ko
+   nme 실행 group.ko
    ```
 
    ```text

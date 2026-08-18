@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [26 — 모험](26-adventure.ko.md), [10 — 랜덤](10-random.ko.md)
-- 주제 (Topic): 게임 / game
-- 결과물 (Result): 제한된 기회 안에 숨은 단어의 글자를 맞히는 행맨형 게임 / a hangman-style game where you guess letters of a hidden word with limited tries
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [26 — 모험](26-adventure.ko.md), [10 — 랜덤](10-random.ko.md)
+- 주제: 게임
+- 결과물: 제한된 기회 안에 숨은 단어의 글자를 맞히는 행맨형 게임
 
 행맨 게임은 단어를 숨기고 글자마다 빈칸 하나를 보여 줍니다. 글자를 맞히면
 빈칸이 채워지고, 틀리면 기회가 하나 줄어듭니다. 단어는
@@ -66,7 +66,7 @@
 
    ```text
    # 숨은 단어 게임: 비밀 단어의 글자를 맞혀 보세요.
-   # 실행: nme r daneo-machigi
+   # 실행: nme 실행 daneo-machigi
 
    랜덤 사용 최신
 
@@ -113,7 +113,7 @@
 5. 실행하고 글자 네 개를 입력한 다음 포기합니다:
 
    ```sh
-   printf 'e\na\nr\nq\n' | nme r daneo-machigi
+   printf 'e\na\nr\nq\n' | nme 실행 daneo-machigi
    ```
 
    ```text

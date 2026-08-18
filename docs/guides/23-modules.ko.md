@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [15 — High score](15-high-score.ko.md), [13 — Files](13-files.ko.md)
-- 주제 (Topic): 모듈 / modules
-- 결과물 (Result): 프로그램을 여러 .nme 파일로 나누기 / splitting a program across .nme files
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [15 — High score](15-high-score.ko.md), [13 — Files](13-files.ko.md)
+- 주제: 모듈
+- 결과물: 프로그램을 여러 .nme 파일로 나누기
 
 작은 프로그램은 파일 하나로 충분합니다. 프로젝트가 커지면 파일을 나눠 각
 파일에 집중하게 만듭니다. NME는 목록에 적은 이름만 가져오므로 모든 모듈이
@@ -41,7 +41,7 @@
 3. 주 프로그램을 실행하면 NME가 옆에 있는 `shapes.nme`를 찾습니다:
 
    ```sh
-   nme r area
+   nme 실행 area
    ```
 
    ```text

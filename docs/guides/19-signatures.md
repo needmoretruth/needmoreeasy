@@ -6,7 +6,7 @@ English | [한국어](19-signatures.ko.md)
 
 [18 — Proof of work](18-proof-of-work.md) | [Full NeedMoreCoin guide](cryptocurrency.md)
 
-- Difficulty: ★★★★★
+- Difficulty: ★★★☆☆ (3/5)
 - Prerequisites: [17 — Cryptocurrency ledger](17-blockchain.md)
 - Topic: transaction proofs and replay prevention
 - Result: validate transaction authorization with a public value and reject replay

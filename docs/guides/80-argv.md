@@ -4,10 +4,10 @@ English | [한국어](80-argv.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [14 — JSON](14-json.md), [61 — Mini bank](61-bank.md)
-- 주제 (Topic): CLI 도구 / command-line tools
-- 결과물 (Result): `nme r todo add "buy milk"`처럼 명령 줄에서 말을 받아 동작하는 할 일 도구 / a todo tool that takes commands like `nme r todo add "buy milk"` on the command line
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [14 — JSON](14-json.md), [61 — Mini bank](61-bank.md)
+- Topic: command-line tools
+- Result: a todo tool that takes commands like `nme r todo add "buy milk"` on the command line
 
 So far every program asked for its input while running. A real tool reads
 its instructions up front: `nme r dice 6` should roll a six-sided die

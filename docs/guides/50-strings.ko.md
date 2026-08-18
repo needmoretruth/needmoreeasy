@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★☆ (4/5)
-- 선수 지식 (Prerequisites): [01 — 인사](01-hello.ko.md), [03 — 저장](03-set.ko.md)
-- 주제 (Topic): 문자열 / strings
-- 결과물 (Result): 문장에서 `text[start:end]` 자르기와 `.upper()/.lower()`, `.replace()`, `.strip()` / slicing `text[start:end]`, `.upper()/.lower()`, `.replace()`, and `.strip()` on a sentence
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [01 — 인사](01-hello.ko.md), [03 — 저장](03-set.ko.md)
+- 주제: 문자열
+- 결과물: 문장에서 `text[start:end]` 자르기와 `.upper()/.lower()`, `.replace()`, `.strip()`
 
 문자열은 `0`부터 세는 글자의 줄입니다. 슬라이스가 조각을 잘라 내고,
 몇 가지 메서드가 글을 바꿉니다 — 모두 평범한 Python이라 NME가 그대로
@@ -48,7 +48,7 @@
 
    ```text
    # strings.ko.nme — 문장을 자르고 바꿉니다.
-   # 실행: nme r strings.ko
+   # 실행: nme 실행 strings.ko
    # Python 문자열 도구: 자르기, 대소문자, 바꾸기, 공백 제거.
 
    문장을 물어봐 f"문장을 입력하세요: "
@@ -76,7 +76,7 @@
 
 5. 문장을 파이프로 넣어 실행합니다 — 입력 줄의 앞뒤 공백이 그대로 남아 있습니다:
    ```sh
-   printf '  I love bananas  \n' | nme r strings.ko
+   printf '  I love bananas  \n' | nme 실행 strings.ko
    ```
    ```text
    문장을 입력하세요: 원문:   I love bananas  

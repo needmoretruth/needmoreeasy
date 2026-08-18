@@ -4,10 +4,10 @@ English | [한국어](37-word-guess.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [26 — Adventure](26-adventure.md), [10 — Random](10-random.md)
-- 주제 (Topic): 게임 / game
-- 결과물 (Result): 제한된 기회 안에 숨은 단어의 글자를 맞히는 행맨형 게임 / a hangman-style game where you guess letters of a hidden word with limited tries
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [26 — Adventure](26-adventure.md), [10 — Random](10-random.md)
+- Topic: game
+- Result: a hangman-style game where you guess letters of a hidden word with limited tries
 
 A hangman game hides a word and shows one blank per letter. A right guess
 fills the blanks, a wrong one costs a try. The word comes from `random_pick`

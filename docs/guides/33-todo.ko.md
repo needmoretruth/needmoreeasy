@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [31 — 기록](31-address-book.ko.md), [23 — 모듈](23-modules.ko.md)
-- 주제 (Topic): 프로젝트 / a project
-- 결과물 (Result): add, done, list를 지원하고 저장 로직을 모듈 파일로 둔 JSON 저장 할 일 목록 / a JSON-persisted todo list with add, done, list, and a module file for the storage logic
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [31 — 기록](31-address-book.ko.md), [23 — 모듈](23-modules.ko.md)
+- 주제: 프로젝트
+- 결과물: add, done, list를 지원하고 저장 로직을 모듈 파일로 둔 JSON 저장 할 일 목록
 
 [31](31-address-book.ko.md)은 `json저장`으로 딕셔너리 목록을 저장했고,
 [23](23-modules.ko.md)은 코드를 모듈로 나눴습니다. 이 가이드는 둘을
@@ -36,7 +36,7 @@
 
    ```text
    # todo.ko.nme — 실행 사이에도 남는 할 일 목록
-   # 실행: nme r todo.ko
+   # 실행: nme 실행 todo.ko
 
    from "store_ko.nme" import load, save
    할일들 = load()
@@ -79,7 +79,7 @@
 3. 파이프로 명령을 넣어 실행합니다:
 
    ```sh
-   printf 'add\nbuy milk\ndone\n0\nlist\nquit\n' | nme r todo.ko
+   printf 'add\nbuy milk\ndone\n0\nlist\nquit\n' | nme 실행 todo.ko
    ```
 
    ```text

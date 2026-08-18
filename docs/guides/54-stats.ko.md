@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [30 — Data](30-data.ko.md), [42 — Compare](42-compare.ko.md)
-- 주제 (Topic): 통계/데이터 / statistics
-- 결과물 (Result): JSON 숫자 목록에서 count·평균·중앙값·최빈값·최소·최대·범위 보고하기 / loading a JSON list and reporting count, mean, median, mode, min, max, and range
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [30 — Data](30-data.ko.md), [42 — Compare](42-compare.ko.md)
+- 주제: 통계/데이터
+- 결과물: JSON 숫자 목록에서 count·평균·중앙값·최빈값·최소·최대·범위 보고하기
 
 평균 하나는 데이터에 대해 알려 주지 못하는 것이 많습니다. 이 가이드는 숫자
 목록을 불러와 여러 통계를 보고합니다. 각 통계는 데이터에 대해 다른 질문에
@@ -36,7 +36,7 @@
 
    ```text
    # stats.nme — 하나의 목록에 대한 여러 통계.
-   # 실행: nme r stats.ko
+   # 실행: nme 실행 stats
    # 같은 폴더에 numbers.json이 있어야 합니다.
 
    use file latest
@@ -59,7 +59,7 @@
 4. 실행하세요:
 
    ```sh
-   nme r stats.ko
+   nme 실행 stats
    ```
 
    ```text

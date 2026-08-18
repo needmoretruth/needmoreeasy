@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★☆☆☆☆ (1/5)
-- 선수 지식 (Prerequisites): [02 — 물어보기](02-ask.ko.md)
-- 주제 (Topic): 값 저장 / storing values
-- 결과물 (Result): 글자나 숫자를 이름 붙여 저장하는 프로그램 / a program that keeps text or numbers in named values
+- 난이도: ★☆☆☆☆ (1/5)
+- 선수 지식: [02 — 물어보기](02-ask.ko.md)
+- 주제: 값 저장
+- 결과물: 글자나 숫자를 이름 붙여 저장하는 프로그램
 
 값은 이름이 붙은 상자입니다. `은`으로 상자에 넣어 두고, 나중에
 `보여줘`로 꺼냅니다.

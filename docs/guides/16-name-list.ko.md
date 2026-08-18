@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [13 — 파일](13-files.ko.md), [14 — JSON](14-json.ko.md)
-- 주제 (Topic): 파일과 목록 / files and lists
-- 결과물 (Result): 파일에서 이름 목록을 읽어 고르는 프로그램 / a program that reads a list of names from a file and picks from it
+- 난이도: ★★★☆☆ (3/5)
+- 선수 지식: [13 — 파일](13-files.ko.md), [14 — JSON](14-json.ko.md)
+- 주제: 파일과 목록
+- 결과물: 파일에서 이름 목록을 읽어 고르는 프로그램
 
 파일이 목록이 될 수 있습니다. 이름이 줄마다 하나씩 있으면, Python 메서드
 하나 `splitlines()`가 파일 전체를 이름 목록으로 바꿔 줍니다.
@@ -32,7 +32,7 @@
    이름들 보여줘
    ```
 
-   `nme r names`를 실행하세요. 콘솔에 `['Mina', 'Sana', '준호', 'Yuna']`가
+   `nme 실행 names`를 실행하세요. 콘솔에 `['Mina', 'Sana', '준호', 'Yuna']`가
    보입니다. `파일읽기`가 글을 돌려주고 `.splitlines()`가 줄바꿈마다
    잘라냅니다. 이 줄은 보통의 Python이라 쓰인 그대로 남습니다.
 

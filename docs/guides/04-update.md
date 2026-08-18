@@ -4,10 +4,10 @@ English | [한국어](04-update.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★☆☆☆ (2/5)
-- 선수 지식 (Prerequisites): [03 — Set](03-set.md)
-- 주제 (Topic): 값 변경 / changing values
-- 결과물 (Result): 점수에 더하고 빼는 프로그램 / a program that adds to and subtracts from a score
+- Difficulty: ★☆☆☆☆ (1/5)
+- Prerequisites: [03 — Set](03-set.md)
+- Topic: changing values
+- Result: a program that adds to and subtracts from a score
 
 Games need scores that change. `score = 0` starts a score, and `add` changes
 it without `+` or `=`.

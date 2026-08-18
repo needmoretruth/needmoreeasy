@@ -4,10 +4,10 @@ English | [한국어](70-reaction.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [68 — Errors](68-errors.md), [10 — Random](10-random.md)
-- 주제 (Topic): 게임/시간 / game & timing
-- 결과물 (Result): time.time()으로 반응 속도를 재고 여러 라운드의 최고 기록을 알려 주는 게임 / a game that measures reaction time with time.time() and reports the best of several rounds
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [68 — Errors](68-errors.md), [10 — Random](10-random.md)
+- Topic: game & timing
+- Result: a game that measures reaction time with time.time() and reports the best of several rounds
 
 A reaction test must know when GO appeared and when you pressed Enter; `time.time()` clocks seconds, so two readings measure the gap.
 

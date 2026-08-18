@@ -4,10 +4,10 @@ English | [한국어](68-errors.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [55 — Network](55-net.md), [13 — Files](13-files.md)
-- 주제 (Topic): 예외 / exceptions
-- 결과물 (Result): 없는 파일을 읽거나 숫자가 아닌 입력을 바꿔도 멈추지 않는 프로그램 / a program that reads a missing file and converts bad input without crashing
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [55 — Network](55-net.md), [13 — Files](13-files.md)
+- Topic: exceptions
+- Result: a program that reads a missing file and converts bad input without crashing
 
 A missing file or a line that is not a number stops a program dead.
 `try` / `except` catches it and runs a friendly fallback.

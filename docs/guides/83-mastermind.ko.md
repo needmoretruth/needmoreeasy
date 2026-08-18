@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [10 — Random](10-random.ko.md), [44 — Playlist](44-playlist.ko.md)
-- 주제 (Topic): 게임/논리 / game & logic
-- 결과물 (Result): 4가지 색의 비밀 코드를 맞히고 검정·하양 단서로 좁혀 가는 마스터마인드 / a Mastermind-style game that hides a 4-color code and gives black/white feedback for each guess
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [10 — Random](10-random.ko.md), [44 — Playlist](44-playlist.ko.md)
+- 주제: 게임/논리
+- 결과물: 4가지 색의 비밀 코드를 맞히고 검정·하양 단서로 좁혀 가는 마스터마인드
 
 지금까지의 추측 게임은 "크다" 또는 "작다"만 답했습니다. 마스터마인드는
 한 번에 단서를 두 개 줍니다: 색이 맞고 **자리도 맞은** 개수(검정),
@@ -62,7 +62,7 @@
 
    ```text
    # mastermind.nme — 4색 비밀 코드 맞히기.
-   # 실행: nme r mastermind
+   # 실행: nme 실행 mastermind
 
    use random latest
 
@@ -98,7 +98,7 @@
    끝남)에서 비밀이 `["yellow", "red", "blue", "red"]`일 때:
 
    ```sh
-   printf 'red blue green white\nblue yellow red white\nyellow red blue red\n' | nme r mastermind
+   printf 'red blue green white\nblue yellow red white\nyellow red blue red\n' | nme 실행 mastermind
    ```
 
    ```text

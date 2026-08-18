@@ -4,10 +4,10 @@ English | [한국어](82-ast.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [46 — Expressions](46-expressions.md), [49 — Tokens](49-tokens.md)
-- 주제 (Topic): 컴파일러/AST / compiler & AST
-- 결과물 (Result): 식을 트리로 파싱하고 재귀로 평가해 우선순위를 지키는 계산기 / a calculator that parses an expression into a tree and evaluates the tree recursively, respecting precedence
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [46 — Expressions](46-expressions.md), [49 — Tokens](49-tokens.md)
+- Topic: compiler & AST
+- Result: a calculator that parses an expression into a tree and evaluates the tree recursively, respecting precedence
 
 Guide [46](46-expressions.md) evaluated `2 + 3 * 4` in one pass; guide
 [58](58-bytecode.md) flattened instructions into data. Real compilers do

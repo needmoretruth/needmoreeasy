@@ -4,10 +4,10 @@ English | [한국어](24-python-packages.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [23 — Modules](23-modules.md), [13 — Files](13-files.md)
-- 주제 (Topic): Python 패키지 / Python packages
-- 결과물 (Result): 표준 라이브러리와 설치된 라이브러리 사용하기 / using the standard library and installed libraries
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [23 — Modules](23-modules.md), [13 — Files](13-files.md)
+- Topic: Python packages
+- Result: using the standard library and installed libraries
 
 Python ships with many ready-made packages. Because advanced NME is ordinary
 Python, any of them is available inside a `.nme` file — that is the third

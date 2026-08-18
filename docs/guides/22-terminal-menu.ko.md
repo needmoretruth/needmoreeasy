@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [10 — 랜덤](10-random.ko.md), [06 — 조건](06-if.ko.md), [07 — 동안](07-while.ko.md)
-- 주제 (Topic): TUI/메뉴
-- 결과물 (Result): 반복으로 움직이는 터미널 메뉴 / a loop-driven terminal menu
+- 난이도: ★★★☆☆ (3/5)
+- 선수 지식: [10 — 랜덤](10-random.ko.md), [06 — 조건](06-if.ko.md), [07 — 동안](07-while.ko.md)
+- 주제: 터미널 메뉴
+- 결과물: 반복으로 움직이는 터미널 메뉴
 
 TUI(text user interface)는 키보드로 조종하는 메뉴입니다. 예제
 `examples/terminal-menu.ko.nme`는 선택지 세 개를 보여 주고, 답을 기다리고,
@@ -17,7 +17,7 @@ TUI(text user interface)는 키보드로 조종하는 메뉴입니다. 예제
 첫 답 뒤에 반복이 메뉴로 돌아가므로 메뉴가 두 번 보입니다:
 
 ```sh
-printf '1\n3\n' | nme r examples/terminal-menu.ko
+printf '1\n3\n' | nme 실행 examples/terminal-menu.ko
 ```
 
 ```text
@@ -84,7 +84,7 @@ printf '1\n3\n' | nme r examples/terminal-menu.ko
    ```
 
    영어 쌍둥이 `examples/terminal-menu.nme`는 같은 `while True:` 반복에
-   `ask choice, "choose: "`를 씁니다. `nme r examples/terminal-menu`로
+   `ask choice, "choose: "`를 씁니다. `nme 실행 examples/terminal-menu`로
    실행하고 같은 숫자를 고르면 영어로 같은 흐름이 나옵니다.
 
 ## 직접 해보기

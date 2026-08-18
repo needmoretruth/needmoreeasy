@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [22 — 터미널 메뉴](22-terminal-menu.ko.md), [06 — 조건](06-if.ko.md), [10 — 랜덤](10-random.ko.md)
-- 주제 (Topic): 대형 프로젝트 / a small project
-- 결과물 (Result): 방을 이동하며 고르는 텍스트 모험 / a room-by-room text adventure with choices
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [22 — 터미널 메뉴](22-terminal-menu.ko.md), [06 — 조건](06-if.ko.md), [10 — 랜덤](10-random.ko.md)
+- 주제: 대형 프로젝트
+- 결과물: 방을 이동하며 고르는 텍스트 모험
 
 텍스트 모험은 장소를 설명하고 다음에 무엇을 할지 묻는 프로그램입니다. 앞
 가이드에서 배운 것이 모두 한곳에 모입니다: `물어봐`가 선택을 읽고,
@@ -20,7 +20,7 @@
 
    ```text
    # 작은 텍스트 모험: 동굴을 지나 금을 찾아라.
-   # 실행: nme r adventure.ko
+   # 실행: nme 실행 adventure.ko
 
    랜덤 사용 최신
 
@@ -90,7 +90,7 @@
    문을 엽니다:
 
    ```sh
-   printf 'east\nnorth\neast\nwest\ndice\neast\nnorth\n' | nme r adventure.ko
+   printf 'east\nnorth\neast\nwest\ndice\neast\nnorth\n' | nme 실행 adventure.ko
    ```
 
    ```text

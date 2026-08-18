@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [20 — 합의](20-consensus.ko.md), [13 — 파일](13-files.ko.md)
-- 주제 (Topic): 네트워크/HTTP
-- 결과물 (Result): 로컬 서버에서 페이지를 가져오기 / fetching a page from a local server
+- 난이도: ★★★☆☆ (3/5)
+- 선수 지식: [20 — 합의](20-consensus.ko.md), [13 — 파일](13-files.ko.md)
+- 주제: 네트워크와 HTTP
+- 결과물: 로컬 서버에서 페이지를 가져오기
 
 HTTP는 프로그램이 웹 서버에게 페이지를 묻는 방법입니다. 예제
 `examples/http-client.ko.nme`는 `http://localhost:8000`으로 자기 컴퓨터에게
@@ -71,7 +71,7 @@ nme 실행 examples/http-client.ko
 
 5. 영어 쌍둥이 `examples/http-client.nme`는 같은 프로그램을 씁니다. 마지막
    `show`만 `show "the server answered: " + body.strip()`로 바뀝니다. 같은
-   폴더에서 `nme r examples/http-client`로 실행하면 영어로 같은 결과가
+   폴더에서 `nme 실행 examples/http-client`로 실행하면 영어로 같은 결과가
    나옵니다.
 
 ## 직접 해보기

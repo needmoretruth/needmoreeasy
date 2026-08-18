@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [62 — 버블 정렬](62-bubble.ko.md), [39 — 정렬](39-sorting.ko.md)
-- 주제 (Topic): 알고리즘 / algorithm
-- 결과물 (Result): 정렬된 목록에서 목표 숫자를 매 단계 탐색 범위를 절반으로 줄이며 찾고, 단계 수까지 보여 주는 프로그램 / finding a number in a sorted list by halving the search range each step, showing the step count and the found index
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [62 — 버블 정렬](62-bubble.ko.md), [39 — 정렬](39-sorting.ko.md)
+- 주제: 알고리즘
+- 결과물: 정렬된 목록에서 목표 숫자를 매 단계 탐색 범위를 절반으로 줄이며 찾고, 단계 수까지 보여 주는 프로그램
 
 [62](62-bubble.ko.md) 가이드가 목록을 정렬했고, [39](39-sorting.ko.md)
 가이드가 Python으로 정렬하게 했습니다. 목록이 정렬되면 더 똑똑한 검색
@@ -78,7 +78,7 @@
 
    ```text
    # binary.ko.nme — 이진 탐색, 절반씩 찾기
-   # 실행: nme r binary.ko
+   # 실행: nme 실행 binary.ko
    #
    # 목록이 정렬되어 있습니다. 낮은과 높은이라는 두 포인터로
    # 목표가 있을 수 있는 범위를 잡고, 매 단계 가운데를 읽어
@@ -123,7 +123,7 @@
 5. 실행합니다:
 
    ```sh
-   nme r binary.ko
+   nme 실행 binary.ko
    ```
 
    ```text

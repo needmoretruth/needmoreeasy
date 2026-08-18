@@ -4,13 +4,13 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [14 — JSON](14-json.ko.md), [61 — Mini bank](61-bank.ko.md)
-- 주제 (Topic): CLI 도구 / command-line tools
-- 결과물 (Result): `nme r todo add "buy milk"`처럼 명령 줄에서 말을 받아 동작하는 할 일 도구 / a todo tool that takes commands like `nme r todo add "buy milk"` on the command line
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [14 — JSON](14-json.ko.md), [61 — Mini bank](61-bank.ko.md)
+- 주제: CLI 도구
+- 결과물: `nme 실행 todo add "buy milk"`처럼 명령 줄에서 말을 받아 동작하는 할 일 도구
 
 지금까지의 프로그램은 실행하는 동안 입력을 물었습니다. 진짜 도구는
-시작할 때 지시를 읽습니다: `nme r dice 6`은 아무것도 묻지 않고 육면체
+시작할 때 지시를 읽습니다: `nme 실행 dice 6`은 아무것도 묻지 않고 육면체
 주사위를 굴려야 합니다. 파일 이름 뒤에 적는 말들이 **명령 줄 인자**이고,
 Python은 이것들을 `sys.argv` 목록에 넣습니다.
 
@@ -21,7 +21,7 @@ Python은 이것들을 `sys.argv` 목록에 넣습니다.
 
    ```text
    # greet.nme — 명령 줄에서 받은 이름으로 인사하기.
-   # 실행: nme r greet 미나
+   # 실행: nme 실행 greet 미나
 
    import sys
 
@@ -30,7 +30,7 @@ Python은 이것들을 `sys.argv` 목록에 넣습니다.
    ```
 
    ```sh
-   nme r greet 미나
+   nme 실행 greet 미나
    ```
 
    ```text
@@ -46,21 +46,21 @@ Python은 이것들을 `sys.argv` 목록에 넣습니다.
 
    ```text
    # dice.nme — 명령 줄에서 원하는 면 수의 주사위 굴리기.
-   # 실행: nme r dice 6
+   # 실행: nme 실행 dice 6
 
    use random latest
 
    import sys
 
    if len(sys.argv) < 2:
-       show "usage: nme r dice <sides>"
+       show "usage: nme 실행 dice <sides>"
    else:
        sides = int(sys.argv[1])
        show random_number(1, sides)
    ```
 
    ```sh
-   nme r dice 6
+   nme 실행 dice 6
    ```
 
    ```text
@@ -68,7 +68,7 @@ Python은 이것들을 `sys.argv` 목록에 넣습니다.
    ```
 
    `int(sys.argv[1])`이 단어 `"6"`을 숫자 6으로 바꿉니다([02](02-ask.ko.md)의
-   변환과 같음). 확인이 없으면 `nme r dice`는 빈 목록에서 오류로
+   변환과 같음). 확인이 없으면 `nme 실행 dice`는 빈 목록에서 오류로
    무너집니다. 올바른 명령을 보여 주는 "usage:" 줄이 인자 누락에
    친절하게 답하는 방법입니다.
 
@@ -78,9 +78,9 @@ Python은 이것들을 `sys.argv` 목록에 넣습니다.
 
    ```text
    # todo.nme — 명령 줄로 명령을 받는 할 일 도구.
-   # 실행: nme r todo add "buy milk"
-   #       nme r todo list
-   #       nme r todo done 1
+   # 실행: nme 실행 todo add "buy milk"
+   #       nme 실행 todo list
+   #       nme 실행 todo done 1
 
    use file latest
 
@@ -127,10 +127,10 @@ Python은 이것들을 `sys.argv` 목록에 넣습니다.
 4. 명령을 이어서 도구를 실행해 보세요:
 
    ```sh
-   nme r todo add "buy milk"
-   nme r todo add "learn argv"
-   nme r todo done 1
-   nme r todo
+   nme 실행 todo add "buy milk"
+   nme 실행 todo add "learn argv"
+   nme 실행 todo done 1
+   nme 실행 todo
    ```
 
    ```text
@@ -150,7 +150,7 @@ Python은 이것들을 `sys.argv` 목록에 넣습니다.
 목록을 비우는 `clear` 명령이나 번호 하나를 지우는 `rm` 명령
 (`todos.pop(number)`)을 추가해 보세요. 주사위 도구를 면 수 목록을 받아
 각각 굴리게 바꿔 보세요 (`for side in sys.argv[1:]`). 그다음 나만의
-도구를 만들어 보세요 — 단위 변환기(`nme r convert 100 km to mi`)가
+도구를 만들어 보세요 — 단위 변환기(`nme 실행 convert 100 km to mi`)가
 좋은 첫 번째입니다.
 
 ## 배운 것

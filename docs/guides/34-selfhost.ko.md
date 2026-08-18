@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [29 — 부트스트랩](29-bootstrap.ko.md)
-- 주제 (Topic): 셀프호스팅 / self-hosting
-- 결과물 (Result): say/set/while로 된 아주 작은 NME형 부분집합을 Python으로 컴파일하는 NME 프로그램 / an NME program that compiles a tiny NME-like subset (say/set/while) to Python
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [29 — 부트스트랩](29-bootstrap.ko.md)
+- 주제: 셀프호스팅
+- 결과물: say/set/while로 된 아주 작은 NME형 부분집합을 Python으로 컴파일하는 NME 프로그램
 
 [29](29-bootstrap.ko.md)은 BML이라는 아주 작은 언어를 컴파일했습니다. 이 가이드는
 이미 NME 단어인 `say`, `set`, `while`, `end`로 된 부분집합을 컴파일합니다 —
@@ -34,7 +34,7 @@ NME가 NME를 실행하는 씨앗입니다.
    # selfhost.ko.nme — 아주 작은 NME형 언어를 컴파일하는 NME
    # 미니 언어는 NME 단어를 씁니다: say <글자>, set <이름> <정수>,
    # add <이름> <정수>, while <이름> <정수>, end
-   # 실행: nme r selfhost.ko
+   # 실행: nme 실행 selfhost.ko
 
    program = [
        "set count 0",
@@ -77,7 +77,7 @@ NME가 NME를 실행하는 씨앗입니다.
 3. 서버도 입력도 없이 실행합니다:
 
    ```sh
-   nme r selfhost.ko
+   nme 실행 selfhost.ko
    ```
 
    ```text

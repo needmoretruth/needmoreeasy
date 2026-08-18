@@ -4,10 +4,10 @@ English | [한국어](01-hello.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★☆☆☆☆ (1/5)
-- 선수 지식 (Prerequisites): none
-- 주제 (Topic): 첫 프로그램과 출력 / first program and output
-- 결과물 (Result): `nme run`으로 메시지를 출력하는 프로그램 / a program that prints a message with `nme run`
+- Difficulty: ★☆☆☆☆ (1/5)
+- Prerequisites: none
+- Topic: first program and output
+- Result: a program that prints a message with `nme run`
 
 Your first program. NME prints whatever follows `show` — no quotes, no
 parentheses.

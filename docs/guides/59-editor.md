@@ -4,10 +4,10 @@ English | [한국어](59-editor.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [47 — Progress](47-progress.md), [50 — Strings](50-strings.md)
-- 주제 (Topic): TUI/터미널 앱 / a terminal app
-- 결과물 (Result): 버퍼를 두고 줄을 추가·삭제·목록·저장하는 줄 단위 에디터 / a line-based editor with a buffer and add, list, remove, save, and quit commands
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [47 — Progress](47-progress.md), [50 — Strings](50-strings.md)
+- Topic: a terminal app
+- Result: a line-based editor with a buffer and add, list, remove, save, and quit commands
 
 A text file is one long string. An editor works on a buffer — the same text
 split into a list of lines, one per row. You add, remove, and list those rows,

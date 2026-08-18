@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [35 — 일기](35-diary.ko.md), [30 — 데이터](30-data.ko.md)
-- 주제 (Topic): 파일/프로젝트 / files
-- 결과물 (Result): JSON 데이터 파일 몇 개를 읽어 file_write로 요약 보고서 하나를 쓰는 프로그램 / reading a few JSON data files and writing one text report with file_write
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [35 — 일기](35-diary.ko.md), [30 — 데이터](30-data.ko.md)
+- 주제: 파일/프로젝트
+- 결과물: JSON 데이터 파일 몇 개를 읽어 file_write로 요약 보고서 하나를 쓰는 프로그램
 
 JSON 파일 하나는 한 종류의 데이터를 담고, 보고서는 여러 데이터를 합칩니다.
 이 가이드는 점수 파일과 선수 파일을 읽어 짧은 요약 — 평균, 최고 득점자,
@@ -105,7 +105,7 @@ JSON 파일 하나는 한 종류의 데이터를 담고, 보고서는 여러 데
 
    ```text
    # 보고서: JSON 데이터 파일 두 개를 읽어 요약 파일 하나를 쓰기
-   # 실행: nme r report.ko
+   # 실행: nme 실행 report.ko
    # scores.json과 players.json 파일이 같은 폴더에 있어야 합니다.
 
    파일 사용 최신
@@ -152,7 +152,7 @@ JSON 파일 하나는 한 종류의 데이터를 담고, 보고서는 여러 데
 7. 실행하고, 프로그램이 쓴 파일을 봅니다:
 
    ```sh
-   nme r report.ko
+   nme 실행 report.ko
    cat report.txt
    ```
 

@@ -4,10 +4,10 @@ English | [한국어](02-ask.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★☆☆☆☆ (1/5)
-- 선수 지식 (Prerequisites): [01 — Hello](01-hello.md)
-- 주제 (Topic): 입력 / input
-- 결과물 (Result): 이름을 물어보고 문장으로 인사하는 프로그램 / a program that asks a name and greets it in a sentence
+- Difficulty: ★☆☆☆☆ (1/5)
+- Prerequisites: [01 — Hello](01-hello.md)
+- Topic: input
+- Result: a program that asks a name and greets it in a sentence
 
 A program that listens. `ask` reads what the user types and stores it in a
 name.

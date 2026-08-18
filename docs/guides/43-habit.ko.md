@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [33 — 할 일](33-todo.ko.md), [23 — 모듈](23-modules.ko.md)
-- 주제 (Topic): 프로젝트 / a project
-- 결과물 (Result): add, check, streak, list, quit를 지원하고 저장 로직을 모듈 파일로 둔 JSON 저장 습관 추적기 / a JSON-persisted habit tracker with add, check, streak, list, quit, and a module file for the storage logic
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [33 — 할 일](33-todo.ko.md), [23 — 모듈](23-modules.ko.md)
+- 주제: 프로젝트
+- 결과물: add, check, streak, list, quit를 지원하고 저장 로직을 모듈 파일로 둔 JSON 저장 습관 추적기
 
 [33](33-todo.ko.md) 가이드는 딕셔너리 목록의 할 일을 저장했고, [23](23-modules.ko.md) 가이드는 프로젝트를 여러 파일로 나눴습니다. 습관 추적기는 딕셔너리 하나 — 습관마다 연속 날수 — 를 JSON으로 저장합니다.
 
@@ -32,7 +32,7 @@
 
    ```text
    # habit.ko.nme — 실행 사이에도 남는 습관 추적기
-   # 실행: nme r habit.ko
+   # 실행: nme 실행 habit.ko
 
    from "store_ko.nme" import load, save
    습관들 = load()
@@ -71,7 +71,7 @@
 3. 파이프로 명령을 넣어 실행합니다:
 
    ```sh
-   printf 'add\n물 마시기\ncheck\n물 마시기\ncheck\n물 마시기\nstreak\n물 마시기\nlist\nquit\n' | nme r habit.ko
+   printf 'add\n물 마시기\ncheck\n물 마시기\ncheck\n물 마시기\nstreak\n물 마시기\nlist\nquit\n' | nme 실행 habit.ko
    ```
    ```text
 

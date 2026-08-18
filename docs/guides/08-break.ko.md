@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★☆☆ (3/5)
-- 선수 지식 (Prerequisites): [07 — 동안](07-while.ko.md)
-- 주제 (Topic): 반복 / loops
-- 결과물 (Result): 반복을 일찍 끝내는 프로그램 / a program that leaves a loop early
+- 난이도: ★★☆☆☆ (2/5)
+- 선수 지식: [07 — 동안](07-while.ko.md)
+- 주제: 반복
+- 결과물: 반복을 일찍 끝내는 프로그램
 
 반복이 도중에 멈춰야 할 때가 있습니다. `멈춰`는 가장 가까운 반복을
 즉시 끝내고 그다음 줄로 넘어갑니다.

@@ -6,7 +6,7 @@ English | [한국어](18-proof-of-work.ko.md)
 
 [17 — Cryptocurrency ledger](17-blockchain.md) | [Full NeedMoreCoin guide](cryptocurrency.md)
 
-- Difficulty: ★★★★★
+- Difficulty: ★★★☆☆ (3/5)
 - Prerequisites: [17 — Cryptocurrency ledger](17-blockchain.md), [07 — While](07-while.md)
 - Topic: proof of work and block linkage
 - Result: link transactions to the previous block and perform SHA-256 proof of work

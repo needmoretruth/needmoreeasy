@@ -4,10 +4,10 @@ English | [한국어](58-bytecode.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [49 — Tokens](49-tokens.md), [29 — Bootstrap](29-bootstrap.md)
-- 주제 (Topic): 컴파일러 / compiler
-- 결과물 (Result): 간단한 명령을 단계 목록으로 컴파일하고 가상 머신처럼 한 단계씩 실행하기 / compiling simple instructions into a list of steps and running them one by one like a tiny virtual machine
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [49 — Tokens](49-tokens.md), [29 — Bootstrap](29-bootstrap.md)
+- Topic: compiler
+- Result: compiling simple instructions into a list of steps and running them one by one like a tiny virtual machine
 
 Guide [29](29-bootstrap.md) translated source text into Python and ran it;
 [49](49-tokens.md) split lines into tokens and dispatched them. The next step

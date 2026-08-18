@@ -4,10 +4,10 @@ English | [한국어](53-sets.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [36 — Word count](36-word-count.md), [39 — Sorting](39-sorting.md)
-- 주제 (Topic): 집합/데이터 / sets & data
-- 결과물 (Result): Python 집합으로 텍스트 파일의 고유 단어와 문장의 고유 글자를 찾기 / using a Python set to find unique words in a text file, then unique letters in a sentence
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [36 — Word count](36-word-count.md), [39 — Sorting](39-sorting.md)
+- Topic: sets & data
+- Result: using a Python set to find unique words in a text file, then unique letters in a sentence
 
 Guide [36](36-word-count.md) counted every word, repeats and all. A set keeps
 only the unique values, so `set(words)` answers a different question: how many

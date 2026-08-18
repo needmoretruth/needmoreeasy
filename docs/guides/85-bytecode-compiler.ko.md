@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [82 — AST](82-ast.ko.md), [58 — Bytecode](58-bytecode.ko.md)
-- 주제 (Topic): 컴파일러/바이트코드 / compiler & bytecode
-- 결과물 (Result): 식 트리를 납작한 명령 목록으로 컴파일하고 스택 가상 머신으로 실행하는 컴파일러 / a compiler that flattens an expression tree into instruction lines and runs them on a stack machine
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [82 — AST](82-ast.ko.md), [58 — Bytecode](58-bytecode.ko.md)
+- 주제: 컴파일러/바이트코드
+- 결과물: 식 트리를 납작한 명령 목록으로 컴파일하고 스택 가상 머신으로 실행하는 컴파일러
 
 [82](82-ast.ko.md)는 트리를 직접 평가했고, [58](58-bytecode.ko.md)은 미리
 만든 명령을 실행했습니다. 진짜 컴파일러는 둘을 잇습니다: 트리를 납작한
@@ -51,7 +51,7 @@
 
    ```text
    # bytecode.nme — 전체 파이프라인: 토큰 -> 트리 -> 명령 -> 실행.
-   # 실행: nme r bytecode
+   # 실행: nme 실행 bytecode
 
    def tokenize(line):
        return line.split()
@@ -116,7 +116,7 @@
 4. 실행하세요:
 
    ```sh
-   nme r bytecode
+   nme 실행 bytecode
    ```
 
    ```text

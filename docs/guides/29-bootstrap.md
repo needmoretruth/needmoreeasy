@@ -4,10 +4,10 @@ English | [한국어](29-bootstrap.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [28 — Compiler](28-compiler.md), [23 — Modules](23-modules.md)
-- 주제 (Topic): 부트스트랩 / bootstrap
-- 결과물 (Result): NME로 쓴 미니 컴파일러 / a tiny compiler written in NME
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [28 — Compiler](28-compiler.md), [23 — Modules](23-modules.md)
+- Topic: bootstrap
+- Result: a tiny compiler written in NME
 
 Guide [28](28-compiler.md) interpreted lines directly. The next step is the
 seed of a real compiler: a program that **translates** a tiny language into

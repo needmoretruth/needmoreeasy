@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [13 — 파일](13-files.ko.md), [30 — 데이터](30-data.ko.md)
-- 주제 (Topic): 데이터 / data
-- 결과물 (Result): 쉼표로 나뉜 텍스트 파일을 split(",")로 읽고 한 열의 평균을 구해 요약 CSV를 쓰기 / reading a comma-separated text file with split(","), computing a column's average, and writing a summary CSV
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [13 — 파일](13-files.ko.md), [30 — 데이터](30-data.ko.md)
+- 주제: 데이터
+- 결과물: 쉼표로 나뉜 텍스트 파일을 split(",")로 읽고 한 열의 평균을 구해 요약 CSV를 쓰기
 
 CSV 파일은 그냥 텍스트입니다 — 줄마다 행 하나, 쉼표로 구분된 필드들.
 작은 파일이라면 `split(",")`만으로 충분합니다.
@@ -39,7 +39,7 @@ CSV 파일은 그냥 텍스트입니다 — 줄마다 행 하나, 쉼표로 구�
 
    ```text
    # scores.ko.nme — CSV를 읽고 점수 평균을 구해 요약 파일 쓰기.
-   # 실행: nme r scores.ko
+   # 실행: nme 실행 scores.ko
 
    파일 사용 최신
 
@@ -76,7 +76,7 @@ CSV 파일은 그냥 텍스트입니다 — 줄마다 행 하나, 쉼표로 구�
 4. `data.csv` 옆에서 실행하고, 새 `summary.csv`도 확인합니다:
 
    ```sh
-   nme r scores.ko
+   nme 실행 scores.ko
    ```
 
    ```text

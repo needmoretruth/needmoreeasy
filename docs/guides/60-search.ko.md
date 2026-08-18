@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [31 — 기록](31-address-book.ko.md), [55 — 네트워크](55-net.ko.md)
-- 주제 (Topic): 검색/데이터 / search & data
-- 결과물 (Result): 로컬 서버나 파일에서 JSON 목록을 불러와 대소문자 구분 없이 검색하기 / loading a JSON catalog from a local server or file and searching it by keyword, case-insensitively
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [31 — 기록](31-address-book.ko.md), [55 — 네트워크](55-net.ko.md)
+- 주제: 검색/데이터
+- 결과물: 로컬 서버나 파일에서 JSON 목록을 불러와 대소문자 구분 없이 검색하기
 
 목록은 기록들의 모음입니다 — `name`과 `tags`가 든 딕셔너리. 검색 반복은
 키워드를 물어보고 목록을 훑으며 이름이 맞는 기록을 골라냅니다. 이
@@ -80,7 +80,7 @@
 
    ```text
    # search.ko.nme — JSON 목록에서 찾기.
-   # 실행: nme r search.ko
+   # 실행: nme 실행 search.ko
    # search, list, quit 중 하나를 입력하세요.
 
    import os
@@ -127,7 +127,7 @@
    모든 이름을 출력하며, `quit`이 반복을 끝냅니다:
 
    ```sh
-   printf 'search\nred\nlist\nquit\n' | nme r search.ko
+   printf 'search\nred\nlist\nquit\n' | nme 실행 search.ko
    ```
 
    ```text

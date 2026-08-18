@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [49 — Tokens](49-tokens.ko.md), [29 — Bootstrap](29-bootstrap.ko.md)
-- 주제 (Topic): 컴파일러 / compiler
-- 결과물 (Result): 간단한 명령을 단계 목록으로 컴파일하고 가상 머신처럼 한 단계씩 실행하기 / compiling simple instructions into a list of steps and running them one by one like a tiny virtual machine
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [49 — Tokens](49-tokens.ko.md), [29 — Bootstrap](29-bootstrap.ko.md)
+- 주제: 컴파일러
+- 결과물: 간단한 명령을 단계 목록으로 컴파일하고 가상 머신처럼 한 단계씩 실행하기
 
 가이드 [29](29-bootstrap.ko.md)는 소스 텍스트를 Python으로 번역해 실행했고,
 [49](49-tokens.ko.md)는 줄을 토큰으로 나누어 실행을 보냈습니다. 다음 단계는
@@ -40,7 +40,7 @@
 
    ```text
    # bytecode.ko.nme — 작은 바이트코드 실행기, 미니 가상 머신.
-   # 실행: nme r bytecode.ko
+   # 실행: nme 실행 bytecode.ko
    # 각 명령은 목록이며, run()이 프로그램 카운터로 한 걸음씩 실행합니다.
 
    def run(program):
@@ -94,7 +94,7 @@
 3. 실행하세요:
 
    ```sh
-   nme r bytecode.ko
+   nme 실행 bytecode.ko
    ```
 
    ```text

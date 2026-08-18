@@ -4,10 +4,10 @@ English | [한국어](11-check-build.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★☆ (4/5)
-- 선수 지식 (Prerequisites): [08 — Break](08-break.md)
-- 주제 (Topic): 도구 사용 / using the tools
-- 결과물 (Result): 프로그램을 확인하고 생성된 Python을 읽는 습관 / the habit of verifying programs and reading the generated Python
+- Difficulty: ★★☆☆☆ (2/5)
+- Prerequisites: [08 — Break](08-break.md)
+- Topic: using the tools
+- Result: the habit of verifying programs and reading the generated Python
 
 `nme check` and `nme build` show what your NME really is. `check` asks Python
 whether the generated program is valid; `build` shows the generated Python

@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [28 — 첫 컴파일러](28-compiler.ko.md), [29 — 부트스트랩](29-bootstrap.ko.md)
-- 주제 (Topic): 컴파일러 / compiler
-- 결과물 (Result): `2 + 3 * 4`를 연산자 우선순위에 맞게 계산하는 아주 작은 계산기 / a tiny calculator that evaluates 2 + 3 * 4 respecting precedence, as a step toward a real expression compiler
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [28 — 첫 컴파일러](28-compiler.ko.md), [29 — 부트스트랩](29-bootstrap.ko.md)
+- 주제: 컴파일러
+- 결과물: `2 + 3 * 4`를 연산자 우선순위에 맞게 계산하는 아주 작은 계산기
 
 가이드 [28](28-compiler.ko.md)과 [29](29-bootstrap.ko.md)은 줄을 나누고 번역했습니다. 진짜 컴파일러는 식도 계산해야 하는데, 첫 규칙은 우선순위 — `2 + 3 * 4`에서 곱셈이 먼저 일어납니다.
 
@@ -29,7 +29,7 @@
 
    ```text
    # expr.ko.nme — 2 + 3 * 4 같은 식 계산기.
-   # 실행: nme r expr.ko
+   # 실행: nme 실행 expr.ko
 
    def 곱셈통과(값들):
        i = 0
@@ -80,7 +80,7 @@
 3. 파이프로 식을 넣어 실행합니다:
 
    ```sh
-   printf '2 + 3 * 4\n10 - 2 * 3\n2 * 3 + 4\n1 + 2 + 3\n5 * 2 - 3\nquit\n' | nme r expr.ko
+   printf '2 + 3 * 4\n10 - 2 * 3\n2 * 3 + 4\n1 + 2 + 3\n5 * 2 - 3\nquit\n' | nme 실행 expr.ko
    ```
 
    ```text

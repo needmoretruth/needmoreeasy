@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [13 — 파일](13-files.ko.md), [14 — JSON](14-json.ko.md), [06 — 조건](06-if.ko.md)
-- 주제 (Topic): 프로젝트 / project
-- 결과물 (Result): 최고 점수를 기억하는 주사위 게임 / a dice game that remembers its best score
+- 난이도: ★★★☆☆ (3/5)
+- 선수 지식: [13 — 파일](13-files.ko.md), [14 — JSON](14-json.ko.md), [06 — 조건](06-if.ko.md)
+- 주제: 프로젝트
+- 결과물: 최고 점수를 기억하는 주사위 게임
 
 지금까지 배운 것이 작은 프로젝트 하나에 담깁니다: 최고 점수를 기억하는
 주사위 게임입니다. `랜덤 사용`은 주사위를 굴리고, `파일 사용`은 기록을

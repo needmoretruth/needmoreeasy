@@ -4,10 +4,10 @@ English | [한국어](83-mastermind.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [10 — Random](10-random.md), [44 — Playlist](44-playlist.md)
-- 주제 (Topic): 게임/논리 / game & logic
-- 결과물 (Result): 4가지 색의 비밀 코드를 맞히고 검정·하양 단서로 좁혀 가는 마스터마인드 / a Mastermind-style game that hides a 4-color code and gives black/white feedback for each guess
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [10 — Random](10-random.md), [44 — Playlist](44-playlist.md)
+- Topic: game & logic
+- Result: a Mastermind-style game that hides a 4-color code and gives black/white feedback for each guess
 
 The guessing games so far answered only "too big" or "too small".
 Mastermind gives two clues at once: how many colors are right **and in

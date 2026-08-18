@@ -4,10 +4,10 @@ English | [한국어](45-csv.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [13 — Files](13-files.md), [30 — Data](30-data.md)
-- 주제 (Topic): 데이터 / data
-- 결과물 (Result): 쉼표로 나뉜 텍스트 파일을 split(",")로 읽고 한 열의 평균을 구해 요약 CSV를 쓰기 / reading a comma-separated text file with split(","), computing a column's average, and writing a summary CSV
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [13 — Files](13-files.md), [30 — Data](30-data.md)
+- Topic: data
+- Result: reading a comma-separated text file with split(","), computing a column's average, and writing a summary CSV
 
 A CSV file is plain text — one row per line, fields separated by commas; a small file only needs `split(",")`.
 

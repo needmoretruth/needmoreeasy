@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [23 — Modules](23-modules.ko.md), [07 — While](07-while.ko.md)
-- 주제 (Topic): 네이티브 컴파일 / native compilation
-- 결과물 (Result): CPython 없이 기계어로 실행하기 / running a program as machine code without CPython
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [23 — Modules](23-modules.ko.md), [07 — While](07-while.ko.md)
+- 주제: 네이티브 컴파일
+- 결과물: CPython 없이 기계어로 실행하기
 
 지금까지 모든 프로그램은 CPython 위에서 실행됐습니다. NME가 Python으로
 컴파일하고 Python이 그것을 실행했습니다. 언어의 작은 부분 — 네이티브 코어
@@ -140,7 +140,7 @@
    10
    ```
 
-   영어 명령 `nme native count`도 같은 방식입니다.
+   영어 명령 `nme 네이티브 count`도 같은 방식입니다.
 
 3. C 소스와 실행 파일을 남기려면:
 
@@ -177,7 +177,7 @@
    ```
 
    ```sh
-   nme r examples/native-factorial.ko
+   nme 실행 examples/native-factorial.ko
    nme 네이티브 실행 examples/native-factorial.ko
    ```
 
@@ -188,7 +188,7 @@
 
    ```sh
    nme 네이티브 실행 ask-demo    # "지원하지 않습니다" 진단 출력
-   nme r ask-demo         # CPython으로는 그대로 동작
+   nme 실행 ask-demo         # CPython으로는 그대로 동작
    ```
 
 ## 어떻게 동작하나요
@@ -215,7 +215,7 @@ Developer PowerShell의 Microsoft `cl`이 `/O2`와 `/utf-8`로 같은 일을 합
 - 네이티브 코어는 C로, macOS·Linux에서는 `cc`로, Windows에서는 MSVC `cl`로
   네이티브 실행 파일로 컴파일됩니다.
 - `nme 네이티브 실행`이 실행하고 `nme 네이티브 빌드`가 C와 실행 파일을
-  남깁니다. 영어 명령은 `nme native run`과 `nme native build`입니다.
+  남깁니다. 영어 명령은 `nme 네이티브 run`과 `nme 네이티브 build`입니다.
 - 함수, 반복, 조건, `say`/`show`/`말해` 출력이 모두 코어 안에서 동작하며,
   조건과 반복에 정한 한 줄 NME 출력 형식과 반복 안의 한 줄 `break`도 포함합니다.
 - 코어 밖에서는 잘못 컴파일하는 대신 프로그램을 거부합니다.

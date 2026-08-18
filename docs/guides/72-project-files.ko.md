@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [67 — 성적부](67-grade-book.ko.md), [23 — 모듈](23-modules.ko.md)
-- 주제 (Topic): 모듈/구조 / modules & structure
-- 결과물 (Result): fetch·analyze·report 세 .nme 모듈로 나누고 주 프로그램이 가져오는 작은 날씨 보고서 프로젝트 / a small weather-report project split into three .nme modules (fetch, analyze, report) with clear interfaces, imported by a main program
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [67 — 성적부](67-grade-book.ko.md), [23 — 모듈](23-modules.ko.md)
+- 주제: 모듈/구조
+- 결과물: fetch·analyze·report 세 .nme 모듈로 나누고 주 프로그램이 가져오는 작은 날씨 보고서 프로젝트
 
 [23](23-modules.ko.md)은 프로그램에서 도우미를 나누었고,
 [67](67-grade-book.ko.md)은 저장 모듈 하나를 썼습니다. 진짜 프로젝트는
@@ -84,7 +84,7 @@
 
    ```text
    # main.ko.nme — 날씨 보고서 프로젝트.
-   # 실행: nme r main.ko
+   # 실행: nme 실행 main.ko
    # weather.json이 같은 폴더에 있어야 합니다.
 
    from "fetch_ko.nme" import 날씨불러오기
@@ -109,7 +109,7 @@
 6. 데이터 파일이 있는 상태에서 주 프로그램을 실행합니다:
 
    ```sh
-   nme r main.ko
+   nme 실행 main.ko
    ```
 
    ```text

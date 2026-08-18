@@ -4,10 +4,10 @@ English | [한국어](26-adventure.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [22 — Terminal menu](22-terminal-menu.md), [06 — If](06-if.md), [10 — Random](10-random.md)
-- 주제 (Topic): 대형 프로젝트 / a small project
-- 결과물 (Result): 방을 이동하며 고르는 텍스트 모험 / a room-by-room text adventure with choices
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [22 — Terminal menu](22-terminal-menu.md), [06 — If](06-if.md), [10 — Random](10-random.md)
+- Topic: a small project
+- Result: a room-by-room text adventure with choices
 
 A text adventure describes a place and asks what you do next. Everything from
 the earlier guides comes together here: `ask` reads your choices, `if`/`elif`/

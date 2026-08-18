@@ -4,10 +4,10 @@ English | [한국어](81-testing.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [23 — Modules](23-modules.md), [46 — Expressions](46-expressions.md)
-- 주제 (Topic): 테스트 / testing
-- 결과물 (Result): 자기 함수를 예상값과 비교해 통과·실패를 보고하는 작은 테스트 실행기 / a tiny test runner that calls your own functions, compares each result with the expected value, and reports pass or fail
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [23 — Modules](23-modules.md), [46 — Expressions](46-expressions.md)
+- Topic: testing
+- Result: a tiny test runner that calls your own functions, compares each result with the expected value, and reports pass or fail
 
 "Wait — I said it works without actually testing it, didn't I?" Most
 programmers ask themselves that question. Tests answer it: a program that

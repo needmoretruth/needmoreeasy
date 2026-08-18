@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [30 — 데이터](30-data.ko.md), [14 — JSON](14-json.ko.md)
-- 주제 (Topic): 데이터/비교 / data & comparison
-- 결과물 (Result): 두 JSON 숫자 목록을 불러와 평균과 최댓값을 비교하는 프로그램 / loading two JSON number lists and comparing their means and maxima
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [30 — 데이터](30-data.ko.md), [14 — JSON](14-json.ko.md)
+- 주제: 데이터/비교
+- 결과물: 두 JSON 숫자 목록을 불러와 평균과 최댓값을 비교하는 프로그램
 
 [30](30-data.ko.md) 가이드는 숫자 목록 하나를 요약했습니다. 목록 두 개를
 비교하는 것은 같은 질문을 두 번 하고 어느 묶음이 더 큰지 정하는 일입니다.
@@ -51,7 +51,7 @@
 
    ```text
    # 비교.nme — 두 숫자 묶음 중 어느 쪽이 더 클까요?
-   # 실행: nme r 비교
+   # 실행: nme 실행 비교
    # a.json과 b.json 파일이 같은 폴더에 있어야 합니다.
 
    파일 사용 최신
@@ -84,7 +84,7 @@
    ```
 
    ```sh
-   nme r 비교
+   nme 실행 비교
    ```
    ```text
    a: 평균 4.5, 최대 9

@@ -4,10 +4,10 @@ English | [한국어](05-repeat.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★☆☆☆ (2/5)
-- 선수 지식 (Prerequisites): [04 — Update](04-update.md)
-- 주제 (Topic): 반복 / loops
-- 결과물 (Result): 줄을 여러 번 실행하는 프로그램 / a program that runs lines several times
+- Difficulty: ★★☆☆☆ (2/5)
+- Prerequisites: [04 — Update](04-update.md)
+- Topic: loops
+- Result: a program that runs lines several times
 
 Computers are great at doing the same thing many times. `repeat` runs a line
 or a block again and again.

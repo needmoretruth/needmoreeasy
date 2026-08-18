@@ -37,6 +37,8 @@ jobs:
           python-version: '3.14'
       - name: Check Korean and English documentation parity
         run: python scripts/check-doc-parity.py
+      - name: Check the syntax list against the compiler
+        run: python scripts/check-syntax-reference.py
 
   test:
     name: ${{ matrix.os }}

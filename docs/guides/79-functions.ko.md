@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [73 — Capstone](73-capstone.ko.md), [23 — Modules](23-modules.ko.md)
-- 주제 (Topic): 컴파일러/함수 / compiler & functions
-- 결과물 (Result): `def`/`return`/호출을 가진 미니 언어를 Python으로 컴파일하고 실행하는 컴파일러 / a compiler that translates a mini language with `def`, `return`, and calls into Python and runs it
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [73 — Capstone](73-capstone.ko.md), [23 — Modules](23-modules.ko.md)
+- 주제: 컴파일러/함수
+- 결과물: `def`/`return`/호출을 가진 미니 언어를 Python으로 컴파일하고 실행하는 컴파일러
 
 [73](73-capstone.ko.md)은 다섯 동사를 Python으로 컴파일했습니다. 진짜 언어에는
 함수가 있으므로, 이번 컴파일러에는 함수가 생깁니다: `def 이름 매개변수`가
@@ -88,7 +88,7 @@
 
    ```text
    # functions.nme — 함수가 있는 미니 언어를 Python으로 컴파일하기.
-   # 실행: nme r functions
+   # 실행: nme 실행 functions
    # 미니 언어를 읽어 Python 소스로 컴파일하고,
    # out.py를 쓴 다음 exec로 실행합니다.
 
@@ -144,7 +144,7 @@
 5. 서버도 입력도 필요 없이 실행하세요:
 
    ```sh
-   nme r functions
+   nme 실행 functions
    ```
 
    ```text

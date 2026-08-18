@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [10 — 랜덤](10-random.ko.md), [14 — JSON](14-json.ko.md)
-- 주제 (Topic): 게임/랜덤 / game & random
-- 결과물 (Result): JSON에서 불러온 플레이리스트에 셔플·다음 곡·반복 재생을 더한 프로그램 / a playlist loaded from JSON with shuffle, next, and a loop of songs
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [10 — 랜덤](10-random.ko.md), [14 — JSON](14-json.ko.md)
+- 주제: 게임/랜덤
+- 결과물: JSON에서 불러온 플레이리스트에 셔플·다음 곡·반복 재생을 더한 프로그램
 
 음악 플레이어는 노래 목록을 넘겨 가며 움직입니다 — JSON으로 불러와 랜덤 도우미로 섞고, 끝낼 때까지 반복하는 메뉴를 돌립니다.
 
@@ -31,7 +31,7 @@
 
    ```text
    # playlist.ko.nme — 랜덤 음악 플레이어.
-   # 실행: nme r playlist.ko
+   # 실행: nme 실행 playlist.ko
 
    랜덤 사용 최신
    파일 사용 최신
@@ -72,7 +72,7 @@
 3. 파이프로 명령을 넣어 실행합니다:
 
    ```sh
-   printf 'next\nnext\nlist\nquit\n' | nme r playlist.ko
+   printf 'next\nnext\nlist\nquit\n' | nme 실행 playlist.ko
    ```
 
    ```text

@@ -4,10 +4,10 @@ English | [한국어](62-bubble.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [39 — Sorting](39-sorting.md), [51 — Grid](51-grid.md)
-- 주제 (Topic): 알고리즘 / algorithm
-- 결과물 (Result): 중첩 반복과 맞바꿈으로 버블 정렬을 직접 구현하고 Python 내장 정렬과 결과를 비교하는 프로그램 / implementing bubble sort by hand with nested loops and a swap, then comparing the result with Python's built-in sort
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [39 — Sorting](39-sorting.md), [51 — Grid](51-grid.md)
+- Topic: algorithm
+- Result: implementing bubble sort by hand with nested loops and a swap, then comparing the result with Python's built-in sort
 
 Guide [39](39-sorting.md) let Python sort for you. Here you build the sort
 yourself. Bubble sort is an algorithm — a fixed recipe of steps that always

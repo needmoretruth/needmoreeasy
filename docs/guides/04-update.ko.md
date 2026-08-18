@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★☆☆☆ (2/5)
-- 선수 지식 (Prerequisites): [03 — 저장](03-set.ko.md)
-- 주제 (Topic): 값 변경 / changing values
-- 결과물 (Result): 점수에 더하고 빼는 프로그램 / a program that adds to and subtracts from a score
+- 난이도: ★☆☆☆☆ (1/5)
+- 선수 지식: [03 — 저장](03-set.ko.md)
+- 주제: 값 변경
+- 결과물: 점수에 더하고 빼는 프로그램
 
 게임에는 바뀌는 점수가 필요합니다. `점수는 0`으로 점수를 시작하고,
 `더해`로 `+`와 `=` 없이 바꿉니다.

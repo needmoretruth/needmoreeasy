@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [16 — 이름 목록](16-name-list.ko.md), [13 — 파일](13-files.ko.md)
-- 주제 (Topic): 데이터 / data
-- 결과물 (Result): 텍스트 파일을 읽어 단어가 각각 몇 번 나오는지 세는 프로그램 / reading a text file and counting how often each word appears, using a dict and collections.Counter
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [16 — 이름 목록](16-name-list.ko.md), [13 — 파일](13-files.ko.md)
+- 주제: 데이터
+- 결과물: 텍스트 파일을 읽어 단어가 각각 몇 번 나오는지 세는 프로그램
 
 단어 세기는 많은 글 프로그램의 첫걸음입니다. 파일을 읽고 단어로 나누고
 셉니다: 보통 dict로 직접 셀 수 있고, `collections.Counter`가 한 번에 같은
@@ -75,7 +75,7 @@
 
    ```text
    # 텍스트 파일에서 단어가 각각 몇 번 나오는지 셉니다.
-   # 실행: nme r daneo
+   # 실행: nme 실행 daneo
 
    파일 사용 최신
    from collections import Counter
@@ -107,7 +107,7 @@
 6. `story.txt`가 있는 폴더에서 실행합니다:
 
    ```sh
-   nme r daneo
+   nme 실행 daneo
    ```
 
    ```text

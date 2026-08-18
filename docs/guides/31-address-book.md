@@ -4,10 +4,10 @@ English | [한국어](31-address-book.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [14 — JSON](14-json.md), [23 — Modules](23-modules.md)
-- 주제 (Topic): 데이터/기록 / records
-- 결과물 (Result): 연락처를 추가·목록·검색하는 JSON 파일 주소록 / a JSON-file address book that adds, lists, and searches contacts
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [14 — JSON](14-json.md), [23 — Modules](23-modules.md)
+- Topic: records
+- Result: a JSON-file address book that adds, lists, and searches contacts
 
 A record is one dict with several fields. An address book is a list of those
 records saved as JSON. This guide builds a menu-driven book that adds a

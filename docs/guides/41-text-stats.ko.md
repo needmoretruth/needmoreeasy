@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [16 — 이름 목록](16-name-list.ko.md), [13 — 파일](13-files.ko.md)
-- 주제 (Topic): 텍스트/데이터 / text & data
-- 결과물 (Result): 텍스트 파일을 읽어 글자 수, 단어 수, 가장 긴 단어, 가장 흔한 단어를 보고하는 프로그램 / reading a text file and reporting character count, word count, longest word, and most common word (with collections.Counter)
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [16 — 이름 목록](16-name-list.ko.md), [13 — 파일](13-files.ko.md)
+- 주제: 텍스트/데이터
+- 결과물: 텍스트 파일을 읽어 글자 수, 단어 수, 가장 긴 단어, 가장 흔한 단어를 보고하는 프로그램
 
 이야기는 먼저 문자열이고, 그다음 단어 목록입니다. 이 가이드는 텍스트 파일을 읽어 글자와 단어를 세고, Python이 가장 긴 단어와 가장 흔한 단어를 찾게 합니다.
 
@@ -52,7 +52,7 @@
 
    ```text
    # 텍스트통계.nme — 텍스트 파일의 글자와 단어.
-   # 실행: nme r 텍스트통계
+   # 실행: nme 실행 텍스트통계
    # story.txt 파일이 같은 폴더에 있어야 합니다.
 
    파일 사용 최신
@@ -85,7 +85,7 @@
    `most_common(1)[0]`은 한 요소 목록에서 유일한 짝을 꺼내고, 마지막 반복은 각 단어의 길이를 모두 더합니다.
 
    ```sh
-   nme r 텍스트통계
+   nme 실행 텍스트통계
    ```
 
    ```text

@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★☆☆☆☆ (1/5)
-- 선수 지식 (Prerequisites): 없음
-- 주제 (Topic): 첫 프로그램과 출력 / first program and output
-- 결과물 (Result): `nme 실행`으로 메시지를 출력하는 프로그램 / a program that prints a message with `nme 실행`
+- 난이도: ★☆☆☆☆ (1/5)
+- 선수 지식: 없음
+- 주제: 첫 프로그램과 출력
+- 결과물: `nme 실행`으로 메시지를 출력하는 프로그램
 
 첫 프로그램입니다. NME는 `말해줘` 뒤에 오는 내용을 그대로 출력합니다.
 따옴표도 괄호도 필요 없습니다.
@@ -47,11 +47,11 @@
 ## 직접 해보기
 
 메시지를 여러분의 이름이나 좋아하는 곳으로 바꾸고 저장한 뒤 다시
-`nme r hello`를 실행해 보세요. `nme r`은 `nme 실행`의 짧은 명령입니다.
+`nme 실행 hello`를 실행해 보세요. `nme r`은 `nme 실행`의 짧은 명령입니다.
 
 ## 배운 것
 
-- `nme 실행 hello`는 `hello.nme`를 실행하고, `nme r hello`가 짧은 명령입니다.
+- `nme 실행 hello`는 `hello.nme`를 실행하고, `nme 실행 hello`가 짧은 명령입니다.
 - `말해줘 메시지`는 줄의 나머지를 출력하고, `show`가 영어 동작입니다.
 - 문장에는 따옴표, 쉼표, 괄호가 필요 없습니다.
 - 자연스러운 한 줄 문장은 그대로 출력됩니다.

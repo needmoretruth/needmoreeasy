@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [46 — 표현식](46-expressions.ko.md), [29 — 부트스트랩](29-bootstrap.ko.md)
-- 주제 (Topic): 컴파일러 / compiler
-- 결과물 (Result): 명령 줄을 토큰으로 나누고 실행을 보내는 프로그램 / splitting a command line into tokens and dispatching them, a step toward a real tokenizer and parser
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [46 — 표현식](46-expressions.ko.md), [29 — 부트스트랩](29-bootstrap.ko.md)
+- 주제: 컴파일러
+- 결과물: 명령 줄을 토큰으로 나누고 실행을 보내는 프로그램
 
 [46](46-expressions.ko.md)은 식을 단어로 나누었고,
 [29](29-bootstrap.ko.md)은 명령 줄을 나누었습니다. 진짜 컴파일러도 같은
@@ -54,7 +54,7 @@
 
    ```text
    # tokens.ko.nme — 명령 줄을 토큰으로 나누고 실행합니다.
-   # 실행: nme r tokens.ko
+   # 실행: nme 실행 tokens.ko
    # 토큰은 줄의 한 단어이고, split()이 목록을 만듭니다.
    # 첫 토큰이 명령이고, 나머지 토큰이 인자입니다.
    # 진짜 컴파일러도 글을 읽고, 토큰으로 자르고, 첫 토큰으로 갈라집니다.
@@ -97,7 +97,7 @@
 4. 파이프로 명령을 넣어 실행합니다:
 
    ```sh
-   printf 'move 3\nturn left\nsay hi\nwhere\nquit\n' | nme r tokens.ko
+   printf 'move 3\nturn left\nsay hi\nwhere\nquit\n' | nme 실행 tokens.ko
    ```
 
    ```text

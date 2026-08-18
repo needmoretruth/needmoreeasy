@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [05 — 반복](05-repeat.ko.md), [47 — 진행](47-progress.ko.md)
-- 주제 (Topic): 출력/루프 / output & loops
-- 결과물 (Result): 중첩 반복과 문자열 곱셈으로 직각 삼각형, 거꾸로 삼각형, 마름모를 그리는 프로그램 / building a right triangle, an upside-down triangle, and a diamond with nested loops and string multiplication
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [05 — 반복](05-repeat.ko.md), [47 — 진행](47-progress.ko.md)
+- 주제: 출력/루프
+- 결과물: 중첩 반복과 문자열 곱셈으로 직각 삼각형, 거꾸로 삼각형, 마름모를 그리는 프로그램
 
 [47](47-progress.ko.md) 가이드는 한 줄이 자라나는 `#` 행을 그렸습니다.
 여기서는 행이 모양을 유지하므로 그림이 나타납니다 — `*`와 공백으로 만든
@@ -67,7 +67,7 @@
 
    ```text
    # ascii.ko.nme — 문자로 도형 그리기
-   # 실행: nme r ascii.ko
+   # 실행: nme 실행 ascii.ko
    #
    # 도형은 두 가지 아이디어로 만듭니다. 문자열 곱셈은 문자를
    # 반복하고, 중첩 반복은 줄을 반복합니다. 직각 삼각형,
@@ -99,7 +99,7 @@
 6. 실행합니다:
 
    ```sh
-   nme r ascii.ko
+   nme 실행 ascii.ko
    ```
 
    ```text

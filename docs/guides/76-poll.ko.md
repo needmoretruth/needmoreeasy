@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [55 — Network](55-net.ko.md), [70 — Reaction](70-reaction.ko.md)
-- 주제 (Topic): 네트워크/시간 / network & timing
-- 결과물 (Result): 로컬 서버의 status.json을 몇 초마다 다시 받아 변화를 보고하기 / repeatedly fetching a status.json from a local server every few seconds and reporting changes
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [55 — Network](55-net.ko.md), [70 — Reaction](70-reaction.ko.md)
+- 주제: 네트워크/시간
+- 결과물: 로컬 서버의 status.json을 몇 초마다 다시 받아 변화를 보고하기
 
 서버를 지켜보는 프로그램은 최신 상태를 계속 물어봅니다. 이것을 폴링이라고
 합니다. 루프는 간단합니다: 받고, 보여 주고, 기다리고, 반복 — 서버가 끝났다고
@@ -42,7 +42,7 @@
 
    ```text
    # poll.nme — status.json이 done이 될 때까지 지켜보기.
-   # 실행: nme r poll.ko
+   # 실행: nme 실행 poll
    # 먼저 이 폴더를 서비스하세요: python3 -m http.server 8000
    # 실행 중에 status.json을 {"status": "done", "step": 2}로 바꾸세요.
 
@@ -68,7 +68,7 @@
 5. 실행 중에 `status.json`을 편집하며 실행하세요:
 
    ```sh
-   nme r poll.ko
+   nme 실행 poll
    ```
 
    ```text

@@ -4,10 +4,10 @@ English | [한국어](64-binary-search.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [62 — Bubble sort](62-bubble.md), [39 — Sorting](39-sorting.md)
-- 주제 (Topic): 알고리즘 / algorithm
-- 결과물 (Result): 정렬된 목록에서 목표 숫자를 매 단계 탐색 범위를 절반으로 줄이며 찾고, 단계 수까지 보여 주는 프로그램 / finding a number in a sorted list by halving the search range each step, showing the step count and the found index
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [62 — Bubble sort](62-bubble.md), [39 — Sorting](39-sorting.md)
+- Topic: algorithm
+- Result: finding a number in a sorted list by halving the search range each step, showing the step count and the found index
 
 Guide [62](62-bubble.md) sorted a list; guide [39](39-sorting.md) let Python
 sort. Once a list is sorted, a smarter way to search appears. Instead of

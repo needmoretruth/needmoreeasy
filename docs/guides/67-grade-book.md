@@ -4,10 +4,10 @@ English | [한국어](67-grade-book.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [61 — Bank](61-bank.md), [48 — Shop](48-shop.md)
-- 주제 (Topic): 프로젝트 / a capstone project
-- 결과물 (Result): 학생 추가·성적 추가·평균 보고를 저장 모듈과 함께 두는 JSON 성적부 / a JSON-persisted grade book with add-student, add-grade, report-averages, and a storage module
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [61 — Bank](61-bank.md), [48 — Shop](48-shop.md)
+- Topic: a capstone project
+- Result: a JSON-persisted grade book with add-student, add-grade, report-averages, and a storage module
 
 The bank in guide [61](61-bank.md) saved a dict through a storage module, and
 the shop in guide [48](48-shop.md) ran a command menu. A grade book puts both

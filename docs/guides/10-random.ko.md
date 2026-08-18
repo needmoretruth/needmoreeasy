@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★☆☆ (3/5)
-- 선수 지식 (Prerequisites): [06 — 조건](06-if.ko.md)
-- 주제 (Topic): 랜덤 / random
-- 결과물 (Result): 주사위를 굴리고 색을 고르는 프로그램 / a program that rolls a die and picks a color
+- 난이도: ★★☆☆☆ (2/5)
+- 선수 지식: [06 — 조건](06-if.ko.md)
+- 주제: 랜덤
+- 결과물: 주사위를 굴리고 색을 고르는 프로그램
 
 게임에는 깜짝 놀랄 일이 필요합니다. NME에는 Python이 제공하는 랜덤
 도우미가 들어 있고, `랜덤 사용` 한 줄로 불러옵니다.

@@ -4,10 +4,10 @@ English | [한국어](41-text-stats.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [16 — Name list](16-name-list.md), [13 — Files](13-files.md)
-- 주제 (Topic): 텍스트/데이터 / text & data
-- 결과물 (Result): 텍스트 파일을 읽어 글자 수, 단어 수, 가장 긴 단어, 가장 흔한 단어를 보고하는 프로그램 / reading a text file and reporting character count, word count, longest word, and most common word (with collections.Counter)
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [16 — Name list](16-name-list.md), [13 — Files](13-files.md)
+- Topic: text & data
+- Result: reading a text file and reporting character count, word count, longest word, and most common word (with collections.Counter)
 
 A story is a string first, then a list of words. This guide reads a text file, counts its characters and words, and lets Python find the longest and most common ones.
 

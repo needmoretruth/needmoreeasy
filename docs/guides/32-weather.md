@@ -4,10 +4,10 @@ English | [한국어](32-weather.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [21 — HTTP](21-http.md), [30 — Data](30-data.md)
-- 주제 (Topic): 네트워크/데이터 / web data
-- 결과물 (Result): 로컬 HTTP 서버의 JSON을 가져와 미니 날씨 보고서 출력하기 / fetching a local HTTP server's JSON and printing a mini weather report
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [21 — HTTP](21-http.md), [30 — Data](30-data.md)
+- Topic: web data
+- Result: fetching a local HTTP server's JSON and printing a mini weather report
 
 Guide [21](21-http.md) fetched a text file over HTTP; [30](30-data.md) loaded JSON
 from disk. This guide fetches JSON over HTTP, parses it, and prints a mini weather

@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [24 — Python 패키지](24-python-packages.ko.md), [13 — 파일](13-files.ko.md)
-- 주제 (Topic): 파일 / files
-- 결과물 (Result): 각 날의 메모를 날짜별 파일에 저장하고 다시 읽는 일기 / a diary that saves each day's note to a dated file and can read it back
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [24 — Python 패키지](24-python-packages.ko.md), [13 — 파일](13-files.ko.md)
+- 주제: 파일
+- 결과물: 각 날의 메모를 날짜별 파일에 저장하고 다시 읽는 일기
 
 일기는 하루에 파일 하나입니다. Python의 `datetime` 패키지가 오늘 날짜를
 알려 주고, [13](13-files.ko.md) 가이드의 `파일` 도우미가 메모를 저장하고
@@ -47,7 +47,7 @@
 
    ```text
    # 일기: 하루 메모가 날짜별 파일에 저장됩니다.
-   # 실행: nme r ilgi
+   # 실행: nme 실행 ilgi
 
    파일 사용 최신
    from datetime import date
@@ -76,7 +76,7 @@
 4. 실행하고 메뉴에 답 세 개를 넣어 보세요 — 메모 추가, 오늘 읽기, 끝내기:
 
    ```sh
-   printf 'add\n친구와 커피를 마셨어요.\nread\ntoday\nquit\n' | nme r ilgi
+   printf 'add\n친구와 커피를 마셨어요.\nread\ntoday\nquit\n' | nme 실행 ilgi
    ```
 
    ```text

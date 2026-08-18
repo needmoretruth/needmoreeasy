@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [13 — 파일](13-files.ko.md), [36 — 단어 세기](36-word-count.ko.md)
-- 주제 (Topic): 파일/폴더 / files & folders
-- 결과물 (Result): 폴더의 파일을 나열해 각각 읽고 전체 단어·글자 수를 보고하는 프로그램 / listing the files in a folder with os.listdir, reading each with file_read, and reporting total words and letters across all of them
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [13 — 파일](13-files.ko.md), [36 — 단어 세기](36-word-count.ko.md)
+- 주제: 파일/폴더
+- 결과물: 폴더의 파일을 나열해 각각 읽고 전체 단어·글자 수를 보고하는 프로그램
 
 [13](13-files.ko.md) 가이드는 코드에 이름을 적은 파일 하나를 읽었습니다.
 실제 폴더에는 파일이 많고, 미리 이름을 알지 못하는 경우가 보통입니다.
@@ -79,7 +79,7 @@
 
    ```text
    # files-folder.ko.nme — 폴더의 모든 .txt 파일의 단어·글자 수 보고.
-   # 실행: nme r files-folder.ko
+   # 실행: nme 실행 files-folder.ko
    # 같은 폴더에 하나.txt와 둘.txt를 먼저 만드세요.
 
    import os
@@ -120,7 +120,7 @@
 6. 텍스트 파일 둘을 폴더에 두고 실행합니다:
 
    ```sh
-   nme r files-folder.ko
+   nme 실행 files-folder.ko
    ```
 
    ```text

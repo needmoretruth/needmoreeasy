@@ -4,10 +4,10 @@ English | [한국어](27-calculator.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [24 — Python packages](24-python-packages.md), [23 — Modules](23-modules.md)
-- 주제 (Topic): 프로젝트 / a project
-- 결과물 (Result): 함수와 모듈 파일로 계속 물어보는 계산기 / a repeat-until-quit calculator with functions and a module file
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [24 — Python packages](24-python-packages.md), [23 — Modules](23-modules.md)
+- Topic: a project
+- Result: a repeat-until-quit calculator with functions and a module file
 
 A calculator that reads `3 + 4` and answers, then asks again until you type
 `quit`, is a complete small project. It uses all three levels in one program:

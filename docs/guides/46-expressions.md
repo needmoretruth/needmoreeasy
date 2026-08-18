@@ -4,10 +4,10 @@ English | [한국어](46-expressions.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [28 — Compiler](28-compiler.md), [29 — Bootstrap](29-bootstrap.md)
-- 주제 (Topic): 컴파일러 / compiler
-- 결과물 (Result): `2 + 3 * 4`를 연산자 우선순위에 맞게 계산하는 아주 작은 계산기 / a tiny calculator that evaluates 2 + 3 * 4 respecting precedence, as a step toward a real expression compiler
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [28 — Compiler](28-compiler.md), [29 — Bootstrap](29-bootstrap.md)
+- Topic: compiler
+- Result: a tiny calculator that evaluates 2 + 3 * 4 respecting precedence, as a step toward a real expression compiler
 
 Guides [28](28-compiler.md) and [29](29-bootstrap.md) dispatched lines and translated them; a real compiler also evaluates expressions, and the first rule is precedence — in `2 + 3 * 4` the multiplication happens first.
 

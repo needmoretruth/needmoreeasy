@@ -4,10 +4,10 @@ English | [한국어](34-selfhost.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [29 — Bootstrap](29-bootstrap.md)
-- 주제 (Topic): 셀프호스팅 / self-hosting
-- 결과물 (Result): say/set/while로 된 아주 작은 NME형 부분집합을 Python으로 컴파일하는 NME 프로그램 / an NME program that compiles a tiny NME-like subset (say/set/while) to Python
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [29 — Bootstrap](29-bootstrap.md)
+- Topic: self-hosting
+- Result: an NME program that compiles a tiny NME-like subset (say/set/while) to Python
 
 Guide [29](29-bootstrap.md) compiled a tiny language called BML. This guide
 compiles a subset whose words are already NME words — `say`, `set`, `while`, `end` — the seed of NME running NME.

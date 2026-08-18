@@ -4,10 +4,10 @@ English | [한국어](33-todo.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [31 — Records](31-address-book.md), [23 — Modules](23-modules.md)
-- 주제 (Topic): 프로젝트 / a project
-- 결과물 (Result): add, done, list를 지원하고 저장 로직을 모듈 파일로 둔 JSON 저장 할 일 목록 / a JSON-persisted todo list with add, done, list, and a module file for the storage logic
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [31 — Records](31-address-book.md), [23 — Modules](23-modules.md)
+- Topic: a project
+- Result: a JSON-persisted todo list with add, done, list, and a module file for the storage logic
 
 Guide [31](31-address-book.md) saved a list of dicts with `json_save`; [23](23-modules.md)
 moved code into modules. This guide grows both into a todo list project.

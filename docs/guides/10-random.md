@@ -4,10 +4,10 @@ English | [한국어](10-random.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★☆☆ (3/5)
-- 선수 지식 (Prerequisites): [06 — If](06-if.md)
-- 주제 (Topic): 랜덤 / random
-- 결과물 (Result): 주사위를 굴리고 색을 고르는 프로그램 / a program that rolls a die and picks a color
+- Difficulty: ★★☆☆☆ (2/5)
+- Prerequisites: [06 — If](06-if.md)
+- Topic: random
+- Result: a program that rolls a die and picks a color
 
 Games need surprises. NME bundles a random helper that Python provides, loaded
 with one `use` line.

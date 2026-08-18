@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★☆ (4/5)
-- 선수 지식 (Prerequisites): [13 — 파일](13-files.ko.md)
-- 주제 (Topic): JSON / json
-- 결과물 (Result): 이름과 점수를 저장하고 불러오는 프로그램 / a program that saves a name and a score and loads them back
+- 난이도: ★★★☆☆ (3/5)
+- 선수 지식: [13 — 파일](13-files.ko.md)
+- 주제: JSON
+- 결과물: 이름과 점수를 저장하고 불러오는 프로그램
 
 파일 하나에 기록 전체를 담을 수 있습니다. JSON은 여러 값을 한 덩어리의
 글로 저장해서, 이름과 점수가 나중에 — 프로그램이 끝난 뒤에도 — 함께

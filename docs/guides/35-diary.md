@@ -4,10 +4,10 @@ English | [한국어](35-diary.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [24 — Python packages](24-python-packages.md), [13 — Files](13-files.md)
-- 주제 (Topic): 파일 / files
-- 결과물 (Result): 각 날의 메모를 날짜별 파일에 저장하고 다시 읽는 일기 / a diary that saves each day's note to a dated file and can read it back
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [24 — Python packages](24-python-packages.md), [13 — Files](13-files.md)
+- Topic: files
+- Result: a diary that saves each day's note to a dated file and can read it back
 
 A diary is one file per day. Python's `datetime` package tells you today's
 date, and the `file` helper from guide [13](13-files.md) saves and reads the

@@ -4,10 +4,10 @@ English | [한국어](77-download.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [55 — Network](55-net.md), [13 — Files](13-files.md)
-- 주제 (Topic): 네트워크/파일 / network & files
-- 결과물 (Result): 로컬 HTTP 서버에서 파일을 받아 진행 상황을 보여 주며 저장하기 / downloading a file from a local HTTP server and saving it while showing progress
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [55 — Network](55-net.md), [13 — Files](13-files.md)
+- Topic: network & files
+- Result: downloading a file from a local HTTP server and saving it while showing progress
 
 Guide [55](55-net.md) fetched data and showed it; [76](76-poll.md) fetched
 it again and again. This guide fetches a file once and **saves it** — the

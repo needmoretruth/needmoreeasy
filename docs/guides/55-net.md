@@ -4,10 +4,10 @@ English | [한국어](55-net.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [32 — Weather](32-weather.md), [44 — Playlist](44-playlist.md)
-- 주제 (Topic): 네트워크 / network
-- 결과물 (Result): 로컬 HTTP 서버에서 메시지를 받아 미니 채팅처럼 보여 주기 / fetching messages from a local HTTP server and showing them like a mini chat
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [32 — Weather](32-weather.md), [44 — Playlist](44-playlist.md)
+- Topic: network
+- Result: fetching messages from a local HTTP server and showing them like a mini chat
 
 A chat client reads messages from a server and sends new ones. This guide
 fetches a JSON message list from a local server, prints it like a chat log,

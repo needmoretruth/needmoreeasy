@@ -4,10 +4,10 @@ English | [한국어](73-capstone.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [58 — Bytecode](58-bytecode.md), [34 — Self-host](34-selfhost.md)
-- 주제 (Topic): 컴파일러/캡스톤 / compiler capstone
-- 결과물 (Result): 아주 작은 언어(say/set/add/while/end)를 읽어 Python 소스로 컴파일하고 파일로 저장한 뒤 실행하는 NME 프로그램 / an NME program that reads a small custom language (say/set/add/while/end), compiles it to Python source, writes it to a file, and runs it
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [58 — Bytecode](58-bytecode.md), [34 — Self-host](34-selfhost.md)
+- Topic: compiler capstone
+- Result: an NME program that reads a small custom language (say/set/add/while/end), compiles it to Python source, writes it to a file, and runs it
 
 Guide [34](34-selfhost.md) compiled NME words into Python and ran them in
 memory. Guide [58](58-bytecode.md) turned instructions into data steps. The

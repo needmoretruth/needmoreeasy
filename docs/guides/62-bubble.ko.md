@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [39 — 정렬](39-sorting.ko.md), [51 — 격자](51-grid.ko.md)
-- 주제 (Topic): 알고리즘 / algorithm
-- 결과물 (Result): 중첩 반복과 맞바꿈으로 버블 정렬을 직접 구현하고 Python 내장 정렬과 결과를 비교하는 프로그램 / implementing bubble sort by hand with nested loops and a swap, then comparing the result with Python's built-in sort
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [39 — 정렬](39-sorting.ko.md), [51 — 격자](51-grid.ko.md)
+- 주제: 알고리즘
+- 결과물: 중첩 반복과 맞바꿈으로 버블 정렬을 직접 구현하고 Python 내장 정렬과 결과를 비교하는 프로그램
 
 [39](39-sorting.ko.md) 가이드는 Python이 정렬을 해 주었습니다. 여기서는
 정렬을 직접 만들어 봅니다. 버블 정렬은 알고리즘입니다 — 언제나 목록을
@@ -94,7 +94,7 @@
 
    ```text
    # bubble.ko.nme — 버블 정렬, 내장 정렬과 비교하기
-   # 실행: nme r bubble.ko
+   # 실행: nme 실행 bubble.ko
    #
    # 매 패스에서 이웃한 쌍을 비교하고 순서가 잘못이면 맞바꿉니다.
    # 그래서 가장 큰 남은 값이 끝으로 떠오릅니다. 교환이 없으면
@@ -137,7 +137,7 @@
 6. 실행합니다:
 
    ```sh
-   nme r bubble.ko
+   nme 실행 bubble.ko
    ```
 
    ```text

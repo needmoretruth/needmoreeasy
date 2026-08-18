@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [50 — 문자열](50-strings.ko.md), [16 — 이름 목록](16-name-list.ko.md)
-- 주제 (Topic): 중첩 데이터 / nested data
-- 결과물 (Result): 목록의 목록으로 만든 3x3 판, `board[row][col]`로 칸 읽고 쓰기 / a tic-tac-toe style 3x3 board stored as a list of lists, reading and writing cells with `board[row][col]`
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [50 — 문자열](50-strings.ko.md), [16 — 이름 목록](16-name-list.ko.md)
+- 주제: 중첩 데이터
+- 결과물: 목록의 목록으로 만든 3x3 판, `board[row][col]`로 칸 읽고 쓰기
 
 목록은 목록을 담을 수 있습니다. 바깥 목록이 판이고, 안쪽 목록 하나가
 행이며, 각 칸은 하나의 표시입니다. 칸을 읽고 쓸 때는 인덱스가 두 개
@@ -34,7 +34,7 @@
 
    ```text
    # grid.ko.nme — 목록으로 만든 3x3 판.
-   # 실행: nme r grid.ko
+   # 실행: nme 실행 grid.ko
    # 판은 행들의 목록이고, 각 행은 칸들의 목록입니다.
 
    판 = [["-", "-", "-"], ["-", "-", "-"], ["-", "-", "-"]]
@@ -77,7 +77,7 @@
 
 4. 실행합니다:
    ```sh
-   nme r grid.ko
+   nme 실행 grid.ko
    ```
    ```text
    빈 판:

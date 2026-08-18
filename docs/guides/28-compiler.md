@@ -4,10 +4,10 @@ English | [한국어](28-compiler.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [26 — Adventure](26-adventure.md), [23 — Modules](23-modules.md)
-- 주제 (Topic): 컴파일러 / compiler
-- 결과물 (Result): `add 2 3` 같은 줄을 읽고 답을 출력하는 아주 작은 언어 / a tiny language that reads lines like `add 2 3` and prints the answer
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [26 — Adventure](26-adventure.md), [23 — Modules](23-modules.md)
+- Topic: compiler
+- Result: a tiny language that reads lines like `add 2 3` and prints the answer
 
 A compiler reads text and decides what it means. You already wrote the hardest
 part of one in [27](27-calculator.md): split a line, read its first word, and

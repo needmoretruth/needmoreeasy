@@ -6,7 +6,7 @@ English | [한국어](17-blockchain.ko.md)
 
 [Full NeedMoreCoin guide](cryptocurrency.md)
 
-- Difficulty: ★★★★☆
+- Difficulty: ★★★☆☆ (3/5)
 - Prerequisites: [03 — Set](03-set.md), [06 — If](06-if.md), [07 — While](07-while.md)
 - Topic: cryptocurrency ledger and transactions
 - Result: a small cryptocurrency ledger with balances, fees, supply, and transaction nonces

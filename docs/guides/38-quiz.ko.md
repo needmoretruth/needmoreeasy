@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [14 — JSON](14-json.ko.md), [26 — 모험](26-adventure.ko.md)
-- 주제 (Topic): 게임/데이터 / game & data
-- 결과물 (Result): JSON 파일에서 문제를 불러와 채점하고 결과를 알려 주는 객관식 퀴즈 / a multiple-choice quiz that loads questions from a JSON file, scores answers, and reports the result
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [14 — JSON](14-json.ko.md), [26 — 모험](26-adventure.ko.md)
+- 주제: 게임/데이터
+- 결과물: JSON 파일에서 문제를 불러와 채점하고 결과를 알려 주는 객관식 퀴즈
 
 퀴즈는 데이터를 도는 반복입니다. 한 라운드마다 문제 하나를 보여 주고 답을
 읽은 다음 점수에 더합니다. [14](14-json.ko.md) 가이드는 기록 하나를
@@ -41,7 +41,7 @@
    말해 f"문제 {len(문제들)}개를 불러왔습니다"
    ```
 
-   `nme r quiz.ko`를 실행하면 `문제 3개를 불러왔습니다`가 출력됩니다.
+   `nme 실행 quiz.ko`를 실행하면 `문제 3개를 불러왔습니다`가 출력됩니다.
 
 3. `for q in 문제들:` 반복이 각 딕셔너리를 방문하고, `enumerate`가 선택지에
    번호를 매깁니다. `물어봐`가 답을 읽고, `if`가 저장된 위치와
@@ -68,7 +68,7 @@
 
    ```text
    # 퀴즈: 질문이 JSON 파일에서 옵니다.
-   # 실행: nme r quiz.ko
+   # 실행: nme 실행 quiz.ko
    # questions.json 파일이 같은 폴더에 있어야 합니다.
 
    파일 사용 최신
@@ -120,7 +120,7 @@
    `1`, 그다음 `no`:
 
    ```sh
-   printf '민수\n1\n1\n1\nno\n' | nme r quiz.ko
+   printf '민수\n1\n1\n1\nno\n' | nme 실행 quiz.ko
    ```
 
    ```text

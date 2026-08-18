@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [24 — Python 패키지](24-python-packages.ko.md), [23 — 모듈](23-modules.ko.md)
-- 주제 (Topic): 프로젝트 / a project
-- 결과물 (Result): 함수와 모듈 파일로 계속 물어보는 계산기 / a repeat-until-quit calculator with functions and a module file
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [24 — Python 패키지](24-python-packages.ko.md), [23 — 모듈](23-modules.ko.md)
+- 주제: 프로젝트
+- 결과물: 함수와 모듈 파일로 계속 물어보는 계산기
 
 `3 + 4`를 읽고 답한 뒤 `quit`을 입력할 때까지 다시 물어보는 계산기는 완성된
 작은 프로젝트입니다. 한 프로그램에서 세 단계를 모두 씁니다: 입력에 초급
@@ -20,7 +20,7 @@
 
    ```text
    # 명령줄 계산기: 3 + 4 를 입력하거나 quit.
-   # 실행: nme r calculator.ko
+   # 실행: nme 실행 calculator.ko
 
    def calculate(parts):
        if parts[1] == "+":
@@ -49,7 +49,7 @@
    ```
 
    ```sh
-   printf '3 + 4\n10 - 3\n7 * 6\n10 / 4\nquit\n' | nme r calculator.ko
+   printf '3 + 4\n10 - 3\n7 * 6\n10 / 4\nquit\n' | nme 실행 calculator.ko
    ```
 
    ```text

@@ -4,10 +4,10 @@ English | [한국어](13-files.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★☆ (4/5)
-- 선수 지식 (Prerequisites): [10 — Random](10-random.md), [03 — Set](03-set.md)
-- 주제 (Topic): 파일 / files
-- 결과물 (Result): 글을 파일에 저장하고 다시 읽는 프로그램 / a program that saves text to a file and reads it back
+- Difficulty: ★★★☆☆ (3/5)
+- Prerequisites: [10 — Random](10-random.md), [03 — Set](03-set.md)
+- Topic: files
+- Result: a program that saves text to a file and reads it back
 
 A value lives until the program ends. A file lives on after it. NME's bundled
 `file` helper writes text to a file and reads it back with two easy lines.

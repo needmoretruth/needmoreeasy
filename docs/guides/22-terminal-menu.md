@@ -4,10 +4,10 @@ English | [한국어](22-terminal-menu.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [10 — Random](10-random.md), [06 — If](06-if.md), [07 — While](07-while.md)
-- 주제 (Topic): TUI/메뉴
-- 결과물 (Result): 반복으로 움직이는 터미널 메뉴 / a loop-driven terminal menu
+- Difficulty: ★★★☆☆ (3/5)
+- Prerequisites: [10 — Random](10-random.md), [06 — If](06-if.md), [07 — While](07-while.md)
+- Topic: terminal menus
+- Result: a loop-driven terminal menu
 
 A TUI (text user interface) is a menu you drive with the keyboard. The example
 `examples/terminal-menu.nme` shows three choices, waits for an answer, does

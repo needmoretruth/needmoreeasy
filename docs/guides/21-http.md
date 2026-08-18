@@ -4,10 +4,10 @@ English | [한국어](21-http.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [20 — Consensus](20-consensus.md), [13 — Files](13-files.md)
-- 주제 (Topic): 네트워크/HTTP
-- 결과물 (Result): 로컬 서버에서 페이지를 가져오기 / fetching a page from a local server
+- Difficulty: ★★★☆☆ (3/5)
+- Prerequisites: [20 — Consensus](20-consensus.md), [13 — Files](13-files.md)
+- Topic: networks and HTTP
+- Result: fetching a page from a local server
 
 HTTP is how programs ask web servers for pages. The example
 `examples/http-client.nme` asks your own computer for a file over

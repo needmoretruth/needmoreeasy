@@ -4,10 +4,10 @@ English | [한국어](30-data.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [24 — Python packages](24-python-packages.md), [14 — JSON](14-json.md)
-- 주제 (Topic): 데이터 / data
-- 결과물 (Result): JSON 파일에서 숫자를 불러와 표준 라이브러리 statistics로 평균·중앙값·최댓값 구하기 / loading numbers from a JSON file and computing mean/median/max with the statistics standard library
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [24 — Python packages](24-python-packages.md), [14 — JSON](14-json.md)
+- Topic: data
+- Result: loading numbers from a JSON file and computing mean/median/max with the statistics standard library
 
 A saved JSON list is ready-made data for a program. This guide loads a list of
 numbers from a file, computes a summary by hand and with the Python standard

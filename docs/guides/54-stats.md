@@ -4,10 +4,10 @@ English | [한국어](54-stats.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [30 — Data](30-data.md), [42 — Compare](42-compare.md)
-- 주제 (Topic): 통계/데이터 / statistics
-- 결과물 (Result): JSON 숫자 목록에서 count·평균·중앙값·최빈값·최소·최대·범위 보고하기 / loading a JSON list and reporting count, mean, median, mode, min, max, and range
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [30 — Data](30-data.md), [42 — Compare](42-compare.md)
+- Topic: statistics
+- Result: loading a JSON list and reporting count, mean, median, mode, min, max, and range
 
 Averages hide what one number cannot tell you. This guide loads a list of
 numbers and reports several statistics, each answering a different question

@@ -4,10 +4,10 @@ English | [한국어](69-patterns.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [68 — Errors](68-errors.md), [50 — Strings](50-strings.md)
-- 주제 (Topic): 정규식 / regular expressions
-- 결과물 (Result): 텍스트 파일에서 전화번호와 이메일을 찾는 프로그램 / a program that finds phone numbers and email addresses in a text file
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [68 — Errors](68-errors.md), [50 — Strings](50-strings.md)
+- Topic: regular expressions
+- Result: a program that finds phone numbers and email addresses in a text file
 
 "Find all phone numbers" needs a pattern, not a fixed word. The standard
 `re` library matches shapes: three digits, a hyphen, four digits — and

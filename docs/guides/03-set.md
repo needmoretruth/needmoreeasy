@@ -4,10 +4,10 @@ English | [한국어](03-set.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★☆☆☆☆ (1/5)
-- 선수 지식 (Prerequisites): [02 — Ask](02-ask.md)
-- 주제 (Topic): 값 저장 / storing values
-- 결과물 (Result): 글자나 숫자를 이름 붙여 저장하는 프로그램 / a program that keeps text or numbers in named values
+- Difficulty: ★☆☆☆☆ (1/5)
+- Prerequisites: [02 — Ask](02-ask.md)
+- Topic: storing values
+- Result: a program that keeps text or numbers in named values
 
 A value is a box with a name. `set` puts something in the box, and `show`
 takes it out later.

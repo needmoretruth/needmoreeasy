@@ -4,10 +4,10 @@ English | [한국어](40-report.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [35 — Diary](35-diary.md), [30 — Data](30-data.md)
-- 주제 (Topic): 파일/프로젝트 / files
-- 결과물 (Result): JSON 데이터 파일 몇 개를 읽어 file_write로 요약 보고서 하나를 쓰는 프로그램 / reading a few JSON data files and writing one text report with file_write
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [35 — Diary](35-diary.md), [30 — Data](30-data.md)
+- Topic: files
+- Result: reading a few JSON data files and writing one text report with file_write
 
 One JSON file holds one kind of data; a report combines several. This guide
 reads a scores file and a players file, computes a short summary — average,

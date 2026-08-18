@@ -4,10 +4,10 @@ English | [한국어](39-sorting.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [16 — Name list](16-name-list.md), [30 — Data](30-data.md)
-- 주제 (Topic): 데이터 / data
-- 결과물 (Result): JSON 파일에서 숫자를 불러와 Python sort로 오름차순·내림차순 순서를 보여 주는 프로그램 / loading numbers from a JSON file and showing sorted ascending and descending orders with the Python sort method
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [16 — Name list](16-name-list.md), [30 — Data](30-data.md)
+- Topic: data
+- Result: loading numbers from a JSON file and showing sorted ascending and descending orders with the Python sort method
 
 A loaded list arrives in the order it was written, which is rarely the order
 you want to show. Python's `sort` method puts the list in order and `sorted()`

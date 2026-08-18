@@ -4,292 +4,277 @@ English | [한국어](index.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-Small, progressive guides for the beginner path. Each guide teaches one idea,
-gets harder than the last, and compiles with `nme check`. Guides 01–04 are
-first-day sentences; 05–10 add beginner syntax and control flow; 11–12 use the
-CLI tools; 13–16 add files, JSON, and small projects; 17–20 add blockchain;
-21–22 add HTTP and terminal menus; 30–31 add data and records; 32–34 add web
-data, a growing project, and self-hosting; 35–37 add a dated diary, word
-counting, and a hidden-word game; 38–40 add a file-based quiz, list sorting,
-and a summary report; 41–43 add a text-stats report, a two-group comparison,
-and a habit-tracker project; 44–46 add a random music player, CSV rows of
-data, and an expression language; 47–49 add a terminal progress bar, an inventory
-store, and reading tokens; 50–52 add string tools, a grid board, and
-tic-tac-toe; 56–58 add logging, grouping, and a tiny bytecode runner;
-59–61 add a text editor, catalog search, and a mini bank; 62–64 add
-algorithms and ASCII art; 65–67 process many files, rank records, and build a
-grade book; 68–70 add error handling, regex patterns, and a reaction game;
-71–73 add a terminal bar chart, a three-module project, and the capstone
-compiler; 74–76 merge data, play a strategy game, and poll a server;
-77–79 download files from the web, analyze a dataset, and add functions
-to the mini language; 80–82 build command-line tools, test them, and
-parse expressions into trees; 83–85 play a code-breaking game, extract
-web links, and compile trees into bytecode.
+85 short guides, written to be read in order. Each one teaches a single
+idea, ends with something to try and a summary of what it taught, and every
+piece of code in them passes `nme check`.
+
+- **01–04** Your first day. Sentence syntax only — no quotes, no equals signs, no colons.
+- **05–12** Repeating, choosing, randomness, and the command-line tools. This is all of sentence syntax.
+- **13–22** Files, JSON, small projects, a blockchain, the network. Beginner syntax starts to appear.
+- **23–52** Modules, games, a calculator, data, strings, grids. More than half of it is Python.
+- **53–85** Statistics, search, algorithms, compilers. Effectively Python programs.
 
 ## Difficulty
 
-- ★☆☆☆☆ (1/5) — first day
-- ★★☆☆☆ (2/5) — comfortable with sentences
-- ★★★☆☆ (3/5) — beginner syntax
-- ★★★★☆ (4/5) — mixing levels
-- ★★★★★ (5/5) — Python-ish
+- ★☆☆☆☆ (1/5) — first day, sentence syntax only
+- ★★☆☆☆ (2/5) — getting comfortable with sentence syntax
+- ★★★☆☆ (3/5) — beginner syntax and files mixed in
+- ★★★★☆ (4/5) — more than half Python
+- ★★★★★ (5/5) — essentially Python
+
+The number *is* the difficulty. Read them in order and no single step is a jump.
 
 ## Learn in order
 
-1. [01 — Hello](01-hello.md)
-2. [02 — Ask](02-ask.md)
-3. [03 — Set](03-set.md)
-4. [04 — Update](04-update.md)
-5. [05 — Repeat](05-repeat.md)
-6. [06 — If](06-if.md)
-7. [07 — While](07-while.md)
-8. [08 — Break](08-break.md)
-9. [09 — And / Or](09-and-or.md)
-10. [10 — Random](10-random.md)
-11. [11 — Check & Build](11-check-build.md)
-12. [12 — Convert](12-convert.md)
-13. [13 — Files](13-files.md)
-14. [14 — JSON](14-json.md)
-15. [15 — High score](15-high-score.md)
-16. [16 — Name list](16-name-list.md)
-17. [17 — Blockchain](17-blockchain.md)
-18. [18 — Proof of work](18-proof-of-work.md)
-19. [19 — Signatures](19-signatures.md)
-20. [20 — Consensus](20-consensus.md)
-21. [21 — HTTP](21-http.md)
-22. [22 — Terminal menu](22-terminal-menu.md)
-23. [23 — Modules](23-modules.md)
-24. [24 — Python packages](24-python-packages.md)
-25. [25 — Native](25-native.md)
-26. [26 — Adventure](26-adventure.md)
-27. [27 — Calculator](27-calculator.md)
-28. [28 — Compiler](28-compiler.md)
-29. [29 — Bootstrap](29-bootstrap.md)
-30. [30 — Data](30-data.md)
-31. [31 — Records](31-address-book.md)
-32. [32 — Weather](32-weather.md)
-33. [33 — Todo](33-todo.md)
-34. [34 — Self-host](34-selfhost.md)
-35. [35 — Diary](35-diary.md)
-36. [36 — Word count](36-word-count.md)
-37. [37 — Word guess](37-word-guess.md)
-38. [38 — Quiz](38-quiz.md)
-39. [39 — Sorting](39-sorting.md)
-40. [40 — Report](40-report.md)
-41. [41 — Text stats](41-text-stats.md)
-42. [42 — Compare](42-compare.md)
-43. [43 — Habit](43-habit.md)
-44. [44 — Playlist](44-playlist.md)
-45. [45 — CSV](45-csv.md)
-46. [46 — Expressions](46-expressions.md)
-47. [47 — Progress](47-progress.md)
-48. [48 — Shop](48-shop.md)
-49. [49 — Tokens](49-tokens.md)
-50. [50 — Strings](50-strings.md)
-51. [51 — Grid](51-grid.md)
-52. [52 — Tic-tac-toe](52-tic-tac-toe.md)
-53. [53 — Sets](53-sets.md)
-54. [54 — Stats](54-stats.md)
-55. [55 — Network](55-net.md)
-56. [56 — Log](56-log.md)
-57. [57 — Group](57-group.md)
-58. [58 — Bytecode](58-bytecode.md)
-59. [59 — Editor](59-editor.md)
-60. [60 — Search](60-search.md)
-61. [61 — Mini bank](61-bank.md)
-62. [62 — Bubble sort](62-bubble.md)
-63. [63 — ASCII art](63-ascii-art.md)
-64. [64 — Binary search](64-binary-search.md)
-65. [65 — Files: many files](65-files-folder.md)
-66. [66 — Top ten](66-top-ten.md)
-67. [67 — Grade book](67-grade-book.md)
-68. [68 — Errors](68-errors.md)
-69. [69 — Patterns](69-patterns.md)
-70. [70 — Reaction](70-reaction.md)
-71. [71 — Chart](71-chart.md)
-72. [72 — Modules](72-project-files.md)
-73. [73 — Capstone](73-capstone.md)
-74. [74 — Merge](74-merge.md)
-75. [75 — Game](75-ai.md)
-76. [76 — Network](76-poll.md)
-77. [77 — Network](77-download.md)
-78. [78 — Data](78-analysis.md)
-79. [79 — Compiler](79-functions.md)
-80. [80 — Tools](80-argv.md)
-81. [81 — Testing](81-testing.md)
-82. [82 — Compiler](82-ast.md)
-83. [83 — Game](83-mastermind.md)
-84. [84 — Web](84-links.md)
-85. [85 — Compiler](85-bytecode-compiler.md)
+1. [01 — Hello: say your first words](01-hello.md)
+2. [02 — Ask: have a conversation](02-ask.md)
+3. [03 — Set: store a value](03-set.md)
+4. [04 — Update: change a value](04-update.md)
+5. [05 — Repeat: do something many times](05-repeat.md)
+6. [06 — If: make a choice](06-if.md)
+7. [07 — While: keep going](07-while.md)
+8. [08 — Break: stop a loop](08-break.md)
+9. [09 — And / Or: combine conditions](09-and-or.md)
+10. [10 — Random: dice and picks](10-random.md)
+11. [11 — Check & Build: see the Python](11-check-build.md)
+12. [12 — Convert: turn Python into NME](12-convert.md)
+13. [13 — Files: save and read text](13-files.md)
+14. [14 — JSON: save and load data](14-json.md)
+15. [15 — High score: a tiny project](15-high-score.md)
+16. [16 — Name list: read lines from a file](16-name-list.md)
+17. [17 — Cryptocurrency ledger — state and transactions](17-blockchain.md)
+18. [18 — Proof of work — mining transaction blocks](18-proof-of-work.md)
+19. [19 — Transaction proofs — wallet ownership and replay prevention](19-signatures.md)
+20. [20 — Full-chain validation — recompute from genesis](20-consensus.md)
+21. [21 — HTTP — asking a web server](21-http.md)
+22. [22 — Terminal menu — a small TUI](22-terminal-menu.md)
+23. [23 — Modules: split your program into files](23-modules.md)
+24. [24 — Python packages: the standard library and installed libraries](24-python-packages.md)
+25. [25 — Native: compile to machine code](25-native.md)
+26. [26 — Adventure — a small text game](26-adventure.md)
+27. [27 — Calculator — a command-line project](27-calculator.md)
+28. [28 — Your first compiler — a tiny language](28-compiler.md)
+29. [29 — Bootstrap: NME compiling a tiny language](29-bootstrap.md)
+30. [30 — Data: statistics on a list](30-data.md)
+31. [31 — Records: a small address book](31-address-book.md)
+32. [32 — Weather: reading JSON from the web](32-weather.md)
+33. [33 — Todo: a growing project](33-todo.md)
+34. [34 — Self-host: NME running NME](34-selfhost.md)
+35. [35 — Diary: notes saved by date](35-diary.md)
+36. [36 — Word count: how often each word appears](36-word-count.md)
+37. [37 — Word guess: a hidden-word game](37-word-guess.md)
+38. [38 — Quiz — questions from a file](38-quiz.md)
+39. [39 — Sorting — putting a list in order](39-sorting.md)
+40. [40 — Report — writing a summary file](40-report.md)
+41. [41 — Text stats: letters and words](41-text-stats.md)
+42. [42 — Compare: two groups of numbers](42-compare.md)
+43. [43 — Project: a habit tracker](43-habit.md)
+44. [44 — Playlist: a random music player](44-playlist.md)
+45. [45 — CSV: rows of data](45-csv.md)
+46. [46 — Compiler tier: a small expression language](46-expressions.md)
+47. [47 — Progress — a bar in the terminal](47-progress.md)
+48. [48 — Shop — an inventory store](48-shop.md)
+49. [49 — Compiler tier: reading tokens](49-tokens.md)
+50. [50 — Strings: slicing and changing text](50-strings.md)
+51. [51 — Grid: a board of lists](51-grid.md)
+52. [52 — Game: tic-tac-toe](52-tic-tac-toe.md)
+53. [53 — Sets: unique values](53-sets.md)
+54. [54 — Stats: understanding data](54-stats.md)
+55. [55 — Network: a mini chat](55-net.md)
+56. [56 — Log: an event record](56-log.md)
+57. [57 — Group: data by category](57-group.md)
+58. [58 — Compiler tier: a tiny bytecode runner](58-bytecode.md)
+59. [59 — Editor — a tiny text editor](59-editor.md)
+60. [60 — Search — finding items in JSON](60-search.md)
+61. [61 — Project — a mini bank](61-bank.md)
+62. [62 — Bubble sort — your first algorithm](62-bubble.md)
+63. [63 — ASCII art — drawing with characters](63-ascii-art.md)
+64. [64 — Binary search — halving the guess](64-binary-search.md)
+65. [65 — Files: processing many files](65-files-folder.md)
+66. [66 — Top ten: ranking records](66-top-ten.md)
+67. [67 — Project — a grade book](67-grade-book.md)
+68. [68 — Errors: handling problems](68-errors.md)
+69. [69 — Patterns: finding matches with regex](69-patterns.md)
+70. [70 — Game: a reaction time test](70-reaction.md)
+71. [71 — Chart: a bar chart in the terminal](71-chart.md)
+72. [72 — Modules: a project across files](72-project-files.md)
+73. [73 — Capstone: a language that compiles to Python](73-capstone.md)
+74. [74 — Merge: joining two lists](74-merge.md)
+75. [75 — Game: a simple opponent](75-ai.md)
+76. [76 — Network: polling a server](76-poll.md)
+77. [77 — Network: downloading files](77-download.md)
+78. [78 — Data: analyzing a month of temperatures](78-analysis.md)
+79. [79 — Compiler tier: functions in the mini language](79-functions.md)
+80. [80 — Tools: reading command-line arguments](80-argv.md)
+81. [81 — Testing: checking the functions you wrote](81-testing.md)
+82. [82 — Compiler tier: expressions as trees](82-ast.md)
+83. [83 — Game: Mastermind, guessing a secret code](83-mastermind.md)
+84. [84 — Web: extracting links from a page](84-links.md)
+85. [85 — Compiler tier: from tree to bytecode](85-bytecode-compiler.md)
 
 ## Topic lookup
 
-- 첫 프로그램 / First program: [01](01-hello.md)
-- 문장/출력 / Sentences and output: [01](01-hello.md), [05](05-repeat.md)
-- 입력 / Input: [02](02-ask.md)
-- 값 저장/변경 / Storing and changing values: [03](03-set.md), [04](04-update.md)
-- 반복 / Loops: [05](05-repeat.md), [07](07-while.md), [08](08-break.md)
-- 조건 / Conditions: [06](06-if.md), [07](07-while.md), [09](09-and-or.md)
-- 랜덤 / Random: [10](10-random.md)
-- 도구 사용 / Using the tools: [11](11-check-build.md), [12](12-convert.md)
-- 파일 / Files: [13](13-files.md), [16](16-name-list.md)
-- 보고서 / Report: [40](40-report.md)
-- 일기 / Diary: [35](35-diary.md)
-- JSON / JSON: [14](14-json.md)
-- 프로젝트 / Project: [15](15-high-score.md), [33](33-todo.md), [43](43-habit.md)
-- 프로젝트 / Habit: [43](43-habit.md)
-- 텍스트/데이터 / Text & data: [41](41-text-stats.md)
-- 비교 / Compare: [42](42-compare.md)
-- 블록체인 / Blockchain: [17](17-blockchain.md), [18](18-proof-of-work.md)
-- 서명 / Signatures: [19](19-signatures.md)
-- 합의 / Consensus: [20](20-consensus.md)
-- 네트워크/HTTP / Network & HTTP: [21](21-http.md)
-- 네트워크/데이터 / Web data: [32](32-weather.md)
-- TUI/메뉴 / TUI & menus: [22](22-terminal-menu.md)
-- 모듈 / Modules: [23](23-modules.md)
-- Python 패키지 / Python packages: [24](24-python-packages.md)
-- 네이티브 / Native: [25](25-native.md)
-- 게임 / Game: [26](26-adventure.md)
-- 게임 / Word guess: [37](37-word-guess.md)
-- 퀴즈 / Quiz: [38](38-quiz.md)
-- 계산기 / Calculator: [27](27-calculator.md)
-- 컴파일러 / Compiler: [28](28-compiler.md)
-- 부트스트랩 / Bootstrap: [29](29-bootstrap.md)
-- 데이터/Data: [30](30-data.md), [31](31-address-book.md)
-- 정렬 / Sorting: [39](39-sorting.md)
-- 단어 / Word count: [36](36-word-count.md)
-- 셀프호스팅 / Self-host: [34](34-selfhost.md)
-- 플레이리스트 / Playlist: [44](44-playlist.md)
-- CSV / 데이터: [45](45-csv.md)
-- 표현식 / Expressions: [46](46-expressions.md)
-- 진행 / Progress: [47](47-progress.md)
-- 상점 / Shop: [48](48-shop.md)
-- 토큰 / Tokens: [49](49-tokens.md)
-- 문자열 / Strings: [50](50-strings.md)
-- 격자 / Grid: [51](51-grid.md)
-- 게임 / Tic-tac-toe: [52](52-tic-tac-toe.md)
-- 집합 / Sets: [53](53-sets.md)
-- 통계 / Stats: [54](54-stats.md)
-- 네트워크 / Network: [55](55-net.md)
-- 기록 / Log: [56](56-log.md)
-- 묶기 / Group: [57](57-group.md)
-- 바이트코드 / Bytecode: [58](58-bytecode.md)
-- 편집기 / Editor: [59](59-editor.md)
-- 검색 / Search: [60](60-search.md)
-- 은행 / Bank: [61](61-bank.md)
-- 알고리즘 / Algorithm: [62](62-bubble.md), [64](64-binary-search.md)
-- 아스키 아트 / ASCII art: [63](63-ascii-art.md)
-- 파일/폴더 / Files & folders: [65](65-files-folder.md)
-- 순위/Top ten: [66](66-top-ten.md)
-- 성적부/Grade book: [67](67-grade-book.md)
-- 예외 / Errors: [68](68-errors.md)
-- 정규식 / Patterns: [69](69-patterns.md)
-- 반응 / Reaction: [70](70-reaction.md)
-- 차트 / Chart: [71](71-chart.md)
-- 프로젝트/모듈 / Project modules: [72](72-project-files.md)
-- 캡스톤 / Capstone: [73](73-capstone.md)
-- 병합 / Merge: [74](74-merge.md)
-- 게임/전략 / Game & strategy: [75](75-ai.md)
-- 네트워크/폴링 / Network & polling: [76](76-poll.md)
-- 다운로드 / Download: [77](77-download.md)
-- 데이터 분석 / Analysis: [78](78-analysis.md)
-- 컴파일러/함수 / Compiler & functions: [79](79-functions.md)
-- 명령 줄 인자 / Command-line arguments: [80](80-argv.md)
-- 테스트 / Testing: [81](81-testing.md)
-- AST/컴파일러 / Compiler & AST: [82](82-ast.md)
-- 게임/논리 / Game & logic: [83](83-mastermind.md)
-- 웹/링크 / Web & links: [84](84-links.md)
-- 바이트코드/컴파일러 / Compiler & bytecode: [85](85-bytecode-compiler.md)
+- first program and output: [01](01-hello.md)
+- input: [02](02-ask.md)
+- storing values: [03](03-set.md)
+- changing values: [04](04-update.md)
+- loops: [05](05-repeat.md), [08](08-break.md)
+- conditions: [06](06-if.md), [09](09-and-or.md)
+- loops and conditions: [07](07-while.md)
+- random: [10](10-random.md)
+- using the tools: [11](11-check-build.md), [12](12-convert.md)
+- files: [13](13-files.md), [35](35-diary.md), [40](40-report.md)
+- json: [14](14-json.md)
+- project: [15](15-high-score.md)
+- files and lists: [16](16-name-list.md)
+- cryptocurrency ledger and transactions: [17](17-blockchain.md)
+- proof of work and block linkage: [18](18-proof-of-work.md)
+- transaction proofs and replay prevention: [19](19-signatures.md)
+- chain validation and consensus boundaries: [20](20-consensus.md)
+- networks and HTTP: [21](21-http.md)
+- terminal menus: [22](22-terminal-menu.md)
+- modules: [23](23-modules.md)
+- Python packages: [24](24-python-packages.md)
+- native compilation: [25](25-native.md)
+- a small project: [26](26-adventure.md)
+- a project: [27](27-calculator.md), [33](33-todo.md), [43](43-habit.md), [48](48-shop.md), [61](61-bank.md)
+- compiler: [28](28-compiler.md), [46](46-expressions.md), [49](49-tokens.md), [58](58-bytecode.md)
+- bootstrap: [29](29-bootstrap.md)
+- data: [30](30-data.md), [36](36-word-count.md), [39](39-sorting.md), [45](45-csv.md), [57](57-group.md)
+- records: [31](31-address-book.md)
+- web data: [32](32-weather.md)
+- self-hosting: [34](34-selfhost.md)
+- game: [37](37-word-guess.md), [52](52-tic-tac-toe.md)
+- game & data: [38](38-quiz.md)
+- text & data: [41](41-text-stats.md)
+- data & comparison: [42](42-compare.md)
+- game & random: [44](44-playlist.md)
+- terminal output: [47](47-progress.md)
+- strings: [50](50-strings.md)
+- nested data: [51](51-grid.md)
+- sets & data: [53](53-sets.md)
+- statistics: [54](54-stats.md)
+- network: [55](55-net.md)
+- files & logging: [56](56-log.md)
+- a terminal app: [59](59-editor.md)
+- search & data: [60](60-search.md)
+- algorithm: [62](62-bubble.md), [64](64-binary-search.md)
+- output & loops: [63](63-ascii-art.md)
+- files & folders: [65](65-files-folder.md)
+- data & ranking: [66](66-top-ten.md)
+- a capstone project: [67](67-grade-book.md)
+- exceptions: [68](68-errors.md)
+- regular expressions: [69](69-patterns.md)
+- game & timing: [70](70-reaction.md)
+- visualization: [71](71-chart.md)
+- modules & structure: [72](72-project-files.md)
+- compiler capstone: [73](73-capstone.md)
+- data & merging: [74](74-merge.md)
+- game & strategy: [75](75-ai.md)
+- network & timing: [76](76-poll.md)
+- network & files: [77](77-download.md)
+- data analysis: [78](78-analysis.md)
+- compiler & functions: [79](79-functions.md)
+- command-line tools: [80](80-argv.md)
+- testing: [81](81-testing.md)
+- compiler & AST: [82](82-ast.md)
+- game & logic: [83](83-mastermind.md)
+- web & text: [84](84-links.md)
+- compiler & bytecode: [85](85-bytecode-compiler.md)
 
 ## All guides
 
 | # | Difficulty | Topic | Title | Result |
 | --- | --- | --- | --- | --- |
-| 01 | ★☆☆☆☆ | 첫 프로그램 / First program | [Hello — say your first words](01-hello.md) | A program that prints a message with `nme run` |
-| 02 | ★☆☆☆☆ | 입력 / Input | [Ask — have a conversation](02-ask.md) | Ask a name and greet it in a sentence |
-| 03 | ★☆☆☆☆ | 값 저장 / Storing values | [Set — store a value](03-set.md) | Keep text or numbers in a named value |
-| 04 | ★★☆☆☆ | 값 변경 / Changing values | [Update — change a value](04-update.md) | Add to and subtract from a score |
-| 05 | ★★☆☆☆ | 반복 / Loops | [Repeat — do something many times](05-repeat.md) | Run lines 3 times with `repeat` or `3 times:` |
-| 06 | ★★☆☆☆ | 조건 / Conditions | [If — make a choice](06-if.md) | Run different lines with `if` and `else` |
-| 07 | ★★★☆☆ | 반복/조건 / Loops & conditions | [While — keep going](07-while.md) | Loop while a condition is true, closed by `end` |
-| 08 | ★★★☆☆ | 반복 / Loops | [Break — stop a loop](08-break.md) | Leave a loop early with `break` |
-| 09 | ★★★☆☆ | 조건 / Conditions | [And / Or — combine conditions](09-and-or.md) | Combine conditions with `and` and `or` |
-| 10 | ★★★☆☆ | 랜덤 / Random | [Random — dice and picks](10-random.md) | Roll a die and pick a color with `use random` |
-| 11 | ★★★★☆ | 도구 사용 / Using the tools | [Check & Build — see the Python](11-check-build.md) | Verify programs and read generated Python |
-| 12 | ★★★★★ | 도구 사용 / Using the tools | [Convert — turn Python into NME](12-convert.md) | Convert a small Python file into NME |
-| 13 | ★★★★☆ | 파일 / Files | [Files — save and read text](13-files.md) | Save text to a file and read it back |
-| 14 | ★★★★☆ | JSON / JSON | [JSON — save and load data](14-json.md) | Save a name and a score and load them back |
-| 15 | ★★★★★ | 프로젝트 / Project | [High score — a tiny project](15-high-score.md) | A dice game that remembers its best score |
-| 16 | ★★★★★ | 파일/목록 / Files & lists | [Name list — read lines from a file](16-name-list.md) | Read a list of names from a file and pick from it |
-| 17 | ★★★★☆ | 블록체인 / Blockchain | [Blockchain — a hash-linked ledger](17-blockchain.md) | Understanding of blocks linked by hashes |
-| 18 | ★★★★★ | 채굴 / Mining | [Proof of work — mining](18-proof-of-work.md) | Mine a block by finding a nonce and verify the chain |
-| 19 | ★★★★★ | 서명 / Signatures | [Signatures — proving identity](19-signatures.md) | Sign and verify a message with hmac |
-| 20 | ★★★★★ | 합의 / Consensus | [Consensus — agreeing on a chain](20-consensus.md) | Two nodes resolving a fork by the longest-chain rule |
-| 21 | ★★★★★ | 네트워크/HTTP / Network & HTTP | [HTTP — asking a web server](21-http.md) | Fetch a page from a local server |
-| 22 | ★★★★★ | TUI/메뉴 / TUI & menus | [Terminal menu — a small TUI](22-terminal-menu.md) | A loop-driven terminal menu |
-| 23 | ★★★★★ | 모듈 / Modules | [Modules — split your program into files](23-modules.md) | Import named values from another .nme file |
-| 24 | ★★★★★ | Python 패키지 / Python packages | [Python packages — the standard library and installed libraries](24-python-packages.md) | Use datetime and other Python packages from NME |
-| 25 | ★★★★★ | 네이티브 / Native | [Native — compile to machine code](25-native.md) | Run a core-subset program without CPython |
-| 26 | ★★★★★ | 게임 / Game | [Adventure — a small text game](26-adventure.md) | A room-by-room text adventure with choices |
-| 27 | ★★★★★ | 계산기 / Calculator | [Calculator — a command-line project](27-calculator.md) | A repeat-until-quit calculator with a module |
-| 28 | ★★★★★ | 컴파일러 / Compiler | [Your first compiler — a tiny language](28-compiler.md) | A tiny calculator language that interprets lines |
-| 29 | ★★★★★ | 부트스트랩 / Bootstrap | [Bootstrap — NME compiling a tiny language](29-bootstrap.md) | A tiny compiler written in NME |
-| 30 | ★★★★★ | 데이터/Data | [Data — statistics on a list](30-data.md) | Load numbers from a JSON file and compute mean, median, and max |
-| 31 | ★★★★★ | 데이터/기록 / Records | [Records — a small address book](31-address-book.md) | A JSON-file address book that adds, lists, and searches contacts |
-| 32 | ★★★★★ | 네트워크/데이터 / Web data | [Weather — reading JSON from the web](32-weather.md) | Fetch a local HTTP server's JSON and print a mini weather report |
-| 33 | ★★★★★ | 프로젝트 / Project | [Todo — a growing project](33-todo.md) | A JSON-persisted todo list with add, done, list, and a storage module |
-| 34 | ★★★★★ | 셀프호스팅 / Self-host | [Self-host — NME running NME](34-selfhost.md) | An NME program that compiles a tiny NME-like subset to Python |
-| 35 | ★★★★★ | 파일 / Files | [Diary — notes saved by date](35-diary.md) | A diary that saves each day's note to a dated file and can read it back |
-| 36 | ★★★★★ | 데이터/Data | [Word count — how often each word appears](36-word-count.md) | Read a text file and count how often each word appears with a dict and Counter |
-| 37 | ★★★★★ | 게임 / Game | [Word guess — a hidden-word game](37-word-guess.md) | A hangman-style game that guesses the letters of a hidden word with limited tries |
-| 38 | ★★★★★ | 퀴즈 / Quiz | [Quiz — questions from a file](38-quiz.md) | A multiple-choice quiz that loads questions from a JSON file, scores answers, and reports the result |
-| 39 | ★★★★★ | 정렬 / Sorting | [Sorting — putting a list in order](39-sorting.md) | Load numbers from a JSON file and show ascending and descending orders with Python sort |
-| 40 | ★★★★★ | 보고서 / Report | [Report — writing a summary file](40-report.md) | Read a few JSON data files and write one text report with file_write |
-| 41 | ★★★★★ | 텍스트/데이터 / Text & data | [Text stats — letters and words](41-text-stats.md) | Read a text file and report character count, word count, longest word, and most common word |
-| 42 | ★★★★★ | 데이터/비교 / Data & comparison | [Compare — two groups of numbers](42-compare.md) | Load two JSON number lists and compare their means and maxima |
-| 43 | ★★★★★ | 프로젝트 / Project | [Habit — a habit tracker](43-habit.md) | A JSON-persisted habit tracker with add, check, streak, list, and a storage module |
-| 44 | ★★★★★ | 게임/랜덤 / Game & random | [Playlist — a random music player](44-playlist.md) | A playlist loaded from JSON with shuffle, next, and a loop of songs |
-| 45 | ★★★★★ | 데이터 / Data | [CSV — rows of data](45-csv.md) | Read a comma-separated file, compute a column's average, and write a summary CSV |
-| 46 | ★★★★★ | 컴파일러 / Compiler | [Compiler tier — a small expression language](46-expressions.md) | A tiny calculator that evaluates `2 + 3 * 4` respecting precedence |
-| 47 | ★★★★★ | 진행/출력 / Progress & output | [Progress — a bar in the terminal](47-progress.md) | A terminal progress bar that fills a row as a loop runs |
-| 48 | ★★★★★ | 프로젝트 / Project | [Shop — an inventory store](48-shop.md) | A JSON-persisted store with buy, sell, stock, list, and a money balance |
-| 49 | ★★★★★ | 컴파일러 / Compiler | [Compiler tier — reading tokens](49-tokens.md) | Split a command line into tokens and dispatch them, a step toward a real tokenizer |
-| 50 | ★★★★☆ | 문자열 / Strings | [Strings — slicing and changing text](50-strings.md) | Slice `text[start:end]` and change a sentence with `.upper()`, `.replace()`, and `.strip()` |
-| 51 | ★★★★★ | 격자 / Grid | [Grid — a board of lists](51-grid.md) | A 3x3 board of lists, reading and writing cells with `board[row][col]` |
-| 52 | ★★★★★ | 게임 / Tic-tac-toe | [Game — tic-tac-toe](52-tic-tac-toe.md) | A playable two-player tic-tac-toe with a win check |
-| 56 | ★★★★★ | 파일/기록 / Files & logging | [Log — an event record](56-log.md) | Append a dated line to a log file every run with datetime and file_write |
-| 57 | ★★★★★ | 데이터 / Data | [Group — data by category](57-group.md) | Group a list of dicts by a category key into a dict of lists and report counts |
-| 58 | ★★★★★ | 컴파일러 / Compiler | [Compiler tier — a tiny bytecode runner](58-bytecode.md) | Compile instructions into a list of steps and run them one by one like a virtual machine |
-| 59 | ★★★★★ | TUI/터미널 앱 / TUI & terminal app | [Editor — a tiny text editor](59-editor.md) | A line-based editor with a buffer and add, list, remove, save, and quit commands |
-| 60 | ★★★★★ | 검색/데이터 / Search & data | [Search — finding items in JSON](60-search.md) | Load a JSON catalog from a local server or file and search it by keyword, case-insensitively |
-| 61 | ★★★★★ | 프로젝트 / Project | [Mini bank — a JSON account](61-bank.md) | A JSON-persisted bank account with deposit, withdraw, balance, history, and a storage module |
-| 62 | ★★★★★ | 알고리즘 / Algorithm | [Bubble sort — your first algorithm](62-bubble.md) | Implementing bubble sort by hand with nested loops and a swap, compared with Python's built-in sort |
-| 63 | ★★★★★ | 아스키 아트 / ASCII art | [ASCII art — drawing with characters](63-ascii-art.md) | A right triangle, an upside-down triangle, and a diamond drawn with nested loops and string multiplication |
-| 64 | ★★★★★ | 알고리즘 / Algorithm | [Binary search — halving the guess](64-binary-search.md) | Finding a number in a sorted list by halving the search each step, with a full walkthrough of the steps |
-| 65 | ★★★★★ | 파일/폴더 / Files & folders | [Files — processing many files](65-files-folder.md) | List the files in a folder with os.listdir, read each with file_read, and report total words and letters |
-| 66 | ★★★★★ | 데이터/순위 / Data & ranking | [Top ten — ranking records](66-top-ten.md) | Load JSON records, sort by a numeric score with sorted(..., key=...), and show the top ten |
-| 67 | ★★★★★ | 프로젝트 / Project | [Project — a grade book](67-grade-book.md) | A JSON-persisted grade book with add-student, add-grade, report-averages, and a storage module |
-| 68 | ★★★★★ | 예외 / Errors | [Errors — handling problems](68-errors.md) | Read a missing file and convert bad input without crashing |
-| 69 | ★★★★★ | 정규식 / Patterns | [Patterns — finding matches with regex](69-patterns.md) | Find phone numbers and email addresses in a text file |
-| 70 | ★★★★★ | 게임/시간 / Game & timing | [Game — a reaction time test](70-reaction.md) | Measure reaction time with time.time() and keep the best round |
-| 71 | ★★★★★ | 시각화/출력 / Visualization | [Chart — a bar chart in the terminal](71-chart.md) | A horizontal bar chart drawn with # blocks from a JSON list, scaled to the largest value |
-| 72 | ★★★★★ | 모듈/구조 / Modules & structure | [Modules — a project across files](72-project-files.md) | A weather-report project split into three .nme modules with clear interfaces, imported by a main program |
-| 73 | ★★★★★ | 컴파일러/캡스톤 / Compiler capstone | [Capstone — a language that compiles to Python](73-capstone.md) | An NME program that compiles a small custom language to Python, writes it to a file, and runs it |
-| 74 | ★★★★★ | 데이터/병합 / Data & merging | [Merge — joining two lists](74-merge.md) | Load two JSON lists and join records by name key into one report |
-| 75 | ★★★★★ | 게임/전략 / Game & strategy | [Game — a simple opponent](75-ai.md) | A take-away game where the computer follows a winning strategy |
-| 76 | ★★★★★ | 네트워크/시간 / Network & timing | [Network — polling a server](76-poll.md) | Repeatedly fetch a status.json from a local server every few seconds and report changes |
-| 77 | ★★★★★ | 네트워크/파일 / Network & files | [Download — saving files from the web](77-download.md) | Download a file from a local HTTP server and save it while showing progress |
-| 78 | ★★★★★ | 데이터 분석 / Data analysis | [Analysis — a month of temperatures](78-analysis.md) | Load a month of temperatures, compute statistics and a histogram, and save a report file |
-| 79 | ★★★★★ | 컴파일러/함수 / Compiler & functions | [Compiler tier — functions](79-functions.md) | Compile a mini language with def, return, and calls into Python and run it |
-| 80 | ★★★★★ | CLI 도구 / Command-line tools | [Tools — reading command-line arguments](80-argv.md) | A todo tool that takes commands like `nme r todo add "buy milk"` on the command line |
-| 81 | ★★★★★ | 테스트 / Testing | [Testing — checking the functions you wrote](81-testing.md) | A tiny test runner that calls your own functions, compares each result with the expected value, and reports pass or fail |
-| 82 | ★★★★★ | 컴파일러/AST / Compiler & AST | [Compiler tier — expressions as trees](82-ast.md) | A calculator that parses an expression into a tree and evaluates the tree recursively, respecting precedence |
-| 83 | ★★★★★ | 게임/논리 / Game & logic | [Game — Mastermind, guessing a secret code](83-mastermind.md) | A Mastermind-style game that hides a 4-color code and gives black/white feedback for each guess |
-| 84 | ★★★★★ | 웹/텍스트 / Web & text | [Web — extracting links from a page](84-links.md) | Fetch an HTML page from a local server and list every link on it as a full URL |
-| 85 | ★★★★★ | 컴파일러/바이트코드 / Compiler & bytecode | [Compiler tier — from tree to bytecode](85-bytecode-compiler.md) | A compiler that flattens an expression tree into instruction lines and runs them on a stack machine |
+| 01 | ★☆☆☆☆ | first program and output | [Hello: say your first words](01-hello.md) | a program that prints a message with `nme run` |
+| 02 | ★☆☆☆☆ | input | [Ask: have a conversation](02-ask.md) | a program that asks a name and greets it in a sentence |
+| 03 | ★☆☆☆☆ | storing values | [Set: store a value](03-set.md) | a program that keeps text or numbers in named values |
+| 04 | ★☆☆☆☆ | changing values | [Update: change a value](04-update.md) | a program that adds to and subtracts from a score |
+| 05 | ★★☆☆☆ | loops | [Repeat: do something many times](05-repeat.md) | a program that runs lines several times |
+| 06 | ★★☆☆☆ | conditions | [If: make a choice](06-if.md) | a program that runs different lines depending on a condition |
+| 07 | ★★☆☆☆ | loops and conditions | [While: keep going](07-while.md) | a block that loops while a condition is true |
+| 08 | ★★☆☆☆ | loops | [Break: stop a loop](08-break.md) | a program that leaves a loop early |
+| 09 | ★★☆☆☆ | conditions | [And / Or: combine conditions](09-and-or.md) | a program that judges combined conditions |
+| 10 | ★★☆☆☆ | random | [Random: dice and picks](10-random.md) | a program that rolls a die and picks a color |
+| 11 | ★★☆☆☆ | using the tools | [Check & Build: see the Python](11-check-build.md) | the habit of verifying programs and reading the generated Python |
+| 12 | ★★☆☆☆ | using the tools | [Convert: turn Python into NME](12-convert.md) | a small Python file converted into NME |
+| 13 | ★★★☆☆ | files | [Files: save and read text](13-files.md) | a program that saves text to a file and reads it back |
+| 14 | ★★★☆☆ | json | [JSON: save and load data](14-json.md) | a program that saves a name and a score and loads them back |
+| 15 | ★★★☆☆ | project | [High score: a tiny project](15-high-score.md) | a dice game that remembers its best score |
+| 16 | ★★★☆☆ | files and lists | [Name list: read lines from a file](16-name-list.md) | a program that reads a list of names from a file and picks from it |
+| 17 | ★★★☆☆ | cryptocurrency ledger and transactions | [Cryptocurrency ledger — state and transactions](17-blockchain.md) | a small cryptocurrency ledger with balances, fees, supply, and transaction nonces |
+| 18 | ★★★☆☆ | proof of work and block linkage | [Proof of work — mining transaction blocks](18-proof-of-work.md) | link transactions to the previous block and perform SHA-256 proof of work |
+| 19 | ★★★☆☆ | transaction proofs and replay prevention | [Transaction proofs — wallet ownership and replay prevention](19-signatures.md) | validate transaction authorization with a public value and reject replay |
+| 20 | ★★★☆☆ | chain validation and consensus boundaries | [Full-chain validation — recompute from genesis](20-consensus.md) | a single-node validator that replays every transaction and block from genesis |
+| 21 | ★★★☆☆ | networks and HTTP | [HTTP — asking a web server](21-http.md) | fetching a page from a local server |
+| 22 | ★★★☆☆ | terminal menus | [Terminal menu — a small TUI](22-terminal-menu.md) | a loop-driven terminal menu |
+| 23 | ★★★★☆ | modules | [Modules: split your program into files](23-modules.md) | splitting a program across .nme files |
+| 24 | ★★★★☆ | Python packages | [Python packages: the standard library and installed libraries](24-python-packages.md) | using the standard library and installed libraries |
+| 25 | ★★★★☆ | native compilation | [Native: compile to machine code](25-native.md) | running a program as machine code without CPython |
+| 26 | ★★★★☆ | a small project | [Adventure — a small text game](26-adventure.md) | a room-by-room text adventure with choices |
+| 27 | ★★★★☆ | a project | [Calculator — a command-line project](27-calculator.md) | a repeat-until-quit calculator with functions and a module file |
+| 28 | ★★★★☆ | compiler | [Your first compiler — a tiny language](28-compiler.md) | a tiny language that reads lines like `add 2 3` and prints the answer |
+| 29 | ★★★★☆ | bootstrap | [Bootstrap: NME compiling a tiny language](29-bootstrap.md) | a tiny compiler written in NME |
+| 30 | ★★★★☆ | data | [Data: statistics on a list](30-data.md) | loading numbers from a JSON file and computing mean/median/max with the statistics standard library |
+| 31 | ★★★★☆ | records | [Records: a small address book](31-address-book.md) | a JSON-file address book that adds, lists, and searches contacts |
+| 32 | ★★★★☆ | web data | [Weather: reading JSON from the web](32-weather.md) | fetching a local HTTP server's JSON and printing a mini weather report |
+| 33 | ★★★★☆ | a project | [Todo: a growing project](33-todo.md) | a JSON-persisted todo list with add, done, list, and a module file for the storage logic |
+| 34 | ★★★★☆ | self-hosting | [Self-host: NME running NME](34-selfhost.md) | an NME program that compiles a tiny NME-like subset (say/set/while) to Python |
+| 35 | ★★★★☆ | files | [Diary: notes saved by date](35-diary.md) | a diary that saves each day's note to a dated file and can read it back |
+| 36 | ★★★★☆ | data | [Word count: how often each word appears](36-word-count.md) | reading a text file and counting how often each word appears, using a dict and collections.Counter |
+| 37 | ★★★★☆ | game | [Word guess: a hidden-word game](37-word-guess.md) | a hangman-style game where you guess letters of a hidden word with limited tries |
+| 38 | ★★★★☆ | game & data | [Quiz — questions from a file](38-quiz.md) | a multiple-choice quiz that loads questions from a JSON file, scores answers, and reports the result |
+| 39 | ★★★★☆ | data | [Sorting — putting a list in order](39-sorting.md) | loading numbers from a JSON file and showing sorted ascending and descending orders with the Python sort method |
+| 40 | ★★★★☆ | files | [Report — writing a summary file](40-report.md) | reading a few JSON data files and writing one text report with file_write |
+| 41 | ★★★★☆ | text & data | [Text stats: letters and words](41-text-stats.md) | reading a text file and reporting character count, word count, longest word, and most common word (with collections.Counter) |
+| 42 | ★★★★☆ | data & comparison | [Compare: two groups of numbers](42-compare.md) | loading two JSON number lists and comparing their means and maxima |
+| 43 | ★★★★☆ | a project | [Project: a habit tracker](43-habit.md) | a JSON-persisted habit tracker with add, check, streak, list, quit, and a module file for the storage logic |
+| 44 | ★★★★☆ | game & random | [Playlist: a random music player](44-playlist.md) | a playlist loaded from JSON with shuffle, next, and a loop of songs |
+| 45 | ★★★★☆ | data | [CSV: rows of data](45-csv.md) | reading a comma-separated text file with split(","), computing a column's average, and writing a summary CSV |
+| 46 | ★★★★☆ | compiler | [Compiler tier: a small expression language](46-expressions.md) | a tiny calculator that evaluates 2 + 3 * 4 respecting precedence, as a step toward a real expression compiler |
+| 47 | ★★★★☆ | terminal output | [Progress — a bar in the terminal](47-progress.md) | a terminal progress bar that fills a row as a loop runs |
+| 48 | ★★★★☆ | a project | [Shop — an inventory store](48-shop.md) | a JSON-persisted store with buy/sell/stock/list and a money balance |
+| 49 | ★★★★☆ | compiler | [Compiler tier: reading tokens](49-tokens.md) | splitting a command line into tokens and dispatching them, a step toward a real tokenizer and parser |
+| 50 | ★★★★☆ | strings | [Strings: slicing and changing text](50-strings.md) | slicing `text[start:end]`, `.upper()/.lower()`, `.replace()`, and `.strip()` on a sentence |
+| 51 | ★★★★☆ | nested data | [Grid: a board of lists](51-grid.md) | a tic-tac-toe style 3x3 board stored as a list of lists, reading and writing cells with `board[row][col]` |
+| 52 | ★★★★☆ | game | [Game: tic-tac-toe](52-tic-tac-toe.md) | a playable two-player tic-tac-toe with a win check |
+| 53 | ★★★★★ | sets & data | [Sets: unique values](53-sets.md) | using a Python set to find unique words in a text file, then unique letters in a sentence |
+| 54 | ★★★★★ | statistics | [Stats: understanding data](54-stats.md) | loading a JSON list and reporting count, mean, median, mode, min, max, and range |
+| 55 | ★★★★★ | network | [Network: a mini chat](55-net.md) | fetching messages from a local HTTP server and showing them like a mini chat |
+| 56 | ★★★★★ | files & logging | [Log: an event record](56-log.md) | appending a dated line to a log file each time the program runs, using datetime and file_write |
+| 57 | ★★★★★ | data | [Group: data by category](57-group.md) | grouping a list of dicts by a category key into a dict of lists, then reporting counts per category |
+| 58 | ★★★★★ | compiler | [Compiler tier: a tiny bytecode runner](58-bytecode.md) | compiling simple instructions into a list of steps and running them one by one like a tiny virtual machine |
+| 59 | ★★★★★ | a terminal app | [Editor — a tiny text editor](59-editor.md) | a line-based editor with a buffer and add, list, remove, save, and quit commands |
+| 60 | ★★★★★ | search & data | [Search — finding items in JSON](60-search.md) | loading a JSON catalog from a local server or file and searching it by keyword, case-insensitively |
+| 61 | ★★★★★ | a project | [Project — a mini bank](61-bank.md) | a JSON-persisted bank account with deposit, withdraw, balance, history, and a storage module |
+| 62 | ★★★★★ | algorithm | [Bubble sort — your first algorithm](62-bubble.md) | implementing bubble sort by hand with nested loops and a swap, then comparing the result with Python's built-in sort |
+| 63 | ★★★★★ | output & loops | [ASCII art — drawing with characters](63-ascii-art.md) | building a right triangle, an upside-down triangle, and a diamond with nested loops and string multiplication |
+| 64 | ★★★★★ | algorithm | [Binary search — halving the guess](64-binary-search.md) | finding a number in a sorted list by halving the search range each step, showing the step count and the found index |
+| 65 | ★★★★★ | files & folders | [Files: processing many files](65-files-folder.md) | listing the files in a folder with os.listdir, reading each with file_read, and reporting total words and letters across all of them |
+| 66 | ★★★★★ | data & ranking | [Top ten: ranking records](66-top-ten.md) | loading JSON records, sorting by a numeric score with sorted(..., key=...), and showing the top ten |
+| 67 | ★★★★★ | a capstone project | [Project — a grade book](67-grade-book.md) | a JSON-persisted grade book with add-student, add-grade, report-averages, and a storage module |
+| 68 | ★★★★★ | exceptions | [Errors: handling problems](68-errors.md) | a program that reads a missing file and converts bad input without crashing |
+| 69 | ★★★★★ | regular expressions | [Patterns: finding matches with regex](69-patterns.md) | a program that finds phone numbers and email addresses in a text file |
+| 70 | ★★★★★ | game & timing | [Game: a reaction time test](70-reaction.md) | a game that measures reaction time with time.time() and reports the best of several rounds |
+| 71 | ★★★★★ | visualization | [Chart: a bar chart in the terminal](71-chart.md) | drawing a horizontal bar chart with # blocks from a JSON list, scaled to the largest value |
+| 72 | ★★★★★ | modules & structure | [Modules: a project across files](72-project-files.md) | a small weather-report project split into three .nme modules (fetch, analyze, report) with clear interfaces, imported by a main program |
+| 73 | ★★★★★ | compiler capstone | [Capstone: a language that compiles to Python](73-capstone.md) | an NME program that reads a small custom language (say/set/add/while/end), compiles it to Python source, writes it to a file, and runs it |
+| 74 | ★★★★★ | data & merging | [Merge: joining two lists](74-merge.md) | loading two JSON lists and joining records by name key into one report |
+| 75 | ★★★★★ | game & strategy | [Game: a simple opponent](75-ai.md) | a take-away game where the computer follows a winning strategy |
+| 76 | ★★★★★ | network & timing | [Network: polling a server](76-poll.md) | repeatedly fetching a status.json from a local server every few seconds and reporting changes |
+| 77 | ★★★★★ | network & files | [Network: downloading files](77-download.md) | downloading a file from a local HTTP server and saving it while showing progress |
+| 78 | ★★★★★ | data analysis | [Data: analyzing a month of temperatures](78-analysis.md) | loading a month of temperatures, computing statistics and a histogram, and saving a report file |
+| 79 | ★★★★★ | compiler & functions | [Compiler tier: functions in the mini language](79-functions.md) | a compiler that translates a mini language with `def`, `return`, and calls into Python and runs it |
+| 80 | ★★★★★ | command-line tools | [Tools: reading command-line arguments](80-argv.md) | a todo tool that takes commands like `nme r todo add "buy milk"` on the command line |
+| 81 | ★★★★★ | testing | [Testing: checking the functions you wrote](81-testing.md) | a tiny test runner that calls your own functions, compares each result with the expected value, and reports pass or fail |
+| 82 | ★★★★★ | compiler & AST | [Compiler tier: expressions as trees](82-ast.md) | a calculator that parses an expression into a tree and evaluates the tree recursively, respecting precedence |
+| 83 | ★★★★★ | game & logic | [Game: Mastermind, guessing a secret code](83-mastermind.md) | a Mastermind-style game that hides a 4-color code and gives black/white feedback for each guess |
+| 84 | ★★★★★ | web & text | [Web: extracting links from a page](84-links.md) | fetching an HTML page from a local server and listing every link on it as a full URL |
+| 85 | ★★★★★ | compiler & bytecode | [Compiler tier: from tree to bytecode](85-bytecode-compiler.md) | a compiler that flattens an expression tree into instruction lines and runs them on a stack machine |
 
 ## Where to continue
 
 - [Getting started](../getting-started.md): the five-minute path from hello to a number game
 - [Tutorial](../tutorial.md): six projects from Hello World to a compiler
 - [Language reference](../language.md): exact rules for all three levels
+- [Syntax list](../syntax.md): every accepted spelling, in one table

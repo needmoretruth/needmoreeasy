@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [66 — Top ten](66-top-ten.ko.md), [31 — Records](31-address-book.ko.md)
-- 주제 (Topic): 데이터/병합 / data & merging
-- 결과물 (Result): 두 JSON 목록을 이름 키로 합쳐 결합 보고서 만들기 / loading two JSON lists and joining records by name key into one report
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [66 — Top ten](66-top-ten.ko.md), [31 — Records](31-address-book.ko.md)
+- 주제: 데이터/병합
+- 결과물: 두 JSON 목록을 이름 키로 합쳐 결합 보고서 만들기
 
 실제 데이터는 한 파일에만 있지 않습니다. 학교는 학생을 한 목록에, 점수를
 다른 목록에 둡니다. 둘을 합치려면 두 번째 목록에서 이름을 찾아야 하는데,
@@ -50,7 +50,7 @@
 
    ```text
    # merge.nme — 학생과 점수를 이름으로 합치기.
-   # 실행: nme r merge.ko
+   # 실행: nme 실행 merge
    # students.json과 scores.json이 같은 폴더에 있어야 합니다.
 
    use file latest
@@ -75,7 +75,7 @@
 5. 실행하세요:
 
    ```sh
-   nme r merge.ko
+   nme 실행 merge
    ```
 
    ```text

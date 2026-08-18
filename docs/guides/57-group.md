@@ -4,10 +4,10 @@ English | [한국어](57-group.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [36 — Word count](36-word-count.md), [54 — Stats](54-stats.md)
-- 주제 (Topic): 데이터 / data
-- 결과물 (Result): 범주 키로 dict 목록을 목록들의 dict로 묶고, 범주별 개수를 보고하기 / grouping a list of dicts by a category key into a dict of lists, then reporting counts per category
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [36 — Word count](36-word-count.md), [54 — Stats](54-stats.md)
+- Topic: data
+- Result: grouping a list of dicts by a category key into a dict of lists, then reporting counts per category
 
 Counting (guides [36](36-word-count.md) and [54](54-stats.md)) answers *how
 many*; grouping answers *how many per category*: it splits one list of dicts

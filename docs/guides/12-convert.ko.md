@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [11 — 확인과 빌드](11-check-build.ko.md)
-- 주제 (Topic): 도구 사용 / using the tools
-- 결과물 (Result): 작은 Python 파일을 NME로 변환하기 / a small Python file converted into NME
+- 난이도: ★★☆☆☆ (2/5)
+- 선수 지식: [11 — 확인과 빌드](11-check-build.ko.md)
+- 주제: 도구 사용
+- 결과물: 작은 Python 파일을 NME로 변환하기
 
 `nme 변환`은 반대 방향입니다. 안전한 Python 패턴을 선택한 단계와 언어로
 다시 써 줍니다. 안전하게 바꿀 수 없는 줄은 Python 그대로 둡니다.
@@ -42,7 +42,7 @@
 3. 영어 명령은 `convert`이고, 문장형으로도 바꿀 수 있습니다:
 
    ```sh
-   nme convert old.py --level sentence --language en -o easy.nme
+   nme 변환 old.py --level sentence --language en -o easy.nme
    ```
 
    결과:

@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [39 — 정렬](39-sorting.ko.md), [54 — 통계](54-stats.ko.md)
-- 주제 (Topic): 데이터/순위 / data & ranking
-- 결과물 (Result): JSON 기록을 불러와 숫자 점수 기준으로 정렬하고 상위 열 개를 보여 주는 프로그램 / loading JSON records, sorting by a numeric score with sorted(..., key=...), and showing the top ten
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [39 — 정렬](39-sorting.ko.md), [54 — 통계](54-stats.ko.md)
+- 주제: 데이터/순위
+- 결과물: JSON 기록을 불러와 숫자 점수 기준으로 정렬하고 상위 열 개를 보여 주는 프로그램
 
 [39](39-sorting.ko.md)는 숫자를 정렬하고, [54](54-stats.ko.md)는 그 숫자를
 요약했습니다. 실제 데이터는 기록들의 목록이고, 기록 하나는 여러 필드가 든
@@ -83,7 +83,7 @@
 
    ```text
    # top-ten.ko.nme — records.json에서 가장 높은 열 개 점수.
-   # 실행: nme r top-ten.ko
+   # 실행: nme 실행 top-ten.ko
    # records.json 파일이 같은 폴더에 있어야 합니다.
 
    파일 사용 최신
@@ -112,7 +112,7 @@
 6. 데이터 파일이 있는 상태에서 실행합니다:
 
    ```sh
-   nme r top-ten.ko
+   nme 실행 top-ten.ko
    ```
 
    ```text

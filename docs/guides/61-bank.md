@@ -4,10 +4,10 @@ English | [한국어](61-bank.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [43 — Habit](43-habit.md), [48 — Shop](48-shop.md)
-- 주제 (Topic): 프로젝트 / a project
-- 결과물 (Result): 입금·출금·잔액·거래 내역을 모듈로 저장하는 JSON 은행 계좌 / a JSON-persisted bank account with deposit, withdraw, balance, history, and a storage module
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [43 — Habit](43-habit.md), [48 — Shop](48-shop.md)
+- Topic: a project
+- Result: a JSON-persisted bank account with deposit, withdraw, balance, history, and a storage module
 
 Guide [48](48-shop.md) kept a shop's money in a dict; guide
 [43](43-habit.md) put the storage logic in a module. A bank account is the

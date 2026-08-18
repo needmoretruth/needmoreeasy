@@ -4,10 +4,10 @@ English | [한국어](79-functions.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [73 — Capstone](73-capstone.md), [23 — Modules](23-modules.md)
-- 주제 (Topic): 컴파일러/함수 / compiler & functions
-- 결과물 (Result): `def`/`return`/호출을 가진 미니 언어를 Python으로 컴파일하고 실행하는 컴파일러 / a compiler that translates a mini language with `def`, `return`, and calls into Python and runs it
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [73 — Capstone](73-capstone.md), [23 — Modules](23-modules.md)
+- Topic: compiler & functions
+- Result: a compiler that translates a mini language with `def`, `return`, and calls into Python and runs it
 
 Guide [73](73-capstone.md) compiled five verbs into Python. Real languages
 have functions, so this compiler grows one: `def name params` opens a

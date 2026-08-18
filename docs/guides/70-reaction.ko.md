@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [68 — 예외](68-errors.ko.md), [10 — 랜덤](10-random.ko.md)
-- 주제 (Topic): 게임/시간 / game & timing
-- 결과물 (Result): time.time()으로 반응 속도를 재고 여러 라운드의 최고 기록을 알려 주는 게임 / a game that measures reaction time with time.time() and reports the best of several rounds
+- 난이도: ★★★★★ (5/5)
+- 선수 지식: [68 — 예외](68-errors.ko.md), [10 — 랜덤](10-random.ko.md)
+- 주제: 게임/시간
+- 결과물: time.time()으로 반응 속도를 재고 여러 라운드의 최고 기록을 알려 주는 게임
 
 반응 테스트는 GO가 나타난 때와 엔터를 누른 때를 알아야 합니다.
 `time.time()`이 초 단위 시계를 읽으므로, 두 번 읽어 빼면 그 사이 시간을 잽니다.
@@ -38,7 +38,7 @@
    빨리 끝나도록 대기는 `0.1`초로 줄였습니다. 진짜 게임은 `1부터 3까지 랜덤정수`를 쓰세요:
    ```text
    # 반응.nme — 반응 속도를 재는 게임입니다.
-   # 실행: nme r 반응
+   # 실행: nme 실행 반응
    # time.time()으로 순간을 재고, 가장 좋은 기록을 남깁니다.
 
    import time
@@ -73,7 +73,7 @@
    ```
 4. 라운드마다 빈 줄 하나씩(준비 엔터 하나 + 라운드마다 하나) 실행합니다:
    ```sh
-   printf '\n\n\n\n' | nme r 반응
+   printf '\n\n\n\n' | nme 실행 반응
    ```
    ```text
    반응 속도 테스트 — GO가 보이면 바로 엔터를 누르세요.

@@ -4,10 +4,10 @@ English | [한국어](85-bytecode-compiler.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [82 — AST](82-ast.md), [58 — Bytecode](58-bytecode.md)
-- 주제 (Topic): 컴파일러/바이트코드 / compiler & bytecode
-- 결과물 (Result): 식 트리를 납작한 명령 목록으로 컴파일하고 스택 가상 머신으로 실행하는 컴파일러 / a compiler that flattens an expression tree into instruction lines and runs them on a stack machine
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [82 — AST](82-ast.md), [58 — Bytecode](58-bytecode.md)
+- Topic: compiler & bytecode
+- Result: a compiler that flattens an expression tree into instruction lines and runs them on a stack machine
 
 Guide [82](82-ast.md) evaluated a tree directly; guide [58](58-bytecode.md)
 ran pre-made instructions. Real compilers connect the two: **compile** the

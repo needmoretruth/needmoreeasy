@@ -4,10 +4,10 @@ English | [한국어](65-files-folder.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [13 — Files](13-files.md), [36 — Word count](36-word-count.md)
-- 주제 (Topic): 파일/폴더 / files & folders
-- 결과물 (Result): 폴더의 파일을 나열해 각각 읽고 전체 단어·글자 수를 보고하는 프로그램 / listing the files in a folder with os.listdir, reading each with file_read, and reporting total words and letters across all of them
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [13 — Files](13-files.md), [36 — Word count](36-word-count.md)
+- Topic: files & folders
+- Result: listing the files in a folder with os.listdir, reading each with file_read, and reporting total words and letters across all of them
 
 Guide [13](13-files.md) read one file you named in the code. Real folders hold
 many files, and you usually do not know their names ahead of time.

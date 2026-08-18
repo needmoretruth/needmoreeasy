@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★☆☆☆☆ (1/5)
-- 선수 지식 (Prerequisites): [01 — 인사](01-hello.ko.md)
-- 주제 (Topic): 입력 / input
-- 결과물 (Result): 이름을 물어보고 문장으로 인사하는 프로그램 / a program that asks a name and greets it in a sentence
+- 난이도: ★☆☆☆☆ (1/5)
+- 선수 지식: [01 — 인사](01-hello.ko.md)
+- 주제: 입력
+- 결과물: 이름을 물어보고 문장으로 인사하는 프로그램
 
 듣는 프로그램입니다. `물어봐`는 사용자가 입력한 답을 읽어 이름에
 저장합니다.

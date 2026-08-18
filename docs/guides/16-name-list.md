@@ -4,10 +4,10 @@ English | [한국어](16-name-list.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [13 — Files](13-files.md), [14 — JSON](14-json.md)
-- 주제 (Topic): 파일과 목록 / files and lists
-- 결과물 (Result): 파일에서 이름 목록을 읽어 고르는 프로그램 / a program that reads a list of names from a file and picks from it
+- Difficulty: ★★★☆☆ (3/5)
+- Prerequisites: [13 — Files](13-files.md), [14 — JSON](14-json.md)
+- Topic: files and lists
+- Result: a program that reads a list of names from a file and picks from it
 
 A file can be a list. When each name sits on its own line, one Python method,
 `splitlines()`, turns the whole file into a list of names.

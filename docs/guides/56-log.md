@@ -4,10 +4,10 @@ English | [한국어](56-log.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [13 — Files](13-files.md), [35 — Diary](35-diary.md)
-- 주제 (Topic): 파일/기록 / files & logging
-- 결과물 (Result): 프로그램이 실행될 때마다 datetime과 file_write로 로그 파일에 날짜 줄을 덧붙이기 / appending a dated line to a log file each time the program runs, using datetime and file_write
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [13 — Files](13-files.md), [35 — Diary](35-diary.md)
+- Topic: files & logging
+- Result: appending a dated line to a log file each time the program runs, using datetime and file_write
 
 The diary in guide [35](35-diary.md) writes one file per day. A **log** is the
 opposite: one growing file with a new line for every event, showing *when*

@@ -4,10 +4,10 @@ English | [한국어](66-top-ten.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [39 — Sorting](39-sorting.md), [54 — Stats](54-stats.md)
-- 주제 (Topic): 데이터/순위 / data & ranking
-- 결과물 (Result): JSON 기록을 불러와 숫자 점수 기준으로 정렬하고 상위 열 개를 보여 주는 프로그램 / loading JSON records, sorting by a numeric score with sorted(..., key=...), and showing the top ten
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [39 — Sorting](39-sorting.md), [54 — Stats](54-stats.md)
+- Topic: data & ranking
+- Result: loading JSON records, sorting by a numeric score with sorted(..., key=...), and showing the top ten
 
 Guide [39](39-sorting.md) sorted plain numbers and guide [54](54-stats.md)
 summarized them. Real data is a list of records, each a dict with several

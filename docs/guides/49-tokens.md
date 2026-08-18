@@ -4,10 +4,10 @@ English | [한국어](49-tokens.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [46 — Expressions](46-expressions.md), [29 — Bootstrap](29-bootstrap.md)
-- 주제 (Topic): 컴파일러 / compiler
-- 결과물 (Result): 명령 줄을 토큰으로 나누고 실행을 보내는 프로그램 / splitting a command line into tokens and dispatching them, a step toward a real tokenizer and parser
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [46 — Expressions](46-expressions.md), [29 — Bootstrap](29-bootstrap.md)
+- Topic: compiler
+- Result: splitting a command line into tokens and dispatching them, a step toward a real tokenizer and parser
 
 Guide [46](46-expressions.md) split an expression into words; [29](29-bootstrap.md)
 split instruction lines. A real compiler starts the same way: it reads source

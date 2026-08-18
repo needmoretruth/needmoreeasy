@@ -170,15 +170,15 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
             format!("{target}.append({})", lower_value(value, source))
         }
         NmeStmt::When { condition, inline } => {
-            let header = format!("if ({}):", lower_condition(condition, source));
+            let header = format!("if {}:", wrap_condition(condition, source));
             lower_suite(header, inline.as_ref(), source)
         }
         NmeStmt::While { condition, inline } => {
-            let header = format!("while ({}):", lower_condition(condition, source));
+            let header = format!("while {}:", wrap_condition(condition, source));
             lower_suite(header, inline.as_ref(), source)
         }
         NmeStmt::ElseIf { condition, inline } => {
-            let header = format!("elif ({}):", lower_condition(condition, source));
+            let header = format!("elif {}:", wrap_condition(condition, source));
             lower_suite(header, inline.as_ref(), source)
         }
         NmeStmt::Else { inline } => lower_suite("else:".to_string(), inline.as_ref(), source),
@@ -221,6 +221,39 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
             format!("from {stem} import {}", names.join(", "))
         }
     }
+}
+
+/// Puts a condition in the parentheses its header needs, without adding a
+/// second pair around a condition that already carries its own.
+fn wrap_condition(condition: &Condition, source: &str) -> String {
+    let lowered = lower_condition(condition, source);
+    if is_wholly_parenthesized(&lowered) {
+        lowered
+    } else {
+        format!("({lowered})")
+    }
+}
+
+fn is_wholly_parenthesized(text: &str) -> bool {
+    if !(text.starts_with('(') && text.ends_with(')')) {
+        return false;
+    }
+    let mut depth = 0_i32;
+    for (index, character) in text.char_indices() {
+        match character {
+            '(' => depth += 1,
+            ')' => {
+                depth -= 1;
+                // The opening parenthesis closed before the end, so the outer
+                // pair does not enclose the whole expression.
+                if depth == 0 && index + 1 != text.len() {
+                    return false;
+                }
+            }
+            _ => {}
+        }
+    }
+    depth == 0
 }
 
 /// True for an expression that cannot change meaning when an operator is put

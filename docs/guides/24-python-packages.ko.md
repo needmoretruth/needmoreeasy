@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [23 — Modules](23-modules.ko.md), [13 — Files](13-files.ko.md)
-- 주제 (Topic): Python 패키지 / Python packages
-- 결과물 (Result): 표준 라이브러리와 설치된 라이브러리 사용하기 / using the standard library and installed libraries
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [23 — Modules](23-modules.ko.md), [13 — Files](13-files.ko.md)
+- 주제: Python 패키지
+- 결과물: 표준 라이브러리와 설치된 라이브러리 사용하기
 
 Python에는 준비된 패키지가 많이 들어 있습니다. 고급 NME는 일반 Python이므로
 그중 아무 패키지나 `.nme` 파일 안에서 쓸 수 있습니다. 그것이 바로 세 번째

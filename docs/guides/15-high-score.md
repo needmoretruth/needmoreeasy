@@ -4,10 +4,10 @@ English | [한국어](15-high-score.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [13 — Files](13-files.md), [14 — JSON](14-json.md), [06 — If](06-if.md)
-- 주제 (Topic): 프로젝트 / project
-- 결과물 (Result): 최고 점수를 기억하는 주사위 게임 / a dice game that remembers its best score
+- Difficulty: ★★★☆☆ (3/5)
+- Prerequisites: [13 — Files](13-files.md), [14 — JSON](14-json.md), [06 — If](06-if.md)
+- Topic: project
+- Result: a dice game that remembers its best score
 
 Everything you know fits into one small project: a dice game that remembers
 its best score. `use random` rolls the die, `use file` saves the record.

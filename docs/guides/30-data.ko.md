@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [24 — Python 패키지](24-python-packages.ko.md), [14 — JSON](14-json.ko.md)
-- 주제 (Topic): 데이터 / data
-- 결과물 (Result): JSON 파일에서 숫자를 불러와 표준 라이브러리 statistics로 평균·중앙값·최댓값 구하기 / loading numbers from a JSON file and computing mean/median/max with the statistics standard library
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [24 — Python 패키지](24-python-packages.ko.md), [14 — JSON](14-json.ko.md)
+- 주제: 데이터
+- 결과물: JSON 파일에서 숫자를 불러와 표준 라이브러리 statistics로 평균·중앙값·최댓값 구하기
 
 저장된 JSON 목록은 프로그램이 바로 쓸 수 있는 데이터입니다. 이 가이드는
 숫자 목록을 파일에서 불러와 손으로 계산한 요약과 Python 표준 라이브러리로
@@ -36,7 +36,7 @@
    말해 f"숫자 {len(숫자들)}개를 불러왔습니다"
    ```
 
-   `nme r load.ko`를 실행하면 `숫자 6개를 불러왔습니다`가 출력됩니다. 파일에
+   `nme 실행 load.ko`를 실행하면 `숫자 6개를 불러왔습니다`가 출력됩니다. 파일에
    목록이 들어 있으므로 `json읽기`는 [14](14-json.ko.md)의 딕셔너리가 아니라
    리스트를 돌려줍니다.
 
@@ -69,7 +69,7 @@
 
    ```text
    # numbers.ko.nme — 저장된 숫자 목록의 통계
-   # 실행: nme r numbers.ko
+   # 실행: nme 실행 numbers.ko
    # numbers.json 파일이 같은 폴더에 있어야 합니다.
 
    파일 사용 최신
@@ -106,7 +106,7 @@
    데이터 파일이 있는 상태에서 실행합니다:
 
    ```sh
-   nme r numbers.ko
+   nme 실행 numbers.ko
    ```
 
    ```text

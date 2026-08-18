@@ -4,10 +4,10 @@ English | [한국어](74-merge.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [66 — Top ten](66-top-ten.md), [31 — Records](31-address-book.md)
-- 주제 (Topic): 데이터/병합 / data & merging
-- 결과물 (Result): 두 JSON 목록을 이름 키로 합쳐 결합 보고서 만들기 / loading two JSON lists and joining records by name key into one report
+- Difficulty: ★★★★★ (5/5)
+- Prerequisites: [66 — Top ten](66-top-ten.md), [31 — Records](31-address-book.md)
+- Topic: data & merging
+- Result: loading two JSON lists and joining records by name key into one report
 
 Real data often lives in more than one file. A school keeps students in one
 list and their scores in another. Joining them means looking a name up in the

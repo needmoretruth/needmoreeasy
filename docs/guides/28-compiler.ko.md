@@ -4,10 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도 (Difficulty): ★★★★★ (5/5)
-- 선수 지식 (Prerequisites): [26 — 모험](26-adventure.ko.md), [23 — 모듈](23-modules.ko.md)
-- 주제 (Topic): 컴파일러 / compiler
-- 결과물 (Result): `add 2 3` 같은 줄을 읽고 답을 출력하는 아주 작은 언어 / a tiny language that reads lines like `add 2 3` and prints the answer
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [26 — 모험](26-adventure.ko.md), [23 — 모듈](23-modules.ko.md)
+- 주제: 컴파일러
+- 결과물: `add 2 3` 같은 줄을 읽고 답을 출력하는 아주 작은 언어
 
 컴파일러는 글을 읽고 그 뜻을 판단합니다. 여러분은 이미 그중 가장 어려운
 부분을 [27](27-calculator.ko.md)에서 썼습니다: 줄을 나누고, 첫 단어를 읽고,
@@ -34,7 +34,7 @@
 
    ```text
    # 아주 작은 계산기 언어: add 2 3, mul 4 5, 또는 quit.
-   # 실행: nme r mini.ko
+   # 실행: nme 실행 mini.ko
 
    def run_command(parts):
        verb = parts[0]
@@ -64,7 +64,7 @@
 3. 실행하고 작은 프로그램을 넣어 보세요:
 
    ```sh
-   printf 'add 2 3\nmul 4 5\nsub 9 2\nquit\n' | nme r mini.ko
+   printf 'add 2 3\nmul 4 5\nsub 9 2\nquit\n' | nme 실행 mini.ko
    ```
 
    ```text
