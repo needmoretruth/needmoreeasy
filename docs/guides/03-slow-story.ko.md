@@ -5,7 +5,7 @@
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
 - 난이도: ★☆☆☆☆ (1/5)
-- 선수 지식: [01 — 인사](01-hello.ko.md)
+- 선수 지식: [02 — 이야기](02-story.ko.md)
 - 주제: 이야기·천천히 출력
 - 결과물: 소설처럼 글자가 하나씩 나타나는 프로그램
 

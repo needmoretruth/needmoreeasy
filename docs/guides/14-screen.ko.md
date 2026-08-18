@@ -5,7 +5,7 @@
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
 - 난이도: ★★☆☆☆ (2/5)
-- 선수 지식: [12 — 랜덤](12-random.ko.md)
+- 선수 지식: [13 — 확률](13-chance.ko.md)
 - 주제: 화면 꾸미기
 - 결과물: 화면을 지우고, 제목을 가운데에 놓고, 상자로 감싸는 프로그램
 

@@ -26,9 +26,8 @@ Difficulty rises inside a part. It does not rise straight through from 01 to
 For someone who has never written a program: sentences only, one new idea per
 guide.
 
-<!-- Numbers 02 and 13 are reserved for two Part 1 guides that are not written yet. Do not reuse them. -->
-
 1. [01 — Hello: say your first words](01-hello.md)
+2. [02 — Story: writing many lines without repeating yourself](02-story.md)
 3. [03 — Story: letters arriving one at a time](03-slow-story.md)
 4. [04 — Ask: have a conversation](04-ask.md)
 5. [05 — Set: store a value](05-set.md)
@@ -39,6 +38,7 @@ guide.
 10. [10 — While: keep going](10-while.md)
 11. [11 — Break: stop a loop](11-break.md)
 12. [12 — Random: dice and picks](12-random.md)
+13. [13 — Chance: how often out of a hundred](13-chance.md)
 14. [14 — Screen: clearing, ruling and boxing](14-screen.md)
 15. [15 — Time: a stopwatch and cooldowns](15-timer.md)
 16. [16 — Check & Build: see the Python](16-check-build.md)
@@ -164,6 +164,7 @@ and validated by hand.
 ## Topic lookup
 
 - first program and output: [01](01-hello.md)
+- story blocks: [02](02-story.md)
 - stories and slow output: [03](03-slow-story.md)
 - input: [04](04-ask.md)
 - storing values and lists: [05](05-set.md)
@@ -172,6 +173,7 @@ and validated by hand.
 - conditions: [08](08-if.md), [09](09-and-or.md)
 - loops and conditions: [10](10-while.md)
 - random: [12](12-random.md)
+- chance: [13](13-chance.md)
 - arranging the screen: [14](14-screen.md)
 - stopwatch and cooldowns: [15](15-timer.md)
 - using the tools: [16](16-check-build.md), [65](65-convert.md)
@@ -239,6 +241,7 @@ and validated by hand.
 | # | Difficulty | Topic | Title | Result |
 | --- | --- | --- | --- | --- |
 | 01 | ★☆☆☆☆ | first program and output | [Hello: say your first words](01-hello.md) | a program that prints a message with `nme run` |
+| 02 | ★☆☆☆☆ | story blocks | [Story: writing many lines without repeating yourself](02-story.md) | a program that tells a story of several lines in one block |
 | 03 | ★☆☆☆☆ | stories and slow output | [Story: letters arriving one at a time](03-slow-story.md) | a program whose text appears one letter at a time, the way a novel unfolds |
 | 04 | ★☆☆☆☆ | input | [Ask: have a conversation](04-ask.md) | a program that asks a name and greets it in a sentence |
 | 05 | ★☆☆☆☆ | storing values and lists | [Set: store a value](05-set.md) | a program that keeps text, numbers and lists in named values |
@@ -249,6 +252,7 @@ and validated by hand.
 | 10 | ★★☆☆☆ | loops and conditions | [While: keep going](10-while.md) | a block that loops while a condition is true |
 | 11 | ★★☆☆☆ | loops | [Break: stop a loop](11-break.md) | a program that leaves a loop early |
 | 12 | ★★☆☆☆ | random | [Random: dice and picks](12-random.md) | a program that rolls a die and picks a color |
+| 13 | ★★☆☆☆ | chance | [Chance: how often out of a hundred](13-chance.md) | a program in which something happens only as often as you decided |
 | 14 | ★★☆☆☆ | arranging the screen | [Screen: clearing, ruling and boxing](14-screen.md) | a program that clears the screen, centres a title and draws a box |
 | 15 | ★★☆☆☆ | stopwatch and cooldowns | [Time: a stopwatch and cooldowns](15-timer.md) | a program that times itself and stops an action from repeating too soon |
 | 16 | ★★☆☆☆ | using the tools | [Check & Build: see the Python](16-check-build.md) | the habit of verifying programs and reading the generated Python |

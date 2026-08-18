@@ -5,7 +5,7 @@ English | [한국어](14-screen.ko.md)
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
 - Difficulty: ★★☆☆☆ (2/5)
-- Prerequisites: [12 — Random](12-random.md)
+- Prerequisites: [13 — Chance](13-chance.md)
 - Topic: arranging the screen
 - Result: a program that clears the screen, centres a title and draws a box
 

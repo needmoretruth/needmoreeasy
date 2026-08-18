@@ -5,7 +5,7 @@ English | [한국어](03-slow-story.ko.md)
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
 - Difficulty: ★☆☆☆☆ (1/5)
-- Prerequisites: [01 — Hello](01-hello.md)
+- Prerequisites: [02 — Story](02-story.md)
 - Topic: stories and slow output
 - Result: a program whose text appears one letter at a time, the way a novel unfolds
 
