@@ -869,6 +869,8 @@ fn is_header_shape(tokens: &[Token]) -> bool {
         return false;
     }
     when_action_at(tokens, 0, MatchMode::Exact).is_some()
+        || english_for_each_start(tokens, MatchMode::Exact).is_some()
+        || korean_for_each_shape(tokens)
         || repeat_action_at(tokens, 0, MatchMode::Exact).is_some()
         || matches!(tokens[0].tok, Tok::While)
         || action_phrase_at(tokens, 0, WHILE_WORDS_EN, MatchMode::Exact).is_some()
@@ -2540,9 +2542,13 @@ fn match_natural_question(
         return None;
     }
 
-    // An age question is answered with a number, and the next line a learner
-    // writes is almost always a comparison, so read it as one.
-    let asks_for_a_number = natural_age_question_target(tokens, question_end).is_some();
+    // A question about how many, or about an age, is answered with a number,
+    // and the next line a learner writes is almost always a comparison — so
+    // read it as one instead of leaving a string behind.
+    let asks_for_a_number = natural_age_question_target(tokens, question_end).is_some()
+        || tokens[..question_end]
+            .iter()
+            .any(|token| token_word(token) == Some("몇"));
     let target = if let Some(target) = natural_age_question_target(tokens, question_end) {
         Some(target)
     } else if let Some(first) = tokens.first().and_then(name_word) {
@@ -2631,7 +2637,7 @@ fn match_natural_question(
     Some(NmeStmt::Ask {
         target: target.to_string(),
         prompt: Some(prompt),
-        kind: if asks_for_a_number {
+        kind: if asks_for_a_number || target == "age" {
             InputKind::Number
         } else {
             InputKind::Text
@@ -3331,19 +3337,39 @@ fn match_english_for_each(
     };
     let header_end = colon_at.map_or(span_of(tokens).end, |at| tail[at].span.end);
     let body = colon_at.map_or(&tail[tail.len()..], |at| &tail[at + 1..]);
+    // The loop name is bound by the header, so the body may already use it.
+    let mut body_names = known_names.clone();
+    body_names.insert(name.clone());
     let inline = parse_suite_body(
         source,
         body,
         block,
         SuiteKind::Repeat,
         Span::new(tokens[0].span.start, header_end),
-        known_names,
+        &body_names,
     )?;
     Ok(Some(NmeStmt::ForEach {
         name,
         items,
         inline,
     }))
+}
+
+/// True when the line looks like `<목록>의 <이름>마다 ...`.
+fn korean_for_each_shape(tokens: &[Token]) -> bool {
+    let Some(name_at) = tokens.iter().position(|token| {
+        name_word(token).is_some_and(|word| {
+            word.strip_suffix(EACH_SUFFIX_KO)
+                .is_some_and(|base| !base.is_empty())
+        })
+    }) else {
+        return false;
+    };
+    name_at > 0
+        && (repeat_action_at(&tokens[name_at + 1..], 0, MatchMode::Exact).is_some()
+            || tokens[name_at + 1..]
+                .iter()
+                .any(|token| matches!(token.tok, Tok::Colon)))
 }
 
 fn match_korean_for_each(
@@ -3378,21 +3404,23 @@ fn match_korean_for_each(
         .map(str::to_string)
         .ok_or_else(|| for_each_diagnostic(span_of(tokens)))?;
     let items_tokens = &tokens[..name_at];
-    let items = expression_code(source, items_tokens)
-        .or_else(|| {
-            strip_attached_particle_span(source, items_tokens, EACH_CONTAINER_PARTICLES_KO)
-                .filter(|span| is_valid_python_expression(&source[span.start..span.end]))
-                .map(Code::Source)
-        })
+    // `친구들의` is a valid Python name on its own, so the particle has to be
+    // taken off first or the loop would read over a name nobody defined.
+    let items = strip_attached_particle_span(source, items_tokens, EACH_CONTAINER_PARTICLES_KO)
+        .filter(|span| is_valid_python_expression(&source[span.start..span.end]))
+        .map(Code::Source)
+        .or_else(|| expression_code(source, items_tokens))
         .ok_or_else(|| for_each_diagnostic(span_of(tokens)))?;
     let header_end = colon_at.map_or(tokens[name_at].span.end, |at| rest[at].span.end);
+    let mut body_names = known_names.clone();
+    body_names.insert(name.clone());
     let inline = parse_suite_body(
         source,
         &rest[body_at.min(rest.len())..],
         block,
         SuiteKind::Repeat,
         Span::new(tokens[0].span.start, header_end),
-        known_names,
+        &body_names,
     )?;
     Ok(Some(NmeStmt::ForEach {
         name,
@@ -6308,36 +6336,55 @@ fn parse_list_value(source: &str, tokens: &[Token], known_names: &HashSet<String
     if items.is_empty() {
         return Some(Value::List(Vec::new()));
     }
-    const JOINERS: &[&str] = &["and", "그리고", "와", "과", "이랑", "랑"];
     let mut values = Vec::new();
-    for part in items.split(|token| {
-        matches!(token.tok, Tok::Comma | Tok::And) || token_matches_exact(token, JOINERS)
-    }) {
-        let part = trim_list_item(part);
+    for part in split_list_items(items) {
         if part.is_empty() {
             continue;
         }
-        values.push(parse_value(source, part, known_names, true).ok()?);
+        values.push(parse_value(source, &part, known_names, true).ok()?);
     }
     Some(Value::List(values))
 }
 
-/// Drops the connector words people put between list items.
-fn trim_list_item(mut tokens: &[Token]) -> &[Token] {
-    const JOINERS: &[&str] = &["and", "그리고", "와", "과", "이랑", "랑"];
-    while tokens
-        .first()
-        .is_some_and(|token| token_matches_exact(token, JOINERS))
-    {
-        tokens = &tokens[1..];
+/// Words people put between list items, standing alone or attached to the
+/// word before them as a Korean particle (`민수와 지안`).
+const LIST_JOINERS: &[&str] = &["and", "그리고", "와", "과", "이랑", "랑"];
+
+/// Cuts a list into its items. A Korean joining particle is part of the word
+/// it follows, so the particle is trimmed off and the item ends there.
+fn split_list_items(tokens: &[Token]) -> Vec<Vec<Token>> {
+    let mut items = Vec::new();
+    let mut current: Vec<Token> = Vec::new();
+    for token in tokens {
+        if matches!(token.tok, Tok::Comma | Tok::And) || token_matches_exact(token, LIST_JOINERS) {
+            items.push(std::mem::take(&mut current));
+            continue;
+        }
+        if let Tok::Name { name } = &token.tok {
+            if let Some(base) = LIST_JOINERS
+                .iter()
+                .filter(|joiner| joiner.chars().next().is_some_and(|c| !c.is_ascii()))
+                .find_map(|joiner| {
+                    name.strip_suffix(joiner).filter(|base| !base.is_empty())
+                })
+            {
+                current.push(Token {
+                    tok: Tok::Name {
+                        name: base.to_string(),
+                    },
+                    span: Span::new(token.span.start, token.span.start + base.len()),
+                });
+                items.push(std::mem::take(&mut current));
+                continue;
+            }
+        }
+        if is_command_ending(token) {
+            continue;
+        }
+        current.push(token.clone());
     }
-    while tokens
-        .last()
-        .is_some_and(|token| token_matches_exact(token, JOINERS) || is_command_ending(token))
-    {
-        tokens = &tokens[..tokens.len() - 1];
-    }
-    tokens
+    items.push(current);
+    items
 }
 
 fn parse_zero_knowledge_value(tokens: &[Token]) -> Option<Value> {
@@ -7216,6 +7263,12 @@ fn remember_bindings(stmt: &NmeStmt, names: &mut HashSet<String>) {
         }
         NmeStmt::FileRead { target, .. } => {
             names.insert(target.clone());
+        }
+        NmeStmt::ForEach { name, inline, .. } => {
+            names.insert(name.clone());
+            if let Some(InlineStmt::Nme(inner)) = inline {
+                remember_bindings(inner, names);
+            }
         }
         NmeStmt::ModuleImport {
             names: imported, ..

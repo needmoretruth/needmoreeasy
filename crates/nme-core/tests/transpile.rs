@@ -799,14 +799,14 @@ fn natural_questions_infer_a_target_without_ask_syntax() {
         "이름 = input(\"이름 은 뭐예요?\" + \" \")\n",
         "이름 = input(\"이름 뭐예요\" + \" \")\n",
         "이름 = input(\"이름이 뭐예요\" + \" \")\n",
-        "나이 = input(\"나이 몇 살이에요\" + \" \")\n",
-        "나이 = input(\"몇 살이에요?\" + \" \")\n",
-        "나이 = input(\"나 몇 살이야\" + \" \")\n",
-        "나이 = input(\"나이는 몇 살이에요?\" + \" \")\n",
+        "나이 = int(input(\"나이 몇 살이에요\" + \" \"))\n",
+        "나이 = int(input(\"몇 살이에요?\" + \" \"))\n",
+        "나이 = int(input(\"나 몇 살이야\" + \" \"))\n",
+        "나이 = int(input(\"나이는 몇 살이에요?\" + \" \"))\n",
         "print(\"안녕하세요 \" + str(이름) + \"!\")\n",
-        "age = input(\"What is your age?\" + \" \")\n",
-        "age = input(\"How old are you?\" + \" \")\n",
-        "age = input(\"How old am I\" + \" \")\n",
+        "age = int(input(\"What is your age?\" + \" \"))\n",
+        "age = int(input(\"How old are you?\" + \" \"))\n",
+        "age = int(input(\"How old am I\" + \" \"))\n",
         "name = input(\"What is your name\" + \" \")\n",
         "name = input(\"What is my name\" + \" \")\n",
         "city = input(\"What's your city?\" + \" \")\n",
@@ -1574,13 +1574,13 @@ fn korean_negation_connectors_lower_to_not_equals() {
         "만약 점수가 5와 같지않으면 말해 \"단어\"\n",
     );
     let expected = concat!(
-        "if (not (점수 == 5)):\n",
+        "if (점수 != 5):\n",
         "    print(\"달라요\")\n",
         "# end\n",
-        "if (not (점수 == 5)):\n",
+        "if (점수 != 5):\n",
         "    print(\"달라요\")\n",
         "# end\n",
-        "if (not (점수 == 5)): print(\"단어\")\n",
+        "if (점수 != 5): print(\"단어\")\n",
     );
     assert_eq!(ok(source), expected);
 }
@@ -1595,7 +1595,7 @@ fn korean_negation_works_inside_a_while_ending() {
     );
     let expected = concat!(
         "점수 = 0\n",
-        "while (not (점수 == 5)):\n",
+        "while (점수 != 5):\n",
         "    점수 = 점수 + 1\n",
         "# end\n",
     );
@@ -1619,7 +1619,7 @@ fn korean_comparison_endings_combine_with_logical_connectors() {
         "if ((점수 > 0 and 점수 < 3)):\n",
         "    print(\"사이\")\n",
         "# end\n",
-        "if ((not (점수 == 5) and 점수 > 0)):\n",
+        "if ((점수 != 5 and 점수 > 0)):\n",
         "    print(\"둘 다\")\n",
         "# end\n",
         "if ((준비 == False and 점수 > 0)):\n",
@@ -1642,7 +1642,7 @@ fn korean_logical_conditions_never_panic() {
         "끝\n",
     );
     let expected = concat!(
-        "if ((not (점수 == 5) and not (점수 == 5))):\n",
+        "if ((점수 != 5 and 점수 != 5)):\n",
         "    print(\"y\")\n",
         "# end\n",
     );
@@ -1656,14 +1656,14 @@ fn korean_logical_conditions_never_panic() {
     );
     let expected = concat!(
         "점수 = 0\n",
-        "while ((not (점수 == 5) and 점수 > 0)):\n",
+        "while ((점수 != 5 and 점수 > 0)):\n",
         "    점수 = 점수 + 1\n",
         "# end\n",
     );
     assert_eq!(ok(source), expected);
     assert_eq!(
         ok("while 점수가 5와 같지 않을 동안 그리고 점수가 0보다 클 동안 성공 말해줘\n"),
-        "while ((not (점수 == 5) and 점수 > 0)): print(\"성공\")\n"
+        "while ((점수 != 5 and 점수 > 0)): print(\"성공\")\n"
     );
 }
 
