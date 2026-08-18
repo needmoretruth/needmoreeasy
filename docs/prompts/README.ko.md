@@ -4,6 +4,10 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [5분 시작](../getting-started.ko.md) | [문법 목록](../syntax.ko.md)
 
+**같은 세 가지가 [needmoreeasy.com](https://needmoreeasy.com/ko/) 맨 위에도
+있습니다.** 거기서는 「상세」를 눌러 내용을 보고 단추 하나로 전체를 복사할 수
+있으니, 이 저장소를 열지 않아도 됩니다.
+
 여기 있는 파일은 **하나만 통째로 복사해서 AI와의 대화 맨 앞에 붙여넣으면**,
 그 AI가 NME를 처음 보더라도 바로 NME 프로그램을 써 줄 수 있게 만드는 글입니다.
 ChatGPT·Claude 같은 평범한 대화창에서 그대로 동작합니다. 에이전트나 도구 설정이

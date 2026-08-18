@@ -4,6 +4,10 @@ English | [한국어](README.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Syntax list](../syntax.md)
 
+**The same three sit at the top of [needmoreeasy.com](https://needmoreeasy.com/).**
+There you can read one behind a "details" toggle and copy the whole thing with a
+button, without opening this repository at all.
+
 Each file here is one document you **copy whole and paste at the start of a chat
 with an AI**, so that the assistant can write NME programs even though it has
 never seen the language. They work in an ordinary chat window — ChatGPT, Claude,
