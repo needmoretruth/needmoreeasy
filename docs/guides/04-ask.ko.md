@@ -5,7 +5,7 @@
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
 - 난이도: ★☆☆☆☆ (1/5)
-- 선수 지식: [03 — 이야기](03-slow-story.ko.md)
+- 선수 지식: [03 — 천천히 나오는 이야기](03-slow-story.ko.md)
 - 주제: 입력
 - 결과물: 이름을 물어보고 문장으로 인사하는 프로그램
 

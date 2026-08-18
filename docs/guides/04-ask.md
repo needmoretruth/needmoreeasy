@@ -5,7 +5,7 @@ English | [한국어](04-ask.ko.md)
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
 - Difficulty: ★☆☆☆☆ (1/5)
-- Prerequisites: [03 — Story](03-slow-story.md)
+- Prerequisites: [03 — Letters one at a time](03-slow-story.md)
 - Topic: input
 - Result: a program that asks a name and greets it in a sentence
 
