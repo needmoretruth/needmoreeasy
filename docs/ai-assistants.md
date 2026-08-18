@@ -4,6 +4,19 @@ English | [한국어](ai-assistants.ko.md)
 
 [Home](../README.md) | [Getting started](getting-started.md) | [Tutorial](tutorial.md) | [Language reference](language.md)
 
+## The simplest way
+
+**Three prompts sit at the top of [needmoreeasy.com](https://needmoreeasy.com/).**
+Copy one whole and paste it at the start of a chat, and that is the whole job.
+They are generated from the compiler, so they are always current, and they work
+in a chat window that cannot open a link. If you have not written a program
+before, use the first one — sentences only.
+
+What follows is for a tool that *can* read a link, when you would rather hand
+over an address than a wall of text.
+
+## Handing over an address
+
 Give an AI coding assistant this one prompt:
 
 ```text
