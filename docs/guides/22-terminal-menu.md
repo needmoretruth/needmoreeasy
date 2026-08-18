@@ -4,8 +4,8 @@ English | [한국어](22-terminal-menu.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- Difficulty: ★★★☆☆ (3/5)
-- Prerequisites: [10 — Random](10-random.md), [06 — If](06-if.md), [07 — While](07-while.md)
+- Difficulty: ★★★★☆ (4/5)
+- Prerequisites: [12 — Random](12-random.md), [08 — If](08-if.md), [10 — While](10-while.md)
 - Topic: terminal menus
 - Result: a loop-driven terminal menu
 
@@ -56,7 +56,7 @@ choose: bye
 
    The block starts at the indentation, exactly like Python.
 
-3. The `if`/`elif`/`else` from guide [06](06-if.md) runs one branch per
+3. The `if`/`elif`/`else` from guide [08](08-if.md) runs one branch per
    answer. The plain Python headers `if choice == "1":` mix freely with the
    NME lines `show`/`break` inside the same block:
 
@@ -74,7 +74,7 @@ choose: bye
            break
    ```
 
-   `show random_number(1, 6)` rolls the die from guide [10](10-random.md) on
+   `show random_number(1, 6)` rolls the die from guide [12](12-random.md) on
    the spot; any other answer falls into `else`, prints `bye`, and leaves the
    loop with `break` — the one way out of `while True:`.
 
@@ -91,7 +91,7 @@ choose: bye
 ## Try it yourself
 
 Add a fourth row `4) coin` to `menu`, then a new `elif choice == "4":` branch
-that shows a random pick between two sides — guide [10](10-random.md) shows
+that shows a random pick between two sides — guide [12](12-random.md) shows
 how. `break` still works; the extra number just adds another branch.
 
 ## What you learned

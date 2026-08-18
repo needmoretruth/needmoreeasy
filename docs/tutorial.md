@@ -145,7 +145,7 @@ Challenge: ask for a name three times, append each answer, then greet them all.
 Four programs in, and nothing so far has needed a quote, a bracket, a colon or
 an `=`. **Sentence syntax carried all four on its own.** The next two projects
 are for someone who already knows Python, or who one day wants to. Skipping them
-now costs you nothing — guides 86 to 88 continue in sentences.
+now costs you nothing — guides 01 to 16 stay in sentences.
 
 ## Project 5: Use all three levels
 

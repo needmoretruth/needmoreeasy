@@ -267,9 +267,9 @@ that prepares learners to understand those later systems.
 
 ## Continue
 
-- [17 — cryptocurrency ledger](17-blockchain.md)
-- [18 — proof of work](18-proof-of-work.md)
-- [19 — transaction signatures and replay](19-signatures.md)
-- [20 — full-chain validation](20-consensus.md)
+- [87 — cryptocurrency ledger](87-blockchain.md)
+- [88 — proof of work](88-proof-of-work.md)
+- [89 — transaction signatures and replay](89-signatures.md)
+- [90 — full-chain validation](90-consensus.md)
 - [How to write strong NME examples](example-authoring.md)
 - [Example template](example-template.md)

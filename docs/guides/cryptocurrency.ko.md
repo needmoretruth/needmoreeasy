@@ -267,9 +267,9 @@ nme 실행 examples/needmorecoin-advanced.en
 
 ## 다음 읽을거리
 
-- [17 — 암호화폐 장부](17-blockchain.ko.md)
-- [18 — 작업증명](18-proof-of-work.ko.md)
-- [19 — 거래 서명과 재전송 방지](19-signatures.ko.md)
-- [20 — 전체 사슬 검증](20-consensus.ko.md)
+- [87 — 암호화폐 장부](87-blockchain.ko.md)
+- [88 — 작업증명](88-proof-of-work.ko.md)
+- [89 — 거래 서명과 재전송 방지](89-signatures.ko.md)
+- [90 — 전체 사슬 검증](90-consensus.ko.md)
 - [좋은 NME 예제 만드는 법](example-authoring.ko.md)
 - [예제 템플릿](example-template.ko.md)

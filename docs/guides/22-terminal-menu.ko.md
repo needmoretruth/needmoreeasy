@@ -4,8 +4,8 @@
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도: ★★★☆☆ (3/5)
-- 선수 지식: [10 — 랜덤](10-random.ko.md), [06 — 조건](06-if.ko.md), [07 — 동안](07-while.ko.md)
+- 난이도: ★★★★☆ (4/5)
+- 선수 지식: [12 — 랜덤](12-random.ko.md), [08 — 조건](08-if.ko.md), [10 — 동안](10-while.ko.md)
 - 주제: 터미널 메뉴
 - 결과물: 반복으로 움직이는 터미널 메뉴
 
@@ -55,7 +55,7 @@ printf '1\n3\n' | nme 실행 examples/terminal-menu.ko
 
    블록은 들여쓰기로 시작하며 Python과 똑같습니다.
 
-3. [06](06-if.ko.md) 가이드의 `if`/`elif`/`else`가 답마다 한 갈래를
+3. [08](08-if.ko.md) 가이드의 `if`/`elif`/`else`가 답마다 한 갈래를
    실행합니다. 순수 Python 헤더 `if 선택 == "1":`가 NME 줄
    `show`/`break`와 같은 블록 안에 자유롭게 섞입니다:
 
@@ -73,7 +73,7 @@ printf '1\n3\n' | nme 실행 examples/terminal-menu.ko
            break
    ```
 
-   `show random_number(1, 6)`은 그 자리에서 [10](10-random.ko.md) 가이드의
+   `show random_number(1, 6)`은 그 자리에서 [12](12-random.ko.md) 가이드의
    주사위를 굴립니다. 다른 답은 `else`로 떨어져 "안녕히 가세요"를 출력하고
    `break`로 반복을 떠납니다 — `while True:`에서 나가는 유일한 길입니다.
 
@@ -90,7 +90,7 @@ printf '1\n3\n' | nme 실행 examples/terminal-menu.ko
 ## 직접 해보기
 
 `menu`에 `4) 동전` 줄을 추가하고, `elif 선택 == "4":` 갈래를 새로 만들어
-두 면 중 무작위로 고른 쪽을 보여 주세요 — [10](10-random.ko.md) 가이드에
+두 면 중 무작위로 고른 쪽을 보여 주세요 — [12](12-random.ko.md) 가이드에
 방법이 있습니다. `break`는 그대로 작동하고, 다른 숫자는 갈래만 하나
 늘어납니다.
 

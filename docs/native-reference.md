@@ -242,5 +242,5 @@ meaning. `run` uses a temporary executable, while `build` preserves the C
 source for inspection.
 
 For the complete artifact naming rules, diagnostics, and backend rationale,
-see the [native-backend memo](native-backend.md). The [native guide](guides/25-native.md)
+see the [native-backend memo](native-backend.md). The [native guide](guides/66-native.md)
 walks through the same workflow as a first native project.

@@ -5,7 +5,7 @@ English | [한국어](09-and-or.ko.md)
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
 - Difficulty: ★★☆☆☆ (2/5)
-- Prerequisites: [08 — Break](08-break.md)
+- Prerequisites: [08 — If](08-if.md)
 - Topic: conditions
 - Result: a program that judges combined conditions
 

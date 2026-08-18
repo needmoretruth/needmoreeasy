@@ -5,7 +5,7 @@
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
 - 난이도: ★★☆☆☆ (2/5)
-- 선수 지식: [08 — 멈춤](08-break.ko.md)
+- 선수 지식: [08 — 조건](08-if.ko.md)
 - 주제: 조건
 - 결과물: 조건을 합쳐 판단하는 프로그램
 

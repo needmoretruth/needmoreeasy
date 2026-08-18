@@ -44,7 +44,7 @@ no quotes or parentheses.
 
 Shortcuts work from the start: `nme r hello` runs, and if `hello.nme` is the
 only program in the folder, plain `nme r` finds it for you. Later, `nme install
-<package>` installs a Python package (guide [24](guides/24-python-packages.md)). `nme c hello`
+<package>` installs a Python package (guide [64](guides/64-python-packages.md)). `nme c hello`
 checks a program without running it, and `nme b hello` shows the readable
 Python it turns into — add `-o hello.py` to save it as a file.
 
@@ -160,10 +160,10 @@ show friends
 ```
 
 Nothing above needed quotes, brackets, colons or `=`. **Sentence syntax is
-not a beginner's toy that you leave behind — it is the language.** Guides 01–12
-and 86–88 are written this way from start to finish, and they cover output,
-questions, lists, loops, conditions, files of your own making, stories, the
-screen, a stopwatch and cooldowns.
+not a beginner's toy that you leave behind — it is the language.** Guides 01–16
+are written this way from start to finish, and they cover output, questions,
+lists, loops, conditions, randomness, stories, the screen, a stopwatch and
+cooldowns.
 
 Two more levels exist for the day you want them: a shorter beginner syntax,
 and ordinary Python, which NME keeps exactly as you typed it. Neither is
@@ -212,7 +212,7 @@ want a more conversational phrase.
 
 ## Where to continue
 
-- [Learning guides](guides/index.md): 73 small progressive guides, each with
+- [Learning guides](guides/index.md): 88 small progressive guides, each with
   difficulty, prerequisites, topic, and result
 - [Learning path](tutorial.md): seven projects from Hello World to a compiler
 - [Language reference](language.md): exact rules for all three levels

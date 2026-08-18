@@ -5,11 +5,11 @@ English | [한국어](53-sets.ko.md)
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
 - Difficulty: ★★★★★ (5/5)
-- Prerequisites: [36 — Word count](36-word-count.md), [39 — Sorting](39-sorting.md)
+- Prerequisites: [42 — Word count](42-word-count.md), [52 — Sorting](52-sorting.md)
 - Topic: sets & data
 - Result: using a Python set to find unique words in a text file, then unique letters in a sentence
 
-Guide [36](36-word-count.md) counted every word, repeats and all. A set keeps
+Guide [42](42-word-count.md) counted every word, repeats and all. A set keeps
 only the unique values, so `set(words)` answers a different question: how many
 *different* words are there?
 
@@ -23,7 +23,7 @@ only the unique values, so `set(words)` answers a different question: how many
    quick and lazy are fun words to say
    ```
 
-2. Read it and split it (guide [36](36-word-count.md)); `set(words)` drops the
+2. Read it and split it (guide [42](42-word-count.md)); `set(words)` drops the
    repeats, so `len(set(words))` counts the different words:
 
    ```nme
@@ -38,7 +38,7 @@ only the unique values, so `set(words)` answers a different question: how many
    no repeats, so the same word can never sit inside twice.
 
 3. Sets have no positions, so `my_set[0]` fails. `sorted(...)` (guide
-   [39](39-sorting.md)) converts one back to an ordered list, and `in` checks
+   [52](52-sorting.md)) converts one back to an ordered list, and `in` checks
    membership:
 
    ```nme
