@@ -20,33 +20,25 @@ program never leaves that tab.
 The in-browser engine cannot use files, the network, or installed packages. When
 a program needs those, follow the install steps below.
 
-The five minutes below start after installing. If `nme --version` does not work
-yet, follow the [Windows, macOS and Linux install guide](install.md) first.
+**Do the five minutes below right there.** Nothing needs installing. The day a
+program of yours needs to save a file or reach the network, read the
+[install guide](install.md). If you have already installed it, the same programs
+run from a file — put one in `hello.nme` and type `nme run hello`.
 
 ## 1. Hello World
 
-Create a UTF-8 file named `hello.nme` (in the same folder where you ran
-`nme --version`; any text editor works — on Windows, Notepad saves UTF-8 by
-default):
+Type this into the writing box and press **Run**.
 
 ```nme
 show Hello world!
 ```
 
-Run it:
+`Hello world!` appears. You just wrote a complete program, and there are no
+quotes and no parentheses in it.
 
-```sh
-nme run hello
-```
-
-Expected output: `Hello world!` You just wrote a complete program. There are
-no quotes or parentheses.
-
-Shortcuts work from the start: `nme r hello` runs, and if `hello.nme` is the
-only program in the folder, plain `nme r` finds it for you. Later, `nme install
-<package>` installs a Python package (guide [64](guides/64-python-packages.md)). `nme c hello`
-checks a program without running it, and `nme b hello` shows the readable
-Python it turns into — add `-o hello.py` to save it as a file.
+To keep what you wrote, move it into one of **File 1, 2 or 3** with the buttons
+above the box. Those three stay in your browser, so opening an example to look
+at it does not take your work away.
 
 ## 2. Have a conversation
 
@@ -122,14 +114,11 @@ if guess is greater than answer
     show Go lower
 ```
 
-The game asks a question and waits for your typed answer. Run the complete
-Korean version:
-
-```sh
-nme run examples/guessing-game.ko
-```
-
-The English version is [`examples/guessing-game.nme`](../examples/guessing-game.nme):
+The game asks a question and waits for your typed answer. On the site, the
+**Guessing game** chip above the writing box opens the finished one. If you
+have installed NME, the repository has it too
+([English](../examples/guessing-game.nme) ·
+[Korean](../examples/guessing-game.ko.nme)):
 
 ```sh
 nme run examples/guessing-game
