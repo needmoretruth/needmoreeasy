@@ -6,9 +6,7 @@ fn needmorecoin_uses_only_korean_sentence_source() {
 
     assert!(
         source.chars().all(|ch| {
-            ch.is_whitespace()
-                || ch.is_ascii_digit()
-                || ('가'..='힣').contains(&ch)
+            ch.is_whitespace() || ch.is_ascii_digit() || ('가'..='힣').contains(&ch)
         }),
         "needmorecoin.ko.nme must contain only Hangul, decimal digits, and whitespace"
     );

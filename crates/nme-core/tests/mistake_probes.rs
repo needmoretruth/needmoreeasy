@@ -60,7 +60,11 @@ fn check(case: &Refusal) {
     );
     // Both languages carry the same information. The example spellings differ
     // on purpose, so only the writer's own word is compared across the two.
-    assert_ne!(english, korean, "{}: the Korean text is the English text", case.probe);
+    assert_ne!(
+        english, korean,
+        "{}: the Korean text is the English text",
+        case.probe
+    );
     if case.names.is_empty() {
         return;
     }
@@ -79,9 +83,8 @@ fn check(case: &Refusal) {
 }
 
 fn accepts(probe: &str, source: &str, expected: &str) {
-    let python = transpile(source).unwrap_or_else(|problems| {
-        panic!("{probe}: expected this to compile, got {problems:?}")
-    });
+    let python = transpile(source)
+        .unwrap_or_else(|problems| panic!("{probe}: expected this to compile, got {problems:?}"));
     assert!(
         python.contains(expected),
         "{probe}: expected `{expected}`, got {python:?}"
@@ -789,12 +792,24 @@ fn a_value_that_would_become_text_is_refused() {
 
 #[test]
 fn punctuation_a_keyboard_produces_is_read_as_written() {
-    accepts("j-en-03", "repeat 3 times, show hello\n", "for _ in range(3): print(\"hello\")");
-    accepts("l-en-06", "ask age as a number How old are you?\n", "age = int(input(\"How old are you?\" + \" \"))");
+    accepts(
+        "j-en-03",
+        "repeat 3 times, show hello\n",
+        "for _ in range(3): print(\"hello\")",
+    );
+    accepts(
+        "l-en-06",
+        "ask age as a number How old are you?\n",
+        "age = int(input(\"How old are you?\" + \" \"))",
+    );
     accepts("p-ko-04", "2초 기다려？\n", "__import__(\"time\").sleep(2)");
     accepts("p-ko-05", "안녕 말해줘！\n", "print(\"안녕\")");
     accepts("p-ko-06", "안녕 말해줘、\n", "print(\"안녕\")");
-    accepts("p-ko-14", "친구들은 목록 민수、지안\n", "친구들 = [\"민수\", \"지안\"]");
+    accepts(
+        "p-ko-14",
+        "친구들은 목록 민수、지안\n",
+        "친구들 = [\"민수\", \"지안\"]",
+    );
 }
 /// A line of ordinary writing prints itself, unchanged.
 fn prints(source: &str) {

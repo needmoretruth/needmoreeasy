@@ -2294,20 +2294,24 @@ fn unreadable_block_header_before(
     index: usize,
     block_header_lines: &HashSet<usize>,
 ) -> Option<Span> {
-    lines[..index].iter().enumerate().rev().find_map(|(at, line)| {
-        if block_header_lines.contains(&at) || line.tokens.is_empty() {
-            return None;
-        }
-        let text = token_text(source, &line.tokens);
-        if is_valid_python_header(text) || is_valid_python_statement(text) {
-            return None;
-        }
-        let python_suite_word = matches!(
-            line.tokens[0].tok,
-            Tok::For | Tok::While | Tok::If | Tok::Def | Tok::Class | Tok::With
-        );
-        (is_header_shape(&line.tokens) || python_suite_word).then_some(line.span)
-    })
+    lines[..index]
+        .iter()
+        .enumerate()
+        .rev()
+        .find_map(|(at, line)| {
+            if block_header_lines.contains(&at) || line.tokens.is_empty() {
+                return None;
+            }
+            let text = token_text(source, &line.tokens);
+            if is_valid_python_header(text) || is_valid_python_statement(text) {
+                return None;
+            }
+            let python_suite_word = matches!(
+                line.tokens[0].tok,
+                Tok::For | Tok::While | Tok::If | Tok::Def | Tok::Class | Tok::With
+            );
+            (is_header_shape(&line.tokens) || python_suite_word).then_some(line.span)
+        })
 }
 
 fn unreadable_block_header_diagnostic(span: Span) -> Diagnostic {
@@ -7978,7 +7982,9 @@ fn broken_set_connector(source: &str, target: &str, value: &[Token]) -> Option<D
     let misspelled_connector = value.len() == 2
         && matches!(value[1].tok, Tok::Int { .. } | Tok::Float { .. })
         && token_word(first).is_some_and(|word| {
-            !CONNECTORS.iter().any(|known| word.eq_ignore_ascii_case(known))
+            !CONNECTORS
+                .iter()
+                .any(|known| word.eq_ignore_ascii_case(known))
                 && CONNECTORS.iter().any(|known| one_typo_away(word, known))
         });
     if !operator && !misspelled_connector {
@@ -10056,7 +10062,8 @@ fn near_miss_action_word(
             .find(|(written, _)| word.eq_ignore_ascii_case(written))
             .map(|(_, action)| *action)
     };
-    if let Some(action) = name_word(&tokens[start]).and_then(|word| lookup(word, COMMAND_WORDS_LEADING))
+    if let Some(action) =
+        name_word(&tokens[start]).and_then(|word| lookup(word, COMMAND_WORDS_LEADING))
     {
         return Some((start, action));
     }
@@ -10110,10 +10117,7 @@ fn unreadable_action_token(tokens: &[Token], known_names: &HashSet<String>) -> u
     // `please` and `좀` are politeness, never the action, so they are never
     // the word a beginner is told about.
     let start = leading_sentence_fillers(tokens);
-    let hangul_line = tokens
-        .iter()
-        .filter_map(name_word)
-        .any(is_hangul);
+    let hangul_line = tokens.iter().filter_map(name_word).any(is_hangul);
     if hangul_line {
         (start..tokens.len())
             .rev()
@@ -10333,7 +10337,9 @@ fn statement_does_nothing(tokens: &[Token]) -> Option<Diagnostic> {
         );
         if let Some(split) = unglue(word) {
             return Some(problem.with_bilingual_hint(
-                format!("`{word}` looks like two words with the space missing; did you mean `{split}`?"),
+                format!(
+                    "`{word}` looks like two words with the space missing; did you mean `{split}`?"
+                ),
                 format!("`{word}`는 띄어쓰기가 빠진 두 낱말로 보여요. 혹시 `{split}`인가요?"),
             ));
         }
@@ -10365,7 +10371,7 @@ fn statement_does_nothing(tokens: &[Token]) -> Option<Diagnostic> {
             .with_bilingual_hint(
                 format!("remove the `:` and write `{text}`"),
                 format!("`:`를 지우고 `{text}`처럼 적어 주세요"),
-            )
+            ),
         );
     }
     if bare_comparison(tokens) {
@@ -10464,8 +10470,7 @@ fn bare_comparison(tokens: &[Token]) -> bool {
                 | Tok::Semi
                 | Tok::Colon
                 | Tok::Dot
-        ) || (is_python_keyword(&token.tok)
-            && !matches!(token.tok, Tok::Is | Tok::Not | Tok::In))
+        ) || (is_python_keyword(&token.tok) && !matches!(token.tok, Tok::Is | Tok::Not | Tok::In))
     }) {
         return false;
     }

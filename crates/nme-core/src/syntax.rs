@@ -143,8 +143,13 @@ pub enum Value {
     Python(Code),
     Text(TextTemplate),
     Literal(Literal),
-    RandomInteger { low: Code, high: Code },
-    RandomChoice { choices: Vec<String> },
+    RandomInteger {
+        low: Code,
+        high: Code,
+    },
+    RandomChoice {
+        choices: Vec<String>,
+    },
     /// `list of Mina, Ada` / `목록 민수, 지안`. Each item is read the same way a
     /// single sentence value is, so numbers stay numbers and words become text
     /// without the writer choosing quotes.

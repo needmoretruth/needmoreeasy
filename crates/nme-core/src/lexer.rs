@@ -200,9 +200,15 @@ fn sentence_text_token(character: char) -> Option<Tok> {
     match character {
         '\\' => None,
         '\u{ff0c}' | '\u{3001}' => Some(Tok::Comma),
-        '\u{3002}' => Some(Tok::Name { name: ".".to_string() }),
-        '\u{ff1f}' => Some(Tok::Name { name: "?".to_string() }),
-        '\u{ff01}' => Some(Tok::Name { name: "!".to_string() }),
+        '\u{3002}' => Some(Tok::Name {
+            name: ".".to_string(),
+        }),
+        '\u{ff1f}' => Some(Tok::Name {
+            name: "?".to_string(),
+        }),
+        '\u{ff01}' => Some(Tok::Name {
+            name: "!".to_string(),
+        }),
         _ => Some(Tok::Name {
             name: character.to_string(),
         }),
