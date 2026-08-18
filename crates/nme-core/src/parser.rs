@@ -64,7 +64,24 @@ const WHEN_WORDS_KO: &[&str] = &["만약", "만약에", "만일", "혹시"];
 const WHILE_WORDS_EN: &[&str] = &["while"];
 const WHILE_WORDS_KO: &[&str] = &["동안", "하는동안", "할동안"];
 const BREAK_WORDS_EN: &[&str] = &["break", "breakhere"];
-const BREAK_WORDS_KO: &[&str] = &["멈춰", "멈춰라", "중단", "반복멈춰", "여기서멈춰"];
+const BREAK_WORDS_KO: &[&str] = &[
+    "멈춰",
+    "멈춰줘",
+    "멈춰라",
+    "멈추기",
+    "그만해",
+    "정지해",
+    "종료해",
+    "중단",
+    "반복멈춰",
+    "여기서멈춰",
+];
+/// Loop control spelled with words that are ordinary Python names as well
+/// (`stop`, `quit`). They mean `break`/`continue` only inside an NME block,
+/// where a line holding nothing but such a word can only be a mistake —
+/// outside one, Python keeps them byte for byte.
+const BREAK_ALIAS_WORDS_EN: &[&str] = &["stop", "stophere", "exitloop", "quit"];
+const CONTINUE_ALIAS_WORDS_EN: &[&str] = &["keepgoing", "carryon"];
 const ELSE_WORDS_EN: &[&str] = &["else", "otherwise"];
 const ELSE_WORDS_KO: &[&str] = &[
     "아니면",
@@ -74,8 +91,8 @@ const ELSE_WORDS_KO: &[&str] = &[
     "그렇지않으면만약",
     "그렇지않으면만약에",
 ];
-const END_WORDS_EN: &[&str] = &["end"];
-const END_WORDS_KO: &[&str] = &["끝"];
+const END_WORDS_EN: &[&str] = &["end", "finish", "done"];
+const END_WORDS_KO: &[&str] = &["끝", "종료", "마침"];
 const USE_WORDS_EN: &[&str] = &["use", "load", "get", "import"];
 const USE_WORDS_KO: &[&str] = &[
     "사용",
@@ -131,7 +148,26 @@ const KOREAN_PARTICLES: &[&str] = &[
 ];
 
 const SET_WORDS_EN: &[&str] = &["set", "save", "remember"];
-const SET_WORDS_KO: &[&str] = &["저장", "저장해", "기억해", "기억해줘", "설정", "설정해"];
+const SET_WORDS_KO: &[&str] = &[
+    "저장",
+    "저장해",
+    "저장해줘",
+    "기억해",
+    "기억해줘",
+    "설정",
+    "설정해",
+    "설정해줘",
+    "지정",
+    "지정해",
+    "정해",
+    "만들어",
+];
+/// Particles that mark the name a value is being saved into when Korean puts
+/// that name first: `점수를 0으로`, `점수가 0`, `점수에 0 저장해`.
+const SET_TARGET_PARTICLES_KO: &[&str] = &["을", "를", "이", "가", "에"];
+/// Spoken endings that belong to the sentence rather than to the value.
+/// `점수는 0이다` saves the number zero, not the text `0이다`.
+const VALUE_ENDINGS_KO: &[&str] = &["입니다", "이에요", "예요", "이다", "으로", "로"];
 const UPDATE_ADD_WORDS_EN: &[&str] = &["add", "increase", "increment", "plus"];
 const UPDATE_ADD_WORDS_KO: &[&str] = &["더해", "더해줘", "올려", "올려줘", "늘려", "늘려줘"];
 const UPDATE_SUBTRACT_WORDS_EN: &[&str] = &["subtract", "decrease", "decrement", "minus", "remove"];
@@ -160,7 +196,17 @@ const SECOND_WORDS_EN: &[&str] = &["second", "seconds", "sec", "secs"];
 const SECOND_WORDS_KO: &[&str] = &["초동안", "초간", "초만", "초"];
 const WAIT_FILLER_WORDS: &[&str] = &["for", "about", "동안", "간"];
 const CONTINUE_WORDS_EN: &[&str] = &["skip", "skipthis", "skipit", "nextone"];
-const CONTINUE_WORDS_KO: &[&str] = &["건너뛰어", "건너뛰어줘", "건너뛰기", "건너뛰자", "넘어가", "넘어가줘"];
+const CONTINUE_WORDS_KO: &[&str] = &[
+    "건너뛰어",
+    "건너뛰어줘",
+    "건너뛰기",
+    "건너뛰자",
+    "넘어가",
+    "넘어가줘",
+    "계속해",
+    "넘겨",
+    "다음",
+];
 const APPEND_WORDS_EN: &[&str] = &["append", "push"];
 const APPEND_WORDS_KO: &[&str] = &["넣어", "넣어줘", "추가해", "추가해줘", "붙여", "붙여줘"];
 const APPEND_CONNECTORS_EN: &[&str] = &["to", "into", "onto"];
@@ -224,6 +270,33 @@ const EACH_SUFFIX_KO: &str = "마다";
 const EACH_CONTAINER_PARTICLES_KO: &[&str] = &["가운데", "안의", "속의", "에서", "중", "의"];
 const SENTENCE_FILLERS: &[&str] = &["please", "좀", "혹시", "제발"];
 const COMMAND_ENDINGS: &[&str] = &["?", "!"];
+/// Counting words accepted wherever a repeat count or a number of seconds is
+/// expected. They are read only in those two places, never as a name, so an
+/// ordinary variable called `one` still means itself everywhere else.
+const NUMBER_WORDS_EN: &[&str] = &[
+    "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "once",
+    "twice",
+];
+/// Written value of each word in [`NUMBER_WORDS_EN`], in the same order.
+const NUMBER_VALUES_EN: &[&str] = &[
+    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "1", "2",
+];
+/// Both Korean counting systems: the native `하나`…`열` and the Sino-Korean
+/// `일`…`십`, each in the plain and the counter-attached spelling.
+const NUMBER_WORDS_KO: &[&str] = &[
+    "하나", "한", "둘", "두", "셋", "세", "넷", "네", "다섯", "여섯", "일곱", "여덟", "아홉", "열",
+    "일", "이", "삼", "사", "오", "육", "칠", "팔", "구", "십",
+];
+/// Written value of each word in [`NUMBER_WORDS_KO`], in the same order.
+const NUMBER_VALUES_KO: &[&str] = &[
+    "1", "1", "2", "2", "3", "3", "4", "4", "5", "6", "7", "8", "9", "10", "1", "2", "3", "4", "5",
+    "6", "7", "8", "9", "10",
+];
+/// Counter words that mark a repeat count. `times` and `번` may stand alone;
+/// the rest are ordinary nouns too, so they only count when a number is
+/// written right in front of them.
+const TIMES_WORDS_EN: &[&str] = &["times", "time", "loops", "loop", "rounds", "round"];
+const TIMES_WORDS_KO: &[&str] = &["번", "회", "차례", "판"];
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum MatchMode {
@@ -469,6 +542,26 @@ pub fn parse_program(
         } else if is_continue && depth > 0 {
             // `skip` and `건너뛰어` are ordinary Python names on their own, so
             // like `break` they are only read as NME inside an NME block.
+            Some(Ok(Some(NmeStmt::Continue)))
+        } else if depth > 0
+            && block_only_loop_control(
+                &line.tokens,
+                &known_names,
+                BREAK_WORDS_EN,
+                BREAK_WORDS_KO,
+                BREAK_ALIAS_WORDS_EN,
+            )
+        {
+            Some(Ok(Some(NmeStmt::Break)))
+        } else if depth > 0
+            && block_only_loop_control(
+                &line.tokens,
+                &known_names,
+                CONTINUE_WORDS_EN,
+                CONTINUE_WORDS_KO,
+                CONTINUE_ALIAS_WORDS_EN,
+            )
+        {
             Some(Ok(Some(NmeStmt::Continue)))
         } else if branch_shape.is_some()
             && depth == 0
@@ -880,6 +973,31 @@ fn exact_continue(tokens: &[Token]) -> bool {
     consumed.is_some_and(|consumed| tokens[consumed..].iter().all(is_command_ending))
 }
 
+/// Loop control written a way that is only safe to read inside an NME block:
+/// either with a word Python would keep as a name (`stop`, `quit`), or with
+/// one character mistyped (`brek`, `멈처`, `skipp`, `건너뛰여`).
+///
+/// A name the program has already set is never claimed, so a variable that
+/// happens to sit one edit from `break` keeps its own meaning.
+fn block_only_loop_control(
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+    words_en: &[&str],
+    words_ko: &[&str],
+    alias_en: &[&str],
+) -> bool {
+    if tokens.is_empty() {
+        return false;
+    }
+    if name_word(&tokens[0]).is_some_and(|word| known_names.contains(word)) {
+        return false;
+    }
+    let consumed = action_phrase_at(tokens, 0, alias_en, MatchMode::Exact)
+        .or_else(|| action_phrase_at(tokens, 0, words_en, MatchMode::Recover))
+        .or_else(|| action_phrase_at(tokens, 0, words_ko, MatchMode::Recover));
+    consumed.is_some_and(|consumed| tokens[consumed..].iter().all(is_command_ending))
+}
+
 fn branch_shape(tokens: &[Token]) -> Option<BranchShape> {
     if tokens.is_empty() {
         return None;
@@ -929,6 +1047,7 @@ fn is_header_shape(tokens: &[Token]) -> bool {
     }
     when_action_at(tokens, 0, MatchMode::Exact).is_some()
         || english_for_each_start(tokens, MatchMode::Exact).is_some()
+        || english_for_each_start(tokens, MatchMode::Recover).is_some()
         || korean_for_each_shape(tokens)
         || repeat_action_at(tokens, 0, MatchMode::Exact).is_some()
         || matches!(tokens[0].tok, Tok::While)
@@ -2159,9 +2278,14 @@ fn classify(
     }
 
     // `for each name in names` is not valid Python either, and `for` is a
-    // Python keyword, so it has to be recognized before the gate below.
+    // Python keyword, so it has to be recognized before the gate below. The
+    // same is true of `for eahc name in names`: without the recovery here,
+    // the keyword gate would hand the whole line back to Python.
     if english_for_each_start(tokens, MatchMode::Exact).is_some() {
         return match_for_each(source, tokens, block, known_names, MatchMode::Exact);
+    }
+    if english_for_each_start(tokens, MatchMode::Recover).is_some() {
+        return match_for_each(source, tokens, block, known_names, MatchMode::Recover);
     }
 
     if is_python_keyword(&tokens[0].tok) && !matches!(tokens[0].tok, Tok::If) {
@@ -2355,6 +2479,14 @@ fn classify(
         match_set(source, tokens, known_names, MatchMode::Recover),
         match_use_module(source, tokens, known_names, MatchMode::Recover),
         match_file_io(source, tokens, known_names, MatchMode::Recover),
+        // Waiting, adding to a list, and looping over a list are ordinary
+        // first-week statements, so their action words earn the same one-edit
+        // repair the older ones have always had.
+        match_wait(source, tokens, known_names, MatchMode::Recover),
+        match_break(source, tokens, known_names, MatchMode::Recover),
+        match_continue(tokens, MatchMode::Recover),
+        match_append(source, tokens, known_names, MatchMode::Recover),
+        match_for_each(source, tokens, block, known_names, MatchMode::Recover),
     ];
     let mut candidates = Vec::new();
     let mut recovery_problems = Vec::new();
@@ -3223,16 +3355,17 @@ fn match_wait(
 ) -> Result<Option<NmeStmt>, Diagnostic> {
     // `… then show Time to sleep` ends in a waiting word but is a condition
     // with a message, not a wait. The opening word decides the line.
+    let action_at = leading_sentence_fillers(tokens);
     if tokens
-        .first()
+        .get(action_at)
         .is_some_and(|token| starts_a_different_statement(token))
     {
         return Ok(None);
     }
-    if let Some(consumed) = action_phrase_at(tokens, 0, WAIT_WORDS_EN, mode)
-        .or_else(|| action_phrase_at(tokens, 0, WAIT_WORDS_KO, mode))
+    if let Some(consumed) = action_phrase_at(tokens, action_at, WAIT_WORDS_EN, mode)
+        .or_else(|| action_phrase_at(tokens, action_at, WAIT_WORDS_KO, mode))
     {
-        return wait_from(source, tokens, &tokens[consumed..], known_names);
+        return wait_from(source, tokens, &tokens[action_at + consumed..], known_names);
     }
     let Some(action_start) = wait_action_ending(tokens, mode) else {
         return Ok(None);
@@ -3249,6 +3382,12 @@ fn wait_from(
     amount: &[Token],
     known_names: &HashSet<String>,
 ) -> Result<Option<NmeStmt>, Diagnostic> {
+    // `wait two seconds` / `일초 기다려` — the length may be written as a
+    // counting word. It is looked up before the guard below because such a
+    // word is a number, not the ordinary speech the guard protects.
+    if let Some(seconds) = number_word_wait_amount(amount) {
+        return Ok(Some(NmeStmt::Wait { seconds }));
+    }
     // `잠깐 기다려` is ordinary speech, and `잠깐` happens to be a valid Python
     // name, so a wait needs a number or a name the program already knows.
     let mentions_a_number = amount.iter().any(|token| {
@@ -3282,12 +3421,17 @@ fn wait_action_ending(tokens: &[Token], mode: MatchMode) -> Option<usize> {
         .find(|&start| wait_action_at(tokens, start, mode).is_some_and(|used| start + used == end))
 }
 
-fn parse_wait_amount(source: &str, tokens: &[Token]) -> Option<Code> {
+/// Strips the words that surround a wait length without being part of it:
+/// `for`, `about`, `동안`, the unit words, sentence punctuation, and politeness
+/// fillers, wherever the writer put them.
+fn wait_amount_core(tokens: &[Token]) -> &[Token] {
     let mut tokens = tokens;
     // `for` lexes as a Python keyword rather than a word, so it is matched by
     // its token as well as by its spelling.
     while tokens.first().is_some_and(|token| {
-        matches!(token.tok, Tok::For) || token_matches_exact(token, WAIT_FILLER_WORDS)
+        matches!(token.tok, Tok::For)
+            || token_matches_exact(token, WAIT_FILLER_WORDS)
+            || token_matches_exact(token, SENTENCE_FILLERS)
     }) {
         tokens = &tokens[1..];
     }
@@ -3296,9 +3440,24 @@ fn parse_wait_amount(source: &str, tokens: &[Token]) -> Option<Code> {
             || token_matches_exact(token, SECOND_WORDS_EN)
             || token_matches_exact(token, SECOND_WORDS_KO)
             || token_matches_exact(token, WAIT_FILLER_WORDS)
+            || token_matches_exact(token, SENTENCE_FILLERS)
     }) {
         tokens = &tokens[..tokens.len() - 1];
     }
+    tokens
+}
+
+/// A wait length written as one counting word, with or without the Korean
+/// unit attached: `two seconds`, `일초`, `세 초`.
+fn number_word_wait_amount(tokens: &[Token]) -> Option<Code> {
+    let [token] = wait_amount_core(tokens) else {
+        return None;
+    };
+    name_word(token).and_then(|word| number_word_code(word, SECOND_WORDS_KO))
+}
+
+fn parse_wait_amount(source: &str, tokens: &[Token]) -> Option<Code> {
+    let tokens = wait_amount_core(tokens);
     if tokens.is_empty() {
         return None;
     }
@@ -3375,6 +3534,26 @@ fn match_append(
     {
         return Ok(None);
     }
+    // `to friends append Mina` — the connector moved to the front. `to` is
+    // never a name a beginner sets, so this ordering can only be the list
+    // line the writer meant.
+    if tokens.len() > 3
+        && token_matches_exact(&tokens[0], APPEND_CONNECTORS_EN)
+        && name_word(&tokens[1]).is_some()
+    {
+        if let Some(consumed) = action_phrase_at(tokens, 2, APPEND_WORDS_EN, mode) {
+            let target = name_word(&tokens[1])
+                .map(str::to_string)
+                .ok_or_else(|| append_diagnostic(tokens[1].span))?;
+            let value_tokens = trim_command_endings(&tokens[2 + consumed..]);
+            if value_tokens.is_empty() {
+                return Err(append_diagnostic(span_of(tokens)));
+            }
+            let value = parse_value(source, value_tokens, known_names, true)
+                .map_err(|()| append_diagnostic(span_of(tokens)))?;
+            return Ok(Some(NmeStmt::Append { target, value }));
+        }
+    }
     if let Some(consumed) = action_phrase_at(tokens, 0, APPEND_WORDS_EN, mode) {
         let mut end = tokens.len();
         while end > consumed && is_command_ending(&tokens[end - 1]) {
@@ -3400,29 +3579,93 @@ fn match_append(
     }
 
     // Korean puts the action last: `<목록>에 <값> 넣어`.
-    let mut end = tokens.len();
-    while end > 0 && is_command_ending(&tokens[end - 1]) {
-        end -= 1;
-    }
-    let start_at = end.saturating_sub(2);
-    let Some(action_start) = (start_at..end).find(|&start| {
-        action_phrase_at(tokens, start, APPEND_WORDS_KO, mode)
-            .is_some_and(|used| start + used == end)
-    }) else {
-        return Ok(None);
+    let Some(action_start) = korean_append_action_start(tokens, mode) else {
+        return korean_leading_append(source, tokens, known_names, mode);
     };
     if action_start < 2 {
         return Ok(None);
     }
+    let head = &tokens[..action_start];
     // The target particle is what separates `친구들에 민수 넣어` from ordinary
     // speech such as `설탕을 넣어`; without it this is not a list line.
-    let Some(target) = name_word(&tokens[0])
+    let marked: Vec<usize> = head
+        .iter()
+        .enumerate()
+        .filter(|(_, token)| korean_append_target(token).is_some())
+        .map(|(index, _)| index)
+        .collect();
+    // Two words carrying the particle could each be the list, and guessing
+    // between them is exactly what must not happen.
+    let [target_at] = marked[..] else {
+        return Ok(None);
+    };
+    // Only the two ends are read: a list marked in the middle would leave the
+    // value in two pieces with the list name sitting between them.
+    if target_at != 0 && target_at + 1 != head.len() {
+        return Ok(None);
+    }
+    let target = korean_append_target(&head[target_at]).expect("checked above");
+    // `민수를 친구들에 넣어` puts the value first. That order is only claimed
+    // when the list is a name the program already made, so ordinary speech
+    // such as `설탕을 그릇에 넣어` stays speech.
+    if target_at != 0 && !known_names.contains(&target) {
+        return Ok(None);
+    }
+    let value_tokens = if target_at == 0 {
+        head[1..].to_vec()
+    } else {
+        trim_suffix_say_value(&head[..target_at])
+    };
+    if value_tokens.is_empty() {
+        return Ok(None);
+    }
+    let value = parse_value(source, &value_tokens, known_names, true)
+        .map_err(|()| append_diagnostic(span_of(tokens)))?;
+    Ok(Some(NmeStmt::Append { target, value }))
+}
+
+/// The list name a word points at, once its `에`/`한테` particle is removed.
+fn korean_append_target(token: &Token) -> Option<String> {
+    name_word(token)
         .and_then(|word| strip_any_suffix(word, APPEND_TARGET_PARTICLES_KO))
         .map(str::to_string)
+}
+
+/// Index of a Korean list-adding word that closes the line.
+fn korean_append_action_start(tokens: &[Token], mode: MatchMode) -> Option<usize> {
+    let end = trim_command_endings(tokens).len();
+    let start_at = end.saturating_sub(2);
+    (start_at..end).find(|&start| {
+        action_phrase_at(tokens, start, APPEND_WORDS_KO, mode)
+            .is_some_and(|used| start + used == end)
+    })
+}
+
+/// `넣어 친구들에 민수` — the action word may also open the line, the way it
+/// does when the action is dictated first. The list must already exist, which
+/// is what keeps ordinary speech out.
+fn korean_leading_append(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+    mode: MatchMode,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    let Some(consumed) = action_phrase_at(tokens, 0, APPEND_WORDS_KO, mode) else {
+        return Ok(None);
+    };
+    let rest = trim_command_endings(&tokens[consumed..]);
+    if rest.len() < 2 {
+        return Ok(None);
+    }
+    let Some(target) = korean_append_target(&rest[0]).filter(|name| known_names.contains(name))
     else {
         return Ok(None);
     };
-    let value = parse_value(source, &tokens[1..action_start], known_names, true)
+    let value_tokens = trim_suffix_say_value(&rest[1..]);
+    if value_tokens.is_empty() {
+        return Ok(None);
+    }
+    let value = parse_value(source, &value_tokens, known_names, true)
         .map_err(|()| append_diagnostic(span_of(tokens)))?;
     Ok(Some(NmeStmt::Append { target, value }))
 }
@@ -3985,15 +4228,21 @@ fn match_for_each(
 
 /// Index of the loop variable in `for each <name> in <items>`, allowing an
 /// optional leading repeat word.
+///
+/// `for` is a Python keyword only in lower case, so `For each` and `FOR EACH`
+/// arrive as ordinary words; both spellings mean the same loop, exactly as
+/// every other English action word folds case. `foreach` written as one word
+/// is the same header again.
 fn english_for_each_start(tokens: &[Token], mode: MatchMode) -> Option<usize> {
     let start = repeat_action_at(tokens, 0, mode).map_or(0, |(_, consumed)| consumed);
-    if !matches!(tokens.get(start)?.tok, Tok::For) {
+    let opener = tokens.get(start)?;
+    if token_word_matches(opener, "foreach", mode) {
+        return Some(start + 1);
+    }
+    if !matches!(opener.tok, Tok::For) && !token_matches_exact(opener, &["for"]) {
         return None;
     }
-    tokens
-        .get(start + 1)
-        .is_some_and(|token| token_matches_exact(token, EACH_WORDS_EN))
-        .then_some(start + 2)
+    word_matches_any(tokens.get(start + 1)?, EACH_WORDS_EN, mode).then_some(start + 2)
 }
 
 fn match_english_for_each(
@@ -4011,7 +4260,7 @@ fn match_english_for_each(
     };
     if !tokens
         .get(name_at + 1)
-        .is_some_and(|token| matches!(token.tok, Tok::In))
+        .is_some_and(|token| matches!(token.tok, Tok::In) || token_matches_exact(token, &["in"]))
     {
         return Err(for_each_diagnostic(span_of(tokens)));
     }
@@ -4043,19 +4292,33 @@ fn match_english_for_each(
     }))
 }
 
-/// True when the line looks like `<목록>의 <이름>마다 ...`.
-fn korean_for_each_shape(tokens: &[Token]) -> bool {
-    let Some(name_at) = tokens.iter().position(|token| {
+/// Position of the loop variable and of the first token after it, for
+/// `<목록>의 <이름>마다 ...`. The ending may be attached to the name or, as
+/// people often type it, written as a word of its own: `친구 마다`.
+fn korean_for_each_variable(tokens: &[Token]) -> Option<(usize, usize)> {
+    if let Some(name_at) = tokens.iter().position(|token| {
         name_word(token).is_some_and(|word| {
             word.strip_suffix(EACH_SUFFIX_KO)
                 .is_some_and(|base| !base.is_empty())
         })
-    }) else {
+    }) {
+        return Some((name_at, name_at + 1));
+    }
+    let suffix_at = tokens
+        .iter()
+        .position(|token| token_is_exact_name(token, EACH_SUFFIX_KO))?;
+    (suffix_at > 0 && name_word(&tokens[suffix_at - 1]).is_some())
+        .then_some((suffix_at - 1, suffix_at + 1))
+}
+
+/// True when the line looks like `<목록>의 <이름>마다 ...`.
+fn korean_for_each_shape(tokens: &[Token]) -> bool {
+    let Some((name_at, rest_at)) = korean_for_each_variable(tokens) else {
         return false;
     };
     name_at > 0
-        && (repeat_action_at(&tokens[name_at + 1..], 0, MatchMode::Exact).is_some()
-            || tokens[name_at + 1..]
+        && (repeat_action_at(&tokens[rest_at..], 0, MatchMode::Recover).is_some()
+            || tokens[rest_at..]
                 .iter()
                 .any(|token| matches!(token.tok, Tok::Colon)))
 }
@@ -4069,18 +4332,13 @@ fn match_korean_for_each(
 ) -> Result<Option<NmeStmt>, Diagnostic> {
     // The loop variable is the word ending in `마다`; everything before it is
     // the collection.
-    let Some(name_at) = tokens.iter().position(|token| {
-        name_word(token).is_some_and(|word| {
-            word.strip_suffix(EACH_SUFFIX_KO)
-                .is_some_and(|base| !base.is_empty())
-        })
-    }) else {
+    let Some((name_at, rest_at)) = korean_for_each_variable(tokens) else {
         return Ok(None);
     };
     if name_at == 0 {
         return Ok(None);
     }
-    let rest = &tokens[name_at + 1..];
+    let rest = &tokens[rest_at..];
     let colon_at = rest.iter().position(|token| matches!(token.tok, Tok::Colon));
     let repeat_consumed = repeat_action_at(rest, 0, mode).map(|(_, consumed)| consumed);
     // Without a closing repeat word or a colon this is ordinary speech.
@@ -4088,7 +4346,8 @@ fn match_korean_for_each(
         return Ok(None);
     };
     let name = name_word(&tokens[name_at])
-        .and_then(|word| word.strip_suffix(EACH_SUFFIX_KO))
+        .map(|word| word.strip_suffix(EACH_SUFFIX_KO).unwrap_or(word))
+        .filter(|name| !name.is_empty())
         .map(str::to_string)
         .ok_or_else(|| for_each_diagnostic(span_of(tokens)))?;
     let items_tokens = &tokens[..name_at];
@@ -4459,7 +4718,7 @@ fn match_subject_when(
     // a comparison word somewhere in its body.
     if when_action_at(tokens, 0, MatchMode::Recover).is_some()
         || repeat_action_at(tokens, 0, MatchMode::Recover).is_some()
-        || attached_korean_times_sentence(source, tokens).is_some()
+        || attached_korean_times_sentence(source, tokens, known_names).is_some()
         || find_count_marker(tokens, MatchMode::Exact).is_some()
         || ask_action_at(tokens, 0, MatchMode::Recover).is_some()
         || output_action_at(tokens, 0, MatchMode::Recover).is_some()
@@ -5854,7 +6113,7 @@ fn match_times(
     known_names: &HashSet<String>,
     mode: MatchMode,
 ) -> Result<Option<NmeStmt>, Diagnostic> {
-    if let Some((count, body_start)) = attached_korean_times_sentence(source, tokens) {
+    if let Some((count, body_start)) = attached_korean_times_sentence(source, tokens, known_names) {
         let mut body_start = body_start;
         if let Some((_, consumed)) = repeat_action_at(tokens, body_start, mode) {
             body_start += consumed;
@@ -5871,7 +6130,7 @@ fn match_times(
         )?;
         return Ok(Some(NmeStmt::Times { count, inline }));
     }
-    if let Some((count, colon_at)) = attached_korean_times_header(source, tokens) {
+    if let Some((count, colon_at)) = attached_korean_times_header(source, tokens, known_names) {
         let inline = parse_suite_body(
             source,
             &tokens[colon_at + 1..],
@@ -5884,7 +6143,7 @@ fn match_times(
     }
     if let Some((times_at, spelling)) = find_times_colon(tokens, mode) {
         let count_start = repeat_action_at(tokens, 0, mode).map_or(0, |(_, consumed)| consumed);
-        let count = parse_count(source, &tokens[count_start..times_at], spelling)?;
+        let count = parse_count(source, &tokens[count_start..times_at], known_names, spelling)?;
         let colon_at = times_at + 1;
         let inline = parse_suite_body(
             source,
@@ -5904,7 +6163,7 @@ fn match_times(
             && marker_at > 0
             && repeat_action_at(tokens, 0, mode).is_none()
         {
-            let count = parse_count(source, &tokens[..marker_at], spelling)?;
+            let count = parse_count(source, &tokens[..marker_at], known_names, spelling)?;
             let inline = parse_suite_body(
                 source,
                 &tokens[tokens.len()..],
@@ -5922,7 +6181,7 @@ fn match_times(
             && repeat_action_at(tokens, marker_at + 1, mode).is_none()
             && repeat_action_at(tokens, marker_at + 1, MatchMode::Recover).is_none()
         {
-            let count = parse_count(source, &tokens[..marker_at], spelling)?;
+            let count = parse_count(source, &tokens[..marker_at], known_names, spelling)?;
             let mut body_start = marker_at + 1;
             if tokens.get(body_start).is_some_and(is_connector_word) {
                 body_start += 1;
@@ -5944,7 +6203,7 @@ fn match_times(
             if marker_at == 0 {
                 return Err(repeat_count_missing(spelling, tokens[marker_at + 1].span));
             }
-            let count = parse_count(source, &tokens[..marker_at], spelling)?;
+            let count = parse_count(source, &tokens[..marker_at], known_names, spelling)?;
             let mut body_start = marker_at + 1 + consumed;
             if tokens.get(body_start).is_some_and(is_connector_word) {
                 body_start += 1;
@@ -5964,13 +6223,35 @@ fn match_times(
     if let Some((spelling, consumed)) = repeat_action_at(tokens, 0, mode) {
         let Some((relative_marker, marker_spelling)) = find_count_marker(&tokens[consumed..], mode)
         else {
+            // `repeat once`, `repeat twice`, `repeat 3` — the counting word
+            // already says how many, so no counter word is needed.
+            if let Some(token) = tokens.get(consumed).filter(|token| is_written_number(token)) {
+                let count = parse_count(
+                    source,
+                    std::slice::from_ref(token),
+                    known_names,
+                    spelling,
+                )?;
+                let mut body_start = consumed + 1;
+                if tokens.get(body_start).is_some_and(is_connector_word) {
+                    body_start += 1;
+                }
+                let inline = parse_sentence_repeat_body(
+                    source,
+                    &tokens[body_start..],
+                    block,
+                    span_of(&tokens[..body_start]),
+                    known_names,
+                )?;
+                return Ok(Some(NmeStmt::Times { count, inline }));
+            }
             return Err(repeat_count_missing(spelling, tokens[0].span));
         };
         let marker_at = relative_marker + consumed;
         if marker_at == consumed {
             return Err(repeat_count_missing(spelling, tokens[0].span));
         }
-        let count = parse_count(source, &tokens[consumed..marker_at], marker_spelling)?;
+        let count = parse_count(source, &tokens[consumed..marker_at], known_names, marker_spelling)?;
         let mut body_start = marker_at + 1;
         if tokens.get(body_start).is_some_and(is_connector_word) {
             body_start += 1;
@@ -6071,11 +6352,28 @@ fn repeat_action_at(tokens: &[Token], start: usize, mode: MatchMode) -> Option<(
         })
 }
 
-fn parse_count(source: &str, tokens: &[Token], spelling: Spelling) -> Result<Code, Diagnostic> {
+fn parse_count(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+    spelling: Spelling,
+) -> Result<Code, Diagnostic> {
+    let tokens = trim_command_endings(tokens);
     if tokens.is_empty() {
         return Err(repeat_count_missing(spelling, Span::new(0, 0)));
     }
     let span = span_of(tokens);
+    if let [token] = tokens {
+        if let Some(code) = name_word(token).and_then(|word| number_word_code(word, TIMES_WORDS_KO))
+        {
+            return Ok(code);
+        }
+    }
+    // A bare word nobody set would compile to `range(word)` and die with
+    // `NameError`, so it is reported here by name instead.
+    if let Some(word) = unreadable_number_word(tokens, known_names) {
+        return Err(repeat_count_word_diagnostic(word, span));
+    }
     if !is_valid_python_expression(&source[span.start..span.end]) {
         return Err(Diagnostic::bilingual(
             DiagnosticCode::RepeatCountUnparseable,
@@ -6089,6 +6387,67 @@ fn parse_count(source: &str, tokens: &[Token], spelling: Spelling) -> Result<Cod
         ));
     }
     Ok(Code::Source(span))
+}
+
+/// The digits a counting word stands for: `three` and `세` are both `3`.
+fn number_word_digits(word: &str) -> Option<&'static str> {
+    debug_assert_eq!(NUMBER_WORDS_EN.len(), NUMBER_VALUES_EN.len());
+    debug_assert_eq!(NUMBER_WORDS_KO.len(), NUMBER_VALUES_KO.len());
+    if let Some(index) = NUMBER_WORDS_EN
+        .iter()
+        .position(|candidate| word.eq_ignore_ascii_case(candidate))
+    {
+        return Some(NUMBER_VALUES_EN[index]);
+    }
+    NUMBER_WORDS_KO
+        .iter()
+        .position(|candidate| word == *candidate)
+        .map(|index| NUMBER_VALUES_KO[index])
+}
+
+/// True when a token can be the number a counter word counts, so `3 times`
+/// and `세 번` mark a count while `story time` and `이 판` do not.
+fn is_written_number(token: &Token) -> bool {
+    matches!(token.tok, Tok::Int { .. } | Tok::Float { .. })
+        || name_word(token).is_some_and(|word| number_word_digits(word).is_some())
+}
+
+/// A count or a number of seconds written as one word: `세`, `three`, or the
+/// Korean spelling with its unit attached, as in `일초`.
+fn number_word_code(word: &str, units: &[&str]) -> Option<Code> {
+    if let Some(digits) = number_word_digits(word) {
+        return Some(Code::Generated(digits.to_string()));
+    }
+    strip_any_suffix(word, units)
+        .and_then(number_word_digits)
+        .map(|digits| Code::Generated(digits.to_string()))
+}
+
+/// A single word the compiler cannot turn into a number. Left alone it would
+/// reach `range()` or `sleep()` as a name nobody set, so it is named in the
+/// diagnostic instead of failing at run time with `NameError`.
+fn unreadable_number_word<'a>(
+    tokens: &'a [Token],
+    known_names: &HashSet<String>,
+) -> Option<&'a str> {
+    let [token] = tokens else {
+        return None;
+    };
+    let word = name_word(token)?;
+    (!known_names.contains(word) && number_word_digits(word).is_none()).then_some(word)
+}
+
+fn repeat_count_word_diagnostic(word: &str, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::RepeatCountUnparseable,
+        "I couldn't understand how many times to repeat",
+        "몇 번 반복할지 이해하지 못했어요",
+        span,
+    )
+    .with_bilingual_hint(
+        format!("`{word}` is not a number; write `repeat 3 times` or `repeat three times`"),
+        format!("`{word}`은 숫자가 아니에요. `3번 반복해` 또는 `세 번 반복해`처럼 적어 주세요"),
+    )
 }
 
 fn repeat_count_missing(_spelling: Spelling, span: Span) -> Diagnostic {
@@ -6107,8 +6466,26 @@ fn repeat_count_missing(_spelling: Spelling, span: Span) -> Diagnostic {
 fn find_count_marker(tokens: &[Token], mode: MatchMode) -> Option<(usize, Spelling)> {
     tokens.iter().enumerate().find_map(|(index, token)| {
         if token_word_matches(token, TIMES_KEYWORD, mode) {
+            return Some((index, Spelling::English));
+        }
+        if token_is_exact_name(token, TIMES_KEYWORD_KO) {
+            return Some((index, Spelling::Korean));
+        }
+        // `time`, `round`, `회`, `판` are ordinary nouns as well, so they only
+        // mark a count when the number sits right in front of them *and* the
+        // repeat word is next to them. That keeps `show Time to sleep` and
+        // `최대 10회 되풀이할 수 있어요` ordinary sentences.
+        if index == 0 || !is_written_number(&tokens[index - 1]) {
+            return None;
+        }
+        if repeat_action_at(tokens, index + 1, MatchMode::Recover).is_none()
+            && repeat_action_at(tokens, 0, MatchMode::Recover).is_none()
+        {
+            return None;
+        }
+        if token_matches_exact(token, TIMES_WORDS_EN) {
             Some((index, Spelling::English))
-        } else if token_is_exact_name(token, TIMES_KEYWORD_KO) {
+        } else if token_matches_exact(token, TIMES_WORDS_KO) {
             Some((index, Spelling::Korean))
         } else {
             None
@@ -6846,7 +7223,7 @@ fn match_set(
             ));
         }
         let value =
-            parse_value(source, &tokens[value_start..], known_names, true).map_err(|()| {
+            set_value(source, &tokens[value_start..], known_names).map_err(|()| {
                 Diagnostic::bilingual(
                     DiagnosticCode::SaveValueUnparseable,
                     "I couldn't understand the value to save",
@@ -6878,7 +7255,7 @@ fn match_set(
                     "`인사는 안녕하세요`처럼 값을 뒤에 적어 주세요",
                 ));
             }
-            let value = parse_value(source, &tokens[1..], known_names, true).map_err(|()| {
+            let value = set_value(source, &tokens[1..], known_names).map_err(|()| {
                 Diagnostic::bilingual(
                     DiagnosticCode::SaveValueUnparseable,
                     "I couldn't understand the value to save",
@@ -6902,7 +7279,7 @@ fn match_set(
         && token_matches_exact(&tokens[1], &["은", "는"])
     {
         let target = name_word(&tokens[0]).expect("checked name token");
-        let value = parse_value(source, &tokens[2..], known_names, true).map_err(|()| {
+        let value = set_value(source, &tokens[2..], known_names).map_err(|()| {
             Diagnostic::bilingual(
                 DiagnosticCode::SaveValueUnparseable,
                 "I couldn't understand the value to save",
@@ -6918,6 +7295,12 @@ fn match_set(
             target: target.to_string(),
             value,
         }));
+    }
+
+    if tokens.len() >= 2 {
+        if let Some(stmt) = korean_target_first_set(source, tokens, known_names, mode)? {
+            return Ok(Some(stmt));
+        }
     }
 
     if let Some((spelling, consumed)) = set_action_at(tokens, 0, mode) {
@@ -6972,7 +7355,7 @@ fn match_set(
             ));
         }
         let value =
-            parse_value(source, &tokens[value_start..], known_names, true).map_err(|()| {
+            set_value(source, &tokens[value_start..], known_names).map_err(|()| {
                 Diagnostic::bilingual(
                     DiagnosticCode::SaveValueUnparseable,
                     "I couldn't understand the value to save",
@@ -6990,6 +7373,128 @@ fn match_set(
         }));
     }
     Ok(None)
+}
+
+/// The number a value region holds once the sentence's own tail is taken off:
+/// a full stop, semicolon, comma, or exclamation mark the writer ended with,
+/// and the Korean endings `이다`/`입니다`/`이에요`/`예요`/`으로`/`로`.
+///
+/// Only a number is recovered this way. `인사는 안녕하세요` ends in `예요` too,
+/// and it is text that must survive exactly as written.
+fn number_value_code(source: &str, tokens: &[Token]) -> Option<Code> {
+    let mut end = tokens.len();
+    while end > 1
+        && tokens.get(end - 1).is_some_and(|token| {
+            is_command_ending(token)
+                || matches!(token.tok, Tok::Semi | Tok::Comma)
+                || token_matches_exact(token, VALUE_ENDINGS_KO)
+        })
+    {
+        end -= 1;
+    }
+    let [token] = &tokens[..end] else {
+        return None;
+    };
+    let span = token.span;
+    match token.tok {
+        Tok::Int { .. } => Some(Code::Source(span)),
+        // `0.` is a Python float, but at the end of a written sentence the
+        // dot is a full stop: there are no digits after it.
+        Tok::Float { .. } => {
+            let text = &source[span.start..span.end];
+            match text.strip_suffix('.') {
+                Some(digits) if !digits.is_empty() && digits.bytes().all(|b| b.is_ascii_digit()) => {
+                    Some(Code::Source(Span::new(span.start, span.end - 1)))
+                }
+                Some(_) => None,
+                None => Some(Code::Source(span)),
+            }
+        }
+        _ => None,
+    }
+}
+
+/// Reads the value of an assignment, taking sentence punctuation and spoken
+/// endings off a number first.
+fn set_value(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+) -> Result<Value, ()> {
+    if let Some(code) = number_value_code(source, tokens) {
+        return Ok(Value::Python(code));
+    }
+    parse_value(source, tokens, known_names, true)
+}
+
+/// `점수를 0으로` · `점수가 0` · `점수에 0 저장해` · `점수를 0으로 만들어`.
+///
+/// Korean marks the name being set with a particle and puts any saving word
+/// last. Without a saving word the value must be a number, so ordinary speech
+/// such as `강을 따라 집으로 갑니다` is never turned into an assignment.
+fn korean_target_first_set(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+    mode: MatchMode,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    let Some(target) = name_word(&tokens[0])
+        .and_then(|word| strip_any_suffix(word, SET_TARGET_PARTICLES_KO))
+        .map(str::to_string)
+    else {
+        return Ok(None);
+    };
+    let mut end = trim_command_endings(tokens).len();
+    let mut saving_word = false;
+    if let Some(start) = (end.saturating_sub(2)..end).find(|&start| {
+        start >= 1
+            && action_phrase_at(tokens, start, SET_WORDS_KO, mode)
+                .is_some_and(|consumed| start + consumed == end)
+    }) {
+        end = start;
+        saving_word = true;
+    }
+    let value_tokens = &tokens[1..end];
+    if value_tokens.is_empty() {
+        return Ok(None);
+    }
+    let number = number_value_code(source, value_tokens);
+    if !saving_word && number.is_none() {
+        return Ok(None);
+    }
+    let value = match number {
+        Some(code) => Value::Python(code),
+        None => {
+            let trimmed = trim_value_endings(value_tokens);
+            parse_value(source, &trimmed, known_names, true).map_err(|()| {
+                Diagnostic::bilingual(
+                    DiagnosticCode::SaveValueUnparseable,
+                    "I couldn't understand the value to save",
+                    "저장할 값을 이해하지 못했어요",
+                    span_of(value_tokens),
+                )
+                .with_bilingual_hint(
+                    "write a number, name, or plain sentence",
+                    "숫자, 이름, 또는 평범한 문장을 적어 주세요",
+                )
+            })?
+        }
+    };
+    Ok(Some(NmeStmt::Set { target, value }))
+}
+
+/// Drops a trailing `으로`/`로` written as its own word, which marks a value
+/// in Korean without being part of it.
+fn trim_value_endings(tokens: &[Token]) -> Vec<Token> {
+    let mut value = tokens.to_vec();
+    while value.len() > 1
+        && value
+            .last()
+            .is_some_and(|token| token_matches_exact(token, &["으로", "로"]))
+    {
+        value.pop();
+    }
+    value
 }
 
 fn set_action_at(tokens: &[Token], start: usize, mode: MatchMode) -> Option<(Spelling, usize)> {
@@ -8264,25 +8769,93 @@ fn action_phrase_at(
         if !all_words {
             continue;
         }
-        let exact_matches = expected
-            .iter()
-            .filter(|candidate| actual.eq_ignore_ascii_case(candidate))
-            .count();
-        if exact_matches == 1 {
-            return Some(consumed);
-        }
-        if exact_matches > 1 {
-            continue;
-        }
-        let recovered_matches = expected
-            .iter()
-            .filter(|candidate| word_matches(&actual, candidate, mode))
-            .count();
-        if recovered_matches == 1 {
-            return Some(consumed);
+        // Several spellings of the *same* action tied at the best rank still
+        // mean that action (`건너뛰여` is equally close to `건너뛰어` and
+        // `건너뛰기`, and both are `continue`), so only an exact word written
+        // twice in one table is treated as a table mistake worth skipping.
+        if let Some((best, matches)) = best_action_rank(&actual, expected, mode) {
+            if best > 0 || matches == 1 {
+                return Some(consumed);
+            }
         }
     }
     None
+}
+
+/// The best (lowest) repair rank among `expected`, and how many candidates
+/// share it. One candidate at the best rank is a confident match; several are
+/// a tie, which no amount of guessing can resolve.
+fn best_action_rank(actual: &str, expected: &[&str], mode: MatchMode) -> Option<(u8, usize)> {
+    let mut best: Option<u8> = None;
+    let mut matches = 0usize;
+    for candidate in expected {
+        let Some(rank) = action_recovery_rank(actual, candidate, mode) else {
+            continue;
+        };
+        match best {
+            Some(current) if rank > current => {}
+            Some(current) if rank == current => matches += 1,
+            _ => {
+                best = Some(rank);
+                matches = 1;
+            }
+        }
+    }
+    best.map(|rank| (rank, matches))
+}
+
+/// Worst repair rank an action word may still be recovered from.
+const RECOVERY_RANK_WORST: u8 = 3;
+
+/// How far a written word is from one action word, lower being a better
+/// repair. Ranking matters because the Korean output words overlap by design:
+/// `말해조` is a whole-word repair of `말해줘` (rank 1) but only a
+/// dropped-character repair of `말해` (rank 2), so the writer plainly meant
+/// `말해줘`. While both merely counted as "one edit" the match looked
+/// ambiguous, recovery switched itself off, and the typo was printed instead.
+fn action_recovery_rank(actual: &str, expected: &str, mode: MatchMode) -> Option<u8> {
+    if actual.eq_ignore_ascii_case(expected) {
+        return Some(0);
+    }
+    if mode == MatchMode::Exact || actual.chars().count() < 2 {
+        return None;
+    }
+    let actual = actual
+        .chars()
+        .flat_map(char::to_lowercase)
+        .collect::<String>();
+    let expected = expected
+        .chars()
+        .flat_map(char::to_lowercase)
+        .collect::<String>();
+    if one_typo_away(&actual, &expected) {
+        // A replaced or swapped character keeps the word whole; adding or
+        // dropping one turns a longer action word into a shorter one.
+        return Some(u8::from(actual.chars().count() != expected.chars().count()) + 1);
+    }
+    action_typo_away(&actual, &expected).then_some(RECOVERY_RANK_WORST)
+}
+
+/// The action words a misspelling is equally close to, when there is more
+/// than one. Naming them is what turns a silent non-match into the ambiguity
+/// diagnostic a writer can act on.
+fn tied_action_words(token: &Token, expected: &[&str]) -> Vec<String> {
+    let Some(actual) = token_word(token) else {
+        return Vec::new();
+    };
+    let Some((best, matches)) = best_action_rank(actual, expected, MatchMode::Recover) else {
+        return Vec::new();
+    };
+    if best == 0 || matches < 2 {
+        return Vec::new();
+    }
+    expected
+        .iter()
+        .filter(|candidate| {
+            action_recovery_rank(actual, candidate, MatchMode::Recover) == Some(best)
+        })
+        .map(|candidate| (*candidate).to_string())
+        .collect()
 }
 
 fn token_matches_exact(token: &Token, expected: &[&str]) -> bool {
@@ -8495,6 +9068,28 @@ fn has_recoverable_sentence_shape(tokens: &[Token]) -> bool {
             && tokens.len() > 1)
         || (action_phrase_at(tokens, 0, USE_WORDS_KO, MatchMode::Recover).is_some()
             && tokens.len() > 1)
+        || has_recoverable_append_shape(tokens)
+        || english_for_each_start(tokens, MatchMode::Recover).is_some()
+        || korean_for_each_shape(tokens)
+}
+
+/// True when a misspelled list-adding word closes or opens the line, which is
+/// the only thing that separates `appned Mina to friends` from ordinary
+/// prose. The exact spellings never reach here; they matched already.
+fn has_recoverable_append_shape(tokens: &[Token]) -> bool {
+    if tokens.len() < 3 {
+        return false;
+    }
+    if action_phrase_at(tokens, 0, APPEND_WORDS_EN, MatchMode::Exact).is_none()
+        && action_phrase_at(tokens, 0, APPEND_WORDS_EN, MatchMode::Recover).is_some()
+        && tokens
+            .iter()
+            .any(|token| token_matches_exact(token, APPEND_CONNECTORS_EN))
+    {
+        return true;
+    }
+    korean_append_action_start(tokens, MatchMode::Exact).is_none()
+        && korean_append_action_start(tokens, MatchMode::Recover).is_some()
 }
 
 fn ambiguous_action_diagnostic(tokens: &[Token]) -> Diagnostic {
@@ -8528,7 +9123,37 @@ fn span_of_refs(tokens: &[&Token]) -> Span {
     Span::new(tokens[0].span.start, tokens[tokens.len() - 1].span.end)
 }
 
-fn attached_korean_times_header(source: &str, tokens: &[Token]) -> Option<(Code, usize)> {
+/// The count in a Korean counter word written attached to it (`3번`, `한번`,
+/// `삼회`). A count that is neither a number nor a name the program knows is
+/// refused here, so it can never become `range(<undefined word>)`.
+fn attached_korean_count(
+    source: &str,
+    name: &str,
+    span: Span,
+    known_names: &HashSet<String>,
+) -> Option<(Code, &'static str)> {
+    let counter = TIMES_WORDS_KO
+        .iter()
+        .find(|counter| name.strip_suffix(*counter).is_some_and(|rest| !rest.is_empty()))?;
+    let count = name.strip_suffix(counter)?;
+    if let Some(digits) = number_word_digits(count) {
+        return Some((Code::Generated(digits.to_string()), counter));
+    }
+    if !count.starts_with(|character: char| character.is_ascii_digit())
+        && !known_names.contains(count)
+    {
+        return None;
+    }
+    let count_span = Span::new(span.start, span.end - counter.len());
+    is_valid_python_expression(&source[count_span.start..count_span.end])
+        .then_some((Code::Source(count_span), counter))
+}
+
+fn attached_korean_times_header(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+) -> Option<(Code, usize)> {
     let [Token {
         tok: Tok::Name { name },
         span,
@@ -8538,16 +9163,14 @@ fn attached_korean_times_header(source: &str, tokens: &[Token]) -> Option<(Code,
     else {
         return None;
     };
-    let count = name.strip_suffix(TIMES_KEYWORD_KO)?;
-    if count.is_empty() {
-        return None;
-    }
-    let count_span = Span::new(span.start, span.end - TIMES_KEYWORD_KO.len());
-    is_valid_python_expression(&source[count_span.start..count_span.end])
-        .then_some((Code::Source(count_span), 1))
+    attached_korean_count(source, name, *span, known_names).map(|(count, _)| (count, 1))
 }
 
-fn attached_korean_times_sentence(source: &str, tokens: &[Token]) -> Option<(Code, usize)> {
+fn attached_korean_times_sentence(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+) -> Option<(Code, usize)> {
     let Token {
         tok: Tok::Name { name },
         span,
@@ -8561,13 +9184,12 @@ fn attached_korean_times_sentence(source: &str, tokens: &[Token]) -> Option<(Cod
     {
         return None;
     }
-    let count = name.strip_suffix(TIMES_KEYWORD_KO)?;
-    if count.is_empty() {
-        return None;
-    }
-    let count_span = Span::new(span.start, span.end - TIMES_KEYWORD_KO.len());
-    is_valid_python_expression(&source[count_span.start..count_span.end])
-        .then_some((Code::Source(count_span), 1))
+    let (count, counter) = attached_korean_count(source, name, *span, known_names)?;
+    // Only `번` is unmistakably a repeat counter standing on its own. `회`,
+    // `차례`, and `판` are ordinary nouns too, so they need the repeat word
+    // right after them before the line becomes a loop.
+    (counter == TIMES_KEYWORD_KO || repeat_action_at(tokens, 1, MatchMode::Recover).is_some())
+        .then_some((count, 1))
 }
 
 fn one_typo_away(actual: &str, expected: &str) -> bool {
