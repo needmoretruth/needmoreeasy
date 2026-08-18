@@ -55,6 +55,8 @@ on one line. This document describes version `0.0.1-beta.160`.
 | Sentence | `set greeting to Hello` | `greeting = "Hello"` |
 | Sentence | `set answer to 7` | `answer = 7` |
 | Sentence | `greeting save Hello` | `greeting = "Hello"` |
+| Sentence | `remember score to 0` | `score = 0` |
+| Sentence | `set score to 0.` | `score = 0` |
 
 ### Changing a value — add, subtract, multiply, divide
 
@@ -63,6 +65,7 @@ on one line. This document describes version `0.0.1-beta.160`.
 | Sentence | `score add 1` | `score = score + 1` |
 | Sentence | `add 1 to score` | `score = score + 1` |
 | Sentence | `score increase by 1` | `score = score + 1` |
+| Sentence | `to score add 1` | `score = score + 1` |
 | Sentence | `subtract 1 from score` | `score = score - 1` |
 | Sentence | `multiply score by 2` | `score = score * 2` |
 | Sentence | `divide score by 2` | `score = score / 2` |
@@ -75,6 +78,7 @@ on one line. This document describes version `0.0.1-beta.160`.
 | Sentence | `wait 3 seconds` | `__import__("time").sleep(3)` |
 | Sentence | `pause 3` | `__import__("time").sleep(3)` |
 | Sentence | `wait 1 second` | `__import__("time").sleep(1)` |
+| Sentence | `wait two seconds` | `__import__("time").sleep(2)` |
 | Sentence | `wait for 5 seconds` | `__import__("time").sleep(5)` |
 | Sentence | `sleep pause_length` | `__import__("time").sleep(pause_length)` |
 
@@ -84,6 +88,8 @@ on one line. This document describes version `0.0.1-beta.160`.
 | --- | --- | --- |
 | Sentence | `repeat 3 times and show Again` | `for _ in range(3): print("Again")` |
 | Sentence | `3 times Welcome` | `for _ in range(3): print("Welcome")` |
+| Sentence | `repeat three times and show Again` | `for _ in range(3): print("Again")` |
+| Sentence | `repeat 3 rounds and show Again` | `for _ in range(3): print("Again")` |
 | Sentence | `repeat 3 times … end` | `for _ in range(3):` |
 
 ### Repeating over a list
@@ -93,6 +99,7 @@ on one line. This document describes version `0.0.1-beta.160`.
 | Sentence | `for each friend in friends` | `for friend in friends:` |
 | Sentence | `for each friend in friends and show friend` | `for friend in friends: print(friend)` |
 | Sentence | `repeat for each name in names` | `for name in names:` |
+| Sentence | `foreach friend in friends` | `for friend in friends:` |
 
 ### Repeating while a condition holds
 
@@ -100,6 +107,7 @@ on one line. This document describes version `0.0.1-beta.160`.
 | --- | --- | --- |
 | Sentence | `while score is less than 3` | `while (score < 3):` |
 | Sentence | `while ready and waiting` | `while (ready and waiting):` |
+| Sentence | `while score is greater than 0` | `while (score > 0):` |
 | Sentence | `while ready then show working` | `while (ready): print("working")` |
 
 ### Conditions — choosing
@@ -108,6 +116,8 @@ on one line. This document describes version `0.0.1-beta.160`.
 | --- | --- | --- |
 | Sentence | `if score is greater than 10 then show You won` | `if (score > 10): print("You won")` |
 | Sentence | `if name exists` | `if (name):` |
+| Sentence | `if score > 10 then show You won` | `if (score > 10): print("You won")` |
+| Sentence | `if score is above 10 then show You won` | `if (score > 10): print("You won")` |
 | Sentence | `score is greater than 5 then show high` | `if (score > 5): print("high")` |
 | Sentence | `else if score equals 0` | `elif (score == 0):` |
 | Sentence | `else` | `else:` |
@@ -133,8 +143,13 @@ on one line. This document describes version `0.0.1-beta.160`.
 | --- | --- | --- |
 | Sentence | `break` | `break` |
 | Sentence | `break here` | `break` |
+| Sentence | `stop` | `break` |
+| Sentence | `exit loop` | `break` |
+| Sentence | `quit` | `break` |
 | Sentence | `skip` | `continue` |
+| Sentence | `keep going` | `continue` |
 | Sentence | `end` | (closes the block) |
+| Sentence | `finish` | (closes the block) |
 
 ### Making a list and adding to it
 
@@ -146,6 +161,8 @@ on one line. This document describes version `0.0.1-beta.160`.
 | Sentence | `set friends to list of` | `friends = []` |
 | Sentence | `append Mina to friends` | `friends.append("Mina")` |
 | Sentence | `push Mina to friends` | `friends.append("Mina")` |
+| Sentence | `add Mina to friends` | `friends.append("Mina")` |
+| Sentence | `to friends append Mina` | `friends.append("Mina")` |
 
 ### Story — letters one at a time
 
@@ -193,6 +210,7 @@ on one line. This document describes version `0.0.1-beta.160`.
 | --- | --- | --- |
 | Sentence | `set die to random number from 1 to 6` | `die = __import__("random").randint(1, 6)` |
 | Sentence | `set color to pick from red or green` | `color = __import__("random").choice(("red", "green",))` |
+| Sentence | `set color to choose from red or green` | `color = __import__("random").choice(("red", "green",))` |
 
 ### Reading and writing files
 
@@ -331,7 +349,7 @@ One import binds **both** the English and the Korean names.
 | --- | --- | --- |
 | 출력 / Output | `say` · `show` · `display` · `tell` · `print` | `말해` · `말해줘` · `말해주세요` · `보여줘` · `보여주세요` · `출력해` · `출력해줘` · `출력해주세요` · `해줘` · `해주세요` · `읽어줘` |
 | 입력 / Input | `ask` · `prompt` · `question` | `물어봐` · `물어봐줘` · `물어보세요` · `질문해` · `질문해줘` · `입력받아` · `입력받아줘` · `입력받아주세요` · `물어봐요` · `물어봐주세요` · `질문해주세요` |
-| 저장 / Save | `set` · `save` · `remember` | `저장` · `저장해` · `기억해` · `기억해줘` · `설정` · `설정해` |
+| 저장 / Save | `set` · `save` · `remember` | `저장` · `저장해` · `저장해줘` · `기억해` · `기억해줘` · `설정` · `설정해` · `설정해줘` · `지정` · `지정해` · `정해` · `만들어` |
 | 더하기 / Add | `add` · `increase` · `increment` · `plus` | `더해` · `더해줘` · `올려` · `올려줘` · `늘려` · `늘려줘` |
 | 빼기 / Subtract | `subtract` · `decrease` · `decrement` · `minus` · `remove` | `빼` · `빼줘` · `내려` · `내려줘` · `줄여` · `줄여줘` |
 | 곱하기 / Multiply | `multiply` · `multiplied` | `곱해` · `곱해줘` · `곱하기해` |
@@ -341,13 +359,22 @@ One import binds **both** the English and the Korean names.
 | 조건 / If | `when` · `if` | `만약` · `만약에` · `만일` · `혹시` |
 | 조건 반복 / While | `while` | `동안` · `하는동안` · `할동안` |
 | 다른 갈래 / Else | `else` · `otherwise` | `아니면` · `그렇지않으면` · `아니면만약` · `아니면만약에` · `그렇지않으면만약` · `그렇지않으면만약에` |
-| 반복 중단 / Break | `break` · `breakhere` | `멈춰` · `멈춰라` · `중단` · `반복멈춰` · `여기서멈춰` |
-| 건너뛰기 / Skip | `skip` · `skipthis` · `skipit` · `nextone` | `건너뛰어` · `건너뛰어줘` · `건너뛰기` · `건너뛰자` · `넘어가` · `넘어가줘` |
-| 블록 닫기 / End | `end` | `끝` |
+| 반복 중단 / Break | `break` · `breakhere` | `멈춰` · `멈춰줘` · `멈춰라` · `멈추기` · `그만해` · `정지해` · `종료해` · `중단` · `반복멈춰` · `여기서멈춰` |
+| 건너뛰기 / Skip | `skip` · `skipthis` · `skipit` · `nextone` | `건너뛰어` · `건너뛰어줘` · `건너뛰기` · `건너뛰자` · `넘어가` · `넘어가줘` · `계속해` · `넘겨` · `다음` |
+| 블록 닫기 / End | `end` · `finish` · `done` | `끝` · `종료` · `마침` |
 | 모듈 쓰기 / Use | `use` · `load` · `get` · `import` | `사용` · `사용해` · `사용해줘` · `사용해주세요` · `불러와` · `불러와줘` · `가져와` · `가져와줘` · `받아` · `받아줘` |
 | 목록에 넣기 / Append | `append` · `push` | `넣어` · `넣어줘` · `추가해` · `추가해줘` · `붙여` · `붙여줘` |
 | 목록 표시 / List | `list` | `목록` · `리스트` |
 | 숫자로 / As a number | `number` · `numeric` | `숫자` · `숫자로` · `수로` |
+| 숫자 낱말 / Number words | `zero` · `one` · `two` · `three` · `four` · `five` · `six` · `seven` · `eight` · `nine` · `ten` · `once` · `twice` | `하나` · `한` · `둘` · `두` · `셋` · `세` · `넷` · `네` · `다섯` · `여섯` · `일곱` · `여덟` · `아홉` · `열` · `일` · `이` · `삼` · `사` · `오` · `육` · `칠` · `팔` · `구` · `십` |
+| 횟수 단위 / Count unit | `times` · `time` · `loops` · `loop` · `rounds` · `round` | `번` · `회` · `차례` · `판` |
+| 반복 중단(블록 안) / Break inside a block | `stop` · `stophere` · `exitloop` · `quit` | — |
+| 건너뛰기(블록 안) / Skip inside a block | `keepgoing` · `carryon` | — |
+| 무작위 고르기 / Random pick | `randomchoice` · `pick` · `choose` | `랜덤선택` · `하나골라` · `골라` · `하나뽑아` · `뽑아` |
+| 값 바꾸기 연결어 / Value-change connector | `to` · `by` · `from` · `of` · `into` · `onto` | — |
+| 목록 연결어 / List connector | `to` · `into` · `onto` | `에다가` · `에다` · `에` · `한테` · `에게` |
+| 저장 대상 조사 / Saved-name particle | — | `을` · `를` · `이` · `가` · `에` |
+| 문장 어미 / Sentence ending | — | `입니다` · `이에요` · `예요` · `이다` · `으로` · `로` |
 | 최신판 / Latest | `latest` · `newest` | `최신` · `최신판` · `최신버전` |
 | 파일 읽기 / File read | `read` | `읽어서` · `읽고` · `읽어` |
 | 파일 쓰기 / File write | `write` | `저장해` · `저장해줘` · `써줘` · `적어` |
