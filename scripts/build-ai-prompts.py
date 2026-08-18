@@ -95,6 +95,30 @@ EXAMPLES = [
         "set names to list of\nrepeat 3 times\nask name Tell me a name\nappend name to names\nend\nshow names\n",
     ),
     (
+        "이야기 / a short story",
+        "화면 지워\n줄 그어\n가운데 말해줘 겨울밤\n줄 그어\n"
+        "천천히 말해줘 문이 천천히 열렸습니다.\n1초 기다려\n"
+        "아주 천천히 말해줘 아무도 없었습니다.\n"
+        "대답을 물어봐 나가 볼까요? 예 또는 아니오\n"
+        "만약에 대답이 예와 같으면\n천천히 말해줘 눈이 내리고 있었습니다.\n"
+        "아니면\n천천히 말해줘 문을 다시 닫았습니다.\n끝\n",
+        "clear the screen\ndraw a line\nsay in the middle A winter night\ndraw a line\n"
+        "say slowly The door opened slowly.\nwait 1 second\n"
+        "say very slowly Nobody was there.\n"
+        "ask answer Do you step outside? yes or no\n"
+        "if answer equals yes\nsay slowly Snow was falling.\n"
+        "else\nsay slowly You closed the door again.\nend\n",
+    ),
+    (
+        "쿨타임 / a cooldown",
+        "시간 재기 시작해\n문 쿨타임 2초 걸어\n만약 문 쿨타임이 남았으면\n"
+        "아직 잠겨 있습니다 말해줘\n끝\n문 쿨타임 끝날때까지 기다려\n"
+        "문이 열렸습니다 말해줘\n잰시간 말해줘\n",
+        "start the timer\nput door on cooldown for 2 seconds\nwhen door is on cooldown\n"
+        "show It is still locked\nend\nwait for door\n"
+        "show The door opened\nshow elapsed\n",
+    ),
+    (
         "기다리기 / waiting",
         "출발합니다 말해줘\n3번 반복해\n1초 기다려\n하나 지났어요 말해줘\n끝\n끝났습니다 말해줘\n",
         "show Starting\nrepeat 3 times\nwait 1 second\nshow One second passed\nend\nshow Done\n",
@@ -179,6 +203,10 @@ def sentence_tables(korean: bool) -> str:
         "list": ("목록 만들기와 넣기", "Making a list and adding to it"),
         "random": ("무작위", "Randomness"),
         "file": ("파일 읽기·쓰기", "Reading and writing files"),
+        "slow": ("이야기 — 글자를 하나씩 내보내기", "Story — letters one at a time"),
+        "screen": ("화면 — 지우기·줄·상자·가운데", "Screen — clearing, ruling, boxing, centring"),
+        "timer": ("시간 재기", "The stopwatch"),
+        "cooldown": ("쿨타임", "Cooldowns"),
     }
 
     def sentence_only(rows):
@@ -195,6 +223,8 @@ def sentence_tables(korean: bool) -> str:
     title = heads["compare"][0] if korean else heads["compare"][1]
     parts.append(f"### {title}\n\n{S.compare_table(korean)}")
     for key, rows in [("control", S.LOOP_CONTROL), ("list", S.LISTS),
+                      ("slow", S.SLOW_TEXT), ("screen", S.SCREEN),
+                      ("timer", S.TIMER), ("cooldown", S.COOLDOWN),
                       ("random", S.RANDOM), ("file", S.FILES)]:
         title = heads[key][0] if korean else heads[key][1]
         parts.append(f"### {title}\n\n{S.level_table(sentence_only(rows), korean)}")

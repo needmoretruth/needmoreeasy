@@ -146,6 +146,46 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 | 문장형 | `친구들에 민수 넣어` | `친구들.append("민수")` |
 | 문장형 | `친구들에 민수 추가해` | `친구들.append("민수")` |
 
+### 이야기 — 글자를 하나씩 내보내기
+
+| 단계 | NME | 만들어지는 Python |
+| --- | --- | --- |
+| 문장형 | `천천히 말해줘 안녕` | `[print(_ch, end="", flush=True) or __import__("time").sleep(0.04) for _ch in "안녕"]; print()` |
+| 문장형 | `천천히 보여줘 안녕` | `[print(_ch, end="", flush=True) or __import__("time").sleep(0.04) for _ch in "안녕"]; print()` |
+| 문장형 | `아주 천천히 말해줘 안녕` | `[print(_ch, end="", flush=True) or __import__("time").sleep(0.12) for _ch in "안녕"]; print()` |
+| 문장형 | `3초씩 천천히 말해줘 안녕` | `[print(_ch, end="", flush=True) or __import__("time").sleep(3) for _ch in "안녕"]; print()` |
+
+### 화면 — 지우기·줄·상자·가운데
+
+| 단계 | NME | 만들어지는 Python |
+| --- | --- | --- |
+| 문장형 | `화면 지워` | `print("\033[2J\033[3J\033[H", end="")` |
+| 문장형 | `화면 비워줘` | `print("\033[2J\033[3J\033[H", end="")` |
+| 문장형 | `줄 그어` | `print("─" * 40)` |
+| 문장형 | `가로줄 그어줘` | `print("─" * 40)` |
+| 문장형 | `상자로 말해줘 안녕` | `print((lambda _t: (lambda _w: "┌" + "─" * (_w + 2) + "┐\n│ " + _t + " │\n└" + "─" * (_w + 2) + "┘")(sum(2 if __import__("unicodedata").east_asian_width(_c) in "WF" else 1 for _c in _t)))("안녕"))` |
+| 문장형 | `가운데 말해줘 안녕` | `print((lambda _t: " " * max(0, (40 - sum(2 if __import__("unicodedata").east_asian_width(_c) in "WF" else 1 for _c in _t)) // 2) + _t)("안녕"))` |
+
+### 시간 재기
+
+| 단계 | NME | 만들어지는 Python |
+| --- | --- | --- |
+| 문장형 | `시간 재기 시작해` | `_nme_clock = __import__("time").time()` |
+| 문장형 | `시간재기 시작해` | `_nme_clock = __import__("time").time()` |
+| 문장형 | `잰시간 말해줘` | `print(round(__import__("time").time() - _nme_clock, 2))` |
+| 문장형 | `걸린시간은 잰시간` | `걸린시간 = round(__import__("time").time() - _nme_clock, 2)` |
+
+### 쿨타임
+
+| 단계 | NME | 만들어지는 Python |
+| --- | --- | --- |
+| 문장형 | `문 쿨타임 3초 걸어` | `_nme_cool_문 = __import__("time").time() + 3` |
+| 문장형 | `만약 문 쿨타임이 끝났으면` | `if (__import__("time").time() >= _nme_cool_문):` |
+| 문장형 | `문 쿨타임 끝났으면` | `if (__import__("time").time() >= _nme_cool_문):` |
+| 문장형 | `만약 문 쿨타임이 남았으면` | `if (__import__("time").time() < _nme_cool_문):` |
+| 문장형 | `문 쿨타임 끝날때까지 기다려` | `__import__("time").sleep(max(0, _nme_cool_문 - __import__("time").time()))` |
+| 문장형 | `문 쿨타임 끝날 때까지 기다려` | `__import__("time").sleep(max(0, _nme_cool_문 - __import__("time").time()))` |
+
 ### 무작위
 
 | 단계 | NME | 만들어지는 Python |
@@ -309,6 +349,23 @@ Python이므로, NME 문장으로 읽히지 않습니다.
 | 최신판 / Latest | `latest` · `newest` | `최신` · `최신판` · `최신버전` |
 | 파일 읽기 / File read | `read` | `읽어서` · `읽고` · `읽어` |
 | 파일 쓰기 / File write | `write` | `저장해` · `저장해줘` · `써줘` · `적어` |
+| 천천히 / Slowly | `slowly` | `천천히` |
+| 아주 / Very | `very` | `아주` |
+| 글자 간격 / Interval | `every` | `초씩` |
+| 화면 / Clear screen | `clear` | `화면` |
+| 화면 지우기 / Clear screen action | `screen` | `지워` · `지워줘` · `비워` · `비워줘` |
+| 줄 / Draw line | `draw` | `줄` · `가로줄` |
+| 줄 긋기 / Draw line action | `line` | `그어` · `그어줘` |
+| 상자 / Box | `box` | `상자로` |
+| 가운데 / Middle | `middle` | `가운데` |
+| 시간 재기 / Start timer | `start` | `시간재기시작해` · `시간재기시작` |
+| 시계 / Timer | `timer` | — |
+| 잰 시간 / Elapsed | `elapsed` | `잰시간` · `걸린시간` |
+| 쿨타임 / Cooldown | `cooldown` | `쿨타임` · `쿨타임을` · `쿨타임은` · `쿨타임이` |
+| 쿨타임 걸기 / Put on cooldown | `put` | `걸어` · `걸어줘` |
+| 쿨타임 끝남 / Ready | `ready` | `끝났으면` |
+| 쿨타임 남음 / On cooldown | — | `남았으면` |
+| 쿨타임 끝날 때까지 / Until ready | — | `끝날때까지` |
 | 군말 / Filler | `please` | `좀` · `혹시` · `제발` |
 
 ## 오류 코드
@@ -348,6 +405,7 @@ Python이므로, NME 문장으로 읽히지 않습니다.
 | `E0223` | 건너뛰기 명령을 이해하지 못했습니다 |
 | `E0224` | 기다릴 시간을 이해하지 못했습니다 |
 | `E0225` | 목록에 넣는 줄을 이해하지 못했습니다 |
+| `E0226` | 시간 재기를 아직 시작하지 않았습니다 |
 | `E0301` | 조건이 비어 있습니다 |
 | `E0302` | 조건을 이해하지 못했습니다 |
 | `E0303` | 반복할 내용을 이해하지 못했습니다 |
@@ -560,6 +618,68 @@ for _ in range(3):
     이름들.append(이름)
 # end
 print(이름들)
+```
+
+### 이야기 / a short story
+
+```nme
+화면 지워
+줄 그어
+가운데 말해줘 겨울밤
+줄 그어
+천천히 말해줘 문이 천천히 열렸습니다.
+1초 기다려
+아주 천천히 말해줘 아무도 없었습니다.
+대답을 물어봐 나가 볼까요? 예 또는 아니오
+만약에 대답이 예와 같으면
+천천히 말해줘 눈이 내리고 있었습니다.
+아니면
+천천히 말해줘 문을 다시 닫았습니다.
+끝
+```
+
+되는 Python:
+
+```python
+print("\033[2J\033[3J\033[H", end="")
+print("─" * 40)
+print((lambda _t: " " * max(0, (40 - sum(2 if __import__("unicodedata").east_asian_width(_c) in "WF" else 1 for _c in _t)) // 2) + _t)("겨울밤"))
+print("─" * 40)
+[print(_ch, end="", flush=True) or __import__("time").sleep(0.04) for _ch in "문이 천천히 열렸습니다."]; print()
+__import__("time").sleep(1)
+[print(_ch, end="", flush=True) or __import__("time").sleep(0.12) for _ch in "아무도 없었습니다."]; print()
+대답 = input("나가 볼까요? 예 또는 아니오" + " ")
+if (대답 == "예"):
+    [print(_ch, end="", flush=True) or __import__("time").sleep(0.04) for _ch in "눈이 내리고 있었습니다."]; print()
+else:
+    [print(_ch, end="", flush=True) or __import__("time").sleep(0.04) for _ch in "문을 다시 닫았습니다."]; print()
+# end
+```
+
+### 쿨타임 / a cooldown
+
+```nme
+시간 재기 시작해
+문 쿨타임 2초 걸어
+만약 문 쿨타임이 남았으면
+아직 잠겨 있습니다 말해줘
+끝
+문 쿨타임 끝날때까지 기다려
+문이 열렸습니다 말해줘
+잰시간 말해줘
+```
+
+되는 Python:
+
+```python
+_nme_clock = __import__("time").time()
+_nme_cool_문 = __import__("time").time() + 2
+if (__import__("time").time() < _nme_cool_문):
+    print("아직 잠겨 있습니다")
+# end
+__import__("time").sleep(max(0, _nme_cool_문 - __import__("time").time()))
+print("문이 열렸습니다")
+print(round(__import__("time").time() - _nme_clock, 2))
 ```
 
 ### 기다리기 / waiting

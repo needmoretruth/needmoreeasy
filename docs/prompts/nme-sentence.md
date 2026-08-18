@@ -147,6 +147,46 @@ on one line. This document describes version `0.0.1-beta.160`.
 | Sentence | `append Mina to friends` | `friends.append("Mina")` |
 | Sentence | `push Mina to friends` | `friends.append("Mina")` |
 
+### Story — letters one at a time
+
+| Level | NME | Python produced |
+| --- | --- | --- |
+| Sentence | `say slowly Hello` | `[print(_ch, end="", flush=True) or __import__("time").sleep(0.04) for _ch in "Hello"]; print()` |
+| Sentence | `show slowly Hello` | `[print(_ch, end="", flush=True) or __import__("time").sleep(0.04) for _ch in "Hello"]; print()` |
+| Sentence | `say very slowly Hello` | `[print(_ch, end="", flush=True) or __import__("time").sleep(0.12) for _ch in "Hello"]; print()` |
+| Sentence | `say slowly every 3 seconds Hello` | `[print(_ch, end="", flush=True) or __import__("time").sleep(3) for _ch in "Hello"]; print()` |
+
+### Screen — clearing, ruling, boxing, centring
+
+| Level | NME | Python produced |
+| --- | --- | --- |
+| Sentence | `clear the screen` | `print("\033[2J\033[3J\033[H", end="")` |
+| Sentence | `clear screen` | `print("\033[2J\033[3J\033[H", end="")` |
+| Sentence | `draw a line` | `print("─" * 40)` |
+| Sentence | `draw line` | `print("─" * 40)` |
+| Sentence | `say in a box Hello` | `print((lambda _t: (lambda _w: "┌" + "─" * (_w + 2) + "┐\n│ " + _t + " │\n└" + "─" * (_w + 2) + "┘")(sum(2 if __import__("unicodedata").east_asian_width(_c) in "WF" else 1 for _c in _t)))("Hello"))` |
+| Sentence | `say in the middle Hello` | `print((lambda _t: " " * max(0, (40 - sum(2 if __import__("unicodedata").east_asian_width(_c) in "WF" else 1 for _c in _t)) // 2) + _t)("Hello"))` |
+
+### The stopwatch
+
+| Level | NME | Python produced |
+| --- | --- | --- |
+| Sentence | `start the timer` | `_nme_clock = __import__("time").time()` |
+| Sentence | `start timer` | `_nme_clock = __import__("time").time()` |
+| Sentence | `show elapsed` | `print(round(__import__("time").time() - _nme_clock, 2))` |
+| Sentence | `set spent to elapsed` | `spent = round(__import__("time").time() - _nme_clock, 2)` |
+
+### Cooldowns
+
+| Level | NME | Python produced |
+| --- | --- | --- |
+| Sentence | `put door on cooldown for 3 seconds` | `_nme_cool_door = __import__("time").time() + 3` |
+| Sentence | `when door is ready` | `if (__import__("time").time() >= _nme_cool_door):` |
+| Sentence | `if door is ready` | `if (__import__("time").time() >= _nme_cool_door):` |
+| Sentence | `when door is on cooldown` | `if (__import__("time").time() < _nme_cool_door):` |
+| Sentence | `wait for door` | `__import__("time").sleep(max(0, _nme_cool_door - __import__("time").time()))` |
+| Sentence | `pause for door` | `__import__("time").sleep(max(0, _nme_cool_door - __import__("time").time()))` |
+
 ### Randomness
 
 | Level | NME | Python produced |
@@ -187,6 +227,23 @@ on one line. This document describes version `0.0.1-beta.160`.
 | 최신판 / Latest | `latest` · `newest` | `최신` · `최신판` · `최신버전` |
 | 파일 읽기 / File read | `read` | `읽어서` · `읽고` · `읽어` |
 | 파일 쓰기 / File write | `write` | `저장해` · `저장해줘` · `써줘` · `적어` |
+| 천천히 / Slowly | `slowly` | `천천히` |
+| 아주 / Very | `very` | `아주` |
+| 글자 간격 / Interval | `every` | `초씩` |
+| 화면 / Clear screen | `clear` | `화면` |
+| 화면 지우기 / Clear screen action | `screen` | `지워` · `지워줘` · `비워` · `비워줘` |
+| 줄 / Draw line | `draw` | `줄` · `가로줄` |
+| 줄 긋기 / Draw line action | `line` | `그어` · `그어줘` |
+| 상자 / Box | `box` | `상자로` |
+| 가운데 / Middle | `middle` | `가운데` |
+| 시간 재기 / Start timer | `start` | `시간재기시작해` · `시간재기시작` |
+| 시계 / Timer | `timer` | — |
+| 잰 시간 / Elapsed | `elapsed` | `잰시간` · `걸린시간` |
+| 쿨타임 / Cooldown | `cooldown` | `쿨타임` · `쿨타임을` · `쿨타임은` · `쿨타임이` |
+| 쿨타임 걸기 / Put on cooldown | `put` | `걸어` · `걸어줘` |
+| 쿨타임 끝남 / Ready | `ready` | `끝났으면` |
+| 쿨타임 남음 / On cooldown | — | `남았으면` |
+| 쿨타임 끝날 때까지 / Until ready | — | `끝날때까지` |
 | 군말 / Filler | `please` | `좀` · `혹시` · `제발` |
 
 Words in the same cell mean the same thing. This table lists the **action words** only; the rest of a sentence — `from`, `to`, `seconds`, `for each`, `greater than`, `random number` — is written exactly as the tables above show it.
