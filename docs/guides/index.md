@@ -43,10 +43,12 @@ guide.
 15. [15 — Time: a stopwatch and cooldowns](15-timer.md)
 16. [16 — Check & Build: see the Python](16-check-build.md)
 
-### Part 2 — Things you can build with sentences alone
+### Part 2 — Small programs you can build
 
 For someone who has finished Part 1 and wants games, menus and small projects
-to keep.
+to keep. **From here on the programs mix in beginner syntax and Python.** The
+guides written in sentences alone are Part 1 — its 231 lines of code contain no
+quote, no bracket and no equals sign.
 
 17. [17 — Word guess: a hidden-word game](17-word-guess.md)
 18. [18 — Adventure — a small text game](18-adventure.md)
@@ -103,7 +105,7 @@ search order.
 57. [57 — Binary search — halving the guess](57-binary-search.md)
 58. [58 — Data: statistics on a list](58-data.md)
 
-### Part 5 — Writing it shorter: beginner and advanced grammar
+### Part 5 — When a program grows: errors, tests and files
 
 For someone who wants shorter code and larger programs: beginner syntax,
 advanced syntax, modules and tools.
