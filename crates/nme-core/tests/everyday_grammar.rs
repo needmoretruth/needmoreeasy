@@ -202,3 +202,63 @@ fn an_age_question_reads_a_number() {
         "age = int(input(\"How old are you?\" + \" \"))\n"
     );
 }
+
+#[test]
+fn a_comma_list_keeps_a_word_ending_in_the_joiner() {
+    // `사과` ends in `과`, the Korean word for `and`. A comma has already
+    // shown the separator, so the fruit must survive whole.
+    assert_eq!(
+        ok("과일들은 목록 사과, 바나나, 포도\n"),
+        "과일들 = [\"사과\", \"바나나\", \"포도\"]\n"
+    );
+    assert_eq!(
+        ok("친구들은 목록 민수와 지안\n"),
+        "친구들 = [\"민수\", \"지안\"]\n"
+    );
+}
+
+#[test]
+fn arithmetic_words_inside_a_message_stay_words() {
+    assert_eq!(
+        ok("show I will multiply by 2\n"),
+        "print(\"I will multiply by 2\")\n"
+    );
+    assert_eq!(
+        ok("ask number factor What should I multiply by\n"),
+        "factor = int(input(\"What should I multiply by\" + \" \"))\n"
+    );
+    assert_eq!(
+        ok("2 곱해 말해줘\n"),
+        "print(\"2 곱해\")\n"
+    );
+}
+
+#[test]
+fn a_one_line_body_may_skip_a_round() {
+    assert_eq!(
+        ok("repeat 3 times\nif 1 equals 1 then skip\nend\n"),
+        "for _ in range(3):\n    if (1 == 1): continue\n# end\n"
+    );
+    assert_eq!(
+        ok("3번 반복해\n만약에 1이 1과 같으면 건너뛰어\n끝\n"),
+        "for _ in range(3):\n    if (1 == 1): continue\n# end\n"
+    );
+}
+
+#[test]
+fn a_one_line_body_may_change_a_value_in_korean() {
+    // The English form always worked; the Korean line was swallowed by the
+    // value-change matcher before the condition was ever read.
+    assert_eq!(
+        ok("점수는 3\n만약에 점수가 5보다 크면 점수에 1 더해\n"),
+        "점수 = 3\nif (점수 > 5): 점수 = 점수 + 1\n"
+    );
+}
+
+#[test]
+fn a_list_loop_needs_no_colon() {
+    assert_eq!(
+        ok("친구들은 목록 민수\nfor each friend in 친구들 and show friend\n"),
+        "친구들 = [\"민수\"]\nfor friend in 친구들: print(friend)\n"
+    );
+}

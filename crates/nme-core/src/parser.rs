@@ -860,6 +860,12 @@ fn is_korean_branch_alias(tokens: &[Token]) -> bool {
     !tokens.is_empty() && action_phrase_at(tokens, 0, ELSE_WORDS_KO, MatchMode::Exact).is_some()
 }
 
+/// `skip` / `건너뛰어` on its own, as the one-line body of an NME block.
+fn is_skip_alias(tokens: &[Token]) -> bool {
+    action_phrase_at(tokens, 0, CONTINUE_WORDS_EN, MatchMode::Exact).is_some()
+        || action_phrase_at(tokens, 0, CONTINUE_WORDS_KO, MatchMode::Exact).is_some()
+}
+
 fn is_korean_break_alias(tokens: &[Token]) -> bool {
     action_phrase_at(tokens, 0, BREAK_WORDS_KO, MatchMode::Exact).is_some()
 }
@@ -2814,10 +2820,26 @@ fn match_update(
     _known_names: &HashSet<String>,
     mode: MatchMode,
 ) -> Result<Option<NmeStmt>, Diagnostic> {
+    // A line that opens with an output or question word is that statement,
+    // whatever its free text happens to say. Without this, the arithmetic
+    // words inside a message quietly rewrite the whole line: `show I will
+    // multiply by 2` used to become `show = show * 2`.
+    if tokens
+        .first()
+        .is_some_and(|token| starts_a_different_statement(token))
+    {
+        return Ok(None);
+    }
     if let Some((action_start, operation, _)) = update_action_ending(tokens, mode) {
         let target_token = tokens
             .first()
             .ok_or_else(|| update_diagnostic(span_of(tokens)))?;
+        // Only a name can have its value changed. A line that starts with a
+        // number or a piece of text is some other sentence that merely
+        // happens to contain `더해`, so let the other matchers read it.
+        if name_word(target_token).is_none() {
+            return Ok(None);
+        }
         let target = name_word(target_token)
             .and_then(update_target_name)
             .ok_or_else(|| update_diagnostic(target_token.span))?;
@@ -2847,6 +2869,9 @@ fn match_update(
         let Some((operation, consumed)) = update_action_at(tokens, action_start, mode) else {
             continue;
         };
+        if name_word(&tokens[0]).is_none() {
+            return Ok(None);
+        }
         let target = name_word(&tokens[0])
             .and_then(update_target_name)
             .ok_or_else(|| update_diagnostic(tokens[0].span))?;
@@ -2967,6 +2992,24 @@ fn update_action_ending(tokens: &[Token], mode: MatchMode) -> Option<(usize, Upd
         }
     }
     None
+}
+
+/// Words that own the line they open, so a value change may not start there.
+fn starts_a_different_statement(token: &Token) -> bool {
+    [
+        SAY_WORDS_EN,
+        ASK_WORDS_EN,
+        SAY_WORDS_KO,
+        ASK_WORDS_KO,
+        WHEN_WORDS_EN,
+        WHEN_WORDS_KO,
+        ELSE_WORDS_EN,
+        ELSE_WORDS_KO,
+        WHILE_WORDS_EN,
+        REPEAT_WORDS_EN,
+    ]
+    .iter()
+    .any(|words| token_matches_exact(token, words))
 }
 
 fn update_target_name(word: &str) -> Option<String> {
@@ -3330,7 +3373,9 @@ fn match_english_for_each(
         return Err(for_each_diagnostic(span_of(tokens)));
     }
     let tail = &tokens[name_at + 2..];
-    let colon_at = tail.iter().position(|token| matches!(token.tok, Tok::Colon));
+    let colon_at = tail.iter().position(|token| {
+        matches!(token.tok, Tok::Colon | Tok::And) || token_matches_exact(token, &["then"])
+    });
     let items_tokens = colon_at.map_or(tail, |at| &tail[..at]);
     let Some(items) = expression_code(source, items_tokens) else {
         return Err(for_each_diagnostic(span_of(tokens)));
@@ -6355,12 +6400,16 @@ const LIST_JOINERS: &[&str] = &["and", "그리고", "와", "과", "이랑", "랑
 fn split_list_items(tokens: &[Token]) -> Vec<Vec<Token>> {
     let mut items = Vec::new();
     let mut current: Vec<Token> = Vec::new();
+    // `사과` ends in `과`, which is also the Korean word for `and`. Once the
+    // writer has shown their separator by using a comma, trust it and stop
+    // reading a joiner out of the end of a word.
+    let comma_separated = tokens.iter().any(|token| matches!(token.tok, Tok::Comma));
     for token in tokens {
         if matches!(token.tok, Tok::Comma | Tok::And) || token_matches_exact(token, LIST_JOINERS) {
             items.push(std::mem::take(&mut current));
             continue;
         }
-        if let Tok::Name { name } = &token.tok {
+        if let (false, Tok::Name { name }) = (comma_separated, &token.tok) {
             if let Some(base) = LIST_JOINERS
                 .iter()
                 .filter(|joiner| joiner.chars().next().is_some_and(|c| !c.is_ascii()))
@@ -6843,6 +6892,9 @@ fn parse_suite_body(
     // the identifier into generated Python.
     if is_korean_break_alias(body) {
         return Ok(Some(InlineStmt::Nme(Box::new(NmeStmt::Break))));
+    }
+    if is_skip_alias(body) {
+        return Ok(Some(InlineStmt::Nme(Box::new(NmeStmt::Continue))));
     }
     if let Some(inner) = classify(source, body, &BlockCtx::Inline, known_names)? {
         if matches!(&inner, NmeStmt::ElseIf { .. } | NmeStmt::Else { .. }) {

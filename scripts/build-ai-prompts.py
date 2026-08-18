@@ -284,13 +284,15 @@ nme --version
 
 RULES_KO = """## 답할 때 지켜야 할 것
 
-1. **위 표에 있는 표기만 씁니다.** 없는 낱말을 지어내지 않습니다. 표에 없는 것을
-   해야 하면, 그 사실을 먼저 말하고 가장 가까운 표기를 제안합니다.
+1. **이 문서의 표에 나온 모양대로만 씁니다.** 없는 낱말을 지어내지 않습니다.
+   문서에 없는 것을 해야 하면, 그 사실을 먼저 말하고 가장 가까운 표기를 제안합니다.
 2. **문장형에서는 따옴표·쉼표·괄호·등호·콜론을 쓰지 않습니다.** 딱 두 군데만
    예외입니다: 파일 경로는 따옴표로 감싸고, 목록 항목은 쉼표로 나눕니다.
 3. **한 줄에 한 가지 일만** 합니다. NME 문장 하나는 Python 한 줄이 됩니다.
 4. **블록은 `끝`으로 닫습니다.** 들여쓰기를 써도 되지만, 처음 배우는 사람에게는
-   `끝`이 더 쉽습니다. 여는 줄마다 닫는 `끝`이 하나씩 있어야 합니다.
+   `끝`이 더 쉽습니다. 반복 하나에 `끝` 하나이고, `만약에`·`아니면 만약에`·`아니면`
+   한 묶음에도 `끝`은 맨 끝에 하나뿐입니다. 조건 뒤에 실행할 것을 한 줄로 붙여
+   썼다면 `끝`이 필요 없습니다.
 5. **이름은 미리 만들어 둡니다.** `점수에 1 더해`를 쓰기 전에 `점수는 0`이
    있어야 합니다. 문장 안에 값이 들어가는 이름도 마찬가지입니다.
 6. **한국어와 영어를 섞어도 됩니다.** 한 줄 안에서도 됩니다. 선언할 것이 없습니다.
@@ -301,14 +303,17 @@ RULES_KO = """## 답할 때 지켜야 할 것
 
 RULES_EN = """## Rules for your answers
 
-1. **Use only the spellings in the tables above.** Never invent a keyword. If
-   something cannot be expressed, say so first and offer the nearest spelling.
+1. **Use only the shapes shown in this document's tables.** Never invent a
+   keyword. If something cannot be expressed, say so first and offer the nearest
+   spelling.
 2. **Sentence level uses no quotes, commas, parentheses, equals signs, or
    colons.** Exactly two exceptions: a file path is quoted, and list items are
    separated by commas.
 3. **One thing per line.** One NME statement becomes one line of Python.
 4. **Close a block with `end`.** Indentation also works, but `end` is easier for
-   a first-time learner. Every opening line needs one closing `end`.
+   a first-time learner. One loop takes one `end`, and an `if` / `else if` /
+   `else` chain takes a single `end` at the bottom. A body written on the same
+   line as its condition needs no `end` at all.
 5. **Create names before using them.** `add 1 to score` needs `set score to 0`
    above it. The same is true for a name you want substituted into a sentence.
 6. **Korean and English may be mixed**, even on one line, with nothing to declare.
@@ -316,6 +321,76 @@ RULES_EN = """## Rules for your answers
    The NME side is the one the learner needs to read.
 8. Write as if explaining to someone who has never programmed. When a technical
    word is unavoidable, explain it in one line right where you use it."""
+
+
+PITFALLS_KO = """## 문장 안에서 이름이 값으로 바뀌는 규칙
+
+이 규칙 하나만 알면 문장형에서 헷갈릴 일이 거의 없습니다.
+
+**출력 문장이나 질문 문구에 쓴 낱말이 앞에서 만들어 둔 이름과 똑같으면 그 자리에
+값이 들어갑니다. 나머지 낱말은 쓴 그대로 찍힙니다.**
+
+```text
+안녕하세요 말해줘          → print("안녕하세요")
+이름은 민수
+안녕하세요 이름! 말해줘     → print("안녕하세요 " + str(이름) + "!")
+```
+
+여기서 나오는 실수는 하나뿐입니다. **문장 안에서 평범한 낱말로 쓰고 싶은 말을
+이름으로도 쓰면 안 됩니다.** `점수는 3`을 만들어 둔 뒤 `당신의 점수 점수 말해줘`라고
+쓰면 두 `점수`가 모두 값으로 바뀝니다. 이름을 `내점수`처럼 문장에 안 나올 말로
+바꾸면 해결됩니다.
+
+## 자주 걸리는 곳
+
+- **`끝`은 갈림길 한 묶음에 하나입니다.** `만약에 …` · `아니면 만약에 …` ·
+  `아니면`은 셋이 한 묶음이므로 맨 끝에 `끝` 하나만 씁니다. 두 개를 쓰면
+  `error[E0101]`이 납니다. 반복 하나에는 `끝` 하나입니다.
+- **이름은 동작을 나타내는 낱말과 겹치지 않게 짓습니다.** `말해`·`더해`·`반복`
+  같은 낱말을 이름으로 쓰면 그 줄이 다른 뜻으로 읽힙니다.
+- **빈 목록은 `친구들은 목록`입니다.** 뒤에 아무것도 쓰지 않으면 빈 목록이 됩니다.
+  거기에 `친구들에 민수 넣어`로 하나씩 담습니다.
+- **항목 이름이 `과`나 `와`로 끝나면 쉼표로 나눕니다.** `목록 사과, 바나나`처럼
+  쉼표를 한 번이라도 쓰면 쉼표만 구분자로 봅니다.
+- **`1초`도 `3초`도 됩니다.** 영어도 `wait 1 second`와 `wait 3 seconds` 둘 다 됩니다.
+- **한 줄로 끝내려면 조건 뒤에 바로 씁니다.** `만약에 점수가 5보다 크면 성공 말해줘`
+  처럼 쓰면 `끝`이 필요 없습니다. `건너뛰어`·`멈춰`·`점수에 1 더해`도 그 자리에
+  올 수 있습니다."""
+
+PITFALLS_EN = """## How a name becomes a value inside a sentence
+
+This is the one rule that makes the sentence level predictable.
+
+**A word in a message or a question is replaced by its value when a name of
+exactly that spelling was created earlier. Every other word is printed as
+written.**
+
+```text
+show hello                   → print("hello")
+set name to Mina
+show Hello name!             → print("Hello " + str(name) + "!")
+```
+
+Only one mistake follows from this. **Do not give a name a word you also want to
+print as an ordinary word.** After `set score to 3`, the line
+`show your score score` prints the number twice. Renaming it to `my_score` — a
+word the message never uses — fixes it.
+
+## Things that catch people out
+
+- **One `end` closes a whole chain.** `if …`, `else if …` and `else` are one
+  group, so they take a single `end` at the bottom. A second one raises
+  `error[E0101]`. One loop takes one `end`.
+- **Do not name something after an action word.** A name such as `show`, `add`
+  or `repeat` makes the line read as that action instead.
+- **An empty list is `set friends to list of` with nothing after it.** Fill it
+  later with `append Mina to friends`.
+- **Use commas when an item ends in a joining word.** Once a comma appears, only
+  commas separate the items.
+- **Both `wait 1 second` and `wait 3 seconds` work.**
+- **A one-line body needs no `end`.** `if score is greater than 5 then show
+  You won` is complete on its own, and `skip`, `break` and `add 1 to score` may
+  all stand in that position."""
 
 
 def what_is_ko() -> str:
@@ -423,7 +498,7 @@ def checklist_ko(deep: bool) -> str:
 
 - 표에 없는 낱말을 쓰지 않았는가?
 - 문장형 줄에 따옴표·괄호·등호·콜론이 들어가지 않았는가?(파일 경로와 목록 쉼표는 예외)
-- 여는 블록마다 `끝`이 하나씩 있는가?
+- 반복마다, 그리고 갈림길 묶음마다 `끝`이 하나씩인가?(한 줄로 쓴 것은 필요 없음)
 - 쓰기 전에 만들어 둔 이름만 쓰고 있는가?
 - 코딩을 모르는 사람이 읽어도 무슨 뜻인지 알 수 있는가?{extra}"""
 
@@ -435,7 +510,7 @@ def checklist_en(deep: bool) -> str:
 - Did you use only spellings from the tables?
 - Do the sentence-level lines avoid quotes, parentheses, equals signs, and
   colons? (A file path and the commas between list items are the exceptions.)
-- Does every opening block have exactly one `end`?
+- Does each loop, and each whole `if`/`else` chain, have exactly one `end`?
 - Does every name exist before it is used?
 - Would someone who has never programmed understand the answer?{extra}"""
 
@@ -518,11 +593,13 @@ def build(binary: Path) -> None:
         + what_is_ko()
         + "\n\n## 문장형 문법 전부\n\n"
         + sentence_tables(True)
-        + "\n\n### 쓸 수 있는 낱말 전부\n\n"
+        + "\n\n### 동작을 나타내는 낱말 전부\n\n"
         + spelling_ko
-        + "\n\n같은 칸에 있는 낱말은 서로 바꿔 써도 뜻이 같습니다. 위 표에 모양이 나오지 "
-          "않은 낱말(`사용`·`use` 같은 것)은 초급 문법에 속하므로 이 프롬프트에서는 "
-          "쓰지 않습니다.\n\n"
+        + "\n\n같은 칸에 있는 낱말은 서로 바꿔 써도 뜻이 같습니다. 이 표는 **동작을 나타내는 "
+          "낱말**만 모은 것입니다. `부터`·`까지`·`초`·`마다`·`보다 크면`·`랜덤정수`처럼 문장을 "
+          "이루는 나머지 말은 위 표들에 나온 모양 그대로 쓰면 됩니다.\n\n"
+        + PITFALLS_KO
+        + "\n\n"
         + short_examples(rows, True, 6)
         + "\n"
         + RUN_KO
@@ -541,11 +618,14 @@ def build(binary: Path) -> None:
         + what_is_en()
         + "\n\n## All of the sentence syntax\n\n"
         + sentence_tables(False)
-        + "\n\n### Every word you may use\n\n"
+        + "\n\n### Every action word\n\n"
         + spelling_en
-        + "\n\nWords in the same cell mean the same thing. A word whose shape does not "
-          "appear in a table above (`use`, for example) belongs to the beginner level "
-          "and is not used in this prompt.\n\n"
+        + "\n\nWords in the same cell mean the same thing. This table lists the **action "
+          "words** only; the rest of a sentence — `from`, `to`, `seconds`, `for each`, "
+          "`greater than`, `random number` — is written exactly as the tables above "
+          "show it.\n\n"
+        + PITFALLS_EN
+        + "\n\n"
         + short_examples(rows, False, 6)
         + "\n"
         + RUN_EN
@@ -577,6 +657,8 @@ def build(binary: Path) -> None:
         + "\n\n## 오류 코드\n\n"
         + codes_ko
         + "\n\n"
+        + PITFALLS_KO
+        + "\n\n"
         + short_examples(rows, True, 6)
         + "\n"
         + RUN_KO
@@ -606,6 +688,8 @@ def build(binary: Path) -> None:
         + spelling_en
         + "\n\n## Error codes\n\n"
         + codes_en
+        + "\n\n"
+        + PITFALLS_EN
         + "\n\n"
         + short_examples(rows, False, 6)
         + "\n"
@@ -638,6 +722,8 @@ def build(binary: Path) -> None:
         + "\n\n## 오류 코드\n\n"
         + codes_ko
         + "\n\n"
+        + PITFALLS_KO
+        + "\n\n"
         + examples_section(rows, True)
         + "\n"
         + RUN_KO
@@ -667,6 +753,8 @@ def build(binary: Path) -> None:
         + spelling_en
         + "\n\n## Error codes\n\n"
         + codes_en
+        + "\n\n"
+        + PITFALLS_EN
         + "\n\n"
         + examples_section(rows, False)
         + "\n"

@@ -74,6 +74,7 @@ on one line. This document describes version `0.0.1-beta.160`.
 | --- | --- | --- |
 | Sentence | `wait 3 seconds` | `__import__("time").sleep(3)` |
 | Sentence | `pause 3` | `__import__("time").sleep(3)` |
+| Sentence | `wait 1 second` | `__import__("time").sleep(1)` |
 | Sentence | `wait for 5 seconds` | `__import__("time").sleep(5)` |
 | Sentence | `sleep pause_length` | `__import__("time").sleep(pause_length)` |
 
@@ -90,7 +91,7 @@ on one line. This document describes version `0.0.1-beta.160`.
 | Level | NME | Python produced |
 | --- | --- | --- |
 | Sentence | `for each friend in friends` | `for friend in friends:` |
-| Sentence | `for each friend in friends: show friend` | `for friend in friends: print(friend)` |
+| Sentence | `for each friend in friends and show friend` | `for friend in friends: print(friend)` |
 | Sentence | `repeat for each name in names` | `for name in names:` |
 
 ### Repeating while a condition holds
@@ -99,6 +100,7 @@ on one line. This document describes version `0.0.1-beta.160`.
 | --- | --- | --- |
 | Sentence | `while score is less than 3` | `while (score < 3):` |
 | Sentence | `while ready and waiting` | `while (ready and waiting):` |
+| Sentence | `while ready then show working` | `while (ready): print("working")` |
 
 ### Conditions — choosing
 
@@ -141,6 +143,7 @@ on one line. This document describes version `0.0.1-beta.160`.
 | Sentence | `set friends to list of Mina, Ada` | `friends = ["Mina", "Ada"]` |
 | Sentence | `set friends to list of Mina and Ada` | `friends = ["Mina", "Ada"]` |
 | Sentence | `set scores to list of 1, 2, 3` | `scores = [1, 2, 3]` |
+| Sentence | `set friends to list of` | `friends = []` |
 | Sentence | `append Mina to friends` | `friends.append("Mina")` |
 | Sentence | `push Mina to friends` | `friends.append("Mina")` |
 
@@ -158,7 +161,7 @@ on one line. This document describes version `0.0.1-beta.160`.
 | Sentence | `read "notes.txt" into memo` | `memo = __import__("pathlib").Path("notes.txt").read_text()` |
 | Sentence | `write "hello" to "out.txt"` | `__import__("pathlib").Path("out.txt").write_text("hello")` |
 
-### Every word you may use
+### Every action word
 
 | Action | English spellings | Korean spellings |
 | --- | --- | --- |
@@ -186,7 +189,42 @@ on one line. This document describes version `0.0.1-beta.160`.
 | 파일 쓰기 / File write | `write` | `저장해` · `저장해줘` · `써줘` · `적어` |
 | 군말 / Filler | `please` | `좀` · `혹시` · `제발` |
 
-Words in the same cell mean the same thing. A word whose shape does not appear in a table above (`use`, for example) belongs to the beginner level and is not used in this prompt.
+Words in the same cell mean the same thing. This table lists the **action words** only; the rest of a sentence — `from`, `to`, `seconds`, `for each`, `greater than`, `random number` — is written exactly as the tables above show it.
+
+## How a name becomes a value inside a sentence
+
+This is the one rule that makes the sentence level predictable.
+
+**A word in a message or a question is replaced by its value when a name of
+exactly that spelling was created earlier. Every other word is printed as
+written.**
+
+```text
+show hello                   → print("hello")
+set name to Mina
+show Hello name!             → print("Hello " + str(name) + "!")
+```
+
+Only one mistake follows from this. **Do not give a name a word you also want to
+print as an ordinary word.** After `set score to 3`, the line
+`show your score score` prints the number twice. Renaming it to `my_score` — a
+word the message never uses — fixes it.
+
+## Things that catch people out
+
+- **One `end` closes a whole chain.** `if …`, `else if …` and `else` are one
+  group, so they take a single `end` at the bottom. A second one raises
+  `error[E0101]`. One loop takes one `end`.
+- **Do not name something after an action word.** A name such as `show`, `add`
+  or `repeat` makes the line read as that action instead.
+- **An empty list is `set friends to list of` with nothing after it.** Fill it
+  later with `append Mina to friends`.
+- **Use commas when an item ends in a joining word.** Once a comma appears, only
+  commas separate the items.
+- **Both `wait 1 second` and `wait 3 seconds` work.**
+- **A one-line body needs no `end`.** `if score is greater than 5 then show
+  You won` is complete on its own, and `skip`, `break` and `add 1 to score` may
+  all stand in that position.
 
 ## Short examples
 
@@ -281,14 +319,17 @@ nme --version
 
 ## Rules for your answers
 
-1. **Use only the spellings in the tables above.** Never invent a keyword. If
-   something cannot be expressed, say so first and offer the nearest spelling.
+1. **Use only the shapes shown in this document's tables.** Never invent a
+   keyword. If something cannot be expressed, say so first and offer the nearest
+   spelling.
 2. **Sentence level uses no quotes, commas, parentheses, equals signs, or
    colons.** Exactly two exceptions: a file path is quoted, and list items are
    separated by commas.
 3. **One thing per line.** One NME statement becomes one line of Python.
 4. **Close a block with `end`.** Indentation also works, but `end` is easier for
-   a first-time learner. Every opening line needs one closing `end`.
+   a first-time learner. One loop takes one `end`, and an `if` / `else if` /
+   `else` chain takes a single `end` at the bottom. A body written on the same
+   line as its condition needs no `end` at all.
 5. **Create names before using them.** `add 1 to score` needs `set score to 0`
    above it. The same is true for a name you want substituted into a sentence.
 6. **Korean and English may be mixed**, even on one line, with nothing to declare.
@@ -302,6 +343,6 @@ nme --version
 - Did you use only spellings from the tables?
 - Do the sentence-level lines avoid quotes, parentheses, equals signs, and
   colons? (A file path and the commas between list items are the exceptions.)
-- Does every opening block have exactly one `end`?
+- Does each loop, and each whole `if`/`else` chain, have exactly one `end`?
 - Does every name exist before it is used?
 - Would someone who has never programmed understand the answer?

@@ -93,6 +93,7 @@ English has no such particle, so it uses `set … to …`.
 | --- | --- | --- |
 | Sentence | `wait 3 seconds` | `__import__("time").sleep(3)` |
 | Sentence | `pause 3` | `__import__("time").sleep(3)` |
+| Sentence | `wait 1 second` | `__import__("time").sleep(1)` |
 | Sentence | `wait for 5 seconds` | `__import__("time").sleep(5)` |
 | Sentence | `sleep pause_length` | `__import__("time").sleep(pause_length)` |
 | Advanced | `import time; time.sleep(3)` | unchanged |
@@ -118,7 +119,7 @@ line containing only `end` / `끝`.
 | Level | NME | Python produced |
 | --- | --- | --- |
 | Sentence | `for each friend in friends` | `for friend in friends:` |
-| Sentence | `for each friend in friends: show friend` | `for friend in friends: print(friend)` |
+| Sentence | `for each friend in friends and show friend` | `for friend in friends: print(friend)` |
 | Sentence | `repeat for each name in names` | `for name in names:` |
 | Beginner | `for each friend in friends:` | `for friend in friends:` |
 | Advanced | `for friend in friends:` | unchanged |
@@ -132,6 +133,7 @@ it immediately.
 | --- | --- | --- |
 | Sentence | `while score is less than 3` | `while (score < 3):` |
 | Sentence | `while ready and waiting` | `while (ready and waiting):` |
+| Sentence | `while ready then show working` | `while (ready): print("working")` |
 | Beginner | `while score < 3` | `while (score < 3):` |
 | Advanced | `while score < 3:` | unchanged |
 
@@ -185,6 +187,7 @@ they are read as NME **only inside a loop block**. Outside one they stay Python.
 | Sentence | `set friends to list of Mina, Ada` | `friends = ["Mina", "Ada"]` |
 | Sentence | `set friends to list of Mina and Ada` | `friends = ["Mina", "Ada"]` |
 | Sentence | `set scores to list of 1, 2, 3` | `scores = [1, 2, 3]` |
+| Sentence | `set friends to list of` | `friends = []` |
 | Sentence | `append Mina to friends` | `friends.append("Mina")` |
 | Sentence | `push Mina to friends` | `friends.append("Mina")` |
 | Advanced | `friends = ["Mina"]` | unchanged |

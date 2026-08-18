@@ -103,6 +103,7 @@ UPDATE = [
 WAIT = [
     ("문장형", "Sentence", "wait 3 seconds", "3초 기다려", '__import__("time").sleep(3)'),
     ("문장형", "Sentence", "pause 3", "3초 쉬어", '__import__("time").sleep(3)'),
+    ("문장형", "Sentence", "wait 1 second", "1초 기다려", '__import__("time").sleep(1)'),
     ("문장형", "Sentence", "wait for 5 seconds", "5 초 기다려주세요", '__import__("time").sleep(5)'),
     ("문장형", "Sentence", "sleep pause_length", "쉬는시간 기다려", '__import__("time").sleep(pause_length)', '__import__("time").sleep(쉬는시간)'),
     ("고급", "Advanced", "import time; time.sleep(3)", "import time; time.sleep(3)", "unchanged"),
@@ -118,7 +119,7 @@ TIMES = [
 
 FOR_EACH = [
     ("문장형", "Sentence", "for each friend in friends", "친구들의 친구마다 반복해", "for friend in friends:", 'for 친구 in 친구들:'),
-    ("문장형", "Sentence", "for each friend in friends: show friend", "친구들의 친구마다 반복해서 친구 말해줘", "for friend in friends: print(friend)", 'for 친구 in 친구들: print(친구)'),
+    ("문장형", "Sentence", "for each friend in friends and show friend", "친구들의 친구마다 반복해서 친구 말해줘", "for friend in friends: print(friend)", 'for 친구 in 친구들: print(친구)'),
     ("문장형", "Sentence", "repeat for each name in names", "이름들에서 이름마다 반복해", "for name in names:", 'for 이름 in 이름들:'),
     ("초급", "Beginner", "for each friend in friends:", "친구들의 친구마다:", "for friend in friends:", 'for 친구 in 친구들:'),
     ("고급", "Advanced", "for friend in friends:", "for 친구 in 친구들:", "unchanged"),
@@ -126,7 +127,8 @@ FOR_EACH = [
 
 WHILE = [
     ("문장형", "Sentence", "while score is less than 3", "점수가 3보다 작을 동안", "while (score < 3):", 'while (점수 < 3):'),
-    ("문장형", "Sentence", "while ready and waiting", "준비하는동안 확인 말해줘", "while (ready and waiting):", 'while (준비): print("확인")'),
+    ("문장형", "Sentence", "while ready and waiting", "준비 그리고 대기 동안", "while (ready and waiting):", 'while (준비 and 대기):'),
+    ("문장형", "Sentence", "while ready then show working", "준비하는동안 확인 말해줘", 'while (ready): print("working")', 'while (준비): print("확인")'),
     ("초급", "Beginner", "while score < 3", "동안 점수 < 3", "while (score < 3):", 'while (점수 < 3):'),
     ("고급", "Advanced", "while score < 3:", "while 점수 < 3:", "unchanged"),
 ]
@@ -142,16 +144,16 @@ WHEN = [
 ]
 
 COMPARE = [
-    ("if name exists", "만약에 이름이 있으면", "name", "참인 값 / truthy"),
-    ("if name missing", "만약에 이름이 없으면", "not (name)", "거짓인 값 / falsey"),
-    ("if score equals 10", "만약에 점수가 10과 같으면", "score == 10", "=="),
-    ("if score is not equal to 10", "만약에 점수가 10과 같지 않으면", "score != 10", "!="),
-    ("if score is greater than 10", "만약에 점수가 10보다 크면", "score > 10", ">"),
-    ("if score is less than 10", "만약에 점수가 10보다 작으면", "score < 10", "<"),
-    ("if score is greater than or equal to 10", "만약에 점수가 10보다 크거나 같으면", "score >= 10", ">="),
-    ("if score is less than or equal to 10", "만약에 점수가 10보다 작거나 같으면", "score <= 10", "<="),
-    ("if ready and score > 2", "만약 준비 그리고 점수가 2보다 크면", "ready and score > 2", "and / 그리고"),
-    ("if ready or waiting", "만약 준비 또는 대기", "ready or waiting", "or / 또는"),
+    ("if name exists", "만약에 이름이 있으면", "name", "참인 값 / truthy", "이름"),
+    ("if name missing", "만약에 이름이 없으면", "not (name)", "거짓인 값 / falsey", "not (이름)"),
+    ("if score equals 10", "만약에 점수가 10과 같으면", "score == 10", "==", "점수 == 10"),
+    ("if score is not equal to 10", "만약에 점수가 10과 같지 않으면", "score != 10", "!=", "점수 != 10"),
+    ("if score is greater than 10", "만약에 점수가 10보다 크면", "score > 10", ">", "점수 > 10"),
+    ("if score is less than 10", "만약에 점수가 10보다 작으면", "score < 10", "<", "점수 < 10"),
+    ("if score is greater than or equal to 10", "만약에 점수가 10보다 크거나 같으면", "score >= 10", ">=", "점수 >= 10"),
+    ("if score is less than or equal to 10", "만약에 점수가 10보다 작거나 같으면", "score <= 10", "<=", "점수 <= 10"),
+    ("if ready and score > 2", "만약 준비 그리고 점수가 2보다 크면", "ready and score > 2", "and / 그리고", "준비 and 점수 > 2"),
+    ("if ready or waiting", "만약 준비 또는 대기", "ready or waiting", "or / 또는", "준비 or 대기"),
 ]
 
 LOOP_CONTROL = [
@@ -165,6 +167,7 @@ LISTS = [
     ("문장형", "Sentence", "set friends to list of Mina, Ada", "친구들은 목록 민수, 지안", 'friends = ["Mina", "Ada"]', '친구들 = ["민수", "지안"]'),
     ("문장형", "Sentence", "set friends to list of Mina and Ada", "친구들은 목록 민수와 지안", 'friends = ["Mina", "Ada"]', '친구들 = ["민수", "지안"]'),
     ("문장형", "Sentence", "set scores to list of 1, 2, 3", "점수들은 목록 1, 2, 3", "scores = [1, 2, 3]", '점수들 = [1, 2, 3]'),
+    ("문장형", "Sentence", "set friends to list of", "친구들은 목록", "friends = []", '친구들 = []'),
     ("문장형", "Sentence", "append Mina to friends", "친구들에 민수 넣어", 'friends.append("Mina")', '친구들.append("민수")'),
     ("문장형", "Sentence", "push Mina to friends", "친구들에 민수 추가해", 'friends.append("Mina")', '친구들.append("민수")'),
     ("고급", "Advanced", 'friends = ["Mina"]', '친구들 = ["민수"]', "unchanged"),
@@ -240,9 +243,10 @@ def korean_condition_endings() -> str:
 def compare_table(korean: bool) -> str:
     header = ["NME", "Python", "뜻"] if korean else ["NME", "Python", "Meaning"]
     lines = ["| " + " | ".join(header) + " |", "| --- | --- | --- |"]
-    for english, hangul, python, meaning in COMPARE:
+    for english, hangul, python, meaning, korean_python in COMPARE:
         nme = hangul if korean else english
-        lines.append(f"| `{nme}` | `{python}` | {meaning} |")
+        shown = korean_python if korean else python
+        lines.append(f"| `{nme}` | `{shown}` | {meaning} |")
     return "\n".join(lines)
 
 
