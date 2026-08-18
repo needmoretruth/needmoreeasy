@@ -43,7 +43,7 @@ needs at least one.
 3. `and` binds before `or`, exactly like Python:
 
    ```nme
-   만약 준비 그리고 기다림 또는 점수 > 2 그러면 성공 말해줘
+   만약 준비 그리고 기다림 또는 점수가 2보다 크면 성공 말해줘
    ```
 
    This means `(준비 and 기다림) or (점수 > 2)`.

@@ -12,8 +12,18 @@
 use crate::syntax::{
     BundledModuleId, Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, Literal,
     LogicalOp, NmeLine, NmeStmt, TextPart, TextTemplate, UpdateOp, Value, ZeroKnowledgeValue,
-    FILE_MODULE_VERSION, RANDOM_MODULE_VERSION, ZERO_KNOWLEDGE_MODULE_VERSION,
+    COOLDOWN_PREFIX, ELAPSED_PYTHON, FILE_MODULE_VERSION, RANDOM_MODULE_VERSION, TIMER_NAME,
+    ZERO_KNOWLEDGE_MODULE_VERSION,
 };
+
+/// Counts one character's screen width the way a terminal does, so a Korean
+/// box or a centred Korean line is not one column short per syllable.
+const EAST_ASIAN_WIDTH_SUM: &str = concat!(
+    "sum(2 if __import__(\"unicodedata\").east_asian_width(_c) in \"WF\" else 1 ",
+    "for _c in _t)"
+);
+/// How wide a drawn line is, and the column a centred line is centred in.
+const SCREEN_COLUMNS: usize = 40;
 
 const BILINGUAL_RANDOM_TOOLS_PREFIX: &str = concat!(
     "import random as 랜덤; ",
@@ -166,6 +176,45 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
             "__import__(\"time\").sleep({})",
             lower_code(seconds, source)
         ),
+        // The three screen sentences below print in one `print(...)` call
+        // each, because one NME statement is always exactly one Python line.
+        // The slow one has to be a list comprehension for the same reason:
+        // there is nowhere to put a loop body.
+        NmeStmt::SaySlowly { value, seconds } => format!(
+            "[print(_ch, end=\"\", flush=True) or __import__(\"time\").sleep({}) for _ch in {}]; print()",
+            lower_code(seconds, source),
+            printable_text(value, source)
+        ),
+        NmeStmt::ClearScreen => "print(\"\\033[2J\\033[3J\\033[H\", end=\"\")".to_string(),
+        NmeStmt::DrawLine => format!("print(\"─\" * {SCREEN_COLUMNS})"),
+        // `_t` is bound once by the outer lambda so a value that calls
+        // something is not evaluated again for the width measurement.
+        NmeStmt::SayInBox { value } => format!(
+            "print((lambda _t: (lambda _w: \"┌\" + \"─\" * (_w + 2) + \"┐\\n│ \" + _t + \" │\\n└\" + \"─\" * (_w + 2) + \"┘\")({EAST_ASIAN_WIDTH_SUM}))({}))",
+            printable_text(value, source)
+        ),
+        NmeStmt::SayInMiddle { value } => format!(
+            "print((lambda _t: \" \" * max(0, ({SCREEN_COLUMNS} - {EAST_ASIAN_WIDTH_SUM}) // 2) + _t)({}))",
+            printable_text(value, source)
+        ),
+        // `time.time()` rather than `time.monotonic()`. Monotonic is the
+        // better clock in principle — it cannot jump when the system clock is
+        // corrected — but it is unreachable in RustPython, which is the engine
+        // that runs programs on needmoreeasy.com: calling it kills the
+        // WebAssembly module outright, not with a Python error. A stopwatch a
+        // learner can actually run beats a stopwatch that is theoretically
+        // sounder, and a clock correction mid-cooldown is not a risk worth a
+        // dead browser tab.
+        NmeStmt::StartTimer => {
+            format!("{TIMER_NAME} = __import__(\"time\").time()")
+        }
+        NmeStmt::Cooldown { target, seconds } => format!(
+            "{COOLDOWN_PREFIX}{target} = __import__(\"time\").time() + {}",
+            lower_code(seconds, source)
+        ),
+        NmeStmt::WaitForCooldown { target } => format!(
+            "__import__(\"time\").sleep(max(0, {COOLDOWN_PREFIX}{target} - __import__(\"time\").time()))"
+        ),
         NmeStmt::Append { target, value } => {
             format!("{target}.append({})", lower_value(value, source))
         }
@@ -269,6 +318,21 @@ fn is_simple_atom(text: &str) -> bool {
 fn lower_code(code: &Code, source: &str) -> String {
     match code {
         Code::Source(span) => slice(source, *span).to_string(),
+        Code::Generated(text) => text.clone(),
+    }
+}
+
+/// The lowered value as a Python **string** expression.
+///
+/// A sentence template already produces text, so it is used as written; a
+/// number, a name, or any other expression is wrapped, because the slow, box
+/// and centred forms all have to walk or measure characters.
+fn printable_text(value: &Value, source: &str) -> String {
+    let lowered = lower_value(value, source);
+    if matches!(value, Value::Text(_)) {
+        lowered
+    } else {
+        format!("str({lowered})")
     }
 }
 
@@ -382,6 +446,7 @@ fn lower_value(value: &Value, source: &str) -> String {
                 .join(", ");
             format!("[{values}]")
         }
+        Value::Elapsed => ELAPSED_PYTHON.to_string(),
         Value::ZeroKnowledge(value) => lower_zero_knowledge(value, source),
     }
 }

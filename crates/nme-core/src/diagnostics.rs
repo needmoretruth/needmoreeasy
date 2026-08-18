@@ -108,6 +108,8 @@ pub enum DiagnosticCode {
     WaitAmountUnparseable,
     /// An append line (`append Mina to friends`) could not be understood.
     AppendUnparseable,
+    /// The stopwatch was read before `start the timer` / `시간 재기 시작해`.
+    TimerNotStarted,
     /// `if`/`while`/`만약` with no condition.
     ConditionMissing,
     /// The condition could not be understood.
@@ -264,6 +266,7 @@ impl DiagnosticCode {
             Self::ContinueCommandUnparseable => "E0223",
             Self::WaitAmountUnparseable => "E0224",
             Self::AppendUnparseable => "E0225",
+            Self::TimerNotStarted => "E0226",
             Self::ConditionMissing => "E0301",
             Self::ConditionInvalid => "E0302",
             Self::RepeatBodyUnparseable => "E0303",
@@ -325,7 +328,7 @@ impl DiagnosticCode {
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 90] = [
+    pub const ALL: [DiagnosticCode; 91] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -359,6 +362,7 @@ impl DiagnosticCode {
         Self::ContinueCommandUnparseable,
         Self::WaitAmountUnparseable,
         Self::AppendUnparseable,
+        Self::TimerNotStarted,
         Self::ConditionMissing,
         Self::ConditionInvalid,
         Self::RepeatBodyUnparseable,
@@ -672,6 +676,13 @@ impl DiagnosticCode {
                 "목록에 넣는 줄을 이해하지 못했습니다",
                 "Adding to a list looks like `append Mina to friends` or `친구들에 민수 넣어`. `add 1 to score` is a different command: that changes a number.",
                 "목록에 넣기는 `친구들에 민수 넣어`, `append Mina to friends` 같은 형태입니다. `점수에 1 더해`(`add 1 to score`)는 숫자를 바꾸는 다른 명령입니다.",
+            ),
+            Self::TimerNotStarted => (
+                "E0226",
+                "the timer has not been started yet",
+                "시간 재기를 아직 시작하지 않았습니다",
+                "`elapsed` / `잰시간` reads a stopwatch, so an earlier line has to start it: write `start the timer` or `시간 재기 시작해` before you read it.",
+                "`잰시간`/`elapsed`는 시계를 읽는 값이라서, 앞선 줄에서 시계를 켜 두어야 합니다. 읽기 전에 `시간 재기 시작해` 또는 `start the timer`라고 적으세요.",
             ),
             Self::ConditionMissing => (
                 "E0301",

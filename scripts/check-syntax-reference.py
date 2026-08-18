@@ -54,6 +54,21 @@ DOCUMENTED_LISTS = [
     "KOREAN_PARTICLES",
     "FILE_READ_WORDS_EN", "FILE_READ_WORDS_KO",
     "FILE_WRITE_WORDS_EN", "FILE_WRITE_WORDS_KO",
+    "SLOW_WORDS_EN", "SLOW_WORDS_KO",
+    "VERY_WORDS_EN", "VERY_WORDS_KO",
+    "SLOW_EVERY_WORDS_EN", "SLOW_EVERY_WORDS_KO",
+    "CLEAR_SCREEN_WORDS_EN", "CLEAR_SCREEN_WORDS_KO",
+    "CLEAR_SCREEN_ACTIONS_EN", "CLEAR_SCREEN_ACTIONS_KO",
+    "DRAW_LINE_WORDS_EN", "DRAW_LINE_WORDS_KO",
+    "DRAW_LINE_ACTIONS_EN", "DRAW_LINE_ACTIONS_KO",
+    "BOX_WORDS_EN", "BOX_WORDS_KO",
+    "MIDDLE_WORDS_EN", "MIDDLE_WORDS_KO",
+    "START_TIMER_WORDS_EN", "START_TIMER_WORDS_KO", "TIMER_WORDS_EN",
+    "ELAPSED_WORDS_EN", "ELAPSED_WORDS_KO",
+    "COOLDOWN_WORDS_EN", "COOLDOWN_WORDS_KO",
+    "COOLDOWN_SET_WORDS_EN", "COOLDOWN_SET_WORDS_KO",
+    "COOLDOWN_READY_WORDS_EN", "COOLDOWN_READY_WORDS_KO",
+    "COOLDOWN_BUSY_WORDS_KO", "COOLDOWN_UNTIL_WORDS_KO",
 ]
 
 # Rows that name a shape rather than a compilable line.
@@ -72,6 +87,8 @@ PREAMBLE = {
         "set friends to list of Mina",
         "set names to list of Mina",
         "set memo to empty",
+        "start the timer",
+        "put door on cooldown for 3 seconds",
     ],
     "ko": [
         "이름은 민수",
@@ -83,6 +100,8 @@ PREAMBLE = {
         "친구들은 목록 민수",
         "이름들은 목록 민수",
         "memo는 비어있음",
+        "시간 재기 시작해",
+        "문 쿨타임 3초 걸어",
     ],
 }
 

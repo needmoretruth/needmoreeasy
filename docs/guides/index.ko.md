@@ -274,7 +274,7 @@
 ## 다음 단계
 
 - [시작하기](../getting-started.ko.md): 인사부터 숫자 게임까지 5분 길
-- [학습 과정](../tutorial.ko.md): Hello World부터 컴파일러까지 여섯 프로젝트
+- [학습 과정](../tutorial.ko.md): Hello World부터 컴파일러까지 일곱 프로젝트
 - [문법 안내](../language.ko.md): 세 단계의 정확한 규칙
 - [문법 목록](../syntax.ko.md): 쓸 수 있는 모든 표기를 한 표에 모은 목록
 - [AI에게 건네는 프롬프트](../prompts/README.ko.md): 대화창에 붙여넣으면 AI가 NME를 쓸 수 있게 되는 글

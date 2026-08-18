@@ -275,7 +275,7 @@ The number *is* the difficulty. Read them in order and no single step is a jump.
 ## Where to continue
 
 - [Getting started](../getting-started.md): the five-minute path from hello to a number game
-- [Tutorial](../tutorial.md): six projects from Hello World to a compiler
+- [Tutorial](../tutorial.md): seven projects from Hello World to a compiler
 - [Language reference](../language.md): exact rules for all three levels
 - [Syntax list](../syntax.md): every accepted spelling, in one table
 - [Prompts to hand to an AI](../prompts/README.md): paste one into a chat and the AI can write NME

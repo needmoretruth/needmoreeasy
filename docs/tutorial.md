@@ -1,4 +1,4 @@
-# Learn NME by making six programs
+# Learn NME by making seven programs
 
 English | [한국어](tutorial.ko.md)
 
@@ -96,7 +96,7 @@ If indentation is getting in the way, write the same control flow as one flat
 block and close it with `end`:
 
 ```nme
-while guess != answer
+while guess is not equal to answer
 show Try again
 ask number guess Pick another number
 end
@@ -107,7 +107,47 @@ end
 Use `break`, `and`/`or`, `elif`, and `else` in the same style. Their Korean
 spellings are `멈춰`, `그리고`/`또는`, `아니면 만약에`, and `아니면`.
 
-## Project 4: Use all three levels
+## Project 4: Greet a list of names
+
+So far every program held one value at a time. A **list** holds several, and a
+list is written as a sentence too. Make `friends.nme`:
+
+```nme
+set friends to list of Mina, Ada, Grace
+for each friend in friends
+    show Hello friend!
+    wait 1 second
+end
+```
+
+```sh
+nme run friends
+```
+
+It greets all three, one per second.
+
+- `set friends to list of Mina, Ada, Grace` builds a list of three names.
+- `for each friend in friends` walks the list from start to end, calling
+  whichever one it is holding `friend`.
+- `wait 1 second` pauses before the next line.
+
+You can also start empty and add one at a time.
+
+```nme
+set friends to empty list
+append Mina to friends
+append Ada to friends
+show friends
+```
+
+Challenge: ask for a name three times, append each answer, then greet them all.
+
+Four programs in, and nothing so far has needed a quote, a bracket, a colon or
+an `=`. **Sentence syntax can carry a whole program on its own.** The next two
+projects are for someone who already knows Python, or who one day wants to.
+Skipping them now costs you nothing.
+
+## Project 5: Use all three levels
 
 Sentence syntax is not a cage. Use compact beginner syntax or Python whenever
 it says the idea more clearly:
@@ -146,7 +186,7 @@ end
 
 Challenge: write a Python function and use sentence `show` inside it.
 
-## Project 5: Move one game toward Python
+## Project 6: Move one game toward Python
 
 The time-loop mystery is the same project written at three levels. Start with
 the conversational English version, then compare the compact beginner
@@ -179,7 +219,7 @@ Run one when you are ready to answer its prompts. The point is not to rewrite
 the whole project at once: replace one block or line with the next level and
 keep the rest of the program unchanged.
 
-## Project 6: Build a compiler in NME
+## Project 7: Build a compiler in NME
 
 This is an optional advanced capstone, not a new syntax level. Before opening
 it, make sure the earlier projects feel comfortable. If indexing, slices, or

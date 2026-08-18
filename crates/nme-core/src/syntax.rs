@@ -41,6 +41,16 @@ pub(crate) const FILE_WRITE_WORDS_EN: &[&str] = &["write"];
 pub(crate) const FILE_READ_WORDS_KO: &[&str] = &["읽어서", "읽고", "읽어"];
 pub(crate) const FILE_WRITE_WORDS_KO: &[&str] = &["저장해", "저장해줘", "써줘", "적어"];
 
+/// The Python name the stopwatch statement binds, and the reading taken from
+/// it. Both the parser and the lowering stage need the exact same text: the
+/// parser so it can tell a program that reads the stopwatch without starting
+/// it, the lowering stage so it can emit it.
+pub const TIMER_NAME: &str = "_nme_clock";
+/// Prefix of the Python name one cooldown binds, completed by the NME name.
+pub const COOLDOWN_PREFIX: &str = "_nme_cool_";
+/// `elapsed` / `잰시간`, rounded so a printed stopwatch stays readable.
+pub const ELAPSED_PYTHON: &str = "round(__import__(\"time\").time() - _nme_clock, 2)";
+
 /// Version of the easy random adapter bundled with this compiler.
 pub const RANDOM_MODULE_VERSION: &str = "0.0.1";
 /// Version of the easy file adapter bundled with this compiler.
@@ -94,9 +104,14 @@ pub enum Spelling {
 
 /// Python code copied from the source. Expressions are never reformatted or
 /// reconstructed by NME.
+///
+/// A few sentence forms have no source expression to point at — the
+/// stopwatch reading and the cooldown comparisons are written by the
+/// compiler itself — so they carry their finished Python text instead.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Code {
     Source(Span),
+    Generated(String),
 }
 
 /// Language-neutral literal values shared by English and Korean sentence
@@ -134,6 +149,8 @@ pub enum Value {
     /// single sentence value is, so numbers stay numbers and words become text
     /// without the writer choosing quotes.
     List(Vec<Value>),
+    /// `elapsed` / `잰시간` — how many seconds the stopwatch has been running.
+    Elapsed,
     ZeroKnowledge(ZeroKnowledgeValue),
 }
 
@@ -292,6 +309,35 @@ pub enum NmeStmt {
     /// `wait 3 seconds` / `3초 기다려`.
     Wait {
         seconds: Code,
+    },
+    /// `say slowly Hello` / `천천히 말해줘 안녕` — one character at a time.
+    /// `seconds` is how long to pause between characters.
+    SaySlowly {
+        value: Value,
+        seconds: Code,
+    },
+    /// `clear the screen` / `화면 지워`.
+    ClearScreen,
+    /// `draw a line` / `줄 그어` — a rule right across the screen.
+    DrawLine,
+    /// `say in a box Hello` / `상자로 말해줘 안녕`.
+    SayInBox {
+        value: Value,
+    },
+    /// `say in the middle Hello` / `가운데 말해줘 안녕`.
+    SayInMiddle {
+        value: Value,
+    },
+    /// `start the timer` / `시간 재기 시작해`.
+    StartTimer,
+    /// `put door on cooldown for 3 seconds` / `문 쿨타임 3초 걸어`.
+    Cooldown {
+        target: String,
+        seconds: Code,
+    },
+    /// `wait for door` / `문 쿨타임 끝날때까지 기다려`.
+    WaitForCooldown {
+        target: String,
     },
     /// `append Mina to friends` / `친구들에 민수 넣어`.
     Append {

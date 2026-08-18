@@ -297,7 +297,7 @@ See [Python conversion](docs/converting-python.md).
   rules for learning goals, syntax levels, failure cases, regression tests, and review
 - [Example template](docs/guides/example-template.md) — design card, six-file
   skeleton, guide outline, and regression-test starter
-- [Learning path](docs/tutorial.md) — six projects: Hello World, conversation,
+- [Learning path](docs/tutorial.md) — seven projects: Hello World, conversation,
   number guessing, mixed Python, the time-loop game, and a tiny compiler
 - [VS Code, Cursor, and Zed](docs/editors.md) — ready tasks and file setup
 - [AI coding assistants](docs/ai-assistants.md) — one link that Claude Code,

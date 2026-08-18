@@ -239,7 +239,69 @@ a quote character.
 | Beginner | `use random version "0.0.1"` | (that exact adapter) |
 | Advanced | `from "helper.nme" import greet` | (from helper import greet — needs helper.nme next to the program) |
 
-## 17. Every action word
+## 17. Slow text
+
+| Level | NME | Python produced |
+| --- | --- | --- |
+| Sentence | `say slowly Hello` | `[print(_ch, end="", flush=True) or __import__("time").sleep(0.04) for _ch in "Hello"]; print()` |
+| Sentence | `show slowly Hello` | `[print(_ch, end="", flush=True) or __import__("time").sleep(0.04) for _ch in "Hello"]; print()` |
+| Sentence | `say very slowly Hello` | `[print(_ch, end="", flush=True) or __import__("time").sleep(0.12) for _ch in "Hello"]; print()` |
+| Sentence | `say slowly every 3 seconds Hello` | `[print(_ch, end="", flush=True) or __import__("time").sleep(3) for _ch in "Hello"]; print()` |
+
+Each character is printed on its own with a short pause after it. The pause is
+0.04 seconds by default, 0.12 with `very`, and whatever you name with
+`every 3 seconds` / `3초씩`.
+
+## 18. Screen
+
+| Level | NME | Python produced |
+| --- | --- | --- |
+| Sentence | `clear the screen` | `print("\033[2J\033[3J\033[H", end="")` |
+| Sentence | `clear screen` | `print("\033[2J\033[3J\033[H", end="")` |
+| Sentence | `draw a line` | `print("─" * 40)` |
+| Sentence | `draw line` | `print("─" * 40)` |
+| Sentence | `say in a box Hello` | `print((lambda _t: (lambda _w: "┌" + "─" * (_w + 2) + "┐\n│ " + _t + " │\n└" + "─" * (_w + 2) + "┘")(sum(2 if __import__("unicodedata").east_asian_width(_c) in "WF" else 1 for _c in _t)))("Hello"))` |
+| Sentence | `say in the middle Hello` | `print((lambda _t: " " * max(0, (40 - sum(2 if __import__("unicodedata").east_asian_width(_c) in "WF" else 1 for _c in _t)) // 2) + _t)("Hello"))` |
+
+Clearing the screen sends a terminal control sequence, so somewhere that is not
+a terminal it may show up as text. The box and the centred line count a Korean
+character as two columns, so a Korean sentence comes out straight; the width is
+40 columns.
+
+## 19. The stopwatch
+
+| Level | NME | Python produced |
+| --- | --- | --- |
+| Sentence | `start the timer` | `_nme_clock = __import__("time").time()` |
+| Sentence | `start timer` | `_nme_clock = __import__("time").time()` |
+| Sentence | `show elapsed` | `print(round(__import__("time").time() - _nme_clock, 2))` |
+| Sentence | `set spent to elapsed` | `spent = round(__import__("time").time() - _nme_clock, 2)` |
+
+`start the timer` starts the clock and `elapsed` / `잰시간` / `걸린시간` reads
+how many seconds have passed, to two decimal places. It is a value, so it works
+in output, in a saved name, and in a condition (`if elapsed is greater than 3`).
+Reading it without starting the clock is reported at compile time as `E0226`. A
+name the program made itself always wins over the word.
+
+## 20. Cooldowns
+
+| Level | NME | Python produced |
+| --- | --- | --- |
+| Sentence | `put door on cooldown for 3 seconds` | `_nme_cool_door = __import__("time").time() + 3` |
+| Sentence | `when door is ready` | `if (__import__("time").time() >= _nme_cool_door):` |
+| Sentence | `if door is ready` | `if (__import__("time").time() >= _nme_cool_door):` |
+| Sentence | `when door is on cooldown` | `if (__import__("time").time() < _nme_cool_door):` |
+| Sentence | `wait for door` | `__import__("time").sleep(max(0, _nme_cool_door - __import__("time").time()))` |
+| Sentence | `pause for door` | `__import__("time").sleep(max(0, _nme_cool_door - __import__("time").time()))` |
+
+One cooldown belongs to one name. `put door on cooldown for 3 seconds` remembers
+the moment three seconds from now, and `is ready` / `쿨타임이 끝났으면` asks
+whether that moment has passed. They are conditions, so they work with `when`,
+`while`, `else if`, and the one-line form of all three. `wait for door` also
+reads as an ordinary English sentence, so a name the program already saved as
+something else is not read as a cooldown.
+
+## 21. Every action word
 
 Every spelling accepted for each action, with nothing left out.
 
@@ -267,15 +329,32 @@ Every spelling accepted for each action, with nothing left out.
 | 최신판 / Latest | `latest` · `newest` | `최신` · `최신판` · `최신버전` |
 | 파일 읽기 / File read | `read` | `읽어서` · `읽고` · `읽어` |
 | 파일 쓰기 / File write | `write` | `저장해` · `저장해줘` · `써줘` · `적어` |
+| 천천히 / Slowly | `slowly` | `천천히` |
+| 아주 / Very | `very` | `아주` |
+| 글자 간격 / Interval | `every` | `초씩` |
+| 화면 / Clear screen | `clear` | `화면` |
+| 화면 지우기 / Clear screen action | `screen` | `지워` · `지워줘` · `비워` · `비워줘` |
+| 줄 / Draw line | `draw` | `줄` · `가로줄` |
+| 줄 긋기 / Draw line action | `line` | `그어` · `그어줘` |
+| 상자 / Box | `box` | `상자로` |
+| 가운데 / Middle | `middle` | `가운데` |
+| 시간 재기 / Start timer | `start` | `시간재기시작해` · `시간재기시작` |
+| 시계 / Timer | `timer` | — |
+| 잰 시간 / Elapsed | `elapsed` | `잰시간` · `걸린시간` |
+| 쿨타임 / Cooldown | `cooldown` | `쿨타임` · `쿨타임을` · `쿨타임은` · `쿨타임이` |
+| 쿨타임 걸기 / Put on cooldown | `put` | `걸어` · `걸어줘` |
+| 쿨타임 끝남 / Ready | `ready` | `끝났으면` |
+| 쿨타임 남음 / On cooldown | — | `남았으면` |
+| 쿨타임 끝날 때까지 / Until ready | — | `끝날때까지` |
 | 군말 / Filler | `please` | `좀` · `혹시` · `제발` |
 
-## 18. Korean particles
+## 22. Korean particles
 
 These endings are not treated as part of the name they follow.
 
 `에게서는` · `한테서는` · `에게서` · `한테서` · `으로는` · `로는` · `에게` · `한테` · `에서` · `으로` · `까지` · `부터` · `처럼` · `보다` · `이라도` · `라도` · `에는` · `에서` · `은` · `는` · `이` · `가` · `을` · `를` · `와` · `과` · `도` · `의` · `에` · `로` · `아` · `야` · `랑` · `이랑` · `예요` · `이에요`
 
-## 19. Typo recovery
+## 23. Typo recovery
 
 For action words and connectors only, and only after Python has rejected the
 line, NME retries once with a single edit repaired (one insertion, deletion,
@@ -283,7 +362,7 @@ substitution, or adjacent swap). If more than one repair is possible it repairs
 nothing and points at the exact span instead. **Strings and comments are never
 touched.**
 
-## 20. Error codes
+## 24. Error codes
 
 | Code | Meaning |
 | --- | --- |
@@ -320,6 +399,7 @@ touched.**
 | `E0223` | the skip command could not be understood |
 | `E0224` | the wait length could not be understood |
 | `E0225` | the list addition could not be understood |
+| `E0226` | the timer has not been started yet |
 | `E0301` | the condition is missing |
 | `E0302` | the condition could not be understood |
 | `E0303` | the repeated body could not be understood |

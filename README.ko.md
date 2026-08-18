@@ -285,7 +285,7 @@ nme 변환 app.py --level 문장형 --language 한국어 -o app.nme
   문법 단계, 실패 사례, 자동 검사, 리뷰 기준을 정하는 저장소 예제 규칙
 - [예제 템플릿](docs/guides/example-template.ko.md) — 새 예제를 바로 시작할 수 있는
   설계 카드, 6종 파일 뼈대, 가이드와 테스트 틀
-- [학습 과정](docs/tutorial.ko.md) — 여섯 프로젝트: Hello World, 대화,
+- [학습 과정](docs/tutorial.ko.md) — 일곱 프로젝트: Hello World, 대화,
   숫자 맞히기, Python 혼용, 타임루프 게임, NME로 작은 컴파일러 만들기
 - [VS Code, Cursor, Zed](docs/editors.ko.md) — 준비된 작업과 파일 설정
 - [AI 코딩 도우미](docs/ai-assistants.ko.md) — Claude Code, Codex,

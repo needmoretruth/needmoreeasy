@@ -42,9 +42,12 @@ pub fn transpile_with_modules(
         .iter()
         .filter_map(|line| match &line.stmt {
             NmeStmt::ModuleImport { path, names } => {
-                let span = match path {
-                    Code::Source(span) => *span,
+                let Code::Source(span) = path else {
+                    // A module path is always copied from the source; the
+                    // compiler never writes one itself.
+                    return None;
                 };
+                let span = *span;
                 let raw = &source[span.start..span.end];
                 Some(ModuleImport {
                     file: raw.trim_matches(['\'', '"']).to_string(),

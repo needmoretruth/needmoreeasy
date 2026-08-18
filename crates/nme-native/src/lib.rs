@@ -1644,9 +1644,10 @@ fn lower_compare(
     }
 }
 
-fn code_text<'a>(code: &nme_core::syntax::Code, source: &'a str) -> &'a str {
+fn code_text<'a>(code: &'a nme_core::syntax::Code, source: &'a str) -> &'a str {
     match code {
         nme_core::syntax::Code::Source(span) => &source[span.start..span.end],
+        nme_core::syntax::Code::Generated(text) => text,
     }
 }
 
@@ -1713,6 +1714,7 @@ fn emit_say(
                 Err(not_supported("null output", span_of_value(value)))
             }
         },
+        Value::Elapsed => Err(not_supported("the stopwatch", span_of_value(value))),
         Value::RandomInteger { .. } | Value::RandomChoice { .. } => {
             Err(not_supported("random values", span_of_value(value)))
         }
@@ -1828,6 +1830,7 @@ fn emit_set(
             Ok(())
         }
         Value::Text(_)
+        | Value::Elapsed
         | Value::RandomInteger { .. }
         | Value::RandomChoice { .. }
         | Value::List(_)
@@ -2685,6 +2688,13 @@ fn unsupported_statement(stmt: &NmeStmt, span: Span) -> Diagnostic {
         NmeStmt::Times { .. } => "repeat blocks",
         NmeStmt::ForEach { .. } => "repeating over a list",
         NmeStmt::Wait { .. } => "waiting",
+        NmeStmt::SaySlowly { .. } => "slow text",
+        NmeStmt::ClearScreen => "clearing the screen",
+        NmeStmt::DrawLine => "drawing a line",
+        NmeStmt::SayInBox { .. } => "a box around text",
+        NmeStmt::SayInMiddle { .. } => "centred text",
+        NmeStmt::StartTimer => "the stopwatch",
+        NmeStmt::Cooldown { .. } | NmeStmt::WaitForCooldown { .. } => "cooldowns",
         NmeStmt::Append { .. } => "adding to a list",
         NmeStmt::Continue => "skipping to the next round",
         NmeStmt::UseModule { .. } => "bundled modules",
@@ -2699,6 +2709,8 @@ fn unsupported_statement(stmt: &NmeStmt, span: Span) -> Diagnostic {
 fn code_span(code: &nme_core::syntax::Code) -> Span {
     match code {
         nme_core::syntax::Code::Source(span) => *span,
+        // Compiler-written Python has no place in the source to point at.
+        nme_core::syntax::Code::Generated(_) => Span::new(0, 0),
     }
 }
 

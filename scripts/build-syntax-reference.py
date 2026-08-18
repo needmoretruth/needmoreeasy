@@ -196,6 +196,42 @@ MODULES = [
     ("고급", "Advanced", 'from "helper.nme" import greet', 'from "helper.nme" import greet', "(from helper import greet — needs helper.nme next to the program)"),
 ]
 
+
+# The stopwatch and every cooldown bind one Python name each
+# (`_nme_clock`, `_nme_cool_<name>`); nothing else in a program may use
+# those names, which is why they start with an underscore.
+SLOW_TEXT = [
+    ('문장형', 'Sentence', 'say slowly Hello', '천천히 말해줘 안녕', '[print(_ch, end="", flush=True) or __import__("time").sleep(0.04) for _ch in "Hello"]; print()', '[print(_ch, end="", flush=True) or __import__("time").sleep(0.04) for _ch in "안녕"]; print()'),
+    ('문장형', 'Sentence', 'show slowly Hello', '천천히 보여줘 안녕', '[print(_ch, end="", flush=True) or __import__("time").sleep(0.04) for _ch in "Hello"]; print()', '[print(_ch, end="", flush=True) or __import__("time").sleep(0.04) for _ch in "안녕"]; print()'),
+    ('문장형', 'Sentence', 'say very slowly Hello', '아주 천천히 말해줘 안녕', '[print(_ch, end="", flush=True) or __import__("time").sleep(0.12) for _ch in "Hello"]; print()', '[print(_ch, end="", flush=True) or __import__("time").sleep(0.12) for _ch in "안녕"]; print()'),
+    ('문장형', 'Sentence', 'say slowly every 3 seconds Hello', '3초씩 천천히 말해줘 안녕', '[print(_ch, end="", flush=True) or __import__("time").sleep(3) for _ch in "Hello"]; print()', '[print(_ch, end="", flush=True) or __import__("time").sleep(3) for _ch in "안녕"]; print()'),
+]
+
+SCREEN = [
+    ('문장형', 'Sentence', 'clear the screen', '화면 지워', 'print("\\033[2J\\033[3J\\033[H", end="")', 'print("\\033[2J\\033[3J\\033[H", end="")'),
+    ('문장형', 'Sentence', 'clear screen', '화면 비워줘', 'print("\\033[2J\\033[3J\\033[H", end="")', 'print("\\033[2J\\033[3J\\033[H", end="")'),
+    ('문장형', 'Sentence', 'draw a line', '줄 그어', 'print("─" * 40)', 'print("─" * 40)'),
+    ('문장형', 'Sentence', 'draw line', '가로줄 그어줘', 'print("─" * 40)', 'print("─" * 40)'),
+    ('문장형', 'Sentence', 'say in a box Hello', '상자로 말해줘 안녕', 'print((lambda _t: (lambda _w: "┌" + "─" * (_w + 2) + "┐\\n│ " + _t + " │\\n└" + "─" * (_w + 2) + "┘")(sum(2 if __import__("unicodedata").east_asian_width(_c) in "WF" else 1 for _c in _t)))("Hello"))', 'print((lambda _t: (lambda _w: "┌" + "─" * (_w + 2) + "┐\\n│ " + _t + " │\\n└" + "─" * (_w + 2) + "┘")(sum(2 if __import__("unicodedata").east_asian_width(_c) in "WF" else 1 for _c in _t)))("안녕"))'),
+    ('문장형', 'Sentence', 'say in the middle Hello', '가운데 말해줘 안녕', 'print((lambda _t: " " * max(0, (40 - sum(2 if __import__("unicodedata").east_asian_width(_c) in "WF" else 1 for _c in _t)) // 2) + _t)("Hello"))', 'print((lambda _t: " " * max(0, (40 - sum(2 if __import__("unicodedata").east_asian_width(_c) in "WF" else 1 for _c in _t)) // 2) + _t)("안녕"))'),
+]
+
+TIMER = [
+    ('문장형', 'Sentence', 'start the timer', '시간 재기 시작해', '_nme_clock = __import__("time").time()', '_nme_clock = __import__("time").time()'),
+    ('문장형', 'Sentence', 'start timer', '시간재기 시작해', '_nme_clock = __import__("time").time()', '_nme_clock = __import__("time").time()'),
+    ('문장형', 'Sentence', 'show elapsed', '잰시간 말해줘', 'print(round(__import__("time").time() - _nme_clock, 2))', 'print(round(__import__("time").time() - _nme_clock, 2))'),
+    ('문장형', 'Sentence', 'set spent to elapsed', '걸린시간은 잰시간', 'spent = round(__import__("time").time() - _nme_clock, 2)', '걸린시간 = round(__import__("time").time() - _nme_clock, 2)'),
+]
+
+COOLDOWN = [
+    ('문장형', 'Sentence', 'put door on cooldown for 3 seconds', '문 쿨타임 3초 걸어', '_nme_cool_door = __import__("time").time() + 3', '_nme_cool_문 = __import__("time").time() + 3'),
+    ('문장형', 'Sentence', 'when door is ready', '만약 문 쿨타임이 끝났으면', 'if (__import__("time").time() >= _nme_cool_door):', 'if (__import__("time").time() >= _nme_cool_문):'),
+    ('문장형', 'Sentence', 'if door is ready', '문 쿨타임 끝났으면', 'if (__import__("time").time() >= _nme_cool_door):', 'if (__import__("time").time() >= _nme_cool_문):'),
+    ('문장형', 'Sentence', 'when door is on cooldown', '만약 문 쿨타임이 남았으면', 'if (__import__("time").time() < _nme_cool_door):', 'if (__import__("time").time() < _nme_cool_문):'),
+    ('문장형', 'Sentence', 'wait for door', '문 쿨타임 끝날때까지 기다려', '__import__("time").sleep(max(0, _nme_cool_door - __import__("time").time()))', '__import__("time").sleep(max(0, _nme_cool_문 - __import__("time").time()))'),
+    ('문장형', 'Sentence', 'pause for door', '문 쿨타임 끝날 때까지 기다려', '__import__("time").sleep(max(0, _nme_cool_door - __import__("time").time()))', '__import__("time").sleep(max(0, _nme_cool_문 - __import__("time").time()))'),
+]
+
 LITERALS = [
     ("`True` · `true`", "`참`", "True"),
     ("`False` · `false`", "`거짓`", "False"),
@@ -275,6 +311,23 @@ def spelling_table(korean: bool) -> str:
         ("최신판 / Latest", "LATEST_WORDS", None),
         ("파일 읽기 / File read", "FILE_READ_WORDS_EN", "FILE_READ_WORDS_KO"),
         ("파일 쓰기 / File write", "FILE_WRITE_WORDS_EN", "FILE_WRITE_WORDS_KO"),
+        ("천천히 / Slowly", "SLOW_WORDS_EN", "SLOW_WORDS_KO"),
+        ("아주 / Very", "VERY_WORDS_EN", "VERY_WORDS_KO"),
+        ("글자 간격 / Interval", "SLOW_EVERY_WORDS_EN", "SLOW_EVERY_WORDS_KO"),
+        ("화면 / Clear screen", "CLEAR_SCREEN_WORDS_EN", "CLEAR_SCREEN_WORDS_KO"),
+        ("화면 지우기 / Clear screen action", "CLEAR_SCREEN_ACTIONS_EN", "CLEAR_SCREEN_ACTIONS_KO"),
+        ("줄 / Draw line", "DRAW_LINE_WORDS_EN", "DRAW_LINE_WORDS_KO"),
+        ("줄 긋기 / Draw line action", "DRAW_LINE_ACTIONS_EN", "DRAW_LINE_ACTIONS_KO"),
+        ("상자 / Box", "BOX_WORDS_EN", "BOX_WORDS_KO"),
+        ("가운데 / Middle", "MIDDLE_WORDS_EN", "MIDDLE_WORDS_KO"),
+        ("시간 재기 / Start timer", "START_TIMER_WORDS_EN", "START_TIMER_WORDS_KO"),
+        ("시계 / Timer", "TIMER_WORDS_EN", None),
+        ("잰 시간 / Elapsed", "ELAPSED_WORDS_EN", "ELAPSED_WORDS_KO"),
+        ("쿨타임 / Cooldown", "COOLDOWN_WORDS_EN", "COOLDOWN_WORDS_KO"),
+        ("쿨타임 걸기 / Put on cooldown", "COOLDOWN_SET_WORDS_EN", "COOLDOWN_SET_WORDS_KO"),
+        ("쿨타임 끝남 / Ready", "COOLDOWN_READY_WORDS_EN", "COOLDOWN_READY_WORDS_KO"),
+        ("쿨타임 남음 / On cooldown", "COOLDOWN_BUSY_WORDS_KO", None),
+        ("쿨타임 끝날 때까지 / Until ready", "COOLDOWN_UNTIL_WORDS_KO", None),
         ("군말 / Filler", "SENTENCE_FILLERS", None),
     ]
     lines = ["| " + " | ".join(header) + " |", "| --- | --- | --- |"]
@@ -428,26 +481,60 @@ NME 명령이 됩니다. 블록 밖에서는 Python 그대로 남습니다.
 
 {level_table(MODULES, True)}
 
-## 17. 동작 단어 전수 목록
+## 17. 천천히 말하기
+
+{level_table(SLOW_TEXT, True)}
+
+글자를 하나씩 내보내고 사이에 잠깐 쉽니다. 쉬는 시간은 기본 0.04초, `아주`를
+붙이면 0.12초이며, `3초씩`처럼 직접 정할 수도 있습니다.
+
+## 18. 화면
+
+{level_table(SCREEN, True)}
+
+화면 지우기는 터미널에 보내는 제어 문자입니다. 터미널이 아닌 곳에서는 글자
+그대로 보일 수 있습니다. 상자와 가운데 맞춤은 한글을 두 칸으로 세기 때문에
+한국어 문장도 반듯하게 나오며, 가로 폭은 40칸입니다.
+
+## 19. 시간 재기
+
+{level_table(TIMER, True)}
+
+`시간 재기 시작해`가 시계를 켜고, `잰시간`/`걸린시간`/`elapsed`는 켠 뒤로 흐른
+초를 소수 둘째 자리까지 돌려줍니다. 값이므로 출력·저장·조건 어디에나 쓸 수
+있습니다(`만약 잰시간이 3보다 크면`). 켜지 않고 읽으면 컴파일할 때 `E0226`으로
+알려 줍니다. 프로그램이 `잰시간`이라는 이름을 직접 만들었으면 그 이름이 이깁니다.
+
+## 20. 쿨타임
+
+{level_table(COOLDOWN, True)}
+
+쿨타임은 이름마다 하나씩 걸립니다. `문 쿨타임 3초 걸어`는 지금부터 3초 뒤를
+기억해 두고, `쿨타임이 끝났으면`/`is ready`는 그 시각이 지났는지 봅니다.
+조건이므로 `만약`·`동안`·`아니면 만약`과 한 줄 형태에서 모두 쓸 수 있습니다.
+`wait for door`는 영어 문장으로도 읽히므로, 그 이름이 이미 다른 값으로 저장돼
+있으면 쿨타임으로 읽지 않습니다.
+
+## 21. 동작 단어 전수 목록
 
 같은 뜻으로 받아들이는 표기를 하나도 빠뜨리지 않고 적은 표입니다.
 
 {spelling_table(True)}
 
-## 18. 조사 부록
+## 22. 조사 부록
 
 이름 뒤에 붙어도 이름의 일부로 보지 않는 조사입니다.
 
 {spellings(words("KOREAN_PARTICLES"))}
 
-## 19. 오타 복구
+## 23. 오타 복구
 
 동작 단어와 연결어에 한해, Python이 그 줄을 거부한 다음에만 한 글자 오타를
 고쳐서 다시 읽어 봅니다(넣기·빼기·바꾸기·이웃 자리 바꿈 한 번). 고칠 방법이
 둘 이상이면 고치지 않고 그 자리를 짚어 알려 줍니다. **문자열과 주석은 절대
 건드리지 않습니다.**
 
-## 20. 오류 코드
+## 24. 오류 코드
 
 {diagnostics_table(True)}
 
@@ -591,19 +678,57 @@ a quote character.
 
 {level_table(MODULES, False)}
 
-## 17. Every action word
+## 17. Slow text
+
+{level_table(SLOW_TEXT, False)}
+
+Each character is printed on its own with a short pause after it. The pause is
+0.04 seconds by default, 0.12 with `very`, and whatever you name with
+`every 3 seconds` / `3초씩`.
+
+## 18. Screen
+
+{level_table(SCREEN, False)}
+
+Clearing the screen sends a terminal control sequence, so somewhere that is not
+a terminal it may show up as text. The box and the centred line count a Korean
+character as two columns, so a Korean sentence comes out straight; the width is
+40 columns.
+
+## 19. The stopwatch
+
+{level_table(TIMER, False)}
+
+`start the timer` starts the clock and `elapsed` / `잰시간` / `걸린시간` reads
+how many seconds have passed, to two decimal places. It is a value, so it works
+in output, in a saved name, and in a condition (`if elapsed is greater than 3`).
+Reading it without starting the clock is reported at compile time as `E0226`. A
+name the program made itself always wins over the word.
+
+## 20. Cooldowns
+
+{level_table(COOLDOWN, False)}
+
+One cooldown belongs to one name. `put door on cooldown for 3 seconds` remembers
+the moment three seconds from now, and `is ready` / `쿨타임이 끝났으면` asks
+whether that moment has passed. They are conditions, so they work with `when`,
+`while`, `else if`, and the one-line form of all three. `wait for door` also
+reads as an ordinary English sentence, so a name the program already saved as
+something else is not read as a cooldown.
+
+## 21. Every action word
 
 Every spelling accepted for each action, with nothing left out.
 
 {spelling_table(False)}
 
-## 18. Korean particles
+## 22. Korean particles
 
 These endings are not treated as part of the name they follow.
 
 {spellings(words("KOREAN_PARTICLES"))}
 
-## 19. Typo recovery
+## 23. Typo recovery
 
 For action words and connectors only, and only after Python has rejected the
 line, NME retries once with a single edit repaired (one insertion, deletion,
@@ -611,7 +736,7 @@ substitution, or adjacent swap). If more than one repair is possible it repairs
 nothing and points at the exact span instead. **Strings and comments are never
 touched.**
 
-## 20. Error codes
+## 24. Error codes
 
 {diagnostics_table(False)}
 

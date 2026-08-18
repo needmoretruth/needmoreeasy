@@ -14,9 +14,9 @@ use crate::lexer::{LogicalLine, Token};
 use crate::syntax::{
     BundledModuleId, Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, Literal,
     LogicalOp, ModuleVersion, NmeLine, NmeStmt, Spelling, TextPart, TextTemplate, UpdateOp, Value,
-    FILE_MODULE, FILE_MODULE_KO, FILE_READ_WORDS_EN, FILE_READ_WORDS_KO, FILE_WRITE_WORDS_EN,
-    FILE_WRITE_WORDS_KO, RANDOM_MODULE, RANDOM_MODULE_KO, SAY_KEYWORD, SAY_KEYWORD_KO,
-    SAY_WORDS_EN, TIMES_KEYWORD, TIMES_KEYWORD_KO,
+    COOLDOWN_PREFIX, ELAPSED_PYTHON, FILE_MODULE, FILE_MODULE_KO, FILE_READ_WORDS_EN,
+    FILE_READ_WORDS_KO, FILE_WRITE_WORDS_EN, FILE_WRITE_WORDS_KO, RANDOM_MODULE, RANDOM_MODULE_KO,
+    SAY_KEYWORD, SAY_KEYWORD_KO, SAY_WORDS_EN, TIMER_NAME, TIMES_KEYWORD, TIMES_KEYWORD_KO,
 };
 
 const SAY_WORDS_KO: &[&str] = &[
@@ -168,6 +168,55 @@ const APPEND_CONNECTORS_EN: &[&str] = &["to", "into", "onto"];
 const APPEND_TARGET_PARTICLES_KO: &[&str] = &["에다가", "에다", "에", "한테", "에게"];
 const LIST_WORDS_EN: &[&str] = &["list"];
 const LIST_WORDS_KO: &[&str] = &["목록", "리스트"];
+/// `say slowly Hello` / `천천히 말해줘 안녕` — text told one character at a time.
+const SLOW_WORDS_EN: &[&str] = &["slowly"];
+const SLOW_WORDS_KO: &[&str] = &["천천히"];
+/// The intensity word in `say very slowly` / `아주 천천히 말해줘`.
+const VERY_WORDS_EN: &[&str] = &["very"];
+const VERY_WORDS_KO: &[&str] = &["아주"];
+/// The marker before an explicit pause: `slowly every 3 seconds` / `3초씩`.
+const SLOW_EVERY_WORDS_EN: &[&str] = &["every"];
+const SLOW_EVERY_WORDS_KO: &[&str] = &["초씩"];
+/// Seconds between characters for the plain and the very slow spelling.
+const SLOW_SECONDS: &str = "0.04";
+const VERY_SLOW_SECONDS: &str = "0.12";
+/// `clear the screen` / `화면 지워`.
+const CLEAR_SCREEN_WORDS_EN: &[&str] = &["clear"];
+const CLEAR_SCREEN_WORDS_KO: &[&str] = &["화면"];
+const CLEAR_SCREEN_ACTIONS_EN: &[&str] = &["screen"];
+const CLEAR_SCREEN_ACTIONS_KO: &[&str] = &["지워", "지워줘", "비워", "비워줘"];
+/// `draw a line` / `줄 그어`.
+const DRAW_LINE_WORDS_EN: &[&str] = &["draw"];
+const DRAW_LINE_WORDS_KO: &[&str] = &["줄", "가로줄"];
+const DRAW_LINE_ACTIONS_EN: &[&str] = &["line"];
+const DRAW_LINE_ACTIONS_KO: &[&str] = &["그어", "그어줘"];
+/// `say in a box Hello` / `상자로 말해줘 안녕`.
+const BOX_WORDS_EN: &[&str] = &["box"];
+const BOX_WORDS_KO: &[&str] = &["상자로"];
+/// `say in the middle Hello` / `가운데 말해줘 안녕`.
+const MIDDLE_WORDS_EN: &[&str] = &["middle"];
+const MIDDLE_WORDS_KO: &[&str] = &["가운데"];
+/// `start the timer` / `시간 재기 시작해`. The Korean spellings are written
+/// joined, exactly like the other multi-word Korean actions, because the
+/// matcher glues neighbouring words back together before comparing.
+const START_TIMER_WORDS_EN: &[&str] = &["start"];
+const START_TIMER_WORDS_KO: &[&str] = &["시간재기시작해", "시간재기시작"];
+const TIMER_WORDS_EN: &[&str] = &["timer"];
+/// `put door on cooldown for 3 seconds` / `문 쿨타임 3초 걸어`.
+const COOLDOWN_WORDS_EN: &[&str] = &["cooldown"];
+const COOLDOWN_WORDS_KO: &[&str] = &["쿨타임", "쿨타임을", "쿨타임은", "쿨타임이"];
+const COOLDOWN_SET_WORDS_EN: &[&str] = &["put"];
+const COOLDOWN_SET_WORDS_KO: &[&str] = &["걸어", "걸어줘"];
+/// `when door is ready` / `문 쿨타임이 끝났으면`.
+const COOLDOWN_READY_WORDS_EN: &[&str] = &["ready"];
+const COOLDOWN_READY_WORDS_KO: &[&str] = &["끝났으면"];
+/// `when door is on cooldown` / `문 쿨타임이 남았으면`.
+const COOLDOWN_BUSY_WORDS_KO: &[&str] = &["남았으면"];
+/// `문 쿨타임 끝날때까지 기다려` — the Korean wait spelling, written joined.
+const COOLDOWN_UNTIL_WORDS_KO: &[&str] = &["끝날때까지"];
+/// `elapsed` / `잰시간` — the stopwatch reading, usable wherever a value is.
+const ELAPSED_WORDS_EN: &[&str] = &["elapsed"];
+const ELAPSED_WORDS_KO: &[&str] = &["잰시간", "걸린시간"];
 const EACH_WORDS_EN: &[&str] = &["each", "every"];
 /// Korean loop-variable ending in `이름들의 이름마다 반복해`.
 const EACH_SUFFIX_KO: &str = "마다";
@@ -551,6 +600,10 @@ pub fn parse_program(
                 };
                 let virtual_indent =
                     (base_target_indent + python_depth).saturating_sub(line.indent);
+                if reads_elapsed(&stmt) && !known_names.contains(TIMER_NAME) {
+                    problems.push(timer_not_started_diagnostic(line.span));
+                    continue;
+                }
                 bindings.remember_nme(&stmt);
                 found.push(NmeLine {
                     line_index: index,
@@ -2125,6 +2178,45 @@ fn classify(
     // These four run before the older actions because each ends with a word
     // the output vocabulary would otherwise claim: `기다려`, `건너뛰어`, `넣어`,
     // and the `마다` loop shape.
+    // The screen and timing sentences come first for the same reason: each
+    // of them ends in, or contains, a word one of the older actions would
+    // otherwise claim (`기다려`, `걸어`, a number of seconds, an output word).
+    exact_match!(match_say_slowly(
+        source,
+        tokens,
+        known_names,
+        MatchMode::Exact
+    ));
+    exact_match!(match_say_in_box(
+        source,
+        tokens,
+        known_names,
+        MatchMode::Exact
+    ));
+    exact_match!(match_say_in_middle(
+        source,
+        tokens,
+        known_names,
+        MatchMode::Exact
+    ));
+    if let Some(stmt) = match_clear_screen(tokens, MatchMode::Exact) {
+        return Ok(Some(stmt));
+    }
+    if let Some(stmt) = match_draw_line(tokens, MatchMode::Exact) {
+        return Ok(Some(stmt));
+    }
+    if let Some(stmt) = match_start_timer(tokens, MatchMode::Exact) {
+        return Ok(Some(stmt));
+    }
+    exact_match!(match_cooldown(
+        source,
+        tokens,
+        known_names,
+        MatchMode::Exact
+    ));
+    if let Some(stmt) = match_cooldown_wait(tokens, known_names, MatchMode::Exact) {
+        return Ok(Some(stmt));
+    }
     exact_match!(match_wait(source, tokens, known_names, MatchMode::Exact));
     exact_match!(match_continue(tokens, MatchMode::Exact));
     exact_match!(match_append(source, tokens, known_names, MatchMode::Exact));
@@ -3007,6 +3099,14 @@ fn starts_a_different_statement(token: &Token) -> bool {
         ELSE_WORDS_KO,
         WHILE_WORDS_EN,
         REPEAT_WORDS_EN,
+        SLOW_WORDS_KO,
+        VERY_WORDS_KO,
+        BOX_WORDS_KO,
+        MIDDLE_WORDS_KO,
+        CLEAR_SCREEN_WORDS_EN,
+        CLEAR_SCREEN_WORDS_KO,
+        DRAW_LINE_WORDS_EN,
+        DRAW_LINE_WORDS_KO,
     ]
     .iter()
     .any(|words| token_matches_exact(token, words))
@@ -3340,6 +3440,533 @@ fn append_diagnostic(span: Span) -> Diagnostic {
     )
 }
 
+// ------------------------------------------- slow text, screen, and timing
+
+/// `say slowly Hello` / `천천히 말해줘 안녕`.
+///
+/// The message is read exactly the way the ordinary output statement reads
+/// it, so a name written inside the sentence is still substituted.
+fn match_say_slowly(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+    mode: MatchMode,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    let start = leading_sentence_fillers(tokens);
+    let Some((seconds, value_start)) = slow_speed_at(source, tokens, start, mode) else {
+        return Ok(None);
+    };
+    let body = &tokens[value_start..];
+    if body.is_empty() {
+        return Err(say_missing(Spelling::English, span_of(tokens)));
+    }
+    let value = parse_value(source, body, known_names, true)
+        .map_err(|()| say_value_unparseable(span_of(body)))?;
+    Ok(Some(NmeStmt::SaySlowly { value, seconds }))
+}
+
+/// How long to pause between two characters, and where the message starts.
+///
+/// English puts the speed after the output word (`say very slowly …`);
+/// Korean puts it before it (`아주 천천히 말해줘 …`, `3초씩 천천히 말해줘 …`).
+fn slow_speed_at(
+    source: &str,
+    tokens: &[Token],
+    start: usize,
+    mode: MatchMode,
+) -> Option<(Code, usize)> {
+    if let Some((_, consumed)) = output_action_at(tokens, start, mode) {
+        let mut cursor = start + consumed;
+        let very = tokens
+            .get(cursor)
+            .is_some_and(|token| token_matches_exact(token, VERY_WORDS_EN));
+        if very {
+            cursor += 1;
+        }
+        if !tokens
+            .get(cursor)
+            .is_some_and(|token| token_matches_exact(token, SLOW_WORDS_EN))
+        {
+            return None;
+        }
+        cursor += 1;
+        if tokens
+            .get(cursor)
+            .is_some_and(|token| token_matches_exact(token, SLOW_EVERY_WORDS_EN))
+        {
+            let amount_start = cursor + 1;
+            let unit = (amount_start..tokens.len())
+                .find(|&index| token_matches_exact(&tokens[index], SECOND_WORDS_EN))?;
+            let seconds = parse_wait_amount(source, &tokens[amount_start..=unit])?;
+            return Some((seconds, unit + 1));
+        }
+        let fixed = if very {
+            VERY_SLOW_SECONDS
+        } else {
+            SLOW_SECONDS
+        };
+        return Some((Code::Generated(fixed.to_string()), cursor));
+    }
+
+    let mut cursor = start;
+    let mut seconds = None;
+    // `3초씩 천천히` — the amount is everything before the `초씩` marker.
+    let interval_unit = (start + 1..tokens.len()).find(|&index| {
+        token_matches_exact(&tokens[index], SLOW_EVERY_WORDS_KO)
+            && tokens
+                .get(index + 1)
+                .is_some_and(|next| token_matches_exact(next, SLOW_WORDS_KO))
+    });
+    if let Some(unit) = interval_unit {
+        seconds = Some(expression_code(source, &tokens[start..unit])?);
+        cursor = unit + 1;
+    } else if tokens
+        .get(cursor)
+        .is_some_and(|token| token_matches_exact(token, VERY_WORDS_KO))
+    {
+        seconds = Some(Code::Generated(VERY_SLOW_SECONDS.to_string()));
+        cursor += 1;
+    }
+    if !tokens
+        .get(cursor)
+        .is_some_and(|token| token_matches_exact(token, SLOW_WORDS_KO))
+    {
+        return None;
+    }
+    cursor += 1;
+    let consumed = action_phrase_at(tokens, cursor, SAY_WORDS_KO, mode)?;
+    Some((
+        seconds.unwrap_or_else(|| Code::Generated(SLOW_SECONDS.to_string())),
+        cursor + consumed,
+    ))
+}
+
+/// `clear the screen` / `화면 지워`.
+fn match_clear_screen(tokens: &[Token], mode: MatchMode) -> Option<NmeStmt> {
+    fixed_screen_sentence(
+        tokens,
+        mode,
+        CLEAR_SCREEN_WORDS_EN,
+        CLEAR_SCREEN_ACTIONS_EN,
+        CLEAR_SCREEN_WORDS_KO,
+        CLEAR_SCREEN_ACTIONS_KO,
+    )
+    .then_some(NmeStmt::ClearScreen)
+}
+
+/// `draw a line` / `줄 그어`.
+fn match_draw_line(tokens: &[Token], mode: MatchMode) -> Option<NmeStmt> {
+    fixed_screen_sentence(
+        tokens,
+        mode,
+        DRAW_LINE_WORDS_EN,
+        DRAW_LINE_ACTIONS_EN,
+        DRAW_LINE_WORDS_KO,
+        DRAW_LINE_ACTIONS_KO,
+    )
+    .then_some(NmeStmt::DrawLine)
+}
+
+/// A whole-line sentence with no value in it: an English verb and its object
+/// (`clear the screen`), or a Korean subject and its verb (`화면 지워`).
+///
+/// Nothing else may be on the line, so a message that merely mentions the
+/// same words (`화면 지워도 되는지 말해줘`) stays a message.
+fn fixed_screen_sentence(
+    tokens: &[Token],
+    mode: MatchMode,
+    english_verb: &[&str],
+    english_object: &[&str],
+    korean_subject: &[&str],
+    korean_verb: &[&str],
+) -> bool {
+    let words = trim_command_endings(tokens);
+    if let Some(consumed) = action_phrase_at(words, 0, english_verb, mode) {
+        let cursor = consumed + usize::from(is_english_article(words.get(consumed)));
+        return words.len() == cursor + 1 && token_matches_exact(&words[cursor], english_object);
+    }
+    words.len() == 2
+        && token_matches_exact(&words[0], korean_subject)
+        && token_matches_exact(&words[1], korean_verb)
+}
+
+/// `say in a box Hello` / `상자로 말해줘 안녕`, and the centred twin. Returns
+/// the message; the caller decides which frame to draw around it.
+fn framed_say_value(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+    mode: MatchMode,
+    english_frame: &[&str],
+    korean_frame: &[&str],
+) -> Result<Option<Value>, Diagnostic> {
+    let start = leading_sentence_fillers(tokens);
+    let value_start = if let Some((_, consumed)) = output_action_at(tokens, start, mode) {
+        let mut cursor = start + consumed;
+        if !tokens
+            .get(cursor)
+            .is_some_and(|token| matches!(token.tok, Tok::In))
+        {
+            return Ok(None);
+        }
+        cursor += 1;
+        cursor += usize::from(is_english_article(tokens.get(cursor)));
+        if !tokens
+            .get(cursor)
+            .is_some_and(|token| token_matches_exact(token, english_frame))
+        {
+            return Ok(None);
+        }
+        cursor + 1
+    } else if tokens
+        .get(start)
+        .is_some_and(|token| token_matches_exact(token, korean_frame))
+    {
+        let Some(consumed) = action_phrase_at(tokens, start + 1, SAY_WORDS_KO, mode) else {
+            return Ok(None);
+        };
+        start + 1 + consumed
+    } else {
+        return Ok(None);
+    };
+    let body = &tokens[value_start..];
+    if body.is_empty() {
+        return Err(say_missing(Spelling::English, span_of(tokens)));
+    }
+    parse_value(source, body, known_names, true)
+        .map(Some)
+        .map_err(|()| say_value_unparseable(span_of(body)))
+}
+
+/// `say in a box Hello` / `상자로 말해줘 안녕`.
+fn match_say_in_box(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+    mode: MatchMode,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    Ok(framed_say_value(
+        source,
+        tokens,
+        known_names,
+        mode,
+        BOX_WORDS_EN,
+        BOX_WORDS_KO,
+    )?
+    .map(|value| NmeStmt::SayInBox { value }))
+}
+
+/// `say in the middle Hello` / `가운데 말해줘 안녕`.
+fn match_say_in_middle(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+    mode: MatchMode,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    Ok(framed_say_value(
+        source,
+        tokens,
+        known_names,
+        mode,
+        MIDDLE_WORDS_EN,
+        MIDDLE_WORDS_KO,
+    )?
+    .map(|value| NmeStmt::SayInMiddle { value }))
+}
+
+/// `start the timer` / `시간 재기 시작해`.
+fn match_start_timer(tokens: &[Token], mode: MatchMode) -> Option<NmeStmt> {
+    let words = trim_command_endings(tokens);
+    if let Some(consumed) = action_phrase_at(words, 0, START_TIMER_WORDS_KO, mode) {
+        return (consumed == words.len()).then_some(NmeStmt::StartTimer);
+    }
+    let consumed = action_phrase_at(words, 0, START_TIMER_WORDS_EN, mode)?;
+    let cursor = consumed + usize::from(is_english_article(words.get(consumed)));
+    (words.len() == cursor + 1 && token_matches_exact(&words[cursor], TIMER_WORDS_EN))
+        .then_some(NmeStmt::StartTimer)
+}
+
+/// `put door on cooldown for 3 seconds` / `문 쿨타임 3초 걸어`.
+fn match_cooldown(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+    mode: MatchMode,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    let words = trim_command_endings(tokens);
+    if let Some(consumed) = action_phrase_at(words, 0, COOLDOWN_SET_WORDS_EN, mode) {
+        let Some(target) = words.get(consumed).and_then(name_word) else {
+            return Ok(None);
+        };
+        let mut cursor = consumed + 1;
+        if !words
+            .get(cursor)
+            .is_some_and(|token| token_matches_exact(token, &["on"]))
+        {
+            return Ok(None);
+        }
+        cursor += 1;
+        if !words
+            .get(cursor)
+            .is_some_and(|token| token_matches_exact(token, COOLDOWN_WORDS_EN))
+        {
+            return Ok(None);
+        }
+        cursor += 1;
+        let Some(seconds) = parse_wait_amount(source, &words[cursor..]) else {
+            return Err(wait_amount_diagnostic(span_of(tokens)));
+        };
+        return Ok(Some(NmeStmt::Cooldown {
+            target: cooldown_target_name(target, known_names),
+            seconds,
+        }));
+    }
+
+    // Korean puts the action last: `<이름> 쿨타임 <n>초 걸어`.
+    let start_at = words.len().saturating_sub(2);
+    let Some(action_start) = (start_at..words.len()).find(|&start| {
+        action_phrase_at(words, start, COOLDOWN_SET_WORDS_KO, mode)
+            .is_some_and(|used| start + used == words.len())
+    }) else {
+        return Ok(None);
+    };
+    // `<이름>`, `쿨타임`, and at least one word of amount have to come first;
+    // without them this is an ordinary sentence that happens to end in `걸어`.
+    if action_start < 3 || !token_matches_exact(&words[1], COOLDOWN_WORDS_KO) {
+        return Ok(None);
+    }
+    let Some(target) = name_word(&words[0]) else {
+        return Ok(None);
+    };
+    let Some(seconds) = parse_wait_amount(source, &words[2..action_start]) else {
+        return Err(wait_amount_diagnostic(span_of(tokens)));
+    };
+    Ok(Some(NmeStmt::Cooldown {
+        target: cooldown_target_name(target, known_names),
+        seconds,
+    }))
+}
+
+/// `wait for door` / `문 쿨타임 끝날때까지 기다려`.
+fn match_cooldown_wait(
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+    mode: MatchMode,
+) -> Option<NmeStmt> {
+    let words = trim_command_endings(tokens);
+    if let Some(consumed) = action_phrase_at(words, 0, WAIT_WORDS_EN, mode) {
+        if words.len() != consumed + 2 || !matches!(words[consumed].tok, Tok::For) {
+            return None;
+        }
+        let target = cooldown_target_name(name_word(&words[consumed + 1])?, known_names);
+        // `wait for pause_length` reads as a length of time when the program
+        // already has a `pause_length`, so a name that is known but is not a
+        // cooldown is left to the ordinary wait rules.
+        let is_cooldown = known_names.contains(&format!("{COOLDOWN_PREFIX}{target}"));
+        return (is_cooldown || !known_names.contains(&target))
+            .then_some(NmeStmt::WaitForCooldown { target });
+    }
+    if words.len() < 4 {
+        return None;
+    }
+    let action_start = words.len() - 1;
+    if !token_matches_exact(&words[action_start], WAIT_WORDS_KO)
+        || !token_matches_exact(&words[1], COOLDOWN_WORDS_KO)
+    {
+        return None;
+    }
+    let target = name_word(&words[0])?;
+    let until = action_phrase_at(words, 2, COOLDOWN_UNTIL_WORDS_KO, mode)?;
+    (2 + until == action_start).then(|| NmeStmt::WaitForCooldown {
+        target: cooldown_target_name(target, known_names),
+    })
+}
+
+/// `<name> is ready` / `<이름> 쿨타임이 끝났으면`, plus the index the inline
+/// body starts at. Both spellings are ordinary conditions, so they work in
+/// `when`, `while`, `else if`, and the one-line forms of all three.
+fn cooldown_condition_at(tokens: &[Token], start: usize) -> Option<(Condition, usize)> {
+    english_cooldown_condition_at(tokens, start)
+        .or_else(|| korean_cooldown_condition_at(tokens, start))
+}
+
+fn english_cooldown_condition_at(tokens: &[Token], start: usize) -> Option<(Condition, usize)> {
+    let target = name_word(tokens.get(start)?)?;
+    if token_word(tokens.get(start + 1)?) != Some("is") {
+        return None;
+    }
+    let (ready, mut body_start) = if tokens
+        .get(start + 2)
+        .is_some_and(|token| token_matches_exact(token, COOLDOWN_READY_WORDS_EN))
+    {
+        (true, start + 3)
+    } else if tokens
+        .get(start + 2)
+        .is_some_and(|token| token_matches_exact(token, &["on"]))
+        && tokens
+            .get(start + 3)
+            .is_some_and(|token| token_matches_exact(token, COOLDOWN_WORDS_EN))
+    {
+        (false, start + 4)
+    } else {
+        return None;
+    };
+    // `then` separates the condition from a one-line body, exactly as it
+    // does after every other English condition.
+    if tokens
+        .get(body_start)
+        .is_some_and(|token| token_word(token) == Some("then"))
+    {
+        body_start += 1;
+    }
+    Some((cooldown_condition(target, ready), body_start))
+}
+
+fn korean_cooldown_condition_at(tokens: &[Token], start: usize) -> Option<(Condition, usize)> {
+    let target = name_word(tokens.get(start)?)?;
+    if !token_matches_exact(tokens.get(start + 1)?, COOLDOWN_WORDS_KO) {
+        return None;
+    }
+    let marker = tokens.get(start + 2)?;
+    let ready = if token_matches_exact(marker, COOLDOWN_READY_WORDS_KO) {
+        true
+    } else if token_matches_exact(marker, COOLDOWN_BUSY_WORDS_KO) {
+        false
+    } else {
+        return None;
+    };
+    Some((cooldown_condition(target, ready), start + 3))
+}
+
+/// The Python behind `is ready` and `is on cooldown`. It is written here
+/// rather than taken from the source, because the source never spells it.
+fn cooldown_condition(target: &str, ready: bool) -> Condition {
+    let operator = if ready { ">=" } else { "<" };
+    Condition::Truthy {
+        value: ConditionValue::Python(Code::Generated(format!(
+            "__import__(\"time\").time() {operator} {COOLDOWN_PREFIX}{target}"
+        ))),
+        negated: false,
+    }
+}
+
+/// The NME name a cooldown belongs to. A Korean particle is only removed
+/// when the program already knows the shorter name, exactly as everywhere
+/// else, so a name that merely ends in a particle survives whole.
+fn cooldown_target_name(word: &str, known_names: &HashSet<String>) -> String {
+    resolve_known_particle(word, known_names)
+        .unwrap_or(word)
+        .to_string()
+}
+
+/// `elapsed` / `잰시간` standing alone as a value.
+///
+/// A name the program made itself always wins, so a program with its own
+/// `elapsed` keeps it.
+fn parse_elapsed_value(tokens: &[Token], known_names: &HashSet<String>) -> Option<Value> {
+    (tokens.len() == 1 && is_elapsed_word(&tokens[0], known_names)).then_some(Value::Elapsed)
+}
+
+fn is_elapsed_word(token: &Token, known_names: &HashSet<String>) -> bool {
+    name_word(token).is_some_and(|word| {
+        !known_names.contains(word)
+            && (ELAPSED_WORDS_EN.contains(&word) || ELAPSED_WORDS_KO.contains(&word))
+    })
+}
+
+/// True when this statement reads the stopwatch, so the parser can say that
+/// the timer was never started instead of leaving a `NameError` for later.
+fn reads_elapsed(stmt: &NmeStmt) -> bool {
+    match stmt {
+        NmeStmt::Say { value }
+        | NmeStmt::Set { value, .. }
+        | NmeStmt::Append { value, .. }
+        | NmeStmt::FileWrite { value, .. }
+        | NmeStmt::SayInBox { value }
+        | NmeStmt::SayInMiddle { value }
+        | NmeStmt::SaySlowly { value, .. } => value_reads_elapsed(value),
+        NmeStmt::Ask { prompt, .. } => prompt.as_ref().is_some_and(value_reads_elapsed),
+        NmeStmt::When { condition, inline }
+        | NmeStmt::While { condition, inline }
+        | NmeStmt::ElseIf { condition, inline } => {
+            condition_reads_elapsed(condition) || inline_reads_elapsed(inline.as_ref())
+        }
+        NmeStmt::Else { inline } => inline_reads_elapsed(inline.as_ref()),
+        NmeStmt::Times { inline, .. } | NmeStmt::ForEach { inline, .. } => {
+            inline_reads_elapsed(inline.as_ref())
+        }
+        _ => false,
+    }
+}
+
+fn value_reads_elapsed(value: &Value) -> bool {
+    match value {
+        Value::Elapsed => true,
+        Value::List(items) => items.iter().any(value_reads_elapsed),
+        _ => false,
+    }
+}
+
+fn condition_reads_elapsed(condition: &Condition) -> bool {
+    match condition {
+        Condition::Truthy { value, .. } => condition_value_reads_elapsed(value),
+        Condition::Compare { left, right, .. } => {
+            condition_value_reads_elapsed(left) || condition_value_reads_elapsed(right)
+        }
+        Condition::Logical { left, right, .. } => {
+            condition_reads_elapsed(left) || condition_reads_elapsed(right)
+        }
+        Condition::Python(_) => false,
+    }
+}
+
+fn condition_value_reads_elapsed(value: &ConditionValue) -> bool {
+    matches!(value, ConditionValue::Python(Code::Generated(text)) if text == ELAPSED_PYTHON)
+}
+
+fn inline_reads_elapsed(inline: Option<&InlineStmt>) -> bool {
+    matches!(inline, Some(InlineStmt::Nme(inner)) if reads_elapsed(inner))
+}
+
+fn timer_not_started_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::TimerNotStarted,
+        "the timer has not been started yet",
+        "시간 재기를 아직 시작하지 않았어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "write `start the timer` on an earlier line",
+        "앞 줄에 `시간 재기 시작해`라고 적어 주세요",
+    )
+}
+
+/// The words of a line, with a trailing `?`, `!`, or `.` dropped.
+fn trim_command_endings(tokens: &[Token]) -> &[Token] {
+    let mut end = tokens.len();
+    while end > 0 && is_command_ending(&tokens[end - 1]) {
+        end -= 1;
+    }
+    &tokens[..end]
+}
+
+fn is_english_article(token: Option<&Token>) -> bool {
+    token.is_some_and(|token| token_matches_exact(token, &["a", "an", "the"]))
+}
+
+fn say_value_unparseable(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::SayValueUnparseable,
+        "I couldn't understand what to show",
+        "무엇을 말할지 이해하지 못했어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "write a value, or a sentence such as `show Hello world`",
+        "`안녕하세요 말해줘`처럼 평범한 문장으로 적어도 돼요",
+    )
+}
+
 // -------------------------------------------------------- repeat over a list
 
 /// `for each name in names` / `이름들의 이름마다 반복해`.
@@ -3650,6 +4277,19 @@ fn match_while(
         }
     }
 
+    if !trailing_while {
+        if let Some((condition, body_start)) = cooldown_condition_at(tokens, condition_start) {
+            let inline = parse_suite_body(
+                source,
+                &tokens[body_start..],
+                block,
+                SuiteKind::Condition,
+                span_of(tokens),
+                known_names,
+            )?;
+            return Ok(Some(NmeStmt::While { condition, inline }));
+        }
+    }
     let (condition_tokens, body_start, connector) = if trailing_while {
         if let Some((relative_at, connector)) = find_condition_connector(condition_slice) {
             let (condition, _, connector) =
@@ -3763,6 +4403,17 @@ fn match_branch(
             inline,
         }));
     }
+    if let Some((condition, body_start)) = cooldown_condition_at(tokens, condition_start) {
+        let inline = parse_suite_body(
+            source,
+            &tokens[body_start..],
+            block,
+            SuiteKind::Condition,
+            span_of(tokens),
+            known_names,
+        )?;
+        return Ok(Some(NmeStmt::ElseIf { condition, inline }));
+    }
     let remainder = &tokens[condition_start..];
     let (condition_tokens, body_start, connector) = match find_condition_connector(remainder) {
         Some((relative_at, connector)) => {
@@ -3823,6 +4474,20 @@ fn match_subject_when(
             .is_some_and(|token| token_matches_exact(token, WHILE_WORDS_KO))
     {
         return Ok(None);
+    }
+    // `문 쿨타임이 끝났으면 발사 말해줘` — the Korean cooldown condition also
+    // works without an explicit `만약`. Only the Korean spelling is claimed
+    // here: bare `door is ready` is a valid Python line and stays Python.
+    if let Some((condition, body_start)) = korean_cooldown_condition_at(tokens, 0) {
+        let inline = parse_suite_body(
+            source,
+            &tokens[body_start..],
+            block,
+            SuiteKind::Condition,
+            span_of(tokens),
+            known_names,
+        )?;
+        return Ok(Some(NmeStmt::When { condition, inline }));
     }
     let Some((relative_at, connector)) = find_condition_connector(tokens) else {
         return Ok(None);
@@ -3953,6 +4618,21 @@ fn match_when(
             condition: Condition::Python(Code::Source(condition_span)),
             inline,
         }));
+    }
+
+    // A Korean cooldown condition ends in its own connector (`끝났으면`), so
+    // it has to be read before the generic connector search cuts that word
+    // off and leaves a meaningless comparison behind.
+    if let Some((condition, body_start)) = cooldown_condition_at(tokens, consumed) {
+        let inline = parse_suite_body(
+            source,
+            &tokens[body_start..],
+            block,
+            SuiteKind::Condition,
+            span_of(tokens),
+            known_names,
+        )?;
+        return Ok(Some(NmeStmt::When { condition, inline }));
     }
 
     let natural = find_condition_connector(&tokens[consumed..]);
@@ -4436,6 +5116,13 @@ fn parse_natural_condition(
 ) -> Result<Condition, Diagnostic> {
     if tokens.is_empty() {
         return Err(condition_missing(spelling, Span::new(0, 0)));
+    }
+    // `<name> is ready` / `<이름> 쿨타임이 남았으면` is a whole condition on
+    // its own; nothing inside it is a comparison to be taken apart.
+    if let Some((condition, end)) = cooldown_condition_at(tokens, 0) {
+        if end == tokens.len() {
+            return Ok(condition);
+        }
     }
     // Parentheses around a whole NME condition should not turn its logical
     // connectors into an opaque Python expression. Keep the token-based
@@ -4928,7 +5615,21 @@ fn condition_left(token: &Token, known_names: &HashSet<String>) -> ConditionValu
     let name = resolve_known_particle(word, known_names)
         .or_else(|| strip_any_suffix(word, &["은", "는", "이", "가"]))
         .unwrap_or(word);
+    if is_elapsed_name(name, known_names) {
+        return elapsed_condition_value();
+    }
     ConditionValue::Name(name.to_string())
+}
+
+/// `잰시간` and `elapsed` read the stopwatch wherever a condition may name a
+/// value, so `만약 잰시간이 3보다 크면` compares seconds and not a name.
+fn is_elapsed_name(name: &str, known_names: &HashSet<String>) -> bool {
+    !known_names.contains(name)
+        && (ELAPSED_WORDS_EN.contains(&name) || ELAPSED_WORDS_KO.contains(&name))
+}
+
+fn elapsed_condition_value() -> ConditionValue {
+    ConditionValue::Python(Code::Generated(ELAPSED_PYTHON.to_string()))
 }
 
 fn condition_rhs(
@@ -4941,6 +5642,9 @@ fn condition_rhs(
             return Some(ConditionValue::Literal(literal));
         }
         if let Some(word) = name_word(&tokens[0]) {
+            if is_elapsed_name(word, known_names) {
+                return Some(elapsed_condition_value());
+            }
             if let Some(name) = resolve_known_particle(word, known_names) {
                 return Some(ConditionValue::Name(name.to_string()));
             }
@@ -6324,6 +7028,9 @@ fn parse_value(
             return Ok(Value::Literal(literal));
         }
     }
+    if let Some(value) = parse_elapsed_value(tokens, known_names) {
+        return Ok(value);
+    }
     if let Some(value) = parse_zero_knowledge_value(tokens) {
         return Ok(value);
     }
@@ -7331,6 +8038,15 @@ fn remember_bindings(stmt: &NmeStmt, names: &mut HashSet<String>) {
         }
         NmeStmt::FileRead { target, .. } => {
             names.insert(target.clone());
+        }
+        // The stopwatch and each cooldown bind one Python name apiece. They
+        // are remembered like any other name so the parser can tell a
+        // program that reads them from one that never set them.
+        NmeStmt::StartTimer => {
+            names.insert(TIMER_NAME.to_string());
+        }
+        NmeStmt::Cooldown { target, .. } => {
+            names.insert(format!("{COOLDOWN_PREFIX}{target}"));
         }
         NmeStmt::ForEach { name, inline, .. } => {
             names.insert(name.clone());

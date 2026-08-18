@@ -91,27 +91,17 @@ If indentation is still uncomfortable, replace the file with this version
 that uses an explicit closing word instead:
 
 ```nme
-score = 0
-while score < 3
+set score to 0
+while score is less than 3
 show score
 add 1 to score
 end
 ```
 
-`score = 0` stores a number, `<` means 'less than', and `add 1 to score`
-increases it — the same ideas as the sentence forms above.
+`set score to 0` stores a number, `while score is less than 3` keeps going
+for as long as that stays true, and `add 1 to score` increases it.
 
-The compact beginner repeat form can use the same trick — replace the file
-with:
-
-```nme
-3 times:
-show one line
-show another line
-end
-```
-
-The same style supports `break`, `and`/`or`, `elif`, and `else`; Korean
+The same style supports `break`, `and`/`or`, `else if`, and `else`; Korean
 spellings are `멈춰`, `그리고`/`또는`, `아니면 만약에`, and `아니면`.
 
 ## 4. Make a number game
@@ -148,43 +138,37 @@ nme run examples/guessing-game
 The random number, numeric input, comparisons, and output compile to ordinary
 Python. No list literal, function call, equals sign, or colon was required.
 
-## 5. Grow into precise and advanced syntax
+## 5. Lists and waiting — still only sentences
 
-Sentence syntax is the easiest start. Beginner syntax is shorter and precise.
-Replace the file with:
-
-```nme
-ask name, "What is your name? "
-when name:
-    say f"Hello, {name}!"
-```
-
-Three new pieces of syntax appear here:
-
-- `ask name, "…"` asks a question and remembers the answer as `name`.
-- `when name:` means "when a condition is true, run the indented lines below".
-- `f"Hello, {name}!"` is a Python f-string: text where `{name}` is replaced
-  by the value of `name`.
-
-The [language reference](language.md) explains each form exactly.
-
-Advanced syntax is just Python. Replace the file with:
-
-```python
-for number in range(1, 4):
-    print(number**2)
-```
-
-Mix all three whenever useful — replace the file with:
+A list is written the way you would say it out loud. Replace the file with:
 
 ```nme
-numbers = [1, 2, 3]
-
-for number in numbers:
-    show number
-
-2 times: 말해 "done"
+set friends to list of Mina, Ada
+for each friend in friends
+    show Hello friend
+    wait 1 second
+end
 ```
+
+Add to a list the same way:
+
+```nme
+set friends to empty list
+append Mina to friends
+append Ada to friends
+show friends
+```
+
+Nothing above needed quotes, brackets, colons or `=`. **Sentence syntax is
+not a beginner's toy that you leave behind — it is the language.** You can
+write whole programs, start to finish, without ever learning Python.
+
+Two more levels exist for the day you want them: a shorter beginner syntax,
+and ordinary Python, which NME keeps exactly as you typed it. Neither is
+needed to finish a program, and both are described in the
+[language reference](language.md). If you are here to learn to program, stay
+on sentences — the next section shows you the Python your sentences already
+became.
 
 ## 6. Check, build, and compile
 
@@ -228,7 +212,7 @@ want a more conversational phrase.
 
 - [Learning guides](guides/index.md): 73 small progressive guides, each with
   difficulty, prerequisites, topic, and result
-- [Learning path](tutorial.md): six projects from Hello World to a compiler
+- [Learning path](tutorial.md): seven projects from Hello World to a compiler
 - [Language reference](language.md): exact rules for all three levels
 - [Editors](editors.md): VS Code, Cursor, and Zed
 - [AI assistants](ai-assistants.md): give an assistant one documentation link

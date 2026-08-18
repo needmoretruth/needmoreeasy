@@ -270,3 +270,445 @@ fn a_message_may_contain_a_waiting_word() {
         "tired = False\nif (tired): print(\"Time to sleep\")\n"
     );
 }
+
+// ------------------------------------------- slow text, screen, and timing
+
+/// The three long lines are written once here so every test below compares
+/// against the exact same Python the compiler emits.
+fn slowly(seconds: &str, text: &str) -> String {
+    format!(
+        "[print(_ch, end=\"\", flush=True) or __import__(\"time\").sleep({seconds}) for _ch in {text}]; print()\n"
+    )
+}
+
+fn boxed(text: &str) -> String {
+    format!(
+        "print((lambda _t: (lambda _w: \"┌\" + \"─\" * (_w + 2) + \"┐\\n│ \" + _t + \" │\\n└\" + \"─\" * (_w + 2) + \"┘\")(sum(2 if __import__(\"unicodedata\").east_asian_width(_c) in \"WF\" else 1 for _c in _t)))({text}))\n"
+    )
+}
+
+fn centred(text: &str) -> String {
+    format!(
+        "print((lambda _t: \" \" * max(0, (40 - sum(2 if __import__(\"unicodedata\").east_asian_width(_c) in \"WF\" else 1 for _c in _t)) // 2) + _t)({text}))\n"
+    )
+}
+
+/// The exact Python every new statement produces, spelled out in full.
+///
+/// The helpers above build the same text from parts; this test is what pins
+/// the parts down, so a change to any emitted line has to be made on purpose.
+#[test]
+fn the_new_statements_emit_exactly_this_python() {
+    assert_eq!(
+        ok("say slowly Hello\n"),
+        "[print(_ch, end=\"\", flush=True) or __import__(\"time\").sleep(0.04) for _ch in \"Hello\"]; print()\n"
+    );
+    assert_eq!(
+        ok("say very slowly Hello\n"),
+        "[print(_ch, end=\"\", flush=True) or __import__(\"time\").sleep(0.12) for _ch in \"Hello\"]; print()\n"
+    );
+    assert_eq!(
+        ok("say slowly every 3 seconds Hello\n"),
+        "[print(_ch, end=\"\", flush=True) or __import__(\"time\").sleep(3) for _ch in \"Hello\"]; print()\n"
+    );
+    assert_eq!(
+        ok("clear the screen\n"),
+        "print(\"\\033[2J\\033[3J\\033[H\", end=\"\")\n"
+    );
+    assert_eq!(ok("draw a line\n"), "print(\"─\" * 40)\n");
+    assert_eq!(
+        ok("say in a box Hello\n"),
+        "print((lambda _t: (lambda _w: \"┌\" + \"─\" * (_w + 2) + \"┐\\n│ \" + _t + \" │\\n└\" + \"─\" * (_w + 2) + \"┘\")(sum(2 if __import__(\"unicodedata\").east_asian_width(_c) in \"WF\" else 1 for _c in _t)))(\"Hello\"))\n"
+    );
+    assert_eq!(
+        ok("say in the middle Hello\n"),
+        "print((lambda _t: \" \" * max(0, (40 - sum(2 if __import__(\"unicodedata\").east_asian_width(_c) in \"WF\" else 1 for _c in _t)) // 2) + _t)(\"Hello\"))\n"
+    );
+    assert_eq!(
+        ok("start the timer\n"),
+        "_nme_clock = __import__(\"time\").time()\n"
+    );
+    assert_eq!(
+        ok("start the timer\nshow elapsed\n"),
+        "_nme_clock = __import__(\"time\").time()\nprint(round(__import__(\"time\").time() - _nme_clock, 2))\n"
+    );
+    assert_eq!(
+        ok("put door on cooldown for 3 seconds\n"),
+        "_nme_cool_door = __import__(\"time\").time() + 3\n"
+    );
+    assert_eq!(
+        ok("when door is ready then show go\n"),
+        "if (__import__(\"time\").time() >= _nme_cool_door): print(\"go\")\n"
+    );
+    assert_eq!(
+        ok("when door is on cooldown then show wait\n"),
+        "if (__import__(\"time\").time() < _nme_cool_door): print(\"wait\")\n"
+    );
+    assert_eq!(
+        ok("wait for door\n"),
+        "__import__(\"time\").sleep(max(0, _nme_cool_door - __import__(\"time\").time()))\n"
+    );
+}
+
+#[test]
+fn slow_text_works_in_both_languages() {
+    assert_eq!(ok("say slowly Hello\n"), slowly("0.04", "\"Hello\""));
+    assert_eq!(ok("show slowly Hello\n"), slowly("0.04", "\"Hello\""));
+    assert_eq!(
+        ok("천천히 말해줘 안녕하세요\n"),
+        slowly("0.04", "\"안녕하세요\"")
+    );
+    assert_eq!(
+        ok("천천히 말해 안녕하세요\n"),
+        slowly("0.04", "\"안녕하세요\"")
+    );
+    assert_eq!(
+        ok("천천히 보여줘 안녕하세요\n"),
+        slowly("0.04", "\"안녕하세요\"")
+    );
+}
+
+#[test]
+fn slow_text_has_a_very_slow_spelling_in_both_languages() {
+    assert_eq!(ok("say very slowly Hello\n"), slowly("0.12", "\"Hello\""));
+    assert_eq!(
+        ok("아주 천천히 말해줘 안녕하세요\n"),
+        slowly("0.12", "\"안녕하세요\"")
+    );
+}
+
+#[test]
+fn slow_text_takes_an_explicit_interval_in_both_languages() {
+    assert_eq!(
+        ok("say slowly every 3 seconds Hello\n"),
+        slowly("3", "\"Hello\"")
+    );
+    assert_eq!(
+        ok("say slowly every 0.5 seconds Hello\n"),
+        slowly("0.5", "\"Hello\"")
+    );
+    assert_eq!(
+        ok("3초씩 천천히 말해줘 안녕하세요\n"),
+        slowly("3", "\"안녕하세요\"")
+    );
+    assert_eq!(
+        ok("0.5초씩 천천히 말해줘 안녕하세요\n"),
+        slowly("0.5", "\"안녕하세요\"")
+    );
+}
+
+#[test]
+fn slow_text_reads_its_message_like_the_say_statement_does() {
+    // A name written inside the sentence is substituted, and a value that is
+    // not text is wrapped so it can be walked one character at a time.
+    assert_eq!(
+        ok("set name to Mina\nsay slowly Hello name\n"),
+        format!(
+            "name = \"Mina\"\n{}",
+            slowly("0.04", "\"Hello \" + str(name)")
+        )
+    );
+    assert_eq!(
+        ok("점수는 7\n천천히 말해줘 점수\n"),
+        format!("점수 = 7\n{}", slowly("0.04", "str(점수)"))
+    );
+}
+
+#[test]
+fn clearing_the_screen_works_in_both_languages() {
+    let cleared = "print(\"\\033[2J\\033[3J\\033[H\", end=\"\")\n";
+    assert_eq!(ok("clear the screen\n"), cleared);
+    assert_eq!(ok("clear screen\n"), cleared);
+    assert_eq!(ok("화면 지워\n"), cleared);
+    assert_eq!(ok("화면 지워줘\n"), cleared);
+    assert_eq!(ok("화면 비워\n"), cleared);
+    assert_eq!(ok("화면 비워줘\n"), cleared);
+}
+
+#[test]
+fn drawing_a_line_works_in_both_languages() {
+    let rule = "print(\"─\" * 40)\n";
+    assert_eq!(ok("draw a line\n"), rule);
+    assert_eq!(ok("draw line\n"), rule);
+    assert_eq!(ok("줄 그어\n"), rule);
+    assert_eq!(ok("줄 그어줘\n"), rule);
+    assert_eq!(ok("가로줄 그어\n"), rule);
+    assert_eq!(ok("가로줄 그어줘\n"), rule);
+}
+
+#[test]
+fn a_box_around_text_works_in_both_languages() {
+    assert_eq!(ok("say in a box Hello\n"), boxed("\"Hello\""));
+    assert_eq!(ok("상자로 말해줘 안녕\n"), boxed("\"안녕\""));
+    assert_eq!(ok("상자로 말해 안녕\n"), boxed("\"안녕\""));
+}
+
+#[test]
+fn a_box_counts_a_korean_character_as_two_columns() {
+    // Without the width rule a Korean box comes out crooked, so the measure
+    // has to be the terminal's own east-asian width, not `len`.
+    let produced = ok("상자로 말해줘 안녕\n");
+    assert!(
+        produced.contains("east_asian_width(_c) in \"WF\""),
+        "{produced}"
+    );
+    assert!(!produced.contains("len(_t)"), "{produced}");
+}
+
+#[test]
+fn text_in_the_middle_works_in_both_languages() {
+    assert_eq!(ok("say in the middle Hello\n"), centred("\"Hello\""));
+    assert_eq!(ok("가운데 말해줘 안녕\n"), centred("\"안녕\""));
+    assert_eq!(ok("가운데 말해 안녕\n"), centred("\"안녕\""));
+}
+
+#[test]
+fn a_framed_message_is_worked_out_only_once() {
+    // The width has to be measured from the same text that gets printed, so
+    // a message that calls something may not be evaluated a second time.
+    let produced = ok("set name to Mina\n가운데 말해줘 안녕 name\n");
+    assert_eq!(produced.matches("str(name)").count(), 1, "{produced}");
+    assert_eq!(
+        produced,
+        format!("name = \"Mina\"\n{}", centred("\"안녕 \" + str(name)"))
+    );
+}
+
+#[test]
+fn starting_the_timer_works_in_both_languages() {
+    let started = "_nme_clock = __import__(\"time\").time()\n";
+    assert_eq!(ok("start the timer\n"), started);
+    assert_eq!(ok("start timer\n"), started);
+    assert_eq!(ok("시간 재기 시작해\n"), started);
+    assert_eq!(ok("시간재기 시작해\n"), started);
+    assert_eq!(ok("시간 재기 시작\n"), started);
+}
+
+#[test]
+fn the_stopwatch_reading_is_a_value_in_both_languages() {
+    let reading = "round(__import__(\"time\").time() - _nme_clock, 2)";
+    assert_eq!(
+        ok("start the timer\nshow elapsed\n"),
+        format!("_nme_clock = __import__(\"time\").time()\nprint({reading})\n")
+    );
+    assert_eq!(
+        ok("start the timer\nset spent to elapsed\n"),
+        format!("_nme_clock = __import__(\"time\").time()\nspent = {reading}\n")
+    );
+    assert_eq!(
+        ok("시간 재기 시작해\n잰시간 말해줘\n"),
+        format!("_nme_clock = __import__(\"time\").time()\nprint({reading})\n")
+    );
+    assert_eq!(
+        ok("시간 재기 시작해\n걸린시간은 잰시간\n"),
+        format!("_nme_clock = __import__(\"time\").time()\n걸린시간 = {reading}\n")
+    );
+}
+
+#[test]
+fn the_stopwatch_reading_is_also_a_value_in_a_condition() {
+    let reading = "round(__import__(\"time\").time() - _nme_clock, 2)";
+    assert_eq!(
+        ok("시간 재기 시작해\n만약 잰시간이 3보다 크면 오래 말해줘\n"),
+        format!(
+            "_nme_clock = __import__(\"time\").time()\nif ({reading} > 3): print(\"오래\")\n"
+        )
+    );
+    assert_eq!(
+        ok("start the timer\nif elapsed is greater than 3 then show long\n"),
+        format!(
+            "_nme_clock = __import__(\"time\").time()\nif ({reading} > 3): print(\"long\")\n"
+        )
+    );
+}
+
+#[test]
+fn reading_the_stopwatch_before_starting_it_is_reported() {
+    assert_eq!(error_code("show elapsed\n"), "E0226");
+    assert_eq!(error_code("잰시간 말해줘\n"), "E0226");
+}
+
+#[test]
+fn a_name_of_your_own_beats_the_stopwatch_word() {
+    assert_eq!(
+        ok("set elapsed to 5\nshow elapsed\n"),
+        "elapsed = 5\nprint(elapsed)\n"
+    );
+    assert_eq!(
+        ok("잰시간은 5\n잰시간 말해줘\n"),
+        "잰시간 = 5\nprint(잰시간)\n"
+    );
+}
+
+#[test]
+fn a_cooldown_is_set_in_both_languages() {
+    assert_eq!(
+        ok("put door on cooldown for 3 seconds\n"),
+        "_nme_cool_door = __import__(\"time\").time() + 3\n"
+    );
+    assert_eq!(
+        ok("문 쿨타임 3초 걸어\n"),
+        "_nme_cool_문 = __import__(\"time\").time() + 3\n"
+    );
+    assert_eq!(
+        ok("문 쿨타임 3초 걸어줘\n"),
+        "_nme_cool_문 = __import__(\"time\").time() + 3\n"
+    );
+}
+
+#[test]
+fn a_finished_cooldown_is_a_condition_in_both_languages() {
+    let ready = "if (__import__(\"time\").time() >= _nme_cool_door):";
+    assert_eq!(
+        ok("when door is ready\n    show go\nend\n"),
+        format!("{ready}\n    print(\"go\")\n# end\n")
+    );
+    assert_eq!(
+        ok("if door is ready\n    show go\nend\n"),
+        format!("{ready}\n    print(\"go\")\n# end\n")
+    );
+    let ready_ko = "if (__import__(\"time\").time() >= _nme_cool_문):";
+    assert_eq!(
+        ok("만약 문 쿨타임이 끝났으면\n    발사 말해줘\n끝\n"),
+        format!("{ready_ko}\n    print(\"발사\")\n# end\n")
+    );
+    assert_eq!(
+        ok("문 쿨타임 끝났으면 발사 말해줘\n"),
+        format!("{ready_ko} print(\"발사\")\n")
+    );
+}
+
+#[test]
+fn a_running_cooldown_is_a_condition_in_both_languages() {
+    let busy = "if (__import__(\"time\").time() < _nme_cool_door):";
+    assert_eq!(
+        ok("when door is on cooldown\n    show wait\nend\n"),
+        format!("{busy}\n    print(\"wait\")\n# end\n")
+    );
+    let busy_ko = "if (__import__(\"time\").time() < _nme_cool_문):";
+    assert_eq!(
+        ok("만약 문 쿨타임이 남았으면\n    대기 말해줘\n끝\n"),
+        format!("{busy_ko}\n    print(\"대기\")\n# end\n")
+    );
+    assert_eq!(
+        ok("문 쿨타임 남았으면 대기 말해줘\n"),
+        format!("{busy_ko} print(\"대기\")\n")
+    );
+}
+
+#[test]
+fn cooldown_conditions_work_in_while_and_else_if() {
+    assert_eq!(
+        ok("while door is on cooldown\n    show waiting\nend\n"),
+        "while (__import__(\"time\").time() < _nme_cool_door):\n    print(\"waiting\")\n# end\n"
+    );
+    assert_eq!(
+        ok("when door is ready\n    show a\nelse if door is on cooldown\n    show b\nend\n"),
+        concat!(
+            "if (__import__(\"time\").time() >= _nme_cool_door):\n",
+            "    print(\"a\")\n",
+            "elif (__import__(\"time\").time() < _nme_cool_door):\n",
+            "    print(\"b\")\n",
+            "# end\n"
+        )
+    );
+    assert_eq!(
+        ok("문 쿨타임이 남았으면 동안\n    대기 말해줘\n끝\n"),
+        "while (__import__(\"time\").time() < _nme_cool_문):\n    print(\"대기\")\n# end\n"
+    );
+}
+
+#[test]
+fn waiting_out_a_cooldown_works_in_both_languages() {
+    let slept =
+        "__import__(\"time\").sleep(max(0, _nme_cool_문 - __import__(\"time\").time()))\n";
+    assert_eq!(
+        ok("wait for door\n"),
+        "__import__(\"time\").sleep(max(0, _nme_cool_door - __import__(\"time\").time()))\n"
+    );
+    assert_eq!(ok("문 쿨타임 끝날때까지 기다려\n"), slept);
+    assert_eq!(ok("문 쿨타임 끝날 때까지 기다려\n"), slept);
+}
+
+#[test]
+fn the_new_words_stay_words_inside_a_message() {
+    assert_eq!(
+        ok("show the screen is clear\n"),
+        "print(\"the screen is clear\")\n"
+    );
+    assert_eq!(
+        ok("화면 지워도 되는지 말해줘\n"),
+        "print(\"화면 지워도 되는지\")\n"
+    );
+    assert_eq!(
+        ok("줄 그어도 되는지 말해줘\n"),
+        "print(\"줄 그어도 되는지\")\n"
+    );
+    assert_eq!(
+        ok("show I will draw a line later\n"),
+        "print(\"I will draw a line later\")\n"
+    );
+    assert_eq!(
+        ok("가운데 자리 좋다고 말해줘\n"),
+        "print(\"가운데 자리 좋다고\")\n"
+    );
+}
+
+#[test]
+fn a_wait_still_wins_over_the_new_openers() {
+    // The old statements keep their lines: none of the new opening words is
+    // allowed to change what these mean.
+    assert_eq!(
+        ok("wait for 5 seconds\n"),
+        "__import__(\"time\").sleep(5)\n"
+    );
+    assert_eq!(ok("3초 기다려\n"), "__import__(\"time\").sleep(3)\n");
+    assert_eq!(ok("잠깐 기다려\n"), "print(\"잠깐 기다려\")\n");
+    assert_eq!(ok("화면에 1 더해\n"), "화면 = 화면 + 1\n");
+}
+
+#[test]
+fn a_slow_message_may_contain_a_waiting_word() {
+    assert_eq!(
+        ok("천천히 말해줘 3초 기다려\n"),
+        slowly("0.04", "\"3초 기다려\"")
+    );
+    assert_eq!(
+        ok("say slowly wait 3 seconds\n"),
+        slowly("0.04", "\"wait 3 seconds\"")
+    );
+}
+
+#[test]
+fn an_unreadable_cooldown_length_is_reported() {
+    assert_eq!(
+        error_code("put door on cooldown for 3 4 5 seconds\n"),
+        "E0224"
+    );
+    assert_eq!(error_code("문 쿨타임 3 4 5초 걸어\n"), "E0224");
+}
+
+#[test]
+fn every_new_statement_is_still_exactly_one_python_line() {
+    let program = concat!(
+        "start the timer\n",
+        "clear the screen\n",
+        "draw a line\n",
+        "say in a box Hello\n",
+        "say in the middle Hello\n",
+        "say slowly Hello\n",
+        "show elapsed\n",
+        "put door on cooldown for 3 seconds\n",
+        "wait for door\n",
+        "화면 지워\n",
+        "줄 그어\n",
+        "상자로 말해줘 안녕\n",
+        "가운데 말해줘 안녕\n",
+        "천천히 말해줘 안녕\n",
+        "잰시간 말해줘\n",
+        "문 쿨타임 3초 걸어\n",
+        "문 쿨타임 끝날때까지 기다려\n",
+    );
+    let produced = ok(program);
+    assert_eq!(produced.lines().count(), program.lines().count());
+}

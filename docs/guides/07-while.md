@@ -31,7 +31,7 @@ condition stays true — and stops when it becomes false.
 
    ```nme
    점수는 0
-   동안 점수 < 3
+   점수가 3보다 작은 동안
        점수 보여줘
        점수에 1 더해
    끝
