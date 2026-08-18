@@ -352,6 +352,14 @@ pub fn parse_program(
     // friendly diagnostic instead of silently staying Python (where it would
     // fail at runtime). Pure-Python files still keep `end` byte-identical.
     let mut saw_nme = false;
+    // Physical indentation of the previous logical line, and whether that
+    // line was allowed to open a deeper one.
+    let mut previous_indent = 0usize;
+    let mut previous_opens_suite = false;
+    // The most recent line that looks like a block header but opened no
+    // block. An `end` with nothing to close names that line instead of
+    // itself, because that is where the writer's mistake is.
+    let mut block_header_lines = HashSet::<usize>::new();
     // Python compound headers normally get their body indentation from the
     // source.  Inside an indentation-free NME block, however, a learner may
     // write a normal Python header (`if x:`) and then continue with the body
@@ -387,6 +395,13 @@ pub fn parse_program(
         let is_break = exact_break(line.tokens.as_slice());
         let is_continue = exact_continue(line.tokens.as_slice());
         let branch_shape = branch_shape(line.tokens.as_slice());
+
+        let opens_suite = opens_a_suite(source, line);
+        if line.indent > previous_indent && !previous_opens_suite {
+            problems.push(unexpected_indent_diagnostic(source, line));
+        }
+        previous_indent = line.indent;
+        previous_opens_suite = opens_suite;
 
         // An indented-suite sentence block (whose first body line was
         // physically indented) may end at the physical dedent, like ordinary
@@ -545,7 +560,12 @@ pub fn parse_program(
         let direct_stmt = if is_end.is_some() && depth > 0 {
             Some(Ok(Some(NmeStmt::End)))
         } else if is_end.is_some() && saw_nme {
-            Some(Err(unmatched_end_diagnostic(line.span)))
+            Some(Err(
+                match unreadable_block_header_before(source, lines, index, &block_header_lines) {
+                    Some(header) => unreadable_block_header_diagnostic(header),
+                    None => unmatched_end_diagnostic(line.span),
+                },
+            ))
         } else if is_break
             && (depth > 0
                 || (line.indent == 0
@@ -683,7 +703,17 @@ pub fn parse_program(
                 }
                 if matches!(stmt, NmeStmt::End) {
                     if blocks.is_empty() {
-                        problems.push(unmatched_end_diagnostic(line.span));
+                        problems.push(
+                            match unreadable_block_header_before(
+                                source,
+                                lines,
+                                index,
+                                &block_header_lines,
+                            ) {
+                                Some(header) => unreadable_block_header_diagnostic(header),
+                                None => unmatched_end_diagnostic(line.span),
+                            },
+                        );
                         continue;
                     }
                     blocks.pop();
@@ -737,6 +767,7 @@ pub fn parse_program(
                             )
                         );
                         bindings.push_explicit_scope(parse_line.indent + 1);
+                        block_header_lines.insert(index);
                         let close_on_dedent = (!flat_body_follows).then_some(line.indent);
                         blocks.push(if is_loop {
                             ExplicitBlock::Loop { close_on_dedent }
@@ -2203,6 +2234,95 @@ where
     })
 }
 
+/// True when this line is allowed to be followed by a more deeply indented
+/// one: it ends with `:`, it is an NME block header, or it starts with a
+/// Python keyword that opens a suite. A broken Python header counts, so its
+/// own diagnostic speaks instead of a second one about the indentation.
+fn opens_a_suite(source: &str, line: &LogicalLine) -> bool {
+    if line.tokens.is_empty() {
+        return false;
+    }
+    token_text(source, &line.tokens).ends_with(':')
+        || is_header_shape(&line.tokens)
+        || matches!(
+            line.tokens[0].tok,
+            Tok::If
+                | Tok::For
+                | Tok::While
+                | Tok::Def
+                | Tok::Class
+                | Tok::Try
+                | Tok::Except
+                | Tok::Else
+                | Tok::Elif
+                | Tok::Finally
+                | Tok::With
+                | Tok::Async
+                | Tok::Match
+                | Tok::Case
+        )
+}
+
+/// `  say hello` at the top of a file is an ordinary slip, and CPython
+/// answers it with `IndentationError: unexpected indent`. NME says which
+/// line starts with a space and what opens a block instead.
+fn unexpected_indent_diagnostic(source: &str, line: &LogicalLine) -> Diagnostic {
+    let line_start = source[..line.span.start]
+        .rfind('\n')
+        .map_or(0, |offset| offset + 1);
+    Diagnostic::bilingual(
+        DiagnosticCode::UnexpectedIndent,
+        "this line starts with a space, and nothing above it opens a block",
+        "이 줄이 공백으로 시작하는데, 위에 블록을 여는 줄이 없어요",
+        Span::new(line_start, line.span.start),
+    )
+    .with_bilingual_hint(
+        "delete the spaces at the start of the line, or open a block above it with `repeat 3 times`, `if ...`, or `for ...:`",
+        "줄 앞의 공백을 지우거나, 위에 `3번 반복해`나 `만약에 ...` 같은 블록을 여는 줄을 적어 주세요",
+    )
+}
+
+/// The `end` closes nothing because the line meant to open the block was
+/// never understood. Pointing at the `end` hides the real mistake, so the
+/// header is named instead.
+/// The last line before `index` that reads like a block header and yet
+/// opened no block. Every `end` with nothing to close is a consequence; the
+/// cause is up there, and naming the `end` hides it.
+fn unreadable_block_header_before(
+    source: &str,
+    lines: &[LogicalLine],
+    index: usize,
+    block_header_lines: &HashSet<usize>,
+) -> Option<Span> {
+    lines[..index].iter().enumerate().rev().find_map(|(at, line)| {
+        if block_header_lines.contains(&at) || line.tokens.is_empty() {
+            return None;
+        }
+        let text = token_text(source, &line.tokens);
+        if is_valid_python_header(text) || is_valid_python_statement(text) {
+            return None;
+        }
+        let python_suite_word = matches!(
+            line.tokens[0].tok,
+            Tok::For | Tok::While | Tok::If | Tok::Def | Tok::Class | Tok::With
+        );
+        (is_header_shape(&line.tokens) || python_suite_word).then_some(line.span)
+    })
+}
+
+fn unreadable_block_header_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::StrayEnd,
+        "this line looks like the start of a block, but I could not read it, so the `end` below closes nothing",
+        "이 줄은 블록을 여는 줄로 보이는데 읽지 못했어요. 그래서 아래의 `끝`이 닫을 블록이 없어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "fix this line first, for example `repeat 3 times`, `for each name in names`, or `if ready`",
+        "이 줄을 먼저 고쳐 주세요. 예를 들어 `3번 반복해`, `이름들 마다`, `만약에 준비가 있으면`처럼 씁니다",
+    )
+}
+
 fn missing_end_diagnostic(block: &ExplicitBlock, offset: usize) -> Diagnostic {
     let (english, korean) = match block {
         ExplicitBlock::Loop { .. } => (
@@ -2237,7 +2357,16 @@ fn classify(
 
     let text = token_text(source, tokens);
     if is_valid_python_statement(text) || is_valid_python_header(text) {
-        return Ok(None);
+        // Python accepts a few whole lines that cannot do anything at all.
+        // Letting Python "win" one of those means shipping a program that
+        // silently does nothing, so they are named here instead, and the ones
+        // that are plainly written sentences fall through and print.
+        if let Some(problem) = statement_does_nothing(tokens) {
+            return Err(problem);
+        }
+        if !valid_python_is_a_sentence(tokens, known_names) {
+            return Ok(None);
+        }
     }
 
     // Future Python grammar may be newer than rustpython-parser. A
@@ -2253,6 +2382,14 @@ fn classify(
     // `nme build` will ask the real CPython whether they are valid.
     if looks_like_future_python(tokens) {
         return Ok(None);
+    }
+
+    // `3번반복해서 안녕 말해줘` — the repeat word is stuck to the counter, so
+    // every matcher below would read it as part of the message. It has to be
+    // caught before the output word at the end of the line claims it.
+    if let Some((index, split)) = glued_count_and_repeat(tokens) {
+        let word = name_word(&tokens[index]).unwrap_or("");
+        return Err(glued_word_diagnostic(&tokens[index], word, &split));
     }
 
     // A natural condition may start with its subject (`색이 빨강과 같으면
@@ -2490,6 +2627,15 @@ fn classify(
     // When no complete NME shape is present, ordinary word-like input should
     // win over those weak typo candidates.
     if looks_like_plain_prose(tokens) && !has_recoverable_sentence_shape(tokens) {
+        // Printing the line is right for prose and wrong for a command whose
+        // action word NME does not accept, so the near miss is named first.
+        if near_miss_action_word(tokens, known_names).is_some() {
+            return Err(unknown_action_word_diagnostic(tokens, known_names));
+        }
+        if let Some((index, split)) = glued_action_word(tokens) {
+            let word = name_word(&tokens[index]).unwrap_or("");
+            return Err(glued_word_diagnostic(&tokens[index], word, &split));
+        }
         let value = parse_value(source, tokens, known_names, true)
             .map_err(|()| missing_action_diagnostic(tokens))?;
         return Ok(Some(NmeStmt::Say { value }));
@@ -2526,13 +2672,16 @@ fn classify(
     if candidates.len() == 1 && recovery_problems.is_empty() {
         return Ok(candidates.pop());
     }
-    if candidates.len() > 1 || (!candidates.is_empty() && !recovery_problems.is_empty()) {
+    let report_recovery = !prose_beats_recovery(tokens);
+    if report_recovery
+        && (candidates.len() > 1 || (!candidates.is_empty() && !recovery_problems.is_empty()))
+    {
         return Err(ambiguous_action_diagnostic(tokens));
     }
-    if recovery_problems.len() == 1 {
+    if report_recovery && recovery_problems.len() == 1 {
         return Err(recovery_problems.pop().expect("one recovery problem"));
     }
-    if recovery_problems.len() > 1 {
+    if report_recovery && recovery_problems.len() > 1 {
         return Err(ambiguous_action_diagnostic(tokens));
     }
 
@@ -2543,9 +2692,22 @@ fn classify(
         return Ok(None);
     }
     if looks_like_plain_prose(tokens) {
+        if near_miss_action_word(tokens, known_names).is_some() {
+            return Err(unknown_action_word_diagnostic(tokens, known_names));
+        }
+        if let Some((index, split)) = glued_action_word(tokens) {
+            let word = name_word(&tokens[index]).unwrap_or("");
+            return Err(glued_word_diagnostic(&tokens[index], word, &split));
+        }
         let value = parse_value(source, tokens, known_names, true)
             .map_err(|()| missing_action_diagnostic(tokens))?;
         return Ok(Some(NmeStmt::Say { value }));
+    }
+    // Handing a written sentence back to Python means the beginner reads
+    // CPython's `SyntaxError`, in English, with the caret inside a Hangul
+    // syllable. NME wrote nothing on this line, so NME explains it.
+    if tokens.len() > 1 && looks_like_written_sentence(tokens) {
+        return Err(unknown_action_word_diagnostic(tokens, known_names));
     }
     Ok(None)
 }
@@ -2570,6 +2732,12 @@ fn match_say(
             body_start += 1;
         }
         if body_start >= tokens.len() {
+            // The action word was only a guess, so an empty message means the
+            // guess was wrong: `입력해 주세요` is a sentence, not `출력해주세요`
+            // with nothing to show.
+            if mode == MatchMode::Recover {
+                return Ok(None);
+            }
             return Err(say_missing(spelling, tokens[action_start].span));
         }
         let body = trim_trailing_fillers(&tokens[body_start..]);
@@ -2613,6 +2781,9 @@ fn match_say(
         return Ok(None);
     };
     if action_start == 0 {
+        if mode == MatchMode::Recover {
+            return Ok(None);
+        }
         return Err(say_missing(spelling, tokens[action_start].span));
     }
     debug_assert!(action_end <= tokens.len());
@@ -2625,6 +2796,9 @@ fn match_say(
     let value_tokens =
         trim_suffix_say_value(trim_trailing_fillers(&tokens[value_start..action_start]));
     if value_tokens.is_empty() {
+        if mode == MatchMode::Recover {
+            return Ok(None);
+        }
         return Err(say_missing(spelling, tokens[action_start].span));
     }
     let value = parse_value(source, &value_tokens, known_names, true).map_err(|()| {
@@ -3018,7 +3192,7 @@ fn find_ask_shape(tokens: &[Token], mode: MatchMode) -> Option<AskShape> {
         while is_english_article(tokens.get(target_at)) && target_at + 1 < tokens.len() {
             target_at += 1;
         }
-        let kind = if tokens
+        let mut kind = if tokens
             .get(target_at)
             .is_some_and(|token| token_matches_exact(token, NUMBER_WORDS))
         {
@@ -3027,6 +3201,26 @@ fn find_ask_shape(tokens: &[Token], mode: MatchMode) -> Option<AskShape> {
         } else {
             InputKind::Text
         };
+        // `ask age as a number How old are you?` — the same request, written
+        // after the name. Dropping the phrase silently would throw the
+        // `int()` away and leave text where a number was asked for.
+        let mut prompt_start = target_at + 1;
+        if matches!(kind, InputKind::Text) {
+            let mut probe = prompt_start;
+            if token_matches_exact_at(tokens, probe, &["as"]) {
+                probe += 1;
+            }
+            while is_english_article(tokens.get(probe)) {
+                probe += 1;
+            }
+            if probe > prompt_start
+                && token_matches_exact_at(tokens, probe, NUMBER_WORDS)
+                && probe + 1 < tokens.len()
+            {
+                kind = InputKind::Number;
+                prompt_start = probe + 1;
+            }
+        }
         // `ask What is your name? name` — the question came first and the
         // name closes the line, after the question mark.
         if opens_a_question(tokens, target_at) {
@@ -3048,7 +3242,7 @@ fn find_ask_shape(tokens: &[Token], mode: MatchMode) -> Option<AskShape> {
         return Some(AskShape {
             action_start,
             target_at,
-            prompt_start: target_at + 1,
+            prompt_start,
             prompt_end: None,
             spelling,
             kind,
@@ -4755,7 +4949,8 @@ fn match_while(
             // after the English keyword: `while 점수가 3보다 작을 동안`.
             let trailing = tokens
                 .last()
-                .is_some_and(|token| token_matches_exact(token, WHILE_WORDS_KO));
+                .is_some_and(|token| token_matches_exact(token, WHILE_WORDS_KO))
+                && !output_word_before(&tokens[consumed..], tokens.len() - 1 - consumed);
             if trailing && tokens.len() > consumed + 1 {
                 (Spelling::English, consumed, tokens.len() - 1, true)
             } else {
@@ -4769,6 +4964,7 @@ fn match_while(
             && tokens
                 .last()
                 .is_some_and(|token| token_matches_exact(token, WHILE_WORDS_KO))
+            && !output_word_before(tokens, tokens.len() - 1)
         {
             (Spelling::Korean, 0, tokens.len() - 1, true)
         } else {
@@ -5022,6 +5218,11 @@ fn match_subject_when(
     let Some((relative_at, connector)) = find_condition_connector(tokens) else {
         return Ok(None);
     };
+    // `안녕 말해줘 아니면` — the connector closes the line and stands right
+    // after the output word, so there is no condition here, only a message.
+    if relative_at + 1 == tokens.len() && output_word_ends_just_before(tokens, relative_at) {
+        return Ok(None);
+    }
     if mode == MatchMode::Exact && find_exact_condition_connector(tokens).is_none() {
         return Ok(None);
     }
@@ -6631,11 +6832,29 @@ fn parse_sentence_repeat_body(
     // `repeat 3 times.` / `3번 반복해.` — a body made of nothing but sentence
     // punctuation is punctuation. The header opens a block, exactly as it
     // does without the full stop, instead of printing `.` three times.
+    // `repeat 3 times, show hello` — the beginner comma belongs to the
+    // header, not to what should be printed three times.
+    let mut body = body;
+    while body
+        .first()
+        .is_some_and(|token| matches!(token.tok, Tok::Comma))
+    {
+        body = &body[1..];
+    }
     let body = if body.iter().all(is_command_ending) {
         &body[..0]
     } else {
         body
     };
+    // `3번 되풀이해서 안녕 말해줘` — the body opens with another word for
+    // "repeat". Printing it three times is never what that means.
+    if body.first().and_then(name_word).is_some_and(|word| {
+        NEAR_MISS_ACTIONS
+            .iter()
+            .any(|(written, _)| word.eq_ignore_ascii_case(written))
+    }) {
+        return Err(unknown_action_word_diagnostic(body, known_names));
+    }
     if branch_shape(body).is_some() {
         return Err(branch_without_condition_diagnostic(span_of(body)));
     }
@@ -7599,6 +7818,9 @@ fn match_set(
 
     if let Some(first) = name_word(&tokens[0]) {
         if let Some(target) = strip_assignment_particle(first) {
+            if korean_value_is_a_sentence(&tokens[1..]) {
+                return Ok(None);
+            }
             if tokens.len() == 1 {
                 return Err(Diagnostic::bilingual(
                     DiagnosticCode::SaveValueMissing,
@@ -7633,6 +7855,7 @@ fn match_set(
     if tokens.len() >= 3
         && name_word(&tokens[0]).is_some()
         && token_matches_exact(&tokens[1], &["은", "는"])
+        && !korean_value_is_a_sentence(&tokens[2..])
     {
         let target = name_word(&tokens[0]).expect("checked name token");
         let value = set_value(source, &tokens[2..], known_names).map_err(|()| {
@@ -7698,6 +7921,9 @@ fn match_set(
         }) {
             value_start += 1;
         }
+        if let Some(problem) = broken_set_connector(source, target, &tokens[value_start..]) {
+            return Err(problem);
+        }
         if value_start >= tokens.len() {
             return Err(Diagnostic::bilingual(
                 DiagnosticCode::SaveValueMissing,
@@ -7736,6 +7962,85 @@ fn match_set(
 ///
 /// Only a number is recovered this way. `인사는 안녕하세요` ends in `예요` too,
 /// and it is text that must survive exactly as written.
+/// `set score = 0` and `set score t 0` would otherwise save the text `"= 0"`
+/// or `"t 0"`, and the program would fail much later with a `TypeError` a
+/// long way from the line that caused it. Both shapes are refused instead,
+/// with the line spelled out the way NME reads it.
+///
+/// Only two shapes are claimed, so `set greeting Hello world` still saves the
+/// sentence: an `=` (or any other operator) standing where the connector
+/// belongs, and a one-edit misspelling of a connector directly in front of a
+/// number.
+fn broken_set_connector(source: &str, target: &str, value: &[Token]) -> Option<Diagnostic> {
+    const CONNECTORS: &[&str] = &["to", "as", "is", "into"];
+    let first = value.first()?;
+    let operator = matches!(first.tok, Tok::Equal | Tok::EqEqual | Tok::ColonEqual);
+    let misspelled_connector = value.len() == 2
+        && matches!(value[1].tok, Tok::Int { .. } | Tok::Float { .. })
+        && token_word(first).is_some_and(|word| {
+            !CONNECTORS.iter().any(|known| word.eq_ignore_ascii_case(known))
+                && CONNECTORS.iter().any(|known| one_typo_away(word, known))
+        });
+    if !operator && !misspelled_connector {
+        return None;
+    }
+    let rest = &value[1..];
+    let written = if rest.is_empty() {
+        String::new()
+    } else {
+        source[span_of(rest).start..span_of(rest).end].to_string()
+    };
+    Some(
+        Diagnostic::bilingual(
+            DiagnosticCode::SaveValueUnparseable,
+            "I couldn't understand the value to save",
+            "저장할 값을 이해하지 못했어요",
+            span_of(value),
+        )
+        .with_bilingual_hint(
+            format!("write `set {target} to {written}`"),
+            format!("`{target}는 {written}`처럼 적어 주세요"),
+        ),
+    )
+}
+
+/// Endings that make a Korean phrase a whole sentence rather than a value.
+/// `점수는 0입니다` still saves zero, because what is left after the ending is
+/// a number; `좋은 아침입니다` leaves `아침`, which is a word, so the line is
+/// prose and prints itself.
+const SENTENCE_ENDINGS_KO: &[&str] = &[
+    "이었습니다",
+    "였습니다",
+    "습니다",
+    "읍니다",
+    "입니다",
+    "이에요",
+    "이었다",
+    "였다",
+    "예요",
+    "해요",
+    "었다",
+    "았다",
+    "이다",
+];
+
+/// True when what follows a Korean `은`/`는` is a sentence, not a value.
+fn korean_value_is_a_sentence(value: &[Token]) -> bool {
+    let Some(word) = value.last().and_then(name_word) else {
+        return false;
+    };
+    let Some(ending) = SENTENCE_ENDINGS_KO
+        .iter()
+        .find(|ending| word.len() > ending.len() && word.ends_with(*ending))
+    else {
+        return false;
+    };
+    let stem = &word[..word.len() - ending.len()];
+    // `0이다` is the number zero spoken as a sentence; `아침입니다` is a
+    // morning. Only the first is a value.
+    !stem.chars().all(|character| character.is_ascii_digit())
+}
+
 fn number_value_code(source: &str, tokens: &[Token]) -> Option<Code> {
     let mut end = tokens.len();
     while end > 1
@@ -9270,6 +9575,12 @@ fn tied_action_words(tokens: &[Token]) -> Vec<String> {
     found
 }
 
+fn token_matches_exact_at(tokens: &[Token], index: usize, expected: &[&str]) -> bool {
+    tokens
+        .get(index)
+        .is_some_and(|token| token_matches_exact(token, expected))
+}
+
 fn token_matches_exact(token: &Token, expected: &[&str]) -> bool {
     token_word(token).is_some_and(|actual| {
         expected
@@ -9373,6 +9684,16 @@ fn condition_word_matches(actual: &str, expected: &[&str]) -> bool {
 fn output_word_before(tokens: &[Token], index: usize) -> bool {
     (0..index.min(tokens.len()))
         .any(|start| output_action_at(tokens, start, MatchMode::Exact).is_some())
+}
+
+/// True when an exact output action word ends exactly at `index`. A block
+/// word written straight after the message (`안녕 말해줘 아니면`) closes
+/// nothing: everything after the output word is what gets printed.
+fn output_word_ends_just_before(tokens: &[Token], index: usize) -> bool {
+    (0..index).any(|start| {
+        output_action_at(tokens, start, MatchMode::Exact)
+            .is_some_and(|(_, consumed)| start + consumed == index)
+    })
 }
 
 fn output_action_ending(tokens: &[Token], mode: MatchMode) -> Option<(usize, Spelling, usize)> {
@@ -9479,9 +9800,41 @@ fn looks_like_future_python(tokens: &[Token]) -> bool {
 }
 
 fn looks_like_plain_prose(tokens: &[Token]) -> bool {
-    tokens.iter().all(|token| {
-        token_word(token).is_some() || is_command_ending(token) || matches!(token.tok, Tok::Comma)
-    })
+    tokens
+        .iter()
+        .enumerate()
+        .all(|(index, token)| is_sentence_word_token(index, token))
+}
+
+/// A token that can be part of a written sentence. A Python keyword that only
+/// ever opens a statement counts when it is not the first word, because it
+/// cannot be code there: `insert coin to continue` is a sentence, while a
+/// line that starts with `continue` is Python's own statement.
+fn is_sentence_word_token(index: usize, token: &Token) -> bool {
+    token_word(token).is_some()
+        || is_command_ending(token)
+        || matches!(token.tok, Tok::Comma | Tok::In | Tok::Not)
+        || (index > 0
+            && matches!(
+                token.tok,
+                Tok::Break
+                    | Tok::Continue
+                    | Tok::Pass
+                    | Tok::Return
+                    | Tok::Raise
+                    | Tok::Del
+                    | Tok::Assert
+                    | Tok::Global
+                    | Tok::Nonlocal
+                    | Tok::Def
+                    | Tok::Class
+                    | Tok::Try
+                    | Tok::Except
+                    | Tok::Finally
+                    | Tok::With
+                    | Tok::For
+                    | Tok::While
+            ))
 }
 
 fn has_recoverable_sentence_shape(tokens: &[Token]) -> bool {
@@ -9517,6 +9870,732 @@ fn has_recoverable_append_shape(tokens: &[Token]) -> bool {
     }
     korean_append_action_start(tokens, MatchMode::Exact).is_none()
         && korean_append_action_start(tokens, MatchMode::Recover).is_some()
+}
+
+// ------------------------------------------------- words that are not actions
+//
+// A beginner reaches for a word NME does not accept far more often than for
+// one it does. Two things must never happen then: CPython's own
+// `SyntaxError`, whose caret lands in the middle of a Hangul syllable and
+// whose text is English only, and the prose fallback quietly turning the
+// command into `print("output hello")`. Both are replaced by a diagnostic
+// that names the word and offers the action word NME does know.
+
+/// Words a beginner writes where an action word belongs, with the action
+/// NME actually accepts. These are **rejected, never translated**: guessing
+/// that `output` meant `show` would be exactly the silent rewrite this
+/// compiler exists to avoid.
+/// Words a beginner writes where an action word belongs, with the action NME
+/// actually accepts. They are **rejected, never translated**: guessing that
+/// `output` meant `show` would be exactly the silent rewrite this compiler
+/// exists to avoid.
+///
+/// The table is consulted in two places with different strictness. Inside the
+/// body of a repeat sentence (`3번 ... 안녕 말해줘`) the line is already known
+/// to be a command, so every word here counts. On an ordinary line, only the
+/// three groups below count, and each of them asks for the shape of its own
+/// action first — otherwise `store it away`, `echo of the mountain` and
+/// `말하기 연습` would stop being the sentences they are.
+const NEAR_MISS_ACTIONS: &[(&str, &str)] = &[
+    ("output", "show"),
+    ("speak", "show"),
+    ("puts", "show"),
+    ("printf", "show"),
+    ("echo", "show"),
+    ("log", "show"),
+    ("insert", "add"),
+    ("input", "ask"),
+    ("store", "set"),
+    ("let", "set"),
+    ("delay", "wait"),
+    ("loop", "repeat"),
+    ("말하기", "말해줘"),
+    ("말해라", "말해줘"),
+    ("말합니다", "말해줘"),
+    ("출력하기", "말해줘"),
+    ("프린트해", "말해줘"),
+    ("보여주기", "보여줘"),
+    ("입력해", "물어봐"),
+    ("여쭤봐", "물어봐"),
+    ("무러봐", "물어봐"),
+    ("되풀이해", "반복해"),
+    ("되풀이해서", "반복해서"),
+    ("돌려서", "반복해서"),
+    ("루프해서", "반복해서"),
+    ("반복합니다", "반복해"),
+    ("반복하기", "반복해"),
+    ("집어넣어", "넣어"),
+    ("너허", "넣어"),
+    ("정해", "저장해"),
+    ("지정해", "저장해"),
+];
+
+/// Words that are only ever an attempt at a command when they open a line.
+/// None of them starts an ordinary English or Korean sentence.
+const COMMAND_WORDS_LEADING: &[(&str, &str)] = &[
+    ("output", "show"),
+    ("speak", "show"),
+    ("puts", "show"),
+    ("printf", "show"),
+    ("출력하기", "말해줘"),
+    ("프린트해", "말해줘"),
+    ("보여주기", "보여줘"),
+    ("말합니다", "말해줘"),
+    ("말해라", "말해줘"),
+];
+
+/// Words for asking. Korean puts them in the middle of the line, so they are
+/// looked for everywhere — but only when the line really asks something and
+/// ends in a question mark. `입력해 주세요` is then still a sentence.
+const COMMAND_WORDS_ASKING: &[(&str, &str)] = &[
+    ("input", "ask"),
+    ("입력해", "물어봐"),
+    ("여쭤봐", "물어봐"),
+    ("무러봐", "물어봐"),
+];
+
+/// Words for adding to a list, claimed only when the line names a list the
+/// program already has. `insert coin to continue` names none, so it prints.
+const COMMAND_WORDS_APPENDING: &[(&str, &str)] = &[
+    ("insert", "add"),
+    ("put", "add"),
+    ("집어넣어", "넣어"),
+    ("너허", "넣어"),
+];
+
+/// Further words seen in beginner corpora. They only enrich a message on a
+/// line NME is refusing anyway, so a word here never turns text into an
+/// error by itself.
+const MISTAKEN_ACTIONS: &[(&str, &str)] = &[
+    ("write", "show"),
+    ("read", "ask"),
+    ("get", "ask"),
+    ("assign", "set"),
+    ("make", "set"),
+    ("bump", "add"),
+    ("raise", "add"),
+    ("hold", "wait"),
+    ("rest", "wait"),
+    ("iterate", "repeat"),
+    ("put", "add"),
+    ("대기", "기다려"),
+    ("대기해", "기다려"),
+    ("대기해줘", "기다려"),
+    ("기다립니다", "기다려"),
+    ("멈춰줘", "기다려"),
+    ("잠시멈춰", "기다려"),
+    ("슬립", "기다려"),
+    ("증가해", "더해"),
+    ("증가시켜", "더해"),
+    ("감소해", "빼"),
+    ("감소시켜", "빼"),
+    ("무러봐", "물어봐"),
+    ("너허", "넣어"),
+];
+
+/// Action words offered when nothing closer is known, one list per script so
+/// a Korean line is never answered with an English word.
+const BASIC_ACTIONS_EN: &[&str] = &["show", "ask", "set", "wait", "repeat"];
+const BASIC_ACTIONS_KO: &[&str] = &["말해줘", "물어봐", "저장해", "기다려", "반복해"];
+
+fn is_hangul(word: &str) -> bool {
+    word.chars().any(|character| {
+        matches!(character,
+            '\u{ac00}'..='\u{d7a3}' | '\u{1100}'..='\u{11ff}' | '\u{3130}'..='\u{318f}')
+    })
+}
+
+/// The action word closest to `word`, or `None` when nothing is close enough
+/// to be worth naming.
+fn suggest_action_word(word: &str) -> Option<&'static str> {
+    for (written, action) in NEAR_MISS_ACTIONS.iter().chain(MISTAKEN_ACTIONS) {
+        if word.eq_ignore_ascii_case(written) {
+            return Some(action);
+        }
+    }
+    let basics = if is_hangul(word) {
+        BASIC_ACTIONS_KO
+    } else {
+        BASIC_ACTIONS_EN
+    };
+    let lowered = word.to_lowercase();
+    basics
+        .iter()
+        .copied()
+        .find(|action| one_typo_away(&lowered, action))
+        .or_else(|| {
+            // Korean verbs are inflected, so a shared stem of two or more
+            // syllables is a stronger signal than a letter-by-letter edit
+            // count (`기다립니다` against `기다려`).
+            is_hangul(word)
+                .then(|| {
+                    basics.iter().copied().find(|action| {
+                        let stem: String = action.chars().take(2).collect();
+                        stem.chars().count() == 2 && word.starts_with(&stem)
+                    })
+                })
+                .flatten()
+        })
+}
+
+/// The word a beginner wrote where an action word belongs, when the rest of
+/// the line has the shape of that action too. Prose is never claimed: the
+/// leading group must open the line, the asking group needs a question mark,
+/// and the adding group needs a list the program already has.
+fn near_miss_action_word(
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+) -> Option<(usize, &'static str)> {
+    let start = leading_sentence_fillers(tokens);
+    if tokens.len() - start < 2 {
+        return None;
+    }
+    let lookup = |word: &str, table: &'static [(&'static str, &'static str)]| {
+        table
+            .iter()
+            .find(|(written, _)| word.eq_ignore_ascii_case(written))
+            .map(|(_, action)| *action)
+    };
+    if let Some(action) = name_word(&tokens[start]).and_then(|word| lookup(word, COMMAND_WORDS_LEADING))
+    {
+        return Some((start, action));
+    }
+    let asks = tokens
+        .last()
+        .is_some_and(|token| token_matches_exact(token, &["?"]));
+    let names_a_list = tokens.iter().any(|token| {
+        name_word(token).is_some_and(|word| resolve_known_particle(word, known_names).is_some())
+    });
+    (start..tokens.len()).find_map(|index| {
+        let word = name_word(&tokens[index])?;
+        if asks {
+            if let Some(action) = lookup(word, COMMAND_WORDS_ASKING) {
+                return Some((index, action));
+            }
+        }
+        if names_a_list {
+            if let Some(action) = lookup(word, COMMAND_WORDS_APPENDING) {
+                return Some((index, action));
+            }
+        }
+        None
+    })
+}
+
+/// True when every token on the line is a word, a number, a quoted piece of
+/// text, or a sentence mark. That is the shape of something a person wrote as
+/// a sentence; Python code always brings an operator, a bracket, or a colon.
+fn looks_like_written_sentence(tokens: &[Token]) -> bool {
+    tokens.iter().enumerate().all(|(index, token)| {
+        is_sentence_word_token(index, token)
+            || matches!(
+                token.tok,
+                Tok::None
+                    | Tok::True
+                    | Tok::False
+                    | Tok::Int { .. }
+                    | Tok::Float { .. }
+                    | Tok::String { .. }
+            )
+    })
+}
+
+/// Which word to name when the line has no action NME knows. English states
+/// the action first, Korean states it last, so each script is asked about the
+/// end of the line where its verb belongs.
+fn unreadable_action_token(tokens: &[Token], known_names: &HashSet<String>) -> usize {
+    if let Some((index, _)) = near_miss_action_word(tokens, known_names) {
+        return index;
+    }
+    // `please` and `좀` are politeness, never the action, so they are never
+    // the word a beginner is told about.
+    let start = leading_sentence_fillers(tokens);
+    let hangul_line = tokens
+        .iter()
+        .filter_map(name_word)
+        .any(is_hangul);
+    if hangul_line {
+        (start..tokens.len())
+            .rev()
+            .find(|index| name_word(&tokens[*index]).is_some())
+            .unwrap_or(tokens.len() - 1)
+    } else {
+        (start..tokens.len())
+            .find(|index| name_word(&tokens[*index]).is_some())
+            .unwrap_or(start.min(tokens.len() - 1))
+    }
+}
+
+fn unknown_action_word_diagnostic(tokens: &[Token], known_names: &HashSet<String>) -> Diagnostic {
+    let index = unreadable_action_token(tokens, known_names);
+    let token = &tokens[index];
+    let word = name_word(token).unwrap_or("");
+    let problem = Diagnostic::bilingual(
+        DiagnosticCode::UnknownActionWord,
+        format!("I don't know what `{word}` does"),
+        format!("`{word}`가 무엇을 하는 말인지 모르겠어요"),
+        token.span,
+    );
+    match suggest_action_word(word) {
+        Some(action) => problem.with_bilingual_hint(
+            format!("`{word}` is not an action word here; did you mean `{action}`?"),
+            format!("여기서 `{word}`는 동작 단어가 아니에요. 혹시 `{action}`인가요?"),
+        ),
+        None => problem.with_bilingual_hint(
+            format!(
+                "write an action word such as {}",
+                BASIC_ACTIONS_EN
+                    .iter()
+                    .map(|action| format!("`{action}`"))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+            format!(
+                "{} 같은 동작 단어를 적어 주세요",
+                BASIC_ACTIONS_KO
+                    .iter()
+                    .map(|action| format!("`{action}`"))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+        ),
+    }
+}
+
+/// Every action word NME accepts, in both languages, for the one job of
+/// telling a beginner where a glued-together word should come apart.
+const ALL_ACTION_WORDS: &[&[&str]] = &[
+    SAY_WORDS_EN,
+    SAY_WORDS_KO,
+    ASK_WORDS_EN,
+    ASK_WORDS_KO,
+    SET_WORDS_EN,
+    SET_WORDS_KO,
+    WAIT_WORDS_EN,
+    WAIT_WORDS_KO,
+    REPEAT_WORDS_EN,
+    REPEAT_WORDS_KO,
+    UPDATE_ADD_WORDS_EN,
+    UPDATE_ADD_WORDS_KO,
+    UPDATE_SUBTRACT_WORDS_EN,
+    UPDATE_SUBTRACT_WORDS_KO,
+    APPEND_WORDS_EN,
+    APPEND_WORDS_KO,
+    END_WORDS_EN,
+    END_WORDS_KO,
+];
+
+fn is_action_word(word: &str) -> bool {
+    ALL_ACTION_WORDS
+        .iter()
+        .any(|list| list.iter().any(|known| word.eq_ignore_ascii_case(known)))
+}
+
+/// Korean counters stay attached to their number, so `3번` is one word and
+/// `3번반복해서` comes apart as `3번` + `반복해서`.
+const ATTACHED_COUNTERS_KO: &[char] = &['번', '회', '차', '판', '초'];
+
+/// The spaces a beginner left out. `sayhello` is `say hello`, `점수는0` is
+/// `점수는 0`, and `점수에1더해` is `점수에 1 더해`. Returns `None` when the
+/// word is just a word.
+fn unglue(word: &str) -> Option<String> {
+    let mut pieces: Vec<String> = Vec::new();
+    let mut current = String::new();
+    let mut previous_digit = false;
+    for character in word.chars() {
+        let digit = character.is_ascii_digit();
+        let counter = ATTACHED_COUNTERS_KO.contains(&character);
+        if !current.is_empty() && digit != previous_digit && !(previous_digit && counter) {
+            pieces.push(std::mem::take(&mut current));
+        }
+        current.push(character);
+        previous_digit = digit || (previous_digit && counter);
+    }
+    if !current.is_empty() {
+        pieces.push(current);
+    }
+    let split = pieces
+        .into_iter()
+        .flat_map(|piece| split_off_action_word(&piece))
+        .collect::<Vec<_>>();
+    // Two pieces alone prove nothing: `data1` is one name. A split is only
+    // worth showing when one of its pieces is a word NME knows.
+    let found_a_word = split
+        .iter()
+        .any(|piece| is_action_word(piece) || strip_assignment_particle(piece).is_some());
+    (split.len() > 1 && found_a_word).then(|| split.join(" "))
+}
+
+/// One piece of a glued word, cut where an action word starts or ends.
+fn split_off_action_word(piece: &str) -> Vec<String> {
+    let boundaries = piece
+        .char_indices()
+        .map(|(offset, _)| offset)
+        .chain(std::iter::once(piece.len()))
+        .collect::<Vec<_>>();
+    for &at in &boundaries {
+        if at == 0 || at == piece.len() {
+            continue;
+        }
+        let (left, right) = piece.split_at(at);
+        // Both halves must be real words. Without this, `Don't stop!` comes
+        // apart as `Do` + `n`, because `do` is one of the repeat words.
+        let both_are_words = left.chars().count() > 1 && right.chars().count() > 1;
+        if both_are_words && (is_action_word(left) || is_action_word(right)) {
+            return vec![left.to_string(), right.to_string()];
+        }
+        if strip_assignment_particle(left).is_some() && right.chars().all(|c| c.is_ascii_digit()) {
+            return vec![left.to_string(), right.to_string()];
+        }
+    }
+    vec![piece.to_string()]
+}
+
+/// A word on the line that is two words with the space missing, such as
+/// `wait3` or `3번반복해서`. Only the first and last word are considered,
+/// because that is where an action word belongs.
+fn glued_action_word(tokens: &[Token]) -> Option<(usize, String)> {
+    if tokens.len() < 2 {
+        return None;
+    }
+    let last = tokens.len() - 1;
+    [0, last].into_iter().find_map(|index| {
+        let word = name_word(&tokens[index])?;
+        if is_action_word(word) {
+            return None;
+        }
+        let split = unglue(word)?;
+        split
+            .split(' ')
+            .any(is_action_word)
+            .then_some((index, split))
+    })
+}
+
+/// `3번반복해서 안녕 말해줘` — the counter and the repeat word were typed with
+/// the space missing, so the repeat word vanishes into the printed message.
+/// A number in front and an exact repeat word behind make this unmistakable,
+/// which is why an ordinary name such as `반복횟수는` is never claimed.
+fn glued_count_and_repeat(tokens: &[Token]) -> Option<(usize, String)> {
+    (1..tokens.len()).find_map(|index| {
+        if !is_written_number(&tokens[index - 1]) {
+            return None;
+        }
+        let word = name_word(&tokens[index])?;
+        TIMES_WORDS_KO.iter().find_map(|marker| {
+            let rest = word.strip_prefix(marker)?;
+            REPEAT_WORDS_KO
+                .contains(&rest)
+                .then(|| (index, format!("{marker} {rest}")))
+        })
+    })
+}
+
+fn glued_word_diagnostic(token: &Token, word: &str, split: &str) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::UnknownActionWord,
+        format!("I don't know what `{word}` does"),
+        format!("`{word}`가 무엇을 하는 말인지 모르겠어요"),
+        token.span,
+    )
+    .with_bilingual_hint(
+        format!("`{word}` looks like two words with the space missing; did you mean `{split}`?"),
+        format!("`{word}`는 띄어쓰기가 빠진 두 낱말로 보여요. 혹시 `{split}`인가요?"),
+    )
+}
+
+/// A whole line that Python accepts and that still cannot do anything.
+///
+/// Three shapes reach here, and none of them is ever what a beginner meant:
+/// a name standing alone (`hello`, `sayhello`), a `name: value` note with no
+/// `=` whose target is an action word (`say: hello`), and a comparison whose
+/// answer is thrown away (`score is 0`). NME refuses all three and says what
+/// to write instead. Everything else Python accepts is left alone.
+///
+/// A name that an earlier line assigned is refused too: reading it in a
+/// program file still does nothing, and saying so where the writer can see it
+/// beats a `NameError` later or silence forever.
+fn statement_does_nothing(tokens: &[Token]) -> Option<Diagnostic> {
+    if let Some(word) = (tokens.len() == 1).then(|| name_word(&tokens[0])).flatten() {
+        // A one-word line that is one of NME's own words stays an ordinary
+        // Python name, exactly as it does today: `end`, `skip`, `멈춰` close
+        // blocks and leave loops, and `say`, `times`, `목록` are names a
+        // Python program is free to use. Only a word NME has no meaning for
+        // is refused, because then the line can only be a mistake.
+        if is_nme_vocabulary_word(&tokens[0]) {
+            return None;
+        }
+        let problem = Diagnostic::bilingual(
+            DiagnosticCode::StatementDoesNothing,
+            format!("this line is only the name `{word}`, so it does nothing"),
+            format!("이 줄은 `{word}`라는 이름뿐이라 아무 일도 하지 않아요"),
+            tokens[0].span,
+        );
+        if let Some(split) = unglue(word) {
+            return Some(problem.with_bilingual_hint(
+                format!("`{word}` looks like two words with the space missing; did you mean `{split}`?"),
+                format!("`{word}`는 띄어쓰기가 빠진 두 낱말로 보여요. 혹시 `{split}`인가요?"),
+            ));
+        }
+        if let Some(closing) = END_WORDS_EN
+            .iter()
+            .chain(END_WORDS_KO)
+            .find(|known| one_typo_away(word, known))
+        {
+            return Some(problem.with_bilingual_hint(
+                format!("did you mean `{closing}`, to close a block?"),
+                format!("블록을 닫는 `{closing}`을 쓰려던 건가요?"),
+            ));
+        }
+        // A word NME cannot say anything useful about is left to Python. One
+        // name per line is also how a plain list of names is written, and
+        // guessing that `Mina` wanted an action would be the same silent
+        // rewrite this whole check exists to stop.
+        return None;
+    }
+    if bare_annotation_action(tokens).is_some() {
+        let text = token_text_without_colon(tokens);
+        return Some(
+            Diagnostic::bilingual(
+                DiagnosticCode::StatementDoesNothing,
+                "a `:` here only writes a note about a name, so this line shows nothing",
+                "여기의 `:`는 이름에 메모를 다는 표기라서 이 줄은 아무것도 보여 주지 않아요",
+                span_of(tokens),
+            )
+            .with_bilingual_hint(
+                format!("remove the `:` and write `{text}`"),
+                format!("`:`를 지우고 `{text}`처럼 적어 주세요"),
+            )
+        );
+    }
+    if bare_comparison(tokens) {
+        return Some(
+            Diagnostic::bilingual(
+                DiagnosticCode::StatementDoesNothing,
+                "this line only compares two things and throws the answer away",
+                "이 줄은 두 값을 비교만 하고 그 답을 버려요",
+                span_of(tokens),
+            )
+            .with_bilingual_hint(
+                "to save a value write `set score to 0`; to decide something write `if score is 0`",
+                "값을 저장하려면 `점수는 0`처럼, 무엇을 결정하려면 `만약에 점수가 0이면`처럼 적어 주세요",
+            ),
+        );
+    }
+    None
+}
+
+fn is_nme_vocabulary_word(token: &Token) -> bool {
+    ALL_ACTION_WORDS
+        .iter()
+        .chain(&[
+            BREAK_WORDS_EN,
+            BREAK_WORDS_KO,
+            BREAK_ALIAS_WORDS_EN,
+            CONTINUE_WORDS_EN,
+            CONTINUE_WORDS_KO,
+            CONTINUE_ALIAS_WORDS_EN,
+            WHEN_WORDS_EN,
+            WHEN_WORDS_KO,
+            WHILE_WORDS_EN,
+            WHILE_WORDS_KO,
+            ELSE_WORDS_EN,
+            ELSE_WORDS_KO,
+            TIMES_WORDS_EN,
+            TIMES_WORDS_KO,
+            LIST_WORDS_EN,
+            LIST_WORDS_KO,
+            USE_WORDS_EN,
+            USE_WORDS_KO,
+            NUMBER_WORDS_EN,
+            NUMBER_WORDS_KO,
+            EACH_WORDS_EN,
+            SENTENCE_FILLERS,
+        ])
+        .any(|list| token_matches_exact(token, list))
+}
+
+/// `say: hello` — Python reads this as a note about a name called `say`, and
+/// prints nothing. Only an action word as the target is claimed, so an
+/// ordinary `count: int` keeps its Python meaning.
+fn bare_annotation_action(tokens: &[Token]) -> Option<()> {
+    if tokens.len() != 3 || !matches!(tokens[1].tok, Tok::Colon) {
+        return None;
+    }
+    name_word(&tokens[0])?;
+    let follows_a_word = name_word(&tokens[2]).is_some();
+    (follows_a_word
+        && (output_action_at(tokens, 0, MatchMode::Exact).is_some()
+            || ask_action_at(tokens, 0, MatchMode::Exact).is_some()))
+    .then_some(())
+}
+
+fn token_text_without_colon(tokens: &[Token]) -> String {
+    tokens
+        .iter()
+        .filter(|token| !matches!(token.tok, Tok::Colon))
+        .filter_map(name_word)
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+/// `score is 0` — a comparison as a whole statement. Brackets, an `=`, a
+/// call, or a Python keyword mean the line is doing something else, so those
+/// are left alone.
+fn bare_comparison(tokens: &[Token]) -> bool {
+    if tokens.len() < 3 || !matches!(tokens[0].tok, Tok::Name { .. }) {
+        return false;
+    }
+    // `log in first` is three words that Python happens to read as a
+    // membership test. It is a sentence, and the fallback prints it.
+    if looks_like_plain_prose(tokens) {
+        return false;
+    }
+    if tokens.iter().any(|token| {
+        matches!(
+            token.tok,
+            Tok::Equal
+                | Tok::Lpar
+                | Tok::Rpar
+                | Tok::Lsqb
+                | Tok::Rsqb
+                | Tok::Lbrace
+                | Tok::Rbrace
+                | Tok::Semi
+                | Tok::Colon
+                | Tok::Dot
+        ) || (is_python_keyword(&token.tok)
+            && !matches!(token.tok, Tok::Is | Tok::Not | Tok::In))
+    }) {
+        return false;
+    }
+    tokens.iter().any(|token| {
+        matches!(
+            token.tok,
+            Tok::Is
+                | Tok::In
+                | Tok::EqEqual
+                | Tok::NotEqual
+                | Tok::Less
+                | Tok::Greater
+                | Tok::LessEqual
+                | Tok::GreaterEqual
+        )
+    })
+}
+
+/// A line Python accepts that is really a written sentence, so the sentence
+/// fallback should print it instead of leaving a program that does nothing.
+///
+/// Two shapes qualify, and both are unmistakable. A comparison spelled out in
+/// words (`log in first`) never appears in code that means anything, because
+/// its answer is thrown away. And one Korean word that ends a sentence
+/// (`끝입니다`) is a sentence, unless the program itself gave that name a
+/// value earlier.
+fn valid_python_is_a_sentence(tokens: &[Token], known_names: &HashSet<String>) -> bool {
+    if tokens.len() > 2 && looks_like_plain_prose(tokens) {
+        let word_comparison = tokens
+            .iter()
+            .any(|token| matches!(token.tok, Tok::Is | Tok::In));
+        if word_comparison {
+            return true;
+        }
+    }
+    if tokens.len() == 1 {
+        if let Some(word) = name_word(&tokens[0]) {
+            return is_hangul(word)
+                && !known_names.contains(word)
+                && SENTENCE_ENDINGS_KO
+                    .iter()
+                    .any(|ending| word.len() > ending.len() && word.ends_with(ending));
+        }
+    }
+    false
+}
+
+/// True when a line of ordinary words should print rather than be reported as
+/// a half-recognized command. Every recovery candidate for such a line rests
+/// on a one-letter guess about a word that is simply a word — `let me think`,
+/// `내일 다시 해 보세요`, `입력해 주세요`. A line that ends in a question mark
+/// is excluded: there the writer is asking something, and a misspelled `ask`
+/// is worth reporting rather than printing.
+fn prose_beats_recovery(tokens: &[Token]) -> bool {
+    if !looks_like_plain_prose(tokens) {
+        return false;
+    }
+    if tokens
+        .last()
+        .is_some_and(|token| token_matches_exact(token, &["?"]))
+    {
+        return false;
+    }
+    if single_word_ties_two_actions(tokens) {
+        return false;
+    }
+    // A line that names one of the bundled modules, or asks for `latest` or a
+    // version, is a `use` line with a typo in it (`usk random latest`), never
+    // a sentence someone wanted printed.
+    let names_a_module = tokens.iter().any(|token| {
+        BundledModuleId::ALL
+            .iter()
+            .any(|module| module_word_matches(token, *module, MatchMode::Recover))
+            || word_matches_any(token, LATEST_WORDS, MatchMode::Recover)
+            || word_matches_any(token, &["version", "버전"], MatchMode::Recover)
+    });
+    if names_a_module {
+        return false;
+    }
+    !tokens
+        .iter()
+        .filter_map(name_word)
+        .any(|word| is_action_word(word) || is_nme_condition_word(word))
+}
+
+/// True when one word on the line is the same small distance from two or more
+/// different action words (`asy` from both `say` and `ask`). That is a typo
+/// worth reporting. A tie made of two *different* words each guessing at a
+/// different action is not: it is what ordinary prose looks like from the
+/// inside of a spell checker.
+fn single_word_ties_two_actions(tokens: &[Token]) -> bool {
+    let mut positions = vec![0];
+    if tokens.len() > 1 {
+        positions.push(tokens.len() - 1);
+    }
+    positions.into_iter().any(|at| {
+        let Some(actual) = tokens.get(at).and_then(token_word) else {
+            return false;
+        };
+        let mut found: Vec<&str> = Vec::new();
+        for table in AMBIGUITY_TABLES {
+            let Some((best, _)) = best_action_rank(actual, table, MatchMode::Recover) else {
+                continue;
+            };
+            if best == 0 {
+                continue;
+            }
+            found.extend(table.iter().copied().filter(|candidate| {
+                action_recovery_rank(actual, candidate, MatchMode::Recover) == Some(best)
+            }));
+        }
+        found.sort_unstable();
+        found.dedup();
+        found.len() >= 2
+    })
+}
+
+fn is_nme_condition_word(word: &str) -> bool {
+    [
+        WHEN_WORDS_EN,
+        WHEN_WORDS_KO,
+        WHILE_WORDS_EN,
+        WHILE_WORDS_KO,
+        ELSE_WORDS_EN,
+        ELSE_WORDS_KO,
+        USE_WORDS_EN,
+        USE_WORDS_KO,
+    ]
+    .iter()
+    .any(|list| list.iter().any(|known| word.eq_ignore_ascii_case(known)))
 }
 
 fn ambiguous_action_diagnostic(tokens: &[Token]) -> Diagnostic {
