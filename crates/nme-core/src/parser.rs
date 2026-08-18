@@ -214,6 +214,22 @@ const APPEND_CONNECTORS_EN: &[&str] = &["to", "into", "onto"];
 const APPEND_TARGET_PARTICLES_KO: &[&str] = &["에다가", "에다", "에", "한테", "에게"];
 const LIST_WORDS_EN: &[&str] = &["list"];
 const LIST_WORDS_KO: &[&str] = &["목록", "리스트"];
+/// Words that make a random pick. They must be written exactly.
+///
+/// A one-edit repair here reads `따라` — "along", one of the commonest words
+/// in ordinary Korean — as `골라`, which turned the sentence
+/// `강을 따라 집으로 갑니다` into a random pick from four fragments with no
+/// error at all. A pick now needs a word that can only mean picking.
+const RANDOM_CHOICE_WORDS: &[&str] = &[
+    "랜덤선택",
+    "하나골라",
+    "골라",
+    "하나뽑아",
+    "뽑아",
+    "randomchoice",
+    "pick",
+    "choose",
+];
 /// `say slowly Hello` / `천천히 말해줘 안녕` — text told one character at a time.
 const SLOW_WORDS_EN: &[&str] = &["slowly"];
 const SLOW_WORDS_KO: &[&str] = &["천천히"];
@@ -2353,7 +2369,15 @@ fn classify(
     ));
 
     if when_action_at(tokens, 0, MatchMode::Exact).is_some() {
-        return match_when(source, tokens, block, known_names, MatchMode::Exact);
+        // `혹시` may decline the line (it is also a politeness filler), so the
+        // remaining matchers still get their turn.
+        exact_match!(match_when(
+            source,
+            tokens,
+            block,
+            known_names,
+            MatchMode::Exact
+        ));
     }
     if repeat_action_at(tokens, 0, MatchMode::Exact).is_some() {
         return match_times(source, tokens, block, known_names, MatchMode::Exact);
@@ -2546,7 +2570,7 @@ fn match_say(
         if body_start >= tokens.len() {
             return Err(say_missing(spelling, tokens[action_start].span));
         }
-        let body = &tokens[body_start..];
+        let body = trim_trailing_fillers(&tokens[body_start..]);
         let prefer_text = action_start != 0
             || consumed != 1
             || mode == MatchMode::Recover
@@ -2596,7 +2620,8 @@ fn match_say(
     {
         value_start += 1;
     }
-    let value_tokens = trim_suffix_say_value(&tokens[value_start..action_start]);
+    let value_tokens =
+        trim_suffix_say_value(trim_trailing_fillers(&tokens[value_start..action_start]));
     if value_tokens.is_empty() {
         return Err(say_missing(spelling, tokens[action_start].span));
     }
@@ -2652,6 +2677,18 @@ fn leading_sentence_fillers(tokens: &[Token]) -> usize {
     index
 }
 
+/// Drops politeness fillers from the end of a message. Korean puts `좀` right
+/// before the verb and English puts `please` right after the message, so both
+/// land at the end of what would otherwise be printed. A message that is
+/// nothing but a filler is left alone: then the filler is the message.
+fn trim_trailing_fillers(tokens: &[Token]) -> &[Token] {
+    let mut end = tokens.len();
+    while end > 1 && token_matches_exact(&tokens[end - 1], SENTENCE_FILLERS) {
+        end -= 1;
+    }
+    &tokens[..end]
+}
+
 // ---------------------------------------------------------------- input
 
 fn match_ask(
@@ -2672,12 +2709,18 @@ fn match_ask(
     let Some(target_word) = name_word(target_token) else {
         return Err(ask_target_diagnostic(shape.spelling, target_token.span));
     };
+    // `ask What is your name?` would otherwise save the answer into a
+    // variable called `What`, and `ask the ...` into one called `the`.
+    // Neither is a name the writer set, so neither is ever emitted.
+    if opens_a_question(tokens, shape.target_at) || is_english_article(Some(target_token)) {
+        return Err(ask_target_diagnostic(shape.spelling, target_token.span));
+    }
     let target = strip_target_particle(target_word).to_string();
     if target.is_empty() {
         return Err(ask_target_diagnostic(shape.spelling, target_token.span));
     }
 
-    let mut prompt_end = tokens.len();
+    let mut prompt_end = shape.prompt_end.unwrap_or(tokens.len());
     if shape.prompt_start + 1 == prompt_end && tokens.last().is_some_and(is_command_ending) {
         prompt_end -= 1;
     }
@@ -2934,14 +2977,45 @@ struct AskShape {
     action_start: usize,
     target_at: usize,
     prompt_start: usize,
+    /// Where the question stops, when the name comes after it rather than
+    /// before. `None` means the question runs to the end of the line.
+    prompt_end: Option<usize>,
     spelling: Spelling,
     kind: InputKind,
+}
+
+/// Words an English question opens with.
+fn is_question_word(token: &Token) -> bool {
+    token_matches_exact(
+        token,
+        &[
+            "what", "who", "whom", "whose", "which", "where", "when", "why", "how",
+        ],
+    )
+}
+
+/// True when the word picked as the name to hold the answer is really the
+/// first word of the question: `ask What is your name?` would otherwise save
+/// the answer into a variable called `What`.
+///
+/// A question word standing alone, or followed by the beginner comma, is an
+/// ordinary name — `ask when, "which day: "` names a variable `when`.
+fn opens_a_question(tokens: &[Token], target_at: usize) -> bool {
+    tokens.get(target_at).is_some_and(is_question_word)
+        && tokens
+            .get(target_at + 1)
+            .is_some_and(|token| !matches!(token.tok, Tok::Comma))
 }
 
 fn find_ask_shape(tokens: &[Token], mode: MatchMode) -> Option<AskShape> {
     let action_start = leading_sentence_fillers(tokens);
     if let Some((spelling, consumed)) = ask_action_at(tokens, action_start, mode) {
         let mut target_at = action_start + consumed;
+        // `ask the name What is your name?` — the article belongs to the
+        // sentence, not to the name the answer goes into.
+        while is_english_article(tokens.get(target_at)) && target_at + 1 < tokens.len() {
+            target_at += 1;
+        }
         let kind = if tokens
             .get(target_at)
             .is_some_and(|token| token_matches_exact(token, NUMBER_WORDS))
@@ -2951,10 +3025,29 @@ fn find_ask_shape(tokens: &[Token], mode: MatchMode) -> Option<AskShape> {
         } else {
             InputKind::Text
         };
+        // `ask What is your name? name` — the question came first and the
+        // name closes the line, after the question mark.
+        if opens_a_question(tokens, target_at) {
+            let last = tokens.len().checked_sub(1)?;
+            if last > target_at + 1
+                && name_word(&tokens[last]).is_some()
+                && tokens.get(last - 1).is_some_and(is_command_ending)
+            {
+                return Some(AskShape {
+                    action_start,
+                    target_at: last,
+                    prompt_start: target_at,
+                    prompt_end: Some(last),
+                    spelling,
+                    kind,
+                });
+            }
+        }
         return Some(AskShape {
             action_start,
             target_at,
             prompt_start: target_at + 1,
+            prompt_end: None,
             spelling,
             kind,
         });
@@ -2987,6 +3080,7 @@ fn find_ask_shape(tokens: &[Token], mode: MatchMode) -> Option<AskShape> {
             action_start,
             target_at,
             prompt_start: action_start + consumed,
+            prompt_end: None,
             spelling,
             kind,
         });
@@ -3038,10 +3132,15 @@ fn ask_target_diagnostic(_spelling: Spelling, span: Span) -> Diagnostic {
 
 // ----------------------------------------------------------- control flow
 
+/// Words that connect a value change to its parts. None of them is ever a
+/// name a beginner sets, so a line that opens with one has been written back
+/// to front rather than naming a variable.
+const UPDATE_CONNECTOR_WORDS_EN: &[&str] = &["to", "by", "from", "of", "into", "onto"];
+
 fn match_update(
     source: &str,
     tokens: &[Token],
-    _known_names: &HashSet<String>,
+    known_names: &HashSet<String>,
     mode: MatchMode,
 ) -> Result<Option<NmeStmt>, Diagnostic> {
     // A line that opens with an output or question word is that statement,
@@ -3054,10 +3153,36 @@ fn match_update(
     {
         return Ok(None);
     }
+    // `to score add 1` / `by 1 increase score` — the connector moved to the
+    // front. Reading the line without it gives the ordinary order back;
+    // reading it *with* it would set a variable called `to`, which nobody
+    // wrote, so that result is never emitted.
+    if tokens.len() > 2
+        && token_matches_exact(&tokens[0], UPDATE_CONNECTOR_WORDS_EN)
+        && !name_word(&tokens[0]).is_some_and(|word| known_names.contains(word))
+    {
+        if let Some(stmt) = match_update(source, &tokens[1..], known_names, mode)? {
+            return Ok(Some(stmt));
+        }
+        if let Some(stmt) = amount_first_update(source, &tokens[1..], mode) {
+            return Ok(Some(stmt));
+        }
+        return Ok(None);
+    }
     if let Some((action_start, operation, _)) = update_action_ending(tokens, mode) {
         let target_token = tokens
             .first()
             .ok_or_else(|| update_diagnostic(span_of(tokens)))?;
+        // Korean may put the amount first and mark the name with `에`:
+        // `1을 점수에 더해`. The name is the one carrying the particle, and it
+        // has to exist already, so ordinary speech is never made arithmetic.
+        if name_word(target_token).is_none() {
+            if let Some(stmt) =
+                korean_amount_first_update(source, tokens, known_names, action_start, operation)
+            {
+                return Ok(Some(stmt));
+            }
+        }
         // Only a name can have its value changed. A line that starts with a
         // number or a piece of text is some other sentence that merely
         // happens to contain `더해`, so let the other matchers read it.
@@ -3080,13 +3205,15 @@ fn match_update(
         {
             amount_tokens.pop();
         }
-        let amount = parse_update_amount(source, &amount_tokens)
-            .ok_or_else(|| update_diagnostic(span_of(tokens)))?;
-        return Ok(Some(NmeStmt::Update {
+        return finish_update(
+            source,
+            tokens,
+            known_names,
             target,
-            amount,
+            &amount_tokens,
             operation,
-        }));
+        )
+        .map(Some);
     }
 
     for action_start in 1..tokens.len() {
@@ -3113,13 +3240,15 @@ fn match_update(
         {
             amount_tokens.remove(0);
         }
-        let amount = parse_update_amount(source, &amount_tokens)
-            .ok_or_else(|| update_diagnostic(span_of(tokens)))?;
-        return Ok(Some(NmeStmt::Update {
+        return finish_update(
+            source,
+            tokens,
+            known_names,
             target,
-            amount,
+            &amount_tokens,
             operation,
-        }));
+        )
+        .map(Some);
     }
 
     // English also reads naturally as `add 1 to score` or
@@ -3159,16 +3288,140 @@ fn match_update(
         let target = name_word(&target_tokens[0])
             .and_then(update_target_name)
             .ok_or_else(|| update_diagnostic(span_of(tokens)))?;
-        let amount = parse_update_amount(source, amount_tokens)
-            .ok_or_else(|| update_diagnostic(span_of(tokens)))?;
-        return Ok(Some(NmeStmt::Update {
+        return finish_update(
+            source,
+            tokens,
+            known_names,
             target,
-            amount,
+            amount_tokens,
             operation,
-        }));
+        )
+        .map(Some);
     }
 
     Ok(None)
+}
+
+/// True when the amount is a single word the program never set. Such a word
+/// is not arithmetic: `add Mina to friends` means putting `Mina` in the list.
+fn is_unset_word(tokens: &[Token], known_names: &HashSet<String>) -> bool {
+    let [token] = tokens else {
+        return false;
+    };
+    literal_token(token).is_none()
+        && name_word(token).is_some_and(|word| {
+            !known_names.contains(word) && !word.starts_with(|c: char| c.is_ascii_digit())
+        })
+}
+
+/// Builds the value change, or the list append the writer actually meant.
+///
+/// `add Mina to friends` used to compile to `friends = friends + Mina` and
+/// die with `NameError`. When the target really was made a list it is an
+/// append; when it was not, the line is reported here rather than at run
+/// time. `docs/syntax.md` §12 warns about exactly this confusion.
+fn finish_update(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+    target: String,
+    amount_tokens: &[Token],
+    operation: UpdateOp,
+) -> Result<NmeStmt, Diagnostic> {
+    if operation == UpdateOp::Add && is_unset_word(amount_tokens, known_names) {
+        let word = name_word(&amount_tokens[0]).expect("checked by is_unset_word");
+        if is_list_name(known_names, &target) {
+            let value = parse_value(source, amount_tokens, known_names, true)
+                .map_err(|()| append_diagnostic(span_of(tokens)))?;
+            return Ok(NmeStmt::Append { target, value });
+        }
+        return Err(add_unset_word_diagnostic(word, span_of(tokens)));
+    }
+    let amount = parse_update_amount(source, amount_tokens)
+        .ok_or_else(|| update_diagnostic(span_of(tokens)))?;
+    Ok(NmeStmt::Update {
+        target,
+        amount,
+        operation,
+    })
+}
+
+fn add_unset_word_diagnostic(word: &str, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::UpdateUnparseable,
+        "I couldn't understand this value change",
+        "값을 어떻게 바꿀지 이해하지 못했어요",
+        span,
+    )
+    .with_bilingual_hint(
+        format!(
+            "nothing was saved in `{word}`, so it is not a number to add; to put it in a list \
+             write `append {word} to friends`"
+        ),
+        format!(
+            "`{word}`에는 저장된 값이 없어서 더할 수 없어요. 목록에 넣으려면 `친구들에 {word} 넣어`처럼 적어 주세요"
+        ),
+    )
+}
+
+/// `by 1 increase score` with its leading connector already removed: the
+/// amount comes first and the name closes the line.
+fn amount_first_update(source: &str, tokens: &[Token], mode: MatchMode) -> Option<NmeStmt> {
+    let end = trim_command_endings(tokens).len();
+    for action_start in 1..end {
+        let Some((operation, consumed)) = update_action_at(tokens, action_start, mode) else {
+            continue;
+        };
+        let [target_token] = &tokens[action_start + consumed..end] else {
+            continue;
+        };
+        let Some(target) = name_word(target_token).and_then(update_target_name) else {
+            continue;
+        };
+        let Some(amount) = parse_update_amount(source, &tokens[..action_start]) else {
+            continue;
+        };
+        return Some(NmeStmt::Update {
+            target,
+            amount,
+            operation,
+        });
+    }
+    None
+}
+
+/// `1을 점수에 더해` — Korean may put the amount first. The name is the word
+/// carrying `에`, and it must already exist, so an ordinary sentence that
+/// happens to end in `더해` is never turned into arithmetic.
+fn korean_amount_first_update(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+    action_start: usize,
+    operation: UpdateOp,
+) -> Option<NmeStmt> {
+    let head = &tokens[..action_start];
+    if head.len() < 2 {
+        return None;
+    }
+    let target_at = head.len() - 1;
+    let target = name_word(&head[target_at])
+        .and_then(|word| strip_any_suffix(word, &["에게", "한테", "에"]))
+        .map(str::to_string)
+        .filter(|name| known_names.contains(name))?;
+    let mut amount_tokens = head[..target_at].to_vec();
+    while amount_tokens
+        .last()
+        .is_some_and(|token| is_update_connector(token, &["을", "를", "만큼"]))
+    {
+        amount_tokens.pop();
+    }
+    let amount = parse_update_amount(source, &amount_tokens)?;
+    Some(NmeStmt::Update {
+        target,
+        amount,
+        operation,
+    })
 }
 
 fn update_action_at(tokens: &[Token], start: usize, mode: MatchMode) -> Option<(UpdateOp, usize)> {
@@ -3248,7 +3501,18 @@ fn update_target_name(word: &str) -> Option<String> {
     strip_any_suffix(
         word,
         &[
-            "에서", "에게", "한테", "에", "으로", "로", "을", "를", "은", "는",
+            "에다가",
+            "에다",
+            "에서",
+            "에게",
+            "한테",
+            "에",
+            "으로",
+            "로",
+            "을",
+            "를",
+            "은",
+            "는",
         ],
     )
     .map(str::to_string)
@@ -3280,7 +3544,11 @@ fn parse_update_amount(source: &str, tokens: &[Token]) -> Option<Code> {
 
 /// Shortens `tokens`' span by one attached Korean particle on the last token.
 /// Returns `None` when the last token carries none of them.
-fn strip_attached_particle_span(source: &str, tokens: &[Token], particles: &[&str]) -> Option<Span> {
+fn strip_attached_particle_span(
+    source: &str,
+    tokens: &[Token],
+    particles: &[&str],
+) -> Option<Span> {
     let last = tokens.last()?;
     let Tok::Name { name } = &last.tok else {
         return None;
@@ -3394,8 +3662,8 @@ fn wait_from(
         matches!(token.tok, Tok::Int { .. } | Tok::Float { .. })
             || name_word(token).is_some_and(|word| word.starts_with(|c: char| c.is_ascii_digit()))
     });
-    let names_a_known_value = amount.len() == 1
-        && name_word(&amount[0]).is_some_and(|word| known_names.contains(word));
+    let names_a_known_value =
+        amount.len() == 1 && name_word(&amount[0]).is_some_and(|word| known_names.contains(word));
     if !mentions_a_number && !names_a_known_value {
         return Ok(None);
     }
@@ -3612,7 +3880,7 @@ fn match_append(
         return Ok(None);
     }
     let value_tokens = if target_at == 0 {
-        head[1..].to_vec()
+        trim_suffix_say_value(&head[1..])
     } else {
         trim_suffix_say_value(&head[..target_at])
     };
@@ -4339,7 +4607,9 @@ fn match_korean_for_each(
         return Ok(None);
     }
     let rest = &tokens[rest_at..];
-    let colon_at = rest.iter().position(|token| matches!(token.tok, Tok::Colon));
+    let colon_at = rest
+        .iter()
+        .position(|token| matches!(token.tok, Tok::Colon));
     let repeat_consumed = repeat_action_at(rest, 0, mode).map(|(_, consumed)| consumed);
     // Without a closing repeat word or a colon this is ordinary speech.
     let Some(body_at) = repeat_consumed.or_else(|| colon_at.map(|at| at + 1)) else {
@@ -4396,7 +4666,6 @@ fn for_each_diagnostic(span: Span) -> Diagnostic {
         "`이름들의 이름마다 반복해` 또는 `for each name in names`처럼 적어 주세요",
     )
 }
-
 
 #[allow(clippy::too_many_lines)]
 fn match_while(
@@ -4844,11 +5113,16 @@ fn match_when(
     let Some((spelling, consumed)) = when_action_at(tokens, 0, mode) else {
         return Ok(None);
     };
+    // `혹시` is a politeness filler as well as a condition word. Only a real
+    // comparison after it makes it a condition; on its own it is the `혹시`
+    // of `혹시 안녕 말해줘`, which is a plain sentence.
     if token_word(&tokens[0]) == Some("혹시")
-        && tokens
+        && (tokens
             .iter()
             .enumerate()
             .any(|(index, _)| ask_action_at(tokens, index, MatchMode::Exact).is_some())
+            || (find_condition_connector(&tokens[consumed..]).is_none()
+                && find_condition_colon(source, tokens, consumed).is_none()))
     {
         return Ok(None);
     }
@@ -5001,6 +5275,28 @@ fn find_exact_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionC
                 return Some((index, ConditionConnector::NotEquals));
             }
         }
+        // `점수가 0보다 큰 동안` — the plain adjective closes a comparison, but
+        // only once `보다` has said one is being made. Without that marker
+        // `큰` is the ordinary Korean word for "big", as in
+        // `아주 큰 소리로 말해줘`, and stays part of the sentence.
+        if let Some(marker_at) = tokens
+            .iter()
+            .position(|token| name_word(token).is_some_and(|word| word.ends_with("보다")))
+        {
+            if let Some(found) =
+                tokens
+                    .iter()
+                    .enumerate()
+                    .skip(marker_at + 1)
+                    .find_map(|(index, token)| match token_word(token) {
+                        Some("큰") => Some((index, ConditionConnector::Greater)),
+                        Some("작은") => Some((index, ConditionConnector::Less)),
+                        _ => None,
+                    })
+            {
+                return Some(found);
+            }
+        }
     }
     exact
         .iter()
@@ -5145,6 +5441,12 @@ fn split_attached_condition_token(token: &Token) -> Option<(Token, ConditionConn
         "크으먄",
         "작으먄",
         "먄",
+        // `초과면`/`미만이면` are whole comparison endings as well; split at
+        // the generic `면` they would leave the meaningless value `초과`.
+        "초과면",
+        "초과이면",
+        "미만이면",
+        "미만면",
     ]
     .contains(&word)
     {
@@ -5348,8 +5650,12 @@ fn condition_tokens_before(
         // ending: `준비 가 거짓 이면` or `이름 이 철수 면`. A multi-token
         // condition is an equality comparison; a single subject keeps the
         // truthy/then meaning.
+        //
+        // A condition that already carries a comparison symbol
+        // (`만약 점수 > 10 이면`) has said what it compares, so the ending is
+        // only the sentence's own `이면` and the whole comparison stands.
         if token_matches_exact(token, &["이면", "이라면", "면", "먄"]) {
-            connector = if condition.len() > 1 {
+            connector = if condition.len() > 1 && !contains_comparison_symbol(&condition) {
                 ConditionConnector::Equals
             } else {
                 ConditionConnector::Then
@@ -5364,6 +5670,22 @@ fn condition_tokens_before(
         body_start += 1;
     }
     (condition, body_start, connector)
+}
+
+/// True when a condition already compares with a written symbol, so a Korean
+/// sentence ending after it adds nothing to the comparison.
+fn contains_comparison_symbol(tokens: &[Token]) -> bool {
+    tokens.iter().any(|token| {
+        matches!(
+            token.tok,
+            Tok::Less
+                | Tok::Greater
+                | Tok::LessEqual
+                | Tok::GreaterEqual
+                | Tok::EqEqual
+                | Tok::NotEqual
+        )
+    })
 }
 
 fn parse_natural_condition(
@@ -5963,8 +6285,14 @@ fn condition_connector_exact(token: &Token, is_last: bool) -> Option<ConditionCo
             ConditionConnector::NotEquals,
             &["같지않으면", "같지않다면", "같지않을"][..],
         ),
-        (ConditionConnector::Greater, &["크면", "크다면", "클"][..]),
-        (ConditionConnector::Less, &["작으면", "작다면", "작을"][..]),
+        (
+            ConditionConnector::Greater,
+            &["크면", "크다면", "클", "초과면", "초과이면"][..],
+        ),
+        (
+            ConditionConnector::Less,
+            &["작으면", "작다면", "작을", "미만이면", "미만면"][..],
+        ),
         (
             ConditionConnector::GreaterOrEqual,
             &["크거나같으면", "크거나같다면"][..],
@@ -6143,7 +6471,12 @@ fn match_times(
     }
     if let Some((times_at, spelling)) = find_times_colon(tokens, mode) {
         let count_start = repeat_action_at(tokens, 0, mode).map_or(0, |(_, consumed)| consumed);
-        let count = parse_count(source, &tokens[count_start..times_at], known_names, spelling)?;
+        let count = parse_count(
+            source,
+            &tokens[count_start..times_at],
+            known_names,
+            spelling,
+        )?;
         let colon_at = times_at + 1;
         let inline = parse_suite_body(
             source,
@@ -6221,17 +6554,22 @@ fn match_times(
 
     // English-first and freely mixed order: `repeat 3 times` / `반복해 3 times`.
     if let Some((spelling, consumed)) = repeat_action_at(tokens, 0, mode) {
-        let Some((relative_marker, marker_spelling)) = find_count_marker(&tokens[consumed..], mode)
+        // The whole line is searched, not only the tail, so a counter word
+        // can still see the repeat word that opened the line. An exact repeat
+        // word is proof enough of intent to also repair a misspelled counter
+        // (`repeat 3 tiems and show hello`).
+        let Some((marker_at, marker_spelling)) = find_count_marker(tokens, mode)
+            .or_else(|| find_count_marker(tokens, MatchMode::Recover))
+            .filter(|&(at, _)| at >= consumed)
         else {
             // `repeat once`, `repeat twice`, `repeat 3` — the counting word
             // already says how many, so no counter word is needed.
-            if let Some(token) = tokens.get(consumed).filter(|token| is_written_number(token)) {
-                let count = parse_count(
-                    source,
-                    std::slice::from_ref(token),
-                    known_names,
-                    spelling,
-                )?;
+            if let Some(token) = tokens
+                .get(consumed)
+                .filter(|token| is_written_number(token))
+            {
+                let count =
+                    parse_count(source, std::slice::from_ref(token), known_names, spelling)?;
                 let mut body_start = consumed + 1;
                 if tokens.get(body_start).is_some_and(is_connector_word) {
                     body_start += 1;
@@ -6247,11 +6585,15 @@ fn match_times(
             }
             return Err(repeat_count_missing(spelling, tokens[0].span));
         };
-        let marker_at = relative_marker + consumed;
         if marker_at == consumed {
             return Err(repeat_count_missing(spelling, tokens[0].span));
         }
-        let count = parse_count(source, &tokens[consumed..marker_at], known_names, marker_spelling)?;
+        let count = parse_count(
+            source,
+            &tokens[consumed..marker_at],
+            known_names,
+            marker_spelling,
+        )?;
         let mut body_start = marker_at + 1;
         if tokens.get(body_start).is_some_and(is_connector_word) {
             body_start += 1;
@@ -6279,6 +6621,14 @@ fn parse_sentence_repeat_body(
     header_span: Span,
     known_names: &HashSet<String>,
 ) -> Result<Option<InlineStmt>, Diagnostic> {
+    // `repeat 3 times.` / `3번 반복해.` — a body made of nothing but sentence
+    // punctuation is punctuation. The header opens a block, exactly as it
+    // does without the full stop, instead of printing `.` three times.
+    let body = if body.iter().all(is_command_ending) {
+        &body[..0]
+    } else {
+        body
+    };
     if branch_shape(body).is_some() {
         return Err(branch_without_condition_diagnostic(span_of(body)));
     }
@@ -7222,19 +7572,18 @@ fn match_set(
                 "`이름 저장 민수` 또는 `name save Mina`처럼 값을 뒤에 적어 주세요",
             ));
         }
-        let value =
-            set_value(source, &tokens[value_start..], known_names).map_err(|()| {
-                Diagnostic::bilingual(
-                    DiagnosticCode::SaveValueUnparseable,
-                    "I couldn't understand the value to save",
-                    "저장할 값을 이해하지 못했어요",
-                    span_of(&tokens[value_start..]),
-                )
-                .with_bilingual_hint(
-                    "write a number, name, or plain sentence",
-                    "숫자, 이름, 또는 평범한 문장을 적어 주세요",
-                )
-            })?;
+        let value = set_value(source, &tokens[value_start..], known_names).map_err(|()| {
+            Diagnostic::bilingual(
+                DiagnosticCode::SaveValueUnparseable,
+                "I couldn't understand the value to save",
+                "저장할 값을 이해하지 못했어요",
+                span_of(&tokens[value_start..]),
+            )
+            .with_bilingual_hint(
+                "write a number, name, or plain sentence",
+                "숫자, 이름, 또는 평범한 문장을 적어 주세요",
+            )
+        })?;
         return Ok(Some(NmeStmt::Set {
             target: target.to_string(),
             value,
@@ -7354,19 +7703,18 @@ fn match_set(
                 "`저장 인사 안녕하세요` 또는 `set greeting to Hello`처럼 쓰세요",
             ));
         }
-        let value =
-            set_value(source, &tokens[value_start..], known_names).map_err(|()| {
-                Diagnostic::bilingual(
-                    DiagnosticCode::SaveValueUnparseable,
-                    "I couldn't understand the value to save",
-                    "저장할 값을 이해하지 못했어요",
-                    span_of(&tokens[value_start..]),
-                )
-                .with_bilingual_hint(
-                    "write a number, name, or plain sentence",
-                    "숫자, 이름, 또는 평범한 문장을 적어 주세요",
-                )
-            })?;
+        let value = set_value(source, &tokens[value_start..], known_names).map_err(|()| {
+            Diagnostic::bilingual(
+                DiagnosticCode::SaveValueUnparseable,
+                "I couldn't understand the value to save",
+                "저장할 값을 이해하지 못했어요",
+                span_of(&tokens[value_start..]),
+            )
+            .with_bilingual_hint(
+                "write a number, name, or plain sentence",
+                "숫자, 이름, 또는 평범한 문장을 적어 주세요",
+            )
+        })?;
         return Ok(Some(NmeStmt::Set {
             target: target.to_string(),
             value,
@@ -7403,7 +7751,9 @@ fn number_value_code(source: &str, tokens: &[Token]) -> Option<Code> {
         Tok::Float { .. } => {
             let text = &source[span.start..span.end];
             match text.strip_suffix('.') {
-                Some(digits) if !digits.is_empty() && digits.bytes().all(|b| b.is_ascii_digit()) => {
+                Some(digits)
+                    if !digits.is_empty() && digits.bytes().all(|b| b.is_ascii_digit()) =>
+                {
                     Some(Code::Source(Span::new(span.start, span.end - 1)))
                 }
                 Some(_) => None,
@@ -7416,11 +7766,7 @@ fn number_value_code(source: &str, tokens: &[Token]) -> Option<Code> {
 
 /// Reads the value of an assignment, taking sentence punctuation and spoken
 /// endings off a number first.
-fn set_value(
-    source: &str,
-    tokens: &[Token],
-    known_names: &HashSet<String>,
-) -> Result<Value, ()> {
+fn set_value(source: &str, tokens: &[Token], known_names: &HashSet<String>) -> Result<Value, ()> {
     if let Some(code) = number_value_code(source, tokens) {
         return Ok(Value::Python(code));
     }
@@ -7462,23 +7808,22 @@ fn korean_target_first_set(
     if !saving_word && number.is_none() {
         return Ok(None);
     }
-    let value = match number {
-        Some(code) => Value::Python(code),
-        None => {
-            let trimmed = trim_value_endings(value_tokens);
-            parse_value(source, &trimmed, known_names, true).map_err(|()| {
-                Diagnostic::bilingual(
-                    DiagnosticCode::SaveValueUnparseable,
-                    "I couldn't understand the value to save",
-                    "저장할 값을 이해하지 못했어요",
-                    span_of(value_tokens),
-                )
-                .with_bilingual_hint(
-                    "write a number, name, or plain sentence",
-                    "숫자, 이름, 또는 평범한 문장을 적어 주세요",
-                )
-            })?
-        }
+    let value = if let Some(code) = number {
+        Value::Python(code)
+    } else {
+        let trimmed = trim_value_endings(value_tokens);
+        parse_value(source, &trimmed, known_names, true).map_err(|()| {
+            Diagnostic::bilingual(
+                DiagnosticCode::SaveValueUnparseable,
+                "I couldn't understand the value to save",
+                "저장할 값을 이해하지 못했어요",
+                span_of(value_tokens),
+            )
+            .with_bilingual_hint(
+                "write a number, name, or plain sentence",
+                "숫자, 이름, 또는 평범한 문장을 적어 주세요",
+            )
+        })?
     };
     Ok(Some(NmeStmt::Set { target, value }))
 }
@@ -7589,7 +7934,11 @@ fn parse_value(
 ///
 /// The marker word is required. Without it a comma-separated sentence stays
 /// ordinary text, which is what a learner writing `Mina, Ada and Grace` means.
-fn parse_list_value(source: &str, tokens: &[Token], known_names: &HashSet<String>) -> Option<Value> {
+fn parse_list_value(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+) -> Option<Value> {
     let mut start = 0;
     if token_matches_exact(tokens.first()?, LIST_WORDS_EN) {
         start = 1;
@@ -7641,9 +7990,7 @@ fn split_list_items(tokens: &[Token]) -> Vec<Vec<Token>> {
             if let Some(base) = LIST_JOINERS
                 .iter()
                 .filter(|joiner| joiner.chars().next().is_some_and(|c| !c.is_ascii()))
-                .find_map(|joiner| {
-                    name.strip_suffix(joiner).filter(|base| !base.is_empty())
-                })
+                .find_map(|joiner| name.strip_suffix(joiner).filter(|base| !base.is_empty()))
             {
                 current.push(Token {
                     tok: Tok::Name {
@@ -7979,13 +8326,9 @@ fn parse_random_integer(source: &str, tokens: &[Token]) -> Option<Value> {
 }
 
 fn parse_random_choice(source: &str, tokens: &[Token]) -> Option<Value> {
-    let pick_at = tokens.iter().position(|token| {
-        word_matches_any(
-            token,
-            &["랜덤선택", "하나골라", "골라", "randomchoice", "pick"],
-            MatchMode::Recover,
-        )
-    })?;
+    let pick_at = tokens
+        .iter()
+        .position(|token| token_matches_exact(token, RANDOM_CHOICE_WORDS))?;
     let choices_tokens = if pick_at == 0 {
         let start = tokens
             .iter()
@@ -8536,8 +8879,33 @@ fn remember_import_bindings(tokens: &[Token], names: &mut HashSet<String>) {
     }
 }
 
+/// Prefix under which a name that was built as a list is remembered inside
+/// the ordinary name set. `[` cannot occur in a Python identifier, so this
+/// marker can never collide with a name a program is able to bind, and every
+/// existing `known_names.contains(...)` test is unaffected.
+const LIST_NAME_MARKER: &str = "[]";
+
+fn remember_list_name(names: &mut HashSet<String>, name: &str) {
+    names.insert(format!("{LIST_NAME_MARKER}{name}"));
+}
+
+/// True when `name` was made a list earlier in the same program.
+fn is_list_name(names: &HashSet<String>, name: &str) -> bool {
+    names.contains(&format!("{LIST_NAME_MARKER}{name}"))
+}
+
 fn remember_bindings(stmt: &NmeStmt, names: &mut HashSet<String>) {
     match stmt {
+        NmeStmt::Append { target, .. } => {
+            remember_list_name(names, target);
+        }
+        NmeStmt::Set {
+            target,
+            value: Value::List(_),
+        } => {
+            names.insert(target.clone());
+            remember_list_name(names, target);
+        }
         NmeStmt::Ask { target, .. } | NmeStmt::Set { target, .. } => {
             names.insert(target.clone());
         }
@@ -8836,26 +9204,63 @@ fn action_recovery_rank(actual: &str, expected: &str, mode: MatchMode) -> Option
     action_typo_away(&actual, &expected).then_some(RECOVERY_RANK_WORST)
 }
 
-/// The action words a misspelling is equally close to, when there is more
-/// than one. Naming them is what turns a silent non-match into the ambiguity
-/// diagnostic a writer can act on.
-fn tied_action_words(token: &Token, expected: &[&str]) -> Vec<String> {
-    let Some(actual) = token_word(token) else {
-        return Vec::new();
-    };
-    let Some((best, matches)) = best_action_rank(actual, expected, MatchMode::Recover) else {
-        return Vec::new();
-    };
-    if best == 0 || matches < 2 {
-        return Vec::new();
+/// Every statement vocabulary a whole line can open or close with. Used only
+/// to name the candidates when a misspelling could be two of them at once.
+const AMBIGUITY_TABLES: &[&[&str]] = &[
+    SAY_WORDS_EN,
+    SAY_WORDS_KO,
+    ASK_WORDS_EN,
+    ASK_WORDS_KO,
+    SET_WORDS_EN,
+    SET_WORDS_KO,
+    REPEAT_WORDS_EN,
+    REPEAT_WORDS_KO,
+    WAIT_WORDS_EN,
+    WAIT_WORDS_KO,
+    APPEND_WORDS_EN,
+    APPEND_WORDS_KO,
+    UPDATE_ADD_WORDS_EN,
+    UPDATE_ADD_WORDS_KO,
+    UPDATE_SUBTRACT_WORDS_EN,
+    UPDATE_SUBTRACT_WORDS_KO,
+];
+
+/// The action words a misspelling is equally close to. Naming them is what
+/// makes the ambiguity diagnostic something a writer can act on: `대해` is one
+/// edit from both `말해` and `더해`, and only the writer knows which was meant.
+fn tied_action_words(tokens: &[Token]) -> Vec<String> {
+    let mut positions = vec![0];
+    if tokens.len() > 1 {
+        positions.push(tokens.len() - 1);
     }
-    expected
-        .iter()
-        .filter(|candidate| {
-            action_recovery_rank(actual, candidate, MatchMode::Recover) == Some(best)
-        })
-        .map(|candidate| (*candidate).to_string())
-        .collect()
+    let mut found: Vec<String> = Vec::new();
+    for at in positions {
+        let Some(actual) = tokens.get(at).and_then(token_word) else {
+            continue;
+        };
+        for table in AMBIGUITY_TABLES {
+            let Some((best, _)) = best_action_rank(actual, table, MatchMode::Recover) else {
+                continue;
+            };
+            if best == 0 {
+                continue;
+            }
+            found.extend(
+                table
+                    .iter()
+                    .filter(|candidate| {
+                        action_recovery_rank(actual, candidate, MatchMode::Recover) == Some(best)
+                    })
+                    .map(|candidate| (*candidate).to_string()),
+            );
+        }
+    }
+    found.sort();
+    found.dedup();
+    if found.len() < 2 {
+        found.clear();
+    }
+    found
 }
 
 fn token_matches_exact(token: &Token, expected: &[&str]) -> bool {
@@ -9093,15 +9498,27 @@ fn has_recoverable_append_shape(tokens: &[Token]) -> bool {
 }
 
 fn ambiguous_action_diagnostic(tokens: &[Token]) -> Diagnostic {
-    Diagnostic::bilingual(
+    let problem = Diagnostic::bilingual(
         DiagnosticCode::AmbiguousAction,
         "this sentence could mean more than one action",
         "이 문장은 두 가지 동작으로 읽힐 수 있어요",
         span_of(tokens),
-    )
-    .with_bilingual_hint(
-        "spell the action word exactly so there is one clear meaning",
-        "동작 단어를 정확히 적어 뜻을 하나로 정해 주세요",
+    );
+    let candidates = tied_action_words(tokens);
+    if candidates.is_empty() {
+        return problem.with_bilingual_hint(
+            "spell the action word exactly so there is one clear meaning",
+            "동작 단어를 정확히 적어 뜻을 하나로 정해 주세요",
+        );
+    }
+    let listed = candidates
+        .iter()
+        .map(|word| format!("`{word}`"))
+        .collect::<Vec<_>>()
+        .join(", ");
+    problem.with_bilingual_hint(
+        format!("write one of {listed} exactly, so there is one clear meaning"),
+        format!("{listed} 가운데 하나를 정확히 적어 뜻을 하나로 정해 주세요"),
     )
 }
 
@@ -9132,9 +9549,10 @@ fn attached_korean_count(
     span: Span,
     known_names: &HashSet<String>,
 ) -> Option<(Code, &'static str)> {
-    let counter = TIMES_WORDS_KO
-        .iter()
-        .find(|counter| name.strip_suffix(*counter).is_some_and(|rest| !rest.is_empty()))?;
+    let counter = TIMES_WORDS_KO.iter().find(|counter| {
+        name.strip_suffix(*counter)
+            .is_some_and(|rest| !rest.is_empty())
+    })?;
     let count = name.strip_suffix(counter)?;
     if let Some(digits) = number_word_digits(count) {
         return Some((Code::Generated(digits.to_string()), counter));

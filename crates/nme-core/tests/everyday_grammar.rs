@@ -120,7 +120,10 @@ fn multiplying_and_dividing_work_in_both_languages() {
 #[test]
 fn a_multi_token_amount_keeps_its_own_arithmetic() {
     // Without the parentheses Python would read `score - 1 + 2`.
-    assert_eq!(ok("subtract 1 + 2 from score\n"), "score = score - (1 + 2)\n");
+    assert_eq!(
+        ok("subtract 1 + 2 from score\n"),
+        "score = score - (1 + 2)\n"
+    );
     assert_eq!(ok("점수에서 1 + 2 빼줘\n"), "점수 = 점수 - (1 + 2)\n");
     assert_eq!(ok("점수에 1 더해\n"), "점수 = 점수 + 1\n");
 }
@@ -227,10 +230,7 @@ fn arithmetic_words_inside_a_message_stay_words() {
         ok("ask number factor What should I multiply by\n"),
         "factor = int(input(\"What should I multiply by\" + \" \"))\n"
     );
-    assert_eq!(
-        ok("2 곱해 말해줘\n"),
-        "print(\"2 곱해\")\n"
-    );
+    assert_eq!(ok("2 곱해 말해줘\n"), "print(\"2 곱해\")\n");
 }
 
 #[test]
@@ -510,15 +510,11 @@ fn the_stopwatch_reading_is_also_a_value_in_a_condition() {
     let reading = "round(__import__(\"time\").time() - _nme_clock, 2)";
     assert_eq!(
         ok("시간 재기 시작해\n만약 잰시간이 3보다 크면 오래 말해줘\n"),
-        format!(
-            "_nme_clock = __import__(\"time\").time()\nif ({reading} > 3): print(\"오래\")\n"
-        )
+        format!("_nme_clock = __import__(\"time\").time()\nif ({reading} > 3): print(\"오래\")\n")
     );
     assert_eq!(
         ok("start the timer\nif elapsed is greater than 3 then show long\n"),
-        format!(
-            "_nme_clock = __import__(\"time\").time()\nif ({reading} > 3): print(\"long\")\n"
-        )
+        format!("_nme_clock = __import__(\"time\").time()\nif ({reading} > 3): print(\"long\")\n")
     );
 }
 
@@ -620,8 +616,7 @@ fn cooldown_conditions_work_in_while_and_else_if() {
 
 #[test]
 fn waiting_out_a_cooldown_works_in_both_languages() {
-    let slept =
-        "__import__(\"time\").sleep(max(0, _nme_cool_문 - __import__(\"time\").time()))\n";
+    let slept = "__import__(\"time\").sleep(max(0, _nme_cool_문 - __import__(\"time\").time()))\n";
     assert_eq!(
         ok("wait for door\n"),
         "__import__(\"time\").sleep(max(0, _nme_cool_door - __import__(\"time\").time()))\n"
@@ -711,4 +706,737 @@ fn every_new_statement_is_still_exactly_one_python_line() {
     );
     let produced = ok(program);
     assert_eq!(produced.lines().count(), program.lines().count());
+}
+
+// -------- 1. `wait`, `append`, `break`, `skip` and `for each` recover from one typo
+
+#[test]
+fn wait_append_break_and_skip_recover_from_one_typo() {
+    // t-en-13
+    assert_eq!(ok("waite 2 seconds\n"), "__import__(\"time\").sleep(2)\n");
+    // t-en-14
+    assert_eq!(ok("wat 2 seconds\n"), "__import__(\"time\").sleep(2)\n");
+    // t-en-15
+    assert_eq!(ok("wiat 2 seconds\n"), "__import__(\"time\").sleep(2)\n");
+    // t-en-16
+    assert_eq!(ok("waitt 2 seconds\n"), "__import__(\"time\").sleep(2)\n");
+    // t-en-19
+    assert_eq!(ok("pasue 2\n"), "__import__(\"time\").sleep(2)\n");
+    // t-en-20
+    assert_eq!(ok("slep 2\n"), "__import__(\"time\").sleep(2)\n");
+    // t-en-21
+    assert_eq!(ok("sleeep 2\n"), "__import__(\"time\").sleep(2)\n");
+    // m-en-05
+    assert_eq!(ok("waitt 3\n"), "__import__(\"time\").sleep(3)\n");
+    // t-ko-11
+    assert_eq!(ok("2초 기다러\n"), "__import__(\"time\").sleep(2)\n");
+    // t-ko-12
+    assert_eq!(ok("2초 기달려\n"), "__import__(\"time\").sleep(2)\n");
+    // t-ko-13
+    assert_eq!(ok("2초 기디려\n"), "__import__(\"time\").sleep(2)\n");
+    // t-ko-14
+    assert_eq!(ok("2초 기다려어\n"), "__import__(\"time\").sleep(2)\n");
+    // t-ko-15
+    assert_eq!(ok("2초 다려\n"), "__import__(\"time\").sleep(2)\n");
+    // t-ko-16
+    assert_eq!(ok("2초 쉬여\n"), "__import__(\"time\").sleep(2)\n");
+    // m-ko-05
+    assert_eq!(ok("3초 기다랴\n"), "__import__(\"time\").sleep(3)\n");
+    // s-ko-11
+    assert_eq!(ok("2초기다려\n"), "__import__(\"time\").sleep(2)\n");
+    // t2-ko-01
+    assert_eq!(ok("2초기다려\n"), "__import__(\"time\").sleep(2)\n");
+    // t-en-48
+    assert_eq!(
+        ok("repeat 3 times\n  brek\nend\n"),
+        "for _ in range(3):\n  break\n# end\n"
+    );
+    // t-en-49
+    assert_eq!(
+        ok("repeat 3 times\n  braek\nend\n"),
+        "for _ in range(3):\n  break\n# end\n"
+    );
+    // m-en-03
+    assert_eq!(
+        ok("repeat 3 times\n  breakk\nend\n"),
+        "for _ in range(3):\n  break\n# end\n"
+    );
+    // t-ko-36
+    assert_eq!(
+        ok("3번 반복해\n  멈처\n끝\n"),
+        "for _ in range(3):\n  break\n# end\n"
+    );
+    // t-ko-37
+    assert_eq!(
+        ok("3번 반복해\n  머춰\n끝\n"),
+        "for _ in range(3):\n  break\n# end\n"
+    );
+    // t-en-50
+    assert_eq!(
+        ok("repeat 3 times\n  skipp\nend\n"),
+        "for _ in range(3):\n  continue\n# end\n"
+    );
+    // t-en-51
+    assert_eq!(
+        ok("repeat 3 times\n  skp\nend\n"),
+        "for _ in range(3):\n  continue\n# end\n"
+    );
+    // m-en-04
+    assert_eq!(
+        ok("repeat 3 times\n  sikp\nend\n"),
+        "for _ in range(3):\n  continue\n# end\n"
+    );
+    // t-ko-38
+    assert_eq!(
+        ok("3번 반복해\n  건너뛰여\n끝\n"),
+        "for _ in range(3):\n  continue\n# end\n"
+    );
+    // t-ko-39
+    assert_eq!(
+        ok("3번 반복해\n  건너띄어\n끝\n"),
+        "for _ in range(3):\n  continue\n# end\n"
+    );
+    // t-en-52
+    assert_eq!(
+        ok("set friends to list of Mina\nappned Mina to friends\n"),
+        "friends = [\"Mina\"]\nfriends.append(\"Mina\")\n"
+    );
+    // t-en-53
+    assert_eq!(
+        ok("set friends to list of Mina\napend Mina to friends\n"),
+        "friends = [\"Mina\"]\nfriends.append(\"Mina\")\n"
+    );
+    // m-en-01
+    assert_eq!(
+        ok("set friends to list of Mina\nappendd Mina to friends\n"),
+        "friends = [\"Mina\"]\nfriends.append(\"Mina\")\n"
+    );
+    // m-en-02
+    assert_eq!(
+        ok("set friends to list of Mina\npsuh Mina to friends\n"),
+        "friends = [\"Mina\"]\nfriends.append(\"Mina\")\n"
+    );
+    // t-ko-40
+    assert_eq!(
+        ok("친구들은 목록 민수\n친구들에 민수 너어\n"),
+        "친구들 = [\"민수\"]\n친구들.append(\"민수\")\n"
+    );
+    // t-ko-41
+    assert_eq!(
+        ok("친구들은 목록 민수\n친구들에 민수 추가헤\n"),
+        "친구들 = [\"민수\"]\n친구들.append(\"민수\")\n"
+    );
+    // t-en-54
+    assert_eq!(
+        ok("for eahc friend in friends\n  show friend\nend\n"),
+        "for friend in friends:\n  print(friend)\n# end\n"
+    );
+    // t-en-26
+    assert_eq!(
+        ok("repeat 3 tiems and show hello\n"),
+        "for _ in range(3): print(\"hello\")\n"
+    );
+    // t-ko-22
+    assert_eq!(
+        ok("3번 반복헤\n  안녕 말해줘\n끝\n"),
+        "for _ in range(3):\n  print(\"안녕\")\n# end\n"
+    );
+}
+
+// -------- 2. Number words and unit words
+
+#[test]
+fn counting_words_and_counter_words_are_numbers() {
+    // n-en-05
+    assert_eq!(ok("wait two seconds\n"), "__import__(\"time\").sleep(2)\n");
+    // n-en-06
+    assert_eq!(ok("wait one second\n"), "__import__(\"time\").sleep(1)\n");
+    // k2-en-02
+    assert_eq!(
+        ok("wait three seconds\n"),
+        "__import__(\"time\").sleep(3)\n"
+    );
+    // n-en-10
+    assert_eq!(
+        ok("repeat three times and show hello\n"),
+        "for _ in range(3): print(\"hello\")\n"
+    );
+    // k2-en-03
+    assert_eq!(
+        ok("repeat five times and show hello\n"),
+        "for _ in range(5): print(\"hello\")\n"
+    );
+    // n-en-11
+    assert_eq!(
+        ok("repeat once and show hello\n"),
+        "for _ in range(1): print(\"hello\")\n"
+    );
+    // n-en-12
+    assert_eq!(
+        ok("repeat twice and show hello\n"),
+        "for _ in range(2): print(\"hello\")\n"
+    );
+    // n-en-08
+    assert_eq!(
+        ok("repeat 1 time and show hello\n"),
+        "for _ in range(1): print(\"hello\")\n"
+    );
+    // n-en-09
+    assert_eq!(
+        ok("repeat 3 time and show hello\n"),
+        "for _ in range(3): print(\"hello\")\n"
+    );
+    // s2-en-02
+    assert_eq!(
+        ok("repeat 3 time and show hello\n"),
+        "for _ in range(3): print(\"hello\")\n"
+    );
+    // s2-en-03
+    assert_eq!(
+        ok("repeat 3 loops and show hello\n"),
+        "for _ in range(3): print(\"hello\")\n"
+    );
+    // n-ko-02
+    assert_eq!(
+        ok("한 번 반복해서 안녕 말해줘\n"),
+        "for _ in range(1): print(\"안녕\")\n"
+    );
+    // n-ko-03
+    assert_eq!(
+        ok("한번 반복해서 안녕 말해줘\n"),
+        "for _ in range(1): print(\"안녕\")\n"
+    );
+    // n-ko-04
+    assert_eq!(
+        ok("세 번 반복해서 안녕 말해줘\n"),
+        "for _ in range(3): print(\"안녕\")\n"
+    );
+    // n-ko-05
+    assert_eq!(
+        ok("세번 반복해서 안녕 말해줘\n"),
+        "for _ in range(3): print(\"안녕\")\n"
+    );
+    // n-ko-06
+    assert_eq!(
+        ok("두 번 반복해서 안녕 말해줘\n"),
+        "for _ in range(2): print(\"안녕\")\n"
+    );
+    // k2-ko-03
+    assert_eq!(
+        ok("세 번 반복해\n  안녕 말해줘\n끝\n"),
+        "for _ in range(3):\n  print(\"안녕\")\n# end\n"
+    );
+    // k2-ko-04
+    assert_eq!(
+        ok("다섯 번 반복해서 안녕 말해줘\n"),
+        "for _ in range(5): print(\"안녕\")\n"
+    );
+    // n-ko-07
+    assert_eq!(
+        ok("삼회 반복해서 안녕 말해줘\n"),
+        "for _ in range(3): print(\"안녕\")\n"
+    );
+    // n-ko-08
+    assert_eq!(
+        ok("3회 반복해서 안녕 말해줘\n"),
+        "for _ in range(3): print(\"안녕\")\n"
+    );
+    // s2-ko-02
+    assert_eq!(
+        ok("3회 반복해서 안녕 말해줘\n"),
+        "for _ in range(3): print(\"안녕\")\n"
+    );
+    // s2-ko-03
+    assert_eq!(
+        ok("3차례 반복해서 안녕 말해줘\n"),
+        "for _ in range(3): print(\"안녕\")\n"
+    );
+    // s2-ko-04
+    assert_eq!(
+        ok("3판 반복해서 안녕 말해줘\n"),
+        "for _ in range(3): print(\"안녕\")\n"
+    );
+    // n-ko-09
+    assert_eq!(ok("일초 기다려\n"), "__import__(\"time\").sleep(1)\n");
+    // n-ko-10
+    assert_eq!(ok("이초 기다려\n"), "__import__(\"time\").sleep(2)\n");
+    // k2-ko-02
+    assert_eq!(ok("삼초 기다려\n"), "__import__(\"time\").sleep(3)\n");
+}
+
+// -------- 3. Korean value-setting is as wide as English
+
+#[test]
+fn korean_value_setting_matches_english() {
+    // k-ko-02
+    assert_eq!(ok("점수를 0으로\n"), "점수 = 0\n");
+    // k-ko-04
+    assert_eq!(ok("점수가 0\n"), "점수 = 0\n");
+    // b-ko-09
+    assert_eq!(ok("점수를 0\n"), "점수 = 0\n");
+    // k-ko-07
+    assert_eq!(ok("점수에 0 저장해\n"), "점수 = 0\n");
+    // k-ko-08
+    assert_eq!(ok("점수를 0으로 설정해\n"), "점수 = 0\n");
+    // k-ko-09
+    assert_eq!(ok("점수를 0으로 저장해줘\n"), "점수 = 0\n");
+    // y-ko-19
+    assert_eq!(ok("점수를 0으로 지정해\n"), "점수 = 0\n");
+    // y-ko-20
+    assert_eq!(ok("점수를 0으로 정해\n"), "점수 = 0\n");
+    // y-ko-21
+    assert_eq!(ok("점수를 0으로 만들어\n"), "점수 = 0\n");
+    // k-ko-05
+    assert_eq!(ok("점수는 0이다\n"), "점수 = 0\n");
+    // k-ko-06
+    assert_eq!(ok("점수는 0입니다\n"), "점수 = 0\n");
+    // b-ko-08
+    assert_eq!(ok("점수는 0으로\n"), "점수 = 0\n");
+}
+
+// -------- 4. Korean typo recovery is no longer switched off by its own word list
+
+#[test]
+fn korean_output_typos_recover_like_english() {
+    // t-ko-02
+    assert_eq!(ok("말해조 안녕\n"), "print(\"안녕\")\n");
+    // t-ko-03
+    assert_eq!(ok("마해줘 안녕\n"), "print(\"안녕\")\n");
+    // t-ko-04
+    assert_eq!(ok("말해쥐 안녕\n"), "print(\"안녕\")\n");
+    // t-ko-05
+    assert_eq!(ok("말해주 안녕\n"), "print(\"안녕\")\n");
+    // n2-ko-02
+    assert_eq!(ok("말해조 안녕\n"), "print(\"안녕\")\n");
+    // n2-ko-04
+    assert_eq!(ok("안녕 말해조\n"), "print(\"안녕\")\n");
+    // n2-ko-05
+    assert_eq!(ok("안녕 마해줘\n"), "print(\"안녕\")\n");
+    // n2-ko-06
+    assert_eq!(ok("안녕 말해쥐\n"), "print(\"안녕\")\n");
+    // k-ko-12
+    assert_eq!(ok("말해라 안녕\n"), "print(\"안녕\")\n");
+    // b-ko-03
+    assert_eq!(ok("점수 저장헤 0\n"), "점수 = 0\n");
+    // t-ko-24
+    assert_eq!(ok("점수 저장헤 0\n"), "점수 = 0\n");
+    // t-ko-28
+    assert_eq!(
+        ok("이름을 물어봐아 이름이 뭐예요?\n"),
+        "이름 = input(\"이름이 뭐예요?\" + \" \")\n"
+    );
+    // l-ko-05
+    assert_eq!(
+        ok("이름을 물어봐줘요 이름이 뭐예요?\n"),
+        "이름 = input(\"이름이 뭐예요?\" + \" \")\n"
+    );
+    // t-ko-32
+    assert_eq!(
+        ok("점수는 0\n점수에 1 더해에\n"),
+        "점수 = 0\n점수 = 점수 + 1\n"
+    );
+    // t-ko-42
+    assert_eq!(
+        ok("점수는 0\n만약게 점수가 10보다 크면 성공 말해줘\n"),
+        "점수 = 0\nif (점수 > 10): print(\"성공\")\n"
+    );
+    // t-ko-31
+    assert_eq!(error_code("점수는 0\n점수에 1 대해\n"), "E0601");
+}
+
+// -------- 5. Trailing punctuation
+
+#[test]
+fn trailing_punctuation_is_punctuation() {
+    // p-en-06
+    assert_eq!(ok("set score to 0.\n"), "score = 0\n");
+    // p-en-07
+    assert_eq!(ok("set score to 0;\n"), "score = 0\n");
+    // p-en-05
+    assert_eq!(error_code("repeat 3 times.\n"), "E0501");
+    // p-ko-09
+    assert_eq!(ok("점수는 0.\n"), "점수 = 0\n");
+    // p-ko-10
+    assert_eq!(ok("점수는 0;\n"), "점수 = 0\n");
+    // e-en-06
+    assert_eq!(
+        ok("repeat 3 times.\n  show hello\nend\n"),
+        "for _ in range(3):\n  print(\"hello\")\n# end\n"
+    );
+    // e-ko-05
+    assert_eq!(
+        ok("3번 반복해.\n  안녕 말해줘\n끝\n"),
+        "for _ in range(3):\n  print(\"안녕\")\n# end\n"
+    );
+    // e-en-05
+    assert_eq!(error_code("repeat 3 times.\n"), "E0501");
+    // e-ko-04
+    assert_eq!(error_code("3번 반복해.\n"), "E0501");
+}
+
+// -------- 6. Loop control and block closing synonyms
+
+#[test]
+fn loop_control_and_block_closing_synonyms() {
+    // i-en-05
+    assert_eq!(
+        ok("repeat 3 times\n  stop\nend\n"),
+        "for _ in range(3):\n  break\n# end\n"
+    );
+    // o2-ko-06
+    assert_eq!(
+        ok("3번 반복해\n  멈춰줘\n끝\n"),
+        "for _ in range(3):\n  break\n# end\n"
+    );
+    // y-en-12
+    assert_eq!(
+        ok("repeat 3 times\n  stop here\nend\n"),
+        "for _ in range(3):\n  break\n# end\n"
+    );
+    // y-en-13
+    assert_eq!(
+        ok("repeat 3 times\n  exit loop\nend\n"),
+        "for _ in range(3):\n  break\n# end\n"
+    );
+    // y-en-15
+    assert_eq!(
+        ok("repeat 3 times\n  quit\nend\n"),
+        "for _ in range(3):\n  break\n# end\n"
+    );
+    // y-ko-01
+    assert_eq!(
+        ok("3번 반복해\n  그만해\n끝\n"),
+        "for _ in range(3):\n  break\n# end\n"
+    );
+    // y-ko-02
+    assert_eq!(
+        ok("3번 반복해\n  멈추기\n끝\n"),
+        "for _ in range(3):\n  break\n# end\n"
+    );
+    // y-ko-03
+    assert_eq!(
+        ok("3번 반복해\n  정지해\n끝\n"),
+        "for _ in range(3):\n  break\n# end\n"
+    );
+    // y-ko-04
+    assert_eq!(
+        ok("3번 반복해\n  종료해\n끝\n"),
+        "for _ in range(3):\n  break\n# end\n"
+    );
+    // i-ko-05
+    assert_eq!(
+        ok("3번 반복해\n  멈춰줘\n끝\n"),
+        "for _ in range(3):\n  break\n# end\n"
+    );
+    // y-en-11
+    assert_eq!(
+        ok("repeat 3 times\n  keep going\nend\n"),
+        "for _ in range(3):\n  continue\n# end\n"
+    );
+    // y-ko-05
+    assert_eq!(
+        ok("3번 반복해\n  계속해\n끝\n"),
+        "for _ in range(3):\n  continue\n# end\n"
+    );
+    // y-ko-06
+    assert_eq!(
+        ok("3번 반복해\n  넘겨\n끝\n"),
+        "for _ in range(3):\n  continue\n# end\n"
+    );
+    // y-ko-07
+    assert_eq!(
+        ok("3번 반복해\n  다음\n끝\n"),
+        "for _ in range(3):\n  continue\n# end\n"
+    );
+    // y-en-30
+    assert_eq!(
+        ok("repeat 3 times\n  show hello\nfinish\n"),
+        "for _ in range(3):\n  print(\"hello\")\n# end\n"
+    );
+    // y-en-31
+    assert_eq!(
+        ok("repeat 3 times\n  show hello\ndone\n"),
+        "for _ in range(3):\n  print(\"hello\")\n# end\n"
+    );
+    // y-ko-26
+    assert_eq!(
+        ok("3번 반복해\n  안녕 말해줘\n종료\n"),
+        "for _ in range(3):\n  print(\"안녕\")\n# end\n"
+    );
+    // y-ko-27
+    assert_eq!(
+        ok("3번 반복해\n  안녕 말해줘\n마침\n"),
+        "for _ in range(3):\n  print(\"안녕\")\n# end\n"
+    );
+}
+
+// -------- 7. Word order
+
+#[test]
+fn word_order_that_can_only_mean_one_thing() {
+    // o-en-09
+    assert_eq!(
+        ok("set score to 0\nto score add 1\n"),
+        "score = 0\nscore = score + 1\n"
+    );
+    // o-en-12
+    assert_eq!(
+        ok("set score to 0\nby 1 increase score\n"),
+        "score = 0\nscore = score + 1\n"
+    );
+    // o-ko-05
+    assert_eq!(
+        ok("점수는 0\n1을 점수에 더해\n"),
+        "점수 = 0\n점수 = 점수 + 1\n"
+    );
+    // k-ko-29
+    assert_eq!(
+        ok("점수는 0\n점수에다 1 더해\n"),
+        "점수 = 0\n점수 = 점수 + 1\n"
+    );
+    // o-en-20
+    assert_eq!(
+        ok("set friends to list of Mina\nto friends append Mina\n"),
+        "friends = [\"Mina\"]\nfriends.append(\"Mina\")\n"
+    );
+    // o-ko-12
+    assert_eq!(
+        ok("친구들은 목록 민수\n민수를 친구들에 넣어\n"),
+        "친구들 = [\"민수\"]\n친구들.append(\"민수\")\n"
+    );
+    // o-ko-13
+    assert_eq!(
+        ok("친구들은 목록 민수\n넣어 친구들에 민수\n"),
+        "친구들 = [\"민수\"]\n친구들.append(\"민수\")\n"
+    );
+    // h-ko-04
+    assert_eq!(
+        ok("친구들은 목록 민수\n민수 친구들에 넣어\n"),
+        "친구들 = [\"민수\"]\n친구들.append(\"민수\")\n"
+    );
+    // k-ko-34
+    assert_eq!(
+        ok("친구들은 목록 민수\n친구들에 민수를 넣어줘\n"),
+        "친구들 = [\"민수\"]\n친구들.append(\"민수\")\n"
+    );
+    // o-en-18
+    assert_eq!(
+        ok("ask What is your name? name\n"),
+        "name = input(\"What is your name?\" + \" \")\n"
+    );
+    // l-en-04
+    assert_eq!(
+        ok("ask the name What is your name?\n"),
+        "name = input(\"What is your name?\" + \" \")\n"
+    );
+}
+
+// -------- 8. Filler words, anywhere in the line
+
+#[test]
+fn filler_words_anywhere_in_the_line() {
+    // q-en-01
+    assert_eq!(ok("please say hello\n"), "print(\"hello\")\n");
+    // q-en-02
+    assert_eq!(
+        ok("please wait 2 seconds\n"),
+        "__import__(\"time\").sleep(2)\n"
+    );
+    // g-en-02
+    assert_eq!(ok("say hello please\n"), "print(\"hello\")\n");
+    // g-en-03
+    assert_eq!(
+        ok("wait 2 seconds please\n"),
+        "__import__(\"time\").sleep(2)\n"
+    );
+    // q-ko-01
+    assert_eq!(ok("좀 안녕 말해줘\n"), "print(\"안녕\")\n");
+    // q-ko-02
+    assert_eq!(ok("안녕 좀 말해줘\n"), "print(\"안녕\")\n");
+    // q-ko-03
+    assert_eq!(ok("제발 2초 기다려\n"), "__import__(\"time\").sleep(2)\n");
+    // g-ko-01
+    assert_eq!(ok("안녕 좀 말해줘\n"), "print(\"안녕\")\n");
+    // g-ko-04
+    assert_eq!(ok("2초 좀 기다려\n"), "__import__(\"time\").sleep(2)\n");
+    // q-ko-04
+    assert_eq!(ok("혹시 안녕 말해줘\n"), "print(\"안녕\")\n");
+}
+
+// -------- 9. `for each` folds case and recovers
+
+#[test]
+fn list_loop_headers_fold_case_and_recover() {
+    // d-en-02
+    assert_eq!(
+        ok("For each friend in friends\n  show friend\nend\n"),
+        "for friend in friends:\n  print(friend)\n# end\n"
+    );
+    // d-en-03
+    assert_eq!(
+        ok("FOR EACH friend in friends\n  show friend\nend\n"),
+        "for friend in friends:\n  print(friend)\n# end\n"
+    );
+    // d-en-04
+    assert_eq!(
+        ok("for eahc friend in friends\n  show friend\nend\n"),
+        "for friend in friends:\n  print(friend)\n# end\n"
+    );
+    // d-en-05
+    assert_eq!(
+        ok("foreach friend in friends\n  show friend\nend\n"),
+        "for friend in friends:\n  print(friend)\n# end\n"
+    );
+    // C-en-20
+    assert_eq!(
+        ok("For each friend in friends\n  show friend\nend\n"),
+        "for friend in friends:\n  print(friend)\n# end\n"
+    );
+    // d-ko-02
+    assert_eq!(
+        ok("친구들의 친구마다 반복헤\n  친구 말해줘\n끝\n"),
+        "for 친구 in 친구들:\n  print(친구)\n# end\n"
+    );
+    // d-ko-03
+    assert_eq!(
+        ok("친구들의 친구 마다 반복해\n  친구 말해줘\n끝\n"),
+        "for 친구 in 친구들:\n  print(친구)\n# end\n"
+    );
+}
+
+// -------- 10. `add X to <a list>`
+
+#[test]
+fn adding_a_word_to_a_list_is_an_append() {
+    // y-en-26
+    assert_eq!(
+        ok("set friends to list of Mina\nadd Mina to friends\n"),
+        "friends = [\"Mina\"]\nfriends.append(\"Mina\")\n"
+    );
+    // y-ko-24
+    assert_eq!(
+        ok("친구들은 목록 민수\n친구들에 민수 더해\n"),
+        "친구들 = [\"민수\"]\n친구들.append(\"민수\")\n"
+    );
+}
+
+// -------- 11. Korean comparison endings after an operator
+
+#[test]
+fn korean_comparison_endings_after_a_symbol() {
+    // p2-ko-02
+    assert_eq!(
+        ok("점수는 0\n만약 점수 > 10 이면 성공 말해줘\n"),
+        "점수 = 0\nif (점수 > 10): print(\"성공\")\n"
+    );
+    // p2-ko-03
+    assert_eq!(
+        ok("점수는 0\n만약 점수 > 10 면 성공 말해줘\n"),
+        "점수 = 0\nif (점수 > 10): print(\"성공\")\n"
+    );
+    // p2-ko-05
+    assert_eq!(
+        ok("점수는 0\n점수 > 10 이면 성공 말해줘\n"),
+        "점수 = 0\nif (점수 > 10): print(\"성공\")\n"
+    );
+    // c2-ko-05
+    assert_eq!(
+        ok("점수는 0\n만약에 점수 > 10 이면 성공 말해줘\n"),
+        "점수 = 0\nif (점수 > 10): print(\"성공\")\n"
+    );
+    // p-ko-17
+    assert_eq!(
+        ok("점수는 0\n만약에 점수 > 10 이면 성공 말해줘\n"),
+        "점수 = 0\nif (점수 > 10): print(\"성공\")\n"
+    );
+    // c2-ko-06
+    assert_eq!(
+        ok("점수는 0\n만약에 점수가 10 초과면 성공 말해줘\n"),
+        "점수 = 0\nif (점수 > 10): print(\"성공\")\n"
+    );
+}
+
+// -------- 12. `따라` no longer turns ordinary prose into a random pick
+
+#[test]
+fn ordinary_korean_prose_is_never_a_random_pick() {
+    // Found live on the site. `따라` ("along") is one edit from `골라`
+    // ("pick one"), so this story sentence compiled to a random choice
+    // between four fragments — in a program that never asked for randomness.
+    assert_eq!(
+        ok("강이 나옵니다. 강을 따라 집으로 갑니다 말해줘\n"),
+        "print(\"강이 나옵니다. 강을 따라 집으로 갑니다\")\n"
+    );
+}
+
+#[test]
+fn a_random_pick_still_works_when_the_word_is_unmistakable() {
+    assert_eq!(
+        ok("색은 빨강 또는 초록 중에서 골라\n"),
+        "색 = __import__(\"random\").choice((\"빨강\", \"초록\",))\n"
+    );
+    assert_eq!(
+        ok("색은 빨강 또는 초록 중에서 뽑아\n"),
+        "색 = __import__(\"random\").choice((\"빨강\", \"초록\",))\n"
+    );
+    assert_eq!(
+        ok("set color to pick from red or green\n"),
+        "color = __import__(\"random\").choice((\"red\", \"green\",))\n"
+    );
+    assert_eq!(
+        ok("set color to choose from red or green\n"),
+        "color = __import__(\"random\").choice((\"red\", \"green\",))\n"
+    );
+}
+
+// -------- guards: none of the new acceptances may claim ordinary speech
+
+#[test]
+fn a_count_that_is_not_a_number_never_reaches_range() {
+    assert_eq!(error_code("repeat lots times and show hello\n"), "E0304");
+    assert_eq!(error_code("여러 번 반복해서 안녕 말해줘\n"), "E0304");
+}
+
+#[test]
+fn a_saved_count_is_still_a_count() {
+    assert_eq!(
+        ok("점수는 3\n점수 번 반복해서 안녕 말해줘\n"),
+        "점수 = 3\nfor _ in range(점수): print(\"안녕\")\n"
+    );
+}
+
+#[test]
+fn the_new_counter_and_comparison_words_leave_prose_alone() {
+    // `10회` and `큰` are ordinary Korean; neither opens a loop or a
+    // comparison without the repeat word or the `보다` marker beside it.
+    assert_eq!(
+        ok("같은 하루를 최대 10회 되풀이할 수 있어요 말해줘\n"),
+        "print(\"같은 하루를 최대 10회 되풀이할 수 있어요\")\n"
+    );
+    assert_eq!(ok("아주 큰 소리로 말해줘\n"), "print(\"아주 큰 소리로\")\n");
+    // A list line needs a name the program made; `그릇` is not one.
+    assert_eq!(
+        ok("설탕을 그릇에 넣어\n"),
+        "print(\"설탕을 그릇에 넣어\")\n"
+    );
+    // `안녕하세요` ends in `예요`, which is a sentence ending only when what
+    // is left is a number.
+    assert_eq!(ok("인사는 안녕하세요\n"), "인사 = \"안녕하세요\"\n");
+}
+
+#[test]
+fn adding_a_number_is_still_arithmetic() {
+    assert_eq!(
+        ok("set score to 0\nadd 1 to score\n"),
+        "score = 0\nscore = score + 1\n"
+    );
+    // Adding a bare word to something that is not a list is reported instead
+    // of compiling to `score = score + Mina`.
+    assert_eq!(error_code("set score to 0\nadd Mina to score\n"), "E0221");
+}
+
+#[test]
+fn loop_control_words_outside_a_block_stay_python() {
+    assert_eq!(ok("stop = 1\nstop\n"), "stop = 1\nstop\n");
+    assert_eq!(ok("done = 1\ndone\n"), "done = 1\ndone\n");
 }

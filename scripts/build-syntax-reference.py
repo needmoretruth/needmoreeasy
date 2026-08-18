@@ -85,6 +85,8 @@ SET = [
     ("문장형", "Sentence", "set greeting to Hello", "인사는 안녕하세요", 'greeting = "Hello"', '인사 = "안녕하세요"'),
     ("문장형", "Sentence", "set answer to 7", "정답은 7", "answer = 7", '정답 = 7'),
     ("문장형", "Sentence", "greeting save Hello", "인사 저장 안녕하세요", 'greeting = "Hello"', '인사 = "안녕하세요"'),
+    ("문장형", "Sentence", "remember score to 0", "점수를 0으로 설정해", "score = 0", '점수 = 0'),
+    ("문장형", "Sentence", "set score to 0.", "점수는 0이다", "score = 0", '점수 = 0'),
     ("초급", "Beginner", "save total to 1 + 2", "저장 총합 1 + 2", "total = 1 + 2", '총합 = 1 + 2'),
     ("고급", "Advanced", "greeting = 'Hello'", "인사 = '안녕'", "unchanged"),
 ]
@@ -93,6 +95,7 @@ UPDATE = [
     ("문장형", "Sentence", "score add 1", "점수에 1 더해", "score = score + 1", '점수 = 점수 + 1'),
     ("문장형", "Sentence", "add 1 to score", "점수에 1 더해줘", "score = score + 1", '점수 = 점수 + 1'),
     ("문장형", "Sentence", "score increase by 1", "점수 1 올려", "score = score + 1", '점수 = 점수 + 1'),
+    ("문장형", "Sentence", "to score add 1", "1을 점수에 더해", "score = score + 1", '점수 = 점수 + 1'),
     ("문장형", "Sentence", "subtract 1 from score", "점수에서 1 빼줘", "score = score - 1", '점수 = 점수 - 1'),
     ("문장형", "Sentence", "multiply score by 2", "점수에 2 곱해", "score = score * 2", '점수 = 점수 * 2'),
     ("문장형", "Sentence", "divide score by 2", "점수를 2로 나눠", "score = score / 2", '점수 = 점수 / 2'),
@@ -104,6 +107,7 @@ WAIT = [
     ("문장형", "Sentence", "wait 3 seconds", "3초 기다려", '__import__("time").sleep(3)'),
     ("문장형", "Sentence", "pause 3", "3초 쉬어", '__import__("time").sleep(3)'),
     ("문장형", "Sentence", "wait 1 second", "1초 기다려", '__import__("time").sleep(1)'),
+    ("문장형", "Sentence", "wait two seconds", "이초 기다려", '__import__("time").sleep(2)'),
     ("문장형", "Sentence", "wait for 5 seconds", "5 초 기다려주세요", '__import__("time").sleep(5)'),
     ("문장형", "Sentence", "sleep pause_length", "쉬는시간 기다려", '__import__("time").sleep(pause_length)', '__import__("time").sleep(쉬는시간)'),
     ("고급", "Advanced", "import time; time.sleep(3)", "import time; time.sleep(3)", "unchanged"),
@@ -112,6 +116,8 @@ WAIT = [
 TIMES = [
     ("문장형", "Sentence", "repeat 3 times and show Again", "3번 반복해서 다시 말해줘", 'for _ in range(3): print("Again")', 'for _ in range(3): print("다시")'),
     ("문장형", "Sentence", "3 times Welcome", "3번 환영합니다", 'for _ in range(3): print("Welcome")', 'for _ in range(3): print("환영합니다")'),
+    ("문장형", "Sentence", "repeat three times and show Again", "세 번 반복해서 다시 말해줘", 'for _ in range(3): print("Again")', 'for _ in range(3): print("다시")'),
+    ("문장형", "Sentence", "repeat 3 rounds and show Again", "3회 반복해서 다시 말해줘", 'for _ in range(3): print("Again")', 'for _ in range(3): print("다시")'),
     ("문장형", "Sentence", "repeat 3 times … end", "3번 반복해 … 끝", "for _ in range(3):", 'for _ in range(3):'),
     ("초급", "Beginner", '3 times: say "Hi"', '3번: 말해 "안녕"', 'for _ in range(3): print("Hi")', 'for _ in range(3): print("안녕")'),
     ("고급", "Advanced", "for i in range(3):", "for i in range(3):", "unchanged"),
@@ -121,6 +127,7 @@ FOR_EACH = [
     ("문장형", "Sentence", "for each friend in friends", "친구들의 친구마다 반복해", "for friend in friends:", 'for 친구 in 친구들:'),
     ("문장형", "Sentence", "for each friend in friends and show friend", "친구들의 친구마다 반복해서 친구 말해줘", "for friend in friends: print(friend)", 'for 친구 in 친구들: print(친구)'),
     ("문장형", "Sentence", "repeat for each name in names", "이름들에서 이름마다 반복해", "for name in names:", 'for 이름 in 이름들:'),
+    ("문장형", "Sentence", "foreach friend in friends", "친구들의 친구 마다 반복해", "for friend in friends:", 'for 친구 in 친구들:'),
     ("초급", "Beginner", "for each friend in friends:", "친구들의 친구마다:", "for friend in friends:", 'for 친구 in 친구들:'),
     ("고급", "Advanced", "for friend in friends:", "for 친구 in 친구들:", "unchanged"),
 ]
@@ -128,6 +135,7 @@ FOR_EACH = [
 WHILE = [
     ("문장형", "Sentence", "while score is less than 3", "점수가 3보다 작을 동안", "while (score < 3):", 'while (점수 < 3):'),
     ("문장형", "Sentence", "while ready and waiting", "준비 그리고 대기 동안", "while (ready and waiting):", 'while (준비 and 대기):'),
+    ("문장형", "Sentence", "while score is greater than 0", "점수가 0보다 큰 동안", "while (score > 0):", 'while (점수 > 0):'),
     ("문장형", "Sentence", "while ready then show working", "준비하는동안 확인 말해줘", 'while (ready): print("working")', 'while (준비): print("확인")'),
     ("초급", "Beginner", "while score < 3", "동안 점수 < 3", "while (score < 3):", 'while (점수 < 3):'),
     ("고급", "Advanced", "while score < 3:", "while 점수 < 3:", "unchanged"),
@@ -136,6 +144,8 @@ WHILE = [
 WHEN = [
     ("문장형", "Sentence", "if score is greater than 10 then show You won", "만약에 점수가 10보다 크면 성공 말해줘", 'if (score > 10): print("You won")', 'if (점수 > 10): print("성공")'),
     ("문장형", "Sentence", "if name exists", "만약에 이름이 있으면", "if (name):", 'if (이름):'),
+    ("문장형", "Sentence", "if score > 10 then show You won", "만약 점수 > 10 이면 성공 말해줘", 'if (score > 10): print("You won")', 'if (점수 > 10): print("성공")'),
+    ("문장형", "Sentence", "if score is above 10 then show You won", "만약에 점수가 10 초과면 성공 말해줘", 'if (score > 10): print("You won")', 'if (점수 > 10): print("성공")'),
     ("문장형", "Sentence", "score is greater than 5 then show high", "점수가 5보다 크면 높음 말해줘", 'if (score > 5): print("high")', 'if (점수 > 5): print("높음")'),
     ("문장형", "Sentence", "else if score equals 0", "아니면 만약에 점수가 0과 같으면", "elif (score == 0):", 'elif (점수 == 0):'),
     ("문장형", "Sentence", "else", "아니면", "else:", 'else:'),
@@ -159,8 +169,13 @@ COMPARE = [
 LOOP_CONTROL = [
     ("문장형", "Sentence", "break", "멈춰", "break"),
     ("문장형", "Sentence", "break here", "여기서 멈춰", "break"),
+    ("문장형", "Sentence", "stop", "그만해", "break"),
+    ("문장형", "Sentence", "exit loop", "정지해", "break"),
+    ("문장형", "Sentence", "quit", "멈춰줘", "break"),
     ("문장형", "Sentence", "skip", "건너뛰어", "continue"),
+    ("문장형", "Sentence", "keep going", "계속해", "continue"),
     ("문장형", "Sentence", "end", "끝", "(closes the block)"),
+    ("문장형", "Sentence", "finish", "종료", "(closes the block)"),
 ]
 
 LISTS = [
@@ -170,12 +185,15 @@ LISTS = [
     ("문장형", "Sentence", "set friends to list of", "친구들은 목록", "friends = []", '친구들 = []'),
     ("문장형", "Sentence", "append Mina to friends", "친구들에 민수 넣어", 'friends.append("Mina")', '친구들.append("민수")'),
     ("문장형", "Sentence", "push Mina to friends", "친구들에 민수 추가해", 'friends.append("Mina")', '친구들.append("민수")'),
+    ("문장형", "Sentence", "add Mina to friends", "친구들에 민수 더해", 'friends.append("Mina")', '친구들.append("민수")'),
+    ("문장형", "Sentence", "to friends append Mina", "민수를 친구들에 넣어", 'friends.append("Mina")', '친구들.append("민수")'),
     ("고급", "Advanced", 'friends = ["Mina"]', '친구들 = ["민수"]', "unchanged"),
 ]
 
 RANDOM = [
     ("문장형", "Sentence", "set die to random number from 1 to 6", "주사위는 1부터 6까지 랜덤정수", 'die = __import__("random").randint(1, 6)', '주사위 = __import__("random").randint(1, 6)'),
     ("문장형", "Sentence", "set color to pick from red or green", "색은 빨강 또는 초록 중에서 랜덤선택", 'color = __import__("random").choice(("red", "green",))', '색 = __import__("random").choice(("빨강", "초록",))'),
+    ("문장형", "Sentence", "set color to choose from red or green", "색은 빨강 또는 초록 중에서 뽑아", 'color = __import__("random").choice(("red", "green",))', '색 = __import__("random").choice(("빨강", "초록",))'),
     ("초급", "Beginner", "use random", "랜덤 사용", "(binds the random helpers)"),
     ("초급", "Beginner", "say random_number(1, 6)", "말해 랜덤정수(1, 6)", "print(random_number(1, 6))", 'print(랜덤정수(1, 6))'),
 ]
@@ -308,6 +326,15 @@ def spelling_table(korean: bool) -> str:
         ("목록에 넣기 / Append", "APPEND_WORDS_EN", "APPEND_WORDS_KO"),
         ("목록 표시 / List", "LIST_WORDS_EN", "LIST_WORDS_KO"),
         ("숫자로 / As a number", "NUMBER_WORDS", None),
+        ("숫자 낱말 / Number words", "NUMBER_WORDS_EN", "NUMBER_WORDS_KO"),
+        ("횟수 단위 / Count unit", "TIMES_WORDS_EN", "TIMES_WORDS_KO"),
+        ("반복 중단(블록 안) / Break inside a block", "BREAK_ALIAS_WORDS_EN", None),
+        ("건너뛰기(블록 안) / Skip inside a block", "CONTINUE_ALIAS_WORDS_EN", None),
+        ("무작위 고르기 / Random pick", "RANDOM_CHOICE_WORDS", None),
+        ("값 바꾸기 연결어 / Value-change connector", "UPDATE_CONNECTOR_WORDS_EN", None),
+        ("목록 연결어 / List connector", "APPEND_CONNECTORS_EN", "APPEND_TARGET_PARTICLES_KO"),
+        ("저장 대상 조사 / Saved-name particle", "SET_TARGET_PARTICLES_KO", None),
+        ("문장 어미 / Sentence ending", "VALUE_ENDINGS_KO", None),
         ("최신판 / Latest", "LATEST_WORDS", None),
         ("파일 읽기 / File read", "FILE_READ_WORDS_EN", "FILE_READ_WORDS_KO"),
         ("파일 쓰기 / File write", "FILE_WRITE_WORDS_EN", "FILE_WRITE_WORDS_KO"),
