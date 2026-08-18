@@ -14,7 +14,7 @@ takes it out later.
 
 ## Steps
 
-1. Create `store.nme`:
+1. Type this into the writing box:
 
    ```nme
    set greeting to Hello

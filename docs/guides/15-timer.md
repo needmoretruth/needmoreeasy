@@ -14,7 +14,7 @@ again yet. Both are sentences.
 
 ## Steps
 
-1. Make `timer.nme`:
+1. Type this into the writing box:
 
    ```nme
    start the timer

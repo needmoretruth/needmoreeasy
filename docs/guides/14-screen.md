@@ -13,7 +13,7 @@ Output piles up and the screen gets messy. Four sentences tidy it.
 
 ## Steps
 
-1. Make `screen.nme`:
+1. Type this into the writing box:
 
    ```nme
    clear the screen

@@ -14,7 +14,7 @@ or a block again and again.
 
 ## Steps
 
-1. Create `repeat.nme`:
+1. Type this into the writing box:
 
    ```nme
    repeat 3 times and show Again

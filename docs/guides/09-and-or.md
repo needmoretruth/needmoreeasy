@@ -14,7 +14,7 @@ needs at least one.
 
 ## Steps
 
-1. Create `combine.nme`:
+1. Type this into the writing box:
 
    ```nme
    set ready to True

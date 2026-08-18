@@ -14,7 +14,7 @@ changes it without `+` or `=`.
 
 ## Steps
 
-1. Create `score.nme`:
+1. Type this into the writing box:
 
    ```nme
    set score to 0

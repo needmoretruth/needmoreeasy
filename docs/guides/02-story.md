@@ -15,7 +15,7 @@ line inside it on the screen exactly as you wrote it.
 
 ## Steps
 
-1. Make `story.nme`:
+1. Type this into the writing box:
 
    ```nme
    story:

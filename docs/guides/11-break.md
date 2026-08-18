@@ -14,7 +14,7 @@ immediately and continues with the lines after it.
 
 ## Steps
 
-1. Create `stop.nme`:
+1. Type this into the writing box:
 
    ```nme
    set ready to True

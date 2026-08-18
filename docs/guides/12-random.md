@@ -14,7 +14,7 @@ with one `use` line.
 
 ## Steps
 
-1. Create `dice.nme`:
+1. Type this into the writing box:
 
    ```nme
    use random latest

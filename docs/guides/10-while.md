@@ -14,7 +14,7 @@ condition stays true — and stops when it becomes false.
 
 ## Steps
 
-1. Create `count.nme`:
+1. Type this into the writing box:
 
    ```nme
    set score to 0

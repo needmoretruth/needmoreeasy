@@ -15,7 +15,7 @@ happens. Thirty times out of a hundred is written `30% chance`.
 
 ## Steps
 
-1. Make `luck.nme`:
+1. Type this into the writing box:
 
    ```nme
    30% chance say You found a coin in the street

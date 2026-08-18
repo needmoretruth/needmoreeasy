@@ -14,7 +14,7 @@ arriving one at a time read better. `say slowly` does that.
 
 ## Steps
 
-1. Make `story.nme`:
+1. Type this into the writing box:
 
    ```nme
    say slowly The door opened slowly.
