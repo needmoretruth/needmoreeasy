@@ -247,6 +247,7 @@ pub fn parse_program(
     for (index, line) in lines.iter().enumerate() {
         let is_end = exact_end(line.tokens.as_slice());
         let is_break = exact_break(line.tokens.as_slice());
+        let is_continue = exact_continue(line.tokens.as_slice());
         let branch_shape = branch_shape(line.tokens.as_slice());
 
         // An indented-suite sentence block (whose first body line was
@@ -260,7 +261,7 @@ pub fn parse_program(
         // flat from there on (only `end` closes it), so mixed indented+flat
         // bodies keep working. Explicit closers (`end`, `break`, branches)
         // are handled by their own paths below.
-        if !(is_end.is_some() || is_break || branch_shape.is_some()) {
+        if !(is_end.is_some() || is_break || is_continue || branch_shape.is_some()) {
             let line_is_header = is_header_shape(&line.tokens);
             let remaining_ends = count_remaining_ends(lines, index);
             loop {
@@ -292,7 +293,8 @@ pub fn parse_program(
         {
             top_level_python_loop_indents.pop();
         }
-        let closes_flat_python_suite = is_end.is_some() || is_break || branch_shape.is_some();
+        let closes_flat_python_suite =
+            is_end.is_some() || is_break || is_continue || branch_shape.is_some();
         while python_header_indents.last().is_some_and(|header_indent| {
             line.indent < header_indent.0
                 || (closes_flat_python_suite && line.indent <= header_indent.0)
@@ -415,6 +417,10 @@ pub fn parse_program(
                     && !is_valid_python_statement(token_text(source, &line.tokens))))
         {
             Some(Ok(Some(NmeStmt::Break)))
+        } else if is_continue && depth > 0 {
+            // `skip` and `건너뛰어` are ordinary Python names on their own, so
+            // like `break` they are only read as NME inside an NME block.
+            Some(Ok(Some(NmeStmt::Continue)))
         } else if branch_shape.is_some()
             && depth == 0
             && !line
@@ -809,6 +815,15 @@ fn exact_break(tokens: &[Token]) -> bool {
     }
     let consumed = action_phrase_at(tokens, 0, BREAK_WORDS_EN, MatchMode::Exact)
         .or_else(|| action_phrase_at(tokens, 0, BREAK_WORDS_KO, MatchMode::Exact));
+    consumed.is_some_and(|consumed| tokens[consumed..].iter().all(is_command_ending))
+}
+
+fn exact_continue(tokens: &[Token]) -> bool {
+    if tokens.is_empty() {
+        return false;
+    }
+    let consumed = action_phrase_at(tokens, 0, CONTINUE_WORDS_EN, MatchMode::Exact)
+        .or_else(|| action_phrase_at(tokens, 0, CONTINUE_WORDS_KO, MatchMode::Exact));
     consumed.is_some_and(|consumed| tokens[consumed..].iter().all(is_command_ending))
 }
 
@@ -2102,7 +2117,7 @@ fn classify(
     // These four run before the older actions because each ends with a word
     // the output vocabulary would otherwise claim: `기다려`, `건너뛰어`, `넣어`,
     // and the `마다` loop shape.
-    exact_match!(match_wait(source, tokens, MatchMode::Exact));
+    exact_match!(match_wait(source, tokens, known_names, MatchMode::Exact));
     exact_match!(match_continue(tokens, MatchMode::Exact));
     exact_match!(match_append(source, tokens, known_names, MatchMode::Exact));
     exact_match!(match_for_each(
@@ -2963,11 +2978,21 @@ fn parse_update_amount(source: &str, tokens: &[Token]) -> Option<Code> {
     if tokens.is_empty() {
         return None;
     }
+    let mut tokens = tokens;
+    // The lexer separates `2로` into a number and a particle, so drop a
+    // trailing particle token before reading the expression.
+    while tokens.len() > 1
+        && tokens
+            .last()
+            .is_some_and(|token| token_matches_exact(token, UPDATE_AMOUNT_PARTICLES_KO))
+    {
+        tokens = &tokens[..tokens.len() - 1];
+    }
     let span = span_of(tokens);
     if is_valid_python_expression(&source[span.start..span.end]) {
         return Some(Code::Source(span));
     }
-    // Spoken Korean attaches the particle to the number: `점수를 2로 나눠`.
+    // Spoken Korean can also attach the particle: `점수를 2로 나눠`.
     let trimmed = strip_attached_particle_span(source, tokens, UPDATE_AMOUNT_PARTICLES_KO)?;
     is_valid_python_expression(&source[trimmed.start..trimmed.end]).then_some(Code::Source(trimmed))
 }
@@ -3044,17 +3069,18 @@ fn match_break(
 fn match_wait(
     source: &str,
     tokens: &[Token],
+    known_names: &HashSet<String>,
     mode: MatchMode,
 ) -> Result<Option<NmeStmt>, Diagnostic> {
     if let Some(consumed) = action_phrase_at(tokens, 0, WAIT_WORDS_EN, mode)
         .or_else(|| action_phrase_at(tokens, 0, WAIT_WORDS_KO, mode))
     {
-        return wait_from(source, tokens, &tokens[consumed..]);
+        return wait_from(source, tokens, &tokens[consumed..], known_names);
     }
     let Some(action_start) = wait_action_ending(tokens, mode) else {
         return Ok(None);
     };
-    wait_from(source, tokens, &tokens[..action_start])
+    wait_from(source, tokens, &tokens[..action_start], known_names)
 }
 
 /// Builds the wait from its amount region. A region with no number at all is
@@ -3064,18 +3090,23 @@ fn wait_from(
     source: &str,
     tokens: &[Token],
     amount: &[Token],
+    known_names: &HashSet<String>,
 ) -> Result<Option<NmeStmt>, Diagnostic> {
-    if let Some(seconds) = parse_wait_amount(source, amount) {
-        return Ok(Some(NmeStmt::Wait { seconds }));
-    }
+    // `잠깐 기다려` is ordinary speech, and `잠깐` happens to be a valid Python
+    // name, so a wait needs a number or a name the program already knows.
     let mentions_a_number = amount.iter().any(|token| {
         matches!(token.tok, Tok::Int { .. } | Tok::Float { .. })
             || name_word(token).is_some_and(|word| word.starts_with(|c: char| c.is_ascii_digit()))
     });
-    if mentions_a_number {
-        return Err(wait_amount_diagnostic(span_of(tokens)));
+    let names_a_known_value = amount.len() == 1
+        && name_word(&amount[0]).is_some_and(|word| known_names.contains(word));
+    if !mentions_a_number && !names_a_known_value {
+        return Ok(None);
     }
-    Ok(None)
+    if let Some(seconds) = parse_wait_amount(source, amount) {
+        return Ok(Some(NmeStmt::Wait { seconds }));
+    }
+    Err(wait_amount_diagnostic(span_of(tokens)))
 }
 
 fn wait_action_at(tokens: &[Token], start: usize, mode: MatchMode) -> Option<usize> {
@@ -3096,10 +3127,11 @@ fn wait_action_ending(tokens: &[Token], mode: MatchMode) -> Option<usize> {
 
 fn parse_wait_amount(source: &str, tokens: &[Token]) -> Option<Code> {
     let mut tokens = tokens;
-    while tokens
-        .first()
-        .is_some_and(|token| token_matches_exact(token, WAIT_FILLER_WORDS))
-    {
+    // `for` lexes as a Python keyword rather than a word, so it is matched by
+    // its token as well as by its spelling.
+    while tokens.first().is_some_and(|token| {
+        matches!(token.tok, Tok::For) || token_matches_exact(token, WAIT_FILLER_WORDS)
+    }) {
         tokens = &tokens[1..];
     }
     while tokens.last().is_some_and(|token| {
@@ -6276,8 +6308,11 @@ fn parse_list_value(source: &str, tokens: &[Token], known_names: &HashSet<String
     if items.is_empty() {
         return Some(Value::List(Vec::new()));
     }
+    const JOINERS: &[&str] = &["and", "그리고", "와", "과", "이랑", "랑"];
     let mut values = Vec::new();
-    for part in items.split(|token| matches!(token.tok, Tok::Comma)) {
+    for part in items.split(|token| {
+        matches!(token.tok, Tok::Comma | Tok::And) || token_matches_exact(token, JOINERS)
+    }) {
         let part = trim_list_item(part);
         if part.is_empty() {
             continue;
