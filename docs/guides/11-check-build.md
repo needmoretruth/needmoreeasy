@@ -41,14 +41,15 @@ itself.
    Reading this is how you grow into Python one line at a time.
 
 3. Every error has a stable code. Deliberately put `break` outside a loop
-   (a line at the left edge, not inside the block) and check it:
+   Save this as `broken.nme` — a `break` with no loop around it — and check it:
 
    ```sh
-   nme c broken.nme
+   nme c broken
    ```
 
    The compiler prints the code, the exact line, and a hint:
 
+   <!-- nme-check: skip -->
    ```text
    error[E0102]: `break` can only be used inside a loop
      --> broken.nme:1:1

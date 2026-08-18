@@ -17,8 +17,8 @@ condition stays true — and stops when it becomes false.
 1. Create `count.nme`:
 
    ```text
-   score = 0
-   while score < 3
+   set score to 0
+   while score is less than 3
    show score
    add 1 to score
    end
@@ -48,21 +48,24 @@ condition stays true — and stops when it becomes false.
    end
    ```
 
-4. A spoken one-line loop puts the ending on the subject. This one runs
-   forever, so stop it with Ctrl+C in the terminal:
+4. A spoken one-line loop puts the ending on the subject:
 
    ```text
-   준비 = True
+   준비는 참
    준비하는동안 성공 말해줘
+   준비는 거짓
    ```
+
+   The last line makes the condition false, so the loop stops after one
+   round. Without it the loop never ends.
 
 ## Try it yourself
 
 Loop while a name is missing, asking until one appears:
 
 ```text
-name = ""
-while name == ""
+set name to empty
+while name equals empty
     ask name What is your name?
 end
 ```

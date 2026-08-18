@@ -271,6 +271,10 @@ nme 변환 app.py --level 문장형 --language 한국어 -o app.nme
 
 ## 배우고 도구 연결하기
 
+- [문법 목록](docs/syntax.ko.md) — 쓸 수 있는 모든 표기와 그것이 되는 Python을
+  한 표에 모은 목록. 컴파일러에서 만들고 실제로 컴파일해서 확인합니다.
+- [AI에게 건네는 프롬프트](docs/prompts/README.ko.md) — 대화창에 붙여넣으면 그
+  AI가 NME를 쓸 수 있게 되는 글 셋(문장형만 / 전체 문법 / 전체 문법+예제).
 - [문법 레퍼런스](docs/language.ko.md) — 세 단계, 정확한 뜻, 오타 복구,
   혼용, 모듈, 제한
 - [학습 가이드](docs/guides/index.ko.md) — 난이도, 선수 지식, 주제, 결과물을

@@ -40,15 +40,16 @@ Python 그 자체를 보여 줍니다.
 
    이렇게 읽는 것이 Python으로 한 줄씩 자라나는 방법입니다.
 
-3. 모든 오류에는 안정적인 코드가 붙습니다. `break`를 반복 밖(블록 안이
-   아닌 왼쪽 끝 줄)에 적어서 확인해 보세요:
+3. 모든 오류에는 안정적인 코드가 붙습니다. `broken.nme` 파일에 반복 없이
+   `멈춰` 한 줄만 적고 검사해 보세요:
 
    ```sh
-   nme 검사 broken.nme
+   nme 검사 broken
    ```
 
    컴파일러는 코드, 정확한 줄, 힌트를 함께 출력합니다:
 
+   <!-- nme-check: skip -->
    ```text
    오류[E0102]: `멈춰`는 반복문 안에서만 쓸 수 있어요
    error[E0102]: `break` can only be used inside a loop

@@ -9,6 +9,20 @@ changes one small idea at a time until you are writing Python. The five-minute
 part starts after installation. If `nme --version` does not work yet, follow the
 [Windows, macOS, or Linux installation guide](install.md) first.
 
+## 0. Try it with nothing installed
+
+**No installation, and it works on a phone.** Open **needmoreeasy.com** in a
+browser (**nmelang.com** goes to the same place). Type a program on the left and
+the Python it becomes appears on the right; press **Run** and the result appears
+underneath. The compiler and a Python engine both run inside the browser, so the
+program never leaves that tab.
+
+The in-browser engine cannot use files, the network, or installed packages. When
+a program needs those, follow the install steps below.
+
+The five minutes below start after installing. If `nme --version` does not work
+yet, follow the [Windows, macOS and Linux install guide](install.md) first.
+
 ## 1. Hello World
 
 Create a UTF-8 file named `hello.nme` (in the same folder where you ran

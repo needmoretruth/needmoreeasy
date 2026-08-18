@@ -17,8 +17,8 @@ immediately and continues with the lines after it.
 1. Create `stop.nme`:
 
    ```text
-   ready = True
-   waiting = False
+   set ready to True
+   set waiting to False
    while ready or waiting
    show Still working
    break
@@ -38,14 +38,17 @@ immediately and continues with the lines after it.
    끝
    ```
 
-3. The sentence spellings `break here` and `여기서 멈춰` mean the same thing
-   inside a block:
+3. `break here` is the longer sentence spelling, and `skip` jumps straight to
+   the next round instead of leaving the loop:
 
    ```text
-   score = 0
-   while score < 10
+   set score to 0
+   while score is less than 10
    add 1 to score
-   여기서 멈춰
+   if score equals 1
+   skip
+   end
+   break here
    end
    ```
 
@@ -57,8 +60,8 @@ immediately and continues with the lines after it.
 Stop a loop as soon as a name exists:
 
 ```text
-name = ""
-while name == ""
+set name to empty
+while name equals empty
     ask name What is your name?
     if name exists
         break
@@ -69,6 +72,7 @@ end
 ## What you learned
 
 - `break` / `멈춰` leaves the nearest loop at once.
-- `break here` / `여기서 멈춰` are the sentence spellings.
+- `break here` / `여기서 멈춰` are the longer sentence spellings.
+- `skip` / `건너뛰어` goes to the next round instead of leaving the loop.
 - A loop that always breaks still runs once.
 - `break` outside a loop is the `E0102` error.

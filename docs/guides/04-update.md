@@ -9,21 +9,21 @@ English | [한국어](04-update.ko.md)
 - Topic: changing values
 - Result: a program that adds to and subtracts from a score
 
-Games need scores that change. `score = 0` starts a score, and `add` changes
-it without `+` or `=`.
+Games need scores that change. `set score to 0` starts a score, and `add`
+changes it without `+` or `=`.
 
 ## Steps
 
 1. Create `score.nme`:
 
    ```text
-   score = 0
+   set score to 0
    score add 1
    show score
    ```
 
-   `score = 0` stores the number 0; `score add 1` increases it. The program
-   prints `1`.
+   `set score to 0` stores the number 0; `score add 1` increases it. The
+   program prints `1`.
 
 2. The value can be changed in several natural word orders:
 
@@ -44,7 +44,16 @@ it without `+` or `=`.
    점수에서 1 빼줘
    ```
 
-4. The advanced spelling `+=` means the same thing and is valid Python:
+4. Multiplying and dividing work the same way:
+
+   ```text
+   multiply score by 2
+   divide score by 2
+   점수에 2 곱해
+   점수를 2로 나눠
+   ```
+
+5. The advanced spelling `+=` means the same thing and is valid Python:
 
    ```python
    score += 1
@@ -55,7 +64,7 @@ it without `+` or `=`.
 Count up to 5 by adding, then count back down by subtracting:
 
 ```text
-score = 0
+set score to 0
 score add 5
 score subtract 2
 show score
@@ -63,7 +72,8 @@ show score
 
 ## What you learned
 
-- `score = 0` stores a number; `점수는 0` is the Korean form.
+- `set score to 0` stores a number; `점수는 0` is the Korean form.
 - `score add 1`, `add 1 to score`, and `score increase by 1` all add.
-- `subtract 1 from score` / `점수에서 1 빼줘` subtract.
+- `subtract 1 from score` / `점수에서 1 빼줘` subtract, and `multiply score by 2` /
+  `점수에 2 곱해` multiplies.
 - `score += 1` is the same idea in ordinary Python.

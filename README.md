@@ -281,6 +281,10 @@ See [Python conversion](docs/converting-python.md).
 
 ## Learn and use tools
 
+- [Syntax list](docs/syntax.md) — every accepted spelling and the Python it
+  becomes, in one table. Generated from the compiler and verified by compiling it.
+- [Prompts to hand to an AI](docs/prompts/README.md) — three documents you paste
+  into a chat so the AI can write NME (sentence only / full syntax / with examples).
 - [Language reference](docs/language.md) — all three levels, exact meanings,
   typo recovery, mixing, modules, and limitations
 - [Learning guides](docs/guides/index.md) — small progressive guides with

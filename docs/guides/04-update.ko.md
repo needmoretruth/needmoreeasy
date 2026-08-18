@@ -37,16 +37,25 @@
 3. 영어도 같습니다:
 
    ```text
-   score = 0
+   set score to 0
    score add 1
    add 1 to score
    score increase by 1
    subtract 1 from score
    ```
 
-   `score = 0`이 숫자 0을 저장합니다.
+   `set score to 0`이 `점수는 0`에 해당하는 영어 문장형입니다.
 
-4. 고급 표기 `+=`도 같은 뜻이고 유효한 Python입니다:
+4. 곱하기와 나누기도 같은 방식입니다:
+
+   ```text
+   점수에 2 곱해
+   점수를 2로 나눠
+   multiply score by 2
+   divide score by 2
+   ```
+
+5. 고급 표기 `+=`도 같은 뜻이고 올바른 Python입니다:
 
    ```python
    score += 1
@@ -65,7 +74,7 @@
 
 ## 배운 것
 
-- `점수는 0`은 숫자를 저장하고, `score = 0`이 영어 형식입니다.
+- `점수는 0`은 숫자를 저장하고, `set score to 0`이 영어 문장형입니다.
 - `점수에 1 더해`, `score add 1`, `add 1 to score`는 모두 더합니다.
-- `점수에서 1 빼줘` / `subtract 1 from score`는 뺍니다.
+- `점수에서 1 빼줘` / `subtract 1 from score`는 빼고, `점수에 2 곱해` / `multiply score by 2`는 곱합니다.
 - `score += 1`은 일반 Python에서 같은 뜻입니다.
