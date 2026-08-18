@@ -7,7 +7,7 @@ English | [한국어](05-repeat.ko.md)
 - Difficulty: ★★☆☆☆ (2/5)
 - Prerequisites: [04 — Update](04-update.md)
 - Topic: loops
-- Result: a program that runs lines several times
+- Result: a program that repeats lines, walks a list, and pauses
 
 Computers are great at doing the same thing many times. `repeat` runs a line
 or a block again and again.
@@ -45,20 +45,44 @@ or a block again and again.
    the block:
 
    ```nme
-   3 times:
+   repeat 3 times
    show one line
    show another line
    end
    ```
 
-   The Korean twin uses `3번:` and `끝`.
+   The Korean twin uses `3번 반복해` and `끝`.
+
+5. Instead of a fixed count you can walk **through a list**, the one you made
+   in [03 — Save](03-set.md):
+
+   ```nme
+   set friends to list of Mina, Ada
+   for each friend in friends
+   show Hello friend!
+   end
+   ```
+
+   `friend` becomes the next value on every round. The Korean form is
+   `친구들의 친구마다 반복해`.
+
+6. Sometimes a loop should **wait** between rounds:
+
+   ```nme
+   repeat 3 times
+   wait 1 second
+   show tick
+   end
+   ```
+
+   Korean is `1초 기다려`, and `wait 3 seconds` waits longer.
 
 ## Try it yourself
 
 Repeat a greeting five times, mixing both languages:
 
 ```nme
-5 times:
+repeat 5 times
 show Hello!
 반가워요! 말해줘
 end
@@ -69,4 +93,6 @@ end
 - `repeat 3 times and show Again` prints one line three times.
 - `3 times Welcome to NME` / `3번 안녕하세요` repeat the rest of the line.
 - An indented block repeats every indented line.
-- `3 times:` ... `end` closes a flat block without indentation.
+- `repeat 3 times` ... `end` closes a flat block without indentation.
+- `for each friend in friends` walks through a list, one value per round.
+- `wait 1 second` pauses right there.

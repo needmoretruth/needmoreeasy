@@ -188,9 +188,9 @@ The number *is* the difficulty. Read them in order and no single step is a jump.
 | --- | --- | --- | --- | --- |
 | 01 | ★☆☆☆☆ | first program and output | [Hello: say your first words](01-hello.md) | a program that prints a message with `nme run` |
 | 02 | ★☆☆☆☆ | input | [Ask: have a conversation](02-ask.md) | a program that asks a name and greets it in a sentence |
-| 03 | ★☆☆☆☆ | storing values | [Set: store a value](03-set.md) | a program that keeps text or numbers in named values |
+| 03 | ★☆☆☆☆ | storing values and lists | [Set: store a value](03-set.md) | a program that keeps text, numbers and lists in named values |
 | 04 | ★☆☆☆☆ | changing values | [Update: change a value](04-update.md) | a program that adds to and subtracts from a score |
-| 05 | ★★☆☆☆ | loops | [Repeat: do something many times](05-repeat.md) | a program that runs lines several times |
+| 05 | ★★☆☆☆ | repetition, walking a list, waiting | [Repeat: do something many times](05-repeat.md) | a program that repeats lines, walks a list, and pauses |
 | 06 | ★★☆☆☆ | conditions | [If: make a choice](06-if.md) | a program that runs different lines depending on a condition |
 | 07 | ★★☆☆☆ | loops and conditions | [While: keep going](07-while.md) | a block that loops while a condition is true |
 | 08 | ★★☆☆☆ | loops | [Break: stop a loop](08-break.md) | a program that leaves a loop early |
