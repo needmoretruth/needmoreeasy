@@ -6,6 +6,23 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+- Sentence syntax gained **story, screen and time** statements: `say slowly`
+  (one letter at a time), `say very slowly`, `say slowly every 0.2 seconds`,
+  `clear the screen`, `draw a line`, `say in a box`, `say in the middle`,
+  `start the timer` with the value `elapsed`, and named cooldowns
+  (`put attack on cooldown for 3 seconds`, `when attack is ready` /
+  `is on cooldown`, `wait for attack`). Korean has all of them too. One NME
+  statement is still exactly one line of Python.
+- Reading `elapsed` before starting the timer is now refused at compile time
+  with `E0226`.
+- The box and the centred line count a Korean letter as two columns wide, so
+  neither comes out crooked.
+- Three new guides: 86 (story), 87 (screen), 88 (time). All three are sentence
+  syntax at ★★, so they follow guides 05–12 rather than the guides before them.
+- The five-minute guide and the tutorial no longer teach beginner syntax or
+  Python in their early sections; a sentence-level project on lists and waiting
+  takes that place.
+
 ## 0.0.1-beta.160 — 2026-08-12
 
 - Fetch the pull-request parent commit before checking changed Rust files, so
