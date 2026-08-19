@@ -102,6 +102,7 @@ on one line. This document describes version `0.1.0`.
 | Sentence | `for each friend in friends and show friend` | `for friend in friends: print(friend)` |
 | Sentence | `repeat for each name in names` | `for name in names:` |
 | Sentence | `foreach friend in friends` | `for friend in friends:` |
+| Sentence | `for every friend in friends` | `for friend in friends:` |
 | Sentence | `for each friend in friends with place` | `for place, friend in enumerate(friends, 1):` |
 
 ### Repeating while a condition holds
@@ -170,6 +171,7 @@ on one line. This document describes version `0.1.0`.
 | Sentence | `remove Mina from friends` | `friends.remove("Mina")` |
 | Sentence | `show how many friends` | `print(len(friends))` |
 | Sentence | `set total to how many friends` | `total = len(friends)` |
+| Sentence | `show You have how many friends left` | `print("You have " + str(len(friends)) + " left")` |
 | Sentence | `sort friends` | `friends.sort()` |
 | Sentence | `reverse friends` | `friends.reverse()` |
 | Sentence | `shuffle friends` | `__import__("random").shuffle(friends)` |
@@ -525,6 +527,8 @@ UTC.
 | 다른 갈래 / Else | `else` · `otherwise` | `아니면` · `그렇지않으면` · `아니면만약` · `아니면만약에` · `그렇지않으면만약` · `그렇지않으면만약에` |
 | 반복 중단 / Break | `break` · `breakhere` | `멈춰` · `멈춰줘` · `멈춰라` · `멈추기` · `그만해` · `정지해` · `종료해` · `중단` · `반복멈춰` · `여기서멈춰` |
 | 말끝 출력 / Output written last | — | `말하기` · `말해라` · `알려줘` · `알려주세요` · `알려줘요` · `얘기해` · `얘기해줘` · `얘기해주세요` · `표시해` · `표시해줘` · `출력하기` · `보여주기` · `프린트해` · `프린트` · `프린트해줘` · `프린트해주세요` · `표시하기` |
+| 목적어가 없을 때만 말끝 출력 / Output written last, with no object | — | `띄워` · `띄워줘` · `띄워주세요` · `나타내` · `나타내줘` · `나타내주세요` · `써줘` · `써주세요` · `적어줘` · `적어주세요` |
+| 한 낱말만 보여 주기 / Show the one word after it | `output` · `write` · `echo` · `reveal` · `report` · `give` · `list` · `present` · `announce` · `speak` · `puts` | — |
 | 한 글자 출력 / Short output word | — | `말` |
 | 화면에 / On the screen | `screen` | `화면에` · `화면에다` · `화면에다가` · `스크린에` |
 | 화면 동사 / Screen verb | `put` · `write` · `print` · `show` · `display` · `say` · `tell` · `output` · `draw` | `띄워` · `띄워줘` · `보여줘` · `출력해` · `말해` · `말해줘` · `표시해` |
@@ -651,12 +655,12 @@ UTC.
 | `E0204` | `say` has nothing to show |
 | `E0211` | the question after the comma is missing |
 | `E0212` | the question could not be understood |
-| `E0213` | the `ask` target is not a variable name |
+| `E0213` | no name to hold the answer |
 | `E0221` | the value change could not be understood |
 | `E0222` | the break command could not be understood |
 | `E0223` | the skip command could not be understood |
 | `E0224` | the wait length could not be understood |
-| `E0225` | the list addition could not be understood |
+| `E0225` | this list line could not be read |
 | `E0226` | the timer has not been started yet |
 | `E0227` | a chance can only go to one decimal place |
 | `E0228` | a chance must be between 0% and 100% |
@@ -665,10 +669,12 @@ UTC.
 | `E0231` | this name was never made into a list |
 | `E0232` | this story has nothing in it |
 | `E0233` | this join does not say what to put between the items |
-| `E0234` | this name does not hold a record |
+| `E0234` | a list line and a record line were mixed up |
 | `E0235` | this job is given a different number of things than it takes |
 | `E0236` | this job reads a name from outside and then changes it |
 | `E0237` | this name is one the language itself needs |
+| `E0238` | a file read with no name to read into |
+| `E0239` | a file name that is not in quotation marks |
 | `E0301` | the condition is missing |
 | `E0302` | the condition could not be understood |
 | `E0303` | the repeated body could not be understood |
@@ -679,16 +685,19 @@ UTC.
 | `E0402` | latest and an exact version on one line |
 | `E0403` | the module version is missing |
 | `E0404` | this module version is not bundled |
-| `E0405` | the module would overwrite your names |
-| `E0406` | the use line shape is not understood |
+| `E0405` | the module would take over a name you made |
+| `E0406` | a module line NME could not read |
+| `E0407` | a module path this line cannot use |
+| `E0408` | a module import line NME could not read |
+| `E0409` | a module loaded twice |
 | `E0411` | the value to save is missing |
 | `E0412` | the value to save could not be understood |
 | `E0413` | the name to save into is missing |
 | `E0414` | the save target is not a simple name |
-| `E0501` | the repeated block is not indented |
-| `E0502` | the condition needs a colon |
-| `E0503` | a block that starts without a statement |
-| `E0504` | one statement per line |
+| `E0501` | the lines to repeat are not indented |
+| `E0502` | nothing to do when the condition is true |
+| `E0503` | a one-line block with nothing in it |
+| `E0504` | one thing to do per line |
 | `E0505` | the block body is not a statement NME knows |
 | `E0506` | this line starts with a space |
 | `E0601` | the sentence could mean more than one action |
