@@ -68,6 +68,14 @@ takes it out later.
    show jobs
    ```
 
+   `an empty list` says the same thing and reads more plainly:
+
+   ```nme
+   set things to an empty list
+   append water to things
+   show things
+   ```
+
    **A name cannot contain a space.** `set my jobs to list of` does not make a
    name called *my jobs* — the line is read as ordinary words and printed as it
    stands. Use one word, or join them: `myjobs`.

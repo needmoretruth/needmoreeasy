@@ -127,6 +127,12 @@ nme 모듈
 가로줄, 가운데 맞춤, 상자, 천천히 말하기, 시간 재기, 쿨타임을 문장형만으로 씁니다.
 영어판은 [`story-sentence.en.nme`](examples/story-sentence.en.nme)입니다.
 
+목록을 문장형만으로 다루는 예제는
+[`shopping-list-sentence.ko.nme`](examples/shopping-list-sentence.ko.nme)입니다.
+빈 목록 만들기, 넣기, 개수 세기, 정렬, 쉼표로 잇기, 첫째와 마지막 꺼내기, 빼기,
+들어 있는지 묻기, 비었는지 묻기를 괄호 하나 없이 씁니다. 영어판은
+[`shopping-list-sentence.nme`](examples/shopping-list-sentence.nme)입니다.
+
 실제 암호 계산과 작업증명을 포함한 작은 암호화폐를 만들고 싶다면 `NeedMoreCoin`
 예제 여섯 개를 비교해 보세요. 문장형 한국어
 [`needmorecoin-sentence.ko.nme`](examples/needmorecoin-sentence.ko.nme), 문장형 영어

@@ -133,6 +133,13 @@ rules a line, centres a title, draws a box, tells its story slowly, times itself
 and puts a door on a cooldown — all in sentence syntax. The Korean twin is
 [`story-sentence.ko.nme`](examples/story-sentence.ko.nme).
 
+For lists handled entirely in sentences, run
+[`shopping-list-sentence.nme`](examples/shopping-list-sentence.nme): making an
+empty list, adding to it, counting it, sorting it, joining it with commas,
+taking the first and the last, removing one, asking whether it holds something
+and whether it is empty — without a single bracket. The Korean twin is
+[`shopping-list-sentence.ko.nme`](examples/shopping-list-sentence.ko.nme).
+
 To build a small cryptocurrency with real cryptographic calculations and proof
 of work, compare the six `NeedMoreCoin` examples: Korean sentence
 [`needmorecoin-sentence.ko.nme`](examples/needmorecoin-sentence.ko.nme), English

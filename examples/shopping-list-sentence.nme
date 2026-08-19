@@ -1,0 +1,21 @@
+# Sentence syntax: a whole list program with no brackets and no punctuation.
+# Run: nme r shopping-list-sentence.nme
+set items to an empty list
+append apples to items
+append bread to items
+append milk to items
+show how many items
+sort items
+show items joined by comma
+show the first of items
+show the last of items
+remove bread from items
+show how many items
+if items contains milk
+show the milk is still there
+end
+if items is empty
+show nothing left to buy
+else
+show still shopping
+end
