@@ -59,7 +59,7 @@ BINARY = next(
 # followed it drove the silent count to zero, which was the whole point: a
 # writer who used a command word now either gets what they meant or is told
 # what to write instead.
-FLOOR_WORKS = 96
+FLOOR_WORKS = 102
 CEILING_SILENT = 0
 
 

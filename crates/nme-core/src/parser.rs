@@ -209,7 +209,19 @@ const SET_PUT_WORDS_EN: &[&str] = &["put", "place", "drop"];
 /// `해줘` and `해주세요` are absent on purpose: both are already output words
 /// (`안녕하세요 해줘` prints the greeting), so a saving sentence can never
 /// reach the set matcher through them.
-const SET_MAKE_WORDS_KO: &[&str] = &["해", "하자", "합시다", "하죠", "부르자"];
+const SET_MAKE_WORDS_KO: &[&str] = &[
+    "해",
+    "하자",
+    "합시다",
+    "하죠",
+    "부르자",
+    // `이름을 5로 두어` — the everyday verb for putting something somewhere
+    // and leaving it there. It only reads as saving when the value already
+    // says what the name becomes (`5로`), so `두어 개` stays a couple.
+    "두어",
+    "둬",
+    "두자",
+];
 /// Value endings that mark what a Korean saving sentence is turning the name
 /// into: `5로 해`, `5라고 하자`.
 const SET_MAKE_ENDINGS_KO: &[&str] = &["으로", "로", "이라고", "라고"];
@@ -233,6 +245,19 @@ const ASK_QUESTION_WORDS_KO: &[&str] = &[
     "달라고해줘",
 ];
 const REPEAT_WORDS_EN: &[&str] = &["repeat", "again", "do"];
+/// `do it 3 times` — the word standing for what is being repeated.
+const REPEAT_OBJECT_WORDS_EN: &[&str] = &["it", "this", "that"];
+/// `그거 3번 반복해` — the same word in Korean, which puts it at the front.
+const REPEAT_OBJECT_WORDS_KO: &[&str] = &[
+    "그거",
+    "그걸",
+    "그것",
+    "그것을",
+    "이거",
+    "이걸",
+    "이것",
+    "이것을",
+];
 const REPEAT_WORDS_KO: &[&str] = &[
     "반복",
     "반복해",
@@ -682,7 +707,18 @@ const APPEND_WORDS_EN: &[&str] = &["append", "push", "insert", "put", "place"];
 /// the connector is already a list — otherwise the line is left alone and
 /// prints itself.
 const APPEND_SOFT_WORDS_EN: &[&str] = &["insert", "put", "place"];
-const APPEND_WORDS_KO: &[&str] = &["넣어", "넣어줘", "추가해", "추가해줘", "붙여", "붙여줘"];
+const APPEND_WORDS_KO: &[&str] = &[
+    "넣어",
+    "넣어줘",
+    // `친구들에 민수 넣기` — the naming form of the verb, which is how a list
+    // of things to do is written down: `우유 사기`, `민수 넣기`.
+    "넣기",
+    "추가해",
+    "추가해줘",
+    "추가하기",
+    "붙여",
+    "붙여줘",
+];
 const APPEND_CONNECTORS_EN: &[&str] = &["to", "into", "onto", "in"];
 /// Particles marking the list a value is being put into (`친구들에 민수 넣어`).
 const APPEND_TARGET_PARTICLES_KO: &[&str] = &["에다가", "에다", "에", "한테", "에게"];
@@ -5029,6 +5065,18 @@ fn find_ask_shape(tokens: &[Token], mode: MatchMode) -> Option<AskShape> {
     let action_start = leading_sentence_fillers(tokens);
     if let Some((spelling, consumed)) = ask_action_at(tokens, action_start, mode) {
         let mut target_at = action_start + consumed;
+        // `ask for name What is your name?` — English asks *for* something,
+        // and the word belongs to the asking, not to the name. It is only
+        // skipped when a name follows it, so `ask for help` stays a sentence.
+        if spelling == Spelling::English
+            && matches!(
+                tokens.get(target_at).map(|token| &token.tok),
+                Some(Tok::For)
+            )
+            && tokens.get(target_at + 2).is_some()
+        {
+            target_at += 1;
+        }
         // `ask the name What is your name?` — the article belongs to the
         // sentence, not to the name the answer goes into.
         while is_english_article(tokens.get(target_at)) && target_at + 1 < tokens.len() {
@@ -10398,10 +10446,21 @@ fn find_exact_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionC
             }
         }
     }
+    // `수가 3보다 클 때` — the last word closes the condition instead of
+    // separating a body from it, and taking it as the separator left the body
+    // empty and the line unread. When a comparison already stands earlier on
+    // the line, that comparison is the connector.
+    let closes_the_line = |at: usize| {
+        at + 1 == tokens.len()
+            && token_matches_exact(&tokens[at], CONDITION_CLOSING_WORDS_KO)
+            && exact
+                .iter()
+                .any(|(_, connector)| *connector != ConditionConnector::Then)
+    };
     exact
         .iter()
         .copied()
-        .find(|(_, connector)| *connector == ConditionConnector::Then)
+        .find(|(at, connector)| *connector == ConditionConnector::Then && !closes_the_line(*at))
         .or_else(|| exact.first().copied())
 }
 
@@ -10789,6 +10848,15 @@ fn condition_tokens_before(
         condition.push(tokens[body_start].clone());
         body_start += 1;
     }
+    // `수가 3보다 클 때` — what is left after the comparing word is the word
+    // that closes the condition, not a body. Read as a body it became a line
+    // holding the single name `때`, which does nothing.
+    if tokens[body_start..]
+        .iter()
+        .all(|token| token_matches_exact(token, CONDITION_CLOSING_WORDS_KO))
+    {
+        body_start = tokens.len();
+    }
     (condition, body_start, connector)
 }
 
@@ -10981,6 +11049,21 @@ fn parse_natural_condition_atom(
         token_matches_exact(token, &["정말", "혹시", "please", "really", "the"])
     }) {
         cleaned.remove(0);
+    }
+    // `수가 3보다 클 때` — Korean can close a condition with `때`("when") after
+    // the comparing word, and the two together left the line unreadable: the
+    // comparison was found and then a word nobody could place followed it.
+    // The closing word is dropped, but only when the comparison is really
+    // there, so `밥을 먹을 때` stays a sentence.
+    if cleaned.len() > 2
+        && cleaned
+            .last()
+            .is_some_and(|token| token_matches_exact(token, CONDITION_CLOSING_WORDS_KO))
+        && cleaned[..cleaned.len() - 1]
+            .iter()
+            .any(|token| condition_connector_exact(token, false).is_some())
+    {
+        cleaned.pop();
     }
     if cleaned.is_empty() {
         return Err(condition_missing(spelling, span_of(tokens)));
@@ -11497,6 +11580,10 @@ fn trim_condition_markers(tokens: &mut Vec<Token>, markers: &[&str]) {
     }
 }
 
+/// Words that close a Korean condition after the comparing word:
+/// `3보다 클 때`, `3보다 클 경우`.
+const CONDITION_CLOSING_WORDS_KO: &[&str] = &["때", "때에", "때는", "경우", "경우에", "경우에는"];
+
 fn condition_connector_exact(token: &Token, is_last: bool) -> Option<ConditionConnector> {
     let word = token_word(token)?;
     if let Some((_, connector)) = split_attached_condition_token(token) {
@@ -11745,6 +11832,28 @@ fn match_times(
     if mode == MatchMode::Recover && korean_line_is_a_sentence(tokens, known_names) {
         return Ok(None);
     }
+    // `그거 3번 반복해` — Korean says what is being repeated first. The word
+    // is dropped only when a count follows it, so `그거 봐` stays a sentence.
+    let counts_next = |tokens: &[Token]| {
+        tokens.get(1).is_some_and(|token| {
+            matches!(token.tok, Tok::Int { .. } | Tok::Float { .. })
+                || name_word(token).is_some_and(|word| {
+                    word.starts_with(|character: char| character.is_ascii_digit())
+                })
+                || is_written_number(token)
+        })
+    };
+    let tokens = if tokens
+        .first()
+        .is_some_and(|token| token_matches_exact(token, REPEAT_OBJECT_WORDS_KO))
+        && (counts_next(tokens) || find_count_marker(tokens, mode).is_some_and(|(at, _)| at > 0))
+        && tokens.len() > 2
+    {
+        &tokens[1..]
+    } else {
+        tokens
+    };
+
     if let Some((count, body_start)) = attached_korean_times_sentence(source, tokens, known_names) {
         let mut body_start = body_start;
         if let Some((_, consumed)) = repeat_action_at(tokens, body_start, mode) {
@@ -11905,7 +12014,17 @@ fn match_times(
     }
 
     // English-first and freely mixed order: `repeat 3 times` / `반복해 3 times`.
-    if let Some((spelling, consumed)) = repeat_action_at(tokens, 0, mode) {
+    if let Some((spelling, mut consumed)) = repeat_action_at(tokens, 0, mode) {
+        // `do it 3 times` — the `it` is the thing being repeated, said out
+        // loud, and it stands between the verb and the count. Only skipped
+        // when a count really follows, so `do it now` is left alone.
+        if tokens
+            .get(consumed)
+            .is_some_and(|token| token_matches_exact(token, REPEAT_OBJECT_WORDS_EN))
+            && find_count_marker(tokens, mode).is_some_and(|(at, _)| at > consumed + 1)
+        {
+            consumed += 1;
+        }
         // The whole line is searched, not only the tail, so a counter word
         // can still see the repeat word that opened the line. An exact repeat
         // word is proof enough of intent to also repair a misspelled counter
@@ -12473,7 +12592,10 @@ fn match_file_io(
             };
             return Ok(Some(NmeStmt::FileWrite { path, value }));
         }
-        return Err(file_write_diagnostic(span_of(tokens)));
+        // Without the mark that says a file is meant (`파일에`, `에`), a line
+        // that merely opens with quoted words and ends in `저장해` is not a
+        // file line: `"안녕"을 인사에 저장해` saves the greeting into a name.
+        return Ok(None);
     }
 
     Ok(None)
@@ -13542,6 +13664,11 @@ fn match_set(
         }));
     }
 
+    if tokens.len() >= 3 {
+        if let Some(stmt) = korean_value_first_set(source, tokens, known_names, mode)? {
+            return Ok(Some(stmt));
+        }
+    }
     if tokens.len() >= 2 {
         if let Some(stmt) = korean_target_first_set(source, tokens, known_names, mode)? {
             return Ok(Some(stmt));
@@ -14154,6 +14281,80 @@ fn set_value(source: &str, tokens: &[Token], known_names: &HashSet<String>) -> R
 /// Korean marks the name being set with a particle and puts any saving word
 /// last. Without a saving word the value must be a number, so ordinary speech
 /// such as `강을 따라 집으로 갑니다` is never turned into an assignment.
+/// `5를 이름에 저장해` — the value first, the name after it, the saving word
+/// last. Korean says it both ways round, and only the target-first order was
+/// read; this one was answered with "NME does not know this word".
+///
+/// The value has to be a value — a number, quoted text, or a name the program
+/// made — because a line of prose that ends in `저장해` is a sentence about
+/// saving, not a saving line: `사진을 폴더에 저장해` names no value.
+fn korean_value_first_set(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+    mode: MatchMode,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    let body = trim_command_endings(tokens);
+    let mut end = body.len();
+    let Some(start) = (end.saturating_sub(2)..end).find(|&start| {
+        start >= 2
+            && action_phrase_at(body, start, SET_WORDS_KO, mode)
+                .is_some_and(|consumed| start + consumed == end)
+    }) else {
+        return Ok(None);
+    };
+    end = start;
+    let target_at = end - 1;
+    let Some(written) = name_word(&body[target_at]) else {
+        return Ok(None);
+    };
+    let Some(target) = strip_any_suffix(written, APPEND_TARGET_PARTICLES_KO) else {
+        return Ok(None);
+    };
+    if target.is_empty() || !is_hangul(target) {
+        return Ok(None);
+    }
+    let value_tokens = &body[..target_at];
+    if value_tokens.is_empty() {
+        return Ok(None);
+    }
+    let trimmed = trim_value_endings(&strip_object_particle(value_tokens));
+    let value = if let Some(code) = number_value_code(source, &trimmed) {
+        Value::Python(code)
+    } else if trimmed.len() == 1
+        && (matches!(trimmed[0].tok, Tok::String { .. })
+            || name_word(&trimmed[0]).is_some_and(|word| known_names.contains(word)))
+    {
+        set_value(source, &trimmed, known_names)
+            .map_err(|()| save_value_diagnostic(source, value_tokens))?
+    } else {
+        return Ok(None);
+    };
+    Ok(Some(NmeStmt::Set {
+        target: target.to_string(),
+        value,
+    }))
+}
+
+/// Drops the `을`/`를` that marks what a Korean sentence is acting on,
+/// whether it is stuck to the word or standing on its own — the lexer splits
+/// it off a number, so `5를` is two tokens and `민수를` is one.
+fn strip_object_particle(tokens: &[Token]) -> Vec<Token> {
+    let mut value = tokens.to_vec();
+    if value.len() > 1
+        && value
+            .last()
+            .is_some_and(|token| token_matches_exact(token, &["을", "를"]))
+    {
+        value.pop();
+        return value;
+    }
+    if let Some(last) = value.last_mut() {
+        trim_name_token_suffix(last, &["을", "를"]);
+    }
+    value
+}
+
 fn korean_target_first_set(
     source: &str,
     tokens: &[Token],
@@ -14184,6 +14385,20 @@ fn korean_target_first_set(
         saving_word = true;
     }
     if goes_into && !saving_word {
+        return Ok(None);
+    }
+    // `사진을 폴더에 저장해` puts the photo in the folder: the `에` names where
+    // it goes, so the name being saved into is that one, not the first word.
+    // Read from the front it became `사진 = "폴더에"`, which is the sentence
+    // turned inside out. The value-first rule above claims the line when what
+    // it saves really is a value; otherwise it is a sentence about saving.
+    if saving_word
+        && written.ends_with(['을', '를'])
+        && tokens[1..end]
+            .iter()
+            .filter_map(name_word)
+            .any(|word| word.ends_with('에') && word.chars().count() > 1)
+    {
         return Ok(None);
     }
     // `이름을 5로 해` · `이름을 5라고 하자` — the everyday light verb closing the
@@ -20921,6 +21136,24 @@ fn rebound_name(stmt: &NmeStmt) -> Option<&str> {
     }
 }
 
+/// The saving line a `name is 5` was probably meant to be, written the way
+/// the reader's own program is written.
+fn comparison_as_a_save(tokens: &[Token]) -> Option<String> {
+    let [name, is_word, value] = tokens else {
+        return None;
+    };
+    if !matches!(is_word.tok, Tok::Is) && !token_matches_exact(is_word, &["is", "="]) {
+        return None;
+    }
+    let target = name_word(name)?;
+    let written = token_word(value).map(str::to_string).or_else(|| match &value.tok {
+        Tok::Int { value } => Some(value.to_string()),
+        Tok::Float { value } => Some(value.to_string()),
+        _ => None,
+    })?;
+    Some(save_line(target, &written))
+}
+
 /// `Hello; goodbye` — names with `;` between them.
 ///
 /// Python takes the line and does nothing with it: each half is a name read
@@ -21136,6 +21369,20 @@ fn statement_does_nothing(tokens: &[Token]) -> Option<Diagnostic> {
         );
     }
     if bare_comparison(tokens) {
+        // The line the writer almost always meant is the saving one, so it is
+        // written out with their own name and value rather than with an
+        // example: `name is 5` is one word away from `set name to 5`.
+        let saving = comparison_as_a_save(tokens);
+        let (english, korean) = match &saving {
+            Some(line) => (
+                format!("to save the value write `{line}`"),
+                format!("값을 저장하려면 `{line}`처럼 적어 주세요"),
+            ),
+            None => (
+                "to save a value write `set score to 0`".to_string(),
+                "값을 저장하려면 `점수는 0`처럼 적어 주세요".to_string(),
+            ),
+        };
         return Some(
             Diagnostic::bilingual(
                 DiagnosticCode::StatementDoesNothing,
@@ -21144,8 +21391,8 @@ fn statement_does_nothing(tokens: &[Token]) -> Option<Diagnostic> {
                 span_of(tokens),
             )
             .with_bilingual_hint(
-                "to save a value write `set score to 0`; to decide something write `if score is 0`",
-                "값을 저장하려면 `점수는 0`처럼, 무엇을 결정하려면 `만약에 점수가 0이면`처럼 적어 주세요",
+                format!("{english}; to decide something write `if name is 5`"),
+                format!("{korean}. 무엇을 결정하려면 `만약에 이름이 5이면`처럼 적습니다"),
             ),
         );
     }

@@ -58,7 +58,10 @@ fn say_with_ununderstandable_value() {
     let message = err("say 1 +\n");
     // The message quotes the half-finished sum rather than saying only that
     // something could not be understood.
-    assert!(message.contains("`1 +` is a sum with a piece missing"), "{message}");
+    assert!(
+        message.contains("`1 +` is a sum with a piece missing"),
+        "{message}"
+    );
 }
 
 #[test]

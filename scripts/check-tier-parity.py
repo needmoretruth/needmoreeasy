@@ -140,6 +140,7 @@ WORD_LIST_EXCEPTIONS = {
     "UPDATE_AMOUNT_PARTICLES_KO": "particles; English uses UPDATE_CONNECTOR_WORDS_EN",
     "SET_TARGET_PARTICLES_KO": "particles; English uses `set … to …`",
     "EACH_CONTAINER_PARTICLES_KO": "particles; English uses `in`",
+    "CONDITION_CLOSING_WORDS_KO": "the word that closes a Korean condition (`3보다 클 때`); English opens with `if`/`when` instead (WHEN_WORDS_EN)",
     "WHILE_MARKERS_KO": "the word that closes a Korean loop condition; English opens with `while` instead (WHILE_WORDS_EN)",
     "NOT_A_COUNT_KO": "everyday words that read as a number glued to a counter (`이번`); English writes its counts apart, so no English word wears that shape",
     "VALUE_ENDINGS_KO": "spoken endings; English has none",

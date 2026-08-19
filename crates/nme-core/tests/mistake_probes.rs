@@ -151,13 +151,6 @@ fn raw_cpython_errors_become_nme_diagnostics() {
             names: "add",
         },
         Refusal {
-            probe: "o-ko-08",
-            source: "0 점수에 저장해\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "저장해",
-        },
-        Refusal {
             probe: "s-en-03",
             source: "  say hello\n",
             code: DiagnosticCode::UnexpectedIndent,
@@ -275,6 +268,25 @@ fn a_line_that_starts_with_a_space_is_named() {
     }
 }
 
+/// `0 점수에 저장해` — the value first, the name after it. Korean says it both
+/// ways round, and this order used to be refused with "NME does not know this
+/// word" pointing at `저장해`, which the language does know.
+#[test]
+fn korean_saves_with_the_value_written_first() {
+    assert_eq!(transpile("0 점수에 저장해\n").unwrap(), "점수 = 0\n");
+    assert_eq!(transpile("5를 이름에 저장해\n").unwrap(), "이름 = 5\n");
+    assert_eq!(
+        transpile("\"안녕\"을 인사에 저장해\n").unwrap(),
+        "인사 = \"안녕\"\n"
+    );
+    // A line of prose that ends in the saving word names no value, so it
+    // stays what it is: `사진을 폴더에 저장해` is a sentence about saving.
+    assert_eq!(
+        transpile("사진을 폴더에 저장해\n").unwrap(),
+        "print(\"사진을 폴더에 저장해\")\n"
+    );
+}
+
 #[test]
 fn a_word_that_is_not_an_action_is_named() {
     for case in [
@@ -345,13 +357,6 @@ fn a_word_that_is_not_an_action_is_named() {
             code: DiagnosticCode::UnknownActionWord,
             line: 2,
             names: "add",
-        },
-        Refusal {
-            probe: "o-ko-08",
-            source: "0 점수에 저장해\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "저장해",
         },
         Refusal {
             probe: "s-en-06",
