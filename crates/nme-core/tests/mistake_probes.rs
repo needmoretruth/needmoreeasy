@@ -452,27 +452,6 @@ fn a_word_that_is_not_an_action_is_named() {
             names: "번반복해서",
         },
         Refusal {
-            probe: "y-en-01",
-            source: "output hello\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "output",
-        },
-        Refusal {
-            probe: "y-en-03",
-            source: "speak hello\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "speak",
-        },
-        Refusal {
-            probe: "y-en-05",
-            source: "puts hello\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "puts",
-        },
-        Refusal {
             probe: "y-en-16",
             source: "store score as 0\n",
             code: DiagnosticCode::UnknownActionWord,
@@ -513,13 +492,6 @@ fn a_word_that_is_not_an_action_is_named() {
             code: DiagnosticCode::UnknownActionWord,
             line: 1,
             names: "rest",
-        },
-        Refusal {
-            probe: "y-en-23",
-            source: "input name What is your name?\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "input",
         },
         Refusal {
             probe: "y-en-27",

@@ -610,11 +610,13 @@ Every spelling accepted for each action, with nothing left out.
 | 조건 반복 / While | `while` | `동안` · `하는동안` · `할동안` |
 | 다른 갈래 / Else | `else` · `otherwise` | `아니면` · `그렇지않으면` · `아니면만약` · `아니면만약에` · `그렇지않으면만약` · `그렇지않으면만약에` |
 | 반복 중단 / Break | `break` · `breakhere` | `멈춰` · `멈춰줘` · `멈춰라` · `멈추기` · `그만해` · `정지해` · `종료해` · `중단` · `반복멈춰` · `여기서멈춰` |
-| 말끝 출력 / Output written last | — | `말하기` · `말해라` · `알려줘` · `알려주세요` · `알려줘요` · `얘기해` · `얘기해줘` · `얘기해주세요` · `표시해` · `표시해줘` · `출력하기` · `보여주기` · `프린트해` |
+| 말끝 출력 / Output written last | — | `말하기` · `말해라` · `알려줘` · `알려주세요` · `알려줘요` · `얘기해` · `얘기해줘` · `얘기해주세요` · `표시해` · `표시해줘` · `출력하기` · `보여주기` · `프린트해` · `프린트` · `프린트해줘` · `프린트해주세요` · `표시하기` |
+| 목적어가 없을 때만 말끝 출력 / Output written last, with no object | — | `띄워` · `띄워줘` · `띄워주세요` · `나타내` · `나타내줘` · `나타내주세요` |
+| 한 낱말만 보여 주기 / Show the one word after it | `output` · `write` · `echo` · `reveal` · `report` · `give` · `list` · `present` · `announce` · `speak` · `puts` | — |
 | 한 글자 출력 / Short output word | — | `말` |
 | 화면에 / On the screen | `screen` | `화면에` · `화면에다` · `화면에다가` · `스크린에` |
 | 화면 동사 / Screen verb | `put` · `write` · `print` · `show` · `display` · `say` · `tell` · `output` · `draw` | `띄워` · `띄워줘` · `보여줘` · `출력해` · `말해` · `말해줘` · `표시해` |
-| 물음표가 있을 때만 묻기 / Ask, only with a question mark | `read` · `get` | `받아` · `받아줘` · `여쭤봐` · `여쭤봐줘` · `여쭈어봐` |
+| 물음표가 있을 때만 묻기 / Ask, only with a question mark | `read` · `get` · `request` · `enter` · `input` | `받아` · `받아줘` · `여쭤봐` · `여쭤봐줘` · `여쭈어봐` · `요청해` · `요청해줘` · `요청해주세요` · `달라고해` · `달라고해줘` |
 | 짧은 물어보기 / Short asking word | — | `물어` |
 | ~로 해 / Save with the everyday verb | `becomes` · `become` · `call` | `해` · `하자` · `합시다` · `하죠` · `부르자` |
 | ~로 / ~라고 표시 / What the name becomes | — | `으로` · `로` · `이라고` · `라고` |
@@ -652,9 +654,9 @@ Every spelling accepted for each action, with nothing left out.
 | 나머지 / Remainder | `remainder` · `rest` · `leftover` | `나머지` |
 | 나누기 말 / Divided | `divided` · `shared` · `split` | `나눈` · `나눈뒤` · `나누고` |
 | 이음말 / Separator | `comma` · `space` · `newline` | `쉼표` · `빈칸` · `공백` · `줄바꿈` |
-| 정렬 / Sort | `sort` | `정렬해` · `정렬해줘` · `정렬` |
-| 거꾸로 / Reverse | `reverse` | `거꾸로` · `거꾸로해` · `거꾸로해줘` · `뒤집어` · `뒤집어줘` |
-| 섞기 / Shuffle | `shuffle` | `섞어` · `섞어줘` · `섞어주세요` |
+| 정렬 / Sort | `sort` · `order` · `arrange` · `sortout` | `정렬해` · `정렬해줘` · `정렬` · `정렬하기` · `순서대로` · `순서대로해` · `차례대로` · `차례대로해` · `오름차순` · `오름차순으로` · `오름차순으로해` |
+| 거꾸로 / Reverse | `reverse` · `flip` · `invert` | `거꾸로` · `거꾸로해` · `거꾸로해줘` · `뒤집어` · `뒤집어줘` · `뒤집기` · `반대로` · `반대로해` · `역순으로` · `역순으로해` |
+| 섞기 / Shuffle | `shuffle` · `mix` · `jumble` · `scramble` · `randomise` · `randomize` | `섞어` · `섞어줘` · `섞어주세요` · `섞기` · `랜덤하게` · `랜덤하게해` · `무작위로해` |
 | 들어있는지 / Contains | `contains` · `contain` · `includes` · `include` · `holds` | `안에는` · `속에는` · `안에` · `속에` · `에는` · `에` |
 | 표 표시 / Record | `record` · `table` | `표` |
 | 표에 넣기 / Put in a record | `put` | `넣어` · `넣어줘` · `넣어주세요` · `두어` · `두어줘` |

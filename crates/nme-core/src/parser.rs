@@ -56,6 +56,25 @@ const SAY_TRAILING_WORDS_KO: &[&str] = &[
     "출력하기",
     "보여주기",
     "프린트해",
+    "프린트",
+    "프린트해줘",
+    "프린트해주세요",
+    "표시하기",
+];
+/// Trailing output words that are ordinary transitive verbs as well.
+///
+/// `배를 띄워` floats a boat and `감정을 나타내` shows a feeling. Both mark what
+/// the verb acts on with `을`/`를` immediately in front of it, and both are
+/// whole sentences. The output reading is the same shape without that mark:
+/// `안녕 띄워`, `점수 나타내`. So these are read as the verb of the line only
+/// when the word before them is not their object.
+const SAY_TRAILING_OBJECT_FREE_WORDS_KO: &[&str] = &[
+    "띄워",
+    "띄워줘",
+    "띄워주세요",
+    "나타내",
+    "나타내줘",
+    "나타내주세요",
 ];
 /// The one-syllable short form of the output word.
 ///
@@ -79,6 +98,22 @@ const SAY_SHORT_WORDS_KO: &[&str] = &["말"];
 const KOREAN_DETERMINERS: &[&str] = &[
     "그", "이", "저", "내", "네", "제", "우리", "저희", "당신", "어느", "옛", "첫", "온갖",
     "별", "헛", "진짜", "참", "한마디", "요즘", "무슨", "웬", "뭔", "아무", "온",
+];
+/// Output words that claim the line only when one word is left to show.
+///
+/// `write`, `give`, `output` and the rest are ordinary English verbs, so they
+/// cannot swallow a whole sentence the way `show` does: `Write down what you
+/// remember.` and `Give it a try!` have to keep every word. With exactly one
+/// word after them there is nothing else they could mean — `write hello`,
+/// `give score`, `list score` — and that is the shape a beginner reaches for
+/// when the message is a single word or a name.
+///
+/// Korean says the same thing by putting the verb last, which it can do with
+/// a whole message in front of it, so its half of this pair lives in
+/// [`SAY_TRAILING_WORDS_KO`].
+const SAY_ONE_WORD_WORDS_EN: &[&str] = &[
+    "output", "write", "echo", "reveal", "report", "give", "list", "present", "announce", "speak",
+    "puts",
 ];
 const ASK_WORDS_EN: &[&str] = &["ask", "prompt", "question"];
 const ASK_WORDS_KO: &[&str] = &[
@@ -140,8 +175,19 @@ const SET_MAKE_ENDINGS_KO: &[&str] = &["으로", "로", "이라고", "라고"];
 /// name what is your name?` is guide 03 written with a different verb. The
 /// question mark is what tells them apart, so these are read only when the
 /// line ends in one.
-const ASK_QUESTION_WORDS_EN: &[&str] = &["read", "get"];
-const ASK_QUESTION_WORDS_KO: &[&str] = &["받아", "받아줘", "여쭤봐", "여쭤봐줘", "여쭈어봐"];
+const ASK_QUESTION_WORDS_EN: &[&str] = &["read", "get", "request", "enter", "input"];
+const ASK_QUESTION_WORDS_KO: &[&str] = &[
+    "받아",
+    "받아줘",
+    "여쭤봐",
+    "여쭤봐줘",
+    "여쭈어봐",
+    "요청해",
+    "요청해줘",
+    "요청해주세요",
+    "달라고해",
+    "달라고해줘",
+];
 const REPEAT_WORDS_EN: &[&str] = &["repeat", "again", "do"];
 const REPEAT_WORDS_KO: &[&str] = &[
     "반복",
@@ -652,12 +698,50 @@ const REPEAT_TEXT_WORDS_KO: &[&str] = &["붙인", "이어붙인"];
 const COPIES_WORDS_EN: &[&str] = &["times"];
 const COPIES_WORDS_KO: &[&str] = &["개", "번"];
 /// `sort friends` / `친구들 정렬해`.
-const SORT_WORDS_EN: &[&str] = &["sort"];
-const SORT_WORDS_KO: &[&str] = &["정렬해", "정렬해줘", "정렬"];
-const REVERSE_WORDS_EN: &[&str] = &["reverse"];
-const REVERSE_WORDS_KO: &[&str] = &["거꾸로", "거꾸로해", "거꾸로해줘", "뒤집어", "뒤집어줘"];
-const SHUFFLE_WORDS_EN: &[&str] = &["shuffle"];
-const SHUFFLE_WORDS_KO: &[&str] = &["섞어", "섞어줘", "섞어주세요"];
+/// The words that put a list in order, in reverse, or in no order at all.
+///
+/// Everyday verbs are safe here in a way they are not anywhere else: an
+/// arranging line has to open (or close) with the name of a list the program
+/// already made, so `mix the flour and the water` and `순서대로 줄을 서세요`
+/// have nothing to arrange and stay sentences. That is why `order`, `mix`,
+/// `flip`, `반대로 해` and `랜덤하게 해` may all be read as commands.
+const SORT_WORDS_EN: &[&str] = &["sort", "order", "arrange", "sortout"];
+const SORT_WORDS_KO: &[&str] = &[
+    "정렬해",
+    "정렬해줘",
+    "정렬",
+    "정렬하기",
+    "순서대로",
+    "순서대로해",
+    "차례대로",
+    "차례대로해",
+    "오름차순",
+    "오름차순으로",
+    "오름차순으로해",
+];
+const REVERSE_WORDS_EN: &[&str] = &["reverse", "flip", "invert"];
+const REVERSE_WORDS_KO: &[&str] = &[
+    "거꾸로",
+    "거꾸로해",
+    "거꾸로해줘",
+    "뒤집어",
+    "뒤집어줘",
+    "뒤집기",
+    "반대로",
+    "반대로해",
+    "역순으로",
+    "역순으로해",
+];
+const SHUFFLE_WORDS_EN: &[&str] = &["shuffle", "mix", "jumble", "scramble", "randomise", "randomize"];
+const SHUFFLE_WORDS_KO: &[&str] = &[
+    "섞어",
+    "섞어줘",
+    "섞어주세요",
+    "섞기",
+    "랜덤하게",
+    "랜덤하게해",
+    "무작위로해",
+];
 /// `if friends contains Mina` — English says it with a verb.
 const CONTAINS_WORDS_EN: &[&str] = &["contains", "contain", "includes", "include", "holds"];
 /// `만약에 친구들에 민수가 있으면` — Korean marks the list with a particle and
@@ -803,6 +887,7 @@ const EACH_CONTAINER_PARTICLES_KO: &[&str] = &["가운데", "안의", "속의", 
 const NOT_A_NAME_EN: &[&str] = &[
     "a",
     "about",
+    "in",
     "above",
     "across",
     "after",
@@ -4172,6 +4257,16 @@ fn output_action_at(tokens: &[Token], start: usize, mode: MatchMode) -> Option<(
         .or_else(|| {
             action_phrase_at(tokens, start, SAY_WORDS_KO, mode)
                 .map(|consumed| (Spelling::Korean, consumed))
+        })
+        .or_else(|| {
+            // See `SAY_ONE_WORD_WORDS_EN`: the whole line has to be the word
+            // and one thing to show. Written exactly, never repaired — these
+            // are ordinary verbs and a repair would reach half the language.
+            (tokens.len() == start + 2
+                && token_matches_exact(&tokens[start], SAY_ONE_WORD_WORDS_EN)
+                && name_word(&tokens[start + 1]).is_some()
+                && !token_matches_exact(&tokens[start + 1], NOT_A_NAME_EN))
+            .then_some((Spelling::English, 1))
         })
 }
 
@@ -15099,12 +15194,28 @@ fn trailing_output_action_at(
     if token_matches_exact(token, SAY_TRAILING_WORDS_KO) {
         return Some(1);
     }
+    if token_matches_exact(token, SAY_TRAILING_OBJECT_FREE_WORDS_KO)
+        && !tokens[..start].iter().any(korean_object_marked)
+    {
+        return Some(1);
+    }
     if token_matches_exact(token, SAY_SHORT_WORDS_KO)
         && message_reads_like_speech(&tokens[start - 1], known_names)
     {
         return Some(1);
     }
     None
+}
+
+/// `배를`, `감정을` — a word carrying the mark that makes it what the verb acts
+/// on. It may stand anywhere in front of the verb, because Korean is free to
+/// put other words between the two (`연을 하늘에 띄워줘`). One syllable on its
+/// own (`를`) is a particle standing alone and is not counted.
+fn korean_object_marked(token: &Token) -> bool {
+    token_word(token).is_some_and(|word| {
+        let mut characters = word.chars();
+        matches!(characters.next_back(), Some('을' | '를')) && characters.next().is_some()
+    })
 }
 
 /// True when the word in front of the one-syllable `말` is something a

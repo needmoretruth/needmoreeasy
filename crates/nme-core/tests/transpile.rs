@@ -1324,16 +1324,13 @@ fn real_python_attribute_lines_are_left_alone() {
 
 #[test]
 fn prose_with_read_or_write_words_stays_sentence_output() {
-    // `write hello` used to print itself, and that assertion used to live
-    // here. The owner named exactly that on 2026-08-19 — *잘 받아주는 척하면서
-    // 정작 「왜 이게 작동 안 하지?」* — so one word after `write` is now
-    // refused and told to write `show`. Everything longer is still prose.
-    assert_eq!(
-        transpile("write hello\n").expect_err("one word after `write` is refused")[0]
-            .code
-            .code(),
-        "E0603"
-    );
+    // `write hello` used to print itself, which the owner named on 2026-08-19
+    // — *잘 받아주는 척하면서 정작 「왜 이게 작동 안 하지?」* — and it was
+    // refused for a while so the writer would be told to say `show`. Later the
+    // same day the owner asked for the other answer to that complaint: accept
+    // the near-synonym instead of teaching the canonical word. One word after
+    // `write` now shows that word; everything longer is still prose.
+    assert_eq!(ok("write hello\n"), "print(\"hello\")\n");
     assert_eq!(ok("write it down before you forget\n"), "print(\"write it down before you forget\")\n");
     assert_eq!(ok("read the book\n"), "print(\"read the book\")\n");
     assert_eq!(

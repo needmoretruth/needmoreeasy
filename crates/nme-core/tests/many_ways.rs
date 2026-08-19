@@ -145,8 +145,6 @@ fn a_line_without_a_screen_is_still_a_sentence() {
 #[test]
 fn one_word_after_a_verb_that_is_not_an_action_is_named() {
     for (source, word) in [
-        ("write hello\n", "write"),
-        ("echo hello\n", "echo"),
         ("log hello\n", "log"),
         ("read hello\n", "read"),
         ("hello write\n", "write"),
@@ -628,4 +626,44 @@ fn a_quoted_sentence_is_printed_exactly_as_written() {
         ok("set bag to list of \"key\"\nshow \"You put the key in your bag.\"\n"),
         "bag = [\"key\"]\nprint(\"You put the key in your bag.\")\n"
     );
+}
+
+/// The everyday verbs a beginner reaches for when the message is one word.
+/// They may not swallow a sentence, so they claim the line only when a single
+/// word is left after them — and that word has to be one a sentence could
+/// make into a name, or `give up` and `echo back` would lose half of
+/// themselves.
+#[test]
+fn an_everyday_verb_shows_the_one_word_after_it() {
+    for line in [
+        "output hello", "write hello", "echo hello", "reveal hello", "report hello",
+        "give hello", "list hello", "present hello", "announce hello",
+    ] {
+        assert_eq!(
+            ok(&format!("{line}\n")),
+            "print(\"hello\")\n",
+            "{line} did not show its word"
+        );
+    }
+    assert_eq!(ok("set score to 7\ngive score\n"), "score = 7\nprint(score)\n");
+    // Two words, or one that never names anything, and it is a sentence again.
+    for sentence in ["give up", "echo back", "write in", "report on", "give it a try"] {
+        assert_eq!(
+            ok(&format!("{sentence}\n")),
+            format!("print(\"{sentence}\")\n"),
+            "{sentence} stopped being a sentence"
+        );
+    }
+}
+
+/// `안녕 띄워` and `점수 나타내` are output; `배를 띄워` and `감정을 나타내` are
+/// sentences. What separates them is the object mark on the word before.
+#[test]
+fn korean_transitive_output_words_leave_their_own_sentences_alone() {
+    assert_eq!(ok("안녕 띄워\n"), "print(\"안녕\")\n");
+    assert_eq!(ok("안녕하세요 띄워줘\n"), "print(\"안녕하세요\")\n");
+    assert_eq!(ok("점수는 7\n점수 나타내\n"), "점수 = 7\nprint(점수)\n");
+    assert_eq!(ok("배를 띄워\n"), "print(\"배를 띄워\")\n");
+    assert_eq!(ok("감정을 나타내\n"), "print(\"감정을 나타내\")\n");
+    assert_eq!(ok("연을 하늘에 띄워줘\n"), "print(\"연을 하늘에 띄워줘\")\n");
 }
