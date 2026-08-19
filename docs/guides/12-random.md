@@ -9,54 +9,63 @@ English | [한국어](12-random.ko.md)
 - Topic: random
 - Result: a program that rolls a die and picks a color
 
-Games need surprises. NME bundles a random helper that Python provides, loaded
-with one `use` line.
+A game needs a surprise. Rolling a die, or picking one of several things, is a
+single sentence. There is nothing to load first and nothing to switch on.
 
 ## Steps
 
 1. Type this into the writing box:
 
    ```nme
-   use random latest
    set die to random number from 1 to 6
    show die
    ```
 
-   Run it a few times: `die` is a random whole number from 1 to 6.
+   Run it a few times. Any number from 1 to 6 comes out. Korean is
+   `주사위는 1부터 6까지 무작위 숫자`.
 
-2. Picking one of several choices works the same way:
+2. Picking one of the things you name:
 
    ```nme
-   use random latest
    set color to pick from red or green or blue
    show color
    ```
 
-3. Korean loads the helper with `랜덤 사용 최신` and uses sentence endings:
+   Korean is `색은 빨강 또는 초록 또는 파랑 중에서 골라`.
+
+3. Mix it with what you already know and it is a game:
 
    ```nme
-   랜덤 사용 최신
-   주사위는 1부터 6까지 랜덤정수
-   주사위 보여줘
-   색은 빨강 또는 초록 또는 파랑 중에서 랜덤선택
-   색 보여줘
+   set answer to random number from 1 to 3
+   ask number guess Pick 1, 2 or 3
+   if guess equals answer
+       show Correct!
+   else
+       show Not this time
+       show answer
+   end
    ```
 
-4. The helper names work in expressions too: `랜덤정수(a, b)` is a random
-   number and `랜덤선택(values)` picks from a list.
+4. Roll several times and keep them:
 
    ```nme
-   use random latest
-   set roll to random number from 1 to 6
-   show roll
+   set rolls to list of
+   repeat 3 times
+   set one to random number from 1 to 6
+   append one to rolls
+   end
+   show rolls
    ```
+
+5. (**Skip this for now.**) In beginner syntax the same jobs have helper names.
+   You load them with `use random` and then write `random_number(1, 6)`. Written
+   as sentences, that line is not needed.
 
 ## Try it yourself
 
-Roll two dice and show both:
+Roll the die twice and show both:
 
 ```nme
-use random latest
 set first to random number from 1 to 6
 set second to random number from 1 to 6
 show first
