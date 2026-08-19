@@ -17,8 +17,8 @@ immediately and continues with the lines after it.
 1. Type this into the writing box:
 
    ```nme
-   set ready to True
-   set waiting to False
+   set ready to true
+   set waiting to false
    while ready or waiting
    show Still working
    break

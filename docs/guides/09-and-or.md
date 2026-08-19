@@ -17,7 +17,7 @@ needs at least one.
 1. Type this into the writing box:
 
    ```nme
-   set ready to True
+   set ready to true
    set score to 5
    if ready and score is greater than 2 then show Go
    ```
@@ -51,8 +51,8 @@ needs at least one.
 4. Combined conditions work in loops too:
 
    ```nme
-   set ready to True
-   set waiting to False
+   set ready to true
+   set waiting to false
    while ready or waiting
        show Still working
        break
