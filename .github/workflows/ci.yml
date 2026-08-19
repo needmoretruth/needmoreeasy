@@ -112,6 +112,7 @@ jobs:
           python scripts/mistake-probes/prose_corpus.py
           python scripts/check-prose-blocks.py
           python scripts/mistake-probes/english_prose.py
+          python scripts/mistake-probes/korean_prose.py
       - name: Install the CLI and smoke test it (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
