@@ -1,121 +1,108 @@
-# 30 — Shop — an inventory store
+# 30 — Shop: stock and a balance
 
 English | [한국어](30-shop.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
 - Difficulty: ★★★★☆ (4/5)
-- Prerequisites: [24 — Quiz](24-quiz.md), [22 — Terminal menu](22-terminal-menu.md)
+- Prerequisites: [24 — Quiz](24-quiz.md), [25 — Calculator](25-calculator.md)
 - Topic: projects
-- Result: a JSON-persisted store with buy/sell/stock/list and a money balance
+- Result: a small shop where every sale takes one off the stock and ten off the money
 
-Guide [35](35-todo.md) saves a list and guide [41](41-address-book.md) saves
-records. A store grows that idea one step: a dict of items (each with `price`
-and `stock`) plus a `money` balance, all in `shop.json`.
+A shop program has two things to remember — **how many of each thing are
+left**, and **how much money there is**. The first is one number under each
+name, which is the shape of a [record](41-address-book.md); the second is one
+number.
 
 ## Steps
 
-1. The shop is one JSON object with two parts: an `items` dict mapping a name
-   to `{"price": N, "stock": N}`, plus a `money` balance:
+1. **Keep the stock in a record.** The thing's name is the name, how many are
+   left is the value:
 
    ```nme
-   {
-     "items": {
-       "apple": {"price": 3, "stock": 10},
-       "banana": {"price": 5, "stock": 5},
-       "cherry": {"price": 2, "stock": 0}
-     },
-     "money": 20
-   }
+   set stock to an empty record
+   put apple at 5 in stock
+   put bread at 2 in stock
+   show apple in stock
    ```
 
-2. The whole store. Save `shop.nme` next to `shop.json`. `use file latest`
-   loads `json_load`/`json_save`, and `os.path.exists` starts a fresh shop:
+   You get `5`.
+
+2. **Asking for something that is not there stops the program**, so ask
+   whether it is there first:
 
    ```nme
-   # shop.nme — a small store kept in a JSON file.
-   # Run: nme r shop
-   # Type list, buy, sell, or quit.
-
-   use file latest
-   import os
-
-   if os.path.exists("shop.json"):
-       data = json_load("shop.json")
-   else:
-       data = {"items": {}, "money": 20}
-
-   while True:
-       show f"Money: {data['money']}"
-       show "Commands: list, buy, sell, quit"
-       ask command, "? "
-       if command == "list":
-           for name in data["items"]:
-               item = data["items"][name]
-               show f"{name}: {item['price']} each, {item['stock']} in stock"
-       elif command == "buy" or command == "sell":
-           ask name, "Item? "
-           if name in data["items"]:
-               item = data["items"][name]
-               if command == "buy":
-                   if item["stock"] > 0:
-                       item["stock"] = item["stock"] - 1
-                       data["money"] = data["money"] - item["price"]
-                       show f"Bought {name}"
-                       json_save("shop.json", data)
-                   else:
-                       show "Out of stock"
-               else:
-                   item["stock"] = item["stock"] + 1
-                   data["money"] = data["money"] + item["price"]
-                   show f"Sold {name}"
-                   json_save("shop.json", data)
-           else:
-               show "No such item"
-       elif command == "quit":
-           show "Bye!"
-           break
-       else:
-           show "Unknown command"
+   set stock to an empty record
+   put apple at 5 in stock
+   if stock contains milk
+       show milk in stock
+   else
+       show we do not have that
+   end
    ```
 
-   `list` walks the dict with `for name in data["items"]:`; `buy` and `sell`
-   share one branch via `or` (guide [09](09-and-or.md)). Buy pays the price
-   and drops stock; sell refunds and adds; `json_save` writes it back, so the
-   store survives between runs.
+3. **Lowering a number in a record takes three steps** — take it out, change
+   it, put it back:
 
-3. Run it and feed the commands through a pipe. `buy apple` pays 3 and drops
-   stock to 9, `sell apple` refunds it:
-
-   ```sh
-   printf 'list\nbuy\napple\nsell\napple\nquit\n' | nme r shop
+   ```nme
+   set stock to an empty record
+   put apple at 5 in stock
+   set left to apple in stock
+   subtract 1 from left
+   put apple at left in stock
+   show apple in stock
    ```
 
-   ```text
-   Money: 20
-   Commands: list, buy, sell, quit
-   ? apple: 3 each, 10 in stock
-   banana: 5 each, 5 in stock
-   cherry: 2 each, 0 in stock
-   Money: 20
-   Commands: list, buy, sell, quit
-   ? Item? Bought apple
-   Money: 17
-   Commands: list, buy, sell, quit
-   ? Item? Sold apple
-   Money: 20
-   Commands: list, buy, sell, quit
-   ? Bye!
+   You get `4`. There is no sentence yet for changing a value inside a record
+   where it sits, and these three lines stand in for it.
+
+4. **Nothing may be sold when none are left**, so look at the count before
+   selling:
+
+   ```nme
+   set left to 0
+   if left is greater than 0
+       show selling one
+   else
+       show that one is gone
+   end
+   ```
+
+5. The whole thing. One sale takes one off the stock and ten off the money:
+
+   ```nme
+   set stock to an empty record
+   put apple at 5 in stock
+   put bread at 2 in stock
+   set money to 100
+   ask item what would you like
+   if stock contains item
+       set left to item in stock
+       if left is greater than 0
+           subtract 1 from left
+           put item at left in stock
+           subtract 10 from money
+           show sold
+           show item
+           show left
+       else
+           show that one is gone
+       end
+   else
+       show we do not have that
+   end
+   show money
    ```
 
 ## Try it yourself
 
-Add a `restock <name> <count>` command that adds to an item's stock, or an
-`add <name> <price>` command that inserts a new item and saves it.
+Give each thing its own price — a second record called `prices`, keyed by the
+same names as `stock`. Then write the other direction: putting stock back in
+is the same shape with `add` where `subtract` is.
 
 ## What you learned
 
-- A store is a dict of item dicts plus a money balance, all saved as JSON.
-- `for name in data["items"]:` lists a dict's keys and reads each item.
-- `buy`/`sell` change the balance and the stock, then `json_save` persists.
-- A `quit` command with `break` ends the `while True:` menu.
+- A record is the right shape for one number under each name.
+- Reading a name that is not there stops the program, so **ask first**.
+- Changing a number inside a record is take-out, change, put-back.
+- Looking at the count before selling is what keeps it from going below zero.
