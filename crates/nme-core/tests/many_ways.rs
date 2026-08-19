@@ -990,3 +990,46 @@ fn a_korean_loop_on_one_line_loops() {
     );
     assert_eq!(ok("3초 동안 기다려\n"), "__import__(\"time\").sleep(3)\n");
 }
+
+/// `이번` is a word, not the number two and a counter.
+#[test]
+fn everyday_korean_words_are_not_repeat_counts() {
+    for sentence in [
+        "이번 달 예산 말해줘",
+        "이번 주 계획 말해줘",
+        "이번 판은 제가 이겼습니다 말해줘",
+        "매번 같은 말을 합니다 말해줘",
+    ] {
+        let said = sentence.trim_end_matches(" 말해줘");
+        assert_eq!(
+            ok(&format!("{sentence}\n")),
+            format!("print(\"{said}\")\n"),
+            "for {sentence}"
+        );
+    }
+    // Whoever means twice writes it a way that is not also a word.
+    assert_eq!(ok("두번 안녕 말해줘\n"), "for _ in range(2): print(\"안녕\")\n");
+    assert_eq!(ok("3번 안녕 말해줘\n"), "for _ in range(3): print(\"안녕\")\n");
+}
+
+/// The divisor may be a name, which `docs/syntax.ko.md` §15 promises.
+///
+/// Only a number was read: a name keeps its particle attached where a number
+/// has it cut off, so the phrase is one token shorter and the whole line came
+/// out as writing.
+#[test]
+fn the_remainder_can_be_taken_by_a_name() {
+    assert_eq!(
+        ok("총점은 356\n인원은 5\n총점을 인원으로 나눈 나머지 말해줘\n"),
+        "총점 = 356\n인원 = 5\nprint(총점 % 인원)\n"
+    );
+    assert_eq!(
+        ok("총점은 356\n총점을 5로 나눈 나머지 말해줘\n"),
+        "총점 = 356\nprint(총점 % 5)\n"
+    );
+    // A name nothing ever made keeps the line a sentence.
+    assert_eq!(
+        ok("총점은 356\n총점을 사람으로 나눈 나머지 말해줘\n"),
+        "총점 = 356\nprint(str(총점) + \"을 사람으로 나눈 나머지\")\n"
+    );
+}

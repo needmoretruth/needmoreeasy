@@ -1809,6 +1809,12 @@ pub fn parse_program(
                     problems.push(timer_not_started_diagnostic(line.span));
                     continue;
                 }
+                // `set sum to 0` replaces Python's own `sum`, and the line
+                // that stops working is a later one that never mentioned it.
+                if let Some(taken) = rebound_name(&stmt).filter(|name| name_python_needs(name)) {
+                    problems.push(name_taken_by_python_diagnostic(taken, line.span));
+                    continue;
+                }
                 // A job that changes a name made outside it needs Python
                 // told so, on this very line. See `NmeLine::globals`.
                 let globals = match rebound_name(&stmt)
@@ -6683,6 +6689,20 @@ fn english_remainder(tokens: &[Token], known_names: &HashSet<String>) -> Option<
 }
 
 /// The number a remainder divides by: a written number, or a saved name.
+/// `인원으로` — the name that is being divided by, with its particle still on
+/// it. See the call site in `korean_reading_prefix`.
+fn korean_divisor_with_particle(token: &Token, known_names: &HashSet<String>) -> Option<Code> {
+    let word = name_word(token)?;
+    let base = strip_any_suffix(word, &["으로", "로"])?;
+    if !known_names.contains(base) {
+        return None;
+    }
+    Some(Code::Source(Span::new(
+        token.span.start,
+        token.span.end - (word.len() - base.len()),
+    )))
+}
+
 fn remainder_divisor(token: &Token, known_names: &HashSet<String>) -> Option<Code> {
     match &token.tok {
         Tok::Int { .. } | Tok::Float { .. } => Some(Code::Source(token.span)),
@@ -6715,6 +6735,18 @@ fn korean_reading_prefix(
     {
         if let Some(by) = remainder_divisor(&rest[0], known_names) {
             return Some((Value::Remainder { of: name, by }, 5));
+        }
+    }
+    // `총점을 인원으로 나눈 나머지`. A name keeps its particle attached — only
+    // a number gets cut off it — so the same phrase is one token shorter, and
+    // reading it only as the number shape made the whole line into writing.
+    // `docs/syntax.ko.md` §15 promises both.
+    if rest.len() > 2
+        && token_matches_exact(&rest[1], DIVIDED_WORDS_KO)
+        && reading_word_matches(name_word(&rest[2])?, REMAINDER_WORDS_KO)
+    {
+        if let Some(by) = korean_divisor_with_particle(&rest[0], known_names) {
+            return Some((Value::Remainder { of: name, by }, 4));
         }
     }
     // `별표를 5개 붙인 것`, and `별표를 5개 이어 붙인 것` written with the two
@@ -6999,6 +7031,46 @@ fn name_written_with_a_space(
         .with_bilingual_hint(
             format!("write `{joined}` as one word instead of `{first} {second}`"),
             format!("`{first} {second}` 대신 `{joined}`처럼 붙여 써 주세요"),
+        ),
+    )
+}
+
+/// `set full name to Mina` — a name written as two words.
+///
+/// The evidence is the connector: it stands after `name`, not after `full`,
+/// so everything in front of it was meant as the name. Every word between has
+/// to be a plain word, because `set the table for four people` is a sentence
+/// and `set score to 0` never gets here at all.
+fn spaced_set_target(tokens: &[Token], target_at: usize) -> Option<Diagnostic> {
+    let connector_at = tokens[target_at + 1..]
+        .iter()
+        .position(|token| token_matches_exact(token, SET_VALUE_CONNECTORS))
+        .map(|at| at + target_at + 1)?;
+    if connector_at == target_at + 1 || connector_at + 1 >= tokens.len() {
+        return None;
+    }
+    let name_tokens = &tokens[target_at..connector_at];
+    if !name_tokens.iter().all(|token| {
+        name_word(token).is_some_and(|word| word.chars().all(char::is_alphanumeric))
+    }) {
+        return None;
+    }
+    let written = name_tokens
+        .iter()
+        .filter_map(name_word)
+        .collect::<Vec<_>>()
+        .join(" ");
+    let joined = written.replace(' ', "_");
+    Some(
+        Diagnostic::bilingual(
+            DiagnosticCode::NameHasSpace,
+            "a name cannot have a space in it",
+            "이름에는 띄어쓰기를 쓸 수 없습니다",
+            Span::new(name_tokens[0].span.start, name_tokens[name_tokens.len() - 1].span.end),
+        )
+        .with_bilingual_hint(
+            format!("write `{joined}` as one word instead of `{written}`"),
+            format!("`{written}` 대신 `{joined}`처럼 붙여 써 주세요"),
         ),
     )
 }
@@ -13021,13 +13093,24 @@ fn match_set(
             target_word
         };
         let mut value_start = consumed + 1;
-        if tokens.get(value_start).is_some_and(|token| {
+        let joined_by_a_connector = tokens.get(value_start).is_some_and(|token| {
             token_matches_exact(
                 token,
                 SET_VALUE_CONNECTORS,
             )
-        }) {
+        });
+        if joined_by_a_connector {
             value_start += 1;
+        } else if spelling == Spelling::English {
+            // `set full name to Mina` made a name called `full` holding the
+            // words `name to Mina`, and printing it showed all of them. The
+            // connector standing further along says the words in front of it
+            // were meant as one name, which is the one thing a name cannot
+            // be. `set greeting Hello world` has no connector anywhere and
+            // keeps saving the greeting.
+            if let Some(problem) = spaced_set_target(tokens, consumed) {
+                return Err(problem);
+            }
         }
         if let Some(problem) = broken_set_connector(source, target, &tokens[value_start..]) {
             return Err(problem);
@@ -17270,6 +17353,34 @@ fn rebound_name(stmt: &NmeStmt) -> Option<&str> {
     }
 }
 
+/// The Python builtins NME's own readings are written in terms of.
+///
+/// `the total of marks` is `sum(marks)` and `how many friends` is
+/// `len(friends)`, so a value named `sum` or `len` takes the reading away
+/// from every later line — and the error lands on one of those lines, not on
+/// the one that chose the name.
+const NAMES_PYTHON_NEEDS: &[&str] = &[
+    "abs", "all", "enumerate", "float", "input", "int", "len", "list", "max", "min", "print",
+    "range", "reversed", "round", "sorted", "str", "sum",
+];
+
+fn name_python_needs(name: &str) -> bool {
+    NAMES_PYTHON_NEEDS.contains(&name)
+}
+
+fn name_taken_by_python_diagnostic(name: &str, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::NameTakenByPython,
+        format!("`{name}` is a name the language itself needs"),
+        format!("`{name}`은(는) 언어 자신이 쓰는 이름입니다"),
+        span,
+    )
+    .with_bilingual_hint(
+        format!("pick another name — `total`, `count` and `answer` are free, `{name}` is not"),
+        format!("다른 이름을 쓰세요 — `총합`·`개수`·`답`은 비어 있고 `{name}`은 아닙니다"),
+    )
+}
+
 fn job_changes_an_outer_name_diagnostic(name: &str, span: Span) -> Diagnostic {
     Diagnostic::bilingual(
         DiagnosticCode::JobReadsBeforeChanging,
@@ -17792,12 +17903,24 @@ fn span_of_refs(tokens: &[&Token]) -> Span {
 /// The count in a Korean counter word written attached to it (`3번`, `한번`,
 /// `삼회`). A count that is neither a number nor a name the program knows is
 /// refused here, so it can never become `range(<undefined word>)`.
+/// Words that are a number and a counter glued together on paper, and an
+/// ordinary Korean word in life.
+///
+/// `이번` is *this time*, and `이` is also the number two, so `이번 달 예산
+/// 말해줘` looped twice and printed `달 예산` — the writer's first word gone.
+/// `이번 주 계획`, `이번 판은 제가 이겼습니다` went the same way. Whoever
+/// means twice writes `두 번`, `두번` or `2번`, none of which are words.
+const NOT_A_COUNT_KO: &[&str] = &["이번", "매번", "저번", "지난번", "요번", "몇번", "여러번"];
+
 fn attached_korean_count(
     source: &str,
     name: &str,
     span: Span,
     known_names: &HashSet<String>,
 ) -> Option<(Code, &'static str)> {
+    if NOT_A_COUNT_KO.contains(&name) {
+        return None;
+    }
     let counter = TIMES_WORDS_KO.iter().find(|counter| {
         name.strip_suffix(*counter)
             .is_some_and(|rest| !rest.is_empty())

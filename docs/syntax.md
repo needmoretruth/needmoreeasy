@@ -770,6 +770,7 @@ touched.**
 | `E0234` | this name does not hold a record |
 | `E0235` | this job is given a different number of things than it takes |
 | `E0236` | this job reads a name from outside and then changes it |
+| `E0237` | this name is one the language itself needs |
 | `E0301` | the condition is missing |
 | `E0302` | the condition could not be understood |
 | `E0303` | the repeated body could not be understood |

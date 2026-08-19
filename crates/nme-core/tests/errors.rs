@@ -1382,3 +1382,35 @@ fn arithmetic_on_a_line_of_its_own_is_refused() {
     // Doing something with the answer is not this error.
     assert!(transpile("set score to 0\nshow score + 1\n").is_ok());
 }
+
+#[test]
+fn a_name_the_language_needs_is_refused() {
+    // `the total of marks` is `sum(marks)`, so a value called `sum` takes the
+    // reading away from every later line — and the error used to land on one
+    // of those lines, saying `'int' object is not callable`.
+    let problems = transpile("set marks to list of 1, 2\nset sum to 3\n")
+        .expect_err("expected this to be refused");
+    assert_eq!(problems[0].code.code(), "E0237");
+    assert!(problems[0].message.contains("sum"), "{problems:?}");
+    // Python written as Python is left alone: whoever writes `sum = 0` in
+    // Python has said what they mean.
+    assert_eq!(transpile("sum = 0\nprint(sum)\n").unwrap(), "sum = 0\nprint(sum)\n");
+    assert!(transpile("set total to 5\n").is_ok());
+}
+
+#[test]
+fn a_name_written_as_two_words_is_named() {
+    // `set full name to Mina` made a name called `full` holding the words
+    // `name to Mina`, and printing it showed all of them.
+    let problems = transpile("set full name to Mina\n").expect_err("expected this to be refused");
+    assert_eq!(problems[0].code.code(), "E0230");
+    assert!(
+        problems[0].hint.as_ref().is_some_and(|hint| hint.contains("full_name")),
+        "{problems:?}"
+    );
+    // No connector anywhere is the documented short form and still saves.
+    assert_eq!(
+        transpile("set greeting Hello world\n").unwrap(),
+        "greeting = \"Hello world\"\n"
+    );
+}

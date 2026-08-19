@@ -256,6 +256,8 @@ pub enum DiagnosticCode {
     JobArgumentCount,
     /// A job reads a name made outside it and then changes it.
     JobReadsBeforeChanging,
+    /// A name NME's own readings need Python to still have.
+    NameTakenByPython,
 }
 
 impl DiagnosticCode {
@@ -305,6 +307,7 @@ impl DiagnosticCode {
             Self::RecordNameUnknown => "E0234",
             Self::JobArgumentCount => "E0235",
             Self::JobReadsBeforeChanging => "E0236",
+            Self::NameTakenByPython => "E0237",
             Self::ConditionMissing => "E0301",
             Self::ConditionInvalid => "E0302",
             Self::RepeatBodyUnparseable => "E0303",
@@ -370,7 +373,7 @@ impl DiagnosticCode {
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 105] = [
+    pub const ALL: [DiagnosticCode; 106] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -476,6 +479,7 @@ impl DiagnosticCode {
         Self::RecordNameUnknown,
         Self::JobArgumentCount,
         Self::JobReadsBeforeChanging,
+        Self::NameTakenByPython,
     ];
 
     pub fn from_code(code: &str) -> Option<Self> {
@@ -809,6 +813,13 @@ impl DiagnosticCode {
                 "이 일이 바깥의 이름을 읽고 나서 바꿉니다",
                 "Python decides for a whole job at once whether a name belongs to it, so a job that changes a name made outside cannot also read that name earlier in the same job. NME writes the `global` line for you where it can, but not here: by the time the change is reached, the earlier line has already read a name Python thinks the job has not made yet. Change the name first and read it afterwards, or hand the job the value it needs and change the name outside the job.",
                 "Python은 이름이 그 일의 것인지 아닌지를 일 전체에 대해 한 번에 정합니다. 그래서 바깥에서 만든 이름을 바꾸는 일은 같은 일 안에서 그 이름을 먼저 읽을 수 없습니다. NME가 대신 `global`을 적어 주지만 여기서는 그럴 수 없습니다. 바꾸는 줄에 닿기 전에 이미 읽은 줄이 있고, Python이 보기에 그 이름은 아직 만들어지지 않았기 때문입니다. 이름을 먼저 바꾸고 나서 읽거나, 일에는 필요한 값을 넘겨 주고 이름은 일 바깥에서 바꾸세요.",
+            ),
+            Self::NameTakenByPython => (
+                "E0237",
+                "this name is one the language itself needs",
+                "이 이름은 언어 자신이 쓰는 이름입니다",
+                "Readings such as `the total of marks` and `how many friends` become Python's own `sum(...)` and `len(...)`. Naming a value `sum` or `len` replaces those, and every later line that uses one stops working — with the error landing on the innocent later line rather than here. Pick another name: `total`, `count`, `answer`, `marks` all work.",
+                "`점수들의 합`이나 `친구들 몇 개`는 Python의 `sum(...)`·`len(...)`이 됩니다. 값에 `sum`이나 `len`이라는 이름을 붙이면 그것을 덮어써서, 그 뒤로 그 표현을 쓰는 줄이 전부 멈춥니다. 게다가 오류는 여기가 아니라 멀쩡한 뒷줄에서 납니다. 다른 이름을 쓰세요. `total`·`count`·`answer`·`marks` 전부 괜찮습니다.",
             ),
             Self::ConditionMissing => (
                 "E0301",
