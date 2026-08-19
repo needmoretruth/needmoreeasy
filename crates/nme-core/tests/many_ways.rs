@@ -487,10 +487,7 @@ fn a_while_loop_compares_the_way_the_words_say() {
 #[test]
 fn bare_korean_adnominals_are_still_ordinary_words() {
     assert_eq!(ok("더 큰 수예요 말해줘\n"), "print(\"더 큰 수예요\")\n");
-    assert_eq!(
-        ok("상자로 말해줘 작은 차림표\n").contains("작은 차림표"),
-        true
-    );
+    assert!(ok("상자로 말해줘 작은 차림표\n").contains("작은 차림표"));
     assert_eq!(ok("다른 길로 갑시다\n"), "print(\"다른 길로 갑시다\")\n");
     assert_eq!(ok("같은 반 친구입니다\n"), "print(\"같은 반 친구입니다\")\n");
 }
@@ -530,4 +527,42 @@ fn a_question_that_asks_a_number_gives_a_number_either_way() {
     }
     // And a question that asks for words still gives words.
     assert!(!ok("ask name What is your name?\n").contains("int(input("));
+}
+
+/// `값들 무작위로 섞어` put a correctly spelled `섞어` one edit from `넣어`, so
+/// the shuffle became `값들.append("무작위로")`: the adverb went into the data
+/// and the list was never shuffled.
+#[test]
+fn an_adverb_between_the_name_and_the_verb_still_arranges_the_list() {
+    let head = "값들은 목록 3, 1, 2\n";
+    for (line, python) in [
+        ("값들 무작위로 섞어\n", "__import__(\"random\").shuffle(값들)\n"),
+        ("값들 잘 섞어\n", "__import__(\"random\").shuffle(값들)\n"),
+        ("값들 한번 섞어\n", "__import__(\"random\").shuffle(값들)\n"),
+        ("값들 다시 정렬해\n", "값들.sort()\n"),
+        ("값들 그냥 거꾸로해\n", "값들.reverse()\n"),
+    ] {
+        let built = ok(&format!("{head}{line}"));
+        assert_eq!(built.lines().nth(1).map(|l| format!("{l}\n")), Some(python.to_string()), "for {line:?}");
+    }
+    // English says it with politeness on the end instead.
+    assert_eq!(
+        ok("set xs to list of 3, 1, 2\nsort xs please\n"),
+        "xs = [3, 1, 2]\nxs.sort()\n"
+    );
+    assert_eq!(
+        ok("set xs to list of 3, 1, 2\nplease shuffle xs\n"),
+        "xs = [3, 1, 2]\n__import__(\"random\").shuffle(xs)\n"
+    );
+}
+
+/// And a sentence that merely contains one of those verbs is still a sentence:
+/// the first word has to be a list the program already made.
+#[test]
+fn an_ordinary_sentence_with_an_arranging_verb_still_prints() {
+    assert_eq!(ok("모두 잘 섞어\n"), "print(\"모두 잘 섞어\")\n");
+    assert_eq!(
+        ok("카드를 잘 섞어 나눠 주세요\n"),
+        "print(\"카드를 잘 섞어 나눠 주세요\")\n"
+    );
 }

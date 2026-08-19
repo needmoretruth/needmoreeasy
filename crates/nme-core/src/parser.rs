@@ -6996,8 +6996,12 @@ fn match_arrange(
     known_names: &HashSet<String>,
     mode: MatchMode,
 ) -> Result<Option<NmeStmt>, Diagnostic> {
-    let body = trim_command_endings(tokens);
-    if body.len() != 2 && body.len() != 3 {
+    // `sort xs please` — `please` is politeness, and the syntax list already
+    // calls it filler, but the arrange line was the one place that read it as
+    // part of the sentence and printed the whole thing back.
+    let body = trim_trailing_fillers(trim_command_endings(tokens));
+    let body = &body[leading_sentence_fillers(body)..];
+    if body.len() < 2 || body.len() > 5 {
         return Ok(None);
     }
     for (words, order) in [
@@ -7021,14 +7025,26 @@ fn match_arrange(
         (REVERSE_WORDS_KO, ListOrder::Reversed),
         (SHUFFLE_WORDS_KO, ListOrder::Shuffled),
     ] {
-        let Some(consumed) = action_phrase_at(body, 1, words, mode) else {
+        // Korean puts an adverb between the name and the verb — `값들 무작위로
+        // 섞어`, `친구들 다시 정렬해` — and requiring the two to be adjacent
+        // left those lines to the one-letter repair, which read `섞어` as
+        // `넣어`. Both ends stay strict: the first word must already be a list,
+        // and the verb must close the line.
+        let Some(at) = (1..body.len()).find(|at| {
+            action_phrase_at(body, *at, words, mode)
+                .is_some_and(|consumed| at + consumed == body.len())
+        }) else {
             continue;
         };
-        if 1 + consumed != body.len() {
-            continue;
-        }
         let Some(target) = list_name_at(&body[0], known_names) else {
-            return Err(not_a_list_diagnostic(&body[0], span_of(tokens)));
+            // Said plainly and next to each other, `이름 정렬해` is worth a
+            // diagnostic naming the name. With words in between there is too
+            // much room for an ordinary sentence — `모두 잘 섞어` — so the line
+            // is left to print itself.
+            if at == 1 {
+                return Err(not_a_list_diagnostic(&body[0], span_of(tokens)));
+            }
+            continue;
         };
         return Ok(Some(NmeStmt::Arrange { target, order }));
     }
@@ -14647,6 +14663,15 @@ fn action_phrase_at(
         // `건너뛰기`, and both are `continue`), so only an exact word written
         // twice in one table is treated as a table mistake worth skipping.
         if let Some((best, matches)) = best_action_rank(&actual, expected, mode) {
+            // A written-out list-arranging word is never a typo of a word that
+            // changes the list. `값들 무작위로 섞어` put `섞어` one edit from
+            // `넣어`, and a correctly spelled shuffle became
+            // `값들.append("무작위로")` — the adverb went into the data and the
+            // list was never shuffled. Every other repair is left alone,
+            // because `말해라` really is the writer reaching for `말해줘`.
+            if best > 0 && arranging_word(&actual) && !arranging_list(expected) {
+                continue;
+            }
             if best > 0 || matches == 1 {
                 return Some(consumed);
             }
@@ -14688,6 +14713,28 @@ fn head_is_exact_action(tokens: &[Token], start: usize, len: usize, expected: &[
 /// The best (lowest) repair rank among `expected`, and how many candidates
 /// share it. One candidate at the best rank is a confident match; several are
 /// a tie, which no amount of guessing can resolve.
+/// The three verbs that put a list back in order, in both languages.
+const ARRANGING_WORD_LISTS: &[&[&str]] = &[
+    SORT_WORDS_EN,
+    SORT_WORDS_KO,
+    REVERSE_WORDS_EN,
+    REVERSE_WORDS_KO,
+    SHUFFLE_WORDS_EN,
+    SHUFFLE_WORDS_KO,
+];
+
+fn arranging_word(word: &str) -> bool {
+    ARRANGING_WORD_LISTS
+        .iter()
+        .any(|list| list.iter().any(|known| word.eq_ignore_ascii_case(known)))
+}
+
+fn arranging_list(expected: &[&str]) -> bool {
+    ARRANGING_WORD_LISTS
+        .iter()
+        .any(|list| list.len() == expected.len() && list.iter().zip(expected).all(|(a, b)| a == b))
+}
+
 fn best_action_rank(actual: &str, expected: &[&str], mode: MatchMode) -> Option<(u8, usize)> {
     let mut best: Option<u8> = None;
     let mut matches = 0usize;
@@ -15942,48 +15989,54 @@ fn statement_does_nothing(tokens: &[Token]) -> Option<Diagnostic> {
     None
 }
 
-fn is_nme_vocabulary_word(token: &Token) -> bool {
-    ALL_ACTION_WORDS
-        .iter()
-        .chain(&[
-            BREAK_WORDS_EN,
-            BREAK_WORDS_KO,
-            BREAK_ALIAS_WORDS_EN,
-            CONTINUE_WORDS_EN,
-            CONTINUE_WORDS_KO,
-            CONTINUE_ALIAS_WORDS_EN,
-            WHEN_WORDS_EN,
-            WHEN_WORDS_KO,
-            WHILE_WORDS_EN,
-            WHILE_WORDS_KO,
-            ELSE_WORDS_EN,
-            ELSE_WORDS_KO,
-            TIMES_WORDS_EN,
-            TIMES_WORDS_KO,
-            LIST_WORDS_EN,
-            LIST_WORDS_KO,
-            USE_WORDS_EN,
-            USE_WORDS_KO,
-            NUMBER_WORDS_EN,
-            NUMBER_WORDS_KO,
-            EACH_WORDS_EN,
-            SENTENCE_FILLERS,
-            // The spellings this round added. Without them the compound-verb
-            // rule cannot see the word in front of a helper verb, and
-            // `길을 물어 보았습니다` became a question nobody asked.
-            SAY_TRAILING_WORDS_KO,
-            SAY_SHORT_WORDS_KO,
-            SCREEN_VERB_WORDS_KO,
-            ASK_SHORT_WORDS_KO,
-            ASK_QUESTION_WORDS_EN,
-            ASK_QUESTION_WORDS_KO,
-            SET_MAKE_WORDS_EN,
-            SET_MAKE_WORDS_KO,
-            REPEAT_COUNT_WORDS_EN,
-            REPEAT_COUNT_WORDS_KO,
-        ])
-        .any(|list| token_matches_exact(token, list))
+/// Every word list NME reads as vocabulary rather than as somebody's writing,
+/// beyond the action words themselves.
+const EXTRA_VOCABULARY_LISTS: &[&[&str]] = &[
+    BREAK_WORDS_EN,
+    BREAK_WORDS_KO,
+    BREAK_ALIAS_WORDS_EN,
+    CONTINUE_WORDS_EN,
+    CONTINUE_WORDS_KO,
+    CONTINUE_ALIAS_WORDS_EN,
+    WHEN_WORDS_EN,
+    WHEN_WORDS_KO,
+    WHILE_WORDS_EN,
+    WHILE_WORDS_KO,
+    ELSE_WORDS_EN,
+    ELSE_WORDS_KO,
+    TIMES_WORDS_EN,
+    TIMES_WORDS_KO,
+    LIST_WORDS_EN,
+    LIST_WORDS_KO,
+    USE_WORDS_EN,
+    USE_WORDS_KO,
+    NUMBER_WORDS_EN,
+    NUMBER_WORDS_KO,
+    EACH_WORDS_EN,
+    SENTENCE_FILLERS,
+    // The spellings this round added. Without them the compound-verb
+    // rule cannot see the word in front of a helper verb, and
+    // `길을 물어 보았습니다` became a question nobody asked.
+    SAY_TRAILING_WORDS_KO,
+    SAY_SHORT_WORDS_KO,
+    SCREEN_VERB_WORDS_KO,
+    ASK_SHORT_WORDS_KO,
+    ASK_QUESTION_WORDS_EN,
+    ASK_QUESTION_WORDS_KO,
+    SET_MAKE_WORDS_EN,
+    SET_MAKE_WORDS_KO,
+    REPEAT_COUNT_WORDS_EN,
+    REPEAT_COUNT_WORDS_KO,
+];
+
+fn nme_vocabulary_lists() -> impl Iterator<Item = &'static &'static [&'static str]> {
+    ALL_ACTION_WORDS.iter().chain(EXTRA_VOCABULARY_LISTS.iter())
 }
+
+fn is_nme_vocabulary_word(token: &Token) -> bool {
+    nme_vocabulary_lists().any(|list| token_matches_exact(token, list))
+}
+
 
 /// `say: hello` — Python reads this as a note about a name called `say`, and
 /// prints nothing. Only an action word as the target is claimed, so an
