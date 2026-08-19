@@ -13,7 +13,7 @@
 
 NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로그래밍
 언어**입니다. 한국어로 써도 되고 영어로 써도 되며, 한 줄 안에서 둘을 섞어도
-됩니다. 이 문서가 설명하는 버전은 `0.2.0`입니다.
+됩니다. 이 문서가 설명하는 버전은 `0.3.0`입니다.
 
 **꼭 알아야 하는 규칙 세 가지.**
 
@@ -341,14 +341,16 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 | 화면 동사 / Screen verb | `put` · `write` · `print` · `show` · `display` · `say` · `tell` · `output` · `draw` | `띄워` · `띄워줘` · `보여줘` · `출력해` · `말해` · `말해줘` · `표시해` |
 | 물음표가 있을 때만 묻기 / Ask, only with a question mark | `read` · `get` · `request` · `enter` · `input` | `받아` · `받아줘` · `여쭤봐` · `여쭤봐줘` · `여쭈어봐` · `요청해` · `요청해줘` · `요청해주세요` · `달라고해` · `달라고해줘` |
 | 짧은 물어보기 / Short asking word | — | `물어` |
-| ~로 해 / Save with the everyday verb | `becomes` · `become` · `call` | `해` · `하자` · `합시다` · `하죠` · `부르자` |
+| ~로 해 / Save with the everyday verb | `becomes` · `become` · `call` | `해` · `하자` · `합시다` · `하죠` · `부르자` · `두어` · `둬` · `두자` |
 | ~로 / ~라고 표시 / What the name becomes | — | `으로` · `로` · `이라고` · `라고` |
 | 횟수가 있을 때만 반복 / Repeat, only with a count | `loop` · `iterate` · `cycle` · `rep` · `goround` · `runthrough` | `돌려` · `돌려줘` · `돌려주세요` · `되풀이` · `되풀이해` · `되풀이해줘` · `되풀이해서` · `되풀이하기` |
+| 반복할 것을 가리키는 말 / What is being repeated | `it` · `this` · `that` | `그거` · `그걸` · `그것` · `그것을` · `이거` · `이걸` · `이것` · `이것을` |
+| 조건을 닫는 말 / Word that closes a condition | — | `때` · `때에` · `때는` · `경우` · `경우에` · `경우에는` |
 | 건너뛰기 / Skip | `skip` · `skipthis` · `skipit` · `nextone` | `건너뛰어` · `건너뛰어줘` · `건너뛰기` · `건너뛰자` · `넘어가` · `넘어가줘` · `계속해` · `넘겨` · `다음` |
 | 블록 닫기 / End | `end` · `finish` · `done` | `끝` · `종료` · `마침` |
 | 모듈 쓰기 / Use | `use` · `load` · `get` · `import` | `사용` · `사용해` · `사용해줘` · `사용해주세요` · `불러와` · `불러와줘` · `가져와` · `가져와줘` · `받아` · `받아줘` |
 | 다른 파일에서 / Import from a file | `use` · `take` · `borrow` | `가져와` · `가져와줘` · `가져오기` · `불러와` · `불러오기` |
-| 목록에 넣기 / Append | `append` · `push` · `insert` · `put` · `place` | `넣어` · `넣어줘` · `추가해` · `추가해줘` · `붙여` · `붙여줘` |
+| 목록에 넣기 / Append | `append` · `push` · `insert` · `put` · `place` | `넣어` · `넣어줘` · `넣기` · `추가해` · `추가해줘` · `추가하기` · `붙여` · `붙여줘` |
 | 목록 표시 / List | `list` | `목록` · `리스트` |
 | 빈 목록 / Empty list | `empty` · `blank` | `빈` · `비어있는` · `새` |
 | 개수 / How many | `count` · `number` · `many` | `개수` · `갯수` |

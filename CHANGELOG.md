@@ -5,6 +5,8 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+
+## 0.3.0
 - **Five more ways of writing the same thing now do it.** Measured against the
   103-variant corpus, 96 of them worked; 102 do now. `5를 이름에 저장해` says
   the value first, `이름을 5로 두어` uses the everyday verb for putting
