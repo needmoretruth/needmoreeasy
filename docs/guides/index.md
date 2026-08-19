@@ -10,14 +10,19 @@ what it taught, and every piece of code in them passes `nme check`.
 
 ## Difficulty
 
-- ★☆☆☆☆ (1/5) — first day, sentence syntax only
-- ★★☆☆☆ (2/5) — getting comfortable with sentence syntax
-- ★★★☆☆ (3/5) — beginner syntax and files mixed in
-- ★★★★☆ (4/5) — more than half Python
-- ★★★★★ (5/5) — essentially Python
+- ★☆☆☆☆ (1/5) — first day. A few sentences and it is done.
+- ★★☆☆☆ (2/5) — conditions and loops appear. Still sentences only.
+- ★★★☆☆ (3/5) — a whole program of your own.
+- ★★★★☆ (4/5) — beginner syntax or Python is mixed in.
+- ★★★★★ (5/5) — essentially Python.
 
-Difficulty rises inside a part. It does not rise straight through from 01 to
-90, because every part starts again with the easiest guide of its subject.
+The star is **how hard it is**, not the order of the numbers. Every part starts
+again with the easiest guide of its subject, and inside a part a guide rewritten
+in sentences gets easier by that much.
+
+**How far the sentence-only guides go** can be measured at any time:
+
+    python3 scripts/report-guide-tier.py --guides
 
 ## Learn in order
 
@@ -46,7 +51,9 @@ guide.
 ### Part 2 — Small programs you can build
 
 For someone who has finished Part 1 and wants games, menus and small projects
-to keep. **From here on the programs mix in beginner syntax and Python.** The
+to keep. **Guides 17, 18, 19, 22 and 28 are written in sentences alone** — no
+quote, no bracket, no equals sign. The rest still mix in beginner syntax and
+Python. The
 guides written in sentences alone are Part 1 — its code contains no quote, no
 bracket and no equals sign, which `scripts/report-guide-tier.py` measures.
 
@@ -240,7 +247,7 @@ and validated by hand.
 
 | # | Difficulty | Topic | Title | Result |
 | --- | --- | --- | --- | --- |
-| 01 | ★☆☆☆☆ | first program and output | [Hello: say your first words](01-hello.md) | a program that prints a message with `nme run` |
+| 01 | ★☆☆☆☆ | your first program, and output | [Hello: say your first words](01-hello.md) | a program that puts what you wrote on the screen |
 | 02 | ★☆☆☆☆ | story blocks | [Story: writing many lines without repeating yourself](02-story.md) | a program that tells a story of several lines in one block |
 | 03 | ★☆☆☆☆ | stories and slow output | [Story: letters arriving one at a time](03-slow-story.md) | a program whose text appears one letter at a time, the way a novel unfolds |
 | 04 | ★☆☆☆☆ | input | [Ask: have a conversation](04-ask.md) | a program that asks a name and greets it in a sentence |
@@ -255,19 +262,19 @@ and validated by hand.
 | 13 | ★★☆☆☆ | chance | [Chance: how often out of a hundred](13-chance.md) | a program in which something happens only as often as you decided |
 | 14 | ★★☆☆☆ | arranging the screen | [Screen: clearing, ruling and boxing](14-screen.md) | a program that clears the screen, centres a title and draws a box |
 | 15 | ★★☆☆☆ | stopwatch and cooldowns | [Time: a stopwatch and cooldowns](15-timer.md) | a program that times itself and stops an action from repeating too soon |
-| 16 | ★★☆☆☆ | using the tools | [Check & Build: see the Python](16-check-build.md) | the habit of verifying programs and reading the generated Python |
-| 17 | ★★★☆☆ | game | [Word guess: a hidden-word game](17-word-guess.md) | a hangman-style game where you guess letters of a hidden word with limited tries |
-| 18 | ★★★★☆ | a small project | [Adventure — a small text game](18-adventure.md) | a room-by-room text adventure with choices |
-| 19 | ★★★★☆ | game & timing | [Game: a reaction time test](19-reaction.md) | a game that measures reaction time with time.time() and reports the best of several rounds |
+| 16 | ★★☆☆☆ | using the tools | [Check & Build: see the Python](16-check-build.md) | the habit of reading the Python your sentences become |
+| 17 | ★★★☆☆ | your first project | [Word guess: a hidden-word game](17-word-guess.md) | a game of guessing a hidden word one letter at a time |
+| 18 | ★★★★☆ | a large project | [Adventure — a small text game](18-adventure.md) | a room-by-room text adventure with choices |
+| 19 | ★★★☆☆ | a game, and timing | [Game: a reaction time test](19-reaction.md) | a program that measures how fast you react |
 | 20 | ★★★★☆ | output & loops | [ASCII art — drawing with characters](20-ascii-art.md) | building a right triangle, an upside-down triangle, and a diamond with nested loops and string multiplication |
 | 21 | ★★★★☆ | terminal output | [Progress — a bar in the terminal](21-progress.md) | a terminal progress bar that fills a row as a loop runs |
-| 22 | ★★★★☆ | terminal menus | [Terminal menu — a small TUI](22-terminal-menu.md) | a loop-driven terminal menu |
+| 22 | ★★★★☆ | a small project | [Terminal menu — a small TUI](22-terminal-menu.md) | a menu program that clears the screen and draws it again |
 | 23 | ★★★★☆ | project | [High score: a tiny project](23-high-score.md) | a dice game that remembers its best score |
 | 24 | ★★★★☆ | game & data | [Quiz — questions from a file](24-quiz.md) | a multiple-choice quiz that loads questions from a JSON file, scores answers, and reports the result |
 | 25 | ★★★★☆ | a project | [Calculator — a command-line project](25-calculator.md) | a repeat-until-quit calculator with functions and a module file |
 | 26 | ★★★★☆ | game | [Game: tic-tac-toe](26-tic-tac-toe.md) | a playable two-player tic-tac-toe with a win check |
 | 27 | ★★★★☆ | game & logic | [Game: Mastermind, guessing a secret code](27-mastermind.md) | a Mastermind-style game that hides a 4-color code and gives black/white feedback for each guess |
-| 28 | ★★★★☆ | game & strategy | [Game: a simple opponent](28-ai.md) | a take-away game where the computer follows a winning strategy |
+| 28 | ★★★★☆ | game and strategy | [Game: a simple opponent](28-ai.md) | a game against an opponent that follows a winning rule |
 | 29 | ★★★★☆ | game & random | [Playlist: a random music player](29-playlist.md) | a playlist loaded from JSON with shuffle, next, and a loop of songs |
 | 30 | ★★★★☆ | a project | [Shop — an inventory store](30-shop.md) | a JSON-persisted store with buy/sell/stock/list and a money balance |
 | 31 | ★★★★☆ | a project | [Project — a mini bank](31-bank.md) | a JSON-persisted bank account with deposit, withdraw, balance, history, and a storage module |
