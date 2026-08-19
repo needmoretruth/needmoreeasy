@@ -892,3 +892,30 @@ fn adding_a_number_to_a_list_puts_it_in() {
         "a = [1]\nb = [2]\na = a + b\n"
     );
 }
+
+/// `save` writes a file when the writer says `file`.
+///
+/// `save` is both NME's saving word and the everyday English for writing a
+/// file, and the two collided in silence: `save entry to "diary.txt"` put the
+/// text `diary.txt` into `entry` and the diary was never written. Saving a
+/// file name into a name is a real thing to do, so the bare form keeps its
+/// meaning; the word `file` settles it, exactly as `파일에` does in Korean.
+#[test]
+fn saying_file_makes_a_save_write_one() {
+    let write = "__import__(\"pathlib\").Path(\"diary.txt\").write_text(entry)";
+    for line in [
+        "save entry to the file \"diary.txt\"",
+        "save entry to file \"diary.txt\"",
+        "store entry into the file \"diary.txt\"",
+        "write entry to the file \"diary.txt\"",
+        "write entry to \"diary.txt\"",
+    ] {
+        let built = ok(&format!("set entry to hello\n{line}\n"));
+        assert_eq!(built, format!("entry = \"hello\"\n{write}\n"), "for {line}");
+    }
+    // Without the word, saving a file name into a name is what it says.
+    assert_eq!(
+        ok("set entry to hello\nsave entry to \"diary.txt\"\n"),
+        "entry = \"hello\"\nentry = \"diary.txt\"\n"
+    );
+}

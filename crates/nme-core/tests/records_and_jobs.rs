@@ -505,3 +505,37 @@ fn a_job_left_open_is_named_as_a_job() {
         problems[0].message
     );
 }
+
+/// A job may count something that was made outside it.
+///
+/// Python decides for a whole function at once whether a name is local, so
+/// `to tally: add 1 to total end` built a function that read `total` before
+/// it had one and died with `UnboundLocalError` — a word the reader has never
+/// met, on a line that looks right. The declaration rides on the same
+/// physical line, because one NME statement is one line of Python.
+#[test]
+fn a_job_can_change_a_name_made_outside_it() {
+    assert_eq!(
+        ok("set total to 0\nto tally:\n  add 1 to total\nend\ndo tally\n"),
+        "total = 0\ndef tally():\n  global total; total = total + 1\n# end\ntally()\n"
+    );
+    assert_eq!(
+        ok("총합은 0\n세기라는 일:\n  총합에 1 더해\n끝\n세기 해줘\n"),
+        "총합 = 0\ndef 세기():\n  global 총합; 총합 = 총합 + 1\n# end\n세기()\n"
+    );
+    // A name the job makes itself is the job's own, and says nothing.
+    assert_eq!(
+        ok("to greet:\n  set hello to hi\n  show hello\nend\n"),
+        "def greet():\n  hello = \"hi\"\n  print(hello)\n# end\n"
+    );
+}
+
+/// Reading first and changing afterwards cannot be written at all, and saying
+/// so beats a `SyntaxError` from CPython about a declaration nobody wrote.
+#[test]
+fn a_job_that_reads_before_it_changes_is_named() {
+    let problems = nme_core::transpile("set total to 0\nto tally:\n  show total\n  add 1 to total\nend\n")
+        .expect_err("expected this to be refused");
+    assert_eq!(problems[0].code.code(), "E0236");
+    assert!(problems[0].message.contains("total"), "{problems:?}");
+}

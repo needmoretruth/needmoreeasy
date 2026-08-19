@@ -704,4 +704,14 @@ pub struct NmeLine {
     pub stmt: NmeStmt,
     /// Indentation inserted by an explicit `end`/`끝` block.
     pub virtual_indent: usize,
+    /// Names this line changes that were made outside the job it is in.
+    ///
+    /// Python decides for a whole function at once whether a name is local,
+    /// so `to tally: add 1 to total end` compiled to a function that read
+    /// `total` before it had one and died with `UnboundLocalError` — a term
+    /// the reader has never met, on a line that looks right. The declaration
+    /// rides on the same physical line as the change, because one NME
+    /// statement is one line of Python and a line of its own would move every
+    /// traceback number after it.
+    pub globals: Vec<String>,
 }

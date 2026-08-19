@@ -1372,6 +1372,7 @@ pub fn parse_program(
                     span: line.span,
                     stmt,
                     virtual_indent,
+                    globals: Vec::new(),
                 });
                 saw_nme = true;
                 continue;
@@ -1808,6 +1809,29 @@ pub fn parse_program(
                     problems.push(timer_not_started_diagnostic(line.span));
                     continue;
                 }
+                // A job that changes a name made outside it needs Python
+                // told so, on this very line. See `NmeLine::globals`.
+                let globals = match rebound_name(&stmt)
+                    .and_then(|name| {
+                        bindings
+                            .changes_a_name_from_outside(name)
+                            .map(|body_start| (name.to_string(), body_start))
+                    }) {
+                    Some((name, body_start)) => {
+                        if source[body_start..line.span.start].contains(&name) {
+                            // Python decides for the whole job at once, so a
+                            // line that read the name before this one already
+                            // read a name that did not exist yet, and a
+                            // declaration here would be a `SyntaxError`
+                            // instead. Say what happened while there is still
+                            // a line to point at.
+                            problems.push(job_changes_an_outer_name_diagnostic(&name, line.span));
+                            continue;
+                        }
+                        vec![name]
+                    }
+                    None => Vec::new(),
+                };
                 bindings.remember_nme(&stmt);
                 // Only a one-line condition leaves an `else` open, and only
                 // for the line straight after it.
@@ -1828,6 +1852,7 @@ pub fn parse_program(
                     span: line.span,
                     stmt,
                     virtual_indent,
+                    globals,
                 });
                 // A story always opens its block: prose has no other way
                 // of saying where it ends, and the lines below it must not
@@ -1859,7 +1884,7 @@ pub fn parse_program(
                     // body may use it straight away.
                     let given: HashSet<String> = parameters.iter().cloned().collect();
                     if flat_body_follows || has_future_end(lines, index) {
-                        bindings.push_function_scope(parse_line.indent + 1, given);
+                        bindings.push_function_scope(parse_line.indent + 1, given, line.span.end);
                         block_header_lines.insert(index);
                         blocks.push(ExplicitBlock::Job {
                             close_on_dedent: (!flat_body_follows).then_some(line.indent),
@@ -1868,7 +1893,11 @@ pub fn parse_program(
                         // Indented body and no `end` anywhere below: this is an
                         // ordinary Python suite that its own dedent closes, the
                         // same route a `3번 반복해` with an indented body takes.
-                        bindings.push_pending_function_scope(parse_line.indent, given);
+                        bindings.push_pending_function_scope(
+                            parse_line.indent,
+                            given,
+                            line.span.end,
+                        );
                     }
                 }
                 if matches!(
@@ -3945,7 +3974,7 @@ fn classify_written_line(
     if output_action_at(tokens, 0, MatchMode::Exact).is_some() {
         return match_say(source, tokens, known_names, MatchMode::Exact);
     }
-    if set_action_at(tokens, 0, MatchMode::Exact).is_some() {
+    if set_action_at(tokens, 0, MatchMode::Exact).is_some() && !english_save_names_a_file(tokens) {
         // Likewise `set the table for four people`: a `set` at the start of
         // a line of ordinary words is part of the sentence.
         exact_match!(match_set(source, tokens, known_names, MatchMode::Exact));
@@ -3976,6 +4005,7 @@ fn classify_written_line(
     }
     if action_phrase_at(tokens, 0, FILE_READ_WORDS_EN, MatchMode::Exact).is_some()
         || action_phrase_at(tokens, 0, FILE_WRITE_WORDS_EN, MatchMode::Exact).is_some()
+        || english_save_names_a_file(tokens)
         || tokens.iter().any(|token| {
             action_phrase_at(
                 std::slice::from_ref(token),
@@ -11694,6 +11724,45 @@ fn find_count_marker(tokens: &[Token], mode: MatchMode) -> Option<(usize, Spelli
 /// Weak matches (`read the book`, `write hello`) fall through to plain
 /// sentence output instead of being claimed as file operations.
 #[allow(clippy::too_many_lines)]
+/// `to the file "diary.txt"` · `into file "diary.txt"` — the path with the
+/// word that says it is one taken off the front.
+fn strip_the_word_file(tokens: &[Token]) -> &[Token] {
+    let mut start = 0;
+    if is_english_article(tokens.get(start)) {
+        start += 1;
+    }
+    if tokens
+        .get(start)
+        .is_some_and(|token| token_matches_exact(token, &["file"]))
+    {
+        return &tokens[start + 1..];
+    }
+    tokens
+}
+
+/// `save entry to the file "diary.txt"`.
+///
+/// `save` is both NME's saving word and the everyday English for writing a
+/// file, and the two collided in silence: `save entry to "diary.txt"` put the
+/// text `diary.txt` into `entry` and the diary was never written. Saving a
+/// file name into a name is a real thing to do, so the bare form keeps its
+/// meaning; what settles it is the writer saying `file`, exactly as Korean
+/// settles it with `파일에`.
+fn english_save_names_a_file(tokens: &[Token]) -> bool {
+    let Some((_, consumed)) = set_action_at(tokens, 0, MatchMode::Exact) else {
+        return false;
+    };
+    let Some(to_at) = tokens[consumed..]
+        .iter()
+        .position(|token| token_matches_exact(token, &["to", "into"]))
+        .map(|at| at + consumed)
+    else {
+        return false;
+    };
+    let after = &tokens[to_at + 1..];
+    strip_the_word_file(after).len() < after.len() && !strip_the_word_file(after).is_empty()
+}
+
 fn match_file_io(
     source: &str,
     tokens: &[Token],
@@ -11798,8 +11867,11 @@ fn match_file_io(
         return Err(file_read_target_diagnostic(span_of(tokens)));
     }
 
-    // English action-first write: `write "hello" to "out.txt"`.
-    if let Some(consumed) = action_phrase_at(tokens, 0, FILE_WRITE_WORDS_EN, mode) {
+    // English action-first write: `write "hello" to "out.txt"`, and
+    // `save entry to the file "diary.txt"` — see `english_save_names_a_file`.
+    let write_word = action_phrase_at(tokens, 0, FILE_WRITE_WORDS_EN, mode)
+        .or_else(|| english_save_names_a_file(tokens).then_some(1));
+    if let Some(consumed) = write_word {
         let mut end = tokens.len();
         if tokens
             .get(end.saturating_sub(1))
@@ -11816,7 +11888,7 @@ fn match_file_io(
         };
         let value = parse_value(source, &tokens[consumed..to_at], known_names, true)
             .map_err(|()| file_write_diagnostic(span_of(tokens)))?;
-        let Some(path) = path_of(&tokens[to_at + 1..end]) else {
+        let Some(path) = path_of(strip_the_word_file(&tokens[to_at + 1..end])) else {
             return Err(file_path_diagnostic(span_of(tokens)));
         };
         return Ok(Some(NmeStmt::FileWrite { path, value }));
@@ -14591,6 +14663,11 @@ struct BindingScope {
     body_indent: usize,
     names: HashSet<String>,
     kind: BindingScopeKind,
+    /// Where an NME job's body starts in the source, so a line inside it can
+    /// ask what the job said before it. See [`NmeLine::globals`]. `None` for
+    /// every other scope, including a function written as Python: somebody
+    /// writing `def` writes their own `global`.
+    body_start: Option<usize>,
 }
 
 struct AsyncFunctionContext {
@@ -14621,6 +14698,7 @@ struct PendingScope {
     header_indent: usize,
     names: HashSet<String>,
     kind: BindingScopeKind,
+    body_start: Option<usize>,
 }
 
 struct BindingEnv {
@@ -14635,6 +14713,7 @@ impl BindingEnv {
                 body_indent: 0,
                 names: HashSet::new(),
                 kind: BindingScopeKind::Root,
+                body_start: None,
             }],
             pending: None,
         }
@@ -14647,6 +14726,7 @@ impl BindingEnv {
                     body_indent: indent,
                     names: pending.names,
                     kind: pending.kind,
+                    body_start: pending.body_start,
                 });
             }
         }
@@ -14668,6 +14748,7 @@ impl BindingEnv {
             body_indent,
             names: HashSet::new(),
             kind: BindingScopeKind::Other,
+            body_start: None,
         });
     }
 
@@ -14675,11 +14756,17 @@ impl BindingEnv {
     /// It is a real Python function scope, so names set inside it stay inside
     /// it, and an ordinary Python `return` written in there is accepted
     /// rather than refused.
-    fn push_function_scope(&mut self, body_indent: usize, names: HashSet<String>) {
+    fn push_function_scope(
+        &mut self,
+        body_indent: usize,
+        names: HashSet<String>,
+        body_start: usize,
+    ) {
         self.scopes.push(BindingScope {
             body_indent,
             names,
             kind: BindingScopeKind::Function,
+            body_start: Some(body_start),
         });
     }
 
@@ -14687,12 +14774,47 @@ impl BindingEnv {
     /// under its header. The scope opens when the first indented line arrives
     /// and closes when the indentation does, which is the same path an
     /// ordinary `def` header already takes.
-    fn push_pending_function_scope(&mut self, header_indent: usize, names: HashSet<String>) {
+    fn push_pending_function_scope(
+        &mut self,
+        header_indent: usize,
+        names: HashSet<String>,
+        body_start: usize,
+    ) {
         self.pending = Some(PendingScope {
             header_indent,
             names,
             kind: BindingScopeKind::Function,
+            body_start: Some(body_start),
         });
+    }
+
+    /// The name this line changes was made outside the job the line is in,
+    /// together with where that job's body starts.
+    ///
+    /// Only an NME job answers: somebody writing Python's own `def` writes
+    /// their own `global`. The name must not already belong to the job — a
+    /// parameter, or something the job made itself, is the job's own.
+    fn changes_a_name_from_outside(&self, name: &str) -> Option<usize> {
+        let mut inside_the_job = true;
+        let mut body_start = None;
+        for scope in self.scopes.iter().rev() {
+            if inside_the_job {
+                if scope.names.contains(name) {
+                    return None;
+                }
+                match scope.kind {
+                    BindingScopeKind::Function => {
+                        body_start = Some(scope.body_start?);
+                        inside_the_job = false;
+                    }
+                    BindingScopeKind::AsyncFunction | BindingScopeKind::Class => return None,
+                    BindingScopeKind::Root | BindingScopeKind::Other => {}
+                }
+            } else if scope.names.contains(name) {
+                return body_start;
+            }
+        }
+        None
     }
 
     fn inside_function(&self) -> bool {
@@ -14807,6 +14929,7 @@ impl BindingEnv {
                 self.pending = Some(PendingScope {
                     header_indent: indent,
                     names: parameters,
+                    body_start: None,
                     kind: if is_python_async_function_header(tokens) {
                         BindingScopeKind::AsyncFunction
                     } else if is_python_function_header(tokens) {
@@ -17066,6 +17189,43 @@ fn lone_nme_action_word(tokens: &[Token], known_names: &HashSet<String>) -> bool
         return false;
     };
     name_word(only).is_some_and(|word| !known_names.contains(word)) && is_nme_vocabulary_word(only)
+}
+
+/// The name a statement gives a new value to, if it gives one.
+///
+/// Only the statements that write `name = …` count. `friends.append("Mina")`
+/// changes what a list holds without rebinding the name, and Python is happy
+/// with that inside a job.
+fn rebound_name(stmt: &NmeStmt) -> Option<&str> {
+    match stmt {
+        NmeStmt::Set { target, .. }
+        | NmeStmt::Update { target, .. }
+        | NmeStmt::Ask { target, .. }
+        | NmeStmt::FileRead { target, .. } => Some(target),
+        _ => None,
+    }
+}
+
+fn job_changes_an_outer_name_diagnostic(name: &str, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::JobReadsBeforeChanging,
+        format!("this job reads `{name}` before it changes it, and Python cannot do both"),
+        format!(
+            "이 일은 `{name}`을(를) 바꾸기 전에 먼저 읽는데, Python에서는 둘을 함께 할 수 \
+             없습니다"
+        ),
+        span,
+    )
+    .with_bilingual_hint(
+        format!(
+            "change `{name}` first and read it afterwards, or give the job the value to work \
+             with and change `{name}` outside the job"
+        ),
+        format!(
+            "`{name}`을(를) 먼저 바꾸고 나서 읽거나, 일에는 값을 넘겨 주고 `{name}`은 일 \
+             바깥에서 바꾸세요"
+        ),
+    )
 }
 
 fn statement_does_nothing(tokens: &[Token]) -> Option<Diagnostic> {

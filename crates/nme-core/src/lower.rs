@@ -194,12 +194,23 @@ pub fn lower_lines(lines: &[NmeLine], source: &str) -> Vec<Edit> {
         .map(|line| Edit {
             span: line.span,
             replacement: format!(
-                "{}{}",
+                "{}{}{}",
                 indent_prefix(line.virtual_indent),
+                global_prefix(&line.globals),
                 lower_stmt(&line.stmt, source)
             ),
         })
         .collect()
+}
+
+/// `global total; ` — see [`NmeLine::globals`]. Two statements on one line is
+/// ordinary Python and keeps the line count, which is what lets a traceback
+/// still name the line the reader wrote.
+fn global_prefix(globals: &[String]) -> String {
+    if globals.is_empty() {
+        return String::new();
+    }
+    format!("global {}; ", globals.join(", "))
 }
 
 /// Lowers one NME statement to Python text (without its original indent —

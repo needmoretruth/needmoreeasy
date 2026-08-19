@@ -254,6 +254,8 @@ pub enum DiagnosticCode {
     RecordNameUnknown,
     /// A job was run with a different number of things than it takes.
     JobArgumentCount,
+    /// A job reads a name made outside it and then changes it.
+    JobReadsBeforeChanging,
 }
 
 impl DiagnosticCode {
@@ -302,6 +304,7 @@ impl DiagnosticCode {
             Self::JoinSeparatorMissing => "E0233",
             Self::RecordNameUnknown => "E0234",
             Self::JobArgumentCount => "E0235",
+            Self::JobReadsBeforeChanging => "E0236",
             Self::ConditionMissing => "E0301",
             Self::ConditionInvalid => "E0302",
             Self::RepeatBodyUnparseable => "E0303",
@@ -367,7 +370,7 @@ impl DiagnosticCode {
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 104] = [
+    pub const ALL: [DiagnosticCode; 105] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -472,6 +475,7 @@ impl DiagnosticCode {
         Self::JoinSeparatorMissing,
         Self::RecordNameUnknown,
         Self::JobArgumentCount,
+        Self::JobReadsBeforeChanging,
     ];
 
     pub fn from_code(code: &str) -> Option<Self> {
@@ -798,6 +802,13 @@ impl DiagnosticCode {
                 "이 일이 받는 것의 개수가 맞지 않습니다",
                 "A job that takes nothing is run as `do greet` / `인사하기 해줘`, and a job that takes one thing as `do greet with Mina` / `민수에게 인사하기 해줘`. Running one the other way would be a Python `TypeError` at run time, on a line that looks right, so it is named here instead. Check the line that opens the job: `to greet:` takes nothing, `to greet someone:` takes one thing.",
                 "받는 것이 없는 일은 `인사하기 해줘`(`do greet`)로, 하나 받는 일은 `민수에게 인사하기 해줘`(`do greet with Mina`)로 실행합니다. 서로 바꿔 쓰면 실행할 때 Python `TypeError`가 나는데, 그 줄은 멀쩡해 보입니다. 그래서 여기서 미리 알려 드립니다. 일을 여는 줄을 확인해 주세요. `인사하기라는 일:`은 받는 것이 없고, `이름에게 인사하기라는 일:`은 하나 받습니다.",
+            ),
+            Self::JobReadsBeforeChanging => (
+                "E0236",
+                "this job reads a name from outside and then changes it",
+                "이 일이 바깥의 이름을 읽고 나서 바꿉니다",
+                "Python decides for a whole job at once whether a name belongs to it, so a job that changes a name made outside cannot also read that name earlier in the same job. NME writes the `global` line for you where it can, but not here: by the time the change is reached, the earlier line has already read a name Python thinks the job has not made yet. Change the name first and read it afterwards, or hand the job the value it needs and change the name outside the job.",
+                "Python은 이름이 그 일의 것인지 아닌지를 일 전체에 대해 한 번에 정합니다. 그래서 바깥에서 만든 이름을 바꾸는 일은 같은 일 안에서 그 이름을 먼저 읽을 수 없습니다. NME가 대신 `global`을 적어 주지만 여기서는 그럴 수 없습니다. 바꾸는 줄에 닿기 전에 이미 읽은 줄이 있고, Python이 보기에 그 이름은 아직 만들어지지 않았기 때문입니다. 이름을 먼저 바꾸고 나서 읽거나, 일에는 필요한 값을 넘겨 주고 이름은 일 바깥에서 바꾸세요.",
             ),
             Self::ConditionMissing => (
                 "E0301",
