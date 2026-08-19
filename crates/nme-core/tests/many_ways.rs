@@ -919,3 +919,74 @@ fn the_widest_korean_verb_is_never_guessed_at() {
     assert_eq!(ok("안녕하세요 써줘\n"), "print(\"안녕하세요\")\n");
     assert_eq!(ok("편지를 써줘\n"), "print(\"편지를 써줘\")\n");
 }
+
+/// The connective between a header and the line under it belongs to neither.
+///
+/// The loop was right every time and the body was the writer's own joining
+/// words: `repeat 3 times after that show Again` printed `after that show
+/// Again`, `3번 반복: 다시 말해줘` printed `: 다시`, and `만약에 점수가
+/// 1보다 크면, 좋아 말해줘` printed `, 좋아`.
+#[test]
+fn joining_words_between_a_header_and_its_line_are_not_the_message() {
+    for line in [
+        "repeat 3 times after that show Again",
+        "repeat 3 times next show Again",
+        "repeat 3 times and then show Again",
+    ] {
+        assert_eq!(
+            ok(&format!("{line}\n")),
+            "for _ in range(3): print(\"Again\")\n",
+            "for {line}"
+        );
+    }
+    for line in [
+        "3번 반복해 그런 다음 다시 말해줘",
+        "3번 반복: 다시 말해줘",
+        "3번 반복해, 다시 말해줘",
+    ] {
+        assert_eq!(
+            ok(&format!("{line}\n")),
+            "for _ in range(3): print(\"다시\")\n",
+            "for {line}"
+        );
+    }
+    assert_eq!(
+        ok("점수는 5\n만약에 점수가 1보다 크면, 좋아 말해줘\n"),
+        "점수 = 5\nif (점수 > 1): print(\"좋아\")\n"
+    );
+    // Nothing is dropped when what is left is not a command.
+    assert_eq!(
+        ok("repeat 3 times next week\n"),
+        "for _ in range(3): print(\"next week\")\n"
+    );
+}
+
+/// A Korean loop written on one line is a loop.
+///
+/// `점수가 5보다 작은 동안 안녕 말해줘` was claimed by the condition matcher,
+/// which then failed on a condition ending in `작은`, and the loop never got
+/// its turn; with `동안에` it came out as an `if` whose message began with
+/// the loop word.
+#[test]
+fn a_korean_loop_on_one_line_loops() {
+    for line in [
+        "점수가 5보다 작은 동안 안녕 말해줘",
+        "점수가 5보다 작은 동안에 안녕 말해줘",
+    ] {
+        assert_eq!(
+            ok(&format!("점수는 0\n{line}\n")),
+            "점수 = 0\nwhile (점수 < 5): print(\"안녕\")\n",
+            "for {line}"
+        );
+    }
+    assert_eq!(
+        ok("점수는 0\n점수가 5보다 작은 동안 점수에 1 더해\n"),
+        "점수 = 0\nwhile (점수 < 5): 점수 = 점수 + 1\n"
+    );
+    // `동안` after the verb is part of what gets said, as it always was.
+    assert_eq!(
+        ok("커서가 깜빡이는 동안 말해줘\n"),
+        "print(\"커서가 깜빡이는 동안\")\n"
+    );
+    assert_eq!(ok("3초 동안 기다려\n"), "__import__(\"time\").sleep(3)\n");
+}

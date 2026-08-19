@@ -5096,6 +5096,13 @@ fn match_update(
     {
         return Ok(None);
     }
+    // `점수가 5보다 작은 동안 점수에 1 더해` is a loop whose body changes a
+    // value, and this matcher runs first. Reading it here left the loop
+    // marker inside the value change and answered E0221 about a line that
+    // was not one.
+    if korean_while_connector(tokens).is_some() {
+        return Ok(None);
+    }
     // `카드를 잘 섞어 나눠 주세요` is a request to deal the cards, and it
     // compiled to `카드 = 카드 / 주세요` — a division by a name nothing ever
     // set. A line that ends the way a written Korean sentence ends and holds
@@ -9344,6 +9351,9 @@ fn match_while(
     }
     let condition =
         parse_natural_condition(source, &condition_tokens, connector, known_names, spelling)?;
+    // `만약에 점수가 1보다 크면, 좋아 말해줘` printed `, 좋아`: the comma the
+    // writer put after the condition became the first word of the message.
+    let body_start = body_start + inline_body_connectors_at(tokens, body_start, mode, known_names);
     let inline = parse_suite_body(
         source,
         &tokens[body_start..],
@@ -9498,6 +9508,7 @@ fn match_branch(
     };
     let condition =
         parse_natural_condition(source, &condition_tokens, connector, known_names, spelling)?;
+    let body_start = body_start + inline_body_connectors_at(tokens, body_start, mode, known_names);
     let inline = parse_suite_body(
         source,
         &tokens[body_start..],
@@ -9541,6 +9552,14 @@ fn match_subject_when(
             .filter_map(name_word)
             .any(|word| is_action_word(word) || is_nme_condition_word(word))
     {
+        return Ok(None);
+    }
+    // `동안` says the line is a loop, and this matcher only makes conditions.
+    // Reading it here claimed `점수가 5보다 작은 동안 안녕 말해줘` and then
+    // failed on a condition ending in `작은`, so the loop never got its turn;
+    // `점수가 5보다 작은 동안에 안녕 말해줘` came out as an `if` whose message
+    // began with `동안에`. The loop marker belongs to `match_while`.
+    if korean_while_connector(tokens).is_some() {
         return Ok(None);
     }
     // `상점선택을 물어봐 살까요? 사려면 …` — the line names what it is asking
@@ -9697,6 +9716,9 @@ fn subject_condition_body_is_action(
         || ask_action_at(tokens, 0, mode).is_some()
         || set_action_at(tokens, 0, mode).is_some()
         || update_action_at(tokens, 0, mode).is_some()
+        // Korean says its verb last, so a value change reads as one only from
+        // the end: `점수에 1 더해`.
+        || update_action_ending(tokens, mode).is_some()
         || action_phrase_at(tokens, 0, BREAK_WORDS_EN, mode).is_some()
         || action_phrase_at(tokens, 0, BREAK_WORDS_KO, mode).is_some()
 }
@@ -9786,6 +9808,7 @@ fn match_when(
     }
     let condition =
         parse_natural_condition(source, &condition_tokens, connector, known_names, spelling)?;
+    let body_start = body_start + inline_body_connectors_at(tokens, body_start, mode, known_names);
     let inline = parse_suite_body(
         source,
         &tokens[body_start..],
@@ -10138,6 +10161,10 @@ fn split_attached_while_token(token: &Token) -> Option<Token> {
     })
 }
 
+/// The Korean word that closes a loop condition. `동안에` is the same word
+/// with the place particle on it, and people write both.
+const WHILE_MARKERS_KO: &[&str] = &["동안", "동안에"];
+
 fn korean_while_connector(tokens: &[Token]) -> Option<(Vec<Token>, usize)> {
     // Prefer the last `동안` so a logical condition may carry an ending on
     // every operand: `점수가 5와 같지 않을 동안 그리고 점수가 0보다 클 동안`.
@@ -10152,7 +10179,7 @@ fn korean_while_connector(tokens: &[Token]) -> Option<(Vec<Token>, usize)> {
             .is_some_and(|token| token_matches_exact(token, WHILE_WORDS_KO)),
     );
     for (index, token) in tokens.iter().enumerate().skip(condition_start + 1).rev() {
-        if !token_matches_exact(token, &["동안"]) {
+        if !token_matches_exact(token, WHILE_MARKERS_KO) {
             continue;
         }
         // Everything after an output word is the message, so a `동안` that
@@ -10162,7 +10189,7 @@ fn korean_while_connector(tokens: &[Token]) -> Option<(Vec<Token>, usize)> {
         }
         let mut condition = tokens[condition_start..index]
             .iter()
-            .filter(|token| !token_matches_exact(token, &["동안"]))
+            .filter(|token| !token_matches_exact(token, WHILE_MARKERS_KO))
             .cloned()
             .collect::<Vec<_>>();
         if condition
@@ -11221,9 +11248,7 @@ fn match_times(
         let mut body_start = body_start;
         if let Some((_, consumed)) = repeat_action_at(tokens, body_start, mode) {
             body_start += consumed;
-            if tokens.get(body_start).is_some_and(is_connector_word) {
-                body_start += 1;
-            }
+            body_start += inline_body_connectors_at(tokens, body_start, mode, known_names);
         }
         let inline = parse_sentence_repeat_body(
             source,
@@ -11330,9 +11355,7 @@ fn match_times(
         {
             let count = parse_count(source, &tokens[..marker_at], known_names, spelling)?;
             let mut body_start = marker_at + 1;
-            if tokens.get(body_start).is_some_and(is_connector_word) {
-                body_start += 1;
-            }
+            body_start += inline_body_connectors_at(tokens, body_start, mode, known_names);
             let inline = parse_sentence_repeat_body(
                 source,
                 &tokens[body_start..],
@@ -11352,9 +11375,7 @@ fn match_times(
             }
             let count = parse_count(source, &tokens[..marker_at], known_names, spelling)?;
             let mut body_start = marker_at + 1 + consumed;
-            if tokens.get(body_start).is_some_and(is_connector_word) {
-                body_start += 1;
-            }
+            body_start += inline_body_connectors_at(tokens, body_start, mode, known_names);
             let inline = parse_sentence_repeat_body(
                 source,
                 &tokens[body_start..],
@@ -11385,9 +11406,7 @@ fn match_times(
                 let count =
                     parse_count(source, std::slice::from_ref(token), known_names, spelling)?;
                 let mut body_start = consumed + 1;
-                if tokens.get(body_start).is_some_and(is_connector_word) {
-                    body_start += 1;
-                }
+                body_start += inline_body_connectors_at(tokens, body_start, mode, known_names);
                 let inline = parse_sentence_repeat_body(
                     source,
                     &tokens[body_start..],
@@ -11409,9 +11428,7 @@ fn match_times(
             marker_spelling,
         )?;
         let mut body_start = marker_at + 1;
-        if tokens.get(body_start).is_some_and(is_connector_word) {
-            body_start += 1;
-        }
+        body_start += inline_body_connectors_at(tokens, body_start, mode, known_names);
         let inline = parse_sentence_repeat_body(
             source,
             &tokens[body_start..],
@@ -14554,6 +14571,15 @@ fn parse_suite_body(
         };
     }
 
+    // A connective between the header and the line under it belongs to
+    // neither: `점수가 1보다 크면, 좋아 말해줘` printed `, 좋아`. Nothing is
+    // dropped unless what is left still reads as a command — see
+    // `INLINE_BODY_CONNECTORS`.
+    let body = &body[inline_body_connectors_at(body, 0, MatchMode::Exact, known_names)..];
+    if body.is_empty() {
+        return Err(inline_block_diagnostic(kind, header_span));
+    }
+
     let body_span = span_of(body);
     if has_top_level_semicolon(body) {
         return Err(one_statement_diagnostic(kind, body_span));
@@ -15312,6 +15338,44 @@ fn resolve_known_particle<'a>(word: &'a str, known_names: &'a HashSet<String>) -
 fn is_connector_word(token: &Token) -> bool {
     matches!(token.tok, Tok::And)
         || token_matches_exact(token, &["and", "then", "해서", "그리고", "그러면"])
+}
+
+/// Words a writer puts between a block header and the one line under it.
+///
+/// `repeat 3 times after that show Again` looped three times and printed
+/// `after that show Again`; `3번 반복해 그런 다음 다시 말해줘` printed `그런
+/// 다음 다시`, and `3번 반복: 다시 말해줘` printed `: 다시`. The loop was
+/// right every time and the body was the writer's own connective.
+///
+/// These are only skipped while what is left still reads as a command, so
+/// `repeat 3 times next week` keeps saying `next week`.
+const INLINE_BODY_CONNECTORS: &[&str] = &[
+    "and", "then", "next", "after", "that", "afterwards", "해서", "그리고", "그러면", "그런",
+    "다음", "다음에", "그다음", "그다음에", "이후", "이후에",
+];
+
+/// How many connector tokens stand between a header and its one-line body.
+///
+/// Nothing is skipped unless the rest still reads as a command: see
+/// [`INLINE_BODY_CONNECTORS`].
+fn inline_body_connectors_at(
+    tokens: &[Token],
+    start: usize,
+    mode: MatchMode,
+    known_names: &HashSet<String>,
+) -> usize {
+    let mut cursor = start;
+    while cursor < tokens.len()
+        && (matches!(tokens[cursor].tok, Tok::And | Tok::Comma | Tok::Colon)
+            || token_matches_exact(&tokens[cursor], INLINE_BODY_CONNECTORS))
+    {
+        cursor += 1;
+    }
+    if cursor > start && subject_condition_body_is_action(&tokens[cursor..], mode, known_names) {
+        return cursor - start;
+    }
+    // One plain `and`/`then` has always been skipped, whatever follows.
+    usize::from(tokens.get(start).is_some_and(is_connector_word))
 }
 
 /// Keywords that can never begin a Python statement, and are ordinary English
