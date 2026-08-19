@@ -1908,6 +1908,15 @@ fn render_diagnostics(
     path: &str,
     language: MessageLanguage,
 ) -> String {
+    // A program written in Korean is explained in Korean, whichever spelling
+    // of the command started the build. The English half is still printed, so
+    // nothing is lost for a reader who wants it; what changes is that the
+    // person looking at a Hangul line no longer reads only English about it.
+    let language = if language == MessageLanguage::English && contains_korean(source) {
+        MessageLanguage::KoreanAndEnglish
+    } else {
+        language
+    };
     match language {
         MessageLanguage::English => nme_core::diagnostics::render_all(problems, source, path),
         MessageLanguage::KoreanAndEnglish => {

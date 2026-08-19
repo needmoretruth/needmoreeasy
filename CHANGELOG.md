@@ -6,6 +6,43 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+- **Ordinary Korean sentences print themselves far more often.** Measured over
+  353 sentences a person really types — a line of a story, a note to self, a
+  message in a game — 294 printed themselves character for character and 38
+  compiled into a different program. It is now 350 and 3. The measurement is
+  `scripts/mistake-probes/korean_prose.py` and it is a checked number.
+- **A polite `… 주세요` request is a sentence again.** All twenty-three of them
+  were wrong: `물 좀 주세요` printed `물`, `설탕을 조금만 넣어 주세요` printed
+  `설탕을 조금만 넣어`, and `물어봐 주셔서 감사합니다` stopped the program at a
+  question nobody wrote. `주세요` attaches to any Korean verb, so it is no
+  longer repaired into an output word, and it is glued to the word before it
+  only when that word is already an action word: `말해 주세요`,
+  `보여 주세요` and `2초 기다려 주세요` are unchanged.
+- **A line that ends the way a written Korean sentence ends keeps its own
+  meaning.** `이유는 저도 잘 모릅니다` became `이유 = "저도 잘 모릅니다"`, a
+  program that runs and says nothing; `3층에서 내리면 됩니다` became a
+  comparison cut inside a word; `1번 출구에서 만납시다` became a loop; and
+  `카드를 잘 섞어 나눠 주세요` became a division by a name nothing ever set.
+  The list of endings that close a Korean sentence now covers the `-ㅂ니다`
+  family (`모릅니다`, `나옵니다`), `-ㅂ시다`, `-니까` and the `-요` endings, and
+  every shape of assignment, loop, comparison and value change asks it — not
+  only the one after a `은`/`는`. `정답은 7입니다` still saves the number seven
+  and `인사는 안녕하세요` still saves the greeting.
+- **A helper verb after an action word is part of that verb.**
+  `말해 봐야 소용없는 일이었습니다` printed only its second half and
+  `저장해 둔 사진을 다시 봤습니다` made a value called `둔`. `말해줘 비가
+  쏟아졌습니다` still prints the rain.
+- **A Korean sentence with a hyphen, a slash, a wave dash or a bracket in it
+  prints.** `K-POP을 좋아합니다`, `A/S 센터에 맡겼습니다`,
+  `오전 9시~오후 6시까지 문을 엽니다` and `(괄호 안은 나중에 지우겠습니다)` were
+  handed to Python, which answered a Korean sentence with an English
+  `SyntaxError` whose caret landed inside a Hangul syllable. Valid Python still
+  wins; this is asked only of a line Python has already refused.
+- **A program written in Korean is explained in Korean.** Error messages
+  followed the spelling of the command, so `nme build` on a Hangul file
+  answered in English only. The Korean half is now printed whenever the program
+  itself holds Korean, and the English half stays.
+
 - **Ordinary English sentences print themselves far more often.** Measured over
   302 sentences a person really types — a line of a story, a note to somebody, a
   message in a game — 184 printed themselves word for word and 44 compiled into
