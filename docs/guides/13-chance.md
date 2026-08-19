@@ -83,10 +83,15 @@ often*.
 
 ```nme
 set die to random number from 1 to 6
-say You rolled the die
+say Here it comes
 say die
-20% chance say And a second die rolled out with it
+20% chance say And a second one rolled out with it
 ```
+
+A name you have given a value to becomes that value inside a sentence. So if
+the second line said *You rolled the die*, the word `die` would come out as the
+number rather than as the word. To print a word as itself, keep the name out of
+the sentence.
 
 ## What you learned
 
