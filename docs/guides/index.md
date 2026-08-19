@@ -240,7 +240,7 @@ and validated by hand.
 | 38 | ★★★☆☆ | files | [Name list: reading a file line by line](38-name-list.md) | a program that saves names one per line and reads them back as a list |
 | 39 | ★★★☆☆ | files | [JSON: save and load data](39-json.md) | a program that saves a name and a score and loads them back |
 | 40 | ★★★☆☆ | files | [CSV: several fields on one line](40-csv.md) | a program that reads a file of comma-separated fields |
-| 41 | ★★★★☆ | working with data | [Records: a small address book](41-address-book.md) | a JSON-file address book that adds, lists, and searches contacts |
+| 41 | ★★★☆☆ | working with data | [Records: a small address book](41-address-book.md) | an address book that finds where someone lives by their name |
 | 42 | ★★★★☆ | lists and text | [Word count: how often each word appears](42-word-count.md) | reading a text file and counting how often each word appears, using a dict and collections.Counter |
 | 43 | ★★★★☆ | lists and text | [Text stats: letters and words](43-text-stats.md) | reading a text file and reporting character count, word count, longest word, and most common word (with collections.Counter) |
 | 44 | ★★★★★ | files | [Log: an event record](44-log.md) | appending a dated line to a log file each time the program runs, using datetime and file_write |
