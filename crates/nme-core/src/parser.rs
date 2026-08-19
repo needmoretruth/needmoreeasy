@@ -9194,6 +9194,17 @@ enum ConditionConnector {
     LessOrEqual,
 }
 
+/// The second half of a split `<=`/`>=`, in every ending Korean gives it.
+///
+/// The bare adnominals — `큰`, `작은`, `많은`, `다른`, `같은` — are deliberately
+/// **not** comparison endings on their own. They are among the most ordinary
+/// words Korean has, and listing them turned `더 큰 수예요 말해줘`,
+/// `상자로 말해줘 작은 차림표` and `도전값과 다른 영지식 도전 만들기` into
+/// comparisons. Here they are safe because the word in front of them
+/// (`크거나`/`작거나`) can mean nothing else.
+const OR_EQUAL_SECOND_WORDS_KO: &[&str] =
+    &["같으면", "같다면", "같을", "같은", "같다", "같으니", "같으니까"];
+
 fn find_exact_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionConnector)> {
     if let Some(inner) = strip_outer_condition_parentheses(tokens) {
         return find_exact_condition_connector(inner)
@@ -9201,12 +9212,23 @@ fn find_exact_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionC
     }
     // Spoken Korean splits `<=`/`>=` into two tokens (`10보다 작거나
     // 같으면`); the lone `같으면` would otherwise match equality.
+    //
+    // The second word changes shape with what comes after it: `같으면` before
+    // a body, `같을`/`같은` before `동안`. Only the first was listed here, so
+    // `점수가 10보다 크거나 같을 동안` reached the one-letter repair, which
+    // read `같을` as `작을` and built the loop with the comparison **reversed**
+    // — `while (점수 < 10)` for a line that says "while it is 10 or more".
     for (index, pair) in tokens.windows(2).enumerate() {
-        if token_word(&pair[0]) == Some("작거나") && token_word(&pair[1]) == Some("같으면") {
-            return Some((index, ConditionConnector::LessOrEqual));
+        let Some(second) = token_word(&pair[1]) else {
+            continue;
+        };
+        if !OR_EQUAL_SECOND_WORDS_KO.contains(&second) {
+            continue;
         }
-        if token_word(&pair[0]) == Some("크거나") && token_word(&pair[1]) == Some("같으면") {
-            return Some((index, ConditionConnector::GreaterOrEqual));
+        match token_word(&pair[0]) {
+            Some("작거나") => return Some((index, ConditionConnector::LessOrEqual)),
+            Some("크거나") => return Some((index, ConditionConnector::GreaterOrEqual)),
+            _ => {}
         }
     }
     let last_operand = last_logical_operand_start(tokens);
@@ -10386,7 +10408,7 @@ fn condition_connector_exact(token: &Token, is_last: bool) -> Option<ConditionCo
         ),
         (
             ConditionConnector::Equals,
-            &["같으면", "같다면", "라면", "면"][..],
+            &["같으면", "같다면", "라면", "면", "같을"][..],
         ),
         (
             ConditionConnector::NotEquals,
@@ -10395,24 +10417,24 @@ fn condition_connector_exact(token: &Token, is_last: bool) -> Option<ConditionCo
         (
             ConditionConnector::Greater,
             &[
-                "크면", "크다면", "클", "초과면", "초과이면", "많으면", "많다면", "많을", "넘으면",
-                "넘는다면", "넘을",
+                "크면", "크다면", "클", "초과면", "초과이면", "초과인", "초과일", "많으면",
+                "많다면", "많을", "넘으면", "넘는다면", "넘을",
             ][..],
         ),
         (
             ConditionConnector::Less,
             &[
-                "작으면", "작다면", "작을", "미만이면", "미만면", "적으면", "적다면", "적을",
-                "모자라면", "안되면",
+                "작으면", "작다면", "작을", "미만이면", "미만면", "미만인", "미만일",
+                "적으면", "적다면", "적을", "모자라면", "안되면",
             ][..],
         ),
         (
             ConditionConnector::GreaterOrEqual,
-            &["크거나같으면", "크거나같다면"][..],
+            &["크거나같으면", "크거나같다면", "크거나같을", "크거나같은", "이상이면", "이상인", "이상일"][..],
         ),
         (
             ConditionConnector::LessOrEqual,
-            &["작거나같으면", "작거나같다면"][..],
+            &["작거나같으면", "작거나같다면", "작거나같을", "작거나같은", "이하이면", "이하인", "이하일"][..],
         ),
     ];
     for (kind, words) in candidates {

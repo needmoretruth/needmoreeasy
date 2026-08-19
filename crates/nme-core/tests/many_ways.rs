@@ -449,3 +449,48 @@ fn the_manqeum_particle_interpolates_a_name() {
         "준피해 = 3\nprint(str(준피해) + \"밖에 없습니다\")\n"
     );
 }
+
+/// `동안` used a shorter comparison vocabulary than `만약`, and the gap was not
+/// a refusal: `점수가 10보다 크거나 같을 동안` reached the one-letter repair,
+/// which read `같을` as `작을` and built the loop **backwards**. A loop that
+/// runs when it should stop is the worst thing a compiler can do quietly.
+#[test]
+fn a_while_loop_compares_the_way_the_words_say() {
+    for (source, python) in [
+        ("점수가 10보다 크거나 같을 동안\n", "while (점수 >= 10):\n"),
+        ("점수가 10보다 크거나 같은 동안\n", "while (점수 >= 10):\n"),
+        ("점수가 10보다 작거나 같을 동안\n", "while (점수 <= 10):\n"),
+        ("점수가 10보다 작거나 같은 동안\n", "while (점수 <= 10):\n"),
+        ("점수가 10 이상인 동안\n", "while (점수 >= 10):\n"),
+        ("점수가 10 이상일 동안\n", "while (점수 >= 10):\n"),
+        ("점수가 10 이하인 동안\n", "while (점수 <= 10):\n"),
+        ("점수가 10 이하일 동안\n", "while (점수 <= 10):\n"),
+        ("점수가 10보다 클 동안\n", "while (점수 > 10):\n"),
+        ("점수가 10보다 큰 동안\n", "while (점수 > 10):\n"),
+        ("점수가 10보다 작은 동안\n", "while (점수 < 10):\n"),
+        ("점수가 10과 같을 동안\n", "while (점수 == 10):\n"),
+    ] {
+        let program = format!("점수는 50\n{source}  가 말해줘\n끝\n");
+        let built = ok(&program);
+        let second = built.lines().nth(1).unwrap_or_default();
+        assert_eq!(
+            format!("{second}\n"),
+            python,
+            "for {source:?}"
+        );
+    }
+}
+
+/// And the words that made those endings possible must stay ordinary words.
+/// `큰`, `작은`, `많은`, `다른` are among the commonest Korean has; listing them
+/// as comparison endings turned three shipped examples into comparisons.
+#[test]
+fn bare_korean_adnominals_are_still_ordinary_words() {
+    assert_eq!(ok("더 큰 수예요 말해줘\n"), "print(\"더 큰 수예요\")\n");
+    assert_eq!(
+        ok("상자로 말해줘 작은 차림표\n").contains("작은 차림표"),
+        true
+    );
+    assert_eq!(ok("다른 길로 갑시다\n"), "print(\"다른 길로 갑시다\")\n");
+    assert_eq!(ok("같은 반 친구입니다\n"), "print(\"같은 반 친구입니다\")\n");
+}
