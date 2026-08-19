@@ -241,7 +241,7 @@ and validated by hand.
 | 39 | ★★★☆☆ | files | [JSON: save and load data](39-json.md) | a program that saves a name and a score and loads them back |
 | 40 | ★★★☆☆ | files | [CSV: several fields on one line](40-csv.md) | a program that reads a file of comma-separated fields |
 | 41 | ★★★☆☆ | working with data | [Records: a small address book](41-address-book.md) | an address book that finds where someone lives by their name |
-| 42 | ★★★★☆ | lists and text | [Word count: how often each word appears](42-word-count.md) | reading a text file and counting how often each word appears, using a dict and collections.Counter |
+| 42 | ★★★★☆ | lists and text | [Word count: how often each word appears](42-word-count.md) | splitting text into words and counting how many times each one appears |
 | 43 | ★★★☆☆ | lists and text | [Text stats: letters, words, and the longest one](43-text-stats.md) | reading a saved file back and reporting its letters, its words, and its longest word |
 | 44 | ★★★★★ | files | [Log: an event record](44-log.md) | appending a dated line to a log file each time the program runs, using datetime and file_write |
 | 45 | ★★★★★ | working with data | [Group: data by category](45-group.md) | grouping a list of dicts by a category key into a dict of lists, then reporting counts per category |
