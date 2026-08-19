@@ -3,6 +3,8 @@
 
     python scripts/check-guide-index.py
 
+It also checks that no guide requires a guide that comes after it.
+
 `docs/guides/index.md` and `index.ko.md` end in a table of every guide: its
 number, difficulty, topic, title and what you end up with. Those five facts are
 also written at the top of each guide. Two copies of a fact drift, and on
@@ -67,6 +69,24 @@ def main() -> None:
                         f"{index_path.name} row {number}: {what} says {got!r}, "
                         f"{guide.name} says {want!r}"
                     )
+
+    # A guide may only require guides a reader has already passed. Rewriting a
+    # guide changes what it leans on, and a prerequisite pointing forward sends
+    # a beginner to a page written for someone who has read this one.
+    for guide in sorted(GUIDES.glob("[0-9]*.md")):
+        number = int(guide.name[:2])
+        line = re.search(
+            r"^- (?:선수 지식|Prerequisites):\s*(.+)$",
+            guide.read_text(encoding="utf-8"),
+            re.M,
+        )
+        if not line:
+            continue
+        for referenced in re.findall(r"\[(\d\d)\b", line.group(1)):
+            if int(referenced) >= number:
+                problems.append(
+                    f"{guide.name}: prerequisite points forward to guide {referenced}"
+                )
 
     for problem in problems:
         print(problem)
