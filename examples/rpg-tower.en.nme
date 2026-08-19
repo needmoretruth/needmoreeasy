@@ -1,0 +1,290 @@
+# ────────────────────────────────────────────────────────────────
+# The Forgotten Tower — a turn-based role-playing game
+#
+# Written in NME sentence syntax only. Not one line of Python.
+# One sentence is one line, and that line becomes one line of Python.
+#
+# Apache-2.0
+# ────────────────────────────────────────────────────────────────
+
+clear the screen
+draw a line
+say in the middle The Forgotten Tower
+say in the middle a turn-based role-playing game
+draw a line
+
+story:
+
+  For a hundred years the door of the tower stayed shut.
+  Many climbers went up. Nobody ever came back down.
+  This morning the door swung open by itself, and here you are.
+
+end
+
+ask heroName What shall we call you?
+if heroName is missing
+  set heroName to Wanderer
+end
+
+draw a line
+show A knight is sturdy, a mage hits hard, a thief is quick.
+ask heroClass Knight, mage or thief — which will you be?
+
+if heroClass equals mage
+  set heroKind to mage
+  set heroMax to 26
+  set heroHit to 4
+  set heroGuard to 1
+  set heroSpark to 12
+else if heroClass equals thief
+  set heroKind to thief
+  set heroMax to 30
+  set heroHit to 6
+  set heroGuard to 2
+  set heroSpark to 6
+else
+  set heroKind to knight
+  set heroMax to 36
+  set heroHit to 6
+  set heroGuard to 4
+  set heroSpark to 3
+end
+
+set heroLife to heroMax
+set heroFlask to 3
+set purse to 10
+set wisdom to 0
+set rank to 1
+set nextRank to 12
+set floorNumber to 1
+set ending to climbing
+
+to sheet:
+  draw a line
+  show heroName · heroKind · step rank
+  show arm heroHit · shield heroGuard · spark heroSpark
+  show life heroLife / heroMax · flasks heroFlask · coins purse
+  draw a line
+end
+
+do sheet
+wait 1 second
+
+repeat forever
+
+  clear the screen
+  draw a line
+  say in the middle floor floorNumber
+  draw a line
+
+  if floorNumber is greater than 3
+    set foeName to the keeper of the tower
+    set foeMax to 46
+    set foeHit to 11
+    set prizeGold to 40
+    set prizeWisdom to 30
+  else if floorNumber equals 3
+    set foeName to pick from stone golem or black knight
+    set foeMax to 30
+    set foeHit to 8
+    set prizeGold to 16
+    set prizeWisdom to 14
+  else if floorNumber equals 2
+    set foeName to pick from wolf or wisp or spider
+    set foeMax to 22
+    set foeHit to 6
+    set prizeGold to 10
+    set prizeWisdom to 9
+  else
+    set foeName to pick from slime or bat or rat
+    set foeMax to 14
+    set foeHit to 4
+    set prizeGold to 6
+    set prizeWisdom to 6
+  end
+
+  set foeLife to foeMax
+  show foeName steps into the way.
+  wait 1 second
+
+  repeat forever
+
+    draw a line
+    show against foeName · left foeLife / foeMax
+    show yours heroLife / heroMax · spark heroSpark · flasks heroFlask
+    ask choice strike · spell · flask · flee — what will you do?
+
+    if choice equals spell
+
+      if heroSpark is less than 3
+        show The spark is too thin and the words scatter.
+      else
+        subtract 3 from heroSpark
+        set dealt to random number from 6 to 13
+        add rank to dealt
+        subtract dealt from foeLife
+        show Blue fire bites for dealt.
+      end
+
+    else if choice equals flask
+
+      if heroFlask is greater than 0
+        subtract 1 from heroFlask
+        add 12 to heroLife
+        if heroLife is greater than heroMax
+          set heroLife to heroMax
+        end
+        show You drain the bottle and warmth spreads.
+      else
+        show Not one bottle is left.
+      end
+
+    else if choice equals flee
+
+      if floorNumber is greater than 3
+        show The door is gone. There is no back from here.
+      else
+        set gotAway to false
+        45% chance
+          set gotAway to true
+        end
+        if gotAway exists
+          show You tumble two steps down and land outside.
+          set ending to away
+          break
+        else
+          show You turn your back and are caught at once.
+        end
+      end
+
+    else
+
+      set dealt to random number from 3 to 9
+      add heroHit to dealt
+      20% chance
+        multiply dealt by 2
+        show Straight through the opening.
+      end
+      subtract dealt from foeLife
+      show Your blow lands for dealt.
+
+    end
+
+    if foeLife is less than 1
+      draw a line
+      show foeName goes down.
+      break
+    end
+
+    set taken to random number from 2 to 7
+    add foeHit to taken
+    subtract heroGuard from taken
+    if taken is less than 1
+      set taken to 1
+    end
+    subtract taken from heroLife
+    show The answer from foeName costs you taken.
+
+    if heroLife is less than 1
+      draw a line
+      set ending to fallen
+      break
+    end
+
+    wait 1 second
+
+  end
+
+  if ending is not equal to climbing
+    break
+  end
+
+  add prizeGold to purse
+  add prizeWisdom to wisdom
+  show won prizeGold coins · lesson prizeWisdom
+
+  if wisdom is greater than nextRank
+    subtract nextRank from wisdom
+    add 1 to rank
+    add 6 to heroMax
+    add 2 to heroHit
+    add 1 to heroGuard
+    add 3 to heroSpark
+    set heroLife to heroMax
+    add 8 to nextRank
+    draw a line
+    say in a box you are step rank now
+    draw a line
+  end
+
+  if floorNumber is greater than 3
+    set ending to crowned
+    break
+  end
+
+  draw a line
+  show A quiet landing. A trader leans against the wall.
+  show One bottle costs 8 coins.
+  show purse coins in hand.
+  ask shopChoice Buy a bottle? yes · no
+
+  if shopChoice equals yes
+    if purse is greater than 7
+      subtract 8 from purse
+      add 1 to heroFlask
+      show One bottle goes into your pack.
+    else
+      show Not enough for that.
+    end
+  else
+    show The trader nods and looks away.
+  end
+
+  add 4 to heroLife
+  if heroLife is greater than heroMax
+    set heroLife to heroMax
+  end
+
+  add 1 to floorNumber
+  wait 1 second
+
+end
+
+clear the screen
+draw a line
+
+if ending equals crowned
+  say in the middle the top of the tower
+  draw a line
+  story:
+
+    Wind touches your face.
+    In a hundred years nobody has stood here.
+    Looking down, the way up seems very short.
+
+  end
+else if ending equals away
+  say in the middle outside the door
+  draw a line
+  story:
+
+    The door closes behind you.
+    Being alive is enough for today.
+    The tower will still be there tomorrow.
+
+  end
+else
+  say in the middle this far
+  draw a line
+  story:
+
+    The light goes out of the room.
+    The tower has swallowed one more story.
+    Someone after you may get further.
+
+  end
+end
+
+draw a line
+show heroName · heroKind · step rank · up to floor floorNumber
+draw a line
