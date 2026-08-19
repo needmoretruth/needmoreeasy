@@ -18,13 +18,30 @@ Baseline, measured 2026-08-18 against one build:
 
     printed 184 · refused 74 · changed 44   (302 sentences)
 
-Nine of the 44 are the language working as designed: a line beginning with
-`show`/`say`/`tell` prints what follows it, which is guide 01, and `show Hello
-world` must not print the word `show`. They are counted here anyway, because
-the honest number is the number a reader would get — and because warning on
-them is worth doing one day. The other 35 are defects; the largest causes are
-a typo-tolerant match firing on ordinary words (`day`→`say`, `shop`→`show`), a
-digit switching the prose path off, and a one-word line becoming a bare name.
+and again on 2026-08-19, after the three causes below were closed:
+
+    printed 249 · refused 41 · changed 12   (302 sentences)
+
+Nine of the remaining 12 are the language working as designed: a line
+beginning with `show`/`say`/`tell` prints what follows it, which is guide 01,
+and `show Hello world` must not print the word `show`. They are counted here
+anyway, because the honest number is the number a reader would get — and
+because warning on them is worth doing one day.
+
+The three causes closed on 2026-08-19 were a typo-tolerant match firing on
+ordinary words (`day`→`say`, `shop`→`show`, `road`→`load`), a digit switching
+the prose path off, and a one-word line becoming a bare name that raised
+`NameError`. Three of the 12 that are left are:
+
+    Well done                      `Well` is one letter from `tell`, and one
+                                   word of message is exactly what a real
+                                   misspelling looks like — the same shape as
+                                   `shoe hello`, which must keep working.
+    There is nothing left to say.  `Hello world show` is a documented
+                                   spelling: an output word written exactly,
+                                   after the message, prints the message.
+    ask Mum about the recipe       the same shape as `ask name What is your
+                                   name?`, which is guide 03.
 """
 import os
 import subprocess
@@ -37,8 +54,8 @@ from english_prose_corpus import GROUPS, PROSE  # noqa: E402
 NME = sys.argv[1] if len(sys.argv) > 1 else "/home/user/nmt/needmoreeasy/target/release/nme"
 
 # The numbers this file refuses to let get worse.
-BASELINE_PRINTED = 184
-BASELINE_CHANGED = 44
+BASELINE_PRINTED = 249
+BASELINE_CHANGED = 12
 
 
 def outcome(sentence):

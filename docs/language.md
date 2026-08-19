@@ -67,9 +67,11 @@ Hello everyone!
 오늘도 반가워요!
 ```
 
-A single bare word is still valid Python, so Python wins and it remains an
-ordinary name expression. Add `show` or `말해줘` when a one-word line should
-print.
+A line holding a single word prints too. It is valid Python — a name read and
+thrown away — but a program that says nothing and then dies with a `NameError`
+is nobody's intention, so NME prints the word. Two lines keep their Python
+meaning: a name the program set earlier, and a word NME spells out itself
+(`say`, `end`, `skip`, `목록`).
 
 The shortest conversation does not need a prompt or punctuation:
 

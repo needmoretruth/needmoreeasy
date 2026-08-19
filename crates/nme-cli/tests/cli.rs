@@ -984,11 +984,13 @@ fn the_terminal_menu_example_runs_with_scripted_input() {
         eprintln!("Python not available; skipping terminal menu test");
         return;
     }
-    for (file, expected) in [
-        ("terminal-menu.nme", ["hello!", "bye"]),
-        ("terminal-menu.ko.nme", ["안녕하세요!", "안녕히 가세요"]),
+    // The menu takes words rather than numbers, because what a person types is
+    // always text and `1` never equals the number 1.
+    for (file, answers, expected) in [
+        ("terminal-menu.nme", "greet\nquit\n", ["Hello there!", "Goodbye"]),
+        ("terminal-menu.ko.nme", "인사\n종료\n", ["안녕하세요!", "안녕히 가세요"]),
     ] {
-        let output = nme_with_input(&["run", &example(file)], "1\n3\n");
+        let output = nme_with_input(&["run", &example(file)], answers);
         assert!(output.status.success(), "{file}: {}", stderr(&output));
         let out = stdout(&output);
         for fragment in expected {

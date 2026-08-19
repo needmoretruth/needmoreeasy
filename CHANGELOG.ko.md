@@ -6,6 +6,46 @@ NME의 중요한 변경 사항을 이 문서에 기록합니다.
 
 ## 미출시 (Unreleased)
 
+- **평범한 영어 문장이 훨씬 자주 그대로 출력됩니다.** 사람이 실제로 쓰는 문장
+  302개(이야기 한 줄, 누군가에게 남긴 쪽지, 게임 속 대사)로 재어 보니 184개가
+  글자 그대로 출력되고 44개는 다른 프로그램이 되었습니다. 지금은 249개와
+  12개입니다. 측정 도구는 `scripts/mistake-probes/english_prose.py`이고, 이제
+  검사에 걸리는 수치입니다.
+- **한 글자 차이 나는 낱말이 들어 있다는 이유로 문장을 명령으로 읽지 않습니다.**
+  `Today is a good day`는 `say` 때문에 마지막 낱말을 잃었고,
+  `Clear a path through the snow.`는 `show` 때문에 `snow`를 잃었으며,
+  `end of the road`는 `road`가 `load`와 한 글자 차이라는 이유로 모듈 버전을
+  고르라는 답을 받았습니다. 이제 오타로 고쳐 읽은 영어 출력 낱말은 낱말 하나만
+  메시지로 가져가고(실제 오타는 `shwo hello`, `hello sya`처럼 생겼습니다),
+  모듈 문장은 반드시 모듈 이름을 적어야 하며, `let`처럼 NME가 이미 거절하고
+  설명하는 낱말은 그 동작으로 고쳐 읽지 않습니다.
+- **문장 속 숫자가 문장 읽기를 끄지 않습니다.** `The soup needs cream.`은
+  출력되고 `The soup needs 250 ml of cream.`은 거절되었습니다. 값·나이·시각·
+  날짜·방 번호·장 번호가 이제 쓰인 문장 안에 그대로 남습니다. 명령 낱말 바로
+  옆에 적힌 숫자는 여전히 명령이라서 `wait 3 seconds`와 `set score to 0`은
+  그대로입니다.
+- **낱말 하나뿐인 줄은 그 낱말을 출력합니다.** `Hello`만 있는 줄은 Python 이름
+  그대로 남아서, 프로그램이 아무 말도 하지 않다가 엉뚱한 줄을 가리키는
+  `NameError`로 끝났습니다. 앞에서 값을 저장한 이름과 NME가 직접 쓰는
+  낱말(`say`, `end`, `skip`, `목록`)은 Python 뜻을 지킵니다.
+- **줄 맨 앞의 명령 낱말이 나머지 줄 전체를 제 인자로 삼지 않습니다.**
+  `set the table for four people`은 `the`라는 값을 만들고 아무것도 출력하지
+  않았고, `ask me anything you like`는 아무도 쓰지 않은 질문에서 프로그램을
+  세웠으며, `List the ingredients on the back.`은 Python 목록 괄호에 갇혔습니다.
+  셋 다 문장이라 이제 출력됩니다. `set then to 1`, `ask your "hi"`,
+  `list of Mina, Ada`는 그대로입니다. `to`나 따옴표나 쉼표가 이름·목록을 뜻한다고
+  말해 주기 때문입니다.
+- **무작위 선택은 후보를 서로 구분해 적어야 합니다.** `마음에 드는 것을 골라
+  보세요`는 실행할 때마다 제 낱말 하나를 무작위로 출력했는데, 그 줄 어디에도
+  후보를 적은 적이 없었습니다. `여러 개 중에서 뽑아`와 `pick a flower from the
+  garden`도 마찬가지였습니다. 이제 후보 사이에 `또는`/`or`나 쉼표가 있어야
+  합니다. 문서에 적힌 `색은 빨강 또는 초록 중에서 골라`와 `set color to pick
+  from red or green`은 그대로 동작합니다.
+- **낱말은 낱말로만 쪼갭니다.** `doctor`를 `do ctor`로, `finished`를
+  `finish ed`로, `friend`를 `fri end`로, `telling`을 `tell ing`로 읽는 바람에
+  `story of a small town doctor`가 손쓸 수 없는 제안과 함께 거절되었습니다.
+  정말로 빠뜨린 띄어쓰기는 여전히 짚어 줍니다(`sayhello`, `안녕말해줘`).
+
 - **목록을 만들고 읽는 일을 전부 문장으로 할 수 있습니다.** 빈 목록
   (`친구들은 빈 목록` / `set friends to an empty list`), 몇 개인지
   (`친구들 개수 말해줘` / `show how many friends`), 몇 번째 항목인지

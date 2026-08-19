@@ -6,6 +6,48 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+- **Ordinary English sentences print themselves far more often.** Measured over
+  302 sentences a person really types — a line of a story, a note to somebody, a
+  message in a game — 184 printed themselves word for word and 44 compiled into
+  a different program. It is now 249 and 12. The measurement is
+  `scripts/mistake-probes/english_prose.py` and it is a checked number.
+- **A sentence is no longer read as a command because one of its words is one
+  letter from one.** `Today is a good day` lost its last word to `say`,
+  `Clear a path through the snow.` lost `snow` to `show`, and `end of the road`
+  was told to choose a module version because `road` is one letter from `load`.
+  A repaired English output word now claims a single word of message, which is
+  what a real misspelling looks like (`shwo hello`, `hello sya`); a module line
+  must name a module; and a word NME already refuses and explains, such as
+  `let`, is never repaired into the action it is refused in favour of.
+- **A number in a sentence no longer switches the sentence off.** `The soup
+  needs cream.` printed and `The soup needs 250 ml of cream.` did not. Prices,
+  ages, times, dates, room and chapter numbers now stay in the sentence they
+  were written in. A number written beside a command word is still a command,
+  so `wait 3 seconds` and `set score to 0` are unchanged.
+- **A line holding one word prints it.** `Hello` on its own was left as a bare
+  Python name, and the program said nothing and then died with a `NameError`
+  pointing at a line that is not the mistake. A name the program set earlier,
+  and a word NME spells out itself (`say`, `end`, `skip`, `목록`), keep their
+  Python meaning.
+- **A command word at the start of a line does not make the rest of the line its
+  argument.** `set the table for four people` made a value called `the` and
+  printed nothing at all; `ask me anything you like` stopped the program at a
+  question nobody wrote; `List the ingredients on the back.` was wrapped in
+  Python list brackets. All three are sentences and print. `set then to 1`,
+  `ask your "hi"` and `list of Mina, Ada` still mean what they say, because a
+  `to`, a pair of quotes, or a comma says a name or a list was meant.
+- **A random pick needs its choices marked off from each other.**
+  `마음에 드는 것을 골라 보세요` printed one word of itself at random, a different
+  one every run, and nothing in the line ever named a choice; so did
+  `여러 개 중에서 뽑아` and `pick a flower from the garden`. A pick now needs
+  `또는`/`or` or a comma between the choices. The documented spellings
+  `색은 빨강 또는 초록 중에서 골라` and `set color to pick from red or green` are
+  unchanged.
+- **A word is only taken apart into words.** `doctor` was read as `do ctor`,
+  `finished` as `finish ed`, `friend` as `fri end` and `telling` as `tell ing`,
+  so `story of a small town doctor` was refused with a suggestion nobody could
+  act on. A space really left out is still named: `sayhello` and `안녕말해줘`.
+
 - **Lists can be built and read entirely in sentences.** An empty list
   (`set friends to an empty list` / `친구들은 빈 목록`), how many items it holds
   (`show how many friends` / `친구들 개수 말해줘`), one item by its position

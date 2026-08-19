@@ -19,12 +19,15 @@ There are two corpora of ordinary sentences beside the mistakes:
 | `english_prose.py` + `english_prose_corpus.py` | 302 ordinary **English** sentences. A ratchet, not a gate — only 61% printed on the day it was written, so it records the three numbers and fails when they get worse. |
 
     python3 scripts/mistake-probes/english_prose.py
-    영어 산문 302문장 — 그대로 출력 184 · 거절 74 · 다른 프로그램 44
+    영어 산문 302문장 — 그대로 출력 249 · 거절 41 · 다른 프로그램 12
 
-Korean prose is in far better shape than English prose, and the gap is the
-compiler's, not the corpus's: a typo-tolerant match fires on ordinary English
-words (`day` reads as `say`, `shop` as `show`), a digit anywhere switches the
-prose path off, and a one-word line becomes a bare name that raises `NameError`.
+Korean prose was in far better shape than English prose, and the gap was the
+compiler's, not the corpus's: a typo-tolerant match fired on ordinary English
+words (`day` read as `say`, `shop` as `show`, `road` as `load`), a digit
+anywhere switched the prose path off, and a one-word line became a bare name
+that raised `NameError`. All three were closed on 2026-08-19 and 61% became
+82%. Nine of the twelve that are left are a line beginning with
+`show`/`say`/`tell`, which is the language working as designed.
 
 This is a **measurement**, not a pass/fail gate. Run it, read the three numbers,
 and decide whether the direction is right:
@@ -65,6 +68,10 @@ python scripts/check-prose-blocks.py              # and no guide line may drift
 | 2026-08-18, start | 442 | 124 | 141 | — |
 | 2026-08-18, after accepting more | 496 | 70 | 46 | 20/30 |
 | 2026-08-18, after refusing loudly | 461 | 105 | 11 | 30/30 |
+| 2026-08-19, after the English-prose round | 628 | 122 | 11 | 30/30 |
+
+The first three rows were measured over 566 probes; the last over 750, so read
+the mis-compile column across them and the other two only within a row.
 
 Accepting more and refusing loudly pull in opposite directions, which is why
 both numbers are here: the second round gave back 35 acceptances to remove 35

@@ -1440,3 +1440,238 @@ fn loop_control_words_outside_a_block_stay_python() {
     assert_eq!(ok("stop = 1\nstop\n"), "stop = 1\nstop\n");
     assert_eq!(ok("done = 1\ndone\n"), "done = 1\ndone\n");
 }
+
+// ---------------------------------------------------------------------------
+// 2026-08-19 — English prose. Measured against 302 ordinary English sentences
+// (`scripts/mistake-probes/english_prose.py`): 184 of them printed themselves
+// word for word, and 44 compiled into a different program. Each test below
+// closes one of the causes, and each keeps the command it was hiding behind.
+
+#[test]
+fn ordinary_prose_may_carry_a_number() {
+    // A digit anywhere used to switch the sentence path off for the whole
+    // line: `The soup needs cream.` printed and `The soup needs 250 ml of
+    // cream.` was refused. Prices, ages, times, dates and room numbers are
+    // what people put in sentences.
+    assert_eq!(
+        ok("The soup needs 250 ml of cream.\n"),
+        "print(\"The soup needs 250 ml of cream.\")\n"
+    );
+    assert_eq!(
+        ok("Room 214 is at the end of the corridor.\n"),
+        "print(\"Room 214 is at the end of the corridor.\")\n"
+    );
+    assert_eq!(ok("I have 3 apples\n"), "print(\"I have 3 apples\")\n");
+    assert_eq!(
+        ok("가격은 5000원이었습니다\n"),
+        "print(\"가격은 5000원이었습니다\")\n"
+    );
+    // And a number written beside a command word is still a command.
+    assert_eq!(ok("wait 3 seconds\n"), "__import__(\"time\").sleep(3)\n");
+    assert_eq!(ok("3초 기다려\n"), "__import__(\"time\").sleep(3)\n");
+    assert_eq!(ok("set score to 0\n"), "score = 0\n");
+}
+
+#[test]
+fn a_pick_needs_its_choices_marked_off_from_each_other() {
+    // Found while writing a guide. Nothing in this line names alternatives,
+    // and the parser split it on its spaces and printed one word of it at
+    // random — a different one every run.
+    assert_eq!(
+        ok("마음에 드는 것을 골라 보세요\n"),
+        "print(\"마음에 드는 것을 골라 보세요\")\n"
+    );
+    assert_eq!(
+        ok("천천히 골라도 됩니다\n"),
+        "print(\"천천히 골라도 됩니다\")\n"
+    );
+    // `중에서` on its own is a scope, not a pair of choices: `여러 개` is one
+    // phrase meaning "several", and it too was being picked apart.
+    assert_eq!(
+        ok("여러 개 중에서 뽑아\n"),
+        "print(\"여러 개 중에서 뽑아\")\n"
+    );
+    assert_eq!(
+        ok("pick a flower from the garden\n"),
+        "print(\"pick a flower from the garden\")\n"
+    );
+    assert_eq!(
+        ok("Which one did you choose in the end?\n"),
+        "print(\"Which one did you choose in the end?\")\n"
+    );
+    // The documented spellings mark their choices, and they still pick.
+    assert_eq!(
+        ok("색은 빨강 또는 초록 중에서 골라\n"),
+        "색 = __import__(\"random\").choice((\"빨강\", \"초록\",))\n"
+    );
+    assert_eq!(
+        ok("set color to pick from red or green\n"),
+        "color = __import__(\"random\").choice((\"red\", \"green\",))\n"
+    );
+}
+
+#[test]
+fn a_module_line_names_a_module() {
+    // `road` is one letter from `load` and `us` is one from `use`, and the
+    // search ran over every word of the line, so both of these were answered
+    // with the list of modules NME bundles.
+    assert_eq!(ok("end of the road\n"), "print(\"end of the road\")\n");
+    assert_eq!(
+        ok("Are you coming with us?\n"),
+        "print(\"Are you coming with us?\")\n"
+    );
+    assert_eq!(
+        ok("We use 2 spoons of salt.\n"),
+        "print(\"We use 2 spoons of salt.\")\n"
+    );
+    // A real module line still works, misspelled or not, and a module line
+    // written back to front is still refused.
+    assert!(ok("use random latest\n").contains("import random"));
+    assert!(ok("use randmo latest\n").contains("import random"));
+    assert!(ok("랜덤 사용 최신\n").contains("import random"));
+    assert_eq!(error_code("never use random\n"), "E0406");
+}
+
+#[test]
+fn a_repaired_english_output_word_takes_one_word_of_message() {
+    // `day` is one letter from `say` and `snow` one from `show`, so the last
+    // word of each of these sentences disappeared without a word being said.
+    assert_eq!(
+        ok("Today is a good day\n"),
+        "print(\"Today is a good day\")\n"
+    );
+    assert_eq!(
+        ok("Clear a path through the snow.\n"),
+        "print(\"Clear a path through the snow.\")\n"
+    );
+    assert_eq!(
+        ok("Snow began to fall on the empty market square.\n"),
+        "print(\"Snow began to fall on the empty market square.\")\n"
+    );
+    assert_eq!(
+        ok("How much further is it?\n"),
+        "print(\"How much further is it?\")\n"
+    );
+    // What a beginner really mistypes is the word in front of one word of
+    // message, and that is still repaired — in both orders, in both languages.
+    assert_eq!(ok("shwo hello\n"), "print(\"hello\")\n");
+    assert_eq!(ok("hello sya\n"), "print(\"hello\")\n");
+    assert_eq!(ok("말해조 안녕\n"), "print(\"안녕\")\n");
+    assert_eq!(ok("안녕 말해조\n"), "print(\"안녕\")\n");
+    // An output word spelled exactly is not a guess, so it keeps its whole
+    // message, at either end of the line.
+    assert_eq!(ok("show Hello world\n"), "print(\"Hello world\")\n");
+    assert_eq!(ok("Hello world show\n"), "print(\"Hello world\")\n");
+    assert_eq!(
+        ok("안녕하세요 여러분 말해줘\n"),
+        "print(\"안녕하세요 여러분\")\n"
+    );
+}
+
+#[test]
+fn a_command_word_does_not_bind_a_word_that_is_never_a_name() {
+    // Exit 0, no output, no error: the worst way to be told that a sentence
+    // was read as a command.
+    assert_eq!(
+        ok("set the table for four people\n"),
+        "print(\"set the table for four people\")\n"
+    );
+    assert_eq!(
+        ok("Set your alarm for the early train.\n"),
+        "print(\"Set your alarm for the early train.\")\n"
+    );
+    assert_eq!(
+        ok("remember to water the plants\n"),
+        "print(\"remember to water the plants\")\n"
+    );
+    assert_eq!(
+        ok("ask me anything you like\n"),
+        "print(\"ask me anything you like\")\n"
+    );
+    assert_eq!(
+        ok("Ask nicely and she might say yes.\n"),
+        "print(\"Ask nicely and she might say yes.\")\n"
+    );
+    // A `to` after the name, or quotes around the question, say that a name
+    // really was meant — whatever the word is. Converting Python back into
+    // sentences writes exactly these.
+    assert_eq!(ok("set then to 1\n"), "then = 1\n");
+    assert_eq!(ok("set score to 0\n"), "score = 0\n");
+    assert_eq!(ok("ask your \"hi\"\n"), "your = input(\"hi\")\n");
+    // And the prompt of a question is text, whatever words are in it.
+    assert_eq!(
+        ok("ask answer yes or no\n"),
+        "answer = input(\"yes or no\" + \" \")\n"
+    );
+    assert_eq!(
+        ok("ask number taken How many? 1, 2 or 3\n"),
+        "taken = int(input(\"How many? 1, 2 or 3\" + \" \"))\n"
+    );
+    assert_eq!(
+        ok("대답을 물어봐 예 또는 아니오\n"),
+        "대답 = input(\"예 또는 아니오\" + \" \")\n"
+    );
+}
+
+#[test]
+fn a_list_line_needs_its_items_marked_off() {
+    assert_eq!(
+        ok("List the ingredients on the back.\n"),
+        "print(\"List the ingredients on the back.\")\n"
+    );
+    assert_eq!(
+        ok("list everyone who came to the party\n"),
+        "print(\"list everyone who came to the party\")\n"
+    );
+    assert_eq!(
+        ok("set friends to list of Mina, Ada\n"),
+        "friends = [\"Mina\", \"Ada\"]\n"
+    );
+    assert_eq!(
+        ok("친구들은 목록 민수, 지안\n"),
+        "친구들 = [\"민수\", \"지안\"]\n"
+    );
+}
+
+#[test]
+fn a_glued_word_only_comes_apart_into_words() {
+    // `doctor` was read as `do ctor` and `finished` as `finish ed`, so these
+    // sentences were refused with a suggestion nobody could act on.
+    assert_eq!(
+        ok("story of a small town doctor\n"),
+        "print(\"story of a small town doctor\")\n"
+    );
+    assert_eq!(ok("Nearly finished\n"), "print(\"Nearly finished\")\n");
+    assert_eq!(
+        ok("a story worth telling\n"),
+        "print(\"a story worth telling\")\n"
+    );
+    // A space really left out is still named, in both languages.
+    assert_eq!(error_code("sayhello\n"), "E0604");
+    assert_eq!(error_code("안녕말해줘\n"), "E0604");
+}
+
+#[test]
+fn a_word_that_is_never_an_action_is_not_repaired_into_one() {
+    // `let` is in the table of words NME refuses and explains; repairing it
+    // into `set` is the translation that table exists to refuse.
+    assert_eq!(error_code("let score be 0\n"), "E0603");
+    assert_eq!(
+        ok("Let's not talk about it tonight.\n"),
+        "print(\"Let's not talk about it tonight.\")\n"
+    );
+}
+
+#[test]
+fn a_one_word_line_says_itself() {
+    // `Hello` on its own was a bare Python name, and the program died with a
+    // `NameError` on a line that is not the mistake.
+    assert_eq!(ok("Hello\n"), "print(\"Hello\")\n");
+    assert_eq!(ok("Prologue\n"), "print(\"Prologue\")\n");
+    assert_eq!(ok("안녕\n"), "print(\"안녕\")\n");
+    // A name the program set is Python doing nothing, and stays Python.
+    assert_eq!(ok("score = 1\nscore\n"), "score = 1\nscore\n");
+    // So does a word NME spells out itself.
+    assert_eq!(ok("say\n"), "say\n");
+    assert_eq!(ok("목록\n"), "목록\n");
+}

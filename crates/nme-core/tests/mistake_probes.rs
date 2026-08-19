@@ -948,8 +948,22 @@ fn a_separator_or_a_dash_inside_a_message_is_ordinary_text() {
 
 #[test]
 fn a_one_word_line_that_nme_uses_as_a_word_stays_python() {
-    // Documented behaviour: a one-word line is a Python name. NME only
-    // refuses one when it can say what the writer probably meant.
+    // A word NME spells out itself keeps its Python meaning: `say`, `end`,
+    // `skip` and `목록` are names a Python program is free to use, and a line
+    // holding one of them opens or closes nothing.
     assert_eq!(transpile("say\n").unwrap(), "say\n");
-    assert_eq!(transpile("Mina\nSana\n").unwrap(), "Mina\nSana\n");
+    assert_eq!(transpile("end\n").unwrap(), "end\n");
+    // A name the program set earlier is Python doing nothing, and that is not
+    // NME's to change.
+    assert_eq!(transpile("Mina = 1\nMina\n").unwrap(), "Mina = 1\nMina\n");
+    // Any other one-word line prints. Until 2026-08-19 it stayed a bare
+    // Python name and the program died with a `NameError` pointing at a line
+    // that is not the mistake; `Mina` and `Sana` on their own lines are a
+    // list of names somebody wrote, and now they say themselves.
+    assert_eq!(
+        transpile("Mina\nSana\n").unwrap(),
+        "print(\"Mina\")\nprint(\"Sana\")\n"
+    );
+    assert_eq!(transpile("Hello\n").unwrap(), "print(\"Hello\")\n");
+    assert_eq!(transpile("안녕\n").unwrap(), "print(\"안녕\")\n");
 }

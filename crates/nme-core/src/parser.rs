@@ -393,6 +393,225 @@ const EACH_WORDS_EN: &[&str] = &["each", "every"];
 const EACH_SUFFIX_KO: &str = "마다";
 /// Particles that may sit between the collection and the loop variable.
 const EACH_CONTAINER_PARTICLES_KO: &[&str] = &["가운데", "안의", "속의", "에서", "중", "의"];
+/// English words that never name a value.
+///
+/// A command word at the start of a line does not make the rest of the line
+/// its argument. `set the table for four people` is a sentence, and reading
+/// it as a name called `the` holding `table for four people` produced a
+/// program that ran, printed nothing and reported nothing. So did `remember
+/// to water the plants`, `Set your alarm for the early train.` and `ask me
+/// anything you like`. When the name a sentence form would create is one of
+/// these, the line is prose and prints itself.
+const NOT_A_NAME_EN: &[&str] = &[
+    "a",
+    "about",
+    "above",
+    "across",
+    "after",
+    "again",
+    "against",
+    "all",
+    "an",
+    "along",
+    "already",
+    "also",
+    "although",
+    "always",
+    "am",
+    "among",
+    "another",
+    "any",
+    "anyone",
+    "anything",
+    "anyway",
+    "are",
+    "around",
+    "aside",
+    "at",
+    "away",
+    "back",
+    "be",
+    "because",
+    "been",
+    "before",
+    "behind",
+    "being",
+    "below",
+    "beside",
+    "between",
+    "beyond",
+    "both",
+    "but",
+    "by",
+    "can",
+    "could",
+    "did",
+    "does",
+    "down",
+    "during",
+    "each",
+    "either",
+    "enough",
+    "even",
+    "ever",
+    "every",
+    "everyone",
+    "everything",
+    "except",
+    "for",
+    "from",
+    "had",
+    "has",
+    "have",
+    "he",
+    "her",
+    "here",
+    "hers",
+    "herself",
+    "him",
+    "himself",
+    "his",
+    "how",
+    "however",
+    "i",
+    "if",
+    "inside",
+    "instead",
+    "into",
+    "it",
+    "its",
+    "itself",
+    "just",
+    "may",
+    "me",
+    "might",
+    "must",
+    "my",
+    "myself",
+    "near",
+    "nearly",
+    "neither",
+    "never",
+    "no",
+    "nobody",
+    "none",
+    "nor",
+    "nothing",
+    "now",
+    "of",
+    "off",
+    "on",
+    "onto",
+    "or",
+    "other",
+    "our",
+    "ours",
+    "ourselves",
+    "out",
+    "outside",
+    "over",
+    "past",
+    "perhaps",
+    "please",
+    "quite",
+    "rather",
+    "really",
+    "she",
+    "should",
+    "since",
+    "so",
+    "some",
+    "someone",
+    "something",
+    "still",
+    "such",
+    "than",
+    "that",
+    "the",
+    "their",
+    "theirs",
+    "them",
+    "themselves",
+    "then",
+    "there",
+    "these",
+    "they",
+    "this",
+    "those",
+    "though",
+    "through",
+    "throughout",
+    "to",
+    "together",
+    "too",
+    "toward",
+    "towards",
+    "under",
+    "unless",
+    "until",
+    "up",
+    "upon",
+    "us",
+    "very",
+    "was",
+    "we",
+    "were",
+    "what",
+    "whatever",
+    "where",
+    "whether",
+    "which",
+    "while",
+    "who",
+    "whoever",
+    "whom",
+    "whose",
+    "why",
+    "will",
+    "with",
+    "within",
+    "without",
+    "would",
+    "yet",
+    "you",
+    "your",
+    "yours",
+    "yourself",
+    // Adverbs. `Ask nicely and she might say yes.` is a sentence; a value
+    // called `nicely` is not something anybody sets out to make.
+    "absolutely",
+    "badly",
+    "barely",
+    "carefully",
+    "certainly",
+    "clearly",
+    "completely",
+    "definitely",
+    "easily",
+    "entirely",
+    "exactly",
+    "finally",
+    "gently",
+    "happily",
+    "hardly",
+    "kindly",
+    "loudly",
+    "mostly",
+    "nicely",
+    "politely",
+    "probably",
+    "quickly",
+    "quietly",
+    "sadly",
+    "safely",
+    "simply",
+    "slowly",
+    "softly",
+    "suddenly",
+    "totally",
+    "usually",
+];
+
 const SENTENCE_FILLERS: &[&str] = &["please", "좀", "혹시", "제발"];
 const COMMAND_ENDINGS: &[&str] = &["?", "!"];
 /// Counting words accepted wherever a repeat count or a number of seconds is
@@ -2940,13 +3159,20 @@ fn classify(
         return match_times(source, tokens, block, known_names, MatchMode::Exact);
     }
     if ask_action_at(tokens, 0, MatchMode::Exact).is_some() {
-        return match_ask(source, tokens, known_names, MatchMode::Exact);
+        // An `ask` at the start of a line does not make the rest of the line
+        // a question: `ask Mum about the recipe` asks nobody anything. When
+        // `match_ask` declines, the line goes on to the sentence path rather
+        // than being handed to Python, which would answer a written sentence
+        // with CPython's own `SyntaxError`.
+        exact_match!(match_ask(source, tokens, known_names, MatchMode::Exact));
     }
     if output_action_at(tokens, 0, MatchMode::Exact).is_some() {
         return match_say(source, tokens, known_names, MatchMode::Exact);
     }
     if set_action_at(tokens, 0, MatchMode::Exact).is_some() {
-        return match_set(source, tokens, known_names, MatchMode::Exact);
+        // Likewise `set the table for four people`: a `set` at the start of
+        // a line of ordinary words is part of the sentence.
+        exact_match!(match_set(source, tokens, known_names, MatchMode::Exact));
     }
     if action_phrase_at(tokens, 0, USE_WORDS_EN, MatchMode::Exact).is_some()
         || action_phrase_at(tokens, 0, USE_WORDS_KO, MatchMode::Exact).is_some()
@@ -3088,6 +3314,17 @@ fn classify(
         }
     }
     if candidates.len() == 1 && recovery_problems.is_empty() {
+        // An output word the prose rule turned down is still a reading. When
+        // the same misspelling is one edit from a second action as well, the
+        // line has two meanings and only the writer knows which: `asy name
+        // Hello` is `say` or `ask`, and choosing one silently is the guess
+        // this compiler exists to avoid.
+        let output_declined_for_prose = !recoverable_output_shape(tokens)
+            && (output_action_at(tokens, 0, MatchMode::Recover).is_some()
+                || output_action_ending(tokens, MatchMode::Recover).is_some());
+        if output_declined_for_prose && single_word_ties_two_actions(tokens) {
+            return Err(ambiguous_action_diagnostic(tokens));
+        }
         return Ok(candidates.pop());
     }
     let report_recovery = !prose_beats_recovery(tokens, known_names);
@@ -3126,7 +3363,7 @@ fn classify(
     if is_python_keyword(&tokens[0].tok) {
         return Ok(None);
     }
-    if looks_like_plain_prose(tokens) {
+    if is_written_prose_line(tokens) {
         if near_miss_action_word(tokens, known_names).is_some() {
             return Err(unknown_action_word_diagnostic(tokens, known_names));
         }
@@ -3176,6 +3413,14 @@ fn match_say(
             return Err(say_missing(spelling, tokens[action_start].span));
         }
         let body = trim_trailing_fillers(&tokens[body_start..]);
+        if spelling == Spelling::English
+            && output_action_at(tokens, action_start, MatchMode::Exact).is_none()
+            && !english_output_repair_is_safe(body)
+        {
+            // A repaired English output word only claims one word of message.
+            // See `english_output_repair_is_safe`.
+            return Ok(None);
+        }
         let prefer_text = action_start != 0
             || consumed != 1
             || mode == MatchMode::Recover
@@ -3230,6 +3475,16 @@ fn match_say(
     }
     let value_tokens =
         trim_suffix_say_value(trim_trailing_fillers(&tokens[value_start..action_start]));
+    if spelling == Spelling::English
+        && output_action_ending(tokens, MatchMode::Exact).is_none()
+        && !english_output_repair_is_safe(&value_tokens)
+    {
+        // `Hello world show` is the message-first order English tolerates and
+        // it takes any message, because the output word is written exactly.
+        // A *repaired* one takes a single word: `Clear a path through the
+        // snow.` is a sentence, not `show` with `snow` misspelled.
+        return Ok(None);
+    }
     if value_tokens.is_empty() {
         if mode == MatchMode::Recover {
             return Ok(None);
@@ -3249,6 +3504,34 @@ fn match_say(
         )
     })?;
     Ok(Some(NmeStmt::Say { value }))
+}
+
+/// True when a sentence form may make this word into a name.
+///
+/// Only English is asked: Korean marks its target with a particle, which is
+/// already the proof that a name was meant.
+fn is_bindable_english_name(word: &str) -> bool {
+    !NOT_A_NAME_EN
+        .iter()
+        .any(|known| word.eq_ignore_ascii_case(known))
+}
+
+/// True when an English output word may claim the rest of the line.
+///
+/// English states its action first and states it exactly; every other reading
+/// is a guess. Two of them used to be made silently. A misspelling anywhere on
+/// a line of ordinary words claimed the line — `Today is a good day` printed
+/// `Today is a good`, because `day` is one letter from `say`, and `Clear a
+/// path through the snow.` lost `snow` to `show`. And an output word written
+/// *after* the message — the Korean order, which English also tolerates —
+/// claimed `There is nothing left to say.`
+///
+/// Both readings are kept for what a beginner really writes: one word of
+/// message, which is `shwo hello` and `hello sya`. With more than one word
+/// there, the line is prose and prints itself whole. An output word spelled
+/// *exactly* is not a guess, so `Hello world show` keeps its whole message.
+fn english_output_repair_is_safe(message: &[Token]) -> bool {
+    message.len() == 1 && name_word(&message[0]).is_some()
 }
 
 fn say_missing(_spelling: Spelling, span: Span) -> Diagnostic {
@@ -3336,6 +3619,21 @@ fn match_ask(
     // Neither is a name the writer set, so neither is ever emitted.
     if opens_a_question(tokens, shape.target_at) || is_english_article(Some(target_token)) {
         return Err(ask_target_diagnostic(shape.spelling, target_token.span));
+    }
+    let prompt_is_written_out = tokens[shape.prompt_start.min(tokens.len())..]
+        .iter()
+        .all(|token| !matches!(token.tok, Tok::Comma | Tok::String { .. }));
+    if shape.spelling == Spelling::English
+        && prompt_is_written_out
+        && !is_bindable_english_name(target_word)
+    {
+        // `ask your teacher about the field trip` and `ask me anything you
+        // like` are sentences: neither `your` nor `me` is a name anybody meant
+        // to create, and stopping the program at an `input()` nobody wrote is
+        // the worst way to find that out. Quotes or a comma say a name was
+        // meant, so `ask your "hi"` still asks. The words of the prompt are
+        // never looked at: everything after the name is text.
+        return Ok(None);
     }
     let target = strip_target_particle(target_word).to_string();
     if target.is_empty() {
@@ -9370,6 +9668,13 @@ fn match_use_module(
         }
     }
     let Some((module, module_at)) = module else {
+        if find_use_action(tokens, MatchMode::Exact).is_none() {
+            // The action word was only a guess — `set` is one letter from
+            // `get` — and nothing on the line names a module. Then this is
+            // not a module line, and `set the table for four people` must not
+            // be answered with the list of modules NME bundles.
+            return Ok(None);
+        }
         return Err(unsupported_module_diagnostic(span_of(tokens)));
     };
 
@@ -9634,10 +9939,32 @@ fn unsupported_module_diagnostic(span: Span) -> Diagnostic {
     )
 }
 
+/// Where a module line states its action.
+///
+/// English states it first and nowhere else. Reading it anywhere on the line
+/// meant that `At the end of the use we turned back.` and `We use 2 spoons of
+/// salt.` were answered with a list of the modules NME bundles — `use` was in
+/// the sentence, so the sentence became a module line. Korean writes the
+/// action after the module (`랜덤 사용 최신`), so Korean is still searched
+/// across the line.
 fn find_use_action(tokens: &[Token], mode: MatchMode) -> Option<(usize, usize, Spelling)> {
+    let english_start = leading_sentence_fillers(tokens);
+    if let Some(consumed) = action_phrase_at(tokens, english_start, USE_WORDS_EN, mode) {
+        return Some((english_start, english_start + consumed, Spelling::English));
+    }
+    // Elsewhere on the line, an English `use` word only counts when a module
+    // is named beside it: `never use random` is a module line written back to
+    // front, and `We use 2 spoons of salt.` is a sentence.
+    let names_a_module = tokens.iter().any(|token| {
+        BundledModuleId::ALL
+            .iter()
+            .any(|module| module_word_matches(token, *module, MatchMode::Exact))
+    });
     for start in 0..tokens.len() {
-        if let Some(consumed) = action_phrase_at(tokens, start, USE_WORDS_EN, mode) {
-            return Some((start, start + consumed, Spelling::English));
+        if names_a_module {
+            if let Some(consumed) = action_phrase_at(tokens, start, USE_WORDS_EN, mode) {
+                return Some((start, start + consumed, Spelling::English));
+            }
         }
         if let Some(consumed) = action_phrase_at(tokens, start, USE_WORDS_KO, mode) {
             return Some((start, start + consumed, Spelling::Korean));
@@ -9682,10 +10009,18 @@ fn recoverable_module_shape(tokens: &[Token]) -> bool {
         .filter(|token| word_matches_any(token, &["version", "버전"], MatchMode::Recover))
         .count();
 
-    action_recovered
-        || (module_exact == 0 && module_recovered == 1)
-        || (exact_latest == 0 && recovered_latest == 1)
-        || (exact_version == 0 && recovered_version == 1)
+    // A module line always names its module. Without that, one ordinary word
+    // one edit from `use`/`load`/`get` claimed the whole line: `end of the
+    // road` was told to choose a module version because `road` is one edit
+    // from `load`, and `Are you coming with us?` because `us` is one edit
+    // from `use`. A misspelling only starts a module line when a module is
+    // actually on it.
+    let names_a_module = module_exact + module_recovered > 0;
+    names_a_module
+        && (action_recovered
+            || (module_exact == 0 && module_recovered == 1)
+            || (exact_latest == 0 && recovered_latest == 1)
+            || (exact_version == 0 && recovered_version == 1))
 }
 
 fn module_shape_diagnostic(_spelling: Spelling, span: Span) -> Diagnostic {
@@ -9714,9 +10049,17 @@ fn match_set(
     // sentences to assignments: `이름 저장 민수` / `name save Mina`.  Keep it
     // deliberately strict (the save word must be the second token) so normal
     // prose is not silently turned into a variable assignment.
+    // English spells this one exactly. `have` is one letter from `save`, and
+    // with a repair allowed here `I have 3 apples` quietly became a value
+    // called `I` holding the text `3 apples`. Korean marks its target with a
+    // particle, so a repair there still has something to lean on.
+    let target_first_spelling = set_action_at(tokens, 1, mode).map(|(spelling, _)| spelling);
+    let target_first_is_written_out = target_first_spelling != Some(Spelling::English)
+        || set_action_at(tokens, 1, MatchMode::Exact).is_some();
     if tokens.len() >= 2
         && name_word(&tokens[0]).is_some()
         && set_action_at(tokens, 1, mode).is_some()
+        && target_first_is_written_out
     {
         let target_token = &tokens[0];
         let target = strip_saved_target(name_word(target_token).expect("checked name token"));
@@ -9855,6 +10198,19 @@ fn match_set(
                 "`저장 인사 안녕하세요` 또는 `set greeting to Hello`처럼 쓰세요",
             ));
         };
+        let marked_by_a_connector = tokens
+            .get(consumed + 1)
+            .is_some_and(|token| token_matches_exact(token, &["to", "as", "is", "into"]));
+        if spelling == Spelling::English
+            && !marked_by_a_connector
+            && !is_bindable_english_name(target_word)
+        {
+            // `set the table for four people` — see `NOT_A_NAME_EN`. A `to`
+            // after the name says a name was meant, whatever the word is:
+            // `set then to 1` really does make a value called `then`, and
+            // converting Python back into sentences writes exactly that.
+            return Ok(None);
+        }
         let target = if spelling == Spelling::Korean {
             strip_saved_target(target_word)
         } else {
@@ -10344,6 +10700,15 @@ fn parse_list_value(
             .is_some_and(|token| token_matches_exact(token, &["of"]))
         {
             start = 2;
+        } else if !tokens[1..]
+            .iter()
+            .any(|token| matches!(token.tok, Tok::Comma))
+        {
+            // `list of Mina, Ada` names its items with `of`, and `list Mina,
+            // Ada` names them with commas. `List the ingredients on the back.`
+            // does neither: it is a sentence, and reading it as a list put the
+            // whole of it inside one pair of brackets.
+            return None;
         }
     } else if token_matches_exact(tokens.first()?, LIST_WORDS_KO) {
         start = 1;
@@ -10827,6 +11192,25 @@ fn parse_random_integer(source: &str, tokens: &[Token]) -> Option<Value> {
     }
 }
 
+/// The words that mark one choice off from the next: `red or green`,
+/// `빨강 또는 초록`, or a comma between them.
+const CHOICE_SEPARATOR_WORDS: &[&str] = &["or", "and", "또는", "이나", "나"];
+
+/// True when the alternatives are marked off from each other.
+///
+/// Without this the parser split any sentence containing `골라` on its spaces
+/// and picked one of the pieces: `마음에 드는 것을 골라 보세요` printed a
+/// different word of itself every run, and nothing in the line ever named a
+/// choice. A pick only reads as a pick when the writer separated the choices —
+/// with `또는`/`or`, or with a comma. `중에서` before the pick word is not
+/// enough on its own: `여러 개 중에서 뽑아` is one phrase, not two choices, and
+/// it too was picking a word of itself at random.
+fn choices_are_marked(choices_tokens: &[Token]) -> bool {
+    choices_tokens.iter().any(|token| {
+        token_matches_exact(token, CHOICE_SEPARATOR_WORDS) || matches!(token.tok, Tok::Comma)
+    })
+}
+
 fn parse_random_choice(source: &str, tokens: &[Token]) -> Option<Value> {
     let pick_at = tokens
         .iter()
@@ -10840,6 +11224,9 @@ fn parse_random_choice(source: &str, tokens: &[Token]) -> Option<Value> {
     } else {
         &tokens[..pick_at]
     };
+    if !choices_are_marked(choices_tokens) {
+        return None;
+    }
     let choices: Vec<String> = choices_tokens
         .iter()
         .filter(|token| {
@@ -11828,7 +12215,28 @@ fn word_matches(actual: &str, expected: &str, mode: MatchMode) -> bool {
 /// NME spells out itself has a meaning of its own, so guessing a different
 /// one from it can only be wrong.
 fn is_own_vocabulary(word: &str) -> bool {
+    // An English word the compiler already knows as one a beginner writes
+    // *instead of* an action word is never repaired into that action. The
+    // tables exist to reject those words and say what to write; repairing one
+    // would be the translation they exist to refuse — `let score be 0` saved
+    // the text `"be 0"`, and `Let's not talk about it tonight.` made a value
+    // called `s`. Korean is left out on purpose: `말해라` is in the same table
+    // and is one edit from `말해줘`, and repairing it is what a Korean writer
+    // gets today.
+    if word.is_ascii() && is_mistaken_action_word(word) {
+        return true;
+    }
     [
+        // `to`, `by`, `of`, `into`, `onto`, `from` join the parts of a
+        // statement together, and `and`/`or` join two of anything. `to` is
+        // one letter from the repeat alias `do`, and `to 0 set score` was
+        // read as "repeat 0 times" because of it; `and` is one letter from
+        // `add`, and `She was born in 1952 and died in 2019.` became
+        // `She = She + (died in 2019.)`. A word NME already spells out has a
+        // job of its own.
+        UPDATE_CONNECTOR_WORDS_EN,
+        APPEND_CONNECTORS_EN,
+        CHOICE_SEPARATOR_WORDS,
         READING_LEAD_WORDS_EN,
         DIVIDED_WORDS_KO,
         REMAINDER_WORDS_KO,
@@ -12028,6 +12436,28 @@ fn looks_like_plain_prose(tokens: &[Token]) -> bool {
         .all(|(index, token)| is_sentence_word_token(index, token))
 }
 
+/// A written line that is words and nothing but words, except that it is
+/// allowed to carry numbers.
+///
+/// Prices, ages, times, dates, room and chapter numbers are what people put
+/// in sentences, and one digit anywhere used to switch the sentence path off
+/// for the whole line: `The soup needs cream.` printed and `The soup needs
+/// 250 ml of cream.` did not. Korean already had this through
+/// [`is_written_korean_sentence`]; English had nothing.
+///
+/// This is deliberately *not* [`looks_like_plain_prose`]: the checks that
+/// decide whether valid Python is really a sentence keep the stricter
+/// reading, so `score is 0` is still named as a line that does nothing.
+fn looks_like_written_prose(tokens: &[Token]) -> bool {
+    tokens.iter().enumerate().all(|(index, token)| {
+        is_sentence_word_token(index, token)
+            || matches!(
+                token.tok,
+                Tok::Int { .. } | Tok::Float { .. } | Tok::Percent
+            )
+    })
+}
+
 /// A token that can be part of a written sentence. A Python keyword that only
 /// ever opens a statement counts when it is not the first word, because it
 /// cannot be code there: `insert coin to continue` is a sentence, while a
@@ -12061,8 +12491,7 @@ fn is_sentence_word_token(index: usize, token: &Token) -> bool {
 
 fn has_recoverable_sentence_shape(tokens: &[Token]) -> bool {
     has_recoverable_repeat_shape(tokens)
-        || output_action_at(tokens, 0, MatchMode::Recover).is_some()
-        || output_action_ending(tokens, MatchMode::Recover).is_some()
+        || recoverable_output_shape(tokens)
         || find_ask_shape(tokens, MatchMode::Recover).is_some()
         || (set_action_at(tokens, 0, MatchMode::Recover).is_some() && tokens.len() > 1)
         || recoverable_module_shape(tokens)
@@ -12073,6 +12502,32 @@ fn has_recoverable_sentence_shape(tokens: &[Token]) -> bool {
         || has_recoverable_append_shape(tokens)
         || english_for_each_start(tokens, MatchMode::Recover).is_some()
         || korean_for_each_shape(tokens)
+}
+
+/// True when an output word could really claim this line, which is the same
+/// question [`match_say`] answers.
+///
+/// The two must agree. A line the output matcher will decline is not a
+/// recoverable sentence shape, and calling it one sent the line to the
+/// recovery round instead of the sentence path: `quick and lazy are fun words
+/// to say` was answered by a near miss at a *value change*, because `say`
+/// stands at the end of it.
+fn recoverable_output_shape(tokens: &[Token]) -> bool {
+    if let Some((spelling, consumed)) = output_action_at(tokens, 0, MatchMode::Recover) {
+        let repaired = spelling == Spelling::English
+            && output_action_at(tokens, 0, MatchMode::Exact).is_none();
+        if !repaired || english_output_repair_is_safe(&tokens[consumed..]) {
+            return true;
+        }
+    }
+    if let Some((start, spelling, _)) = output_action_ending(tokens, MatchMode::Recover) {
+        let repaired = spelling == Spelling::English
+            && output_action_ending(tokens, MatchMode::Exact).is_none();
+        if !repaired || english_output_repair_is_safe(&tokens[..start]) {
+            return true;
+        }
+    }
+    false
 }
 
 /// True when a misspelled list-adding word closes or opens the line, which is
@@ -12305,6 +12760,55 @@ fn near_miss_action_word(
     })
 }
 
+/// True when a word a beginner writes where an action word belongs stands on
+/// the line, spelled exactly as one of the tables spells it.
+fn is_mistaken_action_word(word: &str) -> bool {
+    NEAR_MISS_ACTIONS
+        .iter()
+        .chain(MISTAKEN_ACTIONS)
+        .any(|(written, _)| word.eq_ignore_ascii_case(written))
+}
+
+/// True when the first or the last word of the line is an action word, or a
+/// word a beginner writes where an action word belongs.
+///
+/// English states its action first and Korean states it last, so those two
+/// places are where a command word can be doing a command's job. This is what
+/// separates `hold 2 seconds` — a wait written with the wrong word — from
+/// `Room 214 is at the end of the corridor`, where `end` is only part of the
+/// sentence. It is asked only of a line that carries a number, which is the
+/// one case where the sentence path had to be widened.
+fn opens_or_closes_with_a_command_word(tokens: &[Token]) -> bool {
+    let words = tokens.iter().filter_map(name_word).collect::<Vec<_>>();
+    if [words.first().copied(), words.last().copied()]
+        .into_iter()
+        .flatten()
+        .any(|word| is_action_word(word) || is_mistaken_action_word(word))
+    {
+        return true;
+    }
+    // A number written straight beside a command word is the shape of a
+    // command with a count — `wait 3`, `3 times`, `to 0 set score` — and not
+    // the shape of a sentence. `Room 214 is at the end of the corridor.` puts
+    // its number nowhere near `end`, so it stays a sentence.
+    (0..tokens.len()).any(|index| {
+        let numeric = |at: usize| {
+            tokens
+                .get(at)
+                .is_some_and(|token| matches!(token.tok, Tok::Int { .. } | Tok::Float { .. }))
+        };
+        name_word(&tokens[index]).is_some_and(is_action_word)
+            && (numeric(index + 1) || (index > 0 && numeric(index - 1)))
+    })
+}
+
+/// True when the line is written prose: either words alone, or words and
+/// numbers with no command word at either end.
+fn is_written_prose_line(tokens: &[Token]) -> bool {
+    looks_like_plain_prose(tokens)
+        || (looks_like_written_prose(tokens) && !opens_or_closes_with_a_command_word(tokens))
+}
+
 /// True when every token on the line is a word, a number, a quoted piece of
 /// text, or a sentence mark. That is the shape of something a person wrote as
 /// a sentence; Python code always brings an operator, a bracket, or a colon.
@@ -12460,8 +12964,27 @@ fn split_off_action_word(piece: &str) -> Vec<String> {
         let (left, right) = piece.split_at(at);
         // Both halves must be real words. Without this, `Don't stop!` comes
         // apart as `Do` + `n`, because `do` is one of the repeat words.
-        let both_are_words = left.chars().count() > 1 && right.chars().count() > 1;
-        if both_are_words && (is_action_word(left) || is_action_word(right)) {
+        //
+        // English needs a longer half than Korean does. Two ASCII letters are
+        // not a word, and letting them count read `doctor` as `do ctor` and
+        // `finished` as `finish ed`, so `story of a small town doctor` was
+        // refused with a suggestion nobody could act on. A Korean word really
+        // can be two characters (`안녕말해줘` is `안녕` + `말해줘`).
+        // English needs longer halves than Korean does. Two or three ASCII
+        // letters left over are not a word, and letting them count read
+        // `doctor` as `do ctor`, `finished` as `finish ed`, `friend` as `fri
+        // end` and `telling` as `tell ing` — so `story of a small town
+        // doctor` was refused with a suggestion nobody could act on. The half
+        // that is the action word may be short (`say`); the half that is left
+        // over may not. A Korean word really can be two characters
+        // (`안녕말해줘` is `안녕` + `말해줘`).
+        let long_enough = |piece: &str, least: usize| {
+            piece.chars().count() >= if piece.is_ascii() { least } else { 2 }
+        };
+        let split_here = |action: &str, rest: &str| {
+            is_action_word(action) && long_enough(action, 3) && long_enough(rest, 5)
+        };
+        if split_here(left, right) || split_here(right, left) {
             return vec![left.to_string(), right.to_string()];
         }
         if strip_assignment_particle(left).is_some() && right.chars().all(|c| c.is_ascii_digit()) {
@@ -12569,10 +13092,11 @@ fn statement_does_nothing(tokens: &[Token]) -> Option<Diagnostic> {
                 format!("블록을 닫는 `{closing}`을 쓰려던 건가요?"),
             ));
         }
-        // A word NME cannot say anything useful about is left to Python. One
-        // name per line is also how a plain list of names is written, and
-        // guessing that `Mina` wanted an action would be the same silent
-        // rewrite this whole check exists to stop.
+        // A word NME cannot say anything useful about is left to the sentence
+        // path, which prints it (see `valid_python_is_a_sentence`). One name
+        // per line is also how a plain list of names is written, and guessing
+        // that `Mina` wanted an *action* would be the silent rewrite this
+        // whole check exists to stop.
         return None;
     }
     if story_annotation(tokens) {
@@ -12780,13 +13304,17 @@ fn valid_python_is_a_sentence(tokens: &[Token], known_names: &HashSet<String>) -
             return true;
         }
     }
+    // One word on a line of its own, and the program never gave that name a
+    // value. Python reads the name, throws the answer away, and dies with a
+    // `NameError` pointing at a line that is not the mistake. Nothing else
+    // the word could mean is code, so it is what somebody wrote: `Hello`,
+    // `Prologue`, `끝입니다`, and each line of a list of names.
+    //
+    // A name the program *did* set stays Python. There the line really is
+    // Python doing nothing, and it is not NME's to change.
     if tokens.len() == 1 {
         if let Some(word) = name_word(&tokens[0]) {
-            return is_hangul(word)
-                && !known_names.contains(word)
-                && SENTENCE_ENDINGS_KO
-                    .iter()
-                    .any(|ending| word.len() > ending.len() && word.ends_with(ending));
+            return !known_names.contains(word) && !is_nme_vocabulary_word(&tokens[0]);
         }
     }
     false
@@ -12802,7 +13330,7 @@ fn prose_beats_recovery(tokens: &[Token], known_names: &HashSet<String>) -> bool
     // A written Korean sentence counts as prose here even with a number or a
     // `%` in it: `나는 100% 동의합니다` is agreement, and the nearest command
     // to it is a one-letter guess at a value change.
-    if !looks_like_plain_prose(tokens) && !is_written_korean_sentence(tokens, known_names) {
+    if !is_written_prose_line(tokens) && !is_written_korean_sentence(tokens, known_names) {
         return false;
     }
     if tokens

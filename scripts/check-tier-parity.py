@@ -140,6 +140,8 @@ WORD_LIST_EXCEPTIONS = {
     "EXTREME_THING_WORDS_KO": "scaffolding of `점수들 중 가장 큰 것`; English says `the biggest of scores`",
     "READING_PARTICLES_KO": "particles a reading carries in a condition; English has none",
     "READING_LEAD_WORDS_EN": "`how many friends`; Korean puts the counting word after the name (COUNT_WORDS_KO)",
+    "CHOICE_SCOPE_WORDS_KO": "`빨강 또는 초록 중에서 골라`; English writes the scope as `from` inside `pick from red or green`",
+    "NOT_A_NAME_EN": "words a sentence may never turn into a name; Korean marks its target with a particle instead",
 }
 
 
