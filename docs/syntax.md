@@ -754,12 +754,12 @@ touched.**
 | `E0203` | the sentence to show is not valid |
 | `E0204` | `say` has nothing to show |
 | `E0211` | the question after the comma is missing |
-| `E0212` | the question could not be understood |
+| `E0212` | NME could not read the question |
 | `E0213` | no name to hold the answer |
-| `E0221` | the value change could not be understood |
-| `E0222` | the break command could not be understood |
-| `E0223` | the skip command could not be understood |
-| `E0224` | the wait length could not be understood |
+| `E0221` | NME could not read the value change |
+| `E0222` | NME could not read the line that leaves the loop |
+| `E0223` | NME could not read the line that skips a round |
+| `E0224` | NME could not read how long to wait |
 | `E0225` | this list line could not be read |
 | `E0226` | the timer has not been started yet |
 | `E0227` | a chance can only go to one decimal place |
@@ -776,11 +776,11 @@ touched.**
 | `E0238` | a file read with no name to read into |
 | `E0239` | a file name that is not in quotation marks |
 | `E0301` | the condition is missing |
-| `E0302` | the condition could not be understood |
-| `E0303` | the repeated body could not be understood |
-| `E0304` | the repeat count could not be understood |
+| `E0302` | NME could not read the condition |
+| `E0303` | NME could not read what to repeat |
+| `E0304` | NME could not read how many times to repeat |
 | `E0305` | the repeat count is missing |
-| `E0306` | the repeat-over-a-list line could not be understood |
+| `E0306` | NME could not read the line that goes through a list |
 | `E0401` | NME bundles seven modules, and this is not one of them |
 | `E0402` | latest and an exact version on one line |
 | `E0403` | the module version is missing |
@@ -791,7 +791,7 @@ touched.**
 | `E0408` | a module import line NME could not read |
 | `E0409` | a module loaded twice |
 | `E0411` | the value to save is missing |
-| `E0412` | the value to save could not be understood |
+| `E0412` | NME could not read the value to save |
 | `E0413` | the name to save into is missing |
 | `E0414` | the name to save into is not a plain name |
 | `E0501` | the lines to repeat are not indented |

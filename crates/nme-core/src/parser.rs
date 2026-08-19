@@ -4481,8 +4481,8 @@ fn match_say(
         let value = parse_value(source, body, known_names, prefer_text).map_err(|()| {
             Diagnostic::bilingual(
                 DiagnosticCode::SayValueUnparseable,
-                "I couldn't understand what to show",
-                "무엇을 말할지 이해하지 못했습니다",
+                "NME could not read this as something to show",
+                "이 부분을 보여 줄 것으로 읽지 못했습니다",
                 span_of(body),
             )
             .with_bilingual_hint(
@@ -4545,8 +4545,8 @@ fn match_say(
     let value = parse_value(source, &value_tokens, known_names, true).map_err(|()| {
         Diagnostic::bilingual(
             DiagnosticCode::SaySentenceUnparseable,
-            "I couldn't understand the sentence to show",
-            "말할 문장을 이해하지 못했습니다",
+            "NME could not read this as a sentence to show",
+            "이 부분을 보여 줄 문장으로 읽지 못했습니다",
             span_of(&value_tokens),
         )
         .with_bilingual_hint(
@@ -4769,8 +4769,8 @@ fn match_ask(
         } else {
             return Err(Diagnostic::bilingual(
                 DiagnosticCode::AskQuestionUnparseable,
-                "I couldn't understand the question",
-                "질문 내용을 이해하지 못했습니다",
+                "NME could not read this as the question to ask",
+                "이 부분을 물어볼 내용으로 읽지 못했습니다",
                 span,
             )
             .with_bilingual_hint(
@@ -9288,8 +9288,8 @@ fn is_english_article(token: Option<&Token>) -> bool {
 fn say_value_unparseable(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
         DiagnosticCode::SayValueUnparseable,
-        "I couldn't understand what to show",
-        "무엇을 말할지 이해하지 못했습니다",
+        "NME could not read this as something to show",
+        "이 부분을 보여 줄 것으로 읽지 못했습니다",
         span,
     )
     .with_bilingual_hint(
