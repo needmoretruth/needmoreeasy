@@ -1872,7 +1872,9 @@ pub fn parse_program(
                 let virtual_indent =
                     (base_target_indent + python_depth).saturating_sub(line.indent);
                 if reads_elapsed(&stmt) && !known_names.contains(TIMER_NAME) {
-                    problems.push(timer_not_started_diagnostic(line.span));
+                    problems.push(timer_not_started_diagnostic(
+                        elapsed_word_span(&line.tokens).unwrap_or(line.span),
+                    ));
                     continue;
                 }
                 // `set sum to 0` replaces Python's own `sum`, and the line
@@ -9243,6 +9245,19 @@ fn inline_reads_elapsed(inline: Option<&InlineStmt>) -> bool {
     matches!(inline, Some(InlineStmt::Nme(inner)) if reads_elapsed(inner))
 }
 
+/// Where the reading of the timer stands, so the caret marks that word
+/// rather than the whole line around it.
+fn elapsed_word_span(tokens: &[Token]) -> Option<Span> {
+    tokens
+        .iter()
+        .find(|token| {
+            name_word(token).is_some_and(|word| {
+                ELAPSED_WORDS_EN.contains(&word) || ELAPSED_WORDS_KO.contains(&word)
+            })
+        })
+        .map(|token| token.span)
+}
+
 fn timer_not_started_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
         DiagnosticCode::TimerNotStarted,
@@ -12759,7 +12774,9 @@ fn match_use_module(
         if is_written_korean_sentence(tokens, known_names) && !line_asks_a_question(tokens) {
             return Ok(None);
         }
-        return Err(unsupported_module_diagnostic(span_of(tokens)));
+        return Err(unsupported_module_diagnostic(
+            module_place_span(tokens, action_start, action_end).unwrap_or_else(|| span_of(tokens)),
+        ));
     };
 
     // `list`, `text`, `math` and `date` are words people write in ordinary
@@ -13227,6 +13244,25 @@ fn module_touches_the_action(
     after_action(module_at) || before_action(module_at)
 }
 
+/// Where the module's name belongs on a `use` line: right after the action
+/// word in English, right before it in Korean, with `latest` allowed in
+/// between. The caret marks that word instead of the whole line.
+fn module_place_span(tokens: &[Token], action_start: usize, action_end: usize) -> Option<Span> {
+    let not_latest = |at: usize| {
+        tokens
+            .get(at)
+            .filter(|token| {
+                name_word(token).is_some()
+                    && !word_matches_any(token, LATEST_WORDS, MatchMode::Exact)
+            })
+            .map(|token| token.span)
+    };
+    not_latest(action_end)
+        .or_else(|| not_latest(action_end + 1))
+        .or_else(|| not_latest(action_start.checked_sub(1)?))
+        .or_else(|| not_latest(action_start.checked_sub(2)?))
+}
+
 fn unsupported_module_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
         DiagnosticCode::UnsupportedModule,
@@ -13592,11 +13628,14 @@ fn match_set(
             return Err(problem);
         }
         if value_start >= tokens.len() {
+            // The caret marks the empty place the value should fill — the end
+            // of the line — not the name, which is the part that is right.
+            let after = span_of(tokens).end;
             return Err(Diagnostic::bilingual(
                 DiagnosticCode::SaveValueMissing,
                 "the value to save is missing",
                 "저장할 값이 비어 있습니다",
-                target_token.span,
+                Span::new(after, after),
             )
             .with_bilingual_hint(
                 "write `set greeting to Hello`",
@@ -13732,10 +13771,22 @@ fn broken_set_connector(source: &str, target: &str, value: &[Token]) -> Option<D
         source[span_of(rest).start..span_of(rest).end].to_string()
     };
     let line = save_line(target, &written);
-    Some(save_value_diagnostic(source, value).with_bilingual_hint(
-        format!("write `{line}`"),
-        format!("`{line}`처럼 적어 주세요"),
-    ))
+    // The caret belongs under the one word that is wrong. It used to cover
+    // `= 0`, marking the value the writer had got right along with the mark
+    // they had not.
+    let mark = source[first.span.start..first.span.end].to_string();
+    Some(
+        Diagnostic::bilingual(
+            DiagnosticCode::SaveValueUnparseable,
+            format!("`{mark}` is not how the value that follows is marked"),
+            format!("뒤에 오는 값을 표시하는 자리에 `{mark}`은 오지 않습니다"),
+            first.span,
+        )
+        .with_bilingual_hint(
+            format!("write `{line}`"),
+            format!("`{line}`처럼 적어 주세요"),
+        ),
+    )
 }
 
 /// The line that saves a value, written the way the reader's own program is
