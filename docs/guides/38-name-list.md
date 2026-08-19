@@ -1,82 +1,86 @@
-# 38 — Name list: read lines from a file
+# 38 — Name list: reading a file line by line
 
 English | [한국어](38-name-list.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
 - Difficulty: ★★★☆☆ (3/5)
-- Prerequisites: [37 — Files](37-files.md), [05 — Set](05-set.md)
+- Prerequisites: [37 — Files](37-files.md)
 - Topic: files and lists
-- Result: a program that reads a list of names from a file and picks from it
+- Result: a program that saves names one per line and reads them back as a list
 
-A file can be a list. When each name sits on its own line, one Python method,
-`splitlines()`, turns the whole file into a list of names.
+[Guide 37](37-files.md) saved one piece of text. When there are several names,
+it is easier to keep **one per line** and turn them back into a list on the way
+in.
+
+> A program that uses files does not run on the site. Try this on your own
+> computer.
 
 ## Steps
 
-1. Create `names.txt` with one name per line, next to your program:
+1. **Join the list into one piece of text.** A newline between them puts one on
+   each line:
 
    ```nme
-   Mina
-   Sana
-   준호
-   Yuna
+   set friends to list of Mina, Ada, Grace
+   set text to friends joined by newline
+   show text
    ```
 
-2. Read the whole file and split it into lines:
+2. **Save that text to a file:**
 
    ```nme
-   use file latest
-   names = file_read("names.txt").splitlines()
-   show names
+   set friends to list of Mina, Ada, Grace
+   set text to friends joined by newline
+   write text to "names.txt"
    ```
 
-   Run `nme r names`. The console shows `['Mina', 'Sana', '준호', 'Yuna']`.
-   `file_read` returns the text and `.splitlines()` cuts it at every line
-   break. This line is ordinary Python, so it stays exactly as written.
-
-3. Loop over the list with a `for` block. Sentence NME works inside it:
+3. **Read it back and turn it into a list again.** `split by line` does that:
 
    ```nme
-   use file latest
-   names = file_read("names.txt").splitlines()
-   for name in names:
-       show Hello name
+   read "names.txt" into memo
+   set names to memo split by line
+   show how many names
    ```
 
-   This prints one `Hello` per name.
-
-4. Pick a random name with `random_pick`. `use random latest` loads the
-   picker; `3 times:` repeats the pick:
+4. **You can walk it knowing which one you are on:**
 
    ```nme
-   use file latest
-   use random latest
-   names = file_read("names.txt").splitlines()
-   3 times:
-       show random_pick(names)
+   set names to list of Mina, Ada
+   for each name in names with place
+       show place
+       show name
+   end
    ```
 
-5. Korean reads with `파일읽기(...).splitlines()` and picks with `랜덤선택`:
+   `place` counts from 1.
+
+5. All of it:
 
    ```nme
-   파일 사용 최신
-   랜덤 사용 최신
-   이름들 = 파일읽기("names.txt").splitlines()
-   3번:
-       이름 = 랜덤선택(이름들)
-       안녕하세요 이름! 말해줘
+   set friends to list of Mina, Ada, Grace
+   set text to friends joined by newline
+   write text to "names.txt"
+   read "names.txt" into memo
+   set names to memo split by line
+   show how many names
+   for each name in names with place
+       show place
+       show name
+   end
    ```
+
+   `joined` and `split` are opposites. A list becomes text and the text becomes
+   a list again, with a file in between.
 
 ## Try it yourself
 
-Add two names to `names.txt`, rerun, and watch the list and picks grow.
+Ask for names, put each in a list, and save the file when you are done. Next
+time, read that file first and add to it, so the list grows.
 
 ## What you learned
 
-- `file_read(path).splitlines()` / `파일읽기(경로).splitlines()` reads every
-  line of a file into a list.
-- A `for name in names:` block visits each entry; sentence NME works inside
-  it.
-- `random_pick(names)` / `랜덤선택(이름들)` chooses one entry at random.
-- `3 times:` / `3번:` repeats the pick so a game can ask again.
+- `<list> joined by newline` makes text with one item per line.
+- `<text> split by line` turns it back into a list.
+- A file between the two makes the list outlive the program.
+- `with place` gives you which one you are on, counting from 1.

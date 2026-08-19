@@ -86,7 +86,13 @@ bracket and no equals sign, which `scripts/report-guide-tier.py` measures.
 ### Part 3 — Files and data
 
 For someone who wants a program to remember things after it stops: files,
-JSON, CSV and reports.
+JSON, CSV and reports. **Guides 37 and 38 are written in sentences** — except
+that a file name is wrapped in quotes. That is the only place sentence syntax
+uses them, and [guide 37](37-files.md) says why.
+
+⚠ **From this part on, the programs do not run on the site.** There is nowhere
+inside a browser to keep a file. [Install](../install.md) NME and try them on
+your own computer.
 
 37. [37 — Files: save and read text](37-files.md)
 38. [38 — Name list: read lines from a file](38-name-list.md)
@@ -289,7 +295,7 @@ and validated by hand.
 | 35 | ★★★★☆ | a project | [Todo: a growing project](35-todo.md) | a JSON-persisted todo list with add, done, list, and a module file for the storage logic |
 | 36 | ★★★★☆ | files | [Diary: notes saved by date](36-diary.md) | a diary that saves each day's note to a dated file and can read it back |
 | 37 | ★★★☆☆ | files | [Files: save and read text](37-files.md) | a program that writes text to a file and reads it back |
-| 38 | ★★★☆☆ | files and lists | [Name list: read lines from a file](38-name-list.md) | a program that reads a list of names from a file and picks from it |
+| 38 | ★★★☆☆ | files and lists | [Name list: read lines from a file](38-name-list.md) | a program that saves names one per line and reads them back as a list |
 | 39 | ★★★☆☆ | json | [JSON: save and load data](39-json.md) | a program that saves a name and a score and loads them back |
 | 40 | ★★★★☆ | data | [CSV: rows of data](40-csv.md) | reading a comma-separated text file with split(","), computing a column's average, and writing a summary CSV |
 | 41 | ★★★★☆ | records | [Records: a small address book](41-address-book.md) | a JSON-file address book that adds, lists, and searches contacts |
