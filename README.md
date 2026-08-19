@@ -213,7 +213,7 @@ startup time, distribution size, and performance, so measure the actual
 program; NME does not make a false blanket claim that every Python-compatible
 program becomes faster or smaller.
 
-## Versioned random, file, and zero-knowledge tools
+## Versioned random, file, zero-knowledge, list, text, and maths tools
 
 ```text
 랜덤 사용 최신
@@ -261,6 +261,28 @@ sender A, receiver B, saved-transcript replay by malicious relay C,
 zero-knowledge transcript simulation, and the separate live-relay case.
 This is a mathematically faithful learning/reference implementation, not an
 audited side-channel-hardened production cryptography library.
+
+Three more toolboxes are bundled at version `0.0.1`: `list` / `목록`
+(`count`/`개수`, `sort`/`정렬`, `reverse`/`뒤집기`, `remove`/`빼기`,
+`first`/`첫번째`, `last`/`마지막`, `sum`/`합계`, `largest`/`최대`,
+`smallest`/`최소`), `text` / `글자` (`upper`/`대문자`, `lower`/`소문자`,
+`trim`/`공백없애기`, `split`/`나누기`, `join`/`합치기`, `replace`/`바꾸기`,
+`starts_with`/`로시작`, `length`/`길이`) and `math` / `수학` (`root`/`제곱근`,
+`round_to`/`반올림`, `pi`/`원주율`, `power`/`거듭제곱`, `absolute`/`절댓값`,
+`floor`/`내림`, `ceil`/`올림`).
+
+```text
+목록 사용 최신
+use text
+show count([1, 2, 3])
+말해 대문자("hello")
+```
+
+Everything inside them is a plain Python builtin or one call into `math`, so
+they run in the browser as they stand. Their names are ordinary words, so NME
+only reads one as a module when it stands beside `use` / `사용` and no other
+word is left over on the line: `get the list of names` is a sentence and
+prints.
 
 Run `nme modules` to see installed module versions.
 
