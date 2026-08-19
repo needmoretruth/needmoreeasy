@@ -81,7 +81,7 @@ bracket and no equals sign, which `scripts/report-guide-tier.py` measures.
 33. [33 — Project: a habit tracker](33-habit.md)
 34. [34 — Chart: seeing numbers as bars](34-chart.md)
 35. [35 — Todo list: adding, dropping, listing](35-todo.md)
-36. [36 — Diary: notes saved by date](36-diary.md)
+36. [36 — Diary: writing it down with today's date](36-diary.md)
 
 ### Part 3 — Files and data
 
@@ -235,7 +235,7 @@ and validated by hand.
 | 33 | ★★★★☆ | projects | [Project: a habit tracker](33-habit.md) | a JSON-persisted habit tracker with add, check, streak, list, quit, and a module file for the storage logic |
 | 34 | ★★★☆☆ | screen and time | [Chart: seeing numbers as bars](34-chart.md) | drawing how much was read each day as bars, so the days compare at a glance |
 | 35 | ★★★★☆ | projects | [Todo list: adding, dropping, listing](35-todo.md) | a list that keeps taking commands to add, drop and show what needs doing |
-| 36 | ★★★★☆ | files | [Diary: notes saved by date](36-diary.md) | a diary that saves each day's note to a dated file and can read it back |
+| 36 | ★★★☆☆ | files | [Diary: writing it down with today's date](36-diary.md) | saving a one-line diary entry stamped with today's date and weekday, then reading it back |
 | 37 | ★★★☆☆ | files | [Files: saving and reading again](37-files.md) | a program that writes text to a file and reads it back |
 | 38 | ★★★☆☆ | files | [Name list: reading a file line by line](38-name-list.md) | a program that saves names one per line and reads them back as a list |
 | 39 | ★★★☆☆ | files | [JSON: save and load data](39-json.md) | a program that saves a name and a score and loads them back |
