@@ -4111,7 +4111,13 @@ fn classify_written_line(
         ));
     }
     if repeat_action_at(tokens, 0, MatchMode::Exact).is_some() {
-        return match_times(source, tokens, block, known_names, MatchMode::Exact);
+        // `do` opens a repeat (`do 3 times`) and it opens ordinary writing
+        // (`do the washing up`). When the repeat rules decline, the line goes
+        // on to the sentence path, the same way `ask` does below; handing it
+        // straight to Python answered a written line with a `SyntaxError`.
+        if let Some(stmt) = match_times(source, tokens, block, known_names, MatchMode::Exact)? {
+            return Ok(Some(stmt));
+        }
     }
     if ask_action_at(tokens, 0, MatchMode::Exact).is_some() {
         // An `ask` at the start of a line does not make the rest of the line
@@ -5644,13 +5650,13 @@ fn remove_diagnostic(span: Span) -> Diagnostic {
 fn record_remove_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
         DiagnosticCode::RecordNameUnknown,
-        "I couldn't understand which name to take out of the record",
-        "표에서 어떤 이름을 뺄지 이해하지 못했습니다",
+        "this line takes a name out of a record, but NME could not tell which name",
+        "이 줄은 표에서 이름 하나를 빼는 줄인데, 어느 이름을 뺄지 읽지 못했습니다",
         span,
     )
     .with_bilingual_hint(
-        "write `remove Mina from ages` or `나이표에서 민수 빼`",
-        "`나이표에서 민수 빼` 또는 `remove Mina from ages`처럼 적어 주세요",
+        "write `remove Mina from ages`",
+        "`나이표에서 민수 빼`처럼 적어 주세요",
     )
 }
 
@@ -5941,13 +5947,13 @@ fn match_break(
     {
         return Err(Diagnostic::bilingual(
             DiagnosticCode::BreakCommandUnparseable,
-            "I couldn't understand this break command",
-            "이 반복 중단 명령을 이해하지 못했습니다",
+            "NME could not read this as a line that leaves the loop",
+            "이 줄을 반복에서 빠져나오는 줄로 읽지 못했습니다",
             span_of(tokens),
         )
         .with_bilingual_hint(
-            "write only `break` or `여기서 멈춰`",
-            "`break` 또는 `여기서 멈춰`만 적어 주세요",
+            "write `break` on a line of its own",
+            "`여기서 멈춰`만 한 줄에 적어 주세요",
         ));
     }
     Ok(Some(NmeStmt::Break))
@@ -6143,13 +6149,13 @@ fn match_continue(tokens: &[Token], mode: MatchMode) -> Result<Option<NmeStmt>, 
         }
         return Err(Diagnostic::bilingual(
             DiagnosticCode::ContinueCommandUnparseable,
-            "I couldn't understand this skip command",
-            "이 건너뛰기 명령을 이해하지 못했습니다",
+            "NME could not read this as a line that skips to the next round",
+            "이 줄을 다음 차례로 건너뛰는 줄로 읽지 못했습니다",
             span_of(tokens),
         )
         .with_bilingual_hint(
-            "write only `skip` or `건너뛰어`",
-            "`건너뛰어` 또는 `skip`만 적어 주세요",
+            "write `skip` on a line of its own",
+            "`건너뛰어`만 한 줄에 적어 주세요",
         ));
     }
     Ok(Some(NmeStmt::Continue))
@@ -7681,10 +7687,27 @@ fn match_run_job(
             }
         }
     }
-    // `민수에게 인사하기 해줘` — Korean marks it with a particle and puts the
-    // verb last. It is read after the English shape rather than instead of it,
-    // because the lexer splits a particle off a number and `3 에게 두배 해줘`
-    // is then four tokens, exactly like `do greet with Mina`.
+    if let Some(stmt) = korean_run_job(body, known_names)? {
+        return Ok(Some(stmt));
+    }
+    // `do greet with Mina and Bob` names a job this program made and hands it
+    // more than the one thing it takes. Left unclaimed the line fell to the
+    // repeat rules, because `do` also opens `do 3 times`, and the reader was
+    // told the repeat count was missing on a line that repeats nothing.
+    if let Some(problem) = job_given_the_wrong_shape(body, known_names) {
+        return Err(problem);
+    }
+    Ok(None)
+}
+
+/// `민수에게 인사하기 해줘` — Korean marks what the job is given with a
+/// particle and puts the verb last. It is read after the English shape rather
+/// than instead of it, because the lexer splits a particle off a number and
+/// `3 에게 두배 해줘` is then four tokens, exactly like `do greet with Mina`.
+fn korean_run_job(
+    body: &[Token],
+    known_names: &HashSet<String>,
+) -> Result<Option<NmeStmt>, Diagnostic> {
     let Some((value, used)) = korean_job_argument(body, known_names) else {
         return Ok(None);
     };
@@ -7735,21 +7758,57 @@ fn run_job_taking_one(
 
 /// Running a job with the wrong number of things is a Python `TypeError` at
 /// run time on a line that looks right, so it is named here instead.
+/// A line that runs a job whose shape is not one NME reads.
+///
+/// The name has to be a job this program made; anything else is left alone,
+/// because `do the washing up` is a sentence.
+fn job_given_the_wrong_shape(body: &[Token], known_names: &HashSet<String>) -> Option<Diagnostic> {
+    let english = body
+        .first()
+        .is_some_and(|token| token_matches_exact(token, RUN_JOB_WORDS_EN))
+        .then(|| body.get(1))
+        .flatten();
+    let korean = body
+        .last()
+        .is_some_and(|token| token_matches_exact(token, RUN_JOB_WORDS_KO))
+        .then(|| body.get(body.len().checked_sub(2)?))
+        .flatten();
+    let name_token = english.or(korean)?;
+    let takes = [0, 1]
+        .into_iter()
+        .find(|takes| job_call_name(name_token, known_names, *takes).is_some())?;
+    Some(job_argument_count_diagnostic(name_token, takes))
+}
+
+/// The line that runs a job, written the way the reader's own program is
+/// written. `do 인사하기 with Mina` is not a line anybody can type.
+fn run_job_line(name: &str, given: bool) -> String {
+    match (is_hangul(name), given) {
+        (true, true) => format!("민수에게 {name} 해줘"),
+        (true, false) => format!("{name} 해줘"),
+        (false, true) => format!("do {name} with Mina"),
+        (false, false) => format!("do {name}"),
+    }
+}
+
 fn job_argument_count_diagnostic(token: &Token, takes: usize) -> Diagnostic {
     let name = name_word(token).unwrap_or("");
+    // Both halves show the same line to copy, written the way the reader's
+    // own program is written; see `empty_list_line`.
+    let line = run_job_line(name, takes == 1);
     let (english, korean) = if takes == 0 {
         (
-            format!("`{name}` is given nothing, so write `do {name}`"),
+            format!("`{name}` is given nothing, so write `{line}`"),
             format!(
-                "`{name}`{} 받는 것이 없습니다. `{name} 해줘`라고 적어 주세요",
+                "`{name}`{} 받는 것이 없습니다. `{line}`라고 적어 주세요",
                 korean_particle(name, "은", "는")
             ),
         )
     } else {
         (
-            format!("`{name}` is given one thing, so write `do {name} with Mina`"),
+            format!("`{name}` is given one thing, so write `{line}`"),
             format!(
-                "`{name}`{} 하나를 받습니다. `민수에게 {name} 해줘`처럼 적어 주세요",
+                "`{name}`{} 하나를 받습니다. `{line}`처럼 적어 주세요",
                 korean_particle(name, "은", "는")
             ),
         )
@@ -9519,13 +9578,13 @@ fn expression_code(source: &str, tokens: &[Token]) -> Option<Code> {
 fn for_each_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
         DiagnosticCode::ForEachUnparseable,
-        "I couldn't understand this repeat-over-a-list line",
-        "이 목록 반복 줄을 이해하지 못했습니다",
+        "NME could not read this as a line that repeats over a list",
+        "이 줄을 목록을 하나씩 도는 줄로 읽지 못했습니다",
         span,
     )
     .with_bilingual_hint(
-        "write `for each name in names` or `이름들의 이름마다 반복해`",
-        "`이름들의 이름마다 반복해` 또는 `for each name in names`처럼 적어 주세요",
+        "write `for each name in names`",
+        "`이름들의 이름마다 반복해`처럼 적어 주세요",
     )
 }
 
@@ -11795,6 +11854,22 @@ fn match_times(
         }
     }
 
+    // `do` opens both `do 3 times` and `do greet with Mina`. With a name
+    // after it and no counter word anywhere on the line, this is not a
+    // repeat, and claiming it answered `do the washing up` with "the repeat
+    // count is missing". `run through 2 times and show ok` keeps its counter
+    // and stays a repeat.
+    if tokens
+        .first()
+        .is_some_and(|token| token_matches_exact(token, RUN_JOB_WORDS_EN))
+        && tokens
+            .get(1)
+            .is_some_and(|token| name_word(token).is_some() && !is_written_number(token))
+        && find_count_marker(tokens, MatchMode::Exact).is_none()
+    {
+        return Ok(None);
+    }
+
     // English-first and freely mixed order: `repeat 3 times` / `반복해 3 times`.
     if let Some((spelling, consumed)) = repeat_action_at(tokens, 0, mode) {
         // The whole line is searched, not only the tail, so a counter word
@@ -11915,13 +11990,13 @@ fn parse_sentence_repeat_body(
         let value = parse_value(source, body, known_names, true).map_err(|()| {
             Diagnostic::bilingual(
                 DiagnosticCode::RepeatBodyUnparseable,
-                "I couldn't understand what to repeat",
-                "무엇을 반복할지 이해하지 못했습니다",
+                "NME could not read what this line repeats",
+                "이 줄이 무엇을 반복하는지 읽지 못했습니다",
                 span_of(body),
             )
             .with_bilingual_hint(
-                "write a sentence such as `3번 안녕하세요` or add `말해줘`",
-                "`3번 안녕하세요`처럼 쓰거나 끝에 `말해줘`를 붙여 주세요",
+                "write what to do after the count, such as `repeat 3 times and show hello`",
+                "횟수 뒤에 할 일을 적어 주세요. 예를 들어 `3번 반복해서 안녕 말해줘`입니다",
             )
         })?;
         return Ok(Some(InlineStmt::Nme(Box::new(NmeStmt::Say { value }))));
@@ -12380,13 +12455,13 @@ fn file_read_target_diagnostic(span: Span) -> Diagnostic {
 fn file_write_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
         DiagnosticCode::SaveValueUnparseable,
-        "I couldn't understand this file write",
-        "파일에 저장할 내용을 이해하지 못했습니다",
+        "NME could not tell what to write into the file",
+        "파일에 무엇을 적을지 읽지 못했습니다",
         span,
     )
     .with_bilingual_hint(
-        "write `write \"hello\" to \"out.txt\"` or `\"out.txt\" 파일에 \"hello\"를 저장해`",
-        "`write \"hello\" to \"out.txt\"` 또는 `\"out.txt\" 파일에 \"hello\"를 저장해`처럼 쓰세요",
+        "write `write \"hello\" to \"out.txt\"`",
+        "`\"out.txt\" 파일에 \"hello\"를 저장해`처럼 적어 주세요",
     )
 }
 
@@ -13336,8 +13411,8 @@ fn match_set(
                 target_token.span,
             )
             .with_bilingual_hint(
-                "write `name save Mina` or `이름 저장 민수`",
-                "`이름 저장 민수` 또는 `name save Mina`처럼 값을 뒤에 적어 주세요",
+                "write the value after the name: `name save Mina`",
+                "이름 뒤에 값을 적어 주세요. 예를 들어 `이름 저장 민수`입니다",
             ));
         }
         // `PDF로 저장해 두었습니다` is not a name holding `두었습니다`. Every
@@ -13421,8 +13496,8 @@ fn match_set(
                 tokens[0].span,
             )
             .with_bilingual_hint(
-                "write `set greeting to Hello` or `저장 인사 Hello`",
-                "`저장 인사 안녕하세요` 또는 `set greeting to Hello`처럼 쓰세요",
+                "write `set greeting to Hello`",
+                "`인사는 안녕하세요`처럼 적어 주세요",
             ));
         };
         let Some(target_word) = name_word(target_token) else {
@@ -13433,8 +13508,8 @@ fn match_set(
                 target_token.span,
             )
             .with_bilingual_hint(
-                "write `set greeting to Hello` or `저장 인사 Hello`",
-                "`저장 인사 안녕하세요` 또는 `set greeting to Hello`처럼 쓰세요",
+                "write `set greeting to Hello`",
+                "`인사는 안녕하세요`처럼 적어 주세요",
             ));
         };
         // `set x.count to 3` used to save the *text* `.count to 3` into `x`:
@@ -13500,8 +13575,8 @@ fn match_set(
                 target_token.span,
             )
             .with_bilingual_hint(
-                "write `set greeting to Hello` or `저장 인사 Hello`",
-                "`저장 인사 안녕하세요` 또는 `set greeting to Hello`처럼 쓰세요",
+                "write `set greeting to Hello`",
+                "`인사는 안녕하세요`처럼 적어 주세요",
             ));
         }
         // `저장 지점에 도착했습니다` is a place somebody arrived at, not a name
@@ -13632,13 +13707,25 @@ fn broken_set_connector(source: &str, target: &str, value: &[Token]) -> Option<D
     } else {
         source[span_of(rest).start..span_of(rest).end].to_string()
     };
+    let line = save_line(target, &written);
     Some(save_value_diagnostic(source, value).with_bilingual_hint(
-        format!("write `set {target} to {written}`"),
-        format!(
-            "`{target}{} {written}`처럼 적어 주세요",
-            korean_particle(target, "은", "는")
-        ),
+        format!("write `{line}`"),
+        format!("`{line}`처럼 적어 주세요"),
     ))
+}
+
+/// The line that saves a value, written the way the reader's own program is
+/// written; see [`empty_list_line`]. `set 점수 to 0` is not a line anybody
+/// types, and neither is `score는 0`.
+fn save_line(target: &str, written: &str) -> String {
+    if is_hangul(target) {
+        format!(
+            "{target}{} {written}",
+            korean_particle(target, "은", "는")
+        )
+    } else {
+        format!("set {target} to {written}")
+    }
 }
 
 /// Endings that make a Korean phrase a whole sentence rather than a value.
@@ -17597,10 +17684,19 @@ fn is_mistaken_action_word(word: &str) -> bool {
 /// one case where the sentence path had to be widened.
 fn opens_or_closes_with_a_command_word(tokens: &[Token]) -> bool {
     let words = tokens.iter().filter_map(name_word).collect::<Vec<_>>();
+    // `do` and `run` open a job (`do greet`) and a repeat (`do 3 times`), and
+    // they open ordinary writing just as often: `do the washing up`, `run to
+    // the shop`. A job line is claimed before this by name, and a repeat by
+    // the number beside it (the rule below), so on their own these two words
+    // are not proof that the line is a command.
+    let commands_the_line = |word: &str| {
+        (is_action_word(word) || is_mistaken_action_word(word))
+            && !RUN_JOB_WORDS_EN.contains(&word.to_lowercase().as_str())
+    };
     if [words.first().copied(), words.last().copied()]
         .into_iter()
         .flatten()
-        .any(|word| is_action_word(word) || is_mistaken_action_word(word))
+        .any(commands_the_line)
     {
         return true;
     }
