@@ -51,7 +51,7 @@ guide.
 ### Part 2 — Small programs you can build
 
 For someone who has finished Part 1 and wants games, menus and small projects
-to keep. **Guides 17, 18, 19, 22 and 28 are written in sentences alone** — no
+to keep. **Guides 17, 18, 19, 22, 23 and 28 are written in sentences alone** — no
 quote, no bracket, no equals sign. The rest still mix in beginner syntax and
 Python. The
 guides written in sentences alone are Part 1 — its code contains no quote, no
@@ -269,7 +269,7 @@ and validated by hand.
 | 20 | ★★★★☆ | output & loops | [ASCII art — drawing with characters](20-ascii-art.md) | building a right triangle, an upside-down triangle, and a diamond with nested loops and string multiplication |
 | 21 | ★★★★☆ | terminal output | [Progress — a bar in the terminal](21-progress.md) | a terminal progress bar that fills a row as a loop runs |
 | 22 | ★★★★☆ | a small project | [Terminal menu — a small TUI](22-terminal-menu.md) | a menu program that clears the screen and draws it again |
-| 23 | ★★★★☆ | project | [High score: a tiny project](23-high-score.md) | a dice game that remembers its best score |
+| 23 | ★★★☆☆ | a project | [High score: a tiny project](23-high-score.md) | a dice game of three rounds that tells you your best |
 | 24 | ★★★★☆ | game & data | [Quiz — questions from a file](24-quiz.md) | a multiple-choice quiz that loads questions from a JSON file, scores answers, and reports the result |
 | 25 | ★★★★☆ | a project | [Calculator — a command-line project](25-calculator.md) | a repeat-until-quit calculator with functions and a module file |
 | 26 | ★★★★☆ | game | [Game: tic-tac-toe](26-tic-tac-toe.md) | a playable two-player tic-tac-toe with a win check |
