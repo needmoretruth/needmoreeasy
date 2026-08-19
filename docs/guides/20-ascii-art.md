@@ -4,147 +4,90 @@ English | [한국어](20-ascii-art.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- Difficulty: ★★★★☆ (4/5)
-- Prerequisites: [07 — Repeat](07-repeat.md)
-- Topic: output & loops
-- Result: building a right triangle, an upside-down triangle, and a diamond with nested loops and string multiplication
+- Difficulty: ★★★☆☆ (3/5)
+- Prerequisites: [14 — Screen](14-screen.md)
+- Topic: drawing
+- Result: a program that draws shapes by repeating a character
 
-A progress bar is one row of `#` that grows as a loop runs. Here the rows keep
-their shape, so a picture appears: shapes built from `*` and spaces. Two
-tools do the work — string multiplication repeats a character, and a loop
-repeats a row. Nested loops turn those rows into triangles and a diamond.
+The easiest way to draw on a screen is **to repeat one character**. Five stars
+make a line; growing the count line by line makes a triangle.
 
 ## Steps
 
-1. `"*" * 5` is one string with five stars, and `" " * 2 + "*" * 3` glues two
-   spaces to three stars. Strings can multiply and add like numbers:
+1. **Repeat one character.** Keep the character in a name first:
 
    ```nme
-   show "*" * 5
-   show " " * 2 + "*" * 3
+   set star to *
+   set line to star repeated 5 times
+   show line
    ```
 
-   It prints `*****` and then `  ***` (two spaces, three stars).
+   That prints `*****`.
 
-2. A `for` loop turns the repeated string into a triangle. Each pass prints
-   one row, and the row grows with `i`:
+2. **The count can be a name too:**
 
    ```nme
-   for i in range(1, 6):
-       show "*" * i
+   set star to *
+   set n to 3
+   set line to star repeated n times
+   show line
    ```
 
-   It prints a right triangle from one star to five.
-
-3. `range(5, 0, -1)` counts down, so the rows shrink. The same loop body
-   draws an upside-down triangle:
+3. **Add one each time round and it is a triangle:**
 
    ```nme
-   for i in range(5, 0, -1):
-       show "*" * i
+   set star to *
+   set n to 1
+   repeat 5 times
+       set line to star repeated n times
+       show line
+       add 1 to n
+   end
    ```
 
-   It prints five stars down to one.
-
-4. A centered row needs spaces on the left. For row `i` of a five-row shape,
-   `n - i` spaces push the stars to the middle, and `2 * i - 1` stars is an
-   odd count — 1, 3, 5, and so on:
+4. **Counting back down gives the other half.** Together they are a diamond:
 
    ```nme
-   n = 5
-   for i in range(1, n + 1):
-       spaces = " " * (n - i)
-       stars = "*" * (2 * i - 1)
-       show spaces + stars
+   set star to *
+   set n to 1
+   repeat 5 times
+       set line to star repeated n times
+       show line
+       add 1 to n
+   end
+   set n to 4
+   repeat 4 times
+       set line to star repeated n times
+       show line
+       subtract 1 from n
+   end
    ```
 
-   It prints the pointed top half of a diamond.
-
-5. Now the whole picture in one program. The diamond reuses the centered row
-   twice — once counting up for the top, once counting down for the bottom.
-   Save `ascii.nme`:
+5. Mix in [14 — Screen](14-screen.md) and the drawing gets a frame:
 
    ```nme
-   # ascii.nme — drawing shapes with characters.
-   # Run: nme r ascii
-   #
-   # Shapes are built from two ideas: string multiplication
-   # repeats a character, and nested loops repeat a row.
-   # A right triangle, an upside-down triangle, and a diamond.
-
-   n = 5
-
-   show "Right triangle:"
-   for i in range(1, n + 1):
-       show "*" * i
-
-   show ""
-   show "Upside-down triangle:"
-   for i in range(n, 0, -1):
-       show "*" * i
-
-   show ""
-   show "Diamond:"
-   for i in range(1, n + 1):
-       spaces = " " * (n - i)
-       stars = "*" * (2 * i - 1)
-       show spaces + stars
-   for i in range(n - 1, 0, -1):
-       spaces = " " * (n - i)
-       stars = "*" * (2 * i - 1)
-       show spaces + stars
+   clear the screen
+   say in a box Drawing stars
+   draw a line
+   set star to *
+   set n to 1
+   repeat 4 times
+       set line to star repeated n times
+       show line
+       add 1 to n
+   end
+   draw a line
    ```
-
-6. Run it:
-
-   ```sh
-   nme r ascii
-   ```
-
-   ```text
-   Right triangle:
-   *
-   **
-   ***
-   ****
-   *****
-
-   Upside-down triangle:
-   *****
-   ****
-   ***
-   **
-   *
-
-   Diamond:
-       *
-      ***
-     *****
-    *******
-   *********
-    *******
-     *****
-      ***
-       *
-   ```
-
-   The diamond starts with one star, widens to nine, and narrows back to one.
-   The bottom loop starts at `n - 1` so the widest row is not printed twice.
-
-7. Korean writes the same steps with `말해`, `공백`, and `별`. The full
-   Korean program is in the [Korean guide](20-ascii-art.ko.md).
 
 ## Try it yourself
 
-Change `n` from 5 to 8 and rerun — every shape grows. Then build a letter
-`H`: two vertical bars of stars with a middle row of `n` stars, all in one
-loop that chooses the middle row with an `if`. Replacing `"*"` with `"@"`
-gives the same shapes in a different character.
+Use `#` or `♥` instead of `*`. Then grow by two each time — change
+`add 1 to n` to `add 2 to n`.
 
 ## What you learned
 
-- `"*" * 5` repeats a string; `" " * 2 + "*" * 3` builds a centered row.
-- A loop repeats a row; the loop variable sets each row's length.
-- `range(n, 0, -1)` counts down and shrinks the rows.
-- A diamond is one centered row counted up and then down again.
-- Nested loops — a loop that decides each row's shape — draw pictures.
+- `<name> repeated <count> times` repeats one character; Korean is
+  `<이름>을 <개수>개 붙인 것`.
+- The count may be a number or a name.
+- Growing or shrinking the count inside a loop is what makes a shape.
+- Mixed with the screen sentences, a drawing gets a frame.

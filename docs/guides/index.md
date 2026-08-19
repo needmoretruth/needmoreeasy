@@ -56,7 +56,7 @@ guide.
 ### Part 2 — Small programs you can build
 
 For someone who has finished Part 1 and wants games, menus and small projects
-to keep. **Guides 17, 18, 19, 22, 23, 27 and 28 are written in sentences alone** — no
+to keep. **Guides 17, 18, 19, 20, 22, 23, 27 and 28 are written in sentences alone** — no
 quote, no bracket, no equals sign. The rest still mix in beginner syntax and
 Python. The
 guides written in sentences alone are Part 1 — its code contains no quote, no
@@ -271,7 +271,7 @@ and validated by hand.
 | 17 | ★★★☆☆ | your first project | [Word guess: a hidden-word game](17-word-guess.md) | a game of guessing a hidden word one letter at a time |
 | 18 | ★★★★☆ | a large project | [Adventure — a small text game](18-adventure.md) | a room-by-room text adventure with choices |
 | 19 | ★★★☆☆ | a game, and timing | [Game: a reaction time test](19-reaction.md) | a program that measures how fast you react |
-| 20 | ★★★★☆ | output & loops | [ASCII art — drawing with characters](20-ascii-art.md) | building a right triangle, an upside-down triangle, and a diamond with nested loops and string multiplication |
+| 20 | ★★★☆☆ | drawing | [ASCII art — drawing with characters](20-ascii-art.md) | a program that draws shapes by repeating a character |
 | 21 | ★★★★☆ | terminal output | [Progress — a bar in the terminal](21-progress.md) | a terminal progress bar that fills a row as a loop runs |
 | 22 | ★★★★☆ | a small project | [Terminal menu — a small TUI](22-terminal-menu.md) | a menu program that clears the screen and draws it again |
 | 23 | ★★★☆☆ | a project | [High score: a tiny project](23-high-score.md) | a dice game of three rounds that tells you your best |
