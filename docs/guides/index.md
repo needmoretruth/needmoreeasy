@@ -100,7 +100,7 @@ your own computer.
 40. [40 — CSV: several fields on one line](40-csv.md)
 41. [41 — Records: a small address book](41-address-book.md)
 42. [42 — Word count: how often each word appears](42-word-count.md)
-43. [43 — Text stats: letters and words](43-text-stats.md)
+43. [43 — Text stats: letters, words, and the longest one](43-text-stats.md)
 44. [44 — Log: an event record](44-log.md)
 45. [45 — Group: data by category](45-group.md)
 46. [46 — Top ten: ranking records](46-top-ten.md)
@@ -242,7 +242,7 @@ and validated by hand.
 | 40 | ★★★☆☆ | files | [CSV: several fields on one line](40-csv.md) | a program that reads a file of comma-separated fields |
 | 41 | ★★★☆☆ | working with data | [Records: a small address book](41-address-book.md) | an address book that finds where someone lives by their name |
 | 42 | ★★★★☆ | lists and text | [Word count: how often each word appears](42-word-count.md) | reading a text file and counting how often each word appears, using a dict and collections.Counter |
-| 43 | ★★★★☆ | lists and text | [Text stats: letters and words](43-text-stats.md) | reading a text file and reporting character count, word count, longest word, and most common word (with collections.Counter) |
+| 43 | ★★★☆☆ | lists and text | [Text stats: letters, words, and the longest one](43-text-stats.md) | reading a saved file back and reporting its letters, its words, and its longest word |
 | 44 | ★★★★★ | files | [Log: an event record](44-log.md) | appending a dated line to a log file each time the program runs, using datetime and file_write |
 | 45 | ★★★★★ | working with data | [Group: data by category](45-group.md) | grouping a list of dicts by a category key into a dict of lists, then reporting counts per category |
 | 46 | ★★★★★ | working with data | [Top ten: ranking records](46-top-ten.md) | loading JSON records, sorting by a numeric score with sorted(..., key=...), and showing the top ten |
