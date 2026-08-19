@@ -13700,22 +13700,61 @@ fn parse_random_choice(source: &str, tokens: &[Token]) -> Option<Value> {
     (choices.len() >= 2).then_some(Value::RandomChoice { choices })
 }
 
+// A word right after one of these is being used as an ordinary noun, not as the
+// name of a saved value: `show You put the key in your bag.` is a sentence about
+// a key and a bag, not a request to print what they hold. English marks it with
+// articles and possessives; Korean marks it with determiners.
+//
+// Korean `그`, `이`, `저` are deliberately absent. They point at the very thing
+// just spoken about, so replacing the word with its value is what the writer
+// means, not a mistake.
+const TEXT_COMMON_NOUN_MARKERS_EN: &[&str] = &[
+    "the", "a", "an", "this", "that", "these", "those", "my", "your", "our", "their", "his", "her",
+    "its", "each", "every", "any",
+];
+const TEXT_COMMON_NOUN_MARKERS_KO: &[&str] = &["모든", "각", "어떤", "여러", "무슨", "아무", "온갖"];
+
+fn is_common_noun_marker(tokens: &[Token], at: usize) -> bool {
+    token_matches_exact_at(tokens, at, TEXT_COMMON_NOUN_MARKERS_EN)
+        || token_matches_exact_at(tokens, at, TEXT_COMMON_NOUN_MARKERS_KO)
+}
+
 fn make_text_template(
     source: &str,
     tokens: &[Token],
     known_names: &HashSet<String>,
 ) -> TextTemplate {
-    let mut parts = Vec::new();
-    let mut cursor = tokens[0].span.start;
-    let end = tokens[tokens.len() - 1].span.end;
-
-    for token in tokens {
+    // Which words in this sentence could stand in for something the writer saved?
+    let mut slots: Vec<(usize, &str, &str)> = Vec::new();
+    for (at, token) in tokens.iter().enumerate() {
         let Some(word) = name_word(token) else {
             continue;
         };
         let Some((variable, particle)) = split_template_variable(word, known_names) else {
             continue;
         };
+        if at > 0 && is_common_noun_marker(tokens, at - 1) {
+            continue;
+        }
+        slots.push((at, variable, particle));
+    }
+
+    let mut parts = Vec::new();
+    let mut cursor = tokens[0].span.start;
+    let end = tokens[tokens.len() - 1].span.end;
+
+    for &(at, variable, particle) in &slots {
+        // The same name twice in one sentence is a label and then its value:
+        // `show strength strength` is meant to read `strength 7`, and Korean puts
+        // the label first by grammar (`점수는 점수` -> `점수는 10`). Only the last
+        // one is replaced; the earlier ones stay as the word that was typed.
+        if slots
+            .iter()
+            .any(|(other, name, _)| *other > at && *name == variable)
+        {
+            continue;
+        }
+        let token = &tokens[at];
         if cursor < token.span.start {
             push_literal(&mut parts, &source[cursor..token.span.start]);
         }

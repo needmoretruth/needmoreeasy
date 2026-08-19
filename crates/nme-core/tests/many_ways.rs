@@ -566,3 +566,66 @@ fn an_ordinary_sentence_with_an_arranging_verb_still_prints() {
         "print(\"카드를 잘 섞어 나눠 주세요\")\n"
     );
 }
+
+/// A character sheet printed `strength 7` as `7 7`: the word used as the label
+/// was replaced by the very value it was labelling. The same name twice in one
+/// sentence is a label and then its value, so only the last one is replaced.
+#[test]
+fn a_name_written_twice_labels_first_and_shows_the_value_last() {
+    assert_eq!(
+        ok("set strength to 7\nshow strength strength\n"),
+        "strength = 7\nprint(\"strength \" + str(strength))\n"
+    );
+    assert_eq!(
+        ok("힘은 7\n힘 힘 말해줘\n"),
+        "힘 = 7\nprint(\"힘 \" + str(힘))\n"
+    );
+    // Korean writes the label with a particle on it and the value bare.
+    assert_eq!(
+        ok("점수는 10\n점수는 점수 말해줘\n"),
+        "점수 = 10\nprint(\"점수는 \" + str(점수))\n"
+    );
+    // One occurrence still behaves exactly as before.
+    assert_eq!(
+        ok("set score to 10\nshow you scored score points\n"),
+        "score = 10\nprint(\"you scored \" + str(score) + \" points\")\n"
+    );
+}
+
+/// `show You put the key in your bag.` printed the whole inventory list in the
+/// middle of the sentence. A word right after an article, a possessive or a
+/// determiner is an ordinary word, not a request for what that name holds.
+#[test]
+fn a_word_after_an_article_is_an_ordinary_word() {
+    assert_eq!(
+        ok("set bag to list of \"key\"\nshow You put the key in your bag.\n"),
+        "bag = [\"key\"]\nprint(\"You put the key in your bag.\")\n"
+    );
+    assert_eq!(
+        ok("set answer to 7\nshow The answer is answer\n"),
+        "answer = 7\nprint(\"The answer is \" + str(answer))\n"
+    );
+    assert_eq!(
+        ok("점수는 10\n모든 점수를 보여줍니다 말해줘\n"),
+        "점수 = 10\nprint(\"모든 점수를 보여줍니다\")\n"
+    );
+    // Korean `그` points at the value just spoken about, so it still stands in.
+    assert_eq!(
+        ok("점수는 10\n그 점수 말해줘\n"),
+        "점수 = 10\nprint(\"그 \" + str(점수))\n"
+    );
+}
+
+/// Whatever the words happen to be, a sentence inside quotation marks is
+/// printed exactly as it was written — the escape both languages share.
+#[test]
+fn a_quoted_sentence_is_printed_exactly_as_written() {
+    assert_eq!(
+        ok("가방은 목록 \"열쇠\"\n\"가방에 열쇠를 넣었습니다\" 말해줘\n"),
+        "가방 = [\"열쇠\"]\nprint(\"가방에 열쇠를 넣었습니다\")\n"
+    );
+    assert_eq!(
+        ok("set bag to list of \"key\"\nshow \"You put the key in your bag.\"\n"),
+        "bag = [\"key\"]\nprint(\"You put the key in your bag.\")\n"
+    );
+}
