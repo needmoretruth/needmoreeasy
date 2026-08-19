@@ -494,3 +494,40 @@ fn bare_korean_adnominals_are_still_ordinary_words() {
     assert_eq!(ok("다른 길로 갑시다\n"), "print(\"다른 길로 갑시다\")\n");
     assert_eq!(ok("같은 반 친구입니다\n"), "print(\"같은 반 친구입니다\")\n");
 }
+
+/// A question is addressed to a person. Substituting the program's own names
+/// into it made the password program ask *용가 무엇입니까?* — with the password
+/// in the question.
+#[test]
+fn a_question_is_read_as_the_words_that_were_typed() {
+    assert_eq!(
+        ok("비밀번호는 용\n입력을 물어봐 비밀번호가 무엇입니까?\n"),
+        "비밀번호 = \"용\"\n입력 = input(\"비밀번호가 무엇입니까?\" + \" \")\n"
+    );
+    assert_eq!(
+        ok("set password to dragon\nask word What is the password?\n"),
+        "password = \"dragon\"\nword = input(\"What is the password?\" + \" \")\n"
+    );
+}
+
+/// The same question read two ways depending on how it was spelled: written on
+/// its own it gave a number, written after `ask <name>` it gave text, and the
+/// comparison the learner wrote next was silently false for ever.
+#[test]
+fn a_question_that_asks_a_number_gives_a_number_either_way() {
+    for source in [
+        "How old are you?\n",
+        "ask age How old are you?\n",
+        "몇 살이에요?\n",
+        "나이를 물어봐 몇 살이에요?\n",
+        "ask legs How many legs?\n",
+    ] {
+        assert!(
+            ok(source).contains("int(input("),
+            "expected a number for {source:?}, got {}",
+            ok(source)
+        );
+    }
+    // And a question that asks for words still gives words.
+    assert!(!ok("ask name What is your name?\n").contains("int(input("));
+}

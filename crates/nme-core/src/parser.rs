@@ -4200,6 +4200,28 @@ fn trim_trailing_fillers(tokens: &[Token]) -> &[Token] {
 
 // ---------------------------------------------------------------- input
 
+/// True when the words of a question ask for a number rather than for text.
+///
+/// The line a learner writes next is almost always a comparison, and comparing
+/// what `input()` gives back — always text — with a number is silently false
+/// for ever. The bare question form has always read these as numbers; this is
+/// the same rule, so that writing the clearer `ask age How old are you?` does
+/// not quietly mean something different from writing the question alone.
+fn question_asks_for_a_number(source: &str, tokens: &[Token]) -> bool {
+    // `이름을 물어봐` has no question at all, and asking for the text of an
+    // empty slice would take the compiler down.
+    if tokens.is_empty() {
+        return false;
+    }
+    if tokens.iter().any(|token| token_word(token) == Some("몇")) {
+        return true;
+    }
+    let text = token_text(source, tokens).to_lowercase();
+    ["how many", "how old", "how much", "how long", "how tall"]
+        .iter()
+        .any(|opening| text.contains(opening))
+}
+
 fn match_ask(
     source: &str,
     tokens: &[Token],
@@ -4309,19 +4331,35 @@ fn match_ask(
         {
             Some(Value::Python(Code::Source(prompt_span)))
         } else {
-            let mut prompt_names = known_names.clone();
-            prompt_names.remove(&target);
+            // A question is addressed to a person, so it is text and nothing
+            // else. Substituting names into it wrote the program's own values
+            // into the words on the screen: `비밀번호는 용` followed by
+            // `입력을 물어봐 비밀번호가 무엇입니까?` asked *용가 무엇입니까?* —
+            // the password program printed the password. The bare-question
+            // form has always read the words literally; this makes the two
+            // spellings of the same statement agree.
             Some(Value::Text(make_text_template(
                 source,
                 prompt_tokens,
-                &prompt_names,
+                &HashSet::new(),
             )))
         }
+    };
+    // `ask age How old are you?` used to give text while the same question
+    // written on its own gave a number. Reading the words is what decides it,
+    // whichever spelling the writer chose. An explicit `ask number` / `숫자로`
+    // already says so and is left alone.
+    let kind = if shape.kind == InputKind::Text
+        && question_asks_for_a_number(source, &tokens[shape.prompt_start..prompt_end])
+    {
+        InputKind::Number
+    } else {
+        shape.kind
     };
     Ok(Some(NmeStmt::Ask {
         target,
         prompt,
-        kind: shape.kind,
+        kind,
     }))
 }
 
@@ -4354,9 +4392,7 @@ fn match_natural_question(
     // and the next line a learner writes is almost always a comparison — so
     // read it as one instead of leaving a string behind.
     let asks_for_a_number = natural_age_question_target(tokens, question_end).is_some()
-        || tokens[..question_end]
-            .iter()
-            .any(|token| token_word(token) == Some("몇"));
+        || question_asks_for_a_number(source, &tokens[..question_end]);
     let target = if let Some(target) = natural_age_question_target(tokens, question_end) {
         Some(target)
     } else if let Some(first) = tokens.first().and_then(name_word) {
