@@ -4510,7 +4510,7 @@ fn match_update(
         if let Some(stmt) = match_update(source, &tokens[1..], known_names, mode)? {
             return Ok(Some(stmt));
         }
-        if let Some(stmt) = amount_first_update(source, &tokens[1..], mode) {
+        if let Some(stmt) = amount_first_update(source, &tokens[1..], mode, known_names) {
             return Ok(Some(stmt));
         }
         return Ok(None);
@@ -4730,7 +4730,7 @@ fn finish_update(
             return Err(subtract_unset_word_diagnostic(word, span_of(tokens)));
         }
     }
-    let amount = parse_update_amount(source, amount_tokens)
+    let amount = parse_update_amount(source, amount_tokens, known_names)
         .ok_or_else(|| update_diagnostic(span_of(tokens)))?;
     Ok(NmeStmt::Update {
         target,
@@ -4806,7 +4806,12 @@ fn add_unset_word_diagnostic(word: &str, span: Span) -> Diagnostic {
 
 /// `by 1 increase score` with its leading connector already removed: the
 /// amount comes first and the name closes the line.
-fn amount_first_update(source: &str, tokens: &[Token], mode: MatchMode) -> Option<NmeStmt> {
+fn amount_first_update(
+    source: &str,
+    tokens: &[Token],
+    mode: MatchMode,
+    known_names: &HashSet<String>,
+) -> Option<NmeStmt> {
     let end = trim_command_endings(tokens).len();
     for action_start in 1..end {
         let Some((operation, consumed)) = update_action_at(tokens, action_start, mode) else {
@@ -4818,7 +4823,7 @@ fn amount_first_update(source: &str, tokens: &[Token], mode: MatchMode) -> Optio
         let Some(target) = name_word(target_token).and_then(update_target_name) else {
             continue;
         };
-        let Some(amount) = parse_update_amount(source, &tokens[..action_start]) else {
+        let Some(amount) = parse_update_amount(source, &tokens[..action_start], known_names) else {
             continue;
         };
         return Some(NmeStmt::Update {
@@ -4856,7 +4861,7 @@ fn korean_amount_first_update(
     {
         amount_tokens.pop();
     }
-    let amount = parse_update_amount(source, &amount_tokens)?;
+    let amount = parse_update_amount(source, &amount_tokens, known_names)?;
     Some(NmeStmt::Update {
         target,
         amount,
@@ -4963,7 +4968,11 @@ fn update_target_name(word: &str) -> Option<String> {
     .or_else(|| (!word.is_empty()).then(|| word.to_string()))
 }
 
-fn parse_update_amount(source: &str, tokens: &[Token]) -> Option<Code> {
+fn parse_update_amount(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+) -> Option<Code> {
     if tokens.is_empty() {
         return None;
     }
@@ -4977,12 +4986,24 @@ fn parse_update_amount(source: &str, tokens: &[Token]) -> Option<Code> {
     {
         tokens = &tokens[..tokens.len() - 1];
     }
+    // Spoken Korean attaches the particle to the word: `결과를 둘째수로 나눠`.
+    // A name with the particle still on it is a perfectly valid Python
+    // expression — it is just a name nothing ever set — so checking validity
+    // first left `결과 = 결과 / 둘째수로` behind, a `NameError` on a line that
+    // reads correctly. What tells the two apart is which of them the program
+    // actually made, so ask that before asking Python.
+    let trimmed = strip_attached_particle_span(source, tokens, UPDATE_AMOUNT_PARTICLES_KO);
+    if let Some(trimmed) = trimmed {
+        let base = &source[trimmed.start..trimmed.end];
+        if known_names.contains(base) && !known_names.contains(&source[span_of(tokens).start..span_of(tokens).end]) {
+            return Some(Code::Source(trimmed));
+        }
+    }
     let span = span_of(tokens);
     if is_valid_python_expression(&source[span.start..span.end]) {
         return Some(Code::Source(span));
     }
-    // Spoken Korean can also attach the particle: `점수를 2로 나눠`.
-    let trimmed = strip_attached_particle_span(source, tokens, UPDATE_AMOUNT_PARTICLES_KO)?;
+    let trimmed = trimmed?;
     is_valid_python_expression(&source[trimmed.start..trimmed.end]).then_some(Code::Source(trimmed))
 }
 

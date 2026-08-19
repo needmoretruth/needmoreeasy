@@ -10,6 +10,11 @@ All notable changes to NME are recorded here.
   shape refused — with `E0101` pointing at a header that was already correct.
   A job now closes the way `repeat 3 times` and `story:` do: an indented body
   ends where its indentation ends, a flat one waits for `end`.
+- **A Korean amount no longer keeps its particle.** `결과를 둘째수로 나눠`
+  produced `결과 = 결과 / 둘째수로` and died at run time with `NameError`.
+  `둘째수로` is a valid Python expression too — a name nothing ever set — so
+  "does Python read it" cannot tell the two apart. Which one the program
+  actually made is asked first now. A written number (`2로 나눠`) is unchanged.
 - **A list line written on a record is refused.** `표에 사과 넣어` and
   `append apple to ages` compiled to `표.append("사과")` and died at run time
   with `AttributeError: 'dict' object has no attribute 'append'` on a line

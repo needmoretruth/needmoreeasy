@@ -191,6 +191,27 @@ fn a_record_line_naming_a_list_is_refused_rather_than_appended() {
 }
 
 #[test]
+fn a_korean_amount_keeps_its_particle_off_the_name() {
+    // `결과를 둘째수로 나눠` produced `결과 = 결과 / 둘째수로`: the particle
+    // stayed glued to the name, and `둘째수로` is a perfectly valid Python
+    // expression — a name nothing ever set. Which of the two the program
+    // actually made is what tells them apart, so that is asked first.
+    assert_eq!(
+        ok("첫수는 12\n둘째수는 4\n결과는 첫수\n결과를 둘째수로 나눠\n"),
+        "첫수 = 12\n둘째수 = 4\n결과 = 첫수\n결과 = 결과 / 둘째수\n"
+    );
+    // A written number keeps working, and so do the other three operations.
+    assert_eq!(
+        ok("결과는 12\n결과를 2로 나눠\n"),
+        "결과 = 12\n결과 = 결과 / 2\n"
+    );
+    assert_eq!(
+        ok("둘째수는 4\n결과는 12\n결과에 둘째수 곱해\n"),
+        "둘째수 = 4\n결과 = 12\n결과 = 결과 * 둘째수\n"
+    );
+}
+
+#[test]
 fn a_list_line_naming_a_record_is_refused_rather_than_appended() {
     // The mirror of `a_record_line_naming_a_list_is_refused`. Without it,
     // `표에 사과 넣어` and `append apple to ages` compiled to
