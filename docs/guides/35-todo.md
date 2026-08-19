@@ -42,13 +42,16 @@ keeps going is all it takes.
 
    `2`, then `buy milk, read a book`.
 
-3. **Dropping something that is not there stops the program**, so ask first:
+3. **Dropping something that is not there stops the program**, so ask first.
+   Put what you are looking for **in a name** — something written as several
+   words cannot go straight into a condition:
 
    ```nme
    set jobs to an empty list
    append buy milk to jobs
-   if jobs contains buy milk
-       remove buy milk from jobs
+   set wanted to buy milk
+   if jobs contains wanted
+       remove wanted from jobs
    else
        show there is no such job
    end
