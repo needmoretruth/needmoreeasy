@@ -60,7 +60,10 @@ fn a_korean_output_word_at_the_front_is_still_a_sentence() {
     // and was before this round: `보여주기` opens the line, which is where
     // `COMMAND_WORDS_LEADING` reads it.)
     assert_eq!(ok("말하기 연습\n"), "print(\"말하기 연습\")\n");
-    assert_eq!(ok("말하기 대회에 나갔습니다\n"), "print(\"말하기 대회에 나갔습니다\")\n");
+    assert_eq!(
+        ok("말하기 대회에 나갔습니다\n"),
+        "print(\"말하기 대회에 나갔습니다\")\n"
+    );
 }
 
 #[test]
@@ -122,7 +125,10 @@ fn the_screen_is_a_place_a_message_goes() {
     assert_eq!(ok("write hello on the screen\n"), "print(\"hello\")\n");
     assert_eq!(ok("show hello to the screen\n"), "print(\"hello\")\n");
     assert_eq!(ok("안녕하세요 화면에 띄워\n"), "print(\"안녕하세요\")\n");
-    assert_eq!(ok("안녕하세요 화면에다 보여줘\n"), "print(\"안녕하세요\")\n");
+    assert_eq!(
+        ok("안녕하세요 화면에다 보여줘\n"),
+        "print(\"안녕하세요\")\n"
+    );
 }
 
 #[test]
@@ -187,7 +193,10 @@ fn korean_saves_with_its_everyday_verb() {
     assert_eq!(ok("이름을 5로 해\n"), "이름 = 5\n");
     assert_eq!(ok("이름을 5라고 하자\n"), "이름 = 5\n");
     assert_eq!(ok("점수를 0으로 하자\n"), "점수 = 0\n");
-    assert_eq!(ok("인사를 안녕하세요라고 하자\n"), "인사 = \"안녕하세요\"\n");
+    assert_eq!(
+        ok("인사를 안녕하세요라고 하자\n"),
+        "인사 = \"안녕하세요\"\n"
+    );
 }
 
 #[test]
@@ -203,9 +212,15 @@ fn the_everyday_verb_needs_the_mark_that_says_what_it_becomes() {
 fn english_saves_with_its_everyday_verb() {
     assert_eq!(ok("name becomes 5\n"), "name = 5\n");
     assert_eq!(ok("score become 0\n"), "score = 0\n");
-    assert_eq!(ok("set best to 9\nscore becomes best\n"), "best = 9\nscore = best\n");
+    assert_eq!(
+        ok("set best to 9\nscore becomes best\n"),
+        "best = 9\nscore = best\n"
+    );
     assert_eq!(ok("call it name 5\n"), "name = 5\n");
-    assert_eq!(ok("call it greeting Hello world\n"), "greeting = \"Hello world\"\n");
+    assert_eq!(
+        ok("call it greeting Hello world\n"),
+        "greeting = \"Hello world\"\n"
+    );
 }
 
 #[test]
@@ -225,7 +240,10 @@ fn a_word_a_sentence_may_not_name_keeps_the_sentence() {
         ok("Water becomes ice at zero degrees.\n"),
         "print(\"Water becomes ice at zero degrees.\")\n"
     );
-    assert_eq!(ok("Winter becomes spring.\n"), "print(\"Winter becomes spring.\")\n");
+    assert_eq!(
+        ok("Winter becomes spring.\n"),
+        "print(\"Winter becomes spring.\")\n"
+    );
 }
 
 // ------------------------------------------------------------------- asking
@@ -422,7 +440,9 @@ fn else_may_follow_a_one_line_if() {
 #[test]
 fn a_second_else_after_a_one_line_if_is_refused() {
     assert_eq!(
-        error_code("체력은 5\n만약에 체력이 0보다 크면 A 말해줘\n아니면 B 말해줘\n아니면 C 말해줘\n"),
+        error_code(
+            "체력은 5\n만약에 체력이 0보다 크면 A 말해줘\n아니면 B 말해줘\n아니면 C 말해줘\n"
+        ),
         "E0104"
     );
 }
@@ -471,11 +491,7 @@ fn a_while_loop_compares_the_way_the_words_say() {
         let program = format!("점수는 50\n{source}  가 말해줘\n끝\n");
         let built = ok(&program);
         let second = built.lines().nth(1).unwrap_or_default();
-        assert_eq!(
-            format!("{second}\n"),
-            python,
-            "for {source:?}"
-        );
+        assert_eq!(format!("{second}\n"), python, "for {source:?}");
     }
 }
 
@@ -487,7 +503,10 @@ fn bare_korean_adnominals_are_still_ordinary_words() {
     assert_eq!(ok("더 큰 수예요 말해줘\n"), "print(\"더 큰 수예요\")\n");
     assert!(ok("상자로 말해줘 작은 차림표\n").contains("작은 차림표"));
     assert_eq!(ok("다른 길로 갑시다\n"), "print(\"다른 길로 갑시다\")\n");
-    assert_eq!(ok("같은 반 친구입니다\n"), "print(\"같은 반 친구입니다\")\n");
+    assert_eq!(
+        ok("같은 반 친구입니다\n"),
+        "print(\"같은 반 친구입니다\")\n"
+    );
 }
 
 /// A question is addressed to a person. Substituting the program's own names
@@ -534,14 +553,21 @@ fn a_question_that_asks_a_number_gives_a_number_either_way() {
 fn an_adverb_between_the_name_and_the_verb_still_arranges_the_list() {
     let head = "값들은 목록 3, 1, 2\n";
     for (line, python) in [
-        ("값들 무작위로 섞어\n", "__import__(\"random\").shuffle(값들)\n"),
+        (
+            "값들 무작위로 섞어\n",
+            "__import__(\"random\").shuffle(값들)\n",
+        ),
         ("값들 잘 섞어\n", "__import__(\"random\").shuffle(값들)\n"),
         ("값들 한번 섞어\n", "__import__(\"random\").shuffle(값들)\n"),
         ("값들 다시 정렬해\n", "값들.sort()\n"),
         ("값들 그냥 거꾸로해\n", "값들.reverse()\n"),
     ] {
         let built = ok(&format!("{head}{line}"));
-        assert_eq!(built.lines().nth(1).map(|l| format!("{l}\n")), Some(python.to_string()), "for {line:?}");
+        assert_eq!(
+            built.lines().nth(1).map(|l| format!("{l}\n")),
+            Some(python.to_string()),
+            "for {line:?}"
+        );
     }
     // English says it with politeness on the end instead.
     assert_eq!(
@@ -636,8 +662,15 @@ fn a_quoted_sentence_is_printed_exactly_as_written() {
 #[test]
 fn an_everyday_verb_shows_the_one_word_after_it() {
     for line in [
-        "output hello", "write hello", "echo hello", "reveal hello", "report hello",
-        "give hello", "list hello", "present hello", "announce hello",
+        "output hello",
+        "write hello",
+        "echo hello",
+        "reveal hello",
+        "report hello",
+        "give hello",
+        "list hello",
+        "present hello",
+        "announce hello",
     ] {
         assert_eq!(
             ok(&format!("{line}\n")),
@@ -645,9 +678,18 @@ fn an_everyday_verb_shows_the_one_word_after_it() {
             "{line} did not show its word"
         );
     }
-    assert_eq!(ok("set score to 7\ngive score\n"), "score = 7\nprint(score)\n");
+    assert_eq!(
+        ok("set score to 7\ngive score\n"),
+        "score = 7\nprint(score)\n"
+    );
     // Two words, or one that never names anything, and it is a sentence again.
-    for sentence in ["give up", "echo back", "write in", "report on", "give it a try"] {
+    for sentence in [
+        "give up",
+        "echo back",
+        "write in",
+        "report on",
+        "give it a try",
+    ] {
         assert_eq!(
             ok(&format!("{sentence}\n")),
             format!("print(\"{sentence}\")\n"),
@@ -665,7 +707,10 @@ fn korean_transitive_output_words_leave_their_own_sentences_alone() {
     assert_eq!(ok("점수는 7\n점수 나타내\n"), "점수 = 7\nprint(점수)\n");
     assert_eq!(ok("배를 띄워\n"), "print(\"배를 띄워\")\n");
     assert_eq!(ok("감정을 나타내\n"), "print(\"감정을 나타내\")\n");
-    assert_eq!(ok("연을 하늘에 띄워줘\n"), "print(\"연을 하늘에 띄워줘\")\n");
+    assert_eq!(
+        ok("연을 하늘에 띄워줘\n"),
+        "print(\"연을 하늘에 띄워줘\")\n"
+    );
 }
 
 /// `put`, `insert` and `place` are the words a beginner reaches for when the
@@ -676,7 +721,11 @@ fn korean_transitive_output_words_leave_their_own_sentences_alone() {
 #[test]
 fn everyday_verbs_put_things_in_lists_and_names() {
     let list = "set friends to list of \"Mina\"\n";
-    for line in ["insert Sana into friends", "put Sana in friends", "place Sana onto friends"] {
+    for line in [
+        "insert Sana into friends",
+        "put Sana in friends",
+        "place Sana onto friends",
+    ] {
         assert_eq!(
             ok(&format!("{list}{line}\n")),
             "friends = [\"Mina\"]\nfriends.append(\"Sana\")\n",
@@ -709,7 +758,11 @@ fn everyday_verbs_put_things_in_lists_and_names() {
 fn a_record_key_written_as_two_words_is_named() {
     let source = "set marks to an empty record\nput wash up at 90 in marks\n";
     assert_eq!(error_code(source), "E0230");
-    assert!(refusal_names(source).contains("washup"), "{}", refusal_names(source));
+    assert!(
+        refusal_names(source).contains("washup"),
+        "{}",
+        refusal_names(source)
+    );
 }
 
 /// The shortest ways anybody says a value went up or down. `up` and `down`
@@ -762,14 +815,24 @@ fn a_value_goes_up_and_down_in_the_words_people_use() {
 #[test]
 fn more_ways_to_write_the_same_command() {
     for (line, python) in [
-        ("rep 3 times and show hi", "for _ in range(3): print(\"hi\")"),
-        ("go round 2 times and show ok", "for _ in range(2): print(\"ok\")"),
+        (
+            "rep 3 times and show hi",
+            "for _ in range(3): print(\"hi\")",
+        ),
+        (
+            "go round 2 times and show ok",
+            "for _ in range(2): print(\"ok\")",
+        ),
         (
             "run through 2 times and show ok",
             "for _ in range(2): print(\"ok\")",
         ),
     ] {
-        assert_eq!(ok(&format!("{line}\n")), format!("{python}\n"), "for {line}");
+        assert_eq!(
+            ok(&format!("{line}\n")),
+            format!("{python}\n"),
+            "for {line}"
+        );
     }
 
     let start = "set n to 5\n";
@@ -848,7 +911,13 @@ fn ordinary_words_are_not_read_as_typos() {
             "{sentence} stopped being a sentence"
         );
     }
-    for typo in ["shwo hello", "sohw hello", "sya hello", "pirnt hello", "tel hello"] {
+    for typo in [
+        "shwo hello",
+        "sohw hello",
+        "sya hello",
+        "pirnt hello",
+        "tel hello",
+    ] {
         assert_eq!(ok(&format!("{typo}\n")), "print(\"hello\")\n", "for {typo}");
     }
     // The rule may not cost the comparison words their own reading.
@@ -865,14 +934,8 @@ fn ordinary_words_are_not_read_as_typos() {
 /// was worse than useless: `점수 = 1` threw away the score being counted.
 #[test]
 fn korean_marks_say_which_way_even_without_the_verb() {
-    assert_eq!(
-        ok("점수는 5\n점수에 1\n"),
-        "점수 = 5\n점수 = 점수 + 1\n"
-    );
-    assert_eq!(
-        ok("점수는 5\n점수에서 2\n"),
-        "점수 = 5\n점수 = 점수 - 2\n"
-    );
+    assert_eq!(ok("점수는 5\n점수에 1\n"), "점수 = 5\n점수 = 점수 + 1\n");
+    assert_eq!(ok("점수는 5\n점수에서 2\n"), "점수 = 5\n점수 = 점수 - 2\n");
     // `에` with a saving word is still a save, and a name the program never
     // made is still a sentence.
     assert_eq!(ok("점수는 5\n점수에 0 저장해\n"), "점수 = 5\n점수 = 0\n");
@@ -1008,8 +1071,14 @@ fn everyday_korean_words_are_not_repeat_counts() {
         );
     }
     // Whoever means twice writes it a way that is not also a word.
-    assert_eq!(ok("두번 안녕 말해줘\n"), "for _ in range(2): print(\"안녕\")\n");
-    assert_eq!(ok("3번 안녕 말해줘\n"), "for _ in range(3): print(\"안녕\")\n");
+    assert_eq!(
+        ok("두번 안녕 말해줘\n"),
+        "for _ in range(2): print(\"안녕\")\n"
+    );
+    assert_eq!(
+        ok("3번 안녕 말해줘\n"),
+        "for _ in range(3): print(\"안녕\")\n"
+    );
 }
 
 /// The divisor may be a name, which `docs/syntax.ko.md` §15 promises.

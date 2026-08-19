@@ -23,6 +23,12 @@ fn err(source: &str) -> String {
     }
 }
 
+/// The code of the single diagnostic a broken source produces.
+fn error_code(source: &str) -> String {
+    let problems = transpile(source).expect_err("expected an error");
+    problems[0].code.code().to_string()
+}
+
 fn bilingual_err(source: &str) -> String {
     let problems = transpile(source).expect_err("expected an error");
     render_all_bilingual(&problems, source, "test.nme")
@@ -68,10 +74,7 @@ fn inline_body_allows_only_one_statement() {
 #[test]
 fn unterminated_string_is_reported_gently() {
     let message = err("say \"oops\n");
-    assert!(
-        message.contains("not something Python or NME can read"),
-        "{message}"
-    );
+    assert!(message.contains("never closed"), "{message}");
 }
 
 #[test]
@@ -95,7 +98,7 @@ fn diagnostics_render_with_location_code_and_hint() {
 #[test]
 fn ask_requires_a_simple_target() {
     let target = err("ask 123, \"Number? \"\n");
-    assert!(target.contains("name that should hold"), "{target}");
+    assert!(target.contains("where to put what the person types"), "{target}");
 }
 
 #[test]
@@ -118,7 +121,7 @@ fn ask_requires_a_valid_prompt() {
 #[test]
 fn when_requires_a_condition_colon_and_body() {
     let colon = err("when ready\n");
-    assert!(colon.contains("needs `:`"), "{colon}");
+    assert!(colon.contains("nothing follows this condition"), "{colon}");
 
     let condition = err("when:\n    say \"no\"\n");
     assert!(condition.contains("condition is missing"), "{condition}");
@@ -134,12 +137,12 @@ fn korean_forms_return_korean_guidance() {
     assert!(say.contains("couldn't understand"), "{say}");
 
     let repeat = bilingual_err("3번:\n말해 \"들여쓰기 없음\"\n");
-    assert!(repeat.contains("들여써야"), "{repeat}");
-    assert!(repeat.contains("must be indented"), "{repeat}");
+    assert!(repeat.contains("들여쓴 줄이 없어서"), "{repeat}");
+    assert!(repeat.contains("nothing below this line is indented"), "{repeat}");
 
     let when = bilingual_err("만약 준비됨\n");
-    assert!(when.contains("필요합니다"), "{when}");
-    assert!(when.contains("needs `:`"), "{when}");
+    assert!(when.contains("조건이 맞아도 할 일이 없습니다"), "{when}");
+    assert!(when.contains("nothing follows this condition"), "{when}");
 }
 
 #[test]
@@ -1156,9 +1159,10 @@ fn only_the_bundled_modules_are_available() {
     // NME has never shipped still gets the whole list back.
     let message = err("use network\n");
     assert!(
-        message.contains("bundles `use random`, `use file`, `use list`, `use text`, `use math`, `use date`, and `use zero_knowledge`"),
+        message.contains("not one of the seven modules NME carries"),
         "{message}"
     );
+    assert!(message.contains("`zero_knowledge`"), "{message}");
 }
 
 #[test]
@@ -1193,7 +1197,7 @@ fn file_module_does_not_overwrite_existing_names() {
 fn two_modules_on_one_line_are_rejected() {
     let message = err("use random and file\n");
     assert!(
-        message.contains("bundles `use random`, `use file`, `use list`, `use text`, `use math`, `use date`, and `use zero_knowledge`"),
+        message.contains("not one of the seven modules NME carries"),
         "{message}"
     );
 }
@@ -1201,7 +1205,10 @@ fn two_modules_on_one_line_are_rejected() {
 #[test]
 fn a_file_read_without_a_target_is_reported() {
     let message = err("read \"notes.txt\"\n");
-    assert!(message.contains("target name"), "{message}");
+    assert!(
+        message.contains("does not say where to put what it reads"),
+        "{message}"
+    );
 }
 
 #[test]
@@ -1214,21 +1221,28 @@ fn a_module_import_needs_a_nme_path_and_names() {
 
     let bad_shape = err("from \"helper.nme\" import greet 1\n");
     assert!(bad_shape.contains("module import"), "{bad_shape}");
+    // Each of the two mistakes now has a code of its own, so a reader looking
+    // one up is not sent to a page about missing actions.
+    assert_eq!(error_code("from \"helper.py\" import greet\n"), "E0407");
+    assert_eq!(error_code("from \"helper.nme\" import\n"), "E0408");
 }
 
 #[test]
 fn a_module_import_needs_a_python_identifier_file_name() {
     let dashed = err("from \"my-helper.nme\" import greet\n");
-    assert!(dashed.contains("Python identifier"), "{dashed}");
+    assert!(dashed.contains("letters, numbers, and `_`"), "{dashed}");
 
     let dotted = err("from \"shapes.ko.nme\" import rect\n");
-    assert!(dotted.contains("Python identifier"), "{dotted}");
+    assert!(dotted.contains("letters, numbers, and `_`"), "{dotted}");
 }
 
 #[test]
 fn a_file_write_without_a_path_is_reported() {
     let message = err("write \"hello\" to\n");
-    assert!(message.contains("quoted path"), "{message}");
+    assert!(
+        message.contains("not inside quotation marks"),
+        "{message}"
+    );
 }
 
 #[test]
@@ -1328,7 +1342,10 @@ fn sentence_lowering_never_changes_physical_line_numbers() {
 #[test]
 fn explicit_blocks_report_structural_mistakes() {
     let missing = err("while ready\nshow waiting\n");
-    assert!(missing.contains("missing its closing `end`"), "{missing}");
+    assert!(
+        missing.contains("is still open at the end of the file"),
+        "{missing}"
+    );
     let unmatched = err("else\n");
     assert!(unmatched.contains("open condition block"), "{unmatched}");
     let outside = err("break\n");
@@ -1364,7 +1381,10 @@ fn an_extra_end_after_a_closed_block_is_reported() {
 #[test]
 fn a_flat_block_still_requires_its_own_end() {
     let message = err("점수가 5와 같으면\n만약 true라면\n    say \"a\"\n끝\n");
-    assert!(message.contains("missing its closing `end`"), "{message}");
+    assert!(
+        message.contains("is still open at the end of the file"),
+        "{message}"
+    );
 }
 
 #[test]
@@ -1394,7 +1414,10 @@ fn a_name_the_language_needs_is_refused() {
     assert!(problems[0].message.contains("sum"), "{problems:?}");
     // Python written as Python is left alone: whoever writes `sum = 0` in
     // Python has said what they mean.
-    assert_eq!(transpile("sum = 0\nprint(sum)\n").unwrap(), "sum = 0\nprint(sum)\n");
+    assert_eq!(
+        transpile("sum = 0\nprint(sum)\n").unwrap(),
+        "sum = 0\nprint(sum)\n"
+    );
     assert!(transpile("set total to 5\n").is_ok());
 }
 
@@ -1405,7 +1428,10 @@ fn a_name_written_as_two_words_is_named() {
     let problems = transpile("set full name to Mina\n").expect_err("expected this to be refused");
     assert_eq!(problems[0].code.code(), "E0230");
     assert!(
-        problems[0].hint.as_ref().is_some_and(|hint| hint.contains("full_name")),
+        problems[0]
+            .hint
+            .as_ref()
+            .is_some_and(|hint| hint.contains("full_name")),
         "{problems:?}"
     );
     // No connector anywhere is the documented short form and still saves.

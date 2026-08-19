@@ -868,8 +868,14 @@ fn a_korean_word_ending_in_the_joining_particle_stays_whole() {
     // The particle really used as "and" still joins, in both shapes.
     assert_eq!(ok("과일은 목록 사과와 배\n"), "과일 = [\"사과\", \"배\"]\n");
     assert_eq!(ok("과일은 목록 감과 배\n"), "과일 = [\"감\", \"배\"]\n");
-    assert_eq!(ok("친구들은 목록 민수랑 지영\n"), "친구들 = [\"민수\", \"지영\"]\n");
-    assert_eq!(ok("친구들은 목록 지영이랑 민수\n"), "친구들 = [\"지영\", \"민수\"]\n");
+    assert_eq!(
+        ok("친구들은 목록 민수랑 지영\n"),
+        "친구들 = [\"민수\", \"지영\"]\n"
+    );
+    assert_eq!(
+        ok("친구들은 목록 지영이랑 민수\n"),
+        "친구들 = [\"지영\", \"민수\"]\n"
+    );
 }
 
 /// A number added to a list goes *into* it.

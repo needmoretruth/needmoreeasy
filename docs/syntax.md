@@ -755,12 +755,12 @@ touched.**
 | `E0204` | `say` has nothing to show |
 | `E0211` | the question after the comma is missing |
 | `E0212` | the question could not be understood |
-| `E0213` | the `ask` target is not a variable name |
+| `E0213` | no name to hold the answer |
 | `E0221` | the value change could not be understood |
 | `E0222` | the break command could not be understood |
 | `E0223` | the skip command could not be understood |
 | `E0224` | the wait length could not be understood |
-| `E0225` | the list addition could not be understood |
+| `E0225` | this list line could not be read |
 | `E0226` | the timer has not been started yet |
 | `E0227` | a chance can only go to one decimal place |
 | `E0228` | a chance must be between 0% and 100% |
@@ -769,10 +769,12 @@ touched.**
 | `E0231` | this name was never made into a list |
 | `E0232` | this story has nothing in it |
 | `E0233` | this join does not say what to put between the items |
-| `E0234` | this name does not hold a record |
+| `E0234` | a list line and a record line were mixed up |
 | `E0235` | this job is given a different number of things than it takes |
 | `E0236` | this job reads a name from outside and then changes it |
 | `E0237` | this name is one the language itself needs |
+| `E0238` | a file read with no name to read into |
+| `E0239` | a file name that is not in quotation marks |
 | `E0301` | the condition is missing |
 | `E0302` | the condition could not be understood |
 | `E0303` | the repeated body could not be understood |
@@ -785,12 +787,14 @@ touched.**
 | `E0404` | this module version is not bundled |
 | `E0405` | the module would overwrite your names |
 | `E0406` | the use line shape is not understood |
+| `E0407` | a module path this line cannot use |
+| `E0408` | a module import line NME could not read |
 | `E0411` | the value to save is missing |
 | `E0412` | the value to save could not be understood |
 | `E0413` | the name to save into is missing |
 | `E0414` | the save target is not a simple name |
-| `E0501` | the repeated block is not indented |
-| `E0502` | the condition needs a colon |
+| `E0501` | the lines to repeat are not indented |
+| `E0502` | nothing to do when the condition is true |
 | `E0503` | a block that starts without a statement |
 | `E0504` | one statement per line |
 | `E0505` | the block body is not a statement NME knows |

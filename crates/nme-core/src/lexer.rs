@@ -356,22 +356,131 @@ fn line_number(line_starts: &[usize], offset: usize) -> usize {
 
 fn lexical_diagnostic(source: &str, err: &rustpython_parser::lexer::LexicalError) -> Diagnostic {
     let offset = usize::from(err.location);
+    let reported = err.error.to_string();
+    // CPython's own wording ("EOL while scanning string literal") is English
+    // jargon with no Korean at all, and its caret lands one column past the
+    // end of the line, under nothing. The two mistakes that reach here almost
+    // every time are answered in both languages instead, pointing at the mark
+    // that was opened rather than at the place the reading stopped.
+    if reported.contains("string literal") {
+        if let Some((at, quote)) = unclosed_quote(source, offset) {
+            return Diagnostic::bilingual(
+                DiagnosticCode::UnrecognizedInput,
+                "a quotation mark was opened here and never closed",
+                "여기서 연 따옴표가 닫히지 않았습니다",
+                Span::new(at, at + 1),
+            )
+            .with_bilingual_hint(
+                format!("add a closing `{quote}` at the end of the text"),
+                format!("글자가 끝나는 자리에 닫는 `{quote}`를 적어 주세요"),
+            );
+        }
+    }
+    if reported.contains("unexpected EOF") {
+        if let Some((at, opened)) = unclosed_bracket(source, offset) {
+            let closing = match opened {
+                '(' => ')',
+                '[' => ']',
+                _ => '}',
+            };
+            return Diagnostic::bilingual(
+                DiagnosticCode::UnrecognizedInput,
+                format!("a `{opened}` was opened here and never closed"),
+                format!("여기서 연 `{opened}`가 닫히지 않았습니다"),
+                Span::new(at, at + 1),
+            )
+            .with_bilingual_hint(
+                format!("add the closing `{closing}`"),
+                format!("닫는 `{closing}`를 적어 주세요"),
+            );
+        }
+    }
     // The lexer points at the offending character; underline it (or the
     // final byte when the error is at end of input).
     let start = offset.min(source.len().saturating_sub(1));
     Diagnostic::bilingual(
         DiagnosticCode::UnrecognizedInput,
-        format!(
-            "this is not something Python or NME can read: {}",
-            err.error
-        ),
-        format!("Python이나 NME가 읽을 수 없는 내용이에요: {}", err.error),
+        format!("this is not something Python or NME can read: {reported}"),
+        "Python도 NME도 이 줄을 읽지 못했습니다".to_string(),
         Span::new(start, start + 1),
     )
     .with_bilingual_hint(
         "check for an unterminated string or a stray character",
-        "닫히지 않은 문자열이나 잘못 들어간 문자가 있는지 확인하세요",
+        "닫히지 않은 따옴표나 잘못 들어간 글자가 있는지 확인해 주세요",
     )
+}
+
+/// Where the still-open quotation mark on `offset`'s line begins.
+///
+/// Only that one line is read: a string that runs past the end of a line is
+/// exactly the mistake being reported, so nothing above it can be part of it.
+fn unclosed_quote(source: &str, offset: usize) -> Option<(usize, char)> {
+    // The reading stops at the line's end, and the location can be the
+    // newline itself or one past it. Either way the string was opened on the
+    // line that ends there, not on the empty one after it.
+    let stopped = offset.min(source.len());
+    let stopped = if source[..stopped].ends_with('\n') {
+        stopped - 1
+    } else {
+        stopped
+    };
+    let line_start = source[..stopped].rfind('\n').map_or(0, |at| at + 1);
+    let line_end = source[line_start..]
+        .find('\n')
+        .map_or(source.len(), |at| line_start + at);
+    let mut open: Option<(usize, char)> = None;
+    let mut escaped = false;
+    for (at, character) in source[line_start..line_end].char_indices() {
+        match open {
+            Some((_, quote)) => {
+                if escaped {
+                    escaped = false;
+                } else if character == '\\' {
+                    escaped = true;
+                } else if character == quote {
+                    open = None;
+                }
+            }
+            None => match character {
+                '"' | '\'' => open = Some((line_start + at, character)),
+                '#' => break,
+                _ => {}
+            },
+        }
+    }
+    open
+}
+
+/// Where the innermost still-open bracket begins.
+///
+/// Brackets nest and may span lines, so the whole file up to the point the
+/// reading stopped is walked, with strings and comments skipped.
+fn unclosed_bracket(source: &str, offset: usize) -> Option<(usize, char)> {
+    let mut open: Vec<(usize, char)> = Vec::new();
+    let mut inside: Option<char> = None;
+    let mut escaped = false;
+    for (at, character) in source[..offset.min(source.len())].char_indices() {
+        match inside {
+            Some(quote) => {
+                if escaped {
+                    escaped = false;
+                } else if character == '\\' {
+                    escaped = true;
+                } else if character == quote {
+                    inside = None;
+                }
+            }
+            None => match character {
+                '"' | '\'' => inside = Some(character),
+                '(' | '[' | '{' => open.push((at, character)),
+                ')' | ']' | '}' => {
+                    open.pop();
+                }
+                _ => {}
+            },
+        }
+    }
+    open.pop()
 }
 
 #[cfg(test)]
@@ -438,9 +547,20 @@ mod tests {
     }
 
     #[test]
-    fn unterminated_string_is_a_friendly_error() {
+    fn unterminated_string_points_at_the_mark_that_was_opened() {
         let err = logical_lines("say \"oops\n").unwrap_err();
-        assert!(err.message.contains("not something Python or NME can read"));
+        assert!(err.message.contains("never closed"), "{}", err.message);
+        // The caret belongs under the `"` at column 5, not one column past
+        // the end of the line where the reading happened to stop.
+        assert_eq!(err.span.start, 4);
+        assert_eq!(err.span.end, 5);
+    }
+
+    #[test]
+    fn an_unclosed_bracket_points_at_the_bracket() {
+        let err = logical_lines("print(\n").unwrap_err();
+        assert!(err.message.contains("`(`"), "{}", err.message);
+        assert_eq!(err.span.start, 5);
     }
 
     #[test]

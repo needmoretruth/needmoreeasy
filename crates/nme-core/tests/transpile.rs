@@ -1331,7 +1331,10 @@ fn prose_with_read_or_write_words_stays_sentence_output() {
     // the near-synonym instead of teaching the canonical word. One word after
     // `write` now shows that word; everything longer is still prose.
     assert_eq!(ok("write hello\n"), "print(\"hello\")\n");
-    assert_eq!(ok("write it down before you forget\n"), "print(\"write it down before you forget\")\n");
+    assert_eq!(
+        ok("write it down before you forget\n"),
+        "print(\"write it down before you forget\")\n"
+    );
     assert_eq!(ok("read the book\n"), "print(\"read the book\")\n");
     assert_eq!(
         ok("오늘 책을 읽고 싶어\n"),

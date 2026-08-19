@@ -209,8 +209,7 @@ impl Rewrite<'_> {
                     // the most written line in the language; turning it into
                     // `보여줘 점수` would put English word order in the middle
                     // of a Korean program.
-                    (Language::Korean, Value::Python(_)) if !is_one_plain_name(&written) =>
-                    {
+                    (Language::Korean, Value::Python(_)) if !is_one_plain_name(&written) => {
                         format!("보여줘 {written}")
                     }
                     (Language::Korean, _) => format!("{written} 말해줘"),

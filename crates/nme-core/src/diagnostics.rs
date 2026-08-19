@@ -134,6 +134,10 @@ pub enum DiagnosticCode {
     ModuleNameCollision,
     /// The `use` line shape is not understood.
     ModuleShapeInvalid,
+    /// The path in a `from "…" import …` line cannot name a module.
+    ModuleImportPathInvalid,
+    /// The shape of a `from "…" import …` line is not understood.
+    ModuleImportShapeInvalid,
     /// `set`/`save` with no value.
     SaveValueMissing,
     /// The value to save could not be understood.
@@ -258,6 +262,10 @@ pub enum DiagnosticCode {
     JobReadsBeforeChanging,
     /// A name NME's own readings need Python to still have.
     NameTakenByPython,
+    /// A file read with nothing saying where the text should go.
+    FileReadTargetMissing,
+    /// A file name written without quotation marks.
+    FilePathNotQuoted,
 }
 
 impl DiagnosticCode {
@@ -308,6 +316,8 @@ impl DiagnosticCode {
             Self::JobArgumentCount => "E0235",
             Self::JobReadsBeforeChanging => "E0236",
             Self::NameTakenByPython => "E0237",
+            Self::FileReadTargetMissing => "E0238",
+            Self::FilePathNotQuoted => "E0239",
             Self::ConditionMissing => "E0301",
             Self::ConditionInvalid => "E0302",
             Self::RepeatBodyUnparseable => "E0303",
@@ -320,6 +330,8 @@ impl DiagnosticCode {
             Self::UnbundledVersion => "E0404",
             Self::ModuleNameCollision => "E0405",
             Self::ModuleShapeInvalid => "E0406",
+            Self::ModuleImportPathInvalid => "E0407",
+            Self::ModuleImportShapeInvalid => "E0408",
             Self::SaveValueMissing => "E0411",
             Self::SaveValueUnparseable => "E0412",
             Self::SaveNameMissing => "E0413",
@@ -373,7 +385,7 @@ impl DiagnosticCode {
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 106] = [
+    pub const ALL: [DiagnosticCode; 110] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -420,6 +432,8 @@ impl DiagnosticCode {
         Self::UnbundledVersion,
         Self::ModuleNameCollision,
         Self::ModuleShapeInvalid,
+        Self::ModuleImportPathInvalid,
+        Self::ModuleImportShapeInvalid,
         Self::SaveValueMissing,
         Self::SaveValueUnparseable,
         Self::SaveNameMissing,
@@ -480,6 +494,8 @@ impl DiagnosticCode {
         Self::JobArgumentCount,
         Self::JobReadsBeforeChanging,
         Self::NameTakenByPython,
+        Self::FileReadTargetMissing,
+        Self::FilePathNotQuoted,
     ];
 
     pub fn from_code(code: &str) -> Option<Self> {
@@ -697,10 +713,10 @@ impl DiagnosticCode {
             ),
             Self::AskTargetInvalid => (
                 "E0213",
-                "the `ask` target is not a variable name",
-                "`ask`의 대상이 변수 이름이 아닙니다",
-                "`ask name, ...` saves the answer into `name`. Write a simple variable name there (letters and numbers, starting with a letter), not a sentence or a keyword.",
-                "`ask name, ...`는 답을 `name`에 저장합니다. 문장이나 키워드가 아니라 간단한 변수 이름(문자로 시작하는 문자·숫자 조합)을 적으세요.",
+                "no name to hold the answer",
+                "대답을 담을 이름이 없습니다",
+                "`ask name, ...` puts what the person types into `name`. What stands there has to be a name you choose — letters and numbers, starting with a letter — not a sentence, a number, or a word Python has already taken.",
+                "`ask name, ...`은 사람이 입력한 값을 `name`에 담습니다. 그 자리에는 직접 고른 이름이 와야 합니다. 문자로 시작하는 문자·숫자 조합이며, 문장이나 숫자, Python이 이미 쓰는 낱말은 올 수 없습니다.",
             ),
             Self::UpdateUnparseable => (
                 "E0221",
@@ -732,8 +748,8 @@ impl DiagnosticCode {
             ),
             Self::AppendUnparseable => (
                 "E0225",
-                "the list addition could not be understood",
-                "목록에 넣는 줄을 이해하지 못했습니다",
+                "this list line could not be read",
+                "이 목록 문장을 읽지 못했습니다",
                 "Adding to a list looks like `append Mina to friends` or `친구들에 민수 넣어`. `add 1 to score` is a different command: that changes a number.",
                 "목록에 넣기는 `친구들에 민수 넣어`, `append Mina to friends` 같은 형태입니다. `점수에 1 더해`(`add 1 to score`)는 숫자를 바꾸는 다른 명령입니다.",
             ),
@@ -795,10 +811,24 @@ impl DiagnosticCode {
             ),
             Self::RecordNameUnknown => (
                 "E0234",
-                "this name does not hold a record",
-                "이 이름에는 표가 들어 있지 않습니다",
+                "a list line and a record line were mixed up",
+                "목록 문장과 표 문장을 서로 바꿔 썼습니다",
                 "A record holds many named values at once: `set ages to an empty record` / `나이표는 빈 표`, and then `put Mina at 90 in ages` / `나이표에 민수를 90으로 넣어`. This line writes a name and a value into something that is not one — most often a list, which holds items in order and has no names to write them under. Make a record first, or use a list line: `append Mina to friends` / `친구들에 민수 넣어`.",
                 "표는 이름이 붙은 값을 한 번에 여럿 담습니다. `나이표는 빈 표`(`set ages to an empty record`)라고 만든 뒤 `나이표에 민수를 90으로 넣어`(`put Mina at 90 in ages`)처럼 적습니다. 이 줄은 표가 아닌 것에 이름과 값을 적으려 하고 있습니다. 대개는 목록인데, 목록은 순서대로 담을 뿐 이름을 붙일 자리가 없습니다. 먼저 표를 만들거나, 목록 문장인 `친구들에 민수 넣어`(`append Mina to friends`)로 적어 주세요.",
+            ),
+            Self::FileReadTargetMissing => (
+                "E0238",
+                "a file read with no name to read into",
+                "읽은 내용을 담을 이름이 없는 파일 읽기",
+                "Reading a file only means something if the text goes somewhere: `read \"notes.txt\" into memo` puts it in `memo`. This line names a file but no name to hold what was read, so nothing would be kept. Add a name of your own.",
+                "파일을 읽는 일은 읽은 글이 어딘가에 담길 때만 뜻이 있습니다. `read \"notes.txt\" into memo`는 읽은 글을 `memo`에 담습니다. 이 줄에는 파일 이름만 있고 담을 이름이 없어서 아무것도 남지 않습니다. 담을 이름을 하나 적어 주세요.",
+            ),
+            Self::FilePathNotQuoted => (
+                "E0239",
+                "a file name that is not in quotation marks",
+                "따옴표로 감싸지 않은 파일 이름",
+                "A file name is text, so it goes inside quotation marks: `\"notes.txt\"`. Without them Python reads `notes.txt` as one name, a dot, and another name, which is not a file at all. Put the whole name, the dot and what follows it included, inside `\"`.",
+                "파일 이름은 글자라서 따옴표 안에 넣습니다. `\"notes.txt\"`처럼 적습니다. 따옴표가 없으면 Python은 `notes.txt`를 이름과 점과 또 다른 이름으로 읽고, 그것은 파일이 아닙니다. 점과 그 뒤까지 이름 전체를 `\"` 안에 넣어 주세요.",
             ),
             Self::JobArgumentCount => (
                 "E0235",
@@ -905,6 +935,20 @@ impl DiagnosticCode {
                 "Write the module line as `use random` (or `랜덤 사용`), optionally with `latest` or `version \"0.0.1\"`. Other word orders are not accepted. `list`, `text` and `math` are stricter still: the name has to stand right beside `use`/`사용`, because those words appear in ordinary sentences.",
                 "모듈 줄은 `use random`(`랜덤 사용`) 형태로 쓰고, 원하면 `latest`나 `version \"0.0.1\"`를 붙이세요. 다른 단어 순서는 받아들이지 않습니다. `목록`·`글자`·`수학`은 조건이 하나 더 있습니다. 평범한 문장에도 나오는 낱말이라서 `사용`/`use` 바로 옆에 있어야 합니다.",
             ),
+            Self::ModuleImportPathInvalid => (
+                "E0407",
+                "a module path this line cannot use",
+                "이 줄이 쓸 수 없는 모듈 경로",
+                "`from \"helper.nme\" import greet` brings names over from another NME program. The quoted path has to end in `.nme`, and the file name itself may use only letters, numbers, and `_`, because that name becomes a Python name while the program runs. Rename the file, or write the path again.",
+                "`from \"helper.nme\" import greet`은 다른 NME 프로그램의 이름을 가져옵니다. 따옴표 안 경로는 `.nme`로 끝나야 하고, 파일 이름 자체에는 영문자, 숫자, 밑줄(`_`)만 쓸 수 있습니다. 그 이름이 프로그램이 도는 동안 Python의 이름이 되기 때문입니다. 파일 이름을 바꾸거나 경로를 다시 적어 주세요.",
+            ),
+            Self::ModuleImportShapeInvalid => (
+                "E0408",
+                "a module import line NME could not read",
+                "읽지 못한 모듈 가져오기 줄",
+                "A module import is one line with two parts: the other program's path in quotation marks, and the names to bring over. `from \"helper.nme\" import greet, score`. Anything else in the line — one extra word, a missing `import`, a name with a dot in it — leaves NME no way to tell which names should cross.",
+                "모듈 가져오기는 두 부분으로 된 한 줄입니다. 따옴표 안에 적은 다른 프로그램의 경로와, 가져올 이름들입니다. `from \"helper.nme\" import greet, score`처럼 적습니다. 그 밖의 것이 줄에 섞이면 — 낱말이 하나 더 있거나, `import`가 빠졌거나, 이름에 점이 있으면 — 어떤 이름을 가져올지 알 수 없습니다.",
+            ),
             Self::SaveValueMissing => (
                 "E0411",
                 "the value to save is missing",
@@ -935,17 +979,17 @@ impl DiagnosticCode {
             ),
             Self::IndentationRequired => (
                 "E0501",
-                "the repeated block is not indented",
-                "반복할 블록이 들여쓰지 않았습니다",
+                "the lines to repeat are not indented",
+                "반복할 줄이 들여쓰여 있지 않습니다",
                 "The body lines of `N times:` must be indented (press Tab or four spaces), or the block can use a sentence-level form with `end`/`끝`. NME never guesses which lines belong to the block.",
                 "`N times:`의 본문 줄은 들여쓰기(Tab 또는 스페이스 4칸)해야 합니다. 또는 `end`/`끝`을 쓰는 문장형 블록을 사용하세요. NME는 어떤 줄이 블록에 속하는지 추측하지 않습니다.",
             ),
             Self::ColonRequired => (
                 "E0502",
-                "the condition needs a colon",
-                "조건 뒤에 콜론이 필요합니다",
-                "A beginner `if`/`while` header with no indented body needs `:` to stay valid Python, or use the sentence form that ends with `end`/`끝`.",
-                "본문이 들여쓰기로 없는 초급형 `if`/`while` 헤더는 `:`가 있어야 올바른 Python이 됩니다. 또는 `end`/`끝`으로 끝나는 문장형을 쓰세요.",
+                "nothing to do when the condition is true",
+                "조건이 맞을 때 할 일이 없습니다",
+                "A condition needs lines under it, indented, saying what happens when it holds. A beginner `if`/`while` header with nothing indented below it needs `:` to stay valid Python; the sentence form closes with `end`/`끝` instead.",
+                "조건 아래에는 조건이 맞을 때 할 일이 들여쓰기로 적혀 있어야 합니다. 아래에 들여쓴 줄이 없는 초급형 `if`/`while` 머리줄은 `:`가 있어야 올바른 Python이 되고, 문장형은 `끝`으로 닫습니다.",
             ),
             Self::BlockWithoutStatement => (
                 "E0503",
@@ -993,8 +1037,8 @@ impl DiagnosticCode {
                 "E0603",
                 "this word is not an action NME knows",
                 "이 단어는 NME가 아는 동작이 아닙니다",
-                "The line is not Python, and the word standing where the action belongs is not one of NME's action words. NME never guesses which action you meant, so it names the word and suggests the closest one it does know. Replace the word with the suggested spelling, or write the line as Python.",
-                "이 줄은 Python이 아니고, 동작이 와야 할 자리의 단어가 NME의 동작 단어가 아닙니다. NME는 어떤 동작인지 짐작하지 않으므로, 그 단어를 짚고 가장 가까운 동작 단어를 알려 줍니다. 알려 준 표기로 바꾸거나 이 줄을 Python으로 쓰세요.",
+                "The line is not Python, and the word standing where the action belongs is not one of NME's action words. NME never guesses which action you meant, so it names the word and suggests the closest one it does know. When that suggestion makes a line that works, the hint shows the whole line, ready to copy. Replace the word, or write the line as Python.",
+                "이 줄은 Python이 아니고, 동작이 와야 할 자리의 단어가 NME의 동작 단어가 아닙니다. NME는 어떤 동작인지 짐작하지 않으므로, 그 낱말을 짚고 가장 가까운 동작 낱말을 알려 줍니다. 그 낱말로 고친 줄이 실제로 돌아가면 도움말이 그 줄 전체를 그대로 보여 주니, 옮겨 적으면 됩니다. 낱말을 바꾸거나 이 줄을 Python으로 쓰세요.",
             ),
             Self::StatementDoesNothing => (
                 "E0604",
@@ -1438,7 +1482,11 @@ impl Diagnostic {
 /// Anything else falls back to the vowel-ending form, which is the one that
 /// reads as a slip rather than as broken grammar.
 #[must_use]
-pub fn korean_particle(word: &str, after_consonant: &'static str, after_vowel: &'static str) -> &'static str {
+pub fn korean_particle(
+    word: &str,
+    after_consonant: &'static str,
+    after_vowel: &'static str,
+) -> &'static str {
     let Some(last) = word.chars().rev().find(|letter| !letter.is_whitespace()) else {
         return after_vowel;
     };
@@ -1446,14 +1494,25 @@ pub fn korean_particle(word: &str, after_consonant: &'static str, after_vowel: &
         '가'..='힣' => (u32::from(last) - 0xAC00) % 28 != 0,
         'a'..='z' | 'A'..='Z' => {
             let lowered = last.to_ascii_lowercase();
-            let two: String = word.chars().rev().take(2).collect::<Vec<_>>().into_iter().rev().collect();
+            let two: String = word
+                .chars()
+                .rev()
+                .take(2)
+                .collect::<Vec<_>>()
+                .into_iter()
+                .rev()
+                .collect();
             matches!(lowered, 'n' | 'm' | 'l' | 'p' | 'k' | 'b' | 'g')
                 || two.to_ascii_lowercase().ends_with("ng")
         }
         '0'..='9' => matches!(last, '0' | '1' | '3' | '6' | '7' | '8'),
         _ => false,
     };
-    if consonant { after_consonant } else { after_vowel }
+    if consonant {
+        after_consonant
+    } else {
+        after_vowel
+    }
 }
 
 pub fn render_all(diagnostics: &[Diagnostic], source: &str, path: &str) -> String {

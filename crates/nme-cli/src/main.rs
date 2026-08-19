@@ -218,7 +218,7 @@ fn main() -> ExitCode {
                     ),
                     &format!(
                         "`{path}` 명령을 알 수 없습니다. `nme 도움`으로 명령을 확인하세요.\n\
-                         팁: 현재 폴더에 .nme 파일이 하나뿐이면 `nme 실행`만으로 실행할 수 있어요."
+                         팁: 현재 폴더에 .nme 파일이 하나뿐이면 `nme 실행`만으로 실행할 수 있습니다."
                     ),
                 )
             }
@@ -588,7 +588,7 @@ fn command_install(args: &[String], language: MessageLanguage) -> ExitCode {
             nme_core::diagnostics::DiagnosticCode::CliInstallPackageMissing,
             language,
             "which package should I install? e.g. nme install requests",
-            "어떤 패키지를 설치할까요? 예: nme 설치 requests",
+            "어떤 꾸러미를 설치할지 적어 주세요. 예: nme 설치 requests",
         );
     }
     if args.len() > 1 {
@@ -697,7 +697,7 @@ fn command_error_lookup(args: &[String], language: MessageLanguage) -> ExitCode 
                 "`{code}`: one error code at a time. Try `nme ko {code}` or `nme ko` for the list."
             ),
             &format!(
-                "`{code}`: 오류 코드는 한 번에 하나씩 확인할 수 있어요. `nme ko {code}` 또는 목록을 보려면 `nme ko`를 사용하세요."
+                "`{code}`: 오류 코드는 한 번에 하나씩 확인할 수 있습니다. `nme ko {code}`처럼 적거나, 목록을 보려면 `nme ko`를 실행하세요."
             ),
         );
     }
@@ -707,7 +707,7 @@ fn command_error_lookup(args: &[String], language: MessageLanguage) -> ExitCode 
             language,
             &format!("there is no error code `{code}`. Run `nme ko` to list every code."),
             &format!(
-                "`{code}` 오류 코드는 없어요. `nme ko`를 실행하면 모든 코드를 볼 수 있습니다."
+                "`{code}` 오류 코드는 없습니다. `nme ko`를 실행하면 모든 코드를 볼 수 있습니다."
             ),
         );
     };
@@ -1501,7 +1501,7 @@ fn ambiguous_program_message(
          hint: type more of the name, e.g. `nme {action_en} {stem}`"
     );
     let korean = format!(
-        "`{wanted}`(와)과 일치하는 프로그램이 여러 개예요: {listed}\n\
+        "`{wanted}`(와)과 일치하는 프로그램이 여럿입니다: {listed}\n\
          도움말: 이름을 더 길게 적어 주세요. 예: `nme {action_ko} {stem}`"
     );
     (english, korean)
@@ -1576,7 +1576,7 @@ fn discover_current_program(
                  nme {action_en} hello"
             ),
             &format!(
-                "여기에 .nme 프로그램이 없어요. 파일을 만들거나(예: hello.nme) 이름을 적어 주세요:\n\
+                "여기에 .nme 프로그램이 없습니다. 파일을 만들거나(예: hello.nme) 이름을 적어 주세요:\n\
                  nme {action_ko} hello"
             ),
         )),
@@ -1591,7 +1591,7 @@ fn discover_current_program(
                 println!("  {}. {name}", index + 1);
             }
             if language == MessageLanguage::KoreanAndEnglish {
-                print!("어느 것을 선택할까요? (1-{}) ", many.len());
+                print!("어느 것을 고르시겠습니까? (1-{}) ", many.len());
             } else {
                 print!("Which one? (1-{}) ", many.len());
             }
@@ -1611,7 +1611,7 @@ fn discover_current_program(
                     nme_core::diagnostics::DiagnosticCode::CliEmptyPickAnswer,
                     language,
                     "no answer given — type a number or a program name, then press Enter",
-                    "대답이 입력되지 않았어요 — 숫자나 프로그램 이름을 적고 Enter를 누르세요",
+                    "대답이 입력되지 않았습니다 — 숫자나 프로그램 이름을 적고 Enter를 누르세요",
                 ));
             }
             if let Ok(number) = answer.parse::<usize>() {
@@ -1650,7 +1650,7 @@ fn discover_current_program(
                              Tip: pick a number from the list above, or type more of the name"
                         ),
                         &format!(
-                            "`{answer}`(와)과 일치하는 프로그램이 여러 개예요: {listed}\n\
+                            "`{answer}`(와)과 일치하는 프로그램이 여럿입니다: {listed}\n\
                              팁: 위 목록에서 숫자를 고르거나 이름을 더 길게 입력하세요"
                         ),
                     ));

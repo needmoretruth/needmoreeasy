@@ -534,8 +534,9 @@ fn a_job_can_change_a_name_made_outside_it() {
 /// so beats a `SyntaxError` from CPython about a declaration nobody wrote.
 #[test]
 fn a_job_that_reads_before_it_changes_is_named() {
-    let problems = nme_core::transpile("set total to 0\nto tally:\n  show total\n  add 1 to total\nend\n")
-        .expect_err("expected this to be refused");
+    let problems =
+        nme_core::transpile("set total to 0\nto tally:\n  show total\n  add 1 to total\nend\n")
+            .expect_err("expected this to be refused");
     assert_eq!(problems[0].code.code(), "E0236");
     assert!(problems[0].message.contains("total"), "{problems:?}");
 }

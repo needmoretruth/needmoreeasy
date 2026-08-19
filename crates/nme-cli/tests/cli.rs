@@ -1222,7 +1222,7 @@ fn command_errors_follow_the_command_language() {
     assert!(!install.status.success());
     let install_error = stderr(&install);
     let install_korean_position = install_error
-        .find("오류[E9030]: 어떤 패키지를 설치할까요?")
+        .find("오류[E9030]: 어떤 꾸러미를 설치할지 적어 주세요")
         .unwrap();
     let install_english_position = install_error
         .find("error[E9030]: which package should I install?")
@@ -1638,15 +1638,15 @@ fn check_rejects_broken_nme_with_a_friendly_error() {
     assert!(!bilingual.status.success());
     let bilingual_error = stderr(&bilingual);
     let korean_position = bilingual_error
-        .find("반복할 다음 줄은 들여써야 합니다")
+        .find("이 줄 아래에 들여쓴 줄이 없어서")
         .unwrap();
     let english_position = bilingual_error
-        .find("the lines that should repeat must be indented")
+        .find("nothing below this line is indented")
         .unwrap();
     assert!(korean_position < english_position, "{bilingual_error}");
     assert!(bilingual_error.contains("도움말:"), "{bilingual_error}");
 
-    assert!(!error.contains("반복할 다음 줄"), "{error}");
+    assert!(!error.contains("들여쓴 줄이 없어서"), "{error}");
     assert!(!error.contains("오류:"), "{error}");
 
     let _ = std::fs::remove_dir_all(&dir);
@@ -2081,7 +2081,7 @@ fn an_ambiguous_name_prefix_lists_candidates_instead_of_guessing() {
     assert!(!korean.status.success());
     let korean_error = stderr(&korean);
     assert!(
-        korean_error.contains("일치하는 프로그램이 여러 개예요"),
+        korean_error.contains("일치하는 프로그램이 여럿입니다"),
         "{korean_error}"
     );
     assert!(

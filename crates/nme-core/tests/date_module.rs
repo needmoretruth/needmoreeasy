@@ -250,11 +250,17 @@ fn a_name_cannot_take_a_loaded_module_word() {
 #[test]
 fn a_sentence_with_is_in_it_is_not_an_identity_test() {
     assert_eq!(
-        ok("use date\nshow Today is today()\n").lines().last().unwrap(),
+        ok("use date\nshow Today is today()\n")
+            .lines()
+            .last()
+            .unwrap(),
         "print(\"Today is today()\")"
     );
     assert_eq!(
-        ok("use date\nshow It is weekday()\n").lines().last().unwrap(),
+        ok("use date\nshow It is weekday()\n")
+            .lines()
+            .last()
+            .unwrap(),
         "print(\"It is weekday()\")"
     );
     // Names the program made are still put into the sentence, which is what
