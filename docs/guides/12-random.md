@@ -74,8 +74,10 @@ show second
 
 ## What you learned
 
-- `use random latest` / `랜덤 사용 최신` loads the bundled random helper.
-- `random number from 1 to 6` / `1부터 6까지 랜덤정수` roll a die.
-- `pick from red or green or blue` / `... 중에서 랜덤선택` pick one choice.
-- `use file` may join `use random` in the same program — guide
-  [23](23-high-score.md) saves its best score that way.
+- `random number from 1 to 6` / `1부터 6까지 무작위 숫자` rolls a die.
+- `pick from red or green or blue` / `... 중에서 골라` picks one of several.
+- Written as sentences, nothing has to be loaded first.
+- Chance mixes straight into conditions, loops and lists — mix them and you
+  have a game.
+- Beginner syntax calls the same jobs by name, after `use random`. That comes
+  later, in [61 — Modules](61-modules.md).
