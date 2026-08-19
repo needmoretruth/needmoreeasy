@@ -1,189 +1,94 @@
-# 25 — 계산기 — 명령줄 프로젝트
+# 25 — 계산기: 물어보고 셈하기
 
 [English](25-calculator.md) | 한국어
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도: ★★★★☆ (4/5)
-- 선수 지식: [22 — 터미널 메뉴](22-terminal-menu.ko.md), [08 — 조건](08-if.ko.md)
+- 난이도: ★★★☆☆ (3/5)
+- 선수 지식: [08 — 조건](08-if.ko.md), [24 — 퀴즈](24-quiz.ko.md)
 - 주제: 프로젝트
-- 결과물: 함수와 모듈 파일로 계속 물어보는 계산기
+- 결과물: 숫자 두 개와 셈 종류를 물어보고 답을 알려 주는 계산기
 
-`3 + 4`를 읽고 답한 뒤 `quit`을 입력할 때까지 다시 물어보는 계산기는 완성된
-작은 프로젝트입니다. 한 프로그램에서 세 단계를 모두 씁니다: 입력에 초급
-`물어봐`, 반복과 계산에 순수 Python `while True:`와 `def`, 출력에 NME
-`말해`.
+지금까지 물어본 것은 모두 **글**이었습니다. 글은 더할 수 없습니다 —
+`"12"`와 `"4"`를 더하면 `124`가 되어 버립니다. 숫자로 받으려면 그렇게
+말해 주어야 합니다.
 
 ## 단계
 
-1. 계산기 전체를 `calculator.ko.nme` 한 파일로 저장하고 실행합니다:
+1. **숫자로 물어봅니다.** `숫자로`를 넣으면 답을 숫자로 받습니다:
 
    ```nme
-   # 명령줄 계산기: 3 + 4 를 입력하거나 quit.
-   # 실행: nme 실행 calculator.ko
-
-   def calculate(parts):
-       if parts[1] == "+":
-           return int(parts[0]) + int(parts[2])
-       elif parts[1] == "-":
-           return int(parts[0]) - int(parts[2])
-       elif parts[1] == "*":
-           return int(parts[0]) * int(parts[2])
-       else:
-           return int(parts[0]) / int(parts[2])
-
-
-   말해 "계산기 — 3 + 4 같은 명령을 입력하거나 quit."
-
-   while True:
-       물어봐 command, "명령을 입력하세요? "
-       만약 command == "quit":
-           말해 "안녕!"
-           break
-       parts = command.split()
-       if len(parts) == 3:
-           answer = calculate(parts)
-           말해 f"{command} = {answer}"
-       else:
-           말해 "형식: 숫자 연산자 숫자"
+   첫수를 숫자로 물어봐 첫 번째 숫자
+   둘째수를 숫자로 물어봐 두 번째 숫자
+   결과는 첫수
+   결과에 둘째수 더해
+   결과 말해줘
    ```
 
-   ```sh
-   printf '3 + 4\n10 - 3\n7 * 6\n10 / 4\nquit\n' | nme 실행 calculator.ko
-   ```
+   `12`와 `4`를 넣으면 `16`이 나옵니다. `숫자로`를 빼면 `124`가 나옵니다 —
+   글을 이어 붙인 것입니다.
 
-   ```text
-   계산기 — 3 + 4 같은 명령을 입력하거나 quit.
-   명령을 입력하세요? 3 + 4 = 7
-   명령을 입력하세요? 10 - 3 = 7
-   명령을 입력하세요? 7 * 6 = 42
-   명령을 입력하세요? 10 / 4 = 2.5
-   명령을 입력하세요? 안녕!
-   ```
-
-2. 계산은 함수에 들어 있습니다. `def`가 이름을 붙이고, `parts`가 나뉜
-   명령을 담으며, `return`이 답을 돌려줍니다. `parts[1]`은 연산자이고
-   `int(parts[0])`은 글자 `"3"`을 숫자 `3`으로 바꿉니다:
+2. **네 가지 셈은 네 문장입니다.** 모두 「이름에 무엇을 한다」는 꼴입니다:
 
    ```nme
-   def calculate(parts):
-       if parts[1] == "+":
-           return int(parts[0]) + int(parts[2])
-       elif parts[1] == "-":
-           return int(parts[0]) - int(parts[2])
-       elif parts[1] == "*":
-           return int(parts[0]) * int(parts[2])
-       else:
-           return int(parts[0]) / int(parts[2])
+   결과는 12
+   결과에 4 더해
+   결과에서 2 빼
+   결과에 3 곱해
+   결과를 2로 나눠
+   결과 말해줘
    ```
 
-   `elif`가 연산자마다 갈래를 만들고, 마지막 `else`가 나눗셈입니다. 이
-   블록은 NME 파일 안에 그대로 쓴 고급 Python입니다.
+   한 줄에 하나씩 결과가 바뀌어 갑니다: 12에서 16이 되고, 14가 되고, 42가
+   되고, 마지막에 21이 됩니다. 화면에는 마지막 값인 `21.0`만 나옵니다.
+   **나눗셈만 소수점이 붙습니다.** 나눈 몫은 딱 떨어지지 않는 일이 흔해서
+   늘 소수로 답합니다.
 
-3. `split()`이 명령을 단어로 자릅니다. `"3 + 4".split()`은
-   `['3', '+', '4']`가 되므로 `parts[0]`은 첫 숫자, `parts[1]`은 연산자,
-   `parts[2]`는 둘째 숫자입니다. `len(parts) == 3`은 형식에 맞지 않는
-   명령을 거릅니다:
+3. **어느 셈을 할지는 물어봐서 정합니다.** 갈래가 넷이면
+   `아니면 만약에`를 씁니다:
 
    ```nme
-   parts = command.split()
-   if len(parts) == 3:
-       answer = calculate(parts)
-       말해 f"{command} = {answer}"
-   else:
-       말해 "형식: 숫자 연산자 숫자"
+   기호는 곱하기
+   결과는 12
+   만약에 기호가 더하기와 같으면
+       결과에 4 더해
+   아니면 만약에 기호가 곱하기와 같으면
+       결과에 4 곱해
+   아니면
+       모르는 셈입니다 말해줘
+   끝
+   결과 말해줘
    ```
 
-   `말해 f"{command} = {answer}"`는 입력한 줄과 결과를 한 줄로 출력합니다.
-
-4. 반복은 [22](22-terminal-menu.ko.md) 가이드의 메뉴와 같은 모양입니다:
-   `while True:`는 스스로 끝나지 않으므로 `quit`이 `break`로 나가야 합니다.
-   그 사이가 계산기의 한 턴입니다:
+4. 전체입니다:
 
    ```nme
-   while True:
-       물어봐 command, "명령을 입력하세요? "
-       만약 command == "quit":
-           말해 "안녕!"
-           break
-       parts = command.split()
-       if len(parts) == 3:
-           answer = calculate(parts)
-           말해 f"{command} = {answer}"
-       else:
-           말해 "형식: 숫자 연산자 숫자"
+   첫수를 숫자로 물어봐 첫 번째 숫자
+   둘째수를 숫자로 물어봐 두 번째 숫자
+   기호를 물어봐 더하기 빼기 곱하기 나누기 중 하나
+   결과는 첫수
+   만약에 기호가 더하기와 같으면
+       결과에 둘째수 더해
+   아니면 만약에 기호가 빼기와 같으면
+       결과에서 둘째수 빼
+   아니면 만약에 기호가 곱하기와 같으면
+       결과에 둘째수 곱해
+   아니면
+       결과를 둘째수로 나눠
+   끝
+   결과 말해줘
    ```
-
-5. 함수가 작동하면 [61](61-modules.ko.md) 가이드처럼 함수를 자기 모듈로
-   옮깁니다. `calc.nme`에 함수만 저장합니다:
-
-   ```nme
-   # calc.nme — calculate 함수만
-   def calculate(parts):
-       if parts[1] == "+":
-           return int(parts[0]) + int(parts[2])
-       elif parts[1] == "-":
-           return int(parts[0]) - int(parts[2])
-       elif parts[1] == "*":
-           return int(parts[0]) * int(parts[2])
-       else:
-           return int(parts[0]) / int(parts[2])
-   ```
-
-   그다음 `calculator.ko.nme` 맨 위에서 불러옵니다. 이제 주 파일은 반복만
-   설명하고 계산은 `calc.nme`에 남습니다:
-
-   ```nme
-   from "calc.nme" import calculate
-
-   말해 "계산기 — 3 + 4 같은 명령을 입력하거나 quit."
-
-   while True:
-       물어봐 command, "명령을 입력하세요? "
-       만약 command == "quit":
-           말해 "안녕!"
-           break
-       parts = command.split()
-       if len(parts) == 3:
-           answer = calculate(parts)
-           말해 f"{command} = {answer}"
-       else:
-           말해 "형식: 숫자 연산자 숫자"
-   ```
-
-   `nme 검사 calculator.ko`가 두 파일을 모두 확인하고, `nme r
-   calculator.ko`는 전처럼 import를 실행합니다.
-
-6. 영어 쌍둥이 `calculator.nme`는 같은 `def`를 쓰고 반복을 `ask`,
-   `if`, `show`로 씁니다:
-
-   ```nme
-   def calculate(parts):
-       if parts[1] == "+":
-           return int(parts[0]) + int(parts[2])
-
-
-   while True:
-       ask command, "Your command? "
-       if command == "quit":
-           show "Bye!"
-           break
-       parts = command.split()
-       answer = calculate(parts)
-       show f"{command} = {answer}"
-   ```
-
-   같은 파이프 입력이 두 언어에서 같은 답을 냅니다.
 
 ## 직접 해보기
 
-다섯 번째 연산자를 더해 보세요: `else` 갈래를 `//`(나머지 없는 나눗셈,
-`int(parts[0]) // int(parts[2])`)로 바꾼 뒤 `17 // 5`를 시험하세요. 또는
-모르는 연산자에 나눗셈 대신 친절한 메시지를 출력하게 하세요.
+`나머지`를 하나 더 넣어 보세요 — `결과는 첫수를 둘째수로 나눈 나머지`가
+그것입니다. 그리고 `둘째수`에 `0`을 넣고 나누기를 골라 보세요. 프로그램이
+멈추면서 `ZeroDivisionError`가 나옵니다. 나누기 전에 `만약에 둘째수가 0과
+같으면`으로 막아 두면 됩니다.
 
 ## 배운 것
 
-- `def`/`return`이 계산을 재사용하는 함수 하나로 묶습니다.
-- `command.split()`은 줄을 토막내고 `int(parts[0])`은 숫자를 읽습니다.
-- `while True:`에 `quit`이 `break`로 나가면 계속 물어보는 반복이 됩니다.
-- 함수를 `.nme` 모듈로 옮기면 프로젝트가 깔끔해집니다.
+- `<이름>을 숫자로 물어봐`가 답을 숫자로 받습니다. 그냥 `물어봐`는 글입니다.
+- 셈 네 가지는 `더해`·`빼`·`곱해`·`나눠` 네 문장입니다.
+- 나눗셈만 늘 소수로 답합니다.
+- 갈래가 셋 이상이면 `아니면 만약에`를 이어 씁니다.

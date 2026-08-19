@@ -70,7 +70,7 @@ bracket and no equals sign, which `scripts/report-guide-tier.py` measures.
 22. [22 — Terminal menu — a small TUI](22-terminal-menu.md)
 23. [23 — High score: a small project](23-high-score.md)
 24. [24 — Quiz: asking questions and marking them](24-quiz.md)
-25. [25 — Calculator — a command-line project](25-calculator.md)
+25. [25 — Calculator: asking and working it out](25-calculator.md)
 26. [26 — Game: tic-tac-toe](26-tic-tac-toe.md)
 27. [27 — Game: guessing a hidden set of colours](27-mastermind.md)
 28. [28 — Game: an opponent that knows the rule](28-ai.md)
@@ -224,7 +224,7 @@ and validated by hand.
 | 22 | ★★★★☆ | projects | [Terminal menu — a small TUI](22-terminal-menu.md) | a menu program that clears the screen and draws it again |
 | 23 | ★★★☆☆ | projects | [High score: a small project](23-high-score.md) | a dice game of three rounds that tells you your best |
 | 24 | ★★★☆☆ | games | [Quiz: asking questions and marking them](24-quiz.md) | a quiz that asks each question in turn, marks the answers, and reports a score |
-| 25 | ★★★★☆ | projects | [Calculator — a command-line project](25-calculator.md) | a repeat-until-quit calculator with functions and a module file |
+| 25 | ★★★☆☆ | projects | [Calculator: asking and working it out](25-calculator.md) | a calculator that asks for two numbers and a operation, and says the answer |
 | 26 | ★★★★☆ | games | [Game: tic-tac-toe](26-tic-tac-toe.md) | a playable two-player tic-tac-toe with a win check |
 | 27 | ★★★☆☆ | games | [Game: guessing a hidden set of colours](27-mastermind.md) | guessing the three colours the computer hid, in five tries |
 | 28 | ★★★★☆ | games | [Game: an opponent that knows the rule](28-ai.md) | a game against an opponent that follows a winning rule |
