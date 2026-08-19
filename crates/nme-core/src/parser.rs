@@ -387,6 +387,47 @@ const LIST_WORDS_KO: &[&str] = &["목록", "리스트"];
 /// list when a list word follows it, so `빈 방이었습니다` stays a sentence.
 const EMPTY_WORDS_EN: &[&str] = &["empty", "blank"];
 const EMPTY_WORDS_KO: &[&str] = &["빈", "비어있는", "새"];
+/// `record` / `표` — one name holding many named values, each one under a name
+/// of its own. Python calls it a dictionary.
+///
+/// Read as the kind of thing being made **only where a value is being saved**,
+/// exactly like the list word beside it. Everywhere else `record`, `table` and
+/// `표` are words somebody wrote: `표는 두 장 남았습니다` is about tickets.
+const RECORD_WORDS_EN: &[&str] = &["record", "table"];
+const RECORD_WORDS_KO: &[&str] = &["표"];
+/// `put Mina at 90 in ages` / `나이표에 민수를 90으로 넣어`.
+///
+/// The Korean verbs are the list-adding verbs, on purpose: it is the same act
+/// in the same words, and the name decides which kind of container is meant.
+const RECORD_PUT_WORDS_EN: &[&str] = &["put"];
+const RECORD_PUT_WORDS_KO: &[&str] = &["넣어", "넣어줘", "넣어주세요", "두어", "두어줘"];
+/// The word in front of the value in `put Mina at 90 in ages`.
+const RECORD_AT_WORDS_EN: &[&str] = &["at", "as"];
+/// The word in front of the record in `put Mina at 90 in ages`.
+const RECORD_IN_WORDS_EN: &[&str] = &["in", "into"];
+/// `민수를` — the particle that marks which name is being written under.
+const RECORD_KEY_PARTICLES_KO: &[&str] = &["을", "를"];
+/// `90으로` — the particle that marks the value being written.
+const RECORD_VALUE_PARTICLES_KO: &[&str] = &["으로", "로"];
+/// `나이표의 민수` · `나이표에서 민수` — the particles that read one value out.
+///
+/// `의` is the commonest particle in the language, so the gate is never the
+/// particle: the name in front of it has to be one the program made a record.
+const RECORD_OF_PARTICLES_KO: &[&str] = &["에서", "의"];
+/// `인사하기라는 일:` — the noun that closes a Korean job header.
+const JOB_WORDS_KO: &[&str] = &["일", "작업"];
+/// `인사하기라는` · `계산이라는` — what marks the name in a Korean job header.
+const JOB_NAME_SUFFIXES_KO: &[&str] = &["이라는", "라는"];
+/// `to greet:` — the word that opens an English job header.
+const JOB_LEAD_WORDS_EN: &[&str] = &["to"];
+/// `do greet` / `인사하기 해줘` — run a job that was defined earlier.
+const RUN_JOB_WORDS_EN: &[&str] = &["do", "run"];
+const RUN_JOB_WORDS_KO: &[&str] = &["해", "해줘", "해주세요", "실행해", "실행해줘"];
+/// `이름에게 인사하기라는 일:` and `민수에게 인사하기 해줘` — the particle that
+/// marks the one thing a job is given.
+const JOB_PARAMETER_PARTICLES_KO: &[&str] = &["에게", "한테", "을", "를"];
+/// `do greet with Mina` — the word that marks the same thing in English.
+const JOB_WITH_WORDS_EN: &[&str] = &["with"];
 /// `how many friends` / `친구들 개수` — how many items a list holds.
 const COUNT_WORDS_EN: &[&str] = &["count", "number", "many"];
 const COUNT_WORDS_KO: &[&str] = &["개수", "갯수"];
@@ -1459,6 +1500,32 @@ pub fn parse_program(
                         last_line: last_physical_line(source, line),
                     }));
                 }
+                // A job's body is a real Python function scope, so names set
+                // inside it stay inside it. Like a story and like a repeat, a
+                // job always opens an explicit block: an indented body closes
+                // on its own dedent, and a flat one waits for `end`/`끝`.
+                //
+                // Opening the block only for a flat body is what this used to
+                // do, and it meant the shape every guide in this repository
+                // teaches — indented body, `끝` underneath — was refused with
+                // `E0101` pointing at a header that was perfectly correct.
+                if let Some(NmeStmt::Job { parameters, .. }) = found.last().map(|line| &line.stmt) {
+                    // The name the job is given is bound by its header, so the
+                    // body may use it straight away.
+                    let given: HashSet<String> = parameters.iter().cloned().collect();
+                    if flat_body_follows || has_future_end(lines, index) {
+                        bindings.push_function_scope(parse_line.indent + 1, given);
+                        block_header_lines.insert(index);
+                        blocks.push(ExplicitBlock::Job {
+                            close_on_dedent: (!flat_body_follows).then_some(line.indent),
+                        });
+                    } else {
+                        // Indented body and no `end` anywhere below: this is an
+                        // ordinary Python suite that its own dedent closes, the
+                        // same route a `3번 반복해` with an indented body takes.
+                        bindings.push_pending_function_scope(parse_line.indent, given);
+                    }
+                }
                 if matches!(
                     found.last().map(|line| &line.stmt),
                     Some(
@@ -1704,6 +1771,10 @@ enum ExplicitBlock {
     /// `이야기:` / `story:`. Kept apart from the other two because nothing
     /// inside it is ever read as a command.
     Story(StoryBlock),
+    /// `to greet:` / `인사하기라는 일:`. Kept apart because it is neither a
+    /// loop nor a condition: `멈춰` may not leave it and `아니면` may not
+    /// follow it, and both of those fall out of it having its own variant.
+    Job { close_on_dedent: Option<usize> },
 }
 
 /// One open story block: how it closes, how its lines are told, and what the
@@ -1732,6 +1803,7 @@ impl ExplicitBlock {
     fn close_on_dedent(&self) -> Option<usize> {
         match self {
             ExplicitBlock::Loop { close_on_dedent }
+            | ExplicitBlock::Job { close_on_dedent }
             | ExplicitBlock::Conditional {
                 close_on_dedent, ..
             } => *close_on_dedent,
@@ -1744,6 +1816,7 @@ impl ExplicitBlock {
     fn clear_close_on_dedent(&mut self) {
         match self {
             ExplicitBlock::Loop { close_on_dedent }
+            | ExplicitBlock::Job { close_on_dedent }
             | ExplicitBlock::Conditional {
                 close_on_dedent, ..
             } => {
@@ -1904,6 +1977,7 @@ fn is_header_shape(tokens: &[Token]) -> bool {
         || forever_body_start(tokens, MatchMode::Exact).is_some()
         || subject_condition_shape(tokens)
         || story_colon_shape(tokens)
+        || job_header(tokens).is_some()
         || chance_prefix(tokens).is_some_and(|prefix| prefix.consumed == tokens.len())
 }
 
@@ -3150,6 +3224,10 @@ fn missing_end_diagnostic(block: &ExplicitBlock, offset: usize) -> Diagnostic {
             "this story is missing its closing `end`",
             "이 이야기에는 닫는 `끝`이 필요해요",
         ),
+        ExplicitBlock::Job { .. } => (
+            "this job is missing its closing `end`",
+            "이 일에는 닫는 `끝`이 필요해요",
+        ),
     };
     Diagnostic::bilingual(
         DiagnosticCode::MissingEnd,
@@ -3237,6 +3315,17 @@ fn classify(
         return Ok(Some(stmt));
     }
     if let Some(stmt) = match_chance(source, tokens, block, known_names)? {
+        return Ok(Some(stmt));
+    }
+
+    // A named job hangs on the same kind of structure a story does: a closing
+    // colon and a block underneath. A line that runs one hangs on something
+    // stronger still — a name the program has already made a job — so both
+    // are read before any word-led matcher can claim their ordinary words.
+    if let Some(stmt) = match_job(tokens, block) {
+        return Ok(Some(stmt));
+    }
+    if let Some(stmt) = match_run_job(tokens, known_names)? {
         return Ok(Some(stmt));
     }
 
@@ -3386,6 +3475,14 @@ fn classify(
         MatchMode::Exact
     ));
     exact_match!(match_arrange(tokens, known_names, MatchMode::Exact));
+    // Before the list statement: a record line uses the same verb and the
+    // same container particle, and only the extra marks tell them apart.
+    exact_match!(match_record_put(
+        source,
+        tokens,
+        known_names,
+        MatchMode::Exact
+    ));
     exact_match!(match_append(source, tokens, known_names, MatchMode::Exact));
     exact_match!(match_for_each(
         source,
@@ -4609,6 +4706,17 @@ fn finish_update(
     // be subtracted from a list. So on a list the word can only mean taking
     // one item back out.
     if operation == UpdateOp::Subtract && !amount_tokens.is_empty() {
+        // `remove Mina from ages` / `나이표에서 민수 빼`. A record has no
+        // `.remove`, so this cannot go through the list path: `del` is the
+        // Python for taking one named value back out.
+        if is_record_name(known_names, &target) {
+            let [key_token] = amount_tokens else {
+                return Err(record_remove_diagnostic(span_of(tokens)));
+            };
+            let key = record_key_value(key_token, known_names, READING_PARTICLES_KO)
+                .ok_or_else(|| record_remove_diagnostic(span_of(tokens)))?;
+            return Ok(NmeStmt::RecordRemove { target, key });
+        }
         if is_list_name(known_names, &target) {
             let value = parse_value(source, amount_tokens, known_names, true)
                 .map_err(|()| remove_diagnostic(span_of(tokens)))?;
@@ -4638,6 +4746,21 @@ fn remove_diagnostic(span: Span) -> Diagnostic {
     .with_bilingual_hint(
         "write `remove Mina from friends` or `친구들에서 민수 빼`",
         "`친구들에서 민수 빼` 또는 `remove Mina from friends`처럼 적어 주세요",
+    )
+}
+
+/// The same shape as [`remove_diagnostic`], worded for a record: a record is
+/// emptied one **name** at a time, not one item at a time.
+fn record_remove_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::RecordNameUnknown,
+        "I couldn't understand which name to take out of the record",
+        "표에서 어떤 이름을 뺄지 이해하지 못했어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "write `remove Mina from ages` or `나이표에서 민수 빼`",
+        "`나이표에서 민수 빼` 또는 `remove Mina from ages`처럼 적어 주세요",
     )
 }
 
@@ -5194,6 +5317,23 @@ fn match_append(
     if target_at != 0 && !known_names.contains(&target) {
         return Ok(None);
     }
+    // A **repaired** list word is a guess, and a guess may not also invent the
+    // container it puts something in. `너에게 하고 싶은 말이 있어` put `있어`
+    // one character from `넣어` and became `너.append("하고 싶은 말이")`, a
+    // program that dies with `NameError` on a line that reads as a sentence.
+    // The exact spellings are untouched.
+    if target_at == 0 && mode == MatchMode::Recover && !known_names.contains(&target) {
+        return Ok(None);
+    }
+    // `그릇에 설탕을 한 스푼으로 넣어` marks a name **and** a value, which is
+    // the record shape, not the list one — and `그릇` is not something this
+    // program ever made. Appending the whole of `설탕을 한 스푼으로` as one
+    // piece of text writes a program nobody asked for, so somebody cooking
+    // keeps their sentence. When the name *is* a list the record matcher has
+    // already refused the line and said why.
+    if target_at == 0 && !known_names.contains(&target) && korean_record_shape(head, known_names) {
+        return Ok(None);
+    }
     let value_tokens = if target_at == 0 {
         trim_suffix_say_value(&head[1..])
     } else {
@@ -5285,6 +5425,57 @@ fn saved_name_at(token: &Token, known_names: &HashSet<String>) -> Option<String>
     resolve_known_particle(word, known_names).map(str::to_string)
 }
 
+/// The record this word names, once any Korean particle is off it.
+///
+/// `None` unless the program made that name a record. Every record statement
+/// hangs off this: `in`, `의`, `넣어` and `빼` are ordinary words, and the
+/// name is the only thing that can say which kind of container is meant.
+fn record_name_at(token: &Token, known_names: &HashSet<String>) -> Option<String> {
+    let word = name_word(token)?;
+    let name = resolve_known_particle(word, known_names)?;
+    is_record_name(known_names, name).then(|| name.to_string())
+}
+
+/// A name that can be counted: a list, or a record. `개수` and `how many`
+/// mean the same thing for both, and `len(...)` is the Python for both.
+fn countable_name_at(token: &Token, known_names: &HashSet<String>) -> Option<String> {
+    let word = name_word(token)?;
+    let name = resolve_known_particle(word, known_names)?;
+    (is_list_name(known_names, name) || is_record_name(known_names, name)).then(|| name.to_string())
+}
+
+/// The name a record keeps one value under: a name the program already saved,
+/// a number, a quoted string, or the word itself as text.
+///
+/// A saved name wins, because that is what a loop over a record hands the
+/// writer: `for each name in ages` then `show name in ages`.
+fn record_key_value(
+    token: &Token,
+    known_names: &HashSet<String>,
+    particles: &[&str],
+) -> Option<Value> {
+    if matches!(
+        token.tok,
+        Tok::Int { .. } | Tok::Float { .. } | Tok::String { .. }
+    ) {
+        return Some(Value::Python(Code::Source(token.span)));
+    }
+    let word = name_word(token)?;
+    let word = resolve_known_particle(word, known_names)
+        .unwrap_or_else(|| strip_any_suffix(word, particles).unwrap_or(word));
+    Some(record_key_from_word(word, known_names))
+}
+
+fn record_key_from_word(word: &str, known_names: &HashSet<String>) -> Value {
+    if known_names.contains(word) {
+        Value::Python(Code::Generated(word.to_string()))
+    } else {
+        Value::Text(TextTemplate {
+            parts: vec![TextPart::Literal(word.to_string())],
+        })
+    }
+}
+
 /// A reading word may carry a subject particle when it stands in a condition.
 fn strip_reading_particle(word: &str) -> &str {
     strip_any_suffix(word, READING_PARTICLES_KO).unwrap_or(word)
@@ -5299,11 +5490,23 @@ fn reading_word_matches(word: &str, words: &[&str]) -> bool {
     words.contains(&word) || words.contains(&strip_reading_particle(word))
 }
 
-/// Which reading a word asks for, and whether the name has to be a list.
+/// Which reading a word asks for, and what kind of name it may be taken from.
 struct ReadingWord {
     kind: ReadingKind,
     used: usize,
-    needs_list: bool,
+    needs: NameNeeded,
+}
+
+/// What a reading needs of the name it is taken from.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum NameNeeded {
+    /// `the total of scores` — only a list. A record has no order and no
+    /// numbers to add up, and refusing says so.
+    List,
+    /// `how many` — a list or a record. `len(...)` is right for both.
+    ListOrRecord,
+    /// `the length of name` — any name the program saved.
+    Saved,
 }
 
 enum ReadingKind {
@@ -5335,6 +5538,24 @@ fn english_reading_prefix(
         if let Some(of) = saved_name_at(&tokens[0], known_names) {
             if let Some((reading, used)) = english_case_words(tokens, 2) {
                 return Some((Value::Reading { of, reading }, 2 + used));
+            }
+        }
+    }
+    // `Mina in ages` — one value out of a record. `in` is one of the
+    // commonest words in English, so the record name carries the whole gate:
+    // `the best in class` names nothing the program made.
+    if tokens.len() > 2
+        && (matches!(tokens[1].tok, Tok::In) || token_matches_exact(&tokens[1], &["in"]))
+    {
+        if let Some(of) = record_name_at(&tokens[2], known_names) {
+            if let Some(key) = record_key_value(&tokens[0], known_names, READING_PARTICLES_KO) {
+                return Some((
+                    Value::Entry {
+                        of,
+                        key: Box::new(key),
+                    },
+                    3,
+                ));
             }
         }
     }
@@ -5391,7 +5612,7 @@ fn english_reading_prefix(
             .get(at + 1)
             .is_some_and(|token| token_matches_exact(token, COUNT_WORDS_EN))
     {
-        let of = list_name_at(tokens.get(at + 2)?, known_names)?;
+        let of = countable_name_at(tokens.get(at + 2)?, known_names)?;
         return Some((
             Value::Reading {
                 of,
@@ -5427,10 +5648,10 @@ fn english_reading_prefix(
     }
     cursor += 1;
     let name_token = tokens.get(cursor)?;
-    let of = if word.needs_list {
-        list_name_at(name_token, known_names)?
-    } else {
-        saved_name_at(name_token, known_names)?
+    let of = match word.needs {
+        NameNeeded::List => list_name_at(name_token, known_names)?,
+        NameNeeded::ListOrRecord => countable_name_at(name_token, known_names)?,
+        NameNeeded::Saved => saved_name_at(name_token, known_names)?,
     };
     let value = match word.kind {
         ReadingKind::Value(reading) => Value::Reading { of, reading },
@@ -5463,11 +5684,15 @@ fn english_reading_word(tokens: &[Token], at: usize) -> Option<ReadingWord> {
         Some(ReadingWord {
             kind,
             used,
-            needs_list: true,
+            needs: NameNeeded::List,
         })
     };
     if token_matches_exact(token, COUNT_WORDS_EN) {
-        return listed(ReadingKind::Value(Reading::Count), 1);
+        return Some(ReadingWord {
+            kind: ReadingKind::Value(Reading::Count),
+            used: 1,
+            needs: NameNeeded::ListOrRecord,
+        });
     }
     if token_matches_exact(token, TOTAL_WORDS_EN) {
         return listed(ReadingKind::Value(Reading::Total), 1);
@@ -5490,14 +5715,14 @@ fn english_reading_word(tokens: &[Token], at: usize) -> Option<ReadingWord> {
         return Some(ReadingWord {
             kind: ReadingKind::Value(Reading::Count),
             used: 1,
-            needs_list: false,
+            needs: NameNeeded::Saved,
         });
     }
     let (reading, used) = english_case_words(tokens, at)?;
     Some(ReadingWord {
         kind: ReadingKind::Value(reading),
         used,
-        needs_list: false,
+        needs: NameNeeded::Saved,
     })
 }
 
@@ -5628,6 +5853,12 @@ fn korean_reading_prefix(
     tokens: &[Token],
     known_names: &HashSet<String>,
 ) -> Option<(Value, usize)> {
+    // `나이표의 민수` · `나이표에서 민수` — one value out of a record. Read
+    // first because `의` is a particle every other reading also allows, and
+    // only a record name can reach this at all.
+    if let Some(found) = korean_record_entry(tokens, known_names) {
+        return Some(found);
+    }
     let name_token = tokens.first()?;
     let name = saved_name_at(name_token, known_names)?;
     let rest = &tokens[1..];
@@ -5715,13 +5946,18 @@ fn korean_reading_prefix(
         }
     }
     let word = name_word(rest.first()?)?;
+    let recorded = is_record_name(known_names, &name);
     for (words, reading) in [
         (COUNT_WORDS_KO, Reading::Count),
         (TOTAL_WORDS_KO, Reading::Total),
         (LARGEST_WORDS_KO, Reading::Largest),
         (SMALLEST_WORDS_KO, Reading::Smallest),
     ] {
-        if listed && reading_word_matches(word, words) {
+        // `나이표 개수` counts a record the same way `친구들 개수` counts a
+        // list. The other three have no meaning for a record: there is no
+        // order to it and nothing to add up.
+        let allowed = listed || (recorded && reading == Reading::Count);
+        if allowed && reading_word_matches(word, words) {
             return Some((Value::Reading { of: name, reading }, 2));
         }
     }
@@ -5735,6 +5971,26 @@ fn korean_reading_prefix(
         }
     }
     None
+}
+
+/// `나이표의 민수` · `나이표에서 민수` — one value a record keeps.
+///
+/// Two words exactly. The first carries `의` or `에서` and names a record the
+/// program made; the second is the name that value is kept under. `의` is the
+/// commonest particle in Korean, so without the record set behind it this
+/// would claim half the language.
+fn korean_record_entry(tokens: &[Token], known_names: &HashSet<String>) -> Option<(Value, usize)> {
+    let word = name_word(tokens.first()?)?;
+    let of = strip_any_suffix(word, RECORD_OF_PARTICLES_KO)
+        .filter(|base| is_record_name(known_names, base))?;
+    let key = record_key_value(tokens.get(1)?, known_names, READING_PARTICLES_KO)?;
+    Some((
+        Value::Entry {
+            of: of.to_string(),
+            key: Box::new(key),
+        },
+        2,
+    ))
 }
 
 /// `중 가장 큰 것` · `가장 작은 값` · `중에서 제일 큰`.
@@ -5906,6 +6162,461 @@ fn name_written_with_a_space(
 }
 
 // ------------------------------------------------- putting a list in order
+
+// ------------------------------------------------ putting a value in a record
+
+/// `put Mina at 90 in ages` / `나이표에 민수를 90으로 넣어`.
+///
+/// The Korean verb is the list-adding verb, and the Korean particle on the
+/// container is the list-adding particle. What separates the two lines is the
+/// **shape**: a record line marks a name *and* a value, a list line marks only
+/// the thing being added. Read before the list statement, so the extra marks
+/// are never swallowed into a piece of text.
+fn match_record_put(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+    mode: MatchMode,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    if tokens.first().is_some_and(starts_a_different_statement) {
+        return Ok(None);
+    }
+    let body = trim_command_endings(tokens);
+    if let Some(stmt) = english_record_put(source, tokens, body, known_names, mode)? {
+        return Ok(Some(stmt));
+    }
+    korean_record_put(source, tokens, body, known_names, mode)
+}
+
+/// `put Mina at 90 in ages`.
+fn english_record_put(
+    source: &str,
+    tokens: &[Token],
+    body: &[Token],
+    known_names: &HashSet<String>,
+    mode: MatchMode,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    let Some(consumed) = action_phrase_at(body, 0, RECORD_PUT_WORDS_EN, mode) else {
+        return Ok(None);
+    };
+    let Some(at_index) =
+        (consumed..body.len()).find(|&index| token_matches_exact(&body[index], RECORD_AT_WORDS_EN))
+    else {
+        return Ok(None);
+    };
+    let Some(in_index) = (at_index + 1..body.len()).rev().find(|&index| {
+        matches!(body[index].tok, Tok::In) || token_matches_exact(&body[index], RECORD_IN_WORDS_EN)
+    }) else {
+        return Ok(None);
+    };
+    // The record has to be the last word: `put the kettle on at eight in the
+    // morning` leaves words after it and is a sentence.
+    if in_index + 2 != body.len() {
+        return Ok(None);
+    }
+    let key_tokens = &body[consumed..at_index];
+    let value_tokens = &body[at_index + 1..in_index];
+    let [key_token] = key_tokens else {
+        return Ok(None);
+    };
+    if value_tokens.is_empty() {
+        return Ok(None);
+    }
+    let name_token = &body[in_index + 1];
+    let Some(target) = record_name_at(name_token, known_names) else {
+        return not_a_record(name_token, tokens, known_names);
+    };
+    let Some(key) = record_key_value(key_token, known_names, READING_PARTICLES_KO) else {
+        return Ok(None);
+    };
+    let value = parse_value(source, value_tokens, known_names, true)
+        .map_err(|()| record_put_diagnostic(span_of(tokens)))?;
+    Ok(Some(NmeStmt::RecordPut { target, key, value }))
+}
+
+/// `나이표에 민수를 90으로 넣어`.
+fn korean_record_put(
+    source: &str,
+    tokens: &[Token],
+    body: &[Token],
+    known_names: &HashSet<String>,
+    mode: MatchMode,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    let Some(action_start) = korean_record_put_action_start(body, mode) else {
+        return Ok(None);
+    };
+    let head = &body[..action_start];
+    if head.len() < 3 {
+        return Ok(None);
+    }
+    let Some(container) =
+        name_word(&head[0]).and_then(|word| strip_any_suffix(word, APPEND_TARGET_PARTICLES_KO))
+    else {
+        return Ok(None);
+    };
+    let Some((key, value_at)) = korean_record_key(head, known_names) else {
+        return Ok(None);
+    };
+    let Some(value_tokens) = korean_record_value(&head[value_at..]) else {
+        return Ok(None);
+    };
+    if value_tokens.is_empty() {
+        return Ok(None);
+    }
+    if !is_record_name(known_names, container) {
+        return not_a_record(&head[0], tokens, known_names);
+    }
+    let value = parse_value(source, &value_tokens, known_names, true)
+        .map_err(|()| record_put_diagnostic(span_of(tokens)))?;
+    Ok(Some(NmeStmt::RecordPut {
+        target: container.to_string(),
+        key,
+        value,
+    }))
+}
+
+/// True when a Korean container line is written in the **record** shape: a
+/// name marked with `을`/`를` and a value marked with `으로`/`로`, which is one
+/// mark more than adding to a list ever needs.
+fn korean_record_shape(head: &[Token], known_names: &HashSet<String>) -> bool {
+    head.len() >= 3
+        && korean_record_key(head, known_names)
+            .is_some_and(|(_, value_at)| korean_record_value(&head[value_at..]).is_some())
+}
+
+/// Index of a Korean record-writing word that closes the line.
+fn korean_record_put_action_start(tokens: &[Token], mode: MatchMode) -> Option<usize> {
+    let end = tokens.len();
+    let start_at = end.saturating_sub(2);
+    (start_at..end).find(|&start| {
+        action_phrase_at(tokens, start, RECORD_PUT_WORDS_KO, mode)
+            .is_some_and(|used| start + used == end)
+    })
+}
+
+/// The name a Korean record line writes under, and where the value begins.
+///
+/// The particle may be glued to the word (`민수를`) or standing on its own,
+/// which is what the lexer leaves behind for a number (`3 을`).
+fn korean_record_key(head: &[Token], known_names: &HashSet<String>) -> Option<(Value, usize)> {
+    if let Some(at) = head
+        .iter()
+        .position(|token| token_matches_exact(token, RECORD_KEY_PARTICLES_KO))
+    {
+        if at == 2 {
+            let key = record_key_value(&head[1], known_names, &[])?;
+            return Some((key, at + 1));
+        }
+        return None;
+    }
+    let word = name_word(head.get(1)?)?;
+    let base = strip_any_suffix(word, RECORD_KEY_PARTICLES_KO)?;
+    let key = resolve_known_particle(word, known_names).map_or_else(
+        || record_key_from_word(base, known_names),
+        |name| record_key_from_word(name, known_names),
+    );
+    Some((key, 2))
+}
+
+/// The value a Korean record line writes, with its `으로`/`로` taken off.
+///
+/// The marker is required: without it `나이표에 민수를 넣어` is the list
+/// statement it looks like, and this one declines.
+fn korean_record_value(tokens: &[Token]) -> Option<Vec<Token>> {
+    let (last, head) = tokens.split_last()?;
+    if token_matches_exact(last, RECORD_VALUE_PARTICLES_KO) {
+        return Some(head.to_vec());
+    }
+    let word = name_word(last)?;
+    let base = strip_any_suffix(word, RECORD_VALUE_PARTICLES_KO)?;
+    let mut value = head.to_vec();
+    value.push(Token {
+        tok: Tok::Name {
+            name: base.to_string(),
+        },
+        span: Span::new(last.span.start, last.span.start + base.len()),
+    });
+    Some(value)
+}
+
+/// A record line naming something that is not a record.
+///
+/// A name the program never made anything is left alone — `그릇에 설탕을
+/// 스푼으로 넣어` is somebody cooking. A name it made a **list** is refused,
+/// because the list statement would otherwise take the whole of
+/// `민수를 90` and append it as one piece of text.
+fn not_a_record(
+    token: &Token,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    let Some(name) = name_word(token).and_then(|word| resolve_known_particle(word, known_names))
+    else {
+        return Ok(None);
+    };
+    if !is_list_name(known_names, name) {
+        return Ok(None);
+    }
+    Err(Diagnostic::bilingual(
+        DiagnosticCode::RecordNameUnknown,
+        format!("`{name}` holds a list, not a record"),
+        format!("`{name}`에는 표가 아니라 목록이 들어 있어요"),
+        span_of(tokens),
+    )
+    .with_bilingual_hint(
+        format!(
+            "a list keeps items in order and has no names to write them under; write \
+                 `set ages to an empty record` first, or `append Mina to {name}`"
+        ),
+        format!(
+            "목록은 순서대로만 담아서 이름을 붙일 자리가 없어요. 먼저 `나이표는 빈 표`라고 \
+                 적거나, `{name}에 민수 넣어`처럼 적어 주세요"
+        ),
+    ))
+}
+
+fn record_put_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::RecordNameUnknown,
+        "I couldn't understand what to put in the record",
+        "표에 무엇을 넣을지 이해하지 못했어요",
+        span,
+    )
+    .with_bilingual_hint(
+        "write `put Mina at 90 in ages` or `나이표에 민수를 90으로 넣어`",
+        "`나이표에 민수를 90으로 넣어` 또는 `put Mina at 90 in ages`처럼 적어 주세요",
+    )
+}
+
+// ------------------------------------------------------------- a named job
+
+/// `to greet:` / `인사하기라는 일:` — the name of a job, when the line is one.
+///
+/// Structure only. `일`, `하기`, `to` and `do` are ordinary words in both
+/// languages, so what is asked for is a shape no ordinary sentence has: a
+/// closing colon with the phrase and nothing else in front of it.
+fn job_header(tokens: &[Token]) -> Option<(String, Vec<String>)> {
+    let body = strip_closing_colon(tokens)?;
+    korean_job_header(body).or_else(|| english_job_header(body))
+}
+
+/// `인사하기라는 일:` · `계산이라는 작업:` · `이름에게 인사하기라는 일:`
+fn korean_job_header(body: &[Token]) -> Option<(String, Vec<String>)> {
+    let (given, name_token, noun) = match body {
+        [name_token, noun] => (None, name_token, noun),
+        [given, name_token, noun] => (Some(given), name_token, noun),
+        _ => return None,
+    };
+    if !token_matches_exact(noun, JOB_WORDS_KO) {
+        return None;
+    }
+    let word = name_word(name_token)?;
+    let name = strip_any_suffix(word, JOB_NAME_SUFFIXES_KO)?;
+    if !is_plain_python_name(name) {
+        return None;
+    }
+    let parameters = match given {
+        None => Vec::new(),
+        Some(token) => {
+            let word = name_word(token)?;
+            let parameter = strip_any_suffix(word, JOB_PARAMETER_PARTICLES_KO)?;
+            if !is_plain_python_name(parameter) {
+                return None;
+            }
+            vec![parameter.to_string()]
+        }
+    };
+    Some((name.to_string(), parameters))
+}
+
+/// `to greet:` · `to greet someone:`
+///
+/// Every word has to be one somebody would give a job or the thing it is
+/// given. `To do:`, `To be:` and `To my knowledge:` are headings, and `do`,
+/// `be` and `my` are in `NOT_A_NAME_EN` for exactly this reason.
+fn english_job_header(body: &[Token]) -> Option<(String, Vec<String>)> {
+    let (lead, name_token, given) = match body {
+        [lead, name_token] => (lead, name_token, None),
+        [lead, name_token, given] => (lead, name_token, Some(given)),
+        _ => return None,
+    };
+    if !token_matches_exact(lead, JOB_LEAD_WORDS_EN) {
+        return None;
+    }
+    let name = english_job_word(name_token)?;
+    if !is_bindable_english_name(&name) {
+        return None;
+    }
+    // The thing the job is given is only checked for being a plain name.
+    // `NOT_A_NAME_EN` is the list of words a *sentence* may never quietly turn
+    // into a name, and it holds `someone`, `something` and `each` — which are
+    // exactly the words a beginner names the thing a job is given. The job
+    // name in front of it already carries that check, and the header carries
+    // three more: the opening word, the colon, and a block underneath.
+    let parameters = match given {
+        None => Vec::new(),
+        Some(token) => vec![english_job_word(token)?],
+    };
+    Some((name, parameters))
+}
+
+/// One word of an English job header: a plain name that is not a Python
+/// keyword.
+fn english_job_word(token: &Token) -> Option<String> {
+    if is_python_keyword(&token.tok) {
+        return None;
+    }
+    let word = name_word(token)?;
+    is_plain_python_name(word).then(|| word.to_string())
+}
+
+/// `to greet:` / `인사하기라는 일:` — a piece of program with a name.
+///
+/// **A colon and a block.** A header with nothing under it is not a job at
+/// all: it declines here and the line prints, which is what keeps a lone
+/// `To do:` the heading it is. There is no one-line form either — the colon
+/// has to close the line — so `to summarise: it was fine` can never become a
+/// function.
+fn match_job(tokens: &[Token], block: &BlockCtx<'_>) -> Option<NmeStmt> {
+    let (name, parameters) = job_header(tokens)?;
+    let BlockCtx::TopLevel { line, next_indent } = block else {
+        return None;
+    };
+    if !next_indent.is_some_and(|next| next > line.indent) {
+        return None;
+    }
+    Some(NmeStmt::Job { name, parameters })
+}
+
+/// `do greet` · `run greet` / `인사하기 해줘` · `인사하기 실행해`.
+///
+/// Two words, and the name must be a job the program already made. That is
+/// the whole gate: `do` and `해줘` are far too ordinary to carry one.
+fn match_run_job(
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    let body = trim_command_endings(tokens);
+    // `do greet` / `인사하기 해줘` — a job that is given nothing.
+    if let [first, second] = body {
+        if token_matches_exact(first, RUN_JOB_WORDS_EN) {
+            if let Some(stmt) = run_job_taking_nothing(second, known_names)? {
+                return Ok(Some(stmt));
+            }
+        }
+        if token_matches_exact(second, RUN_JOB_WORDS_KO) {
+            if let Some(stmt) = run_job_taking_nothing(first, known_names)? {
+                return Ok(Some(stmt));
+            }
+        }
+        return Ok(None);
+    }
+    // `do greet with Mina` — the thing it is given closes the line.
+    if let [first, name_token, marker, given] = body {
+        if token_matches_exact(first, RUN_JOB_WORDS_EN)
+            && (matches!(marker.tok, Tok::With) || token_matches_exact(marker, JOB_WITH_WORDS_EN))
+        {
+            if let Some(value) = record_key_value(given, known_names, &[]) {
+                if let Some(stmt) = run_job_taking_one(name_token, value, known_names)? {
+                    return Ok(Some(stmt));
+                }
+            }
+        }
+    }
+    // `민수에게 인사하기 해줘` — Korean marks it with a particle and puts the
+    // verb last. It is read after the English shape rather than instead of it,
+    // because the lexer splits a particle off a number and `3 에게 두배 해줘`
+    // is then four tokens, exactly like `do greet with Mina`.
+    let Some((value, used)) = korean_job_argument(body, known_names) else {
+        return Ok(None);
+    };
+    let Some([name_token, verb]) = body.get(used..) else {
+        return Ok(None);
+    };
+    if !token_matches_exact(verb, RUN_JOB_WORDS_KO) {
+        return Ok(None);
+    }
+    run_job_taking_one(name_token, value, known_names)
+}
+
+/// `do greet` — a job that is given nothing, unless the job takes one thing,
+/// in which case the line is refused rather than run wrong.
+fn run_job_taking_nothing(
+    token: &Token,
+    known_names: &HashSet<String>,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    if let Some(name) = job_call_name(token, known_names, 0) {
+        return Ok(Some(NmeStmt::RunJob {
+            name,
+            arguments: Vec::new(),
+        }));
+    }
+    if job_call_name(token, known_names, 1).is_some() {
+        return Err(job_argument_count_diagnostic(token, 1));
+    }
+    Ok(None)
+}
+
+/// `do greet with Mina`, and the same refusal the other way round.
+fn run_job_taking_one(
+    token: &Token,
+    value: Value,
+    known_names: &HashSet<String>,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    if let Some(name) = job_call_name(token, known_names, 1) {
+        return Ok(Some(NmeStmt::RunJob {
+            name,
+            arguments: vec![value],
+        }));
+    }
+    if job_call_name(token, known_names, 0).is_some() {
+        return Err(job_argument_count_diagnostic(token, 0));
+    }
+    Ok(None)
+}
+
+/// Running a job with the wrong number of things is a Python `TypeError` at
+/// run time on a line that looks right, so it is named here instead.
+fn job_argument_count_diagnostic(token: &Token, takes: usize) -> Diagnostic {
+    let name = name_word(token).unwrap_or("");
+    let (english, korean) = if takes == 0 {
+        (
+            format!("`{name}` is given nothing, so write `do {name}`"),
+            format!("`{name}`은(는) 받는 것이 없어요. `{name} 해줘`라고 적어 주세요"),
+        )
+    } else {
+        (
+            format!("`{name}` is given one thing, so write `do {name} with Mina`"),
+            format!("`{name}`은(는) 하나를 받아요. `민수에게 {name} 해줘`처럼 적어 주세요"),
+        )
+    };
+    Diagnostic::bilingual(
+        DiagnosticCode::JobArgumentCount,
+        "this job is given a different number of things than it takes",
+        "이 일이 받는 것의 개수가 맞지 않아요",
+        token.span,
+    )
+    .with_bilingual_hint(english, korean)
+}
+
+/// The job this word names, when the program made one taking `takes` things.
+fn job_call_name(token: &Token, known_names: &HashSet<String>, takes: usize) -> Option<String> {
+    let word = name_word(token)?;
+    let name = resolve_known_particle(word, known_names)?;
+    is_job_name(known_names, name, takes).then(|| name.to_string())
+}
+
+/// `민수에게` · `3 에게` — the one thing a Korean line hands to a job, and how
+/// many tokens it took. The lexer splits a particle off a number and leaves it
+/// attached to a word, so both have to be read.
+fn korean_job_argument(body: &[Token], known_names: &HashSet<String>) -> Option<(Value, usize)> {
+    if body.len() >= 2 && token_matches_exact(&body[1], JOB_PARAMETER_PARTICLES_KO) {
+        return record_key_value(body.first()?, known_names, &[]).map(|value| (value, 2));
+    }
+    let word = name_word(body.first()?)?;
+    strip_any_suffix(word, JOB_PARAMETER_PARTICLES_KO)?;
+    record_key_value(body.first()?, known_names, JOB_PARAMETER_PARTICLES_KO).map(|value| (value, 1))
+}
 
 /// `sort friends` / `친구들 정렬해`, and the two orders beside it.
 ///
@@ -6477,7 +7188,7 @@ fn chance_set_target(tokens: &[Token], known_names: &HashSet<String>) -> Option<
 /// The line must be the phrase and its colon and nothing else. Every other
 /// line that mentions a story is an ordinary sentence and stays one.
 fn match_story(source: &str, tokens: &[Token]) -> Option<NmeStmt> {
-    let body = strip_story_colon(tokens)?;
+    let body = strip_closing_colon(tokens)?;
     if body.is_empty() {
         return None;
     }
@@ -6489,7 +7200,7 @@ fn match_story(source: &str, tokens: &[Token]) -> Option<NmeStmt> {
 /// Drops the closing `:`, in either width. A Korean keyboard writes the
 /// full-width `：`, which Python cannot read at all and the lexer therefore
 /// hands over as ordinary sentence text.
-fn strip_story_colon(tokens: &[Token]) -> Option<&[Token]> {
+fn strip_closing_colon(tokens: &[Token]) -> Option<&[Token]> {
     let last = tokens.last()?;
     let closed = matches!(last.tok, Tok::Colon) || token_matches_exact(last, &[FULL_WIDTH_COLON]);
     closed.then(|| &tokens[..tokens.len() - 1])
@@ -6498,7 +7209,7 @@ fn strip_story_colon(tokens: &[Token]) -> Option<&[Token]> {
 /// True for a line shaped like a story header, which is all the block and
 /// indentation checks need to know before the line is read properly.
 fn story_colon_shape(tokens: &[Token]) -> bool {
-    let Some(body) = strip_story_colon(tokens) else {
+    let Some(body) = strip_closing_colon(tokens) else {
         return false;
     };
     let Some(last) = body.last() else {
@@ -8873,6 +9584,7 @@ fn condition_reading_at(
         Some((Value::Remainder { of, by }, used)) => {
             Some((ConditionValue::Remainder { of, by }, used))
         }
+        Some((Value::Entry { of, key }, used)) => Some((ConditionValue::Entry { of, key }, used)),
         _ => None,
     }
 }
@@ -11504,6 +12216,11 @@ fn set_value(source: &str, tokens: &[Token], known_names: &HashSet<String>) -> R
     if empty_list_phrase(tokens) {
         return Ok(Value::List(Vec::new()));
     }
+    // `나이표는 빈 표` / `set ages to an empty record`. Same rule as the list
+    // word: only here is `표` the kind of thing being made.
+    if empty_record_phrase(tokens) {
+        return Ok(Value::EmptyRecord);
+    }
     parse_value(source, tokens, known_names, true)
 }
 
@@ -11756,6 +12473,33 @@ fn empty_list_phrase(tokens: &[Token]) -> bool {
         at += 1;
     }
     at == tokens.len()
+}
+
+/// `표` · `record` · `an empty record` · `빈 표`.
+///
+/// **Only an assignment reads these as a record**, for the same reason the
+/// list word is read that way only there: `표를 보여 주세요` asks to be shown a
+/// table, and answering it with `{}` puts an empty pair of braces on the
+/// screen and tells the writer nothing.
+fn empty_record_phrase(tokens: &[Token]) -> bool {
+    let Some(first) = tokens.first() else {
+        return false;
+    };
+    let article = token_matches_exact(first, &["a", "an", "the"]);
+    let mut at = usize::from(article);
+    let empty = tokens.get(at).is_some_and(|token| {
+        token_matches_exact(token, EMPTY_WORDS_EN) || token_matches_exact(token, EMPTY_WORDS_KO)
+    });
+    if article && !empty {
+        return false;
+    }
+    at += usize::from(empty);
+    if !tokens.get(at).is_some_and(|token| {
+        token_matches_exact(token, RECORD_WORDS_EN) || token_matches_exact(token, RECORD_WORDS_KO)
+    }) {
+        return false;
+    }
+    at + 1 == tokens.len()
 }
 
 /// Words people put between list items, standing alone or attached to the
@@ -12527,6 +13271,30 @@ impl BindingEnv {
         });
     }
 
+    /// The body of a named job whose lines are flat and closed by `end`.
+    /// It is a real Python function scope, so names set inside it stay inside
+    /// it, and an ordinary Python `return` written in there is accepted
+    /// rather than refused.
+    fn push_function_scope(&mut self, body_indent: usize, names: HashSet<String>) {
+        self.scopes.push(BindingScope {
+            body_indent,
+            names,
+            kind: BindingScopeKind::Function,
+        });
+    }
+
+    /// The body of a named job written the way Python writes one: indented
+    /// under its header. The scope opens when the first indented line arrives
+    /// and closes when the indentation does, which is the same path an
+    /// ordinary `def` header already takes.
+    fn push_pending_function_scope(&mut self, header_indent: usize, names: HashSet<String>) {
+        self.pending = Some(PendingScope {
+            header_indent,
+            names,
+            kind: BindingScopeKind::Function,
+        });
+    }
+
     fn inside_function(&self) -> bool {
         for scope in self.scopes.iter().rev() {
             match scope.kind {
@@ -12619,6 +13387,17 @@ impl BindingEnv {
             &mut self.scopes.last_mut().expect("root scope").names,
         );
         if let Some((name, parameters)) = python_scope_header(tokens) {
+            // `def greet():` written in ordinary Python is a job the sentence
+            // tier can run by name. Only a job that takes nothing: `do greet`
+            // passes no arguments, and calling a function that wants some
+            // would fail at run time on a line that looks right.
+            if is_python_function_header(tokens) && parameters.is_empty() {
+                remember_job_name(
+                    &mut self.scopes.last_mut().expect("root scope").names,
+                    &name,
+                    0,
+                );
+            }
             self.scopes
                 .last_mut()
                 .expect("root scope")
@@ -12703,6 +13482,15 @@ fn remember_python_binding(tokens: &[Token], names: &mut HashSet<String>) {
         // return anything.
         if matches!(rest.first().map(|token| &token.tok), Some(Tok::Lsqb)) {
             remember_list_name(names, name);
+        }
+        // `ages = {}` in ordinary Python makes a record just as `나이표는 빈 표`
+        // does. `{` alone is not enough — `{1, 2}` is a set — so either the
+        // braces are empty or something inside them is written `key: value`.
+        if matches!(rest.first().map(|token| &token.tok), Some(Tok::Lbrace))
+            && (matches!(rest.get(1).map(|token| &token.tok), Some(Tok::Rbrace))
+                || rest.iter().any(|token| matches!(token.tok, Tok::Colon)))
+        {
+            remember_record_name(names, name);
         }
     }
 
@@ -12790,6 +13578,40 @@ fn is_list_name(names: &HashSet<String>, name: &str) -> bool {
     names.contains(&format!("{LIST_NAME_MARKER}{name}"))
 }
 
+/// Prefix under which a name that was built as a record is remembered, the
+/// same way a list name is. The two sets are separate because the statements
+/// that read one way for a list and another for a record — `개수`, `빼`,
+/// `넣어` — have to know which kind the name holds, and nothing in the wording
+/// can tell them.
+const RECORD_NAME_MARKER: &str = "[record]";
+
+fn remember_record_name(names: &mut HashSet<String>, name: &str) {
+    names.insert(format!("{RECORD_NAME_MARKER}{name}"));
+}
+
+/// True when `name` was made a record earlier in the same program.
+fn is_record_name(names: &HashSet<String>, name: &str) -> bool {
+    names.contains(&format!("{RECORD_NAME_MARKER}{name}"))
+}
+
+/// Prefix under which a name that was made a job is remembered.
+///
+/// `do`, `해` and `해줘` are ordinary words, so a line that runs a job is
+/// never recognized by its verb. This set is the whole gate.
+const JOB_NAME_MARKER: &str = "[job]";
+
+/// How many things the job is given is remembered with it, so a line that
+/// runs one can never hand it the wrong number of them.
+fn remember_job_name(names: &mut HashSet<String>, name: &str, takes: usize) {
+    names.insert(format!("{JOB_NAME_MARKER}{takes}:{name}"));
+}
+
+/// True when `name` was made a job taking `takes` things earlier in the same
+/// program.
+fn is_job_name(names: &HashSet<String>, name: &str, takes: usize) -> bool {
+    names.contains(&format!("{JOB_NAME_MARKER}{takes}:{name}"))
+}
+
 /// Prefix under which a name a bundled module bound is remembered beside the
 /// ordinary name set, the same way a list name is. `[` cannot occur in a
 /// Python identifier, so it can never collide with a name a program binds.
@@ -12808,6 +13630,21 @@ fn remember_bindings(stmt: &NmeStmt, names: &mut HashSet<String>) {
     match stmt {
         NmeStmt::Append { target, .. } => {
             remember_list_name(names, target);
+        }
+        NmeStmt::RecordPut { target, .. } => {
+            names.insert(target.clone());
+            remember_record_name(names, target);
+        }
+        NmeStmt::Set {
+            target,
+            value: Value::EmptyRecord,
+        } => {
+            names.insert(target.clone());
+            remember_record_name(names, target);
+        }
+        NmeStmt::Job { name, parameters } => {
+            names.insert(name.clone());
+            remember_job_name(names, name, parameters.len());
         }
         NmeStmt::Set {
             target,

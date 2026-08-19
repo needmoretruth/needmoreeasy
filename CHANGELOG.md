@@ -5,7 +5,68 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
-
+- **A job's body may be indented.** Indenting under `to greet:` and closing with
+  `end` is the shape every guide in this repository teaches, and it was the one
+  shape refused — with `E0101` pointing at a header that was already correct.
+  A job now closes the way `repeat 3 times` and `story:` do: an indented body
+  ends where its indentation ends, a flat one waits for `end`.
+- **A record — one name holding many named values.** `set ages to an empty
+  record` / `나이표는 빈 표`, then `put Mina at 90 in ages` /
+  `나이표에 민수를 90으로 넣어`, `show Mina in ages` / `나이표의 민수 말해줘`,
+  and `remove Mina from ages` / `나이표에서 민수 빼`, which is Python's `del`
+  because a dictionary has no `.remove`. Python calls it a dictionary; the
+  twenty guides of Part 2 use one eighty-seven times, and there was no way to
+  write one at all.
+- **The list spellings mean the record thing when the name holds a record.**
+  `how many` / `개수`, `contains` / `…에 …가 있으면`, `for each` /
+  `…마다 반복해` and `remove` / `빼` are **the same words for both**, and the
+  compiler decides from the kind the name holds, never from the wording. A
+  reader should not have to remember which spelling belongs to which
+  container, and that was the whole argument for building it this way. Looping
+  over a record hands back its names, exactly as Python does, so
+  `show name in ages` reads the value back inside the loop.
+- **A record line written on a list is refused (`E0234`).** Left alone,
+  `친구들에 민수를 90으로 넣어` appended the whole of `민수를 90` to the list as
+  one piece of text — a program that runs, looks right, and is not what anybody
+  wrote. `the total of`, `the biggest of`, `the first of` and `sort` stay
+  list-only: a record has no order and nothing to add up, and refusing says so.
+- **A record is only a record where a value is being saved.** Everywhere else
+  `record`, `table` and `표` are words somebody wrote, so `I keep a record of
+  everything I read` and `표는 두 장 남았습니다` still print. A name ordinary
+  Python wrote as `ages = {}` is a record to every one of these statements; a
+  set literal such as `{1, 2}` is not.
+- **A named job — a piece of program with a name.** `to greet:` /
+  `인사하기라는 일:`, a block, `end` / `끝`, and then `do greet` /
+  `인사하기 해줘` runs it. It becomes an ordinary `def`. `to`, `do`, `일`,
+  `하기` and `해줘` are among the most ordinary words either language has, so a
+  job is recognized by **structure and never by a word**: the opening `to`, or
+  the `라는` on the name and the `일` after it, **and** the closing colon,
+  **and** a block underneath. Without the block there is no job, so `To do:`,
+  `오늘의 할 일:` and `to be honest` print as the lines they are. There is no
+  one-line form either, so a colon in the middle of a sentence cannot open one.
+- **The line that runs a job is gated on the job existing.** `do` and `해줘`
+  decide nothing on their own; the name has to be one this program already
+  made. A Python `def` that takes no arguments counts, so the three levels mix.
+  A name saved inside a job stays inside it and a Python `return` written in
+  there is accepted, because the body is a real function scope.
+- **A job may be given one thing.** `to greet someone:` /
+  `이름에게 인사하기라는 일:`, and then `do greet with Mina` /
+  `민수에게 인사하기 해줘`. How many things a job takes is remembered with its
+  name, so running it the other way round is refused with `E0235` instead of
+  becoming a Python `TypeError` at run time on a line that looks right.
+- **Not yet: a job that takes two things, and a job that hands something
+  back.** Write a Python `def` for either; advanced NME is ordinary Python.
+- **A repaired list word no longer invents the container as well.**
+  `너에게 하고 싶은 말이 있어` became `너.append("하고 싶은 말이")`, because
+  `있어` is one character from `넣어`; so did `창고에 상자를 세로로 두어`. A
+  guess at the verb may not also invent the name it puts something in, so a
+  repaired list word now needs a name the program already made. The exact
+  spellings are untouched.
+- **`그릇에 설탕을 한 스푼으로 넣어` prints again.** A Korean line that marks a
+  name *and* a value is the record shape, and when the container is something
+  the program never made, the list statement used to take the whole of
+  `설탕을 한 스푼으로` and append it as one piece of text. Somebody cooking now
+  keeps their sentence.
 - **Text can be cut into a list.** `set names to memo split by line` /
   `이름들은 메모를 줄마다 나눈 것`, and the same with `by comma`, `by space` and
   `by newline` (`쉼표로`, `빈칸으로`, `줄바꿈으로`). `join` landed in round 2 and
@@ -42,7 +103,6 @@ All notable changes to NME are recorded here.
   choose — the word after `with`, and the word before `와 함께`. Comparing two
   lists position by position is what mastermind and tic-tac-toe are made of,
   and there was no way to hold the position at all.
-
 - **Three more bundled modules: `use list`, `use text` and `use math`.** One
   line each, and both languages of every name are ready at once —
   `말해 개수(친구들)` and `say count(friends)` are the same program. `list`
@@ -77,7 +137,6 @@ All notable changes to NME are recorded here.
   itself. Both exist because both are things people mean, and a helper that
   answered `None` while quietly reordering your names would be the worse
   surprise.
-
 - **Ordinary Korean sentences print themselves far more often.** Measured over
   353 sentences a person really types — a line of a story, a note to self, a
   message in a game — 294 printed themselves character for character and 38
@@ -122,7 +181,6 @@ All notable changes to NME are recorded here.
   followed the spelling of the command, so `nme build` on a Hangul file
   answered in English only. The Korean half is now printed whenever the program
   itself holds Korean, and the English half stays.
-
 - **Ordinary English sentences print themselves far more often.** Measured over
   302 sentences a person really types — a line of a story, a note to somebody, a
   message in a game — 184 printed themselves word for word and 44 compiled into
@@ -164,7 +222,6 @@ All notable changes to NME are recorded here.
   `finished` as `finish ed`, `friend` as `fri end` and `telling` as `tell ing`,
   so `story of a small town doctor` was refused with a suggestion nobody could
   act on. A space really left out is still named: `sayhello` and `안녕말해줘`.
-
 - **Lists can be built and read entirely in sentences.** An empty list
   (`set friends to an empty list` / `친구들은 빈 목록`), how many items it holds
   (`show how many friends` / `친구들 개수 말해줘`), one item by its position
@@ -253,7 +310,6 @@ All notable changes to NME are recorded here.
   quietly became `좋 = "하루였습니다"`; `how` is `show` without its `s`, so
   `how are you` printed `are you`. A word the sentence grammar spells out
   itself is no longer read as a misspelling of something else.
-
 - **Far more of what a beginner actually types is accepted, and what cannot be
   read is said out loud instead of guessed at.** Measured against a 566-mistake
   corpus (`scripts/mistake-probes/`), the number that compiled to something the

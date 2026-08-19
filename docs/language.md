@@ -224,6 +224,56 @@ if how many friends is greater than 3
 만약에 친구들 개수가 3보다 크면
 ```
 
+### Records
+
+A record holds many named values at once, each one under a name of its own.
+Python calls it a dictionary.
+
+```nme
+set ages to an empty record
+put Mina at 90 in ages
+show Mina in ages
+show how many ages
+remove Mina from ages
+```
+
+```nme
+나이표는 빈 표
+나이표에 민수를 90으로 넣어
+나이표의 민수 말해줘
+나이표 개수 말해줘
+나이표에서 민수 빼
+```
+
+The word `record` (`표`, and `table` in English) is only the kind of thing
+being made **where a value is being saved**. Everywhere else it is a word
+somebody wrote: `I keep a record of everything I read` and
+`표는 두 장 남았습니다` print themselves.
+
+Most of a record's grammar is spelled **exactly like a list's** — `how many` /
+`개수`, `remove` / `빼`, `contains` / `…에 …가 있으면`, `for each` / `…마다
+반복해` — and the compiler decides which is meant from the kind the name holds,
+never from the wording. That is the point: a reader should not have to remember
+which spelling belongs to which container. A record line written on a list is
+refused with `E0234`, because appending `Mina를 90` to the list as one piece of
+text would be a program nobody wrote.
+
+A record has no order and nothing to add up, so `the total of`, `the biggest
+of`, `the first of` and `sort` are list-only and stay refused for a record.
+
+Looping over a record hands back its **names**, exactly as Python does, so the
+value is read back inside the loop:
+
+```nme
+set ages to an empty record
+put Mina at 90 in ages
+for each name in ages
+    show name in ages
+end
+```
+
+A name ordinary Python wrote as `ages = {}` is a record to all of these too.
+
 ### What is left over
 
 <!-- nme-check: skip — a side-by-side vocabulary listing, not a program. -->
@@ -545,6 +595,72 @@ or, when you opened it by indenting, where the indentation ends.
 Python-wins rule not at all, and the colon is the shape Python itself uses to
 open a block. It also keeps the form well away from ordinary sentences —
 `story time` and `tell me a story` carry no colon and stay sentences.
+
+### A named job
+
+A named job gives a piece of program a name, so it can be run later by that
+name. Python calls it a function.
+
+```nme
+to greet:
+    show Hello
+    show Nice to meet you
+end
+do greet
+```
+
+```nme
+인사하기라는 일:
+    안녕하세요 말해줘
+    반가워요 말해줘
+끝
+인사하기 해줘
+```
+
+`to`, `do`, `일`, `하기` and `해줘` are among the most ordinary words either
+language has, so a job is recognized by **structure and never by a word**. The
+header needs the opening `to` — or, in Korean, `라는` on the name and `일` or
+`작업` after it — *and* a closing `:` *and* a block underneath. `to be honest`
+and `할 일이 많습니다` have none of it.
+
+**Without a block there is no job.** A heading such as `To do:` or
+`오늘의 할 일:` prints as the line it is, and there is no one-line form, so a
+colon in the middle of a sentence can never open one either.
+
+The line that *runs* a job is gated on something stronger still: the name has
+to be one this program already made a job. A Python `def` that takes no
+arguments counts, so the three levels mix freely.
+
+A name saved inside a job stays inside it, and an ordinary Python `return`
+written in there is accepted, because what the job becomes is a real `def`.
+
+A job may be given **one thing**. The header names it in front of the job
+name, and the line that runs the job hands it over the same way:
+
+```nme
+to greet someone:
+    show Hello someone!
+end
+do greet with Mina
+```
+
+```nme
+이름에게 인사하기라는 일:
+    안녕하세요 이름! 말해줘
+끝
+민수에게 인사하기 해줘
+```
+
+How many things a job takes is remembered with its name, so running it the
+other way round is refused with `E0235` rather than left to become a Python
+`TypeError` at run time on a line that looks right. In English the thing it is
+given only has to be a plain name — `someone` and `something` are exactly what
+a beginner calls it, and the job name in front already carries the check that
+keeps a heading from becoming a function.
+
+Sentence grammar has **no job that takes two things** and **no job that hands
+something back** yet. Write a Python `def` when you need either — advanced NME
+is ordinary Python and passes through untouched.
 
 ### Typo and connector recovery
 

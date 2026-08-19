@@ -251,7 +251,44 @@ of many` ordinary sentences. Using one on a name that is not a list is
 `newline` with a line break. Items go through `map(str, …)`, so a list of
 numbers joins as readily as a list of words.
 
-## 13. Working with text
+## 13. Records
+
+| Level | NME | Python produced |
+| --- | --- | --- |
+| Sentence | `set ages to an empty record` | `ages = {}` |
+| Sentence | `set ages to record` | `ages = {}` |
+| Sentence | `set ages to an empty table` | `ages = {}` |
+| Sentence | `put Mina at 90 in ages` | `ages["Mina"] = 90` |
+| Sentence | `put Mina as 90 in ages` | `ages["Mina"] = 90` |
+| Sentence | `show Mina in ages` | `print(ages["Mina"])` |
+| Sentence | `set best to Mina in ages` | `best = ages["Mina"]` |
+| Sentence | `show how many ages` | `print(len(ages))` |
+| Sentence | `if ages contains Mina` | `if ("Mina" in ages):` |
+| Sentence | `for each name in ages` | `for name in ages:` |
+| Sentence | `remove Mina from ages` | `del ages["Mina"]` |
+| Beginner | `save rates to {}` | `rates = {}` |
+| Beginner | `say ages["Mina"]` | `print(ages["Mina"])` |
+| Advanced | `ages["Mina"] = 90` | unchanged |
+
+A record holds many named values at once. Python calls it a dictionary; a
+beginner calls it a list of names and what goes with each.
+
+`an empty record` / `빈 표` is only a record **where a value is being saved**.
+An ordinary sentence holding the same word — `I keep a record of everything I
+read` — stays a sentence.
+
+The spellings a record shares with a list — `how many`, `remove`, `contains`,
+`for each`, `개수`, `빼`, `넣어` — are **the same words**, and what they do
+depends on which kind the name holds. That is deliberate: a reader should not
+have to remember which is which. Using a record line on a list is `E0234`.
+
+A record has no order, so `the total of`, `the biggest of`, `the first of` and
+`sort` are not written for one. `for each name in ages` hands back the
+**names**, so the value is read back with `name in ages`.
+
+A name Python wrote as `ages = {}` is a record too.
+
+## 14. Working with text
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -272,7 +309,7 @@ changed. All three are values, so they work in output, in a saved name, and in
 a condition. They only read a name the program already made, which is what
 keeps an ordinary sentence containing one of those words a sentence.
 
-## 14. Number remainders
+## 15. Number remainders
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -286,7 +323,7 @@ keeps an ordinary sentence containing one of those words a sentence.
 works in output, in a saved name, and in a condition; the number being divided
 by must be a number or a name the program already made.
 
-## 15. Values and literals
+## 16. Values and literals
 
 | English | Korean | Python |
 | --- | --- | --- |
@@ -294,7 +331,7 @@ by must be a number or a name the program already made.
 | `False` · `false` | `거짓` | `False` |
 | `None` · `none` · `null` | `없음` | `None` |
 
-## 16. Randomness
+## 17. Randomness
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -307,7 +344,7 @@ by must be a number or a name the program already made.
 A choice written as a number stays a number (`pick from 1 or 2` →
 `choice((1, 2,))`).
 
-## 17. Chance
+## 18. Chance
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -329,7 +366,7 @@ floating-point rounding can creep in.
 A chance saved in a name is an ordinary true/false value, so the usual
 condition words can ask about it: `if luck then show You win`.
 
-## 18. Files
+## 19. Files
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -341,7 +378,7 @@ condition words can ask about it: `if luck then show You win`.
 A file path is always quoted. This is the one place the sentence level asks for
 a quote character.
 
-## 19. Modules
+## 20. Modules
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -411,7 +448,7 @@ sentence and prints.
 alone. To change the list itself, use the sentence statements `sort friends`,
 `reverse friends` and `remove Mina from friends`.
 
-## 20. Slow text
+## 21. Slow text
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -424,7 +461,7 @@ Each character is printed on its own with a short pause after it. The pause is
 0.04 seconds by default, 0.12 with `very`, and whatever you name with
 `every 3 seconds` / `3초씩`.
 
-## 21. Stories
+## 22. Stories
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -443,7 +480,48 @@ indenting, by ending the indentation. A blank line prints an empty line, names
 you made earlier are still substituted into the text, and the colon may be the
 plain `:` or the full-width `：` a Korean keyboard writes.
 
-## 22. Screen
+## 23. Named jobs
+
+| Level | NME | Python produced |
+| --- | --- | --- |
+| Sentence | `to greet:` | `def greet():` |
+| Sentence | `to greet:` | `def greet():` |
+| Sentence | `do greet` | `greet()` |
+| Sentence | `run greet` | `greet()` |
+| Sentence | `do greet` | `greet()` |
+| Sentence | `to hail someone:` | `def hail(someone):` |
+| Sentence | `do hail with Mina` | `hail("Mina")` |
+| Sentence | `run hail with Mina` | `hail("Mina")` |
+| Advanced | `def greet():` | unchanged |
+
+A named job gives a piece of program a name, so it can be run later by that
+name. Python calls it a function (`def`).
+
+`to`, `do`, `일` and `하기` are ordinary words, so a named job is recognized by
+**structure and never by a word**: the opening `to` (or, in Korean, the `라는`
+on the name and the `일` after it), the closing `:`, **and a block underneath**.
+`to be honest` and `할 일이 많습니다` have none of that.
+
+**Without a block it is not a job.** A heading such as `To do:` on its own is
+printed as the line it is, and there is no one-line form.
+
+The line that runs a job only runs one when the name is **a job this program
+already made**. `do` and `run` decide nothing on their own. A Python `def` that
+takes no arguments can be run the same way.
+
+A name saved inside a job stays inside it, exactly as in a Python function.
+
+A job **may be given one thing.** The header names it in front of the job name
+(`to greet someone:`, `이름에게 인사하기라는 일:`), and the line that runs the
+job hands it over the same way (`do greet with Mina`, `민수에게 인사하기 해줘`).
+Giving a job the wrong number of things is refused with `E0235`, because the
+Python `TypeError` it would otherwise cause happens at run time on a line that
+looks right.
+
+Sentence grammar has **no job that takes two things** and **no job that hands
+something back** yet. Write a Python `def` when you need either.
+
+## 24. Screen
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -459,7 +537,7 @@ a terminal it may show up as text. The box and the centred line count a Korean
 character as two columns, so a Korean sentence comes out straight; the width is
 40 columns.
 
-## 23. The stopwatch
+## 25. The stopwatch
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -474,7 +552,7 @@ in output, in a saved name, and in a condition (`if elapsed is greater than 3`).
 Reading it without starting the clock is reported at compile time as `E0226`. A
 name the program made itself always wins over the word.
 
-## 24. Cooldowns
+## 26. Cooldowns
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -492,7 +570,7 @@ whether that moment has passed. They are conditions, so they work with `when`,
 reads as an ordinary English sentence, so a name the program already saved as
 something else is not read as a cooldown.
 
-## 25. Every action word
+## 27. Every action word
 
 Every spelling accepted for each action, with nothing left out.
 
@@ -548,6 +626,15 @@ Every spelling accepted for each action, with nothing left out.
 | 거꾸로 / Reverse | `reverse` | `거꾸로` · `거꾸로해` · `거꾸로해줘` · `뒤집어` · `뒤집어줘` |
 | 섞기 / Shuffle | `shuffle` | `섞어` · `섞어줘` · `섞어주세요` |
 | 들어있는지 / Contains | `contains` · `contain` · `includes` · `include` · `holds` | `안에는` · `속에는` · `안에` · `속에` · `에는` · `에` |
+| 표 표시 / Record | `record` · `table` | `표` |
+| 표에 넣기 / Put in a record | `put` | `넣어` · `넣어줘` · `넣어주세요` · `두어` · `두어줘` |
+| 표 값 앞말 / Record value connector | `at` · `as` | `으로` · `로` |
+| 표 이름 앞말 / Record container connector | `in` · `into` | `을` · `를` |
+| 표에서 읽기 조사 / Record reading particle | — | `에서` · `의` |
+| 일 표시 / Job | `to` | `일` · `작업` |
+| 일 이름 어미 / Job name ending | — | `이라는` · `라는` |
+| 일 실행 / Run a job | `do` · `run` | `해` · `해줘` · `해주세요` · `실행해` · `실행해줘` |
+| 일이 받는 것 / What a job is given | `with` | `에게` · `한테` · `을` · `를` |
 | 무한 반복 / Forever | `forever` · `always` | `계속` · `무한` · `끝없이` |
 | 읽기 조사 / Reading particle | — | `이` · `가` · `은` · `는` · `을` · `를` |
 | 숫자로 / As a number | `number` · `numeric` | `숫자` · `숫자로` · `수로` |
@@ -589,13 +676,13 @@ Every spelling accepted for each action, with nothing left out.
 | 확률 저장 / Chance saved in a name | `is` · `equals` | — |
 | 군말 / Filler | `please` | `좀` · `혹시` · `제발` |
 
-## 26. Korean particles
+## 28. Korean particles
 
 These endings are not treated as part of the name they follow.
 
 `에게서는` · `한테서는` · `에게서` · `한테서` · `으로는` · `로는` · `에게` · `한테` · `에서` · `으로` · `까지` · `부터` · `처럼` · `보다` · `이라도` · `라도` · `에는` · `에서` · `은` · `는` · `이` · `가` · `을` · `를` · `와` · `과` · `도` · `의` · `에` · `로` · `아` · `야` · `랑` · `이랑` · `예요` · `이에요`
 
-## 27. Typo recovery
+## 29. Typo recovery
 
 For action words and connectors only, and only after Python has rejected the
 line, NME retries once with a single edit repaired (one insertion, deletion,
@@ -603,7 +690,7 @@ substitution, or adjacent swap). If more than one repair is possible it repairs
 nothing and points at the exact span instead. **Strings and comments are never
 touched.**
 
-## 28. Error codes
+## 30. Error codes
 
 | Code | Meaning |
 | --- | --- |
@@ -648,6 +735,8 @@ touched.**
 | `E0231` | this name was never made into a list |
 | `E0232` | this story has nothing in it |
 | `E0233` | this join does not say what to put between the items |
+| `E0234` | this name does not hold a record |
+| `E0235` | this job is given a different number of things than it takes |
 | `E0301` | the condition is missing |
 | `E0302` | the condition could not be understood |
 | `E0303` | the repeated body could not be understood |

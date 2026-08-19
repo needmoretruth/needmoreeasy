@@ -1527,8 +1527,10 @@ fn check_condition(
                 ConditionValue::Text(_) => {
                     return Err(not_supported("text in a truthy condition", span));
                 }
-                ConditionValue::Reading { .. } | ConditionValue::Remainder { .. } => {
-                    return Err(not_supported("list and text readings", span));
+                ConditionValue::Reading { .. }
+                | ConditionValue::Remainder { .. }
+                | ConditionValue::Entry { .. } => {
+                    return Err(not_supported("list, record and text readings", span));
                 }
             };
             if kind == ExprType::Str {
@@ -1597,8 +1599,10 @@ fn condition_operand(
             nme_core::syntax::Literal::False => Ok(("0".to_string(), ExprType::Bool)),
             nme_core::syntax::Literal::None => Err(not_supported("null in a condition", span)),
         },
-        ConditionValue::Reading { .. } | ConditionValue::Remainder { .. } => {
-            Err(not_supported("list and text readings", span))
+        ConditionValue::Reading { .. }
+        | ConditionValue::Remainder { .. }
+        | ConditionValue::Entry { .. } => {
+            Err(not_supported("list, record and text readings", span))
         }
     }
 }
@@ -1725,13 +1729,15 @@ fn emit_say(
             Err(not_supported("random values", span_of_value(value)))
         }
         Value::List(_) => Err(not_supported("list values", span_of_value(value))),
+        Value::EmptyRecord => Err(not_supported("record values", span_of_value(value))),
         Value::Reading { .. }
         | Value::Item { .. }
+        | Value::Entry { .. }
         | Value::Joined { .. }
         | Value::Split { .. }
         | Value::Repeated { .. }
         | Value::Remainder { .. } => Err(not_supported(
-            "list and text readings",
+            "list, record and text readings",
             span_of_value(value),
         )),
         Value::ZeroKnowledge(_) => {
@@ -1850,8 +1856,10 @@ fn emit_set(
         | Value::RandomChoice { .. }
         | Value::Chance { .. }
         | Value::List(_)
+        | Value::EmptyRecord
         | Value::Reading { .. }
         | Value::Item { .. }
+        | Value::Entry { .. }
         | Value::Joined { .. }
         | Value::Split { .. }
         | Value::Repeated { .. }

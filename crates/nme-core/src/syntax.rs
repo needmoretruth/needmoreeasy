@@ -207,6 +207,23 @@ pub enum Value {
     /// single sentence value is, so numbers stay numbers and words become text
     /// without the writer choosing quotes.
     List(Vec<Value>),
+    /// `set ages to an empty record` / `나이표는 빈 표` — one name holding many
+    /// named values, which Python calls a dictionary.
+    ///
+    /// There is no spelling for a record with things already in it. A record
+    /// is filled the way a beginner fills one: a line at a time, with
+    /// [`NmeStmt::RecordPut`].
+    EmptyRecord,
+    /// `Mina in ages` / `나이표의 민수` — the one value a record keeps under
+    /// that name.
+    ///
+    /// The key is a whole sentence value rather than a piece of text, because
+    /// the name a loop is holding is exactly what a beginner writes there:
+    /// `for each name in ages` then `show name in ages`.
+    Entry {
+        of: String,
+        key: Box<Value>,
+    },
     /// `친구들 개수` / `how many friends` — a reading taken from a name the
     /// program already made. The name is kept as a name rather than a span,
     /// because the writer may have attached a Korean particle to it.
@@ -398,6 +415,12 @@ pub enum ConditionValue {
         of: String,
         by: Code,
     },
+    /// `만약에 나이표의 민수가 90보다 크면` / `if Mina in ages is greater than 90`
+    /// — one value out of a record, on one side of a comparison.
+    Entry {
+        of: String,
+        key: Box<Value>,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -543,6 +566,26 @@ pub enum NmeStmt {
         target: String,
         value: Value,
     },
+    /// `put Mina at 90 in ages` / `나이표에 민수를 90으로 넣어`.
+    ///
+    /// Putting something into a record is spelled with the same verb as
+    /// putting something into a list, so the two are told apart by the name
+    /// and by the shape: a record line marks a key **and** a value, a list
+    /// line marks only the thing being added.
+    RecordPut {
+        target: String,
+        key: Value,
+        value: Value,
+    },
+    /// `remove Mina from ages` / `나이표에서 민수 빼` — Python's `del`.
+    ///
+    /// A list gives back the item it took out with `.remove(...)`; a record
+    /// has no such method, and `.remove` on a dictionary is an
+    /// `AttributeError` a beginner cannot read.
+    RecordRemove {
+        target: String,
+        key: Value,
+    },
     /// `sort friends` / `친구들 정렬해`, and its two companions.
     Arrange {
         target: String,
@@ -571,6 +614,28 @@ pub enum NmeStmt {
         /// spellings, and then every line inside is told one character at a
         /// time with that pause between them.
         seconds: Option<Code>,
+    },
+    /// `to greet:` / `인사하기라는 일:` — opens a block that is a piece of
+    /// program with a name. Python calls it a function.
+    ///
+    /// Like the story block, it is recognized by **structure** and never by a
+    /// word: `일`, `하기`, `to` and `do` are ordinary words in both languages.
+    /// The colon, the noun or the opening `to`, and a body underneath are all
+    /// required together, so `할 일이 많습니다` and `to be honest` stay prose.
+    Job {
+        name: String,
+        /// The names the job is given when it is run. Empty today: the
+        /// spelling for a job that takes something is not built yet.
+        parameters: Vec<String>,
+    },
+    /// `do greet` / `인사하기 해줘` — run a job that was defined earlier.
+    ///
+    /// `do`, `해` and `해줘` are among the most ordinary words either language
+    /// has, so the gate is not the word: the name has to be one the program
+    /// has already made a job.
+    RunJob {
+        name: String,
+        arguments: Vec<Value>,
     },
     When {
         condition: Condition,

@@ -112,6 +112,14 @@ DOCUMENTED_LISTS = [
     "NME_IMPORT_WORDS_EN", "NME_IMPORT_WORDS_KO",
     "REMAINDER_WORDS_EN", "REMAINDER_WORDS_KO",
     "DIVIDED_WORDS_EN", "DIVIDED_WORDS_KO",
+    "RECORD_WORDS_EN", "RECORD_WORDS_KO",
+    "RECORD_PUT_WORDS_EN", "RECORD_PUT_WORDS_KO",
+    "RECORD_AT_WORDS_EN", "RECORD_IN_WORDS_EN",
+    "RECORD_KEY_PARTICLES_KO", "RECORD_VALUE_PARTICLES_KO",
+    "RECORD_OF_PARTICLES_KO",
+    "JOB_LEAD_WORDS_EN", "JOB_WORDS_KO", "JOB_NAME_SUFFIXES_KO",
+    "RUN_JOB_WORDS_EN", "RUN_JOB_WORDS_KO",
+    "JOB_WITH_WORDS_EN", "JOB_PARAMETER_PARTICLES_KO",
 ]
 
 # Rows that name a shape rather than a compilable line.
@@ -133,6 +141,11 @@ PREAMBLE = {
         "set memo to empty",
         "start the timer",
         "put door on cooldown for 3 seconds",
+        "set ages to an empty record",
+        "to greet:",
+        "    show ok",
+        "to hail someone:",
+        "    show ok",
     ],
     "ko": [
         "이름은 민수",
@@ -147,6 +160,11 @@ PREAMBLE = {
         "memo는 비어있음",
         "시간 재기 시작해",
         "문 쿨타임 3초 걸어",
+        "나이표는 빈 표",
+        "인사하기라는 일:",
+        "    확인 말해줘",
+        "이름에게 부르기라는 일:",
+        "    확인 말해줘",
     ],
 }
 

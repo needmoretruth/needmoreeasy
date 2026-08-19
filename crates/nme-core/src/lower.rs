@@ -288,6 +288,14 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
         NmeStmt::Remove { target, value } => {
             format!("{target}.remove({})", lower_value(value, source))
         }
+        NmeStmt::RecordPut { target, key, value } => format!(
+            "{target}[{}] = {}",
+            lower_value(key, source),
+            lower_value(value, source)
+        ),
+        NmeStmt::RecordRemove { target, key } => {
+            format!("del {target}[{}]", lower_value(key, source))
+        }
         // `random` is imported inline here for the same reason `time` is: one
         // NME line stays one Python line, so there is nowhere to put a
         // separate import statement.
@@ -306,6 +314,20 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
         // only has to carry their indentation. `if True:` is the plainest
         // suite Python has, and one NME line is still one Python line.
         NmeStmt::Story { .. } => "if True:".to_string(),
+        // A job is a `def`, and one NME line is still one Python line, so the
+        // body it opens gets its indentation from the block machinery exactly
+        // the way a loop body does.
+        NmeStmt::Job { name, parameters } => {
+            format!("def {name}({}):", parameters.join(", "))
+        }
+        NmeStmt::RunJob { name, arguments } => format!(
+            "{name}({})",
+            arguments
+                .iter()
+                .map(|argument| lower_value(argument, source))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
         NmeStmt::When { condition, inline } => {
             let header = format!("if {}:", wrap_condition(condition, source));
             lower_suite(header, inline.as_ref(), source)
@@ -514,6 +536,13 @@ fn lower_condition_value(value: &ConditionValue, source: &str) -> String {
             },
             source,
         ),
+        ConditionValue::Entry { of, key } => lower_value(
+            &Value::Entry {
+                of: of.clone(),
+                key: key.clone(),
+            },
+            source,
+        ),
     }
 }
 
@@ -565,6 +594,8 @@ fn lower_value(value: &Value, source: &str) -> String {
                 .join(", ");
             format!("[{values}]")
         }
+        Value::EmptyRecord => "{}".to_string(),
+        Value::Entry { of, key } => format!("{of}[{}]", lower_value(key, source)),
         Value::Reading { of, reading } => lower_reading(of, *reading),
         Value::Item { of, position } => match position {
             ItemPosition::First => format!("{of}[0]"),

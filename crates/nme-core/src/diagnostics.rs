@@ -250,6 +250,10 @@ pub enum DiagnosticCode {
     StoryEmpty,
     /// A list and a joining word, with nothing saying what goes between.
     JoinSeparatorMissing,
+    /// A record statement named something that was never made a record.
+    RecordNameUnknown,
+    /// A job was run with a different number of things than it takes.
+    JobArgumentCount,
 }
 
 impl DiagnosticCode {
@@ -296,6 +300,8 @@ impl DiagnosticCode {
             Self::ListNameUnknown => "E0231",
             Self::StoryEmpty => "E0232",
             Self::JoinSeparatorMissing => "E0233",
+            Self::RecordNameUnknown => "E0234",
+            Self::JobArgumentCount => "E0235",
             Self::ConditionMissing => "E0301",
             Self::ConditionInvalid => "E0302",
             Self::RepeatBodyUnparseable => "E0303",
@@ -361,7 +367,7 @@ impl DiagnosticCode {
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 102] = [
+    pub const ALL: [DiagnosticCode; 104] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -464,6 +470,8 @@ impl DiagnosticCode {
         Self::ListNameUnknown,
         Self::StoryEmpty,
         Self::JoinSeparatorMissing,
+        Self::RecordNameUnknown,
+        Self::JobArgumentCount,
     ];
 
     pub fn from_code(code: &str) -> Option<Self> {
@@ -776,6 +784,20 @@ impl DiagnosticCode {
                 "이어 붙일 때 사이에 무엇을 넣을지가 없습니다",
                 "`friends joined` and `친구들을 이어` name a list and say to join it, but not with what. Write `friends joined by comma`, `by space`, or `by newline` — or `friends joined together` / `친구들을 붙여` to run the items together with nothing between them. NME will not choose one for you: a program must never quietly mean something you did not write.",
                 "`친구들을 이어`, `friends joined`는 목록과 이어 붙이라는 말은 있지만 무엇으로 이을지가 없습니다. `친구들을 쉼표로 이어`, `빈칸으로 이어`, `줄바꿈으로 이어`처럼 적거나, 사이에 아무것도 넣지 않으려면 `친구들을 붙여`(`friends joined together`)라고 적으세요. NME는 대신 골라 주지 않습니다. 프로그램이 쓴 사람 몰래 다른 뜻이 되면 안 되기 때문입니다.",
+            ),
+            Self::RecordNameUnknown => (
+                "E0234",
+                "this name does not hold a record",
+                "이 이름에는 표가 들어 있지 않습니다",
+                "A record holds many named values at once: `set ages to an empty record` / `나이표는 빈 표`, and then `put Mina at 90 in ages` / `나이표에 민수를 90으로 넣어`. This line writes a name and a value into something that is not one — most often a list, which holds items in order and has no names to write them under. Make a record first, or use a list line: `append Mina to friends` / `친구들에 민수 넣어`.",
+                "표는 이름이 붙은 값을 한 번에 여럿 담습니다. `나이표는 빈 표`(`set ages to an empty record`)라고 만든 뒤 `나이표에 민수를 90으로 넣어`(`put Mina at 90 in ages`)처럼 적습니다. 이 줄은 표가 아닌 것에 이름과 값을 적으려 하고 있습니다. 대개는 목록인데, 목록은 순서대로 담을 뿐 이름을 붙일 자리가 없습니다. 먼저 표를 만들거나, 목록 문장인 `친구들에 민수 넣어`(`append Mina to friends`)로 적어 주세요.",
+            ),
+            Self::JobArgumentCount => (
+                "E0235",
+                "this job is given a different number of things than it takes",
+                "이 일이 받는 것의 개수가 맞지 않습니다",
+                "A job that takes nothing is run as `do greet` / `인사하기 해줘`, and a job that takes one thing as `do greet with Mina` / `민수에게 인사하기 해줘`. Running one the other way would be a Python `TypeError` at run time, on a line that looks right, so it is named here instead. Check the line that opens the job: `to greet:` takes nothing, `to greet someone:` takes one thing.",
+                "받는 것이 없는 일은 `인사하기 해줘`(`do greet`)로, 하나 받는 일은 `민수에게 인사하기 해줘`(`do greet with Mina`)로 실행합니다. 서로 바꿔 쓰면 실행할 때 Python `TypeError`가 나는데, 그 줄은 멀쩡해 보입니다. 그래서 여기서 미리 알려 드립니다. 일을 여는 줄을 확인해 주세요. `인사하기라는 일:`은 받는 것이 없고, `이름에게 인사하기라는 일:`은 하나 받습니다.",
             ),
             Self::ConditionMissing => (
                 "E0301",

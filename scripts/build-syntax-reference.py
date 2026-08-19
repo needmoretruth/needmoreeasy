@@ -215,6 +215,38 @@ LISTS = [
     ("고급", "Advanced", 'friends = ["Mina"]', '친구들 = ["민수"]', "unchanged"),
 ]
 
+RECORDS = [
+    ("문장형", "Sentence", "set ages to an empty record", "나이표는 빈 표", "ages = {}", '나이표 = {}'),
+    ("문장형", "Sentence", "set ages to record", "나이표는 표", "ages = {}", '나이표 = {}'),
+    # Korean says `표` for both `record` and `table`, so pairing the English
+    # `table` row with `빈 표` printed the same Korean row twice. `비어있는` is a
+    # real second spelling and keeps the row worth reading.
+    ("문장형", "Sentence", "set ages to an empty table", "나이표는 비어있는 표", "ages = {}", '나이표 = {}'),
+    ("문장형", "Sentence", "put Mina at 90 in ages", "나이표에 민수를 90으로 넣어", 'ages["Mina"] = 90', '나이표["민수"] = 90'),
+    ("문장형", "Sentence", "put Mina as 90 in ages", "나이표에 민수를 90으로 두어", 'ages["Mina"] = 90', '나이표["민수"] = 90'),
+    ("문장형", "Sentence", "show Mina in ages", "나이표의 민수 말해줘", 'print(ages["Mina"])', 'print(나이표["민수"])'),
+    ("문장형", "Sentence", "set best to Mina in ages", "제일은 나이표에서 민수", 'best = ages["Mina"]', '제일 = 나이표["민수"]'),
+    ("문장형", "Sentence", "show how many ages", "나이표 개수 말해줘", "print(len(ages))", 'print(len(나이표))'),
+    ("문장형", "Sentence", "if ages contains Mina", "만약에 나이표에 민수가 있으면", 'if ("Mina" in ages):', 'if ("민수" in 나이표):'),
+    ("문장형", "Sentence", "for each name in ages", "나이표의 이름마다 반복해", "for name in ages:", 'for 이름 in 나이표:'),
+    ("문장형", "Sentence", "remove Mina from ages", "나이표에서 민수 빼", 'del ages["Mina"]', 'del 나이표["민수"]'),
+    ("초급", "Beginner", "save rates to {}", "저장 나이표2 {}", "rates = {}", '나이표2 = {}'),
+    ("초급", "Beginner", 'say ages["Mina"]', '말해 나이표["민수"]', 'print(ages["Mina"])', 'print(나이표["민수"])'),
+    ("고급", "Advanced", 'ages["Mina"] = 90', '나이표["민수"] = 90', "unchanged"),
+]
+
+JOBS = [
+    ("문장형", "Sentence", "to greet:", "인사하기라는 일:", "def greet():", 'def 인사하기():'),
+    ("문장형", "Sentence", "to greet:", "계산이라는 작업:", "def greet():", 'def 계산():'),
+    ("문장형", "Sentence", "do greet", "인사하기 해줘", "greet()", '인사하기()'),
+    ("문장형", "Sentence", "run greet", "인사하기 해", "greet()", '인사하기()'),
+    ("문장형", "Sentence", "do greet", "인사하기 실행해", "greet()", '인사하기()'),
+    ("문장형", "Sentence", "to hail someone:", "이름에게 부르기라는 일:", "def hail(someone):", 'def 부르기(이름):'),
+    ("문장형", "Sentence", "do hail with Mina", "민수에게 부르기 해줘", 'hail("Mina")', '부르기("민수")'),
+    ("문장형", "Sentence", "run hail with Mina", "민수한테 부르기 실행해", 'hail("Mina")', '부르기("민수")'),
+    ("고급", "Advanced", "def greet():", "def 인사하기():", "unchanged"),
+]
+
 NUMBERS = [
     ("문장형", "Sentence", "show the remainder of score divided by 4", "점수를 4로 나눈 나머지 말해줘", "print(score % 4)", 'print(점수 % 4)'),
     ("문장형", "Sentence", "set left to the remainder of score divided by 4", "남은것은 점수를 4로 나눈 나머지", "left = score % 4", '남은것 = 점수 % 4'),
@@ -491,6 +523,15 @@ def spelling_table(korean: bool) -> str:
         ("거꾸로 / Reverse", "REVERSE_WORDS_EN", "REVERSE_WORDS_KO"),
         ("섞기 / Shuffle", "SHUFFLE_WORDS_EN", "SHUFFLE_WORDS_KO"),
         ("들어있는지 / Contains", "CONTAINS_WORDS_EN", "CONTAINS_WORDS_KO"),
+        ("표 표시 / Record", "RECORD_WORDS_EN", "RECORD_WORDS_KO"),
+        ("표에 넣기 / Put in a record", "RECORD_PUT_WORDS_EN", "RECORD_PUT_WORDS_KO"),
+        ("표 값 앞말 / Record value connector", "RECORD_AT_WORDS_EN", "RECORD_VALUE_PARTICLES_KO"),
+        ("표 이름 앞말 / Record container connector", "RECORD_IN_WORDS_EN", "RECORD_KEY_PARTICLES_KO"),
+        ("표에서 읽기 조사 / Record reading particle", "RECORD_OF_PARTICLES_KO", None),
+        ("일 표시 / Job", "JOB_LEAD_WORDS_EN", "JOB_WORDS_KO"),
+        ("일 이름 어미 / Job name ending", "JOB_NAME_SUFFIXES_KO", None),
+        ("일 실행 / Run a job", "RUN_JOB_WORDS_EN", "RUN_JOB_WORDS_KO"),
+        ("일이 받는 것 / What a job is given", "JOB_WITH_WORDS_EN", "JOB_PARAMETER_PARTICLES_KO"),
         ("무한 반복 / Forever", "FOREVER_WORDS_EN", "FOREVER_WORDS_KO"),
         ("읽기 조사 / Reading particle", "READING_PARTICLES_KO", None),
         ("숫자로 / As a number", "NUMBER_WORDS", None),
@@ -673,7 +714,28 @@ Python으로는 `친구들[0]`이 됩니다. 0번째는 없으며 적으면 `E02
 `줄바꿈`/`newline`은 줄바꿈입니다. 항목이 숫자여도 되도록 `map(str, …)`을
 거쳐서 잇습니다.
 
-## 13. 글자 다루기
+## 13. 표
+
+{level_table(RECORDS, True)}
+
+표는 이름이 붙은 값을 한 번에 여럿 담습니다. Python으로는 사전(dictionary)이고,
+처음 배우는 사람에게는 「이름과 그에 딸린 값을 적어 둔 표」입니다.
+
+`빈 표`/`an empty record`는 **값을 저장하는 자리에서만** 표가 됩니다.
+`표를 보여 주세요`처럼 그 낱말이 들어간 평범한 문장은 그대로 글로 남습니다.
+
+목록과 겹치는 표기 — `개수`·`빼`·`넣어`·`…에 …가 있으면`·`…마다 반복해` — 는
+**모두 같은 낱말**이고, 그 이름이 목록인지 표인지에 따라 하는 일이 갈립니다.
+읽는 사람이 어느 쪽인지 외울 필요가 없도록 일부러 그렇게 했습니다. 목록인
+이름에 표 문장을 쓰면 `E0234`로 알려 줍니다.
+
+표에는 순서가 없어서 `합`·`가장 큰 것`·`첫 번째`·`정렬해`는 쓰지 않습니다.
+`나이표의 이름마다 반복해`는 값이 아니라 **이름**을 하나씩 돌려주므로, 값은
+`나이표의 이름`처럼 다시 꺼내 읽습니다.
+
+Python으로 `나이표 = {{}}`라고 쓴 이름도 표로 봅니다.
+
+## 14. 글자 다루기
 
 {level_table(TEXT, True)}
 
@@ -682,26 +744,26 @@ Python으로는 `친구들[0]`이 됩니다. 0번째는 없으며 적으면 `E02
 셋 다 값이므로 출력·저장·조건 어디에나 쓸 수 있습니다. 앞에서 만든 이름에만
 쓸 수 있고, 그래서 그 낱말이 들어간 평범한 문장은 그대로 글로 남습니다.
 
-## 14. 숫자 나머지
+## 15. 숫자 나머지
 
 {level_table(NUMBERS, True)}
 
 `나머지`/`the remainder of`는 나눗셈에서 남는 수입니다. 값이라서 출력·저장·조건
 어디에나 쓸 수 있고, 나누는 수는 숫자이거나 앞에서 만든 이름이어야 합니다.
 
-## 15. 값과 리터럴
+## 16. 값과 리터럴
 
 | 영어 표기 | 한국어 표기 | Python |
 | --- | --- | --- |
 """ + "\n".join(f"| {english} | {hangul} | `{python}` |" for english, hangul, python in LITERALS) + f"""
 
-## 16. 무작위
+## 17. 무작위
 
 {level_table(RANDOM, True)}
 
 숫자로 적은 선택지는 숫자로 남습니다(`1 또는 2 중에서 랜덤선택` → `choice((1, 2,))`).
 
-## 17. 확률
+## 18. 확률
 
 {level_table(CHANCE, True)}
 
@@ -715,13 +777,13 @@ Python으로는 `친구들[0]`이 됩니다. 0번째는 없으며 적으면 `E02
 이름에 저장한 확률은 참·거짓 값이라서 `만약에 운이 있으면`처럼 그대로 물어볼 수
 있습니다.
 
-## 18. 파일
+## 19. 파일
 
 {level_table(FILES, True)}
 
 파일 경로는 항상 따옴표로 감쌉니다. 이것만은 문장형에서도 예외입니다.
 
-## 19. 모듈
+## 20. 모듈
 
 {level_table(MODULES, True)}
 
@@ -738,14 +800,14 @@ Python으로는 `친구들[0]`이 됩니다. 0번째는 없으며 적으면 `E02
 직접 바꾸려면 문장형 `친구들 정렬해`·`친구들 거꾸로 해`·`친구들에서 민수 빼`를
 쓰세요.
 
-## 20. 천천히 말하기
+## 21. 천천히 말하기
 
 {level_table(SLOW_TEXT, True)}
 
 글자를 하나씩 내보내고 사이에 잠깐 쉽니다. 쉬는 시간은 기본 0.04초, `아주`를
 붙이면 0.12초이며, `3초씩`처럼 직접 정할 수도 있습니다.
 
-## 21. 이야기
+## 22. 이야기
 
 {level_table(STORY, True)}
 
@@ -756,7 +818,37 @@ Python으로는 `친구들[0]`이 됩니다. 0번째는 없으며 적으면 `E02
 띄우고, 앞에서 만든 이름은 글 안에서 값으로 바뀝니다. 콜론은 반각 `:`과 전각
 `：` 둘 다 됩니다.
 
-## 22. 화면
+## 23. 이름 붙인 일
+
+{level_table(JOBS, True)}
+
+이름 붙인 일은 프로그램의 한 조각에 이름을 붙여 두었다가 나중에 그 이름으로
+실행하는 것입니다. Python으로는 함수(`def`)입니다.
+
+`일`·`하기`·`해줘`는 평범한 낱말이라서, 이름 붙인 일은 **낱말이 아니라 모양**으로
+알아봅니다. 이름 뒤의 `라는`(또는 `이라는`), 그 뒤의 `일`(또는 `작업`), 줄 끝의
+`:`, 그리고 **그 아래에 오는 묶음**까지 넷이 모두 있어야 합니다.
+`할 일이 많습니다`에는 그중 하나도 없습니다.
+
+**묶음이 없으면 일이 아닙니다.** `오늘의 할 일:`처럼 제목만 있는 줄은 그대로 글로
+나옵니다. 한 줄로 붙여 쓰는 형태도 없습니다.
+
+일을 실행하는 줄은 **그 프로그램이 이미 만든 일 이름**일 때만 실행이 됩니다.
+`해`·`해줘`는 그 자체로는 아무것도 정하지 못합니다. Python으로 쓴 `def`도 받는
+값이 없으면 같은 방법으로 실행할 수 있습니다.
+
+일 안에서 저장한 이름은 일 안에만 있습니다. Python 함수와 같습니다.
+
+일은 **하나를 받을 수 있습니다.** 여는 줄에서 이름 앞에 받을 것을 `에게`·`한테`·
+`을`·`를`로 표시하고(`이름에게 인사하기라는 일:`), 실행할 때 같은 방법으로
+건넵니다(`민수에게 인사하기 해줘`). 영어는 `to greet someone:`과
+`do greet with Mina`입니다. 받는 개수가 맞지 않으면 `E0235`로 알려 줍니다.
+실행할 때 나는 Python `TypeError`는 줄이 멀쩡해 보여서 찾기 어렵기 때문입니다.
+
+아직 **둘 이상을 받는 일**과 **값을 돌려주는 일**은 문장 문법에 없습니다. 그 둘이
+필요하면 Python `def`를 그대로 씁니다.
+
+## 24. 화면
 
 {level_table(SCREEN, True)}
 
@@ -764,7 +856,7 @@ Python으로는 `친구들[0]`이 됩니다. 0번째는 없으며 적으면 `E02
 그대로 보일 수 있습니다. 상자와 가운데 맞춤은 한글을 두 칸으로 세기 때문에
 한국어 문장도 반듯하게 나오며, 가로 폭은 40칸입니다.
 
-## 23. 시간 재기
+## 25. 시간 재기
 
 {level_table(TIMER, True)}
 
@@ -773,7 +865,7 @@ Python으로는 `친구들[0]`이 됩니다. 0번째는 없으며 적으면 `E02
 있습니다(`만약 잰시간이 3보다 크면`). 켜지 않고 읽으면 컴파일할 때 `E0226`으로
 알려 줍니다. 프로그램이 `잰시간`이라는 이름을 직접 만들었으면 그 이름이 이깁니다.
 
-## 24. 쿨타임
+## 26. 쿨타임
 
 {level_table(COOLDOWN, True)}
 
@@ -783,26 +875,26 @@ Python으로는 `친구들[0]`이 됩니다. 0번째는 없으며 적으면 `E02
 `wait for door`는 영어 문장으로도 읽히므로, 그 이름이 이미 다른 값으로 저장돼
 있으면 쿨타임으로 읽지 않습니다.
 
-## 25. 동작 단어 전수 목록
+## 27. 동작 단어 전수 목록
 
 같은 뜻으로 받아들이는 표기를 하나도 빠뜨리지 않고 적은 표입니다.
 
 {spelling_table(True)}
 
-## 26. 조사 부록
+## 28. 조사 부록
 
 이름 뒤에 붙어도 이름의 일부로 보지 않는 조사입니다.
 
 {spellings(words("KOREAN_PARTICLES"))}
 
-## 27. 오타 복구
+## 29. 오타 복구
 
 동작 단어와 연결어에 한해, Python이 그 줄을 거부한 다음에만 한 글자 오타를
 고쳐서 다시 읽어 봅니다(넣기·빼기·바꾸기·이웃 자리 바꿈 한 번). 고칠 방법이
 둘 이상이면 고치지 않고 그 자리를 짚어 알려 줍니다. **문자열과 주석은 절대
 건드리지 않습니다.**
 
-## 28. 오류 코드
+## 30. 오류 코드
 
 {diagnostics_table(True)}
 
@@ -935,7 +1027,29 @@ of many` ordinary sentences. Using one on a name that is not a list is
 `newline` with a line break. Items go through `map(str, …)`, so a list of
 numbers joins as readily as a list of words.
 
-## 13. Working with text
+## 13. Records
+
+{level_table(RECORDS, False)}
+
+A record holds many named values at once. Python calls it a dictionary; a
+beginner calls it a list of names and what goes with each.
+
+`an empty record` / `빈 표` is only a record **where a value is being saved**.
+An ordinary sentence holding the same word — `I keep a record of everything I
+read` — stays a sentence.
+
+The spellings a record shares with a list — `how many`, `remove`, `contains`,
+`for each`, `개수`, `빼`, `넣어` — are **the same words**, and what they do
+depends on which kind the name holds. That is deliberate: a reader should not
+have to remember which is which. Using a record line on a list is `E0234`.
+
+A record has no order, so `the total of`, `the biggest of`, `the first of` and
+`sort` are not written for one. `for each name in ages` hands back the
+**names**, so the value is read back with `name in ages`.
+
+A name Python wrote as `ages = {{}}` is a record too.
+
+## 14. Working with text
 
 {level_table(TEXT, False)}
 
@@ -945,7 +1059,7 @@ changed. All three are values, so they work in output, in a saved name, and in
 a condition. They only read a name the program already made, which is what
 keeps an ordinary sentence containing one of those words a sentence.
 
-## 14. Number remainders
+## 15. Number remainders
 
 {level_table(NUMBERS, False)}
 
@@ -953,20 +1067,20 @@ keeps an ordinary sentence containing one of those words a sentence.
 works in output, in a saved name, and in a condition; the number being divided
 by must be a number or a name the program already made.
 
-## 15. Values and literals
+## 16. Values and literals
 
 | English | Korean | Python |
 | --- | --- | --- |
 """ + "\n".join(f"| {english} | {hangul} | `{python}` |" for english, hangul, python in LITERALS) + f"""
 
-## 16. Randomness
+## 17. Randomness
 
 {level_table(RANDOM, False)}
 
 A choice written as a number stays a number (`pick from 1 or 2` →
 `choice((1, 2,))`).
 
-## 17. Chance
+## 18. Chance
 
 {level_table(CHANCE, False)}
 
@@ -980,14 +1094,14 @@ floating-point rounding can creep in.
 A chance saved in a name is an ordinary true/false value, so the usual
 condition words can ask about it: `if luck then show You win`.
 
-## 18. Files
+## 19. Files
 
 {level_table(FILES, False)}
 
 A file path is always quoted. This is the one place the sentence level asks for
 a quote character.
 
-## 19. Modules
+## 20. Modules
 
 {level_table(MODULES, False)}
 
@@ -1005,7 +1119,7 @@ sentence and prints.
 alone. To change the list itself, use the sentence statements `sort friends`,
 `reverse friends` and `remove Mina from friends`.
 
-## 20. Slow text
+## 21. Slow text
 
 {level_table(SLOW_TEXT, False)}
 
@@ -1013,7 +1127,7 @@ Each character is printed on its own with a short pause after it. The pause is
 0.04 seconds by default, 0.12 with `very`, and whatever you name with
 `every 3 seconds` / `3초씩`.
 
-## 21. Stories
+## 22. Stories
 
 {level_table(STORY, False)}
 
@@ -1025,7 +1139,38 @@ indenting, by ending the indentation. A blank line prints an empty line, names
 you made earlier are still substituted into the text, and the colon may be the
 plain `:` or the full-width `：` a Korean keyboard writes.
 
-## 22. Screen
+## 23. Named jobs
+
+{level_table(JOBS, False)}
+
+A named job gives a piece of program a name, so it can be run later by that
+name. Python calls it a function (`def`).
+
+`to`, `do`, `일` and `하기` are ordinary words, so a named job is recognized by
+**structure and never by a word**: the opening `to` (or, in Korean, the `라는`
+on the name and the `일` after it), the closing `:`, **and a block underneath**.
+`to be honest` and `할 일이 많습니다` have none of that.
+
+**Without a block it is not a job.** A heading such as `To do:` on its own is
+printed as the line it is, and there is no one-line form.
+
+The line that runs a job only runs one when the name is **a job this program
+already made**. `do` and `run` decide nothing on their own. A Python `def` that
+takes no arguments can be run the same way.
+
+A name saved inside a job stays inside it, exactly as in a Python function.
+
+A job **may be given one thing.** The header names it in front of the job name
+(`to greet someone:`, `이름에게 인사하기라는 일:`), and the line that runs the
+job hands it over the same way (`do greet with Mina`, `민수에게 인사하기 해줘`).
+Giving a job the wrong number of things is refused with `E0235`, because the
+Python `TypeError` it would otherwise cause happens at run time on a line that
+looks right.
+
+Sentence grammar has **no job that takes two things** and **no job that hands
+something back** yet. Write a Python `def` when you need either.
+
+## 24. Screen
 
 {level_table(SCREEN, False)}
 
@@ -1034,7 +1179,7 @@ a terminal it may show up as text. The box and the centred line count a Korean
 character as two columns, so a Korean sentence comes out straight; the width is
 40 columns.
 
-## 23. The stopwatch
+## 25. The stopwatch
 
 {level_table(TIMER, False)}
 
@@ -1044,7 +1189,7 @@ in output, in a saved name, and in a condition (`if elapsed is greater than 3`).
 Reading it without starting the clock is reported at compile time as `E0226`. A
 name the program made itself always wins over the word.
 
-## 24. Cooldowns
+## 26. Cooldowns
 
 {level_table(COOLDOWN, False)}
 
@@ -1055,19 +1200,19 @@ whether that moment has passed. They are conditions, so they work with `when`,
 reads as an ordinary English sentence, so a name the program already saved as
 something else is not read as a cooldown.
 
-## 25. Every action word
+## 27. Every action word
 
 Every spelling accepted for each action, with nothing left out.
 
 {spelling_table(False)}
 
-## 26. Korean particles
+## 28. Korean particles
 
 These endings are not treated as part of the name they follow.
 
 {spellings(words("KOREAN_PARTICLES"))}
 
-## 27. Typo recovery
+## 29. Typo recovery
 
 For action words and connectors only, and only after Python has rejected the
 line, NME retries once with a single edit repaired (one insertion, deletion,
@@ -1075,7 +1220,7 @@ substitution, or adjacent swap). If more than one repair is possible it repairs
 nothing and points at the exact span instead. **Strings and comments are never
 touched.**
 
-## 28. Error codes
+## 30. Error codes
 
 {diagnostics_table(False)}
 

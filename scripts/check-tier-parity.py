@@ -146,6 +146,16 @@ WORD_LIST_EXCEPTIONS = {
     "CHOICE_SCOPE_WORDS_KO": "`빨강 또는 초록 중에서 골라`; English writes the scope as `from` inside `pick from red or green`",
     "NOT_A_NAME_EN": "words a sentence may never turn into a name; Korean marks its target with a particle instead",
     "SPLIT_THING_WORDS_KO": "the noun that closes `… 나눈 것`; English says `memo split by comma` and needs none",
+    "RECORD_AT_WORDS_EN": "`put Mina at 90 in ages`; Korean marks the value with a particle (RECORD_VALUE_PARTICLES_KO)",
+    "RECORD_IN_WORDS_EN": "`put Mina at 90 in ages`; Korean marks the record with a particle (APPEND_TARGET_PARTICLES_KO)",
+    "RECORD_KEY_PARTICLES_KO": "particles; English writes the name first, in front of RECORD_AT_WORDS_EN",
+    "RECORD_VALUE_PARTICLES_KO": "particles; English uses RECORD_AT_WORDS_EN",
+    "RECORD_OF_PARTICLES_KO": "particles; English says `Mina in ages` and needs none",
+    "JOB_LEAD_WORDS_EN": "`to greet:`; Korean marks the name with JOB_NAME_SUFFIXES_KO and closes with JOB_WORDS_KO",
+    "JOB_NAME_SUFFIXES_KO": "`인사하기라는`; English opens the header with JOB_LEAD_WORDS_EN instead",
+    "JOB_WORDS_KO": "the noun that closes a Korean job header; English opens with JOB_LEAD_WORDS_EN instead",
+    "JOB_PARAMETER_PARTICLES_KO": "particles marking what a job is given; English uses JOB_WITH_WORDS_EN",
+    "JOB_WITH_WORDS_EN": "`do greet with Mina`; Korean marks it with a particle (JOB_PARAMETER_PARTICLES_KO)",
 }
 
 
@@ -186,6 +196,7 @@ PREAMBLE = {
         "set greeting to Hello",
         "start the timer",
         "put door on cooldown for 3 seconds",
+        "set prices to an empty record",
     ],
     "ko": [
         "score는 0",
@@ -197,6 +208,7 @@ PREAMBLE = {
         "greeting은 Hello",
         "시간 재기 시작해",
         "door 쿨타임 3초 걸어",
+        "prices는 빈 표",
     ],
 }
 # Both preambles bind the same Python names on purpose: the cross-language
@@ -861,6 +873,82 @@ MATRIX = [
         line('[print(_ch, end="", flush=True) or __import__("time").sleep(3) for _ch in "Hello"]; print()')),
 
 
+    # ---------------------------------------------------------------- records
+    #
+    # A record is one name holding many named values. Every spelling it shares
+    # with a list — `개수`, `빼`, `넣어`, `…에 …가 있으면`, `…마다 반복해` — is
+    # the *same* spelling here, and the compiler tells the two apart by which
+    # kind the name holds. That is the point of these rows: they prove the
+    # shared spelling means the record thing when the name is a record.
+    row("record_empty", "Make a record with nothing in it", ["Value::EmptyRecord"],
+        line("set rates to an empty record"), line("rates는 빈 표"),
+        line("save rates to {}"), line("저장 rates {}"),
+        line("rates = {}")),
+    row("record_put", "Put a value in a record under a name", ["NmeStmt::RecordPut"],
+        line("put Mina at 90 in prices"), line("prices에 Mina를 90으로 넣어"),
+        line('put "Mina" at 90 in prices'), line('prices에 "Mina"를 90으로 넣어'),
+        line('prices["Mina"] = 90')),
+    row("record_read", "The value a record keeps under one name", ["Value::Entry"],
+        line("show Mina in prices"), line("prices의 Mina 말해줘"),
+        line('say prices["Mina"]'), line('말해 prices["Mina"]'),
+        line('print(prices["Mina"])')),
+    row("record_read_if", "Decide on a value a record keeps", ["ConditionValue::Entry"],
+        block("if Mina in prices is greater than 1", "show hi", "end"),
+        block("만약에 prices의 Mina가 1보다 크면", "hi 말해줘", "끝"),
+        (['when prices["Mina"] > 1', "    print(1)", "end"], 0),
+        (['만약 prices["Mina"] > 1', "    print(1)", "끝"], 0),
+        (['if prices["Mina"] > 1:', "    print(1)"], 0)),
+    row("record_has", "Condition: a record holds that name", [],
+        block("if prices contains Mina", "show hi", "end"),
+        block("만약에 prices에 Mina가 있으면", "hi 말해줘", "끝"),
+        (['when "Mina" in prices', "    print(1)", "end"], 0),
+        (['만약 "Mina" in prices', "    print(1)", "끝"], 0),
+        (['if "Mina" in prices:', "    print(1)"], 0)),
+    row("record_each", "Repeat over the names in a record", [],
+        block("for each name in prices", "show name", "end"),
+        block("prices의 name마다 반복해", "name 말해줘", "끝"),
+        (["for each name in prices:", "    print(name)"], 0),
+        (["prices의 name마다:", "    print(name)"], 0),
+        (["for name in prices:", "    print(name)"], 0)),
+    row("record_count", "How many values a record holds", [],
+        line("show how many prices"), line("prices 개수 말해줘"),
+        line("say len(prices)"), line("말해 len(prices)"),
+        line("print(len(prices))")),
+    row("record_remove", "Take one value out of a record", ["NmeStmt::RecordRemove"],
+        line("remove Mina from prices"), line("prices에서 Mina 빼"),
+        line('remove "Mina" from prices'), line('prices에서 "Mina" 빼'),
+        line('del prices["Mina"]')),
+
+    # ------------------------------------------------------------- named jobs
+    #
+    # A job is recognized by structure and never by a word: a closing colon and
+    # a block underneath. The beginner cells differ from the sentence cells the
+    # way the story ones do — indentation instead of `end` / `끝`.
+    row("job_define", "Give a piece of program a name", ["NmeStmt::Job"],
+        whole("to greet:", "show hi", "end"),
+        whole("greet라는 일:", "hi 말해줘", "끝"),
+        whole("to greet:", "    print(1)"),
+        whole("greet라는 일:", "    print(1)"),
+        whole("def greet():", "    print(1)")),
+    row("job_run", "Run a job by its name", ["NmeStmt::RunJob"],
+        (["to greet:", "show hi", "end", "do greet"], 3),
+        (["greet라는 일:", "hi 말해줘", "끝", "greet 해줘"], 3),
+        (["to greet:", "    print(1)", "run greet"], 2),
+        (["greet라는 일:", "    print(1)", "greet 실행해"], 2),
+        (["def greet():", "    print(1)", "greet()"], 2)),
+    row("job_given", "Give a job something to work on", [],
+        whole("to greet someone:", "show hi someone", "end"),
+        whole("someone에게 greet라는 일:", "hi someone 말해줘", "끝"),
+        whole("to greet someone:", "    print(someone)"),
+        whole("someone에게 greet라는 일:", "    print(someone)"),
+        whole("def greet(someone):", "    print(someone)")),
+    row("job_run_given", "Run a job and hand it something", [],
+        (["to greet someone:", "show hi", "end", "do greet with Mina"], 3),
+        (["someone에게 greet라는 일:", "hi 말해줘", "끝", "Mina에게 greet 해줘"], 3),
+        (["to greet someone:", "    print(1)", "run greet with Mina"], 2),
+        (["someone에게 greet라는 일:", "    print(1)", "Mina에게 greet 실행해"], 2),
+        (["def greet(someone):", "    print(1)", 'greet("Mina")'], 2)),
+
     # ---------------------------------------------------------------- story
     # A story block has no beginner vocabulary of its own: nothing inside it is
     # ever read as code, so there is no quoted or exact spelling to offer. The
@@ -1089,6 +1177,9 @@ DIAGNOSTIC_PARITY = [
     ("E0233", "a join has to say what goes between the items",
      "set stars to list of a, b\nshow stars joined",
      "stars는 목록 a, b\nstars를 이어 말해줘"),
+    ("E0234", "a record line needs a name that was made a record",
+     "set pals to an empty list\nput Mina at 90 in pals",
+     "pals는 빈 목록\npals에 Mina를 90으로 넣어"),
 ]
 
 
