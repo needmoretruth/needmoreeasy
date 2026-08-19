@@ -2,10 +2,13 @@
 
 English | [한국어](README.ko.md)
 
-> **Try it right now, with nothing installed — [needmoreeasy.com](https://needmoreeasy.com/).**
-> The compiler and a Python engine both run inside the browser, so you write a
-> sentence in the box and press Run. It works on a phone. All 90 guides and the
-> full syntax list are on that site too.
+> ### [needmoreeasy.com](https://needmoreeasy.com/) · [nmelang.com](https://nmelang.com/)
+>
+> **Nothing to install, and nothing to know about GitHub.** Both addresses open
+> the same site. The compiler and a Python engine run inside the browser, so you
+> write a sentence in the box and press Run — on a computer or on a phone. All 90
+> guides, every example on this page, and the full syntax list are there to read
+> as ordinary web pages.
 
 **If Python still feels hard, start simpler and grow into Python one line at
 a time.** NME is a learning bridge: begin with ordinary sentences, mix in
@@ -364,5 +367,26 @@ CPython, while `nme compile` can optionally invoke Nuitka. The separate
 `nme native` command compiles its restricted NME subset to C and then to an
 executable with the system C compiler. Compilation preserves physical line
 counts so traceback line numbers continue to match the `.nme` file.
+
+## Contributing
+
+**An example you wrote.** If you made something in NME that other people would
+enjoy reading, running or playing, it can live in `examples/`. Open a pull
+request with the program and a paragraph saying what it shows. Anything merged
+here is under Apache-2.0, the same licence as the rest of the project, so send
+only work you are able to license that way.
+[How to write strong NME examples](docs/guides/example-authoring.md) is the
+checklist this repository uses.
+
+**The compiler itself.** A spelling that should have been accepted, an error
+message that did not help, a short form you kept reaching for, a natural
+sentence in your language that the compiler still refuses — every one of those
+is worth a pull request. [Compiler architecture](docs/architecture.md) holds the
+design rules contributors follow.
+
+**Or just the idea.** You do not have to write any code. An issue that says *"I
+wrote this and expected it to work"* is among the most useful things this
+project can receive, because that sentence is exactly what the language is
+trying to accept. Ideas for examples are equally welcome.
 
 Licensed under Apache-2.0.
