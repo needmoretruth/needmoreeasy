@@ -162,6 +162,9 @@ const SCREEN_VERB_WORDS_KO: &[&str] = &["띄워", "띄워줘", "보여줘", "출
 /// value to carry `로`/`으로` or `라고`/`이라고`, and English needs the name to
 /// be a word a sentence may turn into a name.
 const SET_MAKE_WORDS_EN: &[&str] = &["becomes", "become", "call"];
+/// `put 5 in score` — saving with the everyday verb for putting a thing
+/// somewhere. Written exactly, never repaired.
+const SET_PUT_WORDS_EN: &[&str] = &["put", "place", "drop"];
 /// `해줘` and `해주세요` are absent on purpose: both are already output words
 /// (`안녕하세요 해줘` prints the greeting), so a saving sentence can never
 /// reach the set matcher through them.
@@ -580,9 +583,17 @@ const CONTINUE_WORDS_KO: &[&str] = &[
     "넘겨",
     "다음",
 ];
-const APPEND_WORDS_EN: &[&str] = &["append", "push"];
+const APPEND_WORDS_EN: &[&str] = &["append", "push", "insert", "put", "place"];
+/// Append words that are ordinary verbs too.
+///
+/// `append friends` can be nothing but a list line, so a wrong name there is
+/// worth a message. `put the kettle on` and `insert the key into the lock`
+/// are sentences, so these words only make a list line when the name after
+/// the connector is already a list — otherwise the line is left alone and
+/// prints itself.
+const APPEND_SOFT_WORDS_EN: &[&str] = &["insert", "put", "place"];
 const APPEND_WORDS_KO: &[&str] = &["넣어", "넣어줘", "추가해", "추가해줘", "붙여", "붙여줘"];
-const APPEND_CONNECTORS_EN: &[&str] = &["to", "into", "onto"];
+const APPEND_CONNECTORS_EN: &[&str] = &["to", "into", "onto", "in"];
 /// Particles marking the list a value is being put into (`친구들에 민수 넣어`).
 const APPEND_TARGET_PARTICLES_KO: &[&str] = &["에다가", "에다", "에", "한테", "에게"];
 const LIST_WORDS_EN: &[&str] = &["list"];
@@ -5823,21 +5834,44 @@ fn match_append(
             end -= 1;
         }
         let rest = &tokens[consumed..end];
+        // See `APPEND_SOFT_WORDS_EN`: an everyday verb only makes a list line
+        // when the whole shape is there and the name really is a list. Where
+        // `append` earns a message, `put` hands the line back — `put the
+        // kettle on` and `insert the key into the lock` are sentences, and
+        // `put 5 in score` goes on to the saving rules.
+        let soft = token_matches_exact(&tokens[0], APPEND_SOFT_WORDS_EN);
+        let refuse = |problem: Diagnostic| -> Result<Option<NmeStmt>, Diagnostic> {
+            if soft {
+                Ok(None)
+            } else {
+                Err(problem)
+            }
+        };
+        // The **last** connector, not the first: `append paid in to history`
+        // has an `in` inside the thing being added, and guide 31 stopped
+        // compiling the day `in` became a connector. What is being added may
+        // contain one of these words; the list name may not.
         let Some(separator) = rest
             .iter()
-            .position(|token| token_matches_exact(token, APPEND_CONNECTORS_EN))
+            .rposition(|token| token_matches_exact(token, APPEND_CONNECTORS_EN))
         else {
-            return Err(append_diagnostic(span_of(tokens)));
+            return refuse(append_diagnostic(span_of(tokens)));
         };
         let (value_tokens, target_tokens) = (&rest[..separator], &rest[separator + 1..]);
         if value_tokens.is_empty() || target_tokens.len() != 1 {
-            return Err(append_diagnostic(span_of(tokens)));
+            return refuse(append_diagnostic(span_of(tokens)));
         }
-        let target = name_word(&target_tokens[0])
-            .map(str::to_string)
-            .ok_or_else(|| append_diagnostic(target_tokens[0].span))?;
+        let Some(target) = name_word(&target_tokens[0]).map(str::to_string) else {
+            return refuse(append_diagnostic(target_tokens[0].span));
+        };
+        // `put the car in reverse` names no list, and with an everyday verb
+        // that is all it takes for the line to stay a sentence. `append` and
+        // `push` still name the mistake, because they can mean nothing else.
+        if soft && list_name_at(&target_tokens[0], known_names).is_none() {
+            return Ok(None);
+        }
         if let Some(problem) = not_a_list(&target, known_names, span_of(tokens)) {
-            return Err(problem);
+            return refuse(problem);
         }
         let value = parse_value(source, value_tokens, known_names, true)
             .map_err(|()| append_diagnostic(span_of(tokens)))?;
@@ -6799,6 +6833,28 @@ fn english_record_put(
     let key_tokens = &body[consumed..at_index];
     let value_tokens = &body[at_index + 1..in_index];
     let [key_token] = key_tokens else {
+        // `put wash up at 90 in marks` — the whole shape of a record line is
+        // here and only the key is two words. Saying `put` is not an action
+        // word (which it is) sent the reader to change the verb; the space is
+        // what has to go.
+        if key_tokens.len() > 1
+            && record_name_at(&body[in_index + 1], known_names).is_some()
+            && key_tokens.iter().all(|token| name_word(token).is_some())
+        {
+            let words: Vec<&str> = key_tokens.iter().filter_map(name_word).collect();
+            let joined = words.concat();
+            let written = words.join(" ");
+            return Err(Diagnostic::bilingual(
+                DiagnosticCode::NameHasSpace,
+                "a name in a record cannot have a space in it",
+                "표의 이름에는 띄어쓰기를 쓸 수 없습니다",
+                Span::new(key_tokens[0].span.start, key_tokens[key_tokens.len() - 1].span.end),
+            )
+            .with_bilingual_hint(
+                format!("write `{joined}` as one word instead of `{written}`"),
+                format!("`{written}` 대신 `{joined}`처럼 붙여 써 주세요"),
+            ));
+        }
         return Ok(None);
     };
     if value_tokens.is_empty() {
@@ -12690,6 +12746,31 @@ fn english_make_set(
     known_names: &HashSet<String>,
 ) -> Result<Option<NmeStmt>, Diagnostic> {
     let body = trim_command_endings(tokens);
+    // `put 5 in score` — the value first and the name last, the way the
+    // sentence says it. `put Mina in friends` never arrives here: a list
+    // takes that line first, see `APPEND_SOFT_WORDS_EN`. The value has to be
+    // one thing that could not be part of a sentence, which is what keeps
+    // `put your name in the box` printing itself.
+    if body.len() == 4
+        && token_matches_exact(&body[0], SET_PUT_WORDS_EN)
+        && token_matches_exact(&body[2], &["in", "into"])
+    {
+        let named = name_word(&body[3]).filter(|word| is_bindable_english_name(word));
+        let value_tokens = &body[1..2];
+        let plain = number_value_code(source, value_tokens).is_some()
+            || literal_token(&value_tokens[0]).is_some()
+            || matches!(value_tokens[0].tok, Tok::String { .. })
+            || name_word(&value_tokens[0]).is_some_and(|word| known_names.contains(word));
+        if let (Some(target), true) = (named, plain) {
+            if let Ok(value) = set_value(source, value_tokens, known_names) {
+                return Ok(Some(NmeStmt::Set {
+                    target: target.to_string(),
+                    value,
+                }));
+            }
+        }
+        return Ok(None);
+    }
     let (target_at, value_at) = if body.len() >= 4
         && token_matches_exact(&body[0], SET_MAKE_WORDS_EN)
         && token_matches_exact(&body[1], &["it"])
@@ -15815,12 +15896,11 @@ const COMMAND_WORDS_ASKING: &[(&str, &str)] = &[
 
 /// Words for adding to a list, claimed only when the line names a list the
 /// program already has. `insert coin to continue` names none, so it prints.
-const COMMAND_WORDS_APPENDING: &[(&str, &str)] = &[
-    ("insert", "add"),
-    ("put", "add"),
-    ("집어넣어", "넣어"),
-    ("너허", "넣어"),
-];
+/// `put` and `insert` are absent: since 2026-08-19 they are list words in
+/// their own right, so a line using one of them is read rather than guessed
+/// at, and `put wash up at 90 in marks` is told about the space in its key
+/// instead of being told to write `add`.
+const COMMAND_WORDS_APPENDING: &[(&str, &str)] = &[("집어넣어", "넣어"), ("너허", "넣어")];
 
 /// Further words seen in beginner corpora. They only enrich a message on a
 /// line NME is refusing anyway, so a word here never turns text into an
@@ -15830,13 +15910,11 @@ const MISTAKEN_ACTIONS: &[(&str, &str)] = &[
     ("read", "ask"),
     ("get", "ask"),
     ("assign", "set"),
-    ("make", "set"),
     ("bump", "add"),
     ("raise", "add"),
     ("hold", "wait"),
     ("rest", "wait"),
     ("iterate", "repeat"),
-    ("put", "add"),
     ("대기", "기다려"),
     ("대기해", "기다려"),
     ("대기해줘", "기다려"),
@@ -15943,8 +16021,14 @@ fn near_miss_action_word(
     let asks = tokens
         .last()
         .is_some_and(|token| token_matches_exact(token, &["?"]));
+    // A list or a record, not merely a saved name. `put your name in the box`
+    // names `name`, which holds a piece of text, and the line is a sentence.
     let names_a_list = tokens.iter().any(|token| {
-        name_word(token).is_some_and(|word| resolve_known_particle(word, known_names).is_some())
+        name_word(token).is_some_and(|word| {
+            resolve_known_particle(word, known_names).is_some_and(|name| {
+                is_list_name(known_names, name) || is_record_name(known_names, name)
+            })
+        })
     });
     (start..tokens.len()).find_map(|index| {
         let word = name_word(&tokens[index])?;
@@ -16895,6 +16979,12 @@ fn token_word(token: &Token) -> Option<&str> {
         Tok::As => Some("as"),
         Tok::From => Some("from"),
         Tok::Import => Some("import"),
+        // `put Ada in friends` — Python's `in` is a keyword, so without this
+        // the word a beginner writes between the value and the list was
+        // invisible to every list rule.
+        Tok::In => Some("in"),
+        Tok::Not => Some("not"),
+        Tok::Continue => Some("continue"),
         _ => None,
     }
 }

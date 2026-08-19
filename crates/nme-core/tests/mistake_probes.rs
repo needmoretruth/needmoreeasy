@@ -123,13 +123,6 @@ fn raw_cpython_errors_become_nme_diagnostics() {
             names: "",
         },
         Refusal {
-            probe: "h-en-03",
-            source: "set friends to list of Mina\nput Mina in friends\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 2,
-            names: "put",
-        },
-        Refusal {
             probe: "k-ko-19",
             source: "2초 대기해\n",
             code: DiagnosticCode::UnknownActionWord,
@@ -299,13 +292,6 @@ fn a_line_that_starts_with_a_space_is_named() {
 #[test]
 fn a_word_that_is_not_an_action_is_named() {
     for case in [
-        Refusal {
-            probe: "h-en-03",
-            source: "set friends to list of Mina\nput Mina in friends\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 2,
-            names: "put",
-        },
         // `j-ko-04` (`3번 되풀이해서 안녕 말해줘`) used to be refused because
         // `되풀이해서` was not a repeat word. It is one now, and both
         // `probes2.py` and `probes.py` have always recorded the line as
@@ -450,13 +436,6 @@ fn a_word_that_is_not_an_action_is_named() {
             code: DiagnosticCode::UnknownActionWord,
             line: 1,
             names: "rest",
-        },
-        Refusal {
-            probe: "y-en-27",
-            source: "set friends to list of Mina\ninsert Mina into friends\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 2,
-            names: "insert",
         },
         Refusal {
             probe: "y-en-29",

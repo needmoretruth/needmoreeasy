@@ -667,3 +667,47 @@ fn korean_transitive_output_words_leave_their_own_sentences_alone() {
     assert_eq!(ok("감정을 나타내\n"), "print(\"감정을 나타내\")\n");
     assert_eq!(ok("연을 하늘에 띄워줘\n"), "print(\"연을 하늘에 띄워줘\")\n");
 }
+
+/// `put`, `insert` and `place` are the words a beginner reaches for when the
+/// list is a box and the value is a thing. They are ordinary English verbs
+/// too, so they make a list line only when the name after the connector is
+/// already a list — and `put 5 in score` goes on to mean saving, which is
+/// what it says.
+#[test]
+fn everyday_verbs_put_things_in_lists_and_names() {
+    let list = "set friends to list of \"Mina\"\n";
+    for line in ["insert Sana into friends", "put Sana in friends", "place Sana onto friends"] {
+        assert_eq!(
+            ok(&format!("{list}{line}\n")),
+            "friends = [\"Mina\"]\nfriends.append(\"Sana\")\n",
+            "for {line}"
+        );
+    }
+    assert_eq!(ok("put 5 in score\n"), "score = 5\n");
+    assert_eq!(ok("put \"Mina\" in name\n"), "name = \"Mina\"\n");
+    // The same words in a sentence keep every word they have.
+    for sentence in [
+        "put the kettle on",
+        "put money in the bank",
+        "insert the key into the lock",
+        "place your order here",
+        "put your name in the box",
+    ] {
+        assert_eq!(
+            ok(&format!("{sentence}\n")),
+            format!("print(\"{sentence}\")\n"),
+            "{sentence} stopped being a sentence"
+        );
+    }
+}
+
+/// The record line whose key was written as two words used to be told that
+/// `put` is not an action word, and to write `add` — which would put the key
+/// in a list instead. The space is what is wrong, and that is now what it
+/// says.
+#[test]
+fn a_record_key_written_as_two_words_is_named() {
+    let source = "set marks to an empty record\nput wash up at 90 in marks\n";
+    assert_eq!(error_code(source), "E0230");
+    assert!(refusal_names(source).contains("washup"), "{}", refusal_names(source));
+}

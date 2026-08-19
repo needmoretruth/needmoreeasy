@@ -625,7 +625,7 @@ Every spelling accepted for each action, with nothing left out.
 | 블록 닫기 / End | `end` · `finish` · `done` | `끝` · `종료` · `마침` |
 | 모듈 쓰기 / Use | `use` · `load` · `get` · `import` | `사용` · `사용해` · `사용해줘` · `사용해주세요` · `불러와` · `불러와줘` · `가져와` · `가져와줘` · `받아` · `받아줘` |
 | 다른 파일에서 / Import from a file | `use` · `take` · `borrow` | `가져와` · `가져와줘` · `가져오기` · `불러와` · `불러오기` |
-| 목록에 넣기 / Append | `append` · `push` | `넣어` · `넣어줘` · `추가해` · `추가해줘` · `붙여` · `붙여줘` |
+| 목록에 넣기 / Append | `append` · `push` · `insert` · `put` · `place` | `넣어` · `넣어줘` · `추가해` · `추가해줘` · `붙여` · `붙여줘` |
 | 목록 표시 / List | `list` | `목록` · `리스트` |
 | 빈 목록 / Empty list | `empty` · `blank` | `빈` · `비어있는` · `새` |
 | 개수 / How many | `count` · `number` · `many` | `개수` · `갯수` |
