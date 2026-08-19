@@ -79,7 +79,7 @@ bracket and no equals sign, which `scripts/report-guide-tier.py` measures.
 31. [31 — Project — a mini bank](31-bank.md)
 32. [32 — Project — a grade book](32-grade-book.md)
 33. [33 — Project: a habit tracker](33-habit.md)
-34. [34 — Chart: a bar chart in the terminal](34-chart.md)
+34. [34 — Chart: seeing numbers as bars](34-chart.md)
 35. [35 — Todo: a growing project](35-todo.md)
 36. [36 — Diary: notes saved by date](36-diary.md)
 
@@ -233,7 +233,7 @@ and validated by hand.
 | 31 | ★★★★☆ | projects | [Project — a mini bank](31-bank.md) | a JSON-persisted bank account with deposit, withdraw, balance, history, and a storage module |
 | 32 | ★★★★☆ | projects | [Project — a grade book](32-grade-book.md) | a JSON-persisted grade book with add-student, add-grade, report-averages, and a storage module |
 | 33 | ★★★★☆ | projects | [Project: a habit tracker](33-habit.md) | a JSON-persisted habit tracker with add, check, streak, list, quit, and a module file for the storage logic |
-| 34 | ★★★★☆ | screen and time | [Chart: a bar chart in the terminal](34-chart.md) | drawing a horizontal bar chart with # blocks from a JSON list, scaled to the largest value |
+| 34 | ★★★☆☆ | screen and time | [Chart: seeing numbers as bars](34-chart.md) | drawing how much was read each day as bars, so the days compare at a glance |
 | 35 | ★★★★☆ | projects | [Todo: a growing project](35-todo.md) | a JSON-persisted todo list with add, done, list, and a module file for the storage logic |
 | 36 | ★★★★☆ | files | [Diary: notes saved by date](36-diary.md) | a diary that saves each day's note to a dated file and can read it back |
 | 37 | ★★★☆☆ | files | [Files: saving and reading again](37-files.md) | a program that writes text to a file and reads it back |

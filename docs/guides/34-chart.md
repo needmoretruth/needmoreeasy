@@ -1,137 +1,83 @@
-# 34 — Chart: a bar chart in the terminal
+# 34 — Chart: seeing numbers as bars
 
 English | [한국어](34-chart.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- Difficulty: ★★★★☆ (4/5)
-- Prerequisites: [20 — ASCII art](20-ascii-art.md), [24 — Quiz](24-quiz.md)
+- Difficulty: ★★★☆☆ (3/5)
+- Prerequisites: [21 — Progress](21-progress.md), [20 — ASCII art](20-ascii-art.md)
 - Topic: screen and time
-- Result: drawing a horizontal bar chart with # blocks from a JSON list, scaled to the largest value
+- Result: drawing how much was read each day as bars, so the days compare at a glance
 
-Guide [20](20-ascii-art.md) multiplied strings into rows, and guide
-[46](46-top-ten.md) sorts records by a score. A bar chart puts both
-together: read values from JSON, then turn each value into a row of `#`
-blocks whose length is scaled to the largest value. Numbers become a picture
-you can read at a glance.
+A column of numbers takes a while to read. The same numbers as bar lengths are
+understood immediately. It is the bar from [guide 21](21-progress.md) again,
+except each one is drawn to **its own number** rather than to the step count.
 
 ## Steps
 
-1. Create `chart.json` — a list of records, each with a `label` and a `value`:
+1. **Keep two lists side by side.** One holds the names, the other the
+   numbers, and the same places belong together:
 
    ```nme
-   [
-     {"label": "Jan", "value": 12},
-     {"label": "Feb", "value": 29},
-     {"label": "Mar", "value": 18},
-     {"label": "Apr", "value": 41},
-     {"label": "May", "value": 24},
-     {"label": "Jun", "value": 35}
-   ]
+   set days to list of Monday, Tuesday, Wednesday
+   set pages to list of 3, 7, 5
+   show the first of days
+   show the first of pages
    ```
 
-   The labels become row names; the values become bar lengths.
+   `Monday` and `3` — three pages read on Monday.
 
-2. Load the list with `json_load` from guide [39](39-json.md). Collecting the
-   values into their own list makes `max` easy to call:
+2. **Walk one list and take the same place out of the other.** `with place`
+   says where you are, and that place finds the partner:
 
    ```nme
-   use file latest
-   rows = json_load("chart.json")
-   values = []
-   for row in rows:
-       values.append(row["value"])
-   show max(values)
+   set days to list of Monday, Tuesday, Wednesday
+   set pages to list of 3, 7, 5
+   for each day in days with place
+       set read to item place of pages
+       show day
+       show read
+   end
    ```
 
-   It prints `41` — the largest value, which sets the scale.
-
-3. A bar is a fraction of the longest bar. `max_value` is the largest value;
-   `int(value / max_value * 20)` is that value's share of 20 blocks:
+3. **That number of blocks is the bar:**
 
    ```nme
-   value = 29
-   max_value = 41
-   length = int(value / max_value * 20)
-   show length
+   set block to *
+   set read to 7
+   set bar to block repeated read times
+   show bar
    ```
 
-   It prints `14`, because 29 is roughly 14/20 of 41.
+   Seven `*`.
 
-4. `"#" * length` builds the bar itself — the string multiplication from guide
-   [20](20-ascii-art.md):
+4. The whole thing, ending with the busiest day's number:
 
    ```nme
-   length = 14
-   show "#" * length
+   set days to list of Monday, Tuesday, Wednesday
+   set pages to list of 3, 7, 5
+   set block to *
+   for each day in days with place
+       set read to item place of pages
+       set bar to block repeated read times
+       show day
+       show bar
+   end
+   show the biggest of pages
    ```
 
-   It prints fourteen `#` blocks. Repeating a string is how a number becomes a
-   picture.
-
-5. The full program loads the data, finds the scale, and draws one labeled bar
-   per record. Save `chart.nme`:
-
-   ```nme
-   # chart.nme — a horizontal bar chart in the terminal.
-   # Run: nme r chart
-   # chart.json must be in the same folder.
-   # Each bar is # blocks scaled to the largest value.
-
-   use file latest
-
-   rows = json_load("chart.json")
-
-   values = []
-   for row in rows:
-       values.append(row["value"])
-
-   max_value = max(values)
-   show f"largest value: {max_value}"
-   show ""
-
-   for row in rows:
-       label = row["label"]
-       length = int(row["value"] / max_value * 20)
-       bar = "#" * length
-       show f"{label:>3}: {bar} {row['value']}"
-   ```
-
-   `{label:>3}` pads every label to three columns so all bars start at the
-   same place. `length` and `bar` are recalculated for every row.
-
-6. Run it with the data file present:
-
-   ```sh
-   nme r chart
-   ```
-
-   ```text
-   largest value: 41
-
-   Jan: ##### 12
-   Feb: ############## 29
-   Mar: ######## 18
-   Apr: #################### 41
-   May: ########### 24
-   Jun: ################# 35
-   ```
-
-   April, the largest value, fills all 20 blocks; January, the smallest,
-   fills 5. Every bar is a fraction of the same scale, so the chart is honest.
-
-7. Korean writes the same steps with `파일 사용 최신`, `json읽기`, `말해`, and
-   `막대`. The full Korean program is in the [Korean guide](34-chart.ko.md).
+   You can see Tuesday is the longest without reading a single number.
 
 ## Try it yourself
 
-Add `{"label": "Jul", "value": 47}` to `chart.json` and rerun — the scale
-moves to 47 and every other bar shrinks. Then change 20 to 40 in the length
-formula for a wider chart, or add a second `"@"` bar under each row.
+Add another day and another number — **to both lists**, or the places stop
+lining up and the program stops at the place with no partner. Keeping a name
+and its number together in one place is what [guide 41](41-address-book.md)
+is for.
 
 ## What you learned
 
-- A record's `value` becomes a bar length; `max(values)` sets the scale.
-- `int(value / max_value * 20)` turns a value into a count of blocks.
-- `"#" * length` repeats one character into a bar.
-- `{label:>3}` aligns labels so all bars start at the same column.
+- Two lists side by side pair a name with a number.
+- `with place` says where you are; `item <place> of <list>` takes the partner out.
+- `<block> repeated <n> times` turns that number into one bar.
+- Seen as lengths, the biggest is obvious without reading any number.
