@@ -1,0 +1,451 @@
+//! The other ways a beginner writes the same thing.
+//!
+//! The owner watched one use NME on 2026-08-19 and reported it in a sentence:
+//! *무언가 문법을 사용할 때 순서를 바꾸거나 앞에 두거나 다른 문장연결어를 쓰든
+//! 뭘 하든 제대로 작동해야 해. 지금 코드는 잘 받아주는 척하면서 정작 「왜 이게
+//! 작동 안 하지?」 싶은 게 너무 많아.*
+//!
+//! Every spelling added in answer to that is here, and beside each one the
+//! ordinary sentence it must not claim. The two halves are the whole point:
+//! a spelling that costs a sentence is not an improvement.
+
+use nme_core::transpile;
+
+fn ok(source: &str) -> String {
+    transpile(source)
+        .unwrap_or_else(|problems| panic!("expected successful transpile, got: {problems:?}"))
+}
+
+fn error_code(source: &str) -> String {
+    let problems = transpile(source).expect_err("expected this line to be rejected");
+    problems[0].code.code().to_string()
+}
+
+fn refusal_names(source: &str) -> String {
+    let problems = transpile(source).expect_err("expected this line to be rejected");
+    format!(
+        "{} {}",
+        problems[0].message,
+        problems[0].hint.clone().unwrap_or_default()
+    )
+}
+
+// ----------------------------------------------- Korean output, written last
+
+#[test]
+fn korean_output_words_that_only_close_a_line() {
+    assert_eq!(ok("안녕하세요 말하기\n"), "print(\"안녕하세요\")\n");
+    assert_eq!(ok("안녕하세요 알려줘\n"), "print(\"안녕하세요\")\n");
+    assert_eq!(ok("안녕하세요 알려주세요\n"), "print(\"안녕하세요\")\n");
+    assert_eq!(ok("안녕하세요 얘기해\n"), "print(\"안녕하세요\")\n");
+    assert_eq!(ok("안녕하세요 표시해\n"), "print(\"안녕하세요\")\n");
+    assert_eq!(ok("안녕하세요 출력하기\n"), "print(\"안녕하세요\")\n");
+    // The commonest command shape there is: an object particle and the verb.
+    assert_eq!(ok("결과를 알려줘\n"), "print(\"결과\")\n");
+    assert_eq!(ok("가격을 표시해\n"), "print(\"가격\")\n");
+}
+
+#[test]
+fn two_nouns_joined_by_a_particle_are_a_noun_phrase() {
+    // `와`, `보다`, `의` and their relatives tie the word they are on to the
+    // noun after it, so the noun is not the verb of the line.
+    assert_eq!(ok("듣기와 말하기\n"), "print(\"듣기와 말하기\")\n");
+    assert_eq!(ok("글쓰기보다 말하기\n"), "print(\"글쓰기보다 말하기\")\n");
+}
+
+#[test]
+fn a_korean_output_word_at_the_front_is_still_a_sentence() {
+    // Korean states its verb last. At the front `말하기` is the noun
+    // *speaking*, and the line is prose. (`보여주기 싫어요` is refused instead,
+    // and was before this round: `보여주기` opens the line, which is where
+    // `COMMAND_WORDS_LEADING` reads it.)
+    assert_eq!(ok("말하기 연습\n"), "print(\"말하기 연습\")\n");
+    assert_eq!(ok("말하기 대회에 나갔습니다\n"), "print(\"말하기 대회에 나갔습니다\")\n");
+}
+
+#[test]
+fn the_one_syllable_output_word() {
+    // One syllable is not much to go on, so the message has to be something a
+    // program would say: it ends the way spoken Korean ends, or it is a name
+    // the program already made.
+    assert_eq!(ok("안녕하세요 말\n"), "print(\"안녕하세요\")\n");
+    assert_eq!(ok("고맙습니다 말\n"), "print(\"고맙습니다\")\n");
+    assert_eq!(ok("점수는 5\n점수 말\n"), "점수 = 5\nprint(점수)\n");
+    assert_eq!(
+        ok("이름을 물어봐 이름이 뭐예요?\n안녕하세요 이름! 말\n"),
+        "이름 = input(\"이름이 뭐예요?\" + \" \")\nprint(\"안녕하세요 \" + str(이름) + \"!\")\n"
+    );
+    // A bare noun is not: `엄마 말`, `친구 말` and `농담 말` are noun phrases.
+    assert_eq!(ok("엄마 말\n"), "print(\"엄마 말\")\n");
+    assert_eq!(ok("친구 말\n"), "print(\"친구 말\")\n");
+    assert_eq!(ok("농담 말\n"), "print(\"농담 말\")\n");
+}
+
+#[test]
+fn a_noun_phrase_ending_in_the_word_word_is_still_a_sentence() {
+    // An adnominal ending (`ㄴ`/`ㄹ`) or a determiner in front of `말` makes
+    // it the noun *word*, which is the only thing standing there in Korean.
+    for sentence in [
+        "그건 좋은 말",
+        "무슨 말",
+        "그 말",
+        "내 말",
+        "따뜻한 말",
+        "요즘 말",
+        "당신 말",
+        "우리 말",
+        "예쁜 말",
+        "한마디 말",
+    ] {
+        let source = format!("{sentence}\n");
+        assert_eq!(
+            ok(&source),
+            format!("print(\"{sentence}\")\n"),
+            "{sentence} stopped being a sentence"
+        );
+    }
+}
+
+#[test]
+fn the_short_output_word_is_never_repaired() {
+    // `말` is one character from `물`, `발`, `날` and `살`, so only the word
+    // itself counts.
+    assert_eq!(ok("안녕하세요 물\n"), "print(\"안녕하세요 물\")\n");
+    assert_eq!(ok("안녕하세요 날\n"), "print(\"안녕하세요 날\")\n");
+}
+
+// ----------------------------------------------------- where a message goes
+
+#[test]
+fn the_screen_is_a_place_a_message_goes() {
+    assert_eq!(ok("put hello on the screen\n"), "print(\"hello\")\n");
+    assert_eq!(ok("write hello on the screen\n"), "print(\"hello\")\n");
+    assert_eq!(ok("show hello to the screen\n"), "print(\"hello\")\n");
+    assert_eq!(ok("안녕하세요 화면에 띄워\n"), "print(\"안녕하세요\")\n");
+    assert_eq!(ok("안녕하세요 화면에다 보여줘\n"), "print(\"안녕하세요\")\n");
+}
+
+#[test]
+fn a_line_without_a_screen_is_still_a_sentence() {
+    assert_eq!(ok("put the kettle on\n"), "print(\"put the kettle on\")\n");
+    assert_eq!(
+        ok("the screen was too bright\n"),
+        "print(\"the screen was too bright\")\n"
+    );
+    // The verb is what makes it a command; without one these are writing.
+    assert_eq!(
+        ok("words appeared on the screen\n"),
+        "print(\"words appeared on the screen\")\n"
+    );
+    assert_eq!(ok("휴대폰 화면에\n"), "print(\"휴대폰 화면에\")\n");
+}
+
+// ------------------------------------------- words that are not output words
+
+#[test]
+fn one_word_after_a_verb_that_is_not_an_action_is_named() {
+    for (source, word) in [
+        ("write hello\n", "write"),
+        ("echo hello\n", "echo"),
+        ("log hello\n", "log"),
+        ("read hello\n", "read"),
+        ("hello write\n", "write"),
+    ] {
+        assert_eq!(error_code(source), "E0603", "{source} was not refused");
+        assert!(
+            refusal_names(source).contains(word),
+            "{source} did not name `{word}`"
+        );
+    }
+}
+
+#[test]
+fn the_same_verbs_keep_a_whole_sentence() {
+    for sentence in [
+        "write your name on the envelope",
+        "write it down before you forget",
+        "read the instructions twice",
+        "echo of the mountain",
+        "log the miles you walked this week",
+        // A phrasal verb is two words and still not a command: `out`, `on`
+        // and `back` are words a sentence may never make into a name.
+        "log out",
+        "read on",
+        "echo back",
+    ] {
+        let source = format!("{sentence}\n");
+        assert_eq!(
+            ok(&source),
+            format!("print(\"{sentence}\")\n"),
+            "{sentence} stopped being a sentence"
+        );
+    }
+}
+
+// ------------------------------------------------------------ saving a value
+
+#[test]
+fn korean_saves_with_its_everyday_verb() {
+    assert_eq!(ok("이름을 5로 해\n"), "이름 = 5\n");
+    assert_eq!(ok("이름을 5라고 하자\n"), "이름 = 5\n");
+    assert_eq!(ok("점수를 0으로 하자\n"), "점수 = 0\n");
+    assert_eq!(ok("인사를 안녕하세요라고 하자\n"), "인사 = \"안녕하세요\"\n");
+}
+
+#[test]
+fn the_everyday_verb_needs_the_mark_that_says_what_it_becomes() {
+    // `해` attaches to any noun in the language. Without `로`/`라고` there is
+    // no assignment here, only somebody asking for the rice to be nice.
+    assert_eq!(ok("밥을 맛있게 해\n"), "print(\"밥을 맛있게 해\")\n");
+    assert_eq!(ok("숙제를 해\n"), "print(\"숙제를 해\")\n");
+    assert_eq!(ok("조용히 해\n"), "print(\"조용히 해\")\n");
+}
+
+#[test]
+fn english_saves_with_its_everyday_verb() {
+    assert_eq!(ok("name becomes 5\n"), "name = 5\n");
+    assert_eq!(ok("score become 0\n"), "score = 0\n");
+    assert_eq!(ok("set best to 9\nscore becomes best\n"), "best = 9\nscore = best\n");
+    assert_eq!(ok("call it name 5\n"), "name = 5\n");
+    assert_eq!(ok("call it greeting Hello world\n"), "greeting = \"Hello world\"\n");
+}
+
+#[test]
+fn a_word_a_sentence_may_not_name_keeps_the_sentence() {
+    assert_eq!(ok("Call it a day.\n"), "print(\"Call it a day.\")\n");
+    assert_eq!(
+        ok("Call it what you like.\n"),
+        "print(\"Call it what you like.\")\n"
+    );
+    assert_eq!(
+        ok("call your grandmother on Sunday\n"),
+        "print(\"call your grandmother on Sunday\")\n"
+    );
+    // `becomes` takes a number, a literal or a name the program made, so the
+    // sentences that use it about the world keep their words.
+    assert_eq!(
+        ok("Water becomes ice at zero degrees.\n"),
+        "print(\"Water becomes ice at zero degrees.\")\n"
+    );
+    assert_eq!(ok("Winter becomes spring.\n"), "print(\"Winter becomes spring.\")\n");
+}
+
+// ------------------------------------------------------------------- asking
+
+#[test]
+fn a_verb_that_only_asks_on_a_line_that_asks() {
+    assert_eq!(
+        ok("read name what is your name?\n"),
+        "name = input(\"what is your name?\" + \" \")\n"
+    );
+    assert_eq!(
+        ok("get name what is your name?\n"),
+        "name = input(\"what is your name?\" + \" \")\n"
+    );
+    assert_eq!(
+        ok("이름을 받아 이름이 뭐예요?\n"),
+        "이름 = input(\"이름이 뭐예요?\" + \" \")\n"
+    );
+    assert_eq!(
+        ok("이름을 여쭤봐 이름이 뭐예요?\n"),
+        "이름 = input(\"이름이 뭐예요?\" + \" \")\n"
+    );
+}
+
+#[test]
+fn the_same_verbs_without_a_question_stay_sentences() {
+    assert_eq!(
+        ok("read the label on the bottle\n"),
+        "print(\"read the label on the bottle\")\n"
+    );
+    assert_eq!(
+        ok("Read to your children every night.\n"),
+        "print(\"Read to your children every night.\")\n"
+    );
+}
+
+#[test]
+fn the_short_asking_word() {
+    assert_eq!(
+        ok("이름 물어 이름이 뭐예요?\n"),
+        "이름 = input(\"이름이 뭐예요?\" + \" \")\n"
+    );
+    // Two syllables is one edit from half the language, so it is never
+    // repaired: both of these are sentences.
+    assert_eq!(
+        ok("물을 가져와 마셨습니다\n"),
+        "print(\"물을 가져와 마셨습니다\")\n"
+    );
+    assert_eq!(ok("됐어 그만해\n"), "print(\"됐어 그만해\")\n");
+    // A helper verb straight after it makes a compound verb, not a question.
+    assert_eq!(
+        ok("길을 물어 보았습니다\n"),
+        "print(\"길을 물어 보았습니다\")\n"
+    );
+}
+
+// --------------------------------------------------------- adding to a list
+
+#[test]
+fn the_list_may_be_written_first() {
+    assert_eq!(
+        ok("set friends to an empty list\nfriends append Mina\n"),
+        "friends = []\nfriends.append(\"Mina\")\n"
+    );
+    assert_eq!(
+        ok("친구들은 빈 목록\n친구들 민수 넣어\n"),
+        "친구들 = []\n친구들.append(\"민수\")\n"
+    );
+}
+
+#[test]
+fn a_name_the_program_never_made_a_list_is_not_one() {
+    // Without the particle the list has to be a name the program already
+    // made one, so this is somebody cooking.
+    assert_eq!(ok("그릇 설탕 넣어\n"), "print(\"그릇 설탕 넣어\")\n");
+}
+
+// ------------------------------------------------------------------ repeating
+
+#[test]
+fn a_repeat_word_with_a_count_beside_it() {
+    assert_eq!(
+        ok("loop 3 times\n    show hi\nend\n"),
+        "for _ in range(3):\n    print(\"hi\")\n# end\n"
+    );
+    assert_eq!(
+        ok("3번 돌려\n    안녕 말해줘\n끝\n"),
+        "for _ in range(3):\n    print(\"안녕\")\n# end\n"
+    );
+    assert_eq!(
+        ok("3번 되풀이해\n    안녕 말해줘\n끝\n"),
+        "for _ in range(3):\n    print(\"안녕\")\n# end\n"
+    );
+    assert_eq!(
+        ok("3번 되풀이해서 안녕 말해줘\n"),
+        "for _ in range(3): print(\"안녕\")\n"
+    );
+}
+
+#[test]
+fn a_repeat_word_without_a_count_is_an_ordinary_verb() {
+    assert_eq!(
+        ok("loop the ribbon around twice\n"),
+        "print(\"loop the ribbon around twice\")\n"
+    );
+    assert_eq!(
+        ok("같은 하루를 최대 10회 되풀이할 수 있어요 말해줘\n"),
+        "print(\"같은 하루를 최대 10회 되풀이할 수 있어요\")\n"
+    );
+}
+
+// ----------------------------------------------------------------- comparing
+
+#[test]
+fn more_and_fewer_compare_the_way_greater_and_less_do() {
+    assert_eq!(
+        ok("set n to 5\nif n is more than 3\n    show hi\nend\n"),
+        "n = 5\nif (n > 3):\n    print(\"hi\")\n# end\n"
+    );
+    assert_eq!(
+        ok("set n to 5\nif n is fewer than 3\n    show hi\nend\n"),
+        "n = 5\nif (n < 3):\n    print(\"hi\")\n# end\n"
+    );
+    assert_eq!(
+        ok("수는 5\n수가 3보다 많으면\n    안녕 말해줘\n끝\n"),
+        "수 = 5\nif (수 > 3):\n    print(\"안녕\")\n# end\n"
+    );
+    assert_eq!(
+        ok("수는 5\n수가 3보다 적으면\n    안녕 말해줘\n끝\n"),
+        "수 = 5\nif (수 < 3):\n    print(\"안녕\")\n# end\n"
+    );
+}
+
+// ------------------------------------ four defects found writing a real game
+//
+// A 234-line sentence-syntax program (a turn-based role-playing game) was
+// written with this compiler on 2026-08-19, and each of these is something it
+// hit. Every one of them compiled into a program that ran and did something
+// else, which is the failure this file exists to end.
+
+#[test]
+fn an_input_line_is_not_read_as_a_condition() {
+    // `사려면` inside the question ends in `-면`, which is also how a Korean
+    // condition connects. The line names what it is asking for and then asks,
+    // so the question wins — and the name loses its object particle, because
+    // `상점선택을` is not a name any program ever made.
+    assert_eq!(
+        ok("상점선택을 물어봐 살까요? 사려면 사다 라고 적어 주세요.\n"),
+        "상점선택 = input(\"살까요? 사려면 사다 라고 적어 주세요.\" + \" \")\n"
+    );
+}
+
+#[test]
+fn a_random_range_may_end_at_a_name() {
+    assert_eq!(
+        ok("적공격은 4\n받은피해는 1부터 적공격까지 랜덤정수\n"),
+        "적공격 = 4\n받은피해 = __import__(\"random\").randint(1, 적공격)\n"
+    );
+    assert_eq!(
+        ok("적공격은 4\n받은피해는 1 부터 적공격 까지 랜덤정수\n"),
+        "적공격 = 4\n받은피해 = __import__(\"random\").randint(1, 적공격)\n"
+    );
+    assert_eq!(
+        ok("set attack to 4\nset damage to random number from 1 to attack\n"),
+        "attack = 4\ndamage = __import__(\"random\").randint(1, attack)\n"
+    );
+    // The literal bounds that always worked still do.
+    assert_eq!(
+        ok("받은피해는 1부터 6까지 랜덤정수\n"),
+        "받은피해 = __import__(\"random\").randint(1, 6)\n"
+    );
+    assert_eq!(
+        ok("set damage to random number from 1 to 6\n"),
+        "damage = __import__(\"random\").randint(1, 6)\n"
+    );
+}
+
+#[test]
+fn else_may_follow_a_one_line_if() {
+    assert_eq!(
+        ok("체력은 5\n만약에 체력이 0보다 크면 살아있음 말해줘\n아니면 쓰러졌습니다 말해줘\n"),
+        "체력 = 5\nif (체력 > 0): print(\"살아있음\")\nelse: print(\"쓰러졌습니다\")\n"
+    );
+    assert_eq!(
+        ok("set hp to 5\nif hp is greater than 0 then show alive\notherwise show down\n"),
+        "hp = 5\nif (hp > 0): print(\"alive\")\nelse: print(\"down\")\n"
+    );
+    assert_eq!(
+        ok("체력은 5\n만약에 체력이 10보다 크면 좋음 말해줘\n아니면 만약에 체력이 0보다 크면 보통 말해줘\n아니면 쓰러졌습니다 말해줘\n"),
+        "체력 = 5\nif (체력 > 10): print(\"좋음\")\nelif (체력 > 0): print(\"보통\")\nelse: print(\"쓰러졌습니다\")\n"
+    );
+}
+
+#[test]
+fn a_second_else_after_a_one_line_if_is_refused() {
+    assert_eq!(
+        error_code("체력은 5\n만약에 체력이 0보다 크면 A 말해줘\n아니면 B 말해줘\n아니면 C 말해줘\n"),
+        "E0104"
+    );
+}
+
+#[test]
+fn an_else_still_needs_an_if_in_front_of_it() {
+    assert_eq!(error_code("아니면 쓰러졌습니다 말해줘\n"), "E0103");
+    assert_eq!(
+        error_code("안녕 말해줘\n아니면 쓰러졌습니다 말해줘\n"),
+        "E0103"
+    );
+}
+
+#[test]
+fn the_manqeum_particle_interpolates_a_name() {
+    assert_eq!(
+        ok("준피해는 3\n준피해만큼 베었습니다 말해줘\n"),
+        "준피해 = 3\nprint(str(준피해) + \"만큼 베었습니다\")\n"
+    );
+    assert_eq!(
+        ok("준피해는 3\n준피해밖에 없습니다 말해줘\n"),
+        "준피해 = 3\nprint(str(준피해) + \"밖에 없습니다\")\n"
+    );
+}

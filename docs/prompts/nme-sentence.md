@@ -332,6 +332,15 @@ on one line. This document describes version `0.0.1-beta.160`.
 | 조건 반복 / While | `while` | `동안` · `하는동안` · `할동안` |
 | 다른 갈래 / Else | `else` · `otherwise` | `아니면` · `그렇지않으면` · `아니면만약` · `아니면만약에` · `그렇지않으면만약` · `그렇지않으면만약에` |
 | 반복 중단 / Break | `break` · `breakhere` | `멈춰` · `멈춰줘` · `멈춰라` · `멈추기` · `그만해` · `정지해` · `종료해` · `중단` · `반복멈춰` · `여기서멈춰` |
+| 말끝 출력 / Output written last | — | `말하기` · `말해라` · `알려줘` · `알려주세요` · `알려줘요` · `얘기해` · `얘기해줘` · `얘기해주세요` · `표시해` · `표시해줘` · `출력하기` · `보여주기` · `프린트해` |
+| 한 글자 출력 / Short output word | — | `말` |
+| 화면에 / On the screen | `screen` | `화면에` · `화면에다` · `화면에다가` · `스크린에` |
+| 화면 동사 / Screen verb | `put` · `write` · `print` · `show` · `display` · `say` · `tell` · `output` · `draw` | `띄워` · `띄워줘` · `보여줘` · `출력해` · `말해` · `말해줘` · `표시해` |
+| 물음표가 있을 때만 묻기 / Ask, only with a question mark | `read` · `get` | `받아` · `받아줘` · `여쭤봐` · `여쭤봐줘` · `여쭈어봐` |
+| 짧은 물어보기 / Short asking word | — | `물어` |
+| ~로 해 / Save with the everyday verb | `becomes` · `become` · `call` | `해` · `하자` · `합시다` · `하죠` · `부르자` |
+| ~로 / ~라고 표시 / What the name becomes | — | `으로` · `로` · `이라고` · `라고` |
+| 횟수가 있을 때만 반복 / Repeat, only with a count | `loop` · `iterate` · `cycle` | `돌려` · `돌려줘` · `돌려주세요` · `되풀이` · `되풀이해` · `되풀이해줘` · `되풀이해서` · `되풀이하기` |
 | 건너뛰기 / Skip | `skip` · `skipthis` · `skipit` · `nextone` | `건너뛰어` · `건너뛰어줘` · `건너뛰기` · `건너뛰자` · `넘어가` · `넘어가줘` · `계속해` · `넘겨` · `다음` |
 | 블록 닫기 / End | `end` · `finish` · `done` | `끝` · `종료` · `마침` |
 | 모듈 쓰기 / Use | `use` · `load` · `get` · `import` | `사용` · `사용해` · `사용해줘` · `사용해주세요` · `불러와` · `불러와줘` · `가져와` · `가져와줘` · `받아` · `받아줘` |
@@ -389,7 +398,7 @@ on one line. This document describes version `0.0.1-beta.160`.
 | 값 바꾸기 연결어 / Value-change connector | `to` · `by` · `from` · `of` · `into` · `onto` | — |
 | 목록 연결어 / List connector | `to` · `into` · `onto` | `에다가` · `에다` · `에` · `한테` · `에게` |
 | 저장 대상 조사 / Saved-name particle | — | `을` · `를` · `이` · `가` · `에` |
-| 문장 어미 / Sentence ending | — | `입니다` · `이에요` · `예요` · `이다` · `으로` · `로` |
+| 문장 어미 / Sentence ending | — | `입니다` · `이에요` · `예요` · `이다` · `으로` · `로` · `라고` · `이라고` |
 | 최신판 / Latest | `latest` · `newest` | `최신` · `최신판` · `최신버전` |
 | 파일 읽기 / File read | `read` | `읽어서` · `읽고` · `읽어` |
 | 파일 쓰기 / File write | `write` | `저장해` · `저장해줘` · `써줘` · `적어` |

@@ -145,6 +145,10 @@ WORD_LIST_EXCEPTIONS = {
     "READING_LEAD_WORDS_EN": "`how many friends`; Korean puts the counting word after the name (COUNT_WORDS_KO)",
     "CHOICE_SCOPE_WORDS_KO": "`빨강 또는 초록 중에서 골라`; English writes the scope as `from` inside `pick from red or green`",
     "NOT_A_NAME_EN": "words a sentence may never turn into a name; Korean marks its target with a particle instead",
+    "SAY_TRAILING_WORDS_KO": "output words Korean may only write last; English takes any output word in either place (`show hello` and `hello show`)",
+    "SAY_SHORT_WORDS_KO": "`말`, one syllable; the English output words are one short word already (`say`)",
+    "ASK_SHORT_WORDS_KO": "`물어`, two syllables; the English asking word is one short word already (`ask`)",
+    "SET_MAKE_ENDINGS_KO": "particles saying what the name becomes; English writes the word itself (SET_MAKE_WORDS_EN)",
     "SPLIT_THING_WORDS_KO": "the noun that closes `… 나눈 것`; English says `memo split by comma` and needs none",
     "RECORD_AT_WORDS_EN": "`put Mina at 90 in ages`; Korean marks the value with a particle (RECORD_VALUE_PARTICLES_KO)",
     "RECORD_IN_WORDS_EN": "`put Mina at 90 in ages`; Korean marks the record with a particle (APPEND_TARGET_PARTICLES_KO)",
@@ -1243,6 +1247,8 @@ DIAGNOSTIC_PARITY = [
     ("E0234", "a record line needs a name that was made a record",
      "set pals to an empty list\nput Mina at 90 in pals",
      "pals는 빈 목록\npals에 Mina를 90으로 넣어"),
+    ("E0603", "one word after a verb that is not an action word is named, not printed",
+     "write hello", "출력하기 안녕"),
 ]
 
 

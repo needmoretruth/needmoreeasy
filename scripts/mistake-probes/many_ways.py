@@ -41,8 +41,13 @@ BINARY = next(
 
 # Recorded on 2026-08-19 against the 103-variant corpus. Raise these when the
 # compiler gets better; never lower them to make a run pass.
-FLOOR_WORKS = 68
-CEILING_SILENT = 11
+#
+# 68 · 11 was the first reading, on the morning of that day. The round that
+# followed it drove the silent count to zero, which was the whole point: a
+# writer who used a command word now either gets what they meant or is told
+# what to write instead.
+FLOOR_WORKS = 86
+CEILING_SILENT = 0
 
 
 def build(source: str) -> tuple[str, str]:

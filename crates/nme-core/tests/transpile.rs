@@ -1290,7 +1290,17 @@ fn a_python_from_import_stays_byte_identical() {
 
 #[test]
 fn prose_with_read_or_write_words_stays_sentence_output() {
-    assert_eq!(ok("write hello\n"), "print(\"write hello\")\n");
+    // `write hello` used to print itself, and that assertion used to live
+    // here. The owner named exactly that on 2026-08-19 — *잘 받아주는 척하면서
+    // 정작 「왜 이게 작동 안 하지?」* — so one word after `write` is now
+    // refused and told to write `show`. Everything longer is still prose.
+    assert_eq!(
+        transpile("write hello\n").expect_err("one word after `write` is refused")[0]
+            .code
+            .code(),
+        "E0603"
+    );
+    assert_eq!(ok("write it down before you forget\n"), "print(\"write it down before you forget\")\n");
     assert_eq!(ok("read the book\n"), "print(\"read the book\")\n");
     assert_eq!(
         ok("오늘 책을 읽고 싶어\n"),

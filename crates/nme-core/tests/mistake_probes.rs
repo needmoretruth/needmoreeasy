@@ -327,13 +327,11 @@ fn a_word_that_is_not_an_action_is_named() {
             line: 2,
             names: "put",
         },
-        Refusal {
-            probe: "j-ko-04",
-            source: "3번 되풀이해서 안녕 말해줘\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "말해줘",
-        },
+        // `j-ko-04` (`3번 되풀이해서 안녕 말해줘`) used to be refused because
+        // `되풀이해서` was not a repeat word. It is one now, and both
+        // `probes2.py` and `probes.py` have always recorded the line as
+        // meaning `range(3): print("안녕")`, so the two cases for it moved to
+        // `many_ways.rs` as an accepted spelling.
         Refusal {
             probe: "k-ko-13",
             source: "말합니다 안녕\n",
@@ -558,13 +556,8 @@ fn a_word_that_is_not_an_action_is_named() {
             line: 1,
             names: "보여주기",
         },
-        Refusal {
-            probe: "y-ko-13",
-            source: "3번 되풀이해서 안녕 말해줘\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "말해줘",
-        },
+        // `y-ko-13` is the same line as `j-ko-04` above, and left for the
+        // same reason: `probes.py` records it as a working loop.
         Refusal {
             probe: "y-ko-14",
             source: "3번 돌려서 안녕 말해줘\n",
@@ -600,13 +593,10 @@ fn a_word_that_is_not_an_action_is_named() {
             line: 1,
             names: "슬립",
         },
-        Refusal {
-            probe: "y-ko-22",
-            source: "이름을 여쭤봐 이름이 뭐예요?\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "여쭤봐",
-        },
+        // `y-ko-22` (`이름을 여쭤봐 이름이 뭐예요?`) is accepted now: `여쭤봐` is
+        // the polite word for asking, the line ends in a question mark, and
+        // `probes.py` has always recorded it as `이름 = input(...)`. It moved
+        // to `many_ways.rs`.
         Refusal {
             probe: "y-ko-25",
             source: "친구들은 목록 민수\n친구들에 민수 집어넣어\n",

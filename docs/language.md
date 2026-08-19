@@ -100,6 +100,56 @@ Accepted output actions include `show`, `display`, `tell`, `say`, `보여줘`,
 spellings `say expression` and `말해 표현식` continue to treat a valid Python
 expression as code.
 
+Korean states its verb last, and several more words mean *show it* when they
+stand there. They are read **only** at the end of a line, because at the front
+they are nouns: `말하기 연습` is speaking practice and prints itself.
+
+```nme
+안녕하세요 말하기
+안녕하세요 알려줘
+안녕하세요 얘기해
+안녕하세요 표시해
+안녕하세요 띄워
+```
+
+The shortest of them is one syllable. `말` is also the ordinary noun *word*,
+so it is read as the verb only when nothing in front of it is making it a
+noun — an adnominal ending in `ㄴ`/`ㄹ`, or a determiner. `그건 좋은 말`,
+`무슨 말` and `내 말` keep every word they have:
+
+```nme
+안녕하세요 말
+그건 좋은 말
+무슨 말
+```
+
+A message may also say where it goes. English writes `on the screen` after it
+and Korean writes `화면에`:
+
+```nme
+put hello on the screen
+hello on the screen
+안녕하세요 화면에
+안녕하세요 화면에 띄워
+```
+
+Some words a beginner reaches for are **not** output words, and NME says so
+rather than printing them back. `write` already means the file statement
+(`write text to "notes.txt"`), so guessing between the two would be worse than
+asking:
+
+<!-- nme-check: skip — every line here is refused on purpose. -->
+```
+output hello       → I don't know what `output` does; did you mean `show`?
+write hello        → I don't know what `write` does; did you mean `show`?
+echo hello         → I don't know what `echo` does; did you mean `show`?
+read hello         → I don't know what `read` does; did you mean `ask`?
+```
+
+Only one word of message is claimed that way, so the ordinary sentences keep
+working: `write it down before you forget`, `read the instructions twice` and
+`echo of the mountain` all print themselves.
+
 ### Ask for text or a number
 
 ```nme
@@ -118,7 +168,20 @@ to `int(input(...))`.
 
 Accepted actions include `ask`, `prompt`, `물어봐`, `물어봐줘`, `질문해`, and
 `입력받아`. Korean target particles `을` and `를` are removed from the variable
-name.
+name. The short form `물어` also works; it is read exactly, never as a repaired
+misspelling, because two syllables is one edit away from half the language.
+
+`read`, `get`, `받아` and `여쭤봐` are asking words too, but only on a line that
+really asks — one ending in a question mark, or in a Korean question ending.
+Without one, `read the label on the bottle` and `get well soon` are sentences:
+
+```nme
+read name what is your name?
+get name what is your name?
+이름을 받아 이름이 뭐예요?
+이름을 여쭤봐 이름이 뭐예요?
+이름 물어 이름이 뭐예요?
+```
 
 ### Save a value
 
@@ -137,6 +200,23 @@ These become normal assignments. Target-first speech such as `name save Mina`
 or `이름 저장 민수` is also supported. Numbers and clear expressions remain code;
 plain words become text. A saved name is available for later sentence
 interpolation and conditions.
+
+The everyday verb saves a value too. Korean closes the sentence with `해`,
+`하자` or `합시다`, and the value has to carry `로`/`으로` or `라고`/`이라고`
+saying what the name becomes — without that mark `밥을 맛있게 해` is somebody
+asking for the rice to be nice, and stays a sentence. English writes `becomes`
+after the name, or opens with `call it`:
+
+```nme
+이름을 5로 해
+점수를 0으로 하자
+인사를 안녕하세요라고 하자
+name becomes 5
+call it name 5
+```
+
+A word a sentence may never turn into a name stops the reading, so
+`Call it a day.` and `Call it what you like.` still print themselves.
 
 Small value changes can also be written without `+`, `-`, or `=`. Use
 `score add 1`, `add 1 to score`, or `score increase by 1`; subtraction uses
@@ -208,9 +288,20 @@ if friends is empty
 만약에 친구들이 비었으면
 ```
 
+The list may also come first, which is the order Korean uses and the one a
+beginner reaches for after reading `friends.append("Mina")`. Korean may leave
+the `에` off, the way speech does:
+
+<!-- nme-check: skip — a side-by-side vocabulary listing, not a program. -->
+```nme
+friends append Mina
+친구들 민수 넣어
+```
+
 Every one of them needs a name the program **already made a list**. That is
-the whole reason `sort out your things`, `the first of many` and
-`친구들 이야기를 들었습니다` stay ordinary sentences and print themselves. Using
+the whole reason `sort out your things`, `the first of many`,
+`그릇 설탕 넣어` and `친구들 이야기를 들었습니다` stay ordinary sentences and
+print themselves. Using
 one on a name that is not a list is refused with `E0231`, so a mistake is a
 message and not a program that means something else.
 
@@ -352,6 +443,19 @@ When the count comes first, the plain words after it are repeated output. This
 is the easiest form; add `show`/`말해줘` when you want the meaning to be
 visibly explicit.
 
+`loop`, `iterate` and `cycle`, and Korean `돌려` and `되풀이해`, are repeat words
+too, but only with the count standing beside them — English after the word,
+Korean before it. Without the count they are ordinary verbs, so
+`loop the ribbon around twice` and `돈을 돌려 주세요` keep every word they have:
+
+<!-- nme-check: skip — a side-by-side vocabulary listing, not a program. -->
+```nme
+loop 3 times
+3번 돌려
+3번 되풀이해
+3번 되풀이해서 안녕 말해줘
+```
+
 Several lines use indentation but no colon:
 
 ```nme
@@ -463,6 +567,31 @@ Inline sentences use `then` or a Korean connecting ending:
 ```nme
 if score is greater than 10 then show You won
 만약에 점수가 10보다 크면 성공 말해줘
+```
+
+An `else` may follow a one-line `if` written directly above it, at the same
+indent. That is the shortest thing a beginner can write that says what they
+mean, and the Python it becomes is ordinary:
+
+```nme
+set hp to 5
+if hp is greater than 0 then show alive
+otherwise show down
+
+체력은 5
+만약에 체력이 0보다 크면 살아있음 말해줘
+아니면 만약에 체력이 0과 같으면 아슬아슬 말해줘
+아니면 쓰러졌습니다 말해줘
+```
+
+`more than` and `fewer than` compare the way `greater than` and `less than` do,
+and Korean adds `많으면`/`넘으면` and `적으면` to `크면` and `작으면`:
+
+```nme
+if score is more than 10 then show You won
+if score is fewer than 10 then show Not yet
+만약에 점수가 10보다 많으면 성공 말해줘
+만약에 점수가 10보다 적으면 아직 말해줘
 ```
 
 You may also start with the subject when that reads more naturally:
