@@ -114,7 +114,7 @@ your own computer.
 For someone handling longer lists and longer text: sorting, sets, grids and
 search order.
 
-51. [51 — Strings: slicing and changing text](51-strings.md)
+51. [51 — Text: counting, splitting, joining again](51-strings.md)
 52. [52 — Sorting — putting a list in order](52-sorting.md)
 53. [53 — Sets: unique values](53-sets.md)
 54. [54 — Merge: joining two lists](54-merge.md)
@@ -250,7 +250,7 @@ and validated by hand.
 | 48 | ★★★★★ | files | [Files: processing many files](48-files-folder.md) | listing the files in a folder with os.listdir, reading each with file_read, and reporting total words and letters across all of them |
 | 49 | ★★★★★ | projects | [Report — writing a summary file](49-report.md) | reading a few JSON data files and writing one text report with file_write |
 | 50 | ★★★★★ | projects | [Editor — a tiny text editor](50-editor.md) | a line-based editor with a buffer and add, list, remove, save, and quit commands |
-| 51 | ★★★★☆ | lists and text | [Strings: slicing and changing text](51-strings.md) | slicing `text[start:end]`, `.upper()/.lower()`, `.replace()`, and `.strip()` on a sentence |
+| 51 | ★★★☆☆ | lists and text | [Text: counting, splitting, joining again](51-strings.md) | counting the letters in a sentence, splitting it into words, and joining it back into one line |
 | 52 | ★★★☆☆ | lists and text | [Sorting — putting a list in order](52-sorting.md) | standing a list up in both directions, smallest first and biggest first |
 | 53 | ★★★★★ | lists and text | [Sets: unique values](53-sets.md) | using a Python set to find unique words in a text file, then unique letters in a sentence |
 | 54 | ★★★★★ | working with data | [Merge: joining two lists](54-merge.md) | loading two JSON lists and joining records by name key into one report |
