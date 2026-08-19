@@ -6,7 +6,7 @@ English | [한국어](10-while.ko.md)
 
 - Difficulty: ★★☆☆☆ (2/5)
 - Prerequisites: [09 — And / Or](09-and-or.md)
-- Topic: loops and conditions
+- Topic: choosing and repeating
 - Result: a block that loops while a condition is true
 
 `repeat` runs a fixed number of times. `while` keeps running as long as a

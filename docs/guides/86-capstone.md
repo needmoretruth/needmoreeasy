@@ -6,7 +6,7 @@ English | [한국어](86-capstone.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [82 — Bytecode](82-bytecode.md), [85 — Self-host](85-selfhost.md)
-- Topic: compiler capstone
+- Topic: building a language
 - Result: an NME program that reads a small custom language (say/set/add/while/end), compiles it to Python source, writes it to a file, and runs it
 
 Guide [85](85-selfhost.md) compiled NME words into Python and ran them in

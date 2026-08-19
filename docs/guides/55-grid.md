@@ -6,7 +6,7 @@ English | [한국어](55-grid.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [51 — Strings](51-strings.md), [38 — Name list](38-name-list.md)
-- Topic: nested data
+- Topic: lists and text
 - Result: a tic-tac-toe style 3x3 board stored as a list of lists, reading and writing cells with `board[row][col]`
 
 A list can hold lists. The outer list is the board, each inner list is one

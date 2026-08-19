@@ -6,7 +6,7 @@ English | [한국어](70-patterns.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [59 — Errors](59-errors.md), [51 — Strings](51-strings.md)
-- Topic: regular expressions
+- Topic: the internet
 - Result: a program that finds phone numbers and email addresses in a text file
 
 "Find all phone numbers" needs a pattern, not a fixed word. The standard

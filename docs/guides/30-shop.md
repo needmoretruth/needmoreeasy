@@ -6,7 +6,7 @@ English | [한국어](30-shop.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [24 — Quiz](24-quiz.md), [22 — Terminal menu](22-terminal-menu.md)
-- Topic: a project
+- Topic: projects
 - Result: a JSON-persisted store with buy/sell/stock/list and a money balance
 
 Guide [35](35-todo.md) saves a list and guide [41](41-address-book.md) saves

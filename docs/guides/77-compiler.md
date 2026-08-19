@@ -6,7 +6,7 @@ English | [한국어](77-compiler.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [18 — Adventure](18-adventure.md), [61 — Modules](61-modules.md)
-- Topic: compiler
+- Topic: building a language
 - Result: a tiny language that reads lines like `add 2 3` and prints the answer
 
 A compiler reads text and decides what it means. You already wrote the hardest

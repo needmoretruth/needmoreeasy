@@ -6,7 +6,7 @@ English | [한국어](21-progress.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [07 — Repeat](07-repeat.md), [20 — ASCII art](20-ascii-art.md)
-- Topic: terminal output
+- Topic: screen and time
 - Result: a terminal progress bar that fills a row as a loop runs
 
 Long tasks deserve feedback. A progress bar is a row of `#` that grows while a

@@ -6,7 +6,7 @@ English | [한국어](58-data.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [39 — JSON](39-json.md), [52 — Sorting](52-sorting.md)
-- Topic: data
+- Topic: working with data
 - Result: loading numbers from a JSON file and computing mean/median/max with the statistics standard library
 
 A saved JSON list is ready-made data for a program. This guide loads a list of

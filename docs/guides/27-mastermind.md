@@ -6,7 +6,7 @@ English | [한국어](27-mastermind.ko.md)
 
 - Difficulty: ★★★☆☆ (3/5)
 - Prerequisites: [23 — High score](23-high-score.md)
-- Topic: a game
+- Topic: games
 - Result: guessing the three colours the computer hid, in five tries
 
 The computer hides three colours and you name three. It tells you **only how

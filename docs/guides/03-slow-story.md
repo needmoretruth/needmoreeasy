@@ -6,7 +6,7 @@ English | [한국어](03-slow-story.ko.md)
 
 - Difficulty: ★☆☆☆☆ (1/5)
 - Prerequisites: [02 — Story](02-story.md)
-- Topic: stories and slow output
+- Topic: first steps
 - Result: a program whose text appears one letter at a time, the way a novel unfolds
 
 `show` puts a whole line on screen at once. When you are telling a story, letters

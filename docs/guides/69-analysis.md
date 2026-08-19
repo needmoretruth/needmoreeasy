@@ -6,7 +6,7 @@ English | [한국어](69-analysis.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [67 — Stats](67-stats.md), [40 — CSV](40-csv.md)
-- Topic: data analysis
+- Topic: working with data
 - Result: loading a month of temperatures, computing statistics and a histogram, and saving a report file
 
 Averages are a start, not the whole story. This guide analyzes a real-ish

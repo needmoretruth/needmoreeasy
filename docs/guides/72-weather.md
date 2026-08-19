@@ -6,7 +6,7 @@ English | [한국어](72-weather.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [71 — HTTP](71-http.md), [58 — Data](58-data.md)
-- Topic: web data
+- Topic: the internet
 - Result: fetching a local HTTP server's JSON and printing a mini weather report
 
 Guide [71](71-http.md) fetched a text file over HTTP; [58](58-data.md) loaded JSON

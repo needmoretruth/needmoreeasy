@@ -6,7 +6,7 @@ English | [한국어](09-and-or.ko.md)
 
 - Difficulty: ★★☆☆☆ (2/5)
 - Prerequisites: [08 — If](08-if.md)
-- Topic: conditions
+- Topic: choosing and repeating
 - Result: a program that judges combined conditions
 
 Real conditions are often two questions. `and` needs both to be true; `or`

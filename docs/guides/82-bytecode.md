@@ -6,7 +6,7 @@ English | [한국어](82-bytecode.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [79 — Tokens](79-tokens.md), [80 — AST](80-ast.md)
-- Topic: compiler
+- Topic: building a language
 - Result: compiling simple instructions into a list of steps and running them one by one like a tiny virtual machine
 
 Guide [84](84-bootstrap.md) translates source text into Python and runs it;

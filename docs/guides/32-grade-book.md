@@ -6,7 +6,7 @@ English | [한국어](32-grade-book.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [31 — Mini bank](31-bank.md), [30 — Shop](30-shop.md)
-- Topic: a capstone project
+- Topic: projects
 - Result: a JSON-persisted grade book with add-student, add-grade, report-averages, and a storage module
 
 The bank in guide [31](31-bank.md) saved a dict through a storage module, and

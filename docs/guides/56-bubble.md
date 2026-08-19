@@ -6,7 +6,7 @@ English | [한국어](56-bubble.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [52 — Sorting](52-sorting.md), [55 — Grid](55-grid.md)
-- Topic: algorithm
+- Topic: lists and text
 - Result: implementing bubble sort by hand with nested loops and a swap, then comparing the result with Python's built-in sort
 
 Guide [52](52-sorting.md) let Python sort for you. Here you build the sort

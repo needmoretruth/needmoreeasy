@@ -6,7 +6,7 @@ English | [한국어](43-text-stats.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [42 — Word count](42-word-count.md), [38 — Name list](38-name-list.md)
-- Topic: text & data
+- Topic: lists and text
 - Result: reading a text file and reporting character count, word count, longest word, and most common word (with collections.Counter)
 
 A story is a string first, then a list of words. This guide reads a text file, counts its characters and words, and lets Python find the longest and most common ones.

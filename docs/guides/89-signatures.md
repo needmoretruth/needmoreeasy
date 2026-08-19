@@ -8,7 +8,7 @@ English | [한국어](89-signatures.ko.md)
 
 - Difficulty: ★★★☆☆ (3/5)
 - Prerequisites: [87 — Cryptocurrency ledger](87-blockchain.md)
-- Topic: transaction proofs and replay prevention
+- Topic: cryptocurrency
 - Result: validate transaction authorization with a public value and reject replay
 
 NeedMoreCoin replaces the old shared-secret HMAC lesson with a Schnorr-style

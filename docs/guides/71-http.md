@@ -6,7 +6,7 @@ English | [한국어](71-http.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [37 — Files](37-files.md), [64 — Python packages](64-python-packages.md)
-- Topic: networks and HTTP
+- Topic: the internet
 - Result: fetching a page from a local server
 
 HTTP is how programs ask web servers for pages. The example

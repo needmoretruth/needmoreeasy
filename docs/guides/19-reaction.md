@@ -6,7 +6,7 @@ English | [한국어](19-reaction.ko.md)
 
 - Difficulty: ★★★☆☆ (3/5)
 - Prerequisites: [15 — Time](15-timer.md)
-- Topic: a game, and timing
+- Topic: games
 - Result: a program that measures how fast you react
 
 The stopwatch from [15 — Time](15-timer.md) is enough for a game. Start the

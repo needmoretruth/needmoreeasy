@@ -6,7 +6,7 @@ English | [한국어](57-binary-search.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [56 — Bubble sort](56-bubble.md), [52 — Sorting](52-sorting.md)
-- Topic: algorithm
+- Topic: lists and text
 - Result: finding a number in a sorted list by halving the search range each step, showing the step count and the found index
 
 Guide [56](56-bubble.md) sorted a list; guide [52](52-sorting.md) let Python

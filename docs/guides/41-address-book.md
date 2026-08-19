@@ -6,7 +6,7 @@ English | [한국어](41-address-book.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [39 — JSON](39-json.md), [37 — Files](37-files.md)
-- Topic: records
+- Topic: working with data
 - Result: a JSON-file address book that adds, lists, and searches contacts
 
 A record is one dict with several fields. An address book is a list of those

@@ -6,7 +6,7 @@ English | [한국어](54-merge.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [46 — Top ten](46-top-ten.md), [41 — Records](41-address-book.md)
-- Topic: data & merging
+- Topic: working with data
 - Result: loading two JSON lists and joining records by name key into one report
 
 Real data often lives in more than one file. A school keeps students in one

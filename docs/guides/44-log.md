@@ -6,7 +6,7 @@ English | [한국어](44-log.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [37 — Files](37-files.md), [36 — Diary](36-diary.md)
-- Topic: files & logging
+- Topic: files
 - Result: appending a dated line to a log file each time the program runs, using datetime and file_write
 
 The diary in guide [36](36-diary.md) writes one file per day. A **log** is the

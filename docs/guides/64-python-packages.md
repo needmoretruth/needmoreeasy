@@ -6,7 +6,7 @@ English | [한국어](64-python-packages.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [61 — Modules](61-modules.md), [37 — Files](37-files.md)
-- Topic: Python packages
+- Topic: when a program grows
 - Result: using the standard library and installed libraries
 
 Python ships with many ready-made packages. Because advanced NME is ordinary

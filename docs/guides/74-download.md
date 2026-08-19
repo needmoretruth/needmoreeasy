@@ -6,7 +6,7 @@ English | [한국어](74-download.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [72 — Weather](72-weather.md), [37 — Files](37-files.md)
-- Topic: network & files
+- Topic: the internet
 - Result: downloading a file from a local HTTP server and saving it while showing progress
 
 Guide [76](76-net.md) fetches data and shows it; guide [73](73-poll.md) fetched

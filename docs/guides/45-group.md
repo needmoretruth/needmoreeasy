@@ -6,7 +6,7 @@ English | [한국어](45-group.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [42 — Word count](42-word-count.md), [41 — Records](41-address-book.md)
-- Topic: data
+- Topic: working with data
 - Result: grouping a list of dicts by a category key into a dict of lists, then reporting counts per category
 
 Counting (guides [42](42-word-count.md) and [67](67-stats.md)) answers *how

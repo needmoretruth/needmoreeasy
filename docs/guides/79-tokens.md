@@ -6,7 +6,7 @@ English | [한국어](79-tokens.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [78 — Expressions](78-expressions.md), [77 — Compiler](77-compiler.md)
-- Topic: compiler
+- Topic: building a language
 - Result: splitting a command line into tokens and dispatching them, a step toward a real tokenizer and parser
 
 Guide [78](78-expressions.md) split an expression into words; guide [84](84-bootstrap.md)

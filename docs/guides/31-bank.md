@@ -6,7 +6,7 @@ English | [한국어](31-bank.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [30 — Shop](30-shop.md), [22 — Terminal menu](22-terminal-menu.md)
-- Topic: a project
+- Topic: projects
 - Result: a JSON-persisted bank account with deposit, withdraw, balance, history, and a storage module
 
 Guide [30](30-shop.md) kept a shop's money in a dict; guide

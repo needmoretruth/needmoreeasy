@@ -6,7 +6,7 @@ English | [한국어](38-name-list.ko.md)
 
 - Difficulty: ★★★☆☆ (3/5)
 - Prerequisites: [37 — Files](37-files.md)
-- Topic: files and lists
+- Topic: files
 - Result: a program that saves names one per line and reads them back as a list
 
 [Guide 37](37-files.md) saved one piece of text. When there are several names,

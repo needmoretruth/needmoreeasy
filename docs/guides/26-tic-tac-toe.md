@@ -6,7 +6,7 @@ English | [한국어](26-tic-tac-toe.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [18 — Adventure](18-adventure.md), [22 — Terminal menu](22-terminal-menu.md)
-- Topic: game
+- Topic: games
 - Result: a playable two-player tic-tac-toe with a win check
 
 A board is a list of rows (guide [55](55-grid.md)); guide [18](18-adventure.md) showed how `ask`, `while True`, and `break` make a game loop. Tic-tac-toe joins them: two players take turns picking a row and a column, and after every move a function checks for three in a row.

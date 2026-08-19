@@ -6,7 +6,7 @@ English | [한국어](29-playlist.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [12 — Random](12-random.md), [24 — Quiz](24-quiz.md)
-- Topic: game & random
+- Topic: random and chance
 - Result: a playlist loaded from JSON with shuffle, next, and a loop of songs
 
 A music player walks a list of songs — load it from JSON, mix it with the random helper, and loop a menu until you quit.

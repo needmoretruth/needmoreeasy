@@ -6,7 +6,7 @@ English | [한국어](42-word-count.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [38 — Name list](38-name-list.md), [37 — Files](37-files.md)
-- Topic: data
+- Topic: lists and text
 - Result: reading a text file and counting how often each word appears, using a dict and collections.Counter
 
 Counting words is the first step of many text programs. Read a file, split it

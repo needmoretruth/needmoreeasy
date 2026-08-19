@@ -6,7 +6,7 @@ English | [한국어](68-compare.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [67 — Stats](67-stats.md), [58 — Data](58-data.md)
-- Topic: data & comparison
+- Topic: working with data
 - Result: loading two JSON number lists and comparing their means and maxima
 
 Guide [58](58-data.md) summarized one list of numbers. Comparing two lists

@@ -6,7 +6,7 @@ English | [한국어](12-random.ko.md)
 
 - Difficulty: ★★☆☆☆ (2/5)
 - Prerequisites: [11 — Break](11-break.md)
-- Topic: random
+- Topic: random and chance
 - Result: a program that rolls a die and picks a color
 
 A game needs a surprise. Rolling a die, or picking one of several things, is a

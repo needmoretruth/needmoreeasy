@@ -6,7 +6,7 @@ English | [한국어](15-timer.ko.md)
 
 - Difficulty: ★★☆☆☆ (2/5)
 - Prerequisites: [14 — Screen](14-screen.md)
-- Topic: stopwatch and cooldowns
+- Topic: using the tools
 - Result: a program that times itself and stops an action from repeating too soon
 
 Games keep needing two things: how long did that take, and you cannot do that

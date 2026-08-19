@@ -6,7 +6,7 @@ English | [한국어](22-terminal-menu.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [14 — Screen](14-screen.md), [18 — Adventure](18-adventure.md)
-- Topic: a small project
+- Topic: projects
 - Result: a menu program that clears the screen and draws it again
 
 A menu shows what can be done, lets you choose one, does it, and comes back to

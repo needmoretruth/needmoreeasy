@@ -6,7 +6,7 @@ English | [한국어](62-project-files.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [32 — Grade book](32-grade-book.md), [61 — Modules](61-modules.md)
-- Topic: modules & structure
+- Topic: when a program grows
 - Result: a small weather-report project split into three .nme modules (fetch, analyze, report) with clear interfaces, imported by a main program
 
 Guide [61](61-modules.md) split a helper out of a program, and guide

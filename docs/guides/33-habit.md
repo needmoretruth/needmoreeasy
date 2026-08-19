@@ -6,7 +6,7 @@ English | [한국어](33-habit.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [32 — Grade book](32-grade-book.md), [30 — Shop](30-shop.md)
-- Topic: a project
+- Topic: projects
 - Result: a JSON-persisted habit tracker with add, check, streak, list, quit, and a module file for the storage logic
 
 Guide [35](35-todo.md) saves a todo list of dicts; guide [61](61-modules.md) splits a project across files. A habit tracker is one dict — each habit's days in a row — saved to JSON.

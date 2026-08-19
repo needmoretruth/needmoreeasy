@@ -6,7 +6,7 @@ English | [한국어](59-errors.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [37 — Files](37-files.md), [39 — JSON](39-json.md)
-- Topic: exceptions
+- Topic: when a program grows
 - Result: a program that reads a missing file and converts bad input without crashing
 
 A missing file or a line that is not a number stops a program dead.

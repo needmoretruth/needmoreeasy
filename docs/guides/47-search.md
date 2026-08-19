@@ -6,7 +6,7 @@ English | [한국어](47-search.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [41 — Records](41-address-book.md), [39 — JSON](39-json.md)
-- Topic: search & data
+- Topic: working with data
 - Result: loading a JSON catalog from a local server or file and searching it by keyword, case-insensitively
 
 A catalog is a list of records — dicts with a `name` and `tags`. A search

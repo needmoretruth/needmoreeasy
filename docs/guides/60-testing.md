@@ -6,7 +6,7 @@ English | [한국어](60-testing.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [25 — Calculator](25-calculator.md), [59 — Errors](59-errors.md)
-- Topic: testing
+- Topic: when a program grows
 - Result: a tiny test runner that calls your own functions, compares each result with the expected value, and reports pass or fail
 
 "Wait — I said it works without actually testing it, didn't I?" Most

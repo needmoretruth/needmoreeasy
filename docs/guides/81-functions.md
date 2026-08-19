@@ -6,7 +6,7 @@ English | [한국어](81-functions.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [80 — AST](80-ast.md), [61 — Modules](61-modules.md)
-- Topic: compiler & functions
+- Topic: building a language
 - Result: a compiler that translates a mini language with `def`, `return`, and calls into Python and runs it
 
 Guide [86](86-capstone.md) compiles five verbs into Python. Real languages

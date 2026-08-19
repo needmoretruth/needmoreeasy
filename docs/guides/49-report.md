@@ -6,7 +6,7 @@ English | [한국어](49-report.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [46 — Top ten](46-top-ten.md), [44 — Log](44-log.md)
-- Topic: files
+- Topic: projects
 - Result: reading a few JSON data files and writing one text report with file_write
 
 One JSON file holds one kind of data; a report combines several. This guide

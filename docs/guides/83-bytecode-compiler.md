@@ -6,7 +6,7 @@ English | [한국어](83-bytecode-compiler.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [80 — AST](80-ast.md), [82 — Bytecode](82-bytecode.md)
-- Topic: compiler & bytecode
+- Topic: building a language
 - Result: a compiler that flattens an expression tree into instruction lines and runs them on a stack machine
 
 Guide [80](80-ast.md) evaluated a tree directly; guide [82](82-bytecode.md)

@@ -6,7 +6,7 @@ English | [한국어](18-adventure.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [11 — Break](11-break.md), [12 — Random](12-random.md)
-- Topic: a large project
+- Topic: projects
 - Result: a room-by-room text adventure with choices
 
 A text adventure describes a place and asks what you do next. Everything from

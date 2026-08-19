@@ -6,7 +6,7 @@ English | [한국어](11-break.ko.md)
 
 - Difficulty: ★★☆☆☆ (2/5)
 - Prerequisites: [10 — While](10-while.md)
-- Topic: loops
+- Topic: choosing and repeating
 - Result: a program that leaves a loop early
 
 Sometimes a loop should stop in the middle. `break` leaves the nearest loop

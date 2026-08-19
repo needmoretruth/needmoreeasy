@@ -4,159 +4,97 @@ English | [한국어](52-sorting.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- Difficulty: ★★★★☆ (4/5)
-- Prerequisites: [38 — Name list](38-name-list.md), [39 — JSON](39-json.md)
-- Topic: data
-- Result: loading numbers from a JSON file and showing sorted ascending and descending orders with the Python sort method
+- Difficulty: ★★★☆☆ (3/5)
+- Prerequisites: [38 — Name list](38-name-list.md)
+- Topic: lists and text
+- Result: standing a list up in both directions, smallest first and biggest first
 
-A loaded list arrives in the order it was written, which is rarely the order
-you want to show. Python's `sort` method puts the list in order and `sorted()`
-builds a sorted copy; this guide loads numbers from JSON, sorts them both ways,
-and explains the difference between the two.
+A list stays in the order you wrote it. That is rarely the order you want to
+show — scores read best from the top, names read best in alphabetical order.
+There are only two sentences for putting a list in order.
 
 ## Steps
 
-1. Create `numbers.json` with one JSON list of numbers:
+1. **Make a list and look at it.** `joined by comma` shows a list on one line:
 
    ```nme
-   [5, 2, 9, 1, 7, 3]
+   set scores to list of 5, 3, 9, 1
+   show scores joined by comma
    ```
 
-   Guide [58](58-data.md) uses the same file; the numbers here are deliberately
-   out of order.
+   `5, 3, 9, 1` — exactly as written.
 
-2. Load the list with `json_load` from guide [39](39-json.md):
+2. **`sort` stands it up smallest first:**
 
    ```nme
-   use file latest
-   numbers = json_load("numbers.json")
-   show f"Loaded {len(numbers)} numbers: {numbers}"
+   set scores to list of 5, 3, 9, 1
+   sort scores
+   show scores joined by comma
    ```
 
-   Run it; it prints `Loaded 6 numbers: [5, 2, 9, 1, 7, 3]`.
+   You get `1, 3, 5, 9`. **The list itself changes.** From here on `scores`
+   stays in that order.
 
-3. `sorted(numbers)` returns a NEW list in ascending order and leaves the
-   original untouched:
+3. **Once it is standing, the two ends are your answer.** Smallest first means
+   the first item is the smallest and the last is the biggest:
 
    ```nme
-   numbers = [5, 2, 9, 1, 7, 3]
-   ascending = sorted(numbers)
-   show ascending
-   show numbers
+   set scores to list of 5, 3, 9, 1
+   sort scores
+   show the first of scores
+   show the last of scores
    ```
 
-   It prints `[1, 2, 3, 5, 7, 9]` and then `[5, 2, 9, 1, 7, 3]` — the original
-   stays exactly as it was.
+   `1` and `9`.
 
-4. `numbers.sort()` changes the list ITSELF, in place. After the call the
-   variable holds the sorted list and the old order is gone:
+4. **`reverse` turns it around.** Reversing a sorted list gives biggest first:
 
    ```nme
-   numbers = [5, 2, 9, 1, 7, 3]
-   numbers.sort()
-   show numbers
+   set scores to list of 5, 3, 9, 1
+   sort scores
+   reverse scores
+   show scores joined by comma
    ```
 
-   It prints `[1, 2, 3, 5, 7, 9]`. This is the "ascending" order — the smallest
-   first, the largest last.
+   `9, 5, 3, 1`. That is the order a score table is written in.
 
-5. Descending order flips it, the largest first. `sorted(numbers, reverse=True)`
-   makes a new list without touching `numbers`:
+5. **Words stand up too.** Numbers go smallest first, words go alphabetically:
 
    ```nme
-   numbers = [1, 2, 3, 5, 7, 9]
-   descending = sorted(numbers, reverse=True)
-   show descending
+   set names to list of Zoe, Mina, Ada
+   sort names
+   show names joined by comma
    ```
 
-   It prints `[9, 7, 5, 3, 2, 1]`.
+   You get `Ada, Mina, Zoe`.
 
-6. Now the whole report in one file. Save `sorting.nme`:
+6. The whole thing:
 
    ```nme
-   # Sorting: putting a saved list of numbers in order.
-   # Run: nme r sorting
-   # The file numbers.json must exist in the same folder.
-
-   use file latest
-
-   numbers = json_load("numbers.json")
-
-   show f"Loaded {len(numbers)} numbers: {numbers}"
-   show ""
-
-   ascending = sorted(numbers)
-   show "sorted(numbers) makes a NEW list:"
-   show ascending
-   show "The original list is unchanged:"
-   show numbers
-   show ""
-
-   numbers.sort()
-   show "numbers.sort() changes the list IN PLACE:"
-   show numbers
-   show ""
-
-   descending = sorted(numbers, reverse=True)
-   show "Descending order with reverse=True:"
-   show descending
-
-   show "Smallest: " + str(numbers[0])
-   show "Largest: " + str(numbers[-1])
-
-   show ""
-   show "Sorted list, one number per line:"
-   for n in numbers:
-       show "  " + str(n)
+   set scores to list of 5, 3, 9, 1
+   show "as written"
+   show scores joined by comma
+   sort scores
+   show "smallest first"
+   show scores joined by comma
+   show "the smallest score"
+   show the first of scores
+   show "the biggest score"
+   show the last of scores
+   reverse scores
+   show "biggest first"
+   show scores joined by comma
    ```
-
-7. Run it with the data file present:
-
-   ```sh
-   nme r sorting
-   ```
-
-   ```text
-   Loaded 6 numbers: [5, 2, 9, 1, 7, 3]
-
-   sorted(numbers) makes a NEW list:
-   [1, 2, 3, 5, 7, 9]
-   The original list is unchanged:
-   [5, 2, 9, 1, 7, 3]
-
-   numbers.sort() changes the list IN PLACE:
-   [1, 2, 3, 5, 7, 9]
-
-   Descending order with reverse=True:
-   [9, 7, 5, 3, 2, 1]
-   Smallest: 1
-   Largest: 9
-
-   Sorted list, one number per line:
-     1
-     2
-     3
-     5
-     7
-     9
-   ```
-
-   `numbers.sort()` changed the list for good, which is why the descending line
-   starts from the sorted order and the one-per-line list uses it too.
-
-8. Korean writes the same steps with `파일 사용 최신` and `json읽기`. The full
-   Korean program is in the [Korean guide](52-sorting.ko.md).
 
 ## Try it yourself
 
-Change `numbers.json` to `[100, 3, 42, 17]` and rerun `sorting.nme`; every
-order updates. Then add `numbers.reverse()` after the sort and rerun — the list
-now runs largest to smallest.
+Put `show the biggest of scores` at the very top, before any sorting. It finds
+the biggest without standing the list up at all. Sorting is what you do when
+you want to see **all of it** in order.
 
 ## What you learned
 
-- `sorted(numbers)` returns a new ascending list and leaves the original alone.
-- `numbers.sort()` reorders the list in place; the old order is lost.
-- `sorted(numbers, reverse=True)` builds a descending copy.
-- After sorting, `numbers[0]` is the smallest and `numbers[-1]` the largest.
-- Ascending means smallest first; descending means largest first.
+- `sort <list>` stands a list up smallest first, or alphabetically for words.
+- `reverse <list>` turns the current order around. After sorting, that is biggest first.
+- Both **change the list itself.** The original order is gone.
+- After sorting, `the first` is the smallest and `the last` is the biggest.

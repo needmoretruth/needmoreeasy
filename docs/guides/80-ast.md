@@ -6,7 +6,7 @@ English | [한국어](80-ast.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [78 — Expressions](78-expressions.md), [79 — Tokens](79-tokens.md)
-- Topic: compiler & AST
+- Topic: building a language
 - Result: a calculator that parses an expression into a tree and evaluates the tree recursively, respecting precedence
 
 Guide [78](78-expressions.md) evaluated `2 + 3 * 4` in one pass; guide

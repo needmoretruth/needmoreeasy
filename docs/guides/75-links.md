@@ -6,7 +6,7 @@ English | [한국어](75-links.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [70 — Patterns](70-patterns.md), [72 — Weather](72-weather.md)
-- Topic: web & text
+- Topic: the internet
 - Result: fetching an HTML page from a local server and listing every link on it as a full URL
 
 Guide [76](76-net.md) fetches JSON; guide [70](70-patterns.md) matched

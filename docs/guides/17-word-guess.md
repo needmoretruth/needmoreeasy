@@ -6,7 +6,7 @@ English | [한국어](17-word-guess.ko.md)
 
 - Difficulty: ★★★☆☆ (3/5)
 - Prerequisites: [16 — Check & Build](16-check-build.md)
-- Topic: your first project
+- Topic: games
 - Result: a game of guessing a hidden word one letter at a time
 
 This is where Part 2 begins. Everything from Part 1 comes together into **a game

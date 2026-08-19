@@ -6,7 +6,7 @@ English | [한국어](76-net.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [72 — Weather](72-weather.md), [29 — Playlist](29-playlist.md)
-- Topic: network
+- Topic: the internet
 - Result: fetching messages from a local HTTP server and showing them like a mini chat
 
 A chat client reads messages from a server and sends new ones. This guide

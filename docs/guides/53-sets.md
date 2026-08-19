@@ -6,7 +6,7 @@ English | [한국어](53-sets.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [42 — Word count](42-word-count.md), [52 — Sorting](52-sorting.md)
-- Topic: sets & data
+- Topic: lists and text
 - Result: using a Python set to find unique words in a text file, then unique letters in a sentence
 
 Guide [42](42-word-count.md) counted every word, repeats and all. A set keeps

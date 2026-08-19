@@ -6,7 +6,7 @@ English | [한국어](24-quiz.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [18 — Adventure](18-adventure.md), [23 — High score](23-high-score.md)
-- Topic: game & data
+- Topic: games
 - Result: a multiple-choice quiz that loads questions from a JSON file, scores answers, and reports the result
 
 A quiz is a loop over data: each round shows one question, reads an answer, and

@@ -8,7 +8,7 @@ English | [한국어](87-blockchain.ko.md)
 
 - Difficulty: ★★★☆☆ (3/5)
 - Prerequisites: [05 — Set](05-set.md), [08 — If](08-if.md), [10 — While](10-while.md)
-- Topic: cryptocurrency ledger and transactions
+- Topic: cryptocurrency
 - Result: a small cryptocurrency ledger with balances, fees, supply, and transaction nonces
 
 The blockchain learning track now uses one coherent `NeedMoreCoin` example set

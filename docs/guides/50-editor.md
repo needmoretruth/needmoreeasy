@@ -6,7 +6,7 @@ English | [한국어](50-editor.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [21 — Progress](21-progress.md), [37 — Files](37-files.md)
-- Topic: a terminal app
+- Topic: projects
 - Result: a line-based editor with a buffer and add, list, remove, save, and quit commands
 
 A text file is one long string. An editor works on a buffer — the same text

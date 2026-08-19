@@ -6,7 +6,7 @@ English | [한국어](39-json.ko.md)
 
 - Difficulty: ★★★☆☆ (3/5)
 - Prerequisites: [37 — Files](37-files.md)
-- Topic: json
+- Topic: files
 - Result: a program that saves a name and a score and loads them back
 
 One file can hold a whole record. JSON stores several values together as text,

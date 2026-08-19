@@ -6,7 +6,7 @@ English | [한국어](63-argv.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [39 — JSON](39-json.md), [31 — Mini bank](31-bank.md)
-- Topic: command-line tools
+- Topic: using the tools
 - Result: a todo tool that takes commands like `nme r todo add "buy milk"` on the command line
 
 So far every program asked for its input while running. A real tool reads

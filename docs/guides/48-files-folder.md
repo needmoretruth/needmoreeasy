@@ -6,7 +6,7 @@ English | [한국어](48-files-folder.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [37 — Files](37-files.md), [42 — Word count](42-word-count.md)
-- Topic: files & folders
+- Topic: files
 - Result: listing the files in a folder with os.listdir, reading each with file_read, and reporting total words and letters across all of them
 
 Guide [37](37-files.md) read one file you named in the code. Real folders hold

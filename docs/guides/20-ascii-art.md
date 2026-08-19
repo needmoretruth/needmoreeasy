@@ -6,7 +6,7 @@ English | [한국어](20-ascii-art.ko.md)
 
 - Difficulty: ★★★☆☆ (3/5)
 - Prerequisites: [14 — Screen](14-screen.md)
-- Topic: drawing
+- Topic: screen and time
 - Result: a program that draws shapes by repeating a character
 
 The easiest way to draw on a screen is **to repeat one character**. Five stars

@@ -6,7 +6,7 @@ English | [한국어](51-strings.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [01 — Hello](01-hello.md), [05 — Set](05-set.md)
-- Topic: strings
+- Topic: lists and text
 - Result: slicing `text[start:end]`, `.upper()/.lower()`, `.replace()`, and `.strip()` on a sentence
 
 A string is a row of characters counted from `0`; slicing cuts a piece out,

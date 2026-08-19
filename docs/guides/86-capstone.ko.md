@@ -6,7 +6,7 @@
 
 - 난이도: ★★★★★ (5/5)
 - 선수 지식: [82 — 바이트코드](82-bytecode.ko.md), [85 — 셀프호스트](85-selfhost.ko.md)
-- 주제: 컴파일러/캡스톤
+- 주제: 언어 만들기
 - 결과물: 아주 작은 언어(say/set/add/while/end)를 읽어 Python 소스로 컴파일하고 파일로 저장한 뒤 실행하는 NME 프로그램
 
 [85](85-selfhost.ko.md)은 NME 단어를 Python으로 컴파일해 메모리에서

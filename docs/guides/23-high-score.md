@@ -6,7 +6,7 @@ English | [한국어](23-high-score.ko.md)
 
 - Difficulty: ★★★☆☆ (3/5)
 - Prerequisites: [17 — Word guess](17-word-guess.md)
-- Topic: a project
+- Topic: projects
 - Result: a dice game of three rounds that tells you your best
 
 Three rounds, a score kept for each, and the best of them at the end. **A loop

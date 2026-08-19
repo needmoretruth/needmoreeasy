@@ -6,7 +6,7 @@ English | [한국어](46-top-ten.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [41 — Records](41-address-book.md), [45 — Group](45-group.md)
-- Topic: data & ranking
+- Topic: working with data
 - Result: loading JSON records, sorting by a numeric score with sorted(..., key=...), and showing the top ten
 
 Guide [52](52-sorting.md) sorts plain numbers and guide [67](67-stats.md)

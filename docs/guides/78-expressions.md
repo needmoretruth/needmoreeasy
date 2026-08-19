@@ -6,7 +6,7 @@ English | [한국어](78-expressions.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [77 — Compiler](77-compiler.md), [61 — Modules](61-modules.md)
-- Topic: compiler
+- Topic: building a language
 - Result: a tiny calculator that evaluates 2 + 3 * 4 respecting precedence, as a step toward a real expression compiler
 
 Guide [77](77-compiler.md) dispatched lines and guide [84](84-bootstrap.md) translates them; a real compiler also evaluates expressions, and the first rule is precedence — in `2 + 3 * 4` the multiplication happens first.

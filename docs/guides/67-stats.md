@@ -6,7 +6,7 @@ English | [한국어](67-stats.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [58 — Data](58-data.md), [39 — JSON](39-json.md)
-- Topic: statistics
+- Topic: working with data
 - Result: loading a JSON list and reporting count, mean, median, mode, min, max, and range
 
 Averages hide what one number cannot tell you. This guide loads a list of

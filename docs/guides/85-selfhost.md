@@ -6,7 +6,7 @@ English | [한국어](85-selfhost.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [84 — Bootstrap](84-bootstrap.md)
-- Topic: self-hosting
+- Topic: building a language
 - Result: an NME program that compiles a tiny NME-like subset (say/set/while) to Python
 
 Guide [84](84-bootstrap.md) compiled a tiny language called BML. This guide

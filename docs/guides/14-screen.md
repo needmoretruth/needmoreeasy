@@ -6,7 +6,7 @@ English | [한국어](14-screen.ko.md)
 
 - Difficulty: ★★☆☆☆ (2/5)
 - Prerequisites: [13 — Chance](13-chance.md)
-- Topic: arranging the screen
+- Topic: screen and time
 - Result: a program that clears the screen, centres a title and draws a box
 
 Output piles up and the screen gets messy. Four sentences tidy it.

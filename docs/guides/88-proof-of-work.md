@@ -8,7 +8,7 @@ English | [한국어](88-proof-of-work.ko.md)
 
 - Difficulty: ★★★☆☆ (3/5)
 - Prerequisites: [87 — Cryptocurrency ledger](87-blockchain.md), [10 — While](10-while.md)
-- Topic: proof of work and block linkage
+- Topic: cryptocurrency
 - Result: link transactions to the previous block and perform SHA-256 proof of work
 
 A valid transaction is not yet a blockchain. Every new block must commit to the

@@ -6,7 +6,7 @@ English | [한국어](04-ask.ko.md)
 
 - Difficulty: ★☆☆☆☆ (1/5)
 - Prerequisites: [03 — Letters one at a time](03-slow-story.md)
-- Topic: input
+- Topic: first steps
 - Result: a program that asks a name and greets it in a sentence
 
 A program that listens. `ask` reads what the user types and stores it in a

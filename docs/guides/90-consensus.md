@@ -8,7 +8,7 @@ English | [한국어](90-consensus.ko.md)
 
 - Difficulty: ★★★☆☆ (3/5)
 - Prerequisites: [88 — Proof of work](88-proof-of-work.md), [89 — Transaction proofs](89-signatures.md)
-- Topic: chain validation and consensus boundaries
+- Topic: cryptocurrency
 - Result: a single-node validator that replays every transaction and block from genesis
 
 The core rule is simple: **do not trust the program state that existed while a

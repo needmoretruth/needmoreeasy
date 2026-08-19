@@ -6,7 +6,7 @@ English | [한국어](05-set.ko.md)
 
 - Difficulty: ★☆☆☆☆ (1/5)
 - Prerequisites: [04 — Ask](04-ask.md)
-- Topic: storing values and lists
+- Topic: first steps
 - Result: a program that keeps text, numbers and lists in named values
 
 A value is a box with a name. `set` puts something in the box, and `show`

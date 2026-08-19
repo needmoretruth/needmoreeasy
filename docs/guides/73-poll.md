@@ -6,7 +6,7 @@ English | [한국어](73-poll.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [72 — Weather](72-weather.md), [71 — HTTP](71-http.md)
-- Topic: network & timing
+- Topic: the internet
 - Result: repeatedly fetching a status.json from a local server every few seconds and reporting changes
 
 Programs that watch a server keep asking it for the latest state. This is

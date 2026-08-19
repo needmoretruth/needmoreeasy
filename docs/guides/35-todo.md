@@ -6,7 +6,7 @@ English | [한국어](35-todo.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [33 — Habit](33-habit.md), [30 — Shop](30-shop.md)
-- Topic: a project
+- Topic: projects
 - Result: a JSON-persisted todo list with add, done, list, and a module file for the storage logic
 
 Guide [41](41-address-book.md) saves a list of dicts with `json_save`; [61](61-modules.md)

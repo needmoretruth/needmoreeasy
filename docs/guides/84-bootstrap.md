@@ -6,7 +6,7 @@ English | [한국어](84-bootstrap.ko.md)
 
 - Difficulty: ★★★★★ (5/5)
 - Prerequisites: [77 — Compiler](77-compiler.md), [61 — Modules](61-modules.md)
-- Topic: bootstrap
+- Topic: building a language
 - Result: a tiny compiler written in NME
 
 Guide [77](77-compiler.md) interpreted lines directly. The next step is the

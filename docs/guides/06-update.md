@@ -6,7 +6,7 @@ English | [한국어](06-update.ko.md)
 
 - Difficulty: ★☆☆☆☆ (1/5)
 - Prerequisites: [05 — Set](05-set.md)
-- Topic: changing values
+- Topic: first steps
 - Result: a program that adds to and subtracts from a score
 
 Games need scores that change. `set score to 0` starts a score, and `add`

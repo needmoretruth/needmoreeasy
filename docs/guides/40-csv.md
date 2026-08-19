@@ -6,7 +6,7 @@ English | [한국어](40-csv.ko.md)
 
 - Difficulty: ★★★☆☆ (3/5)
 - Prerequisites: [38 — Name list](38-name-list.md)
-- Topic: files and data
+- Topic: files
 - Result: a program that reads a file of comma-separated fields
 
 [Guide 38](38-name-list.md) put one thing on each line. To put **two or more**

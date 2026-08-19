@@ -6,7 +6,7 @@ English | [한국어](34-chart.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [20 — ASCII art](20-ascii-art.md), [24 — Quiz](24-quiz.md)
-- Topic: visualization
+- Topic: screen and time
 - Result: drawing a horizontal bar chart with # blocks from a JSON list, scaled to the largest value
 
 Guide [20](20-ascii-art.md) multiplied strings into rows, and guide

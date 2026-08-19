@@ -6,7 +6,7 @@ English | [한국어](25-calculator.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [22 — Terminal menu](22-terminal-menu.md), [08 — If](08-if.md)
-- Topic: a project
+- Topic: projects
 - Result: a repeat-until-quit calculator with functions and a module file
 
 A calculator that reads `3 + 4` and answers, then asks again until you type

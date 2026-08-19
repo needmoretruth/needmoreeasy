@@ -6,7 +6,7 @@ English | [한국어](61-modules.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [23 — High score](23-high-score.md), [37 — Files](37-files.md)
-- Topic: modules
+- Topic: when a program grows
 - Result: splitting a program across .nme files
 
 One file works for a small program. As a project grows, splitting it into

@@ -6,7 +6,7 @@ English | [한국어](07-repeat.ko.md)
 
 - Difficulty: ★★☆☆☆ (2/5)
 - Prerequisites: [06 — Update](06-update.md)
-- Topic: loops
+- Topic: first steps
 - Result: a program that repeats lines, walks a list, and pauses
 
 Computers are great at doing the same thing many times. `repeat` runs a line

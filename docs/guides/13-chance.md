@@ -6,7 +6,7 @@ English | [한국어](13-chance.ko.md)
 
 - Difficulty: ★★☆☆☆ (2/5)
 - Prerequisites: [12 — Random](12-random.md)
-- Topic: chance
+- Topic: random and chance
 - Result: a program in which something happens only as often as you decided
 
 The `random number` of [guide 12](12-random.md) rolls a die, and a die gives all

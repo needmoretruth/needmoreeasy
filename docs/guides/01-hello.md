@@ -6,7 +6,7 @@ English | [한국어](01-hello.ko.md)
 
 - Difficulty: ★☆☆☆☆ (1/5)
 - Prerequisites: none
-- Topic: your first program, and output
+- Topic: first steps
 - Result: a program that puts what you wrote on the screen
 
 This is your first program. Nothing to install, and no knowledge of computers

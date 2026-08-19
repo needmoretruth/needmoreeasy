@@ -6,7 +6,7 @@ English | [한국어](66-native.ko.md)
 
 - Difficulty: ★★★★☆ (4/5)
 - Prerequisites: [61 — Modules](61-modules.md), [10 — While](10-while.md)
-- Topic: native compilation
+- Topic: using the tools
 - Result: running a program as machine code without CPython
 
 So far every program ran on CPython: NME compiles to Python and Python runs

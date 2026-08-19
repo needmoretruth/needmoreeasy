@@ -6,7 +6,7 @@ English | [한국어](02-story.ko.md)
 
 - Difficulty: ★☆☆☆☆ (1/5)
 - Prerequisites: [01 — Hello](01-hello.md)
-- Topic: story blocks
+- Topic: first steps
 - Result: a program that tells a story of several lines in one block
 
 In guide 01 every line began with `say`. That is fine for a line or two, but a
