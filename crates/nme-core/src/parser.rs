@@ -12172,6 +12172,9 @@ fn match_set(
             {
                 return Ok(None);
             }
+            if korean_quotative_noun_phrase(first, &tokens[1..], known_names) {
+                return Ok(None);
+            }
             if tokens.len() == 1 {
                 return Err(Diagnostic::bilingual(
                     DiagnosticCode::SaveValueMissing,
@@ -14380,6 +14383,33 @@ fn strip_target_particle(word: &str) -> &str {
         }
     }
     word
+}
+
+/// True for `사랑한다는 말` — a whole clause, the ending that hangs it on a
+/// noun, and the noun. Ten of fourteen ordinary phrases of that shape were
+/// becoming assignments on 2026-08-19: `사랑한다 = "말"` binds a name that is a
+/// verb and prints nothing, and the writer never finds out.
+///
+/// `-다는`/`-라는`/`-냐는`/`-자는` are the endings that do it. A noun really can
+/// end in `다` (`바다는`, `소다는`), so the value settles the rest: a number, a
+/// name the program made, or anything longer than one plain word keeps the
+/// line an assignment. What is refused is exactly the shape of a noun phrase —
+/// clause, ending, one bare noun — and `바다는 파랗다` is one of those too.
+fn korean_quotative_noun_phrase(
+    word: &str,
+    value: &[Token],
+    known_names: &HashSet<String>,
+) -> bool {
+    let Some(base) = word.strip_suffix('는') else {
+        return false;
+    };
+    if !base.ends_with(['다', '라', '냐', '자']) {
+        return false;
+    }
+    let [only] = value else {
+        return false;
+    };
+    name_word(only).is_some_and(|noun| !known_names.contains(noun))
 }
 
 fn strip_assignment_particle(word: &str) -> Option<&str> {

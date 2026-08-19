@@ -52,11 +52,27 @@ import os
 import subprocess
 import sys
 import tempfile
+from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from korean_prose_corpus import GROUPS, PROSE  # noqa: E402
 
-NME = sys.argv[1] if len(sys.argv) > 1 else "/home/user/nmt/needmoreeasy/target/release/nme"
+def newest_nme():
+    """The compiler binary that was built last, release or debug.
+
+    Defaulting to `target/release/nme` meant a debug build of the change under
+    test was measured against the previous release binary; every number came
+    back green because nothing under test was being run.
+    """
+    root = Path("/home/user/nmt/needmoreeasy")
+    found = sorted(
+        (root / "target/release/nme", root / "target/debug/nme"),
+        key=lambda path: -path.stat().st_mtime if path.is_file() else 0,
+    )
+    return str(found[0])
+
+
+NME = sys.argv[1] if len(sys.argv) > 1 else newest_nme()
 
 # The numbers this file refuses to let get worse.
 BASELINE_PRINTED = 350

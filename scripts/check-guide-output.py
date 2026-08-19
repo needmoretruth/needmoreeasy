@@ -33,6 +33,19 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def nme_candidates(root):
+    """The compiler binaries, newest build first.
+
+    These used to be listed release-first, which meant a debug build of the
+    change under test was checked against the previous release binary. Every
+    number came back green because nothing under test was being run.
+    """
+    return sorted(
+        (root / "target/release/nme", root / "target/debug/nme"),
+        key=lambda path: -path.stat().st_mtime if path.is_file() else 0,
+    )
 GUIDES = ROOT / "docs/guides"
 FENCE = re.compile(r"^([ \t]*)```(\w*)\s*$")
 SKIP = "<!-- nme-check: skip"
@@ -168,7 +181,7 @@ def pairs(path: Path) -> list[tuple[int, str, list[str]]]:
 def main() -> None:
     show_all = "--all" in sys.argv
     binary = next(
-        (c for c in (ROOT / "target/release/nme", ROOT / "target/debug/nme") if c.is_file()),
+        (c for c in nme_candidates(ROOT) if c.is_file()),
         None,
     )
     if binary is None:

@@ -50,6 +50,19 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def nme_candidates(root):
+    """The compiler binaries, newest build first.
+
+    These used to be listed release-first, which meant a debug build of the
+    change under test was checked against the previous release binary. Every
+    number came back green because nothing under test was being run.
+    """
+    return sorted(
+        (root / "target/release/nme", root / "target/debug/nme"),
+        key=lambda path: -path.stat().st_mtime if path.is_file() else 0,
+    )
 PARSER = (ROOT / "crates/nme-core/src/parser.rs").read_text(encoding="utf-8")
 SYNTAX = (ROOT / "crates/nme-core/src/syntax.rs").read_text(encoding="utf-8")
 LOWER = (ROOT / "crates/nme-core/src/lower.rs").read_text(encoding="utf-8")
@@ -1484,7 +1497,7 @@ def main() -> None:
         binary = next(
             (
                 candidate
-                for candidate in (ROOT / "target/release/nme", ROOT / "target/debug/nme")
+                for candidate in nme_candidates(ROOT)
                 if candidate.is_file()
             ),
             None,

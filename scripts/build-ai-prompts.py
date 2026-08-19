@@ -29,6 +29,19 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def nme_candidates(root):
+    """The compiler binaries, newest build first.
+
+    These used to be listed release-first, which meant a debug build of the
+    change under test was checked against the previous release binary. Every
+    number came back green because nothing under test was being run.
+    """
+    return sorted(
+        (root / "target/release/nme", root / "target/debug/nme"),
+        key=lambda path: -path.stat().st_mtime if path.is_file() else 0,
+    )
 OUT = ROOT / "docs/prompts"
 
 _spec = importlib.util.spec_from_file_location(
@@ -48,7 +61,7 @@ VERSION = next(
 def compiler() -> Path:
     if len(sys.argv) > 1:
         return Path(sys.argv[1])
-    for candidate in (ROOT / "target/release/nme", ROOT / "target/debug/nme"):
+    for candidate in nme_candidates(ROOT):
         if candidate.is_file():
             return candidate
     raise SystemExit("build-ai-prompts: no nme binary found")
