@@ -21507,7 +21507,7 @@ fn ambiguous_action_diagnostic(tokens: &[Token]) -> Diagnostic {
     if candidates.is_empty() {
         return problem.with_bilingual_hint(
             "spell the action word exactly so there is one clear meaning",
-            "동작 단어를 정확히 적어 뜻을 하나로 정해 주세요",
+            "동작 낱말을 정확히 적어 뜻을 하나로 정해 주세요",
         );
     }
     let listed = candidates

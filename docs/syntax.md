@@ -750,7 +750,7 @@ touched.**
 | `E0119` | conflicting `global` declaration |
 | `E0120` | conflicting `nonlocal` declaration |
 | `E0201` | `say` value could not be understood |
-| `E0202` | the `say` expression is not valid |
+| `E0202` | the value after `say` is not one Python can read |
 | `E0203` | the sentence to show is not valid |
 | `E0204` | `say` has nothing to show |
 | `E0211` | the question after the comma is missing |
@@ -793,16 +793,16 @@ touched.**
 | `E0411` | the value to save is missing |
 | `E0412` | the value to save could not be understood |
 | `E0413` | the name to save into is missing |
-| `E0414` | the save target is not a simple name |
+| `E0414` | the name to save into is not a plain name |
 | `E0501` | the lines to repeat are not indented |
 | `E0502` | nothing to do when the condition is true |
 | `E0503` | a one-line block with nothing in it |
 | `E0504` | one thing to do per line |
-| `E0505` | the block body is not a statement NME knows |
+| `E0505` | the line inside this block is not one NME knows |
 | `E0506` | this line starts with a space |
 | `E0601` | the sentence could mean more than one action |
 | `E0602` | no NME action was found on this line |
-| `E0603` | this word is not an action NME knows |
+| `E0603` | NME does not know this word |
 | `E0604` | this line cannot do anything |
 | `E0605` | this line uses a curly quote |
 | `E0701` | a sentence-style line across several physical lines |
