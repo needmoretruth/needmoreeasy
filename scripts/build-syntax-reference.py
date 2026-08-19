@@ -198,6 +198,9 @@ LISTS = [
     ("문장형", "Sentence", "remove Mina from friends", "친구들에서 민수 빼", 'friends.remove("Mina")', '친구들.remove("민수")'),
     ("문장형", "Sentence", "show how many friends", "친구들 개수 말해줘", "print(len(friends))", 'print(len(친구들))'),
     ("문장형", "Sentence", "set total to how many friends", "총합은 친구들 개수", "total = len(friends)", '총합 = len(친구들)'),
+    # A reading standing inside a sentence rather than being the whole of it.
+    ("문장형", "Sentence", "show You have how many friends left", "친구들 개수 명 남았습니다 말해줘",
+     'print("You have " + str(len(friends)) + " left")', 'print(str(len(친구들)) + " 명 남았습니다")'),
     ("문장형", "Sentence", "sort friends", "친구들 정렬해", "friends.sort()", '친구들.sort()'),
     ("문장형", "Sentence", "reverse friends", "친구들 거꾸로 해", "friends.reverse()", '친구들.reverse()'),
     ("문장형", "Sentence", "shuffle friends", "친구들 섞어", '__import__("random").shuffle(friends)', '__import__("random").shuffle(친구들)'),

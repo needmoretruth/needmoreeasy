@@ -1705,6 +1705,12 @@ fn emit_say(
                             span_of_value(value),
                         ));
                     }
+                    nme_core::syntax::TextPart::Reading { .. } => {
+                        return Err(not_supported(
+                            "a reading inside a sentence",
+                            span_of_value(value),
+                        ));
+                    }
                 }
             }
             let escaped = c_string_literal(&literal, span_of_value(value))?;

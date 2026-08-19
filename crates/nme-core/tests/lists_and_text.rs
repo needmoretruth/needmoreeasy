@@ -493,11 +493,12 @@ fn forever_on_its_own_is_still_a_word() {
 #[test]
 fn nothing_inside_a_story_becomes_a_list_statement() {
     // A story still puts a saved name's value into its text, which is what
-    // the story block has always done; what it must never do is read one of
-    // these lines as a command.
+    // the story block has always done, and a reading is a value the same way
+    // — `친구들 개수` is how many there are. What it must never do is read
+    // one of these lines as a command: `정렬해` sorts nothing in here.
     assert_eq!(
         ok("친구들은 목록 민수\n이야기:\n친구들 정렬해\n친구들 개수 말해줘\n끝\n"),
-        "친구들 = [\"민수\"]\nif True:\n    print(str(친구들) + \" 정렬해\")\n    print(str(친구들) + \" 개수 말해줘\")\n# end\n"
+        "친구들 = [\"민수\"]\nif True:\n    print(str(친구들) + \" 정렬해\")\n    print(str(len(친구들)) + \" 말해줘\")\n# end\n"
     );
     assert_eq!(
         ok("set friends to list of Mina\nstory:\nsort friends\nend\n"),
@@ -917,5 +918,33 @@ fn saying_file_makes_a_save_write_one() {
     assert_eq!(
         ok("set entry to hello\nsave entry to \"diary.txt\"\n"),
         "entry = \"hello\"\nentry = \"diary.txt\"\n"
+    );
+}
+
+/// A reading inside a sentence is read.
+///
+/// The readings only worked as a whole line, so `show You carry how many bag
+/// things` printed `You carry how many ['a', 'b'] things` — the list itself,
+/// dropped into the middle of the sentence.
+#[test]
+fn a_reading_inside_a_sentence_is_worked_out() {
+    assert_eq!(
+        ok("set bag to list of a, b\nshow You carry how many bag things\n"),
+        "bag = [\"a\", \"b\"]\nprint(\"You carry \" + str(len(bag)) + \" things\")\n"
+    );
+    assert_eq!(
+        ok("가방은 목록 가, 나\n가방 개수 개를 들고 있습니다 말해줘\n"),
+        "가방 = [\"가\", \"나\"]\nprint(str(len(가방)) + \" 개를 들고 있습니다\")\n"
+    );
+    // `Your marks` is a possessive and a common noun, so that one stays the
+    // word it is — the rule that keeps `my score` reading as words.
+    assert_eq!(
+        ok("set marks to list of 1, 2\nshow Your marks add up to the total of marks\n"),
+        "marks = [1, 2]\nprint(\"Your marks add up to \" + str(sum(marks)))\n"
+    );
+    // A name on its own in the same sentence still goes in as itself.
+    assert_eq!(
+        ok("set bag to list of a\nset name to Mina\nshow name carries how many bag things\n"),
+        "bag = [\"a\"]\nname = \"Mina\"\nprint(str(name) + \" carries \" + str(len(bag)) + \" things\")\n"
     );
 }

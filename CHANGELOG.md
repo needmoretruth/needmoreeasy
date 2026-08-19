@@ -5,6 +5,12 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+- **A reading may stand inside a sentence.** `how many`, `the total of`, `the
+  biggest of` and their Korean twins only worked as the whole of a line, so
+  `show You carry how many bag things` printed `You carry how many ['a', 'b']
+  things` — the list itself, dropped into the middle of the words. It now
+  reads `You carry 2 things`. The words the writer typed are kept, so tidying
+  a program into the other language leaves the sentence saying what it said.
 
 ## 0.1.0
 - **A word English already has is never read as a misspelling.** NME repairs

@@ -191,6 +191,18 @@ pub enum Literal {
 pub enum TextPart {
     Literal(String),
     Variable(String),
+    /// A reading standing inside a sentence: `You carry how many bag things`,
+    /// `가방 개수 개를 들고 있습니다`.
+    ///
+    /// The readings used to work only as a whole line, so a sentence with one
+    /// in it printed the list itself — `You carry how many ['a', 'b'] things`.
+    /// `written` is the words the writer typed, kept so the sentence can be
+    /// written back exactly as it stood; `of` and `reading` are what it means.
+    Reading {
+        of: String,
+        reading: Reading,
+        written: String,
+    },
 }
 
 /// Text written without quotes. Variables introduced earlier with `ask` or a

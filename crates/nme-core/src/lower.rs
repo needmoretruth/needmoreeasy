@@ -603,7 +603,7 @@ fn lower_condition_value(value: &ConditionValue, source: &str) -> String {
 }
 
 /// The one place a reading becomes Python, shared by values and conditions.
-fn lower_reading(of: &str, reading: Reading) -> String {
+pub(crate) fn lower_reading(of: &str, reading: Reading) -> String {
     match reading {
         Reading::Count => format!("len({of})"),
         Reading::Total => format!("sum({of})"),
@@ -826,6 +826,9 @@ fn lower_template(template: &TextTemplate) -> String {
         .map(|part| match part {
             TextPart::Literal(text) => python_string(text),
             TextPart::Variable(name) => format!("str({name})"),
+            TextPart::Reading { of, reading, .. } => {
+                format!("str({})", lower_reading(of, *reading))
+            }
         })
         .collect();
     if pieces.is_empty() {

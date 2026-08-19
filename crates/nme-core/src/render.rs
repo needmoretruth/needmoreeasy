@@ -8,6 +8,7 @@
 //! writer wrote it.
 
 use crate::convert::{Language, SyntaxLevel};
+use crate::lower::lower_reading;
 use crate::syntax::{
     Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, ItemPosition, ListOrder,
     Literal, LogicalOp, ModuleVersion, NmeStmt, Reading, SplitBy, TextPart, TextTemplate, UpdateOp,
@@ -1032,6 +1033,10 @@ fn plain_text(template: &TextTemplate) -> String {
         .map(|part| match part {
             TextPart::Literal(text) => text.as_str(),
             TextPart::Variable(name) => name.as_str(),
+            // The words the writer typed. A reading inside a sentence is
+            // written back exactly as it stood, the same way the rest of a
+            // message is: what a message *says* is never translated.
+            TextPart::Reading { written, .. } => written.as_str(),
         })
         .collect()
 }
@@ -1052,6 +1057,9 @@ fn lower_template(template: &TextTemplate) -> String {
         .map(|part| match part {
             TextPart::Literal(text) => python_string(text),
             TextPart::Variable(name) => format!("str({name})"),
+            TextPart::Reading { of, reading, .. } => {
+                format!("str({})", lower_reading(of, *reading))
+            }
         })
         .collect();
     if pieces.is_empty() {

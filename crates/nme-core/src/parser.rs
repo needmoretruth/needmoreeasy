@@ -8131,6 +8131,7 @@ fn template_source_text(template: &TextTemplate) -> String {
         .map(|part| match part {
             TextPart::Literal(text) => text.as_str(),
             TextPart::Variable(name) => name.as_str(),
+            TextPart::Reading { written, .. } => written.as_str(),
         })
         .collect()
 }
@@ -14629,9 +14630,37 @@ fn make_text_template(
     tokens: &[Token],
     known_names: &HashSet<String>,
 ) -> TextTemplate {
+    // A reading standing inside a sentence: `You carry how many bag things`,
+    // `가방 개수 개를 들고 있습니다`. The readings used to work only as a
+    // whole line, so those printed the list itself. Read before the single
+    // names, because a reading is made of them.
+    let mut readings: Vec<(usize, usize, String, Reading)> = Vec::new();
+    let mut at = 0;
+    while at < tokens.len() {
+        let found = reading_prefix(&tokens[at..], known_names).and_then(|(value, used)| {
+            match value {
+                // Only the readings that are a name and a word — those lower
+                // to Python from the two of them alone, so a sentence holding
+                // one can still be written back out and checked.
+                Value::Reading { of, reading } if used >= 2 => Some((used, of, reading)),
+                _ => None,
+            }
+        });
+        match found {
+            Some((used, of, reading)) => {
+                readings.push((at, at + used, of, reading));
+                at += used;
+            }
+            None => at += 1,
+        }
+    }
+
     // Which words in this sentence could stand in for something the writer saved?
     let mut slots: Vec<(usize, &str, &str)> = Vec::new();
     for (at, token) in tokens.iter().enumerate() {
+        if readings.iter().any(|(from, to, _, _)| at >= *from && at < *to) {
+            continue;
+        }
         let Some(word) = name_word(token) else {
             continue;
         };
@@ -14644,10 +14673,21 @@ fn make_text_template(
         slots.push((at, variable, particle));
     }
 
-    let mut parts = Vec::new();
-    let mut cursor = tokens[0].span.start;
-    let end = tokens[tokens.len() - 1].span.end;
-
+    // Both kinds in the order they were written, so a sentence with a name
+    // before a reading comes out in that order.
+    let mut pieces: Vec<(Span, TextPart, &str)> = Vec::new();
+    for (from, to, of, reading) in &readings {
+        let span = Span::new(tokens[*from].span.start, tokens[to - 1].span.end);
+        pieces.push((
+            span,
+            TextPart::Reading {
+                of: of.clone(),
+                reading: *reading,
+                written: source[span.start..span.end].to_string(),
+            },
+            "",
+        ));
+    }
     for &(at, variable, particle) in &slots {
         // The same name twice in one sentence is a label and then its value:
         // `show strength strength` is meant to read `strength 7`, and Korean puts
@@ -14659,15 +14699,27 @@ fn make_text_template(
         {
             continue;
         }
-        let token = &tokens[at];
-        if cursor < token.span.start {
-            push_literal(&mut parts, &source[cursor..token.span.start]);
+        pieces.push((
+            tokens[at].span,
+            TextPart::Variable(variable.to_string()),
+            particle,
+        ));
+    }
+    pieces.sort_by_key(|(span, _, _)| span.start);
+
+    let mut parts = Vec::new();
+    let mut cursor = tokens[0].span.start;
+    let end = tokens[tokens.len() - 1].span.end;
+
+    for (span, part, particle) in pieces {
+        if cursor < span.start {
+            push_literal(&mut parts, &source[cursor..span.start]);
         }
-        parts.push(TextPart::Variable(variable.to_string()));
+        parts.push(part);
         if !particle.is_empty() {
             push_literal(&mut parts, particle);
         }
-        cursor = token.span.end;
+        cursor = span.end;
     }
     if cursor < end {
         push_literal(&mut parts, &source[cursor..end]);

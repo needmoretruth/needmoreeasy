@@ -216,6 +216,7 @@ they are read as NME **only inside a loop block**. Outside one they stay Python.
 | Sentence | `remove Mina from friends` | `friends.remove("Mina")` |
 | Sentence | `show how many friends` | `print(len(friends))` |
 | Sentence | `set total to how many friends` | `total = len(friends)` |
+| Sentence | `show You have how many friends left` | `print("You have " + str(len(friends)) + " left")` |
 | Sentence | `sort friends` | `friends.sort()` |
 | Sentence | `reverse friends` | `friends.reverse()` |
 | Sentence | `shuffle friends` | `__import__("random").shuffle(friends)` |
