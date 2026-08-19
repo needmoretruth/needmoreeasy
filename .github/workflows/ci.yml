@@ -98,6 +98,9 @@ jobs:
           cargo build --release -p nme-cli --locked
           python scripts/check-syntax-reference.py
           python scripts/check-guide-code.py
+          python scripts/check-guide-silent.py
+          python scripts/check-guide-index.py
+          python scripts/check-tier-parity.py
       # A program that fails to compile announces itself; one that compiles into
       # a different program does not. These two guard the quiet half: thirty
       # ordinary sentences must print themselves, and no documented line may
@@ -108,6 +111,7 @@ jobs:
         run: |
           python scripts/mistake-probes/prose_corpus.py
           python scripts/check-prose-blocks.py
+          python scripts/mistake-probes/english_prose.py
       - name: Install the CLI and smoke test it (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
