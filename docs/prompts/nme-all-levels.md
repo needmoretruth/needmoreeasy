@@ -439,6 +439,7 @@ on one line. This document describes version `0.0.1-beta.160`.
 | Beginner | `use list` | (binds count, sort, reverse, remove, first, last, sum, largest, smallest and their Korean twins) |
 | Beginner | `use text` | (binds upper, lower, trim, split, join, replace, starts_with, length and their Korean twins) |
 | Beginner | `use math` | (binds math, root, round_to, pi, power, absolute, floor, ceil and their Korean twins) |
+| Beginner | `use date` | (binds today, now, year, month, day_of_month, weekday, days_after and their Korean twins) |
 | Beginner | `use random latest` | (the newest bundled adapter) |
 | Beginner | `use random version "0.0.1"` | (that exact adapter) |
 | Beginner | `from "helper.nme" import greet` | (from helper import greet — needs helper.nme next to the program) |
@@ -458,7 +459,7 @@ restart a project in a different language.
 ⚠ One thing to watch: a one-word line, and anything shaped like `name = value`,
 is already valid Python and will not be read as an NME sentence.
 
-## Six bundled toolboxes
+## Seven bundled toolboxes
 
 One line of `use random` brings in the random tools, `use file` the file tools,
 and `use zero_knowledge` a Schnorr proof-of-knowledge reference implementation.
@@ -473,8 +474,8 @@ One import binds **both** the English and the Korean names.
 
 `random` is not suitable for passwords or any security decision.
 
-Three more: `use list`, `use text` and `use math`. Everything inside them is a
-plain Python builtin, so they run in the browser as they stand.
+Four more: `use list`, `use text`, `use math` and `use date`. Everything inside
+them is a plain Python builtin, so they run in the browser as they stand.
 
 | List | Text | Maths |
 | --- | --- | --- |
@@ -488,9 +489,23 @@ plain Python builtin, so they run in the browser as they stand.
 | `largest(values)` / `최대(값들)` | `length(text)` / `길이(글)` | |
 | `smallest(values)` / `최소(값들)` | | |
 
+| Date | Meaning |
+| --- | --- |
+| `today()` / `오늘()` | today's date, text such as `"2026-08-19"` |
+| `now()` / `지금()` | the time now, text such as `"09:06"` |
+| `year()` / `올해()` | which year it is (a number) |
+| `month()` / `이번달()` | which month it is (a number) |
+| `day_of_month()` / `오늘일자()` | which day of the month it is (a number) |
+| `weekday()` / `요일()` | `Wednesday` in English, `수요일` in Korean |
+| `days_after(n)` / `며칠뒤(n)` | the date n days from today; a negative n is days before |
+
 `sort`, `reverse` and `remove` hand back a new list and leave the original
-alone. `list`, `text` and `math` are ordinary words, so they name a module only
-when they stand beside `use` and nothing else is left over on the line.
+alone. `list`, `text`, `math` and `date` are ordinary words, so they name a
+module only when they stand beside `use` and nothing else is left over on the
+line. `weekday` and `요일` are the one place where two names hold different
+values: a weekday name is a word, so it belongs to a language, and the name you
+write chooses the language of the answer. The clock a browser hands Python is
+UTC.
 
 ### Every word you may use
 
@@ -649,7 +664,7 @@ when they stand beside `use` and nothing else is left over on the line.
 | `E0304` | the repeat count could not be understood |
 | `E0305` | the repeat count is missing |
 | `E0306` | the repeat-over-a-list line could not be understood |
-| `E0401` | NME bundles six modules, and this is not one of them |
+| `E0401` | NME bundles seven modules, and this is not one of them |
 | `E0402` | latest and an exact version on one line |
 | `E0403` | the module version is missing |
 | `E0404` | this module version is not bundled |

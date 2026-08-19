@@ -773,12 +773,12 @@ NME.
 
 ## Versioned bundled modules
 
-Six beginner modules ship with NME: `random` (dice and picks), `file`
+Seven beginner modules ship with NME: `random` (dice and picks), `file`
 (reading, writing, and JSON), `zero_knowledge` / `영지식` (a Schnorr
 proof-of-knowledge reference implementation), `list` / `목록`, `text` / `글자`,
-and `math` / `수학`. Everything is bundled at `0.0.1` except zero knowledge,
-which is at `0.0.2`. One `use` line per module is enough; importing the same
-module twice is a collision error:
+`math` / `수학`, and `date` / `날짜`. Everything is bundled at `0.0.1` except
+zero knowledge, which is at `0.0.2`. One `use` line per module is enough;
+importing the same module twice is a collision error:
 
 ```nme
 use random
@@ -787,13 +787,14 @@ use zero_knowledge
 use list
 use text
 use math
+use date
 ```
 
-`list`, `text`, `math` and their Korean names are words people write in
+`list`, `text`, `math`, `date` and their Korean names are words people write in
 ordinary sentences, so NME only reads one as a module when it stands directly
 beside the `use` / `사용` word and no other word is left over on the line.
-`get the list of names` and `장 볼 목록을 사용해 보세요` are sentences, and they
-print.
+`get the list of names`, `What is the date today?` and
+`장 볼 목록을 사용해 보세요` are sentences, and they print.
 
 `use random latest`, `use latest random`, and `use random version "0.0.1"` are
 equivalents, and so are the Korean spellings `랜덤 사용`, `랜덤 사용 최신`,
@@ -866,9 +867,36 @@ things people mean.
 | `ceil(x)` | `올림(x)` | `math.ceil(x)` |
 | `math_version` | `수학버전` | adapter version string |
 
-Every one of these is a plain Python builtin or one call into `math`, so a
-program using them runs unchanged in the browser as well as on a desktop
-Python.
+| English | Korean | Python meaning |
+| --- | --- | --- |
+| `today()` | `오늘()` | `date.today().isoformat()`, text such as `"2026-08-19"` |
+| `now()` | `지금()` | `datetime.now().strftime("%H:%M")` |
+| `year()` | `올해()` | `date.today().year` |
+| `month()` | `이번달()` | `date.today().month` |
+| `day_of_month()` | `오늘일자()` | `date.today().day` |
+| `weekday()` | `요일()` | the weekday's name; see below |
+| `days_after(n)` | `며칠뒤(n)` | `(date.today() + timedelta(days=n)).isoformat()` |
+| `date_version` | `날짜버전` | adapter version string |
+
+`days_after` counts forwards, so a negative number counts backwards:
+`days_after(-1)` is yesterday.
+
+`weekday` and `요일` are the one place in any bundled module where the two
+languages hold **different** values. Every other helper hands back a number, a
+list, or the writer's own text, and one value serves both names. A weekday name
+is a word, and a word has to be in some language: on a Wednesday `weekday()`
+answers `Wednesday` and `요일()` answers `수요일`. The name you write chooses
+the language of the answer.
+
+The clock is the machine's own clock, and the clock a browser hands Python is
+**UTC**. In the browser playground `today()` is therefore today in UTC and
+`now()` is the time in UTC, which is not the wall clock of a reader outside
+that zone. Dates come back as ISO text (`2026-08-19`), which sorts correctly
+and reads the same everywhere.
+
+Every one of these is a plain Python builtin or one call into `math` or
+`datetime`, so a program using them runs unchanged in the browser as well as on
+a desktop Python.
 
 All bundled adapters reserve their helper names. If one already exists, NME stops
 and asks you to rename it instead of silently overwriting your value.

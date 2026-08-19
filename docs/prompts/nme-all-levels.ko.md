@@ -438,6 +438,7 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 | 초급 | `목록 사용` | (binds count, sort, reverse, remove, first, last, sum, largest, smallest and their Korean twins) |
 | 초급 | `글자 사용` | (binds upper, lower, trim, split, join, replace, starts_with, length and their Korean twins) |
 | 초급 | `수학 사용` | (binds math, root, round_to, pi, power, absolute, floor, ceil and their Korean twins) |
+| 초급 | `날짜 사용` | (binds today, now, year, month, day_of_month, weekday, days_after and their Korean twins) |
 | 초급 | `랜덤 사용 최신` | (the newest bundled adapter) |
 | 초급 | `랜덤 사용 버전 "0.0.1"` | (that exact adapter) |
 | 초급 | `"helper.nme"에서 greet 가져오기` | (from helper import greet — needs helper.nme next to the program) |
@@ -456,7 +457,7 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 ⚠ 한 가지만 조심합니다. 낱말 하나짜리 줄과 `이름 = 값` 모양은 이미 올바른
 Python이므로, NME 문장으로 읽히지 않습니다.
 
-## 딸려 오는 도구 여섯 가지
+## 딸려 오는 도구 일곱 가지
 
 `랜덤 사용` 한 줄이면 무작위 도구가, `파일 사용` 한 줄이면 파일 도구가,
 `영지식 사용` 한 줄이면 영지식 증명 도구가 준비됩니다. 한 번 부르면 한국어
@@ -471,8 +472,8 @@ Python이므로, NME 문장으로 읽히지 않습니다.
 
 `랜덤`은 비밀번호나 보안에 쓰면 안 됩니다.
 
-`목록 사용`, `글자 사용`, `수학 사용` 세 가지가 더 있습니다. 안에 든 것은 전부
-평범한 Python 기본 기능이라 브라우저에서도 그대로 돕니다.
+`목록 사용`, `글자 사용`, `수학 사용`, `날짜 사용` 네 가지가 더 있습니다. 안에 든
+것은 전부 평범한 Python 기본 기능이라 브라우저에서도 그대로 돕니다.
 
 | 목록 | 글자 | 수학 |
 | --- | --- | --- |
@@ -486,9 +487,21 @@ Python이므로, NME 문장으로 읽히지 않습니다.
 | `최대(값들)` / `largest(values)` | `길이(글)` / `length(text)` | |
 | `최소(값들)` / `smallest(values)` | | |
 
+| 날짜 | 뜻 |
+| --- | --- |
+| `오늘()` / `today()` | 오늘 날짜, `"2026-08-19"` 같은 글자 |
+| `지금()` / `now()` | 지금 시각, `"09:06"` 같은 글자 |
+| `올해()` / `year()` | 올해 (숫자) |
+| `이번달()` / `month()` | 이번 달 (숫자) |
+| `오늘일자()` / `day_of_month()` | 오늘이 며칟날인지 (숫자) |
+| `요일()` / `weekday()` | 한국어 이름은 `수요일`, 영어 이름은 `Wednesday` |
+| `며칠뒤(n)` / `days_after(n)` | n일 뒤 날짜. 음수를 넣으면 n일 전 |
+
 `정렬`·`뒤집기`·`빼기`는 새 목록을 돌려주고 원래 목록은 그대로 둡니다.
-`목록`·`글자`·`수학`은 평범한 낱말이라, `사용` 바로 옆에 있고 그 줄에 다른 낱말이
-없을 때만 모듈로 읽습니다.
+`목록`·`글자`·`수학`·`날짜`는 평범한 낱말이라, `사용` 바로 옆에 있고 그 줄에 다른
+낱말이 없을 때만 모듈로 읽습니다. `요일`과 `weekday`는 두 이름이 서로 다른 값을
+갖는 유일한 자리입니다. 요일 이름은 낱말이라서 어느 한 언어에 속하고, 적은 이름이
+답의 언어를 정합니다. 브라우저가 Python에 주는 시계는 UTC입니다.
 
 ### 쓸 수 있는 낱말 전부
 
@@ -647,7 +660,7 @@ Python이므로, NME 문장으로 읽히지 않습니다.
 | `E0304` | 반복 횟수를 이해하지 못했습니다 |
 | `E0305` | 반복 횟수가 비어 있습니다 |
 | `E0306` | 목록 반복 줄을 이해하지 못했습니다 |
-| `E0401` | NME에 내장된 모듈은 여섯 개이고 이것은 그중에 없습니다 |
+| `E0401` | NME에 내장된 모듈은 일곱 개이고 이것은 그중에 없습니다 |
 | `E0402` | 최신과 정확한 버전을 함께 적었습니다 |
 | `E0403` | 모듈 버전이 비어 있습니다 |
 | `E0404` | 내장되어 있지 않은 모듈 버전입니다 |

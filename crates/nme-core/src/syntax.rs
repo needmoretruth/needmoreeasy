@@ -27,7 +27,7 @@ pub const FILE_MODULE: &str = "file";
 pub const FILE_MODULE_KO: &str = "파일";
 pub const ZERO_KNOWLEDGE_MODULE: &str = "zero_knowledge";
 pub const ZERO_KNOWLEDGE_MODULE_KO: &str = "영지식";
-/// The three modules a beginner reaches for first. Every one of their names is
+/// The four modules a beginner reaches for first. Every one of their names is
 /// an ordinary word in both languages, which is why the parser only reads one
 /// as a module when it stands directly beside the `use`/`사용` word and
 /// nothing else on the line is left over. See `match_use_module`.
@@ -37,6 +37,8 @@ pub const TEXT_MODULE: &str = "text";
 pub const TEXT_MODULE_KO: &str = "글자";
 pub const MATH_MODULE: &str = "math";
 pub const MATH_MODULE_KO: &str = "수학";
+pub const DATE_MODULE: &str = "date";
+pub const DATE_MODULE_KO: &str = "날짜";
 pub const USE_KEYWORD_KO: &str = "사용";
 pub const WAIT_KEYWORD: &str = "wait";
 pub const WAIT_KEYWORD_KO: &str = "기다려";
@@ -80,6 +82,8 @@ pub const LIST_MODULE_VERSION: &str = "0.0.1";
 pub const TEXT_MODULE_VERSION: &str = "0.0.1";
 /// Version of the easy maths adapter bundled with this compiler.
 pub const MATH_MODULE_VERSION: &str = "0.0.1";
+/// Version of the easy date adapter bundled with this compiler.
+pub const DATE_MODULE_VERSION: &str = "0.0.1";
 
 /// One bundled beginner module. Both languages are always exposed after one
 /// import, and each module has one explicit local version.
@@ -91,16 +95,18 @@ pub enum BundledModuleId {
     List,
     Text,
     Math,
+    Date,
 }
 
 impl BundledModuleId {
-    pub const ALL: [BundledModuleId; 6] = [
+    pub const ALL: [BundledModuleId; 7] = [
         Self::Random,
         Self::File,
         Self::ZeroKnowledge,
         Self::List,
         Self::Text,
         Self::Math,
+        Self::Date,
     ];
 
     pub fn name_en(self) -> &'static str {
@@ -111,6 +117,7 @@ impl BundledModuleId {
             Self::List => LIST_MODULE,
             Self::Text => TEXT_MODULE,
             Self::Math => MATH_MODULE,
+            Self::Date => DATE_MODULE,
         }
     }
 
@@ -122,6 +129,7 @@ impl BundledModuleId {
             Self::List => LIST_MODULE_KO,
             Self::Text => TEXT_MODULE_KO,
             Self::Math => MATH_MODULE_KO,
+            Self::Date => DATE_MODULE_KO,
         }
     }
 
@@ -133,18 +141,20 @@ impl BundledModuleId {
             Self::List => LIST_MODULE_VERSION,
             Self::Text => TEXT_MODULE_VERSION,
             Self::Math => MATH_MODULE_VERSION,
+            Self::Date => DATE_MODULE_VERSION,
         }
     }
 
     /// True when the module's own name is a word people write in ordinary
-    /// sentences. `list`, `text`, `math`, `목록`, `글자` and `수학` are all such
-    /// words: `get the list of names` and `장 볼 목록을 사용해 보세요` are
-    /// sentences, not module lines. The parser therefore reads these three
+    /// sentences. `list`, `text`, `math`, `date`, `목록`, `글자`, `수학` and
+    /// `날짜` are all such words: `get the list of names`,
+    /// `장 볼 목록을 사용해 보세요` and `이 날짜 사용법을 알려 주세요` are
+    /// sentences, not module lines. The parser therefore reads these four
     /// only when the name stands beside the `use`/`사용` word **and** every
     /// other word on the line is module wording; anything else is not a module
     /// line at all, and goes on to be read as the sentence it is.
     pub fn name_is_an_ordinary_word(self) -> bool {
-        matches!(self, Self::List | Self::Text | Self::Math)
+        matches!(self, Self::List | Self::Text | Self::Math | Self::Date)
     }
 }
 

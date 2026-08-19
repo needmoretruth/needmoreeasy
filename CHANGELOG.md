@@ -5,6 +5,26 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+- **A date module.** One line — `use date latest` / `날짜 사용 최신` — brings
+  `today()`, `now()`, `year()`, `month()`, `day_of_month()`, `weekday()` and
+  `days_after(7)`. It is the seventh bundled module, and it replaces the
+  `from datetime import date` that the diary, log, habit and report guides all
+  used to open with. **It runs on the site too** — only the `monotonic` family
+  of clocks kills the browser engine, and `datetime` was checked in the shipped
+  one. That clock is UTC.
+- **The weekday name is the one thing the two languages answer differently.**
+  `weekday()` gives `Wednesday` and `요일()` gives `수요일`. Every other helper
+  binds one value to both names; a weekday **is a word**, so it has to be in
+  some language. It is the only place in any bundled module where the name you
+  write chooses the language of the answer.
+- **The bare names `date` and `날짜` are not bound.** They are what people call
+  their own values, and binding them would make the module collide with exactly
+  the programs that want it. `날짜는 5` and `날짜 사용 최신` live together.
+- **`No date has been set for the repairs.` prints again.** A module name that
+  is also an ordinary word — `date`, `list` — was counted **anywhere on the
+  line** when recovering a mistyped module line, so that sentence was refused
+  with `E0305`. It now counts only beside the `use`/`사용` word. The defect
+  predates this module; `No list has been set.` had it too.
 - **A job's body may be indented.** Indenting under `to greet:` and closing with
   `end` is the shape every guide in this repository teaches, and it was the one
   shape refused — with `E0101` pointing at a header that was already correct.

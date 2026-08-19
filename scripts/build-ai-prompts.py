@@ -611,7 +611,7 @@ restart a project in a different language.
 is already valid Python and will not be read as an NME sentence."""
 
 
-MODULES_KO = """## 딸려 오는 도구 여섯 가지
+MODULES_KO = """## 딸려 오는 도구 일곱 가지
 
 `랜덤 사용` 한 줄이면 무작위 도구가, `파일 사용` 한 줄이면 파일 도구가,
 `영지식 사용` 한 줄이면 영지식 증명 도구가 준비됩니다. 한 번 부르면 한국어
@@ -626,8 +626,8 @@ MODULES_KO = """## 딸려 오는 도구 여섯 가지
 
 `랜덤`은 비밀번호나 보안에 쓰면 안 됩니다.
 
-`목록 사용`, `글자 사용`, `수학 사용` 세 가지가 더 있습니다. 안에 든 것은 전부
-평범한 Python 기본 기능이라 브라우저에서도 그대로 돕니다.
+`목록 사용`, `글자 사용`, `수학 사용`, `날짜 사용` 네 가지가 더 있습니다. 안에 든
+것은 전부 평범한 Python 기본 기능이라 브라우저에서도 그대로 돕니다.
 
 | 목록 | 글자 | 수학 |
 | --- | --- | --- |
@@ -641,11 +641,23 @@ MODULES_KO = """## 딸려 오는 도구 여섯 가지
 | `최대(값들)` / `largest(values)` | `길이(글)` / `length(text)` | |
 | `최소(값들)` / `smallest(values)` | | |
 
-`정렬`·`뒤집기`·`빼기`는 새 목록을 돌려주고 원래 목록은 그대로 둡니다.
-`목록`·`글자`·`수학`은 평범한 낱말이라, `사용` 바로 옆에 있고 그 줄에 다른 낱말이
-없을 때만 모듈로 읽습니다."""
+| 날짜 | 뜻 |
+| --- | --- |
+| `오늘()` / `today()` | 오늘 날짜, `"2026-08-19"` 같은 글자 |
+| `지금()` / `now()` | 지금 시각, `"09:06"` 같은 글자 |
+| `올해()` / `year()` | 올해 (숫자) |
+| `이번달()` / `month()` | 이번 달 (숫자) |
+| `오늘일자()` / `day_of_month()` | 오늘이 며칟날인지 (숫자) |
+| `요일()` / `weekday()` | 한국어 이름은 `수요일`, 영어 이름은 `Wednesday` |
+| `며칠뒤(n)` / `days_after(n)` | n일 뒤 날짜. 음수를 넣으면 n일 전 |
 
-MODULES_EN = """## Six bundled toolboxes
+`정렬`·`뒤집기`·`빼기`는 새 목록을 돌려주고 원래 목록은 그대로 둡니다.
+`목록`·`글자`·`수학`·`날짜`는 평범한 낱말이라, `사용` 바로 옆에 있고 그 줄에 다른
+낱말이 없을 때만 모듈로 읽습니다. `요일`과 `weekday`는 두 이름이 서로 다른 값을
+갖는 유일한 자리입니다. 요일 이름은 낱말이라서 어느 한 언어에 속하고, 적은 이름이
+답의 언어를 정합니다. 브라우저가 Python에 주는 시계는 UTC입니다."""
+
+MODULES_EN = """## Seven bundled toolboxes
 
 One line of `use random` brings in the random tools, `use file` the file tools,
 and `use zero_knowledge` a Schnorr proof-of-knowledge reference implementation.
@@ -660,8 +672,8 @@ One import binds **both** the English and the Korean names.
 
 `random` is not suitable for passwords or any security decision.
 
-Three more: `use list`, `use text` and `use math`. Everything inside them is a
-plain Python builtin, so they run in the browser as they stand.
+Four more: `use list`, `use text`, `use math` and `use date`. Everything inside
+them is a plain Python builtin, so they run in the browser as they stand.
 
 | List | Text | Maths |
 | --- | --- | --- |
@@ -675,9 +687,23 @@ plain Python builtin, so they run in the browser as they stand.
 | `largest(values)` / `최대(값들)` | `length(text)` / `길이(글)` | |
 | `smallest(values)` / `최소(값들)` | | |
 
+| Date | Meaning |
+| --- | --- |
+| `today()` / `오늘()` | today's date, text such as `"2026-08-19"` |
+| `now()` / `지금()` | the time now, text such as `"09:06"` |
+| `year()` / `올해()` | which year it is (a number) |
+| `month()` / `이번달()` | which month it is (a number) |
+| `day_of_month()` / `오늘일자()` | which day of the month it is (a number) |
+| `weekday()` / `요일()` | `Wednesday` in English, `수요일` in Korean |
+| `days_after(n)` / `며칠뒤(n)` | the date n days from today; a negative n is days before |
+
 `sort`, `reverse` and `remove` hand back a new list and leave the original
-alone. `list`, `text` and `math` are ordinary words, so they name a module only
-when they stand beside `use` and nothing else is left over on the line."""
+alone. `list`, `text`, `math` and `date` are ordinary words, so they name a
+module only when they stand beside `use` and nothing else is left over on the
+line. `weekday` and `요일` are the one place where two names hold different
+values: a weekday name is a word, so it belongs to a language, and the name you
+write chooses the language of the answer. The clock a browser hands Python is
+UTC."""
 
 
 def build(binary: Path) -> None:

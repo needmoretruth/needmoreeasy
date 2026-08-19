@@ -376,18 +376,26 @@ Python으로 `나이표 = {}`라고 쓴 이름도 표로 봅니다.
 | 초급 | `목록 사용` | (binds count, sort, reverse, remove, first, last, sum, largest, smallest and their Korean twins) |
 | 초급 | `글자 사용` | (binds upper, lower, trim, split, join, replace, starts_with, length and their Korean twins) |
 | 초급 | `수학 사용` | (binds math, root, round_to, pi, power, absolute, floor, ceil and their Korean twins) |
+| 초급 | `날짜 사용` | (binds today, now, year, month, day_of_month, weekday, days_after and their Korean twins) |
 | 초급 | `랜덤 사용 최신` | (the newest bundled adapter) |
 | 초급 | `랜덤 사용 버전 "0.0.1"` | (that exact adapter) |
 | 문장형 | `"helper.nme"에서 greet 가져와` | (from helper import greet — needs helper.nme next to the program) |
 | 초급 | `"helper.nme"에서 greet 가져오기` | (from helper import greet — needs helper.nme next to the program) |
 | 고급 | `from "helper.nme" import greet` | (from helper import greet — needs helper.nme next to the program) |
 
-`랜덤 사용`·`파일 사용`·`영지식 사용` 다음으로 자주 쓰는 세 가지가 `목록 사용`,
-`글자 사용`, `수학 사용`입니다. 한 줄이면 아래 이름들이 한국어와 영어 두 가지로
-모두 준비되고, 안에 들어 있는 것은 전부 평범한 Python 기본 기능이라 브라우저에서도
-그대로 돕니다. `목록`·`글자`·`수학`은 평범한 낱말이라서, `사용`/`use` 바로 옆에
-있고 그 줄에 다른 낱말이 없을 때만 모듈로 읽습니다. `장 볼 목록을 사용해 보세요`는
-그대로 출력되는 문장입니다.
+`랜덤 사용`·`파일 사용`·`영지식 사용` 다음으로 자주 쓰는 네 가지가 `목록 사용`,
+`글자 사용`, `수학 사용`, `날짜 사용`입니다. 한 줄이면 아래 이름들이 한국어와 영어
+두 가지로 모두 준비되고, 안에 들어 있는 것은 전부 평범한 Python 기본 기능이라
+브라우저에서도 그대로 돕니다. `목록`·`글자`·`수학`·`날짜`는 평범한 낱말이라서,
+`사용`/`use` 바로 옆에 있고 그 줄에 다른 낱말이 없을 때만 모듈로 읽습니다.
+`장 볼 목록을 사용해 보세요`와 `이 날짜 사용법을 알려 주세요`는 그대로 출력되는
+문장입니다.
+
+수요일이면 `요일()`은 `수요일`을, 영어 이름 `weekday()`는 `Wednesday`를
+돌려줍니다. 두 이름이 서로 다른 값을 갖는 곳은 내장 모듈을 통틀어 여기 하나이며,
+요일 이름은 숫자가 아니라 낱말이라서 어느 한 언어에 속할 수밖에 없기 때문입니다.
+적은 이름이 답의 언어를 정합니다. 브라우저가 Python에 주는 시계는 UTC이므로
+브라우저에서 `오늘()`은 UTC 기준의 오늘입니다.
 
 `목록 사용` (`use list`):
 
@@ -430,6 +438,19 @@ Python으로 `나이표 = {}`라고 쓴 이름도 표로 봅니다.
 | `내림(x)` | `floor(x)` | `math.floor(x)` |
 | `올림(x)` | `ceil(x)` | `math.ceil(x)` |
 | `수학버전` | `math_version` | `"0.0.1"` |
+
+`날짜 사용` (`use date`):
+
+| 한국어 표기 | 영어 표기 | Python |
+| --- | --- | --- |
+| `오늘()` | `today()` | `date.today().isoformat()` — text such as `"2026-08-19"` |
+| `지금()` | `now()` | `datetime.now().strftime("%H:%M")` — the clock a browser gives is UTC |
+| `올해()` | `year()` | `date.today().year` |
+| `이번달()` | `month()` | `date.today().month` |
+| `오늘일자()` | `day_of_month()` | `date.today().day` |
+| `요일()` | `weekday()` | `strftime("%A")`, an English name such as `Wednesday`; the Korean name answers `수요일` |
+| `며칠뒤(n)` | `days_after(n)` | `(date.today() + timedelta(days=n)).isoformat()`; a negative `n` reads as days before |
+| `날짜버전` | `date_version` | `"0.0.1"` |
 
 `정렬`·`뒤집기`·`빼기`는 새 목록을 돌려주고 원래 목록은 그대로 둡니다. 원래 목록을
 직접 바꾸려면 문장형 `친구들 정렬해`·`친구들 거꾸로 해`·`친구들에서 민수 빼`를
@@ -723,7 +744,7 @@ Python으로 `나이표 = {}`라고 쓴 이름도 표로 봅니다.
 | `E0304` | 반복 횟수를 이해하지 못했습니다 |
 | `E0305` | 반복 횟수가 비어 있습니다 |
 | `E0306` | 목록 반복 줄을 이해하지 못했습니다 |
-| `E0401` | NME에 내장된 모듈은 여섯 개이고 이것은 그중에 없습니다 |
+| `E0401` | NME에 내장된 모듈은 일곱 개이고 이것은 그중에 없습니다 |
 | `E0402` | 최신과 정확한 버전을 함께 적었습니다 |
 | `E0403` | 모듈 버전이 비어 있습니다 |
 | `E0404` | 내장되어 있지 않은 모듈 버전입니다 |

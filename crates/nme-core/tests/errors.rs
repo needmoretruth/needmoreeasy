@@ -1156,7 +1156,7 @@ fn only_the_bundled_modules_are_available() {
     // NME has never shipped still gets the whole list back.
     let message = err("use network\n");
     assert!(
-        message.contains("bundles `use random`, `use file`, `use list`, `use text`, `use math`, and `use zero_knowledge`"),
+        message.contains("bundles `use random`, `use file`, `use list`, `use text`, `use math`, `use date`, and `use zero_knowledge`"),
         "{message}"
     );
 }
@@ -1193,7 +1193,7 @@ fn file_module_does_not_overwrite_existing_names() {
 fn two_modules_on_one_line_are_rejected() {
     let message = err("use random and file\n");
     assert!(
-        message.contains("bundles `use random`, `use file`, `use list`, `use text`, `use math`, and `use zero_knowledge`"),
+        message.contains("bundles `use random`, `use file`, `use list`, `use text`, `use math`, `use date`, and `use zero_knowledge`"),
         "{message}"
     );
 }

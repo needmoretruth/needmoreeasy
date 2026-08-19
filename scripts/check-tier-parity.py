@@ -689,6 +689,10 @@ MATRIX = [
         line("use math"), line("수학 사용"),
         line("use math"), line("수학 사용"),
         line("import math")),
+    row("use_date_module", "Load the bundled date module", ["BundledModuleId::Date"],
+        line("use date"), line("날짜 사용"),
+        line("use date"), line("날짜 사용"),
+        line("import datetime")),
     row("use_latest", "Load the newest bundled module", ["ModuleVersion::Latest"],
         line("use random latest"), line("랜덤 사용 최신"),
         line("use random latest"), line("랜덤 사용 최신"),
@@ -704,8 +708,9 @@ MATRIX = [
 
     # ------------------------------------------------- the bundled helpers
     #
-    # Each of these is one name the `use list` / `use text` / `use math`
-    # adapters bind, written out at all three levels in both languages. The
+    # Each of these is one name the `use list` / `use text` / `use math` /
+    # `use date` adapters bind, written out at all three levels in both
+    # languages. The
     # cross-language check is the point of them: the English cell and the
     # Korean cell have to produce the same Python once the Korean helper name
     # is mapped to its English twin, so a Korean helper name that quietly
@@ -855,6 +860,64 @@ MATRIX = [
         (["use math", "say ceil(3.2)"], 1),
         (["수학 사용", "말해 올림(3.2)"], 1),
         (['print(__import__("math").ceil(3.2))'], 0)),
+    row("date_module_today", "Today's date, with the date module", [],
+        (["use date", "show today()"], 1),
+        (["날짜 사용", "말해줘 오늘()"], 1),
+        (["use date", "say today()"], 1),
+        (["날짜 사용", "말해 오늘()"], 1),
+        (['print(__import__("datetime").date.today().isoformat())'], 0)),
+    row("date_module_now", "The time now, with the date module", [],
+        (["use date", "show now()"], 1),
+        (["날짜 사용", "말해줘 지금()"], 1),
+        (["use date", "say now()"], 1),
+        (["날짜 사용", "말해 지금()"], 1),
+        (['print(__import__("datetime").datetime.now().strftime("%H:%M"))'], 0)),
+    row("date_module_year", "Which year it is, with the date module", [],
+        (["use date", "show year()"], 1),
+        (["날짜 사용", "말해줘 올해()"], 1),
+        (["use date", "say year()"], 1),
+        (["날짜 사용", "말해 올해()"], 1),
+        (['print(__import__("datetime").date.today().year)'], 0)),
+    row("date_module_month", "Which month it is, with the date module", [],
+        (["use date", "show month()"], 1),
+        (["날짜 사용", "말해줘 이번달()"], 1),
+        (["use date", "say month()"], 1),
+        (["날짜 사용", "말해 이번달()"], 1),
+        (['print(__import__("datetime").date.today().month)'], 0)),
+    row("date_module_day_of_month", "Which day of the month it is", [],
+        (["use date", "show day_of_month()"], 1),
+        (["날짜 사용", "말해줘 오늘일자()"], 1),
+        (["use date", "say day_of_month()"], 1),
+        (["날짜 사용", "말해 오늘일자()"], 1),
+        (['print(__import__("datetime").date.today().day)'], 0)),
+    # The one row in this file whose two languages are bound to different
+    # Python values, declared as twins here rather than derived from
+    # `lower.rs`. A weekday name is a word, and a word has to be in some
+    # language: `weekday()` answers `Wednesday` and `요일()` answers `수요일`.
+    # The capability — "which weekday is it, named in the reader's language" —
+    # is what is at parity, and `date_weekday_names_differ_by_language` in
+    # `crates/nme-core/tests/date_module.rs` pins the difference so that it
+    # cannot be undone by accident.
+    row("date_module_weekday", "Which weekday it is, named in the reader's language", [],
+        (["use date", "show weekday()"], 1),
+        (["날짜 사용", "말해줘 요일()"], 1),
+        (["use date", "say weekday()"], 1),
+        (["날짜 사용", "말해 요일()"], 1),
+        (['print(__import__("datetime").date.today().strftime("%A"))'], 0),
+        names={"요일": "weekday"}),
+    row("date_module_version", "Which date adapter is loaded", [],
+        (["use date", "show date_version"], 1),
+        (["날짜 사용", "말해줘 날짜버전"], 1),
+        (["use date", "say date_version"], 1),
+        (["날짜 사용", "말해 날짜버전"], 1),
+        (['print("0.0.1")'], 0)),
+    row("date_module_days_after", "The date so many days from today", [],
+        (["use date", "show days_after(7)"], 1),
+        (["날짜 사용", "말해줘 며칠뒤(7)"], 1),
+        (["use date", "say days_after(7)"], 1),
+        (["날짜 사용", "말해 며칠뒤(7)"], 1),
+        (['print((__import__("datetime").date.today() + '
+          '__import__("datetime").timedelta(days=7)).isoformat())'], 0)),
 
     # ---------------------------------------------------------------- slow text
     row("slow", "Say text one character at a time", ["NmeStmt::SaySlowly"],

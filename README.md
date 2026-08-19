@@ -213,7 +213,7 @@ startup time, distribution size, and performance, so measure the actual
 program; NME does not make a false blanket claim that every Python-compatible
 program becomes faster or smaller.
 
-## Versioned random, file, zero-knowledge, list, text, and maths tools
+## Versioned random, file, zero-knowledge, list, text, maths, and date tools
 
 ```text
 랜덤 사용 최신
@@ -262,14 +262,16 @@ zero-knowledge transcript simulation, and the separate live-relay case.
 This is a mathematically faithful learning/reference implementation, not an
 audited side-channel-hardened production cryptography library.
 
-Three more toolboxes are bundled at version `0.0.1`: `list` / `목록`
+Four more toolboxes are bundled at version `0.0.1`: `list` / `목록`
 (`count`/`개수`, `sort`/`정렬`, `reverse`/`뒤집기`, `remove`/`빼기`,
 `first`/`첫번째`, `last`/`마지막`, `sum`/`합계`, `largest`/`최대`,
 `smallest`/`최소`), `text` / `글자` (`upper`/`대문자`, `lower`/`소문자`,
 `trim`/`공백없애기`, `split`/`나누기`, `join`/`합치기`, `replace`/`바꾸기`,
 `starts_with`/`로시작`, `length`/`길이`) and `math` / `수학` (`root`/`제곱근`,
 `round_to`/`반올림`, `pi`/`원주율`, `power`/`거듭제곱`, `absolute`/`절댓값`,
-`floor`/`내림`, `ceil`/`올림`).
+`floor`/`내림`, `ceil`/`올림`) and `date` / `날짜` (`today`/`오늘`,
+`now`/`지금`, `year`/`올해`, `month`/`이번달`, `day_of_month`/`오늘일자`,
+`weekday`/`요일`, `days_after`/`며칠뒤`).
 
 ```text
 목록 사용 최신
@@ -278,11 +280,17 @@ show count([1, 2, 3])
 말해 대문자("hello")
 ```
 
-Everything inside them is a plain Python builtin or one call into `math`, so
-they run in the browser as they stand. Their names are ordinary words, so NME
-only reads one as a module when it stands beside `use` / `사용` and no other
-word is left over on the line: `get the list of names` is a sentence and
-prints.
+Everything inside them is a plain Python builtin or one call into `math` or
+`datetime`, so they run in the browser as they stand. Their names are ordinary
+words, so NME only reads one as a module when it stands beside `use` / `사용`
+and no other word is left over on the line: `get the list of names` and
+`What is the date today?` are sentences and print.
+
+The date module is the one place where a Korean name and its English twin hold
+different values, because a weekday name is a word rather than a number: on a
+Wednesday `weekday()` answers `Wednesday` and `요일()` answers `수요일`. The
+clock is the machine's own, and the clock a browser gives Python is UTC, so in
+the browser playground `today()` is today in UTC.
 
 Run `nme modules` to see installed module versions.
 

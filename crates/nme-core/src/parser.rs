@@ -4995,7 +4995,9 @@ fn parse_update_amount(
     let trimmed = strip_attached_particle_span(source, tokens, UPDATE_AMOUNT_PARTICLES_KO);
     if let Some(trimmed) = trimmed {
         let base = &source[trimmed.start..trimmed.end];
-        if known_names.contains(base) && !known_names.contains(&source[span_of(tokens).start..span_of(tokens).end]) {
+        if known_names.contains(base)
+            && !known_names.contains(&source[span_of(tokens).start..span_of(tokens).end])
+        {
             return Some(Code::Source(trimmed));
         }
     }
@@ -11146,10 +11148,12 @@ fn match_use_module(
         return Err(unsupported_module_diagnostic(span_of(tokens)));
     };
 
-    // `list`, `text` and `math` are words people write in ordinary sentences,
-    // so they name a module only when they stand beside the `use`/`사용` word.
-    // Without this, `get the list of names` was answered with the list of
-    // modules NME bundles instead of being printed.
+    // `list`, `text`, `math` and `date` are words people write in ordinary
+    // sentences, so they name a module only when they stand beside the
+    // `use`/`사용` word. Without this, `get the list of names` was answered
+    // with the list of modules NME bundles instead of being printed, and
+    // `이 날짜 사용법을 알려 주세요` would be a module line rather than a
+    // question.
     if module.name_is_an_ordinary_word()
         && !module_touches_the_action(tokens, action_start, action_end, module_at)
     {
@@ -11274,9 +11278,9 @@ fn match_use_module(
         }
         // A word left over on a `random`, `file` or `zero_knowledge` line is a
         // module line written wrongly, and saying so is worth a bad minute.
-        // A word left over beside `list`, `text` or `math` is far more likely
-        // to be the sentence those words belong to — `I use text messages
-        // every day` — so the line is handed back unclaimed.
+        // A word left over beside `list`, `text`, `math` or `date` is far more
+        // likely to be the sentence those words belong to — `I use text
+        // messages every day` — so the line is handed back unclaimed.
         if module.name_is_an_ordinary_word() {
             return Ok(None);
         }
@@ -11437,6 +11441,28 @@ fn module_binding_names(module: BundledModuleId) -> &'static [&'static str] {
             "math_version",
             "수학버전",
         ],
+        BundledModuleId::Date => &[
+            // `date` and `날짜` themselves are not here, because the adapter
+            // does not bind them: a program that already keeps its own `date`
+            // must still be able to write `use date`.
+            "날짜모듈",
+            "today",
+            "오늘",
+            "now",
+            "지금",
+            "year",
+            "올해",
+            "month",
+            "이번달",
+            "day_of_month",
+            "오늘일자",
+            "weekday",
+            "요일",
+            "days_after",
+            "며칠뒤",
+            "date_version",
+            "날짜버전",
+        ],
     }
 }
 
@@ -11465,10 +11491,11 @@ fn module_name_collision_diagnostic(
 }
 
 fn module_word_matches(token: &Token, module: BundledModuleId, mode: MatchMode) -> bool {
-    // `list` is one edit from `last`, `text` from `next`, and `math` from
-    // `path`. Repairing a typo into one of those names would let an ordinary
-    // sentence name a module, so the three ordinary names are matched exactly
-    // and only the rarer ones earn a one-edit repair.
+    // `list` is one edit from `last`, `text` from `next`, `math` from `path`,
+    // and `date` from `data`, `late` and `gate`. Repairing a typo into one of
+    // those names would let an ordinary sentence name a module, so the four
+    // ordinary names are matched exactly and only the rarer ones earn a
+    // one-edit repair.
     let mode = if module.name_is_an_ordinary_word() {
         MatchMode::Exact
     } else {
@@ -11515,8 +11542,8 @@ fn module_touches_the_action(
 fn unsupported_module_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
         DiagnosticCode::UnsupportedModule,
-        "NME bundles `use random`, `use file`, `use list`, `use text`, `use math`, and `use zero_knowledge`",
-        "NME에는 쉬운 `랜덤`, `파일`, `목록`, `글자`, `수학`, `영지식` 모듈이 들어 있어요",
+        "NME bundles `use random`, `use file`, `use list`, `use text`, `use math`, `use date`, and `use zero_knowledge`",
+        "NME에는 쉬운 `랜덤`, `파일`, `목록`, `글자`, `수학`, `날짜`, `영지식` 모듈이 들어 있어요",
         span,
     )
     .with_bilingual_hint(
@@ -11560,24 +11587,36 @@ fn find_use_action(tokens: &[Token], mode: MatchMode) -> Option<(usize, usize, S
 }
 
 fn recoverable_module_shape(tokens: &[Token]) -> bool {
-    let action_recovered = find_use_action(tokens, MatchMode::Exact).is_none()
-        && find_use_action(tokens, MatchMode::Recover).is_some();
-    let module_exact = tokens
-        .iter()
-        .filter(|token| {
-            BundledModuleId::ALL
-                .iter()
-                .any(|module| module_word_matches(token, *module, MatchMode::Exact))
-        })
-        .count();
-    let module_recovered = tokens
-        .iter()
-        .filter(|token| {
-            BundledModuleId::ALL
-                .iter()
-                .any(|module| module_word_matches(token, *module, MatchMode::Recover))
-        })
-        .count();
+    let recovered_action = find_use_action(tokens, MatchMode::Recover);
+    let action_recovered =
+        find_use_action(tokens, MatchMode::Exact).is_none() && recovered_action.is_some();
+    // `list`, `text`, `math` and `date` are ordinary words. On a real module
+    // line the name stands beside the `use`/`사용` word, which is the rule
+    // `match_use_module` already applies; anywhere else the word belongs to
+    // the sentence it came from. Counting it wherever it appeared made
+    // `No date has been set for the repairs.` a mistyped module line — `set`
+    // is one edit from `get` — which took the line off the prose path and
+    // answered it with `the repeat count is missing`.
+    let names_this_module = |token: &Token, at: usize, module: BundledModuleId, mode: MatchMode| {
+        module_word_matches(token, module, mode)
+            && (!module.name_is_an_ordinary_word()
+                || recovered_action.is_some_and(|(start, end, _)| {
+                    module_touches_the_action(tokens, start, end, at)
+                }))
+    };
+    let module_names = |mode: MatchMode| {
+        tokens
+            .iter()
+            .enumerate()
+            .filter(|(at, token)| {
+                BundledModuleId::ALL
+                    .iter()
+                    .any(|module| names_this_module(token, *at, *module, mode))
+            })
+            .count()
+    };
+    let module_exact = module_names(MatchMode::Exact);
+    let module_recovered = module_names(MatchMode::Recover);
     let exact_latest = tokens
         .iter()
         .filter(|token| word_matches_any(token, LATEST_WORDS, MatchMode::Exact))

@@ -290,6 +290,7 @@ MODULES = [
     ("초급", "Beginner", "use list", "목록 사용", "(binds count, sort, reverse, remove, first, last, sum, largest, smallest and their Korean twins)"),
     ("초급", "Beginner", "use text", "글자 사용", "(binds upper, lower, trim, split, join, replace, starts_with, length and their Korean twins)"),
     ("초급", "Beginner", "use math", "수학 사용", "(binds math, root, round_to, pi, power, absolute, floor, ceil and their Korean twins)"),
+    ("초급", "Beginner", "use date", "날짜 사용", "(binds today, now, year, month, day_of_month, weekday, days_after and their Korean twins)"),
     ("초급", "Beginner", "use random latest", "랜덤 사용 최신", "(the newest bundled adapter)"),
     ("초급", "Beginner", 'use random version "0.0.1"', '랜덤 사용 버전 "0.0.1"', "(that exact adapter)"),
     ("문장형", "Sentence", 'use greet from "helper.nme"', '"helper.nme"에서 greet 가져와', "(from helper import greet — needs helper.nme next to the program)"),
@@ -298,7 +299,7 @@ MODULES = [
 ]
 
 
-# Every name the three newest bundled adapters bind, written once and emitted
+# Every name the four newest bundled adapters bind, written once and emitted
 # into both reference files. These are Python names rather than NME statements,
 # so they are a plain table rather than a level table; `check-tier-parity.py`
 # is what compiles each of them at all three levels in both languages.
@@ -336,11 +337,21 @@ MODULE_HELPERS = [
         ("ceil(x)", "올림(x)", "`math.ceil(x)`"),
         ("math_version", "수학버전", '`"0.0.1"`'),
     ]),
+    ("use date", "날짜 사용", [
+        ("today()", "오늘()", '`date.today().isoformat()` — text such as `"2026-08-19"`'),
+        ("now()", "지금()", '`datetime.now().strftime("%H:%M")` — the clock a browser gives is UTC'),
+        ("year()", "올해()", "`date.today().year`"),
+        ("month()", "이번달()", "`date.today().month`"),
+        ("day_of_month()", "오늘일자()", "`date.today().day`"),
+        ("weekday()", "요일()", '`strftime("%A")`, an English name such as `Wednesday`; the Korean name answers `수요일`'),
+        ("days_after(n)", "며칠뒤(n)", "`(date.today() + timedelta(days=n)).isoformat()`; a negative `n` reads as days before"),
+        ("date_version", "날짜버전", '`"0.0.1"`'),
+    ]),
 ]
 
 
 def module_helper_tables(korean_first: bool) -> str:
-    """The helper tables for `use list`, `use text` and `use math`."""
+    """The helper tables for `use list`, `use text`, `use math` and `use date`."""
     blocks = []
     for english_line, korean_line, rows in MODULE_HELPERS:
         lead = f"`{korean_line}`" if korean_first else f"`{english_line}`"
@@ -787,12 +798,19 @@ Python으로 `나이표 = {{}}`라고 쓴 이름도 표로 봅니다.
 
 {level_table(MODULES, True)}
 
-`랜덤 사용`·`파일 사용`·`영지식 사용` 다음으로 자주 쓰는 세 가지가 `목록 사용`,
-`글자 사용`, `수학 사용`입니다. 한 줄이면 아래 이름들이 한국어와 영어 두 가지로
-모두 준비되고, 안에 들어 있는 것은 전부 평범한 Python 기본 기능이라 브라우저에서도
-그대로 돕니다. `목록`·`글자`·`수학`은 평범한 낱말이라서, `사용`/`use` 바로 옆에
-있고 그 줄에 다른 낱말이 없을 때만 모듈로 읽습니다. `장 볼 목록을 사용해 보세요`는
-그대로 출력되는 문장입니다.
+`랜덤 사용`·`파일 사용`·`영지식 사용` 다음으로 자주 쓰는 네 가지가 `목록 사용`,
+`글자 사용`, `수학 사용`, `날짜 사용`입니다. 한 줄이면 아래 이름들이 한국어와 영어
+두 가지로 모두 준비되고, 안에 들어 있는 것은 전부 평범한 Python 기본 기능이라
+브라우저에서도 그대로 돕니다. `목록`·`글자`·`수학`·`날짜`는 평범한 낱말이라서,
+`사용`/`use` 바로 옆에 있고 그 줄에 다른 낱말이 없을 때만 모듈로 읽습니다.
+`장 볼 목록을 사용해 보세요`와 `이 날짜 사용법을 알려 주세요`는 그대로 출력되는
+문장입니다.
+
+수요일이면 `요일()`은 `수요일`을, 영어 이름 `weekday()`는 `Wednesday`를
+돌려줍니다. 두 이름이 서로 다른 값을 갖는 곳은 내장 모듈을 통틀어 여기 하나이며,
+요일 이름은 숫자가 아니라 낱말이라서 어느 한 언어에 속할 수밖에 없기 때문입니다.
+적은 이름이 답의 언어를 정합니다. 브라우저가 Python에 주는 시계는 UTC이므로
+브라우저에서 `오늘()`은 UTC 기준의 오늘입니다.
 
 {module_helper_tables(True)}
 
@@ -1105,13 +1123,20 @@ a quote character.
 
 {level_table(MODULES, False)}
 
-After `use random`, `use file` and `use zero_knowledge`, the three most asked
-for are `use list`, `use text` and `use math`. One line makes every name below
-ready in both languages, and everything inside them is plain Python builtins,
-so they run in the browser as they stand. `list`, `text` and `math` are
-ordinary words, so they name a module only when they stand beside `use`/`사용`
-and nothing else is left over on the line; `get the list of names` is a
-sentence and prints.
+After `use random`, `use file` and `use zero_knowledge`, the four most asked
+for are `use list`, `use text`, `use math` and `use date`. One line makes every
+name below ready in both languages, and everything inside them is plain Python
+builtins, so they run in the browser as they stand. `list`, `text`, `math` and
+`date` are ordinary words, so they name a module only when they stand beside
+`use`/`사용` and nothing else is left over on the line; `get the list of names`
+and `What is the date today?` are sentences and print.
+
+On a Wednesday, `weekday()` answers `Wednesday` and its Korean name `요일()`
+answers `수요일`.
+This is the one place in any bundled module where the two names hold different
+values: a weekday name is a word rather than a number, so it has to be in some
+language, and the name you write chooses which. The clock a browser hands
+Python is UTC, so in the browser `today()` is today in UTC.
 
 {module_helper_tables(False)}
 

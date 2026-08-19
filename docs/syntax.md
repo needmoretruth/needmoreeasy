@@ -388,19 +388,27 @@ a quote character.
 | Beginner | `use list` | (binds count, sort, reverse, remove, first, last, sum, largest, smallest and their Korean twins) |
 | Beginner | `use text` | (binds upper, lower, trim, split, join, replace, starts_with, length and their Korean twins) |
 | Beginner | `use math` | (binds math, root, round_to, pi, power, absolute, floor, ceil and their Korean twins) |
+| Beginner | `use date` | (binds today, now, year, month, day_of_month, weekday, days_after and their Korean twins) |
 | Beginner | `use random latest` | (the newest bundled adapter) |
 | Beginner | `use random version "0.0.1"` | (that exact adapter) |
 | Sentence | `use greet from "helper.nme"` | (from helper import greet — needs helper.nme next to the program) |
 | Beginner | `from "helper.nme" import greet` | (from helper import greet — needs helper.nme next to the program) |
 | Advanced | `from "helper.nme" import greet` | (from helper import greet — needs helper.nme next to the program) |
 
-After `use random`, `use file` and `use zero_knowledge`, the three most asked
-for are `use list`, `use text` and `use math`. One line makes every name below
-ready in both languages, and everything inside them is plain Python builtins,
-so they run in the browser as they stand. `list`, `text` and `math` are
-ordinary words, so they name a module only when they stand beside `use`/`사용`
-and nothing else is left over on the line; `get the list of names` is a
-sentence and prints.
+After `use random`, `use file` and `use zero_knowledge`, the four most asked
+for are `use list`, `use text`, `use math` and `use date`. One line makes every
+name below ready in both languages, and everything inside them is plain Python
+builtins, so they run in the browser as they stand. `list`, `text`, `math` and
+`date` are ordinary words, so they name a module only when they stand beside
+`use`/`사용` and nothing else is left over on the line; `get the list of names`
+and `What is the date today?` are sentences and print.
+
+On a Wednesday, `weekday()` answers `Wednesday` and its Korean name `요일()`
+answers `수요일`.
+This is the one place in any bundled module where the two names hold different
+values: a weekday name is a word rather than a number, so it has to be in some
+language, and the name you write chooses which. The clock a browser hands
+Python is UTC, so in the browser `today()` is today in UTC.
 
 `use list` (`목록 사용`):
 
@@ -443,6 +451,19 @@ sentence and prints.
 | `floor(x)` | `내림(x)` | `math.floor(x)` |
 | `ceil(x)` | `올림(x)` | `math.ceil(x)` |
 | `math_version` | `수학버전` | `"0.0.1"` |
+
+`use date` (`날짜 사용`):
+
+| English | Korean | Python |
+| --- | --- | --- |
+| `today()` | `오늘()` | `date.today().isoformat()` — text such as `"2026-08-19"` |
+| `now()` | `지금()` | `datetime.now().strftime("%H:%M")` — the clock a browser gives is UTC |
+| `year()` | `올해()` | `date.today().year` |
+| `month()` | `이번달()` | `date.today().month` |
+| `day_of_month()` | `오늘일자()` | `date.today().day` |
+| `weekday()` | `요일()` | `strftime("%A")`, an English name such as `Wednesday`; the Korean name answers `수요일` |
+| `days_after(n)` | `며칠뒤(n)` | `(date.today() + timedelta(days=n)).isoformat()`; a negative `n` reads as days before |
+| `date_version` | `날짜버전` | `"0.0.1"` |
 
 `sort`, `reverse` and `remove` hand back a new list and leave the original
 alone. To change the list itself, use the sentence statements `sort friends`,
@@ -743,7 +764,7 @@ touched.**
 | `E0304` | the repeat count could not be understood |
 | `E0305` | the repeat count is missing |
 | `E0306` | the repeat-over-a-list line could not be understood |
-| `E0401` | NME bundles six modules, and this is not one of them |
+| `E0401` | NME bundles seven modules, and this is not one of them |
 | `E0402` | latest and an exact version on one line |
 | `E0403` | the module version is missing |
 | `E0404` | this module version is not bundled |

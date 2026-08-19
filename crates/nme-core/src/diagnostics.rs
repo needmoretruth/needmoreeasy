@@ -843,10 +843,10 @@ impl DiagnosticCode {
             ),
             Self::UnsupportedModule => (
                 "E0401",
-                "NME bundles six modules, and this is not one of them",
-                "NME에 내장된 모듈은 여섯 개이고 이것은 그중에 없습니다",
-                "NME ships a small set of beginner modules: `random` (`랜덤`) for dice and picks, `file` (`파일`) for reading, writing and JSON, `list` (`목록`), `text` (`글자`), `math` (`수학`), and `zero_knowledge` (`영지식`). Anything else is a Python import: write `import name` on its own line.",
-                "NME는 초보자용 모듈을 여섯 개만 제공합니다: 주사위·선택용 `random`(`랜덤`), 읽기·쓰기·JSON용 `file`(`파일`), 그리고 `list`(`목록`), `text`(`글자`), `math`(`수학`), `zero_knowledge`(`영지식`)입니다. 다른 것은 Python import로 쓸 수 있습니다: `import name`을 한 줄로 쓰세요.",
+                "NME bundles seven modules, and this is not one of them",
+                "NME에 내장된 모듈은 일곱 개이고 이것은 그중에 없습니다",
+                "NME ships a small set of beginner modules: `random` (`랜덤`) for dice and picks, `file` (`파일`) for reading, writing and JSON, `list` (`목록`), `text` (`글자`), `math` (`수학`), `date` (`날짜`), and `zero_knowledge` (`영지식`). Anything else is a Python import: write `import name` on its own line.",
+                "NME는 초보자용 모듈을 일곱 개만 제공합니다: 주사위·선택용 `random`(`랜덤`), 읽기·쓰기·JSON용 `file`(`파일`), 그리고 `list`(`목록`), `text`(`글자`), `math`(`수학`), `date`(`날짜`), `zero_knowledge`(`영지식`)입니다. 다른 것은 Python import로 쓸 수 있습니다: `import name`을 한 줄로 쓰세요.",
             ),
             Self::LatestAndVersion => (
                 "E0402",

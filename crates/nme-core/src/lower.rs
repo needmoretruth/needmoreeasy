@@ -13,8 +13,9 @@ use crate::syntax::{
     BundledModuleId, Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind,
     ItemPosition, ListOrder, Literal, LogicalOp, NmeLine, NmeStmt, Reading, SplitBy, TextPart,
     TextTemplate, UpdateOp, Value, ZeroKnowledgeValue, CHANCE_SCALE, COOLDOWN_PREFIX,
-    ELAPSED_PYTHON, FILE_MODULE_VERSION, LIST_MODULE_VERSION, MATH_MODULE_VERSION,
-    RANDOM_MODULE_VERSION, TEXT_MODULE_VERSION, TIMER_NAME, ZERO_KNOWLEDGE_MODULE_VERSION,
+    DATE_MODULE_VERSION, ELAPSED_PYTHON, FILE_MODULE_VERSION, LIST_MODULE_VERSION,
+    MATH_MODULE_VERSION, RANDOM_MODULE_VERSION, TEXT_MODULE_VERSION, TIMER_NAME,
+    ZERO_KNOWLEDGE_MODULE_VERSION,
 };
 
 /// Counts one character's screen width the way a terminal does, so a Korean
@@ -105,6 +106,47 @@ const BILINGUAL_MATH_TOOLS_PREFIX: &str = concat!(
     "floor = 내림 = 수학.floor; ",
     "ceil = 올림 = 수학.ceil; ",
     "math_version = 수학버전 = ",
+);
+
+/// Eight date readings, all of them out of `datetime`.
+///
+/// `datetime` is the one clock the browser engine survives. `time.monotonic`,
+/// `time.perf_counter` and `time.monotonic_ns` end the RustPython WebAssembly
+/// module with `RuntimeError: unreachable` — not a Python exception a program
+/// can be sorry about, but the whole engine gone — so nothing here touches
+/// them. Every reading below was run in the shipped browser engine before it
+/// was written down.
+///
+/// The clock a browser hands Python is **UTC**, so `today()` in a browser is
+/// today in UTC rather than today where the reader is sitting. That is the
+/// house rule rather than an oversight, and both language references say so
+/// beside the table.
+///
+/// The bare names `date` and `날짜` are deliberately **not** bound. `date` is
+/// what people call their own variable when they are keeping one, and taking
+/// the name would turn `use date` into a refusal in the very programs that
+/// most want it. `datetime` is reached through `날짜모듈` instead.
+///
+/// `weekday` and `요일` are the one place in any bundled module where the two
+/// languages are bound to **different** values. Everywhere else a helper hands
+/// back a number, a list or the writer's own text, and one value serves both
+/// names. A weekday name is not language-neutral: it is a word, and a word has
+/// to be in some language. `Wednesday` is the wrong answer to `요일()` and
+/// `수요일` is the wrong answer to `weekday()`, so the rule here is that the
+/// name you write chooses the language of the answer. The Korean side reads
+/// its name out of a written-out list rather than out of the C library,
+/// because RustPython's `%A` is English on every machine regardless of locale.
+const BILINGUAL_DATE_TOOLS_PREFIX: &str = concat!(
+    "import datetime as 날짜모듈; ",
+    "today = 오늘 = lambda: 날짜모듈.date.today().isoformat(); ",
+    "now = 지금 = lambda: 날짜모듈.datetime.now().strftime(\"%H:%M\"); ",
+    "year = 올해 = lambda: 날짜모듈.date.today().year; ",
+    "month = 이번달 = lambda: 날짜모듈.date.today().month; ",
+    "day_of_month = 오늘일자 = lambda: 날짜모듈.date.today().day; ",
+    "weekday = lambda: 날짜모듈.date.today().strftime(\"%A\"); ",
+    "요일 = lambda: [\"월요일\", \"화요일\", \"수요일\", \"목요일\", \"금요일\", \"토요일\", \"일요일\"][날짜모듈.date.today().weekday()]; ",
+    "days_after = 며칠뒤 = lambda 일수: (날짜모듈.date.today() + 날짜모듈.timedelta(days=일수)).isoformat(); ",
+    "date_version = 날짜버전 = ",
 );
 
 const SCHNORR_GROUP15_PRIME: &str = "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F83655D23DCA3AD961C62F356208552BB9ED529077096966D670C354E4ABC9804F1746C08CA18217C32905E462E36CE3BE39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9DE2BCBF6955817183995497CEA956AE515D2261898FA051015728E5A8AAAC42DAD33170D04507A33A85521ABDF1CBA64ECFB850458DBEF0A8AEA71575D060C7DB3970F85A6E1E4C7ABF5AE8CDB0933D71E8C94E04A25619DCEE3D2261AD2EE6BF12FFA06D98A0864D87602733EC86A64521F2B18177B200CBBE117577A615D6C770988C0BAD946E208E24FA074E5AB3143DB5BFCE0FD108E4B82D120A93AD2CAFFFFFFFFFFFFFFFF";
@@ -364,6 +406,9 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
             }
             BundledModuleId::Math => {
                 format!("{BILINGUAL_MATH_TOOLS_PREFIX}\"{MATH_MODULE_VERSION}\"")
+            }
+            BundledModuleId::Date => {
+                format!("{BILINGUAL_DATE_TOOLS_PREFIX}\"{DATE_MODULE_VERSION}\"")
             }
         },
         NmeStmt::FileRead { target, path } => {
