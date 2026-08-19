@@ -14,7 +14,7 @@ not exist.
 
 NME (NeedMoreEasy) is **a small programming language that turns ordinary
 sentences into Python**. You can write it in English, in Korean, or mix the two
-on one line. This document describes version `0.1.0`.
+on one line. This document describes version `0.2.0`.
 
 **Three rules that matter.**
 

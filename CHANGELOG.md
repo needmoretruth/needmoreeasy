@@ -5,6 +5,43 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+
+## 0.2.0
+- **Errors say what is wrong, where, and why.** Twenty of the messages a
+  beginner meets most often were rewritten. `I don't know what \`echo\` does`
+  now says that the word is standing where the action word goes, and the hint
+  hands back the reader's own line with the word put right — but only when
+  that line really compiles, so following the hint cannot fail again. An
+  unclosed block points at the line that opened it instead of at the end of
+  the file; an unclosed quotation mark points at the mark that was opened, not
+  one column past the end of the line; and the lines that could not be read
+  quote the part they could not read.
+- **Eight programs that used to compile into something else now say so.**
+  `set x.count to 3` saved the words `.count to 3` into `x`; `show a; show b`
+  became one message reading `a; show b`; `item -1 of friends` and `wait -3
+  seconds` went through to a run-time failure; `put Mina in ages` on a record
+  printed itself; loading the same module twice was reported as ten names
+  colliding. Each of them is now refused with the line named.
+- **A semicolon is punctuation in writing.** `It was late; nobody spoke` was
+  handed to Python, which answered with a syntax error, and the Korean
+  `그는 웃었다; 나는 울었다` compiled into an assignment that meant something
+  else. Both now print themselves.
+- **`do` opens a job as well as a repeat.** `do greet with Mina` was answered
+  with "the repeat count is missing" on a line that repeats nothing. Running a
+  job with the wrong number of things is now named as that, and `do the
+  washing up` prints itself.
+- **Five file and module problems have codes of their own** — `E0238`,
+  `E0239`, `E0407`, `E0408` — instead of borrowing the code for a line with no
+  action on it, plus `E0409` for a module loaded twice. Looking a code up no
+  longer explains something else.
+- **Each language keeps its own examples.** A hint written in English no
+  longer offers a Korean line to copy, or the other way round, and a hint that
+  names your own name writes it the way your program writes it. Korean
+  particles now follow the name they attach to, in tidied programs as well as
+  in messages: `score는`, `name을`, `table은`.
+- **CPython's own error is said in plain words first.** A build that fails
+  CPython's check now opens with the line number and what is wrong with it, in
+  both languages, and keeps the original report underneath as evidence.
 - **A reading may stand inside a sentence.** `how many`, `the total of`, `the
   biggest of` and their Korean twins only worked as the whole of a line, so
   `show You carry how many bag things` printed `You carry how many ['a', 'b']
