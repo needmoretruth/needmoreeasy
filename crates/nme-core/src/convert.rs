@@ -168,7 +168,7 @@ pub fn convert_python(
     })
 }
 
-fn convert_line(
+pub(crate) fn convert_line(
     source: &str,
     line: &LogicalLine,
     level: SyntaxLevel,
@@ -642,7 +642,7 @@ fn is_safe_scalar_expression(tokens: &[Token]) -> bool {
     !tokens.is_empty() && !needs_operand
 }
 
-fn spans_multiple_physical_lines(source: &str, line: &LogicalLine) -> bool {
+pub(crate) fn spans_multiple_physical_lines(source: &str, line: &LogicalLine) -> bool {
     if source[line.span.start..line.span.end]
         .bytes()
         .any(|byte| matches!(byte, b'\n' | b'\r'))

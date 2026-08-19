@@ -42,8 +42,11 @@ pub mod diagnostics;
 pub mod lexer;
 pub mod lower;
 pub mod parser;
+mod render;
 pub mod syntax;
+pub mod tidy;
 pub mod transpile;
 
 pub use convert::{convert_python, Conversion, Language, SyntaxLevel};
+pub use tidy::tidy;
 pub use transpile::{transpile, transpile_with_modules, ModuleImport};

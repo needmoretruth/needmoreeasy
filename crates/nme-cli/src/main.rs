@@ -35,6 +35,7 @@ SHORTCUTS:
     nme h                         help
     nme comp hello                compile (Nuitka native build)
     nme conv app.py               convert (Python to NME)
+    nme tidy app.nme              tidy NME into one level and one language
 
 With no file name, `nme r` runs the single .nme program in the current
 folder; with several, it asks which one to run. `nme c` and `nme b` do the
@@ -47,6 +48,7 @@ to type more of the name.
 MORE COMMANDS:
     nme compile hello -o hello    Build an executable with Nuitka
     nme convert app.py [options]  Convert safe Python patterns to NME
+    nme convert app.nme [options] Tidy NME into one level and one language
         --level advanced|beginner|sentence
         --language en|ko
         -o <output.nme>
@@ -89,6 +91,7 @@ const HELP_KOREAN: &str = r"nme — NeedMoreEasy: 더 쉽게 시작해서 Python
     nme h                         도움말
     nme comp hello                컴파일 (Nuitka 실행 파일)
     nme conv app.py               변환 (Python을 NME로)
+    nme 정리 app.nme              NME를 한 표기·한 언어로 정리
 
 파일 이름 없이 `nme r`을 실행하면 현재 폴더의 .nme 프로그램이 하나일 때
 그것을 실행하고, 여러 개일 때는 어느 것을 실행할지 물어봅니다.
@@ -101,6 +104,7 @@ const HELP_KOREAN: &str = r"nme — NeedMoreEasy: 더 쉽게 시작해서 Python
 더 많은 명령:
     nme 컴파일 hello -o hello    Nuitka로 실행 파일 만들기
     nme 변환 app.py [옵션]       안전한 Python 형태를 NME로 변환
+    nme 변환 app.nme [옵션]      NME 프로그램을 한 단계·한 언어 표기로 정리
         --level advanced|beginner|sentence
         --language en|ko
         -o <출력.nme>
@@ -147,8 +151,10 @@ fn main() -> ExitCode {
         Some("컴파일") => command_compile(&args[1..], MessageLanguage::KoreanAndEnglish),
         Some("check" | "c") => command_check(&args[1..], MessageLanguage::English),
         Some("검사") => command_check(&args[1..], MessageLanguage::KoreanAndEnglish),
-        Some("convert" | "conv") => command_convert(&args[1..], MessageLanguage::English),
-        Some("변환") => command_convert(&args[1..], MessageLanguage::KoreanAndEnglish),
+        // `tidy` is the same command under the name somebody looks for when
+        // the file they have is already NME.
+        Some("convert" | "conv" | "tidy") => command_convert(&args[1..], MessageLanguage::English),
+        Some("변환" | "정리") => command_convert(&args[1..], MessageLanguage::KoreanAndEnglish),
         Some("modules" | "module" | "m") => command_modules(&args[1..], MessageLanguage::English),
         Some("모듈") => command_modules(&args[1..], MessageLanguage::KoreanAndEnglish),
         Some("native") => command_native(&args[1..], MessageLanguage::English),
@@ -809,8 +815,8 @@ fn command_convert(args: &[String], language: MessageLanguage) -> ExitCode {
         return fail(
             nme_core::diagnostics::DiagnosticCode::CliConvertNeedsFile,
             language,
-            "which Python file should I convert? e.g. nme convert app.py",
-            "변환할 Python 파일을 적어 주세요. 예: nme 변환 app.py",
+            "which file should I convert? e.g. nme convert app.py, or nme convert app.nme to tidy",
+            "변환할 파일을 적어 주세요. 예: nme 변환 app.py, .nme 파일이면 정리합니다",
         );
     };
     convert_file(&file, output, level, output_language, language)
@@ -834,7 +840,14 @@ fn convert_file(
             );
         }
     };
-    let conversion = match nme_core::convert_python(&source, level, output_language) {
+    // A `.nme` file is already NME, so there is nothing to convert: it is
+    // tidied into one spelling instead. Everything else is Python.
+    let converted = if file.ends_with(".nme") {
+        nme_core::tidy(&source, level, output_language)
+    } else {
+        nme_core::convert_python(&source, level, output_language)
+    };
+    let conversion = match converted {
         Ok(conversion) => conversion,
         Err(problems) => {
             eprint!(

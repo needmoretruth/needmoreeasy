@@ -1,14 +1,43 @@
-# Convert Python to NME
+# Tidy NME, and convert Python to NME
 
 English | [한국어](converting-python.ko.md)
 
 [Home](../README.md) | [Getting started](getting-started.md) | [Tutorial](tutorial.md) | [Language reference](language.md)
+
+## On the site, with nothing installed
+
+Under the writing box on [needmoreeasy.com](https://needmoreeasy.com/) there is
+a **Tidy up** button. Beside it you choose **which language** (English or
+한국어) and **which way of writing** (Sentence, Beginner, Python), and pressing
+it rewrites your program in that one way. **Undo** puts back exactly what you
+had.
+
+So write it fast and badly. Abbreviate, put the words in whatever order comes
+to you, mix the two languages in one file. Tidying is one press, afterwards.
+
+**The program has to run first.** Tidying reads what each line *means* and
+writes that meaning again, so a line the compiler cannot read has no meaning to
+rewrite. The band under the writing box says which line stopped it.
+
+**What the program does never changes.** Every rewritten line goes back through
+the compiler, and the Python has to come out byte for byte the same. A line
+that would change it is thrown away and yours is kept.
+
+## On your own machine
 
 The converter validates the complete input as Python, then rewrites only lines
 whose meaning has a safe equivalent at the requested NME level.
 
 ```sh
 nme convert app.py --level sentence --language ko -o app.nme
+```
+
+The same command also **tidies an NME file**. Give it a `.nme` program and it
+rewrites the NME you already have into one level and one language, so a file
+that mixes all three levels and both languages comes out written one way:
+
+```sh
+nme convert app.nme --level sentence --language ko -o app.tidy.nme
 ```
 
 ## Options
@@ -51,6 +80,24 @@ the friendly space used by hand-written natural prompts. You may remove the
 quotes after inspection when you want a more conversational phrase. Comments,
 indentation, blank lines, line endings, and unsupported Python remain
 unchanged.
+
+## What tidying an NME file does
+
+A `.nme` input has to compile first: tidying a program nobody can run would
+mean guessing what it was meant to say, so the same problems `nme check`
+reports come back and nothing is written.
+
+Every statement the compiler recognized is written again in the canonical
+spelling of the level and language you asked for, and every remaining line of
+Python goes through the Python conversion above. `--level advanced` gives you
+the generated Python, because ordinary Python is NME's advanced level.
+
+The line count and the indentation never change, and neither does what the
+program does: the Python out of the tidied file is compared byte for byte with
+the Python out of the original, and any rewrite that would change it is thrown
+away rather than written. A statement with no spelling at the level you asked
+for — beginner syntax is a smaller surface than sentence syntax on purpose —
+is left exactly as you wrote it.
 
 ## Why some Python remains
 
