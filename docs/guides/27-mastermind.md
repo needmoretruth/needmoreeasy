@@ -1,130 +1,122 @@
-# 27 — Game: Mastermind, guessing a secret code
+# 27 — Game: guessing a hidden set of colours
 
 English | [한국어](27-mastermind.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- Difficulty: ★★★★☆ (4/5)
-- Prerequisites: [12 — Random](12-random.md), [17 — Word guess](17-word-guess.md)
-- Topic: game & logic
-- Result: a Mastermind-style game that hides a 4-color code and gives black/white feedback for each guess
+- Difficulty: ★★★☆☆ (3/5)
+- Prerequisites: [23 — High score](23-high-score.md)
+- Topic: a game
+- Result: guessing the three colours the computer hid, in five tries
 
-The guessing games so far answered only "too big" or "too small".
-Mastermind gives two clues at once: how many colors are right **and in
-the right spot** (black), and how many colors are right but misplaced
-(white). Turning those clues into correct feedback is a small piece of
-real algorithm thinking.
+The computer hides three colours and you name three. It tells you **only how
+many you got**, never which ones, so finding them means changing one answer at a
+time and watching the number move.
 
 ## Steps
 
-1. A secret code is four picks from the color list — the `random_pick`
-   from guide [12](12-random.md), called four times:
+1. **Choose the hidden colours.** Shuffle the list and take the first of it,
+   three times over:
 
    ```nme
-   use random latest
-
-   colors = ["red", "blue", "green", "yellow"]
-
-   secret = []
-   for i in range(4):
-       secret.append(random_pick(colors))
+   set colors to list of red, blue, green, yellow
+   set answer to an empty list
+   repeat 3 times
+       shuffle colors
+       append the first of colors to answer
+   end
+   show answer joined by comma
    ```
 
-   `append` grows the list one color at a time, the same list-building
-   loop that guide [29](29-playlist.md) uses for a playlist.
+   Printing the answer is how you check the program while building it. Delete
+   that last line once it works.
 
-2. Black counts exact matches — same color, same position. Compare each
-   guess color with the secret color:
+2. **One try** takes three colours, keeps them in a list, and counts how many
+   of them are in the hidden set:
 
    ```nme
-   black = 0
-   for i in range(4):
-       if parts[i] == secret[i]:
-           black = black + 1
+   set answer to list of red, blue, green
+   set right to 0
+   set guess to an empty list
+   repeat 3 times
+       ask choice What colour?
+       append choice to guess
+       if answer contains choice
+           add 1 to right
+       end
+   end
+   show guess joined by comma
+   show right
    ```
 
-3. White is trickier: right colors that are in the wrong place. The
-   honest way counts every color that appears in both lists, then removes
-   the black ones:
+3. **Winning** is that one count:
 
    ```nme
-   white = 0
-   for color in colors:
-       white = white + min(parts.count(color), secret.count(color))
-   white = white - black
+   set right to 3
+   if right equals 3
+       show you found them all
+   end
    ```
 
-   `parts.count("red")` counts one list, `secret.count("red")` the other;
-   `min` takes the smaller — a color guessed three times cannot match a
-   secret that has it once. Subtracting `black` leaves only the misplaced
-   ones. This is the standard Mastermind feedback algorithm.
-
-4. The full game asks for guesses, validates them, and stops on four
-   blacks. Save `mastermind.nme`:
+4. **Count the tries down**, and show the answer when they run out:
 
    ```nme
-   # mastermind.nme — guess a 4-color secret code.
-   # Run: nme r mastermind
-
-   use random latest
-
-   colors = ["red", "blue", "green", "yellow"]
-
-   secret = []
-   for i in range(4):
-       secret.append(random_pick(colors))
-
-   turns = 0
-   while True:
-       ask guess, "guess 4 colors (red blue green yellow): "
-       parts = guess.split()
-       if len(parts) != 4:
-           show "please type exactly 4 colors"
-           continue
-       turns = turns + 1
-       black = 0
-       for i in range(4):
-           if parts[i] == secret[i]:
-               black = black + 1
-       white = 0
-       for color in colors:
-           white = white + min(parts.count(color), secret.count(color))
-       white = white - black
-       show f"black: {black}  white: {white}"
-       if black == 4:
-           show f"solved in {turns} turns"
-           break
+   set lives to 5
+   subtract 1 from lives
+   if lives equals 0
+       show out of tries
+   end
    ```
 
-5. Run it. A scripted round (the three guesses are piped in, then the
-   game ends) against a secret of `["yellow", "red", "blue", "red"]`:
+5. All of it:
 
-   ```sh
-   printf 'red blue green white\nblue yellow red white\nyellow red blue red\n' | nme r mastermind
+   ```nme
+   set colors to list of red, blue, green, yellow
+   set answer to an empty list
+   repeat 3 times
+       shuffle colors
+       append the first of colors to answer
+   end
+   set lives to 5
+   repeat forever
+       set right to 0
+       set guess to an empty list
+       repeat 3 times
+           ask choice What colour?
+           append choice to guess
+           if answer contains choice
+               add 1 to right
+           end
+       end
+       show guess joined by comma
+       show how many of them are hidden
+       show right
+       if right equals 3
+           show you found them all
+           stop
+       end
+       subtract 1 from lives
+       if lives equals 0
+           show out of tries
+           show answer joined by comma
+           stop
+       end
+   end
    ```
 
-   ```text
-   guess 4 colors (red blue green yellow): black: 0  white: 2
-   guess 4 colors (red blue green yellow): black: 0  white: 3
-   guess 4 colors (red blue green yellow): black: 4  white: 0
-   solved in 3 turns
-   ```
-
-   The first two guesses place yellow and red somewhere wrong; the third
-   shows every position matching. Play against your own secret by running
-   the program without the pipe — every run hides a new code.
+   **Position is not checked.** It only counts whether a colour is in there, so
+   naming the same colour twice counts twice. Real Mastermind also says how many
+   are in the right place, and that needs a loop that knows which position it is
+   at — something sentence syntax does not have yet.
 
 ## Try it yourself
 
-Count invalid guesses (a wrong color word) as a miss instead of
-re-asking, or add a `tries` limit and a "you lost" message when it runs
-out. Add two more colors and make the game ask for 5 — the feedback
-algorithm does not change at all.
+Use five colours and six tries. Count for yourself which of the two changes
+makes it harder.
 
 ## What you learned
 
-- `random_pick` inside a loop builds a random secret of any length.
-- Black feedback is a position-by-position comparison.
-- `min(count, count)` per color is the honest way to count shared colors.
-- Subtracting black from white leaves exactly the misplaced colors.
-- A `continue` guard keeps invalid input out of the scoring loop.
+- Shuffling and taking the first, several times over, makes a random set.
+- A value taken out of one list goes straight into another.
+- "How many did I get" is one counting name and one `contains`.
+- The whole game has no quotes, no brackets and no equals sign.

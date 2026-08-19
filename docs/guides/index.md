@@ -56,7 +56,7 @@ guide.
 ### Part 2 — Small programs you can build
 
 For someone who has finished Part 1 and wants games, menus and small projects
-to keep. **Guides 17, 18, 19, 22, 23 and 28 are written in sentences alone** — no
+to keep. **Guides 17, 18, 19, 22, 23, 27 and 28 are written in sentences alone** — no
 quote, no bracket, no equals sign. The rest still mix in beginner syntax and
 Python. The
 guides written in sentences alone are Part 1 — its code contains no quote, no
@@ -278,7 +278,7 @@ and validated by hand.
 | 24 | ★★★★☆ | game & data | [Quiz — questions from a file](24-quiz.md) | a multiple-choice quiz that loads questions from a JSON file, scores answers, and reports the result |
 | 25 | ★★★★☆ | a project | [Calculator — a command-line project](25-calculator.md) | a repeat-until-quit calculator with functions and a module file |
 | 26 | ★★★★☆ | game | [Game: tic-tac-toe](26-tic-tac-toe.md) | a playable two-player tic-tac-toe with a win check |
-| 27 | ★★★★☆ | game & logic | [Game: Mastermind, guessing a secret code](27-mastermind.md) | a Mastermind-style game that hides a 4-color code and gives black/white feedback for each guess |
+| 27 | ★★★☆☆ | a game | [Game: Mastermind, guessing a secret code](27-mastermind.md) | guessing the three colours the computer hid, in five tries |
 | 28 | ★★★★☆ | game and strategy | [Game: a simple opponent](28-ai.md) | a game against an opponent that follows a winning rule |
 | 29 | ★★★★☆ | game & random | [Playlist: a random music player](29-playlist.md) | a playlist loaded from JSON with shuffle, next, and a loop of songs |
 | 30 | ★★★★☆ | a project | [Shop — an inventory store](30-shop.md) | a JSON-persisted store with buy/sell/stock/list and a money balance |
