@@ -160,6 +160,8 @@ WORD_LIST_EXCEPTIONS = {
     "CHOICE_SCOPE_WORDS_KO": "`빨강 또는 초록 중에서 골라`; English writes the scope as `from` inside `pick from red or green`",
     "NOT_A_NAME_EN": "words a sentence may never turn into a name; Korean marks its target with a particle instead",
     "SAY_TRAILING_WORDS_KO": "output words Korean may only write last; English takes any output word in either place (`show hello` and `hello show`)",
+    "UPDATE_TRAILING_ONLY_WORDS_KO": "`더하기`·`빼기` are the names of the operations as well, so they count as the verb only where Korean puts a verb — at the end of the line; English says `add`/`subtract` and has no such pair",
+    "UPDATE_SOFT_WORDS_EN": "`up`·`down` are ordinary English words, so arithmetic is claimed only when the line opens with a name the program made; Korean marks the name with a particle (UPDATE_AMOUNT_PARTICLES_KO) and needs no such guard",
     "SET_PUT_WORDS_EN": "`put 5 in score` — English says where the value goes with a verb and a connector; Korean marks the name with a particle (SET_TARGET_PARTICLES_KO) and needs no verb",
     "APPEND_SOFT_WORDS_EN": "`put`·`insert` are everyday verbs, so they make a list line only when the name after the connector is already a list; Korean marks the list with a particle (APPEND_TARGET_PARTICLES_KO), which does the same work",
     "SET_WORDS_NEEDING_A_CONNECTOR_EN": "`let score be 0` — English needs to say where the value starts; Korean marks it with a particle (SET_TARGET_PARTICLES_KO)",

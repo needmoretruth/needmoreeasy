@@ -711,3 +711,48 @@ fn a_record_key_written_as_two_words_is_named() {
     assert_eq!(error_code(source), "E0230");
     assert!(refusal_names(source).contains("washup"), "{}", refusal_names(source));
 }
+
+/// The shortest ways anybody says a value went up or down. `up` and `down`
+/// are ordinary words, so the line has to open with a name the program made —
+/// `give up` and `write it down before you forget` keep every word.
+#[test]
+fn a_value_goes_up_and_down_in_the_words_people_use() {
+    let head = "set score to 0\n";
+    for (line, python) in [
+        ("score up 1", "score = score + 1"),
+        ("score goes up by 2", "score = score + 2"),
+        ("score down 1", "score = score - 1"),
+        ("score goes down by 2", "score = score - 2"),
+    ] {
+        assert_eq!(
+            ok(&format!("{head}{line}\n")),
+            format!("score = 0\n{python}\n"),
+            "for {line}"
+        );
+    }
+    let korean = "점수는 0\n";
+    for (line, python) in [
+        ("점수 1 증가", "점수 = 점수 + 1"),
+        ("점수에 1 더하기", "점수 = 점수 + 1"),
+        ("점수 2 감소", "점수 = 점수 - 2"),
+        ("점수에서 2 빼기", "점수 = 점수 - 2"),
+    ] {
+        assert_eq!(
+            ok(&format!("{korean}{line}\n")),
+            format!("점수 = 0\n{python}\n"),
+            "for {line}"
+        );
+    }
+    for sentence in [
+        "give up",
+        "log out",
+        "write it down before you forget",
+        "put it in the fire",
+    ] {
+        assert_eq!(
+            ok(&format!("{sentence}\n")),
+            format!("print(\"{sentence}\")\n"),
+            "{sentence} stopped being a sentence"
+        );
+    }
+}

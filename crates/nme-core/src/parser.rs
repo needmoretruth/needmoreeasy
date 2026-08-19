@@ -519,10 +519,38 @@ const SET_TARGET_PARTICLES_KO: &[&str] = &["을", "를", "이", "가", "에"];
 const VALUE_ENDINGS_KO: &[&str] = &[
     "입니다", "이에요", "예요", "이다", "으로", "로", "라고", "이라고",
 ];
-const UPDATE_ADD_WORDS_EN: &[&str] = &["add", "increase", "increment", "plus"];
-const UPDATE_ADD_WORDS_KO: &[&str] = &["더해", "더해줘", "올려", "올려줘", "늘려", "늘려줘"];
-const UPDATE_SUBTRACT_WORDS_EN: &[&str] = &["subtract", "decrease", "decrement", "minus", "remove"];
-const UPDATE_SUBTRACT_WORDS_KO: &[&str] = &["빼", "빼줘", "내려", "내려줘", "줄여", "줄여줘"];
+/// `up` and `down` are here for `score up 1` and `score goes up by 1`, the
+/// two shortest ways anybody says it. Both are ordinary words, so the value
+/// change is claimed only in the shape the update rules already require: a
+/// name the program made, and a number.
+const UPDATE_ADD_WORDS_EN: &[&str] = &["add", "increase", "increment", "plus", "up", "goesup"];
+const UPDATE_ADD_WORDS_KO: &[&str] = &[
+    "더해",
+    "더해줘",
+    "올려",
+    "올려줘",
+    "늘려",
+    "늘려줘",
+    "더하기",
+    "증가",
+    "증가해",
+    "증가시켜",
+];
+const UPDATE_SUBTRACT_WORDS_EN: &[&str] = &[
+    "subtract", "decrease", "decrement", "minus", "remove", "down", "goesdown",
+];
+const UPDATE_SUBTRACT_WORDS_KO: &[&str] = &[
+    "빼",
+    "빼줘",
+    "내려",
+    "내려줘",
+    "줄여",
+    "줄여줘",
+    "빼기",
+    "감소",
+    "감소해",
+    "감소시켜",
+];
 // `times` is deliberately absent from the English multiply words: it is the
 // repeat marker, and `score times 2` must keep meaning "repeat".
 const UPDATE_MULTIPLY_WORDS_EN: &[&str] = &["multiply", "multiplied"];
@@ -4932,6 +4960,28 @@ fn ask_target_diagnostic(_spelling: Spelling, span: Span) -> Diagnostic {
 /// name a beginner sets, so a line that opens with one has been written back
 /// to front rather than naming a variable.
 const UPDATE_CONNECTOR_WORDS_EN: &[&str] = &["to", "by", "from", "of", "into", "onto"];
+/// Value-change words that are ordinary words as well. `score up 1` is
+/// arithmetic; `give up`, `log out` and `write it down` are not. What tells
+/// them apart is the first word: arithmetic changes a name the program made.
+const UPDATE_SOFT_WORDS_EN: &[&str] = &["up", "down", "goesup", "goesdown", "plus", "minus"];
+/// Korean value-change words that are ordinary nouns as well.
+///
+/// `더하기` and `빼기` are the names of the operations, and guide 25 asks
+/// `기호를 물어봐 더하기 빼기 곱하기 나누기 중 하나` — a question listing all
+/// four. Korean states its verb last, so these count as the verb only where a
+/// verb can stand: at the end of the line.
+const UPDATE_TRAILING_ONLY_WORDS_KO: &[&str] = &[
+    "더하기",
+    "빼기",
+    "곱하기",
+    "나누기",
+    "증가",
+    "감소",
+    "증가해",
+    "증가시켜",
+    "감소해",
+    "감소시켜",
+];
 
 /// `1 더해 점수에` written back as `점수에 1 더해`.
 ///
@@ -4969,6 +5019,33 @@ fn match_update(
     // words inside a message quietly rewrite the whole line: `show I will
     // multiply by 2` used to become `show = show * 2`.
     if tokens.first().is_some_and(starts_a_different_statement) {
+        return Ok(None);
+    }
+    // See `UPDATE_TRAILING_ONLY_WORDS_KO`: one of those words anywhere but the
+    // end is a noun in a sentence, not the verb of a value change.
+    {
+        let body = trim_command_endings(tokens);
+        if let Some((last, rest)) = body.split_last() {
+            if rest
+                .iter()
+                .any(|token| token_matches_exact(token, UPDATE_TRAILING_ONLY_WORDS_KO))
+                && !token_matches_exact(last, UPDATE_TRAILING_ONLY_WORDS_KO)
+            {
+                return Ok(None);
+            }
+        }
+    }
+    // See `UPDATE_SOFT_WORDS_EN`. `give up`, `log out`, `write it down before
+    // you forget` and `put wash up at 90 in marks` all hold one of those
+    // words and none of them changes a value. Arithmetic changes a name the
+    // program already made, and that is what the line has to open with.
+    if tokens
+        .iter()
+        .any(|token| token_matches_exact(token, UPDATE_SOFT_WORDS_EN))
+        && !tokens.first().and_then(name_word).is_some_and(|word| {
+            resolve_known_particle(word, known_names).is_some()
+        })
+    {
         return Ok(None);
     }
     // `카드를 잘 섞어 나눠 주세요` is a request to deal the cards, and it
@@ -15142,7 +15219,7 @@ fn arranging_list(expected: &[&str]) -> bool {
 const EXACT_ONLY_ACTION_WORDS: &[&str] = &[
     "store", "let", "make", "give", "list", "write", "report", "present", "output", "speak",
     "puts", "echo", "reveal", "announce", "order", "arrange", "mix", "flip", "invert", "jumble",
-    "scramble", "request", "enter", "input",
+    "scramble", "request", "enter", "input", "up", "down", "goesup", "goesdown", "plus", "minus",
 ];
 
 fn best_action_rank(actual: &str, expected: &[&str], mode: MatchMode) -> Option<(u8, usize)> {

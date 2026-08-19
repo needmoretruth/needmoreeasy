@@ -227,20 +227,6 @@ fn raw_cpython_errors_become_nme_diagnostics() {
             line: 1,
             names: "슬립",
         },
-        Refusal {
-            probe: "y-ko-28",
-            source: "점수는 0\n점수를 1 증가해\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 2,
-            names: "증가해",
-        },
-        Refusal {
-            probe: "y-ko-29",
-            source: "점수는 0\n점수를 1 감소해\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 2,
-            names: "감소해",
-        },
     ] {
         check(&case);
     }
@@ -512,20 +498,6 @@ fn a_word_that_is_not_an_action_is_named() {
             code: DiagnosticCode::UnknownActionWord,
             line: 2,
             names: "집어넣어",
-        },
-        Refusal {
-            probe: "y-ko-28",
-            source: "점수는 0\n점수를 1 증가해\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 2,
-            names: "증가해",
-        },
-        Refusal {
-            probe: "y-ko-29",
-            source: "점수는 0\n점수를 1 감소해\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 2,
-            names: "감소해",
         },
     ] {
         check(&case);
