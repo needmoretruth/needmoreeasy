@@ -215,6 +215,8 @@ def sentence_tables(korean: bool) -> str:
         "compare": ("비교하는 말", "Comparison words"),
         "control": ("반복 안에서 멈추기·건너뛰기·닫기", "Stopping, skipping, and closing a block"),
         "list": ("목록 만들기와 넣기", "Making a list and adding to it"),
+        "text": ("글자 다루기 — 길이·대문자·소문자", "Working with text — length and case"),
+        "numbers": ("숫자 나머지", "Number remainders"),
         "random": ("무작위", "Randomness"),
         "file": ("파일 읽기·쓰기", "Reading and writing files"),
         "slow": ("이야기 — 글자를 하나씩 내보내기", "Story — letters one at a time"),
@@ -239,6 +241,7 @@ def sentence_tables(korean: bool) -> str:
     title = heads["compare"][0] if korean else heads["compare"][1]
     parts.append(f"### {title}\n\n{S.compare_table(korean)}")
     for key, rows in [("control", S.LOOP_CONTROL), ("list", S.LISTS),
+                      ("text", S.TEXT), ("numbers", S.NUMBERS),
                       ("slow", S.SLOW_TEXT), ("story", S.STORY),
                       ("chance", S.CHANCE), ("screen", S.SCREEN),
                       ("timer", S.TIMER), ("cooldown", S.COOLDOWN),
@@ -258,7 +261,9 @@ def other_levels(korean: bool) -> str:
         ("횟수 반복", "Repeating a number of times", S.TIMES),
         ("목록 반복", "Repeating over a list", S.FOR_EACH),
         ("조건 반복", "Repeating while", S.WHILE), ("조건", "Conditions", S.WHEN),
-        ("목록", "Lists", S.LISTS), ("무작위", "Randomness", S.RANDOM),
+        ("목록", "Lists", S.LISTS), ("글자 다루기", "Working with text", S.TEXT),
+        ("숫자 나머지", "Number remainders", S.NUMBERS),
+        ("무작위", "Randomness", S.RANDOM),
         ("파일", "Files", S.FILES), ("모듈", "Modules", S.MODULES),
     ]
     parts = []

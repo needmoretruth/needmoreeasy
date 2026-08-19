@@ -161,6 +161,32 @@ pub enum Value {
     /// single sentence value is, so numbers stay numbers and words become text
     /// without the writer choosing quotes.
     List(Vec<Value>),
+    /// `친구들 개수` / `how many friends` — a reading taken from a name the
+    /// program already made. The name is kept as a name rather than a span,
+    /// because the writer may have attached a Korean particle to it.
+    Reading {
+        of: String,
+        reading: Reading,
+    },
+    /// `친구들 첫 번째` / `the first of friends` — one item of a list, counted
+    /// from **one** the way the sentence says it.
+    Item {
+        of: String,
+        position: ItemPosition,
+    },
+    /// `친구들을 쉼표로 이어` / `friends joined by comma` — every item of a
+    /// list in one piece of text. `separator` is the finished text, so the
+    /// named separators and a written one lower through the same path.
+    Joined {
+        of: String,
+        separator: String,
+    },
+    /// `쌓인돌을 4로 나눈 나머지` / `the remainder of pile divided by 4` —
+    /// what is left over, which is how most counting games are decided.
+    Remainder {
+        of: String,
+        by: Code,
+    },
     /// `elapsed` / `잰시간` — how many seconds the stopwatch has been running.
     Elapsed,
     /// `30% 확률` / `a 30% chance` — true that share of the time.
@@ -225,6 +251,55 @@ pub enum ZeroKnowledgeValue {
     },
 }
 
+/// One reading a sentence may take from a list or a piece of text.
+///
+/// Every one of them is a plain Python builtin, so the generated program
+/// stays something a reader can look up. They are one enum rather than one
+/// statement each because they share the whole of their grammar: a name, and
+/// a word saying what to read from it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Reading {
+    /// `친구들 개수` / `how many friends`, and `이름 길이` /
+    /// `the length of name`. Both are `len(...)`.
+    Count,
+    /// `점수들 합` / `the total of scores` — `sum(...)`.
+    Total,
+    /// `점수들 중 가장 큰 것` / `the biggest of scores` — `max(...)`.
+    Largest,
+    /// `점수들 중 가장 작은 것` / `the smallest of scores` — `min(...)`.
+    Smallest,
+    /// `이름 대문자로` / `name in capitals` — `str(...).upper()`.
+    Capitals,
+    /// `이름 소문자로` / `name in small letters` — `str(...).lower()`.
+    SmallLetters,
+}
+
+/// Which item of a list a sentence is pointing at.
+///
+/// The sentence counts from **one**, because that is what the words mean:
+/// `첫 번째` is the first one. Python counts from zero, and the lowering
+/// stage is where that difference is paid.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ItemPosition {
+    /// `친구들 첫 번째` / `the first of friends`.
+    First,
+    /// `친구들 마지막` / `the last of friends`.
+    Last,
+    /// `친구들 3번째` / `item 3 of friends`. One-based; `0` is refused.
+    Numbered(Code),
+}
+
+/// How a list is put back in order.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ListOrder {
+    /// `친구들 정렬해` / `sort friends` — smallest first.
+    Sorted,
+    /// `친구들 거꾸로 해` / `reverse friends` — back to front.
+    Reversed,
+    /// `친구들 섞어` / `shuffle friends` — a different order every run.
+    Shuffled,
+}
+
 /// One operand in a conversational condition. The parser records meaning;
 /// only the lowering stage chooses Python operators and string syntax.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -233,6 +308,18 @@ pub enum ConditionValue {
     Name(String),
     Text(String),
     Literal(Literal),
+    /// `만약에 친구들 개수가 3보다 크면` / `if how many friends is greater than 3`
+    /// — the same readings a value may take, on one side of a comparison.
+    Reading {
+        of: String,
+        reading: Reading,
+    },
+    /// `만약에 쌓인돌을 4로 나눈 나머지가 0과 같으면` — a remainder on one side of
+    /// a comparison, which is how a counting game is decided.
+    Remainder {
+        of: String,
+        by: Code,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -363,6 +450,25 @@ pub enum NmeStmt {
     Append {
         target: String,
         value: Value,
+    },
+    /// `remove Mina from friends` / `친구들에서 민수 빼`.
+    ///
+    /// Taking something away from a list is spelled the same way as taking a
+    /// number away from a number, so the two are told apart by the name: a
+    /// name the program made into a list can only mean this one.
+    Remove {
+        target: String,
+        value: Value,
+    },
+    /// `sort friends` / `친구들 정렬해`, and its two companions.
+    Arrange {
+        target: String,
+        order: ListOrder,
+    },
+    /// `repeat forever` / `계속 반복해` — a block that never ends on its own.
+    /// `break` / `멈춰` is the way out.
+    Forever {
+        inline: Option<InlineStmt>,
     },
     /// `30% 확률로` / `30% chance` — a block, or one statement, that runs
     /// only that share of the time.

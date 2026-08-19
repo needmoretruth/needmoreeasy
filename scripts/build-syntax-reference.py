@@ -119,6 +119,8 @@ TIMES = [
     ("문장형", "Sentence", "repeat three times and show Again", "세 번 반복해서 다시 말해줘", 'for _ in range(3): print("Again")', 'for _ in range(3): print("다시")'),
     ("문장형", "Sentence", "repeat 3 rounds and show Again", "3회 반복해서 다시 말해줘", 'for _ in range(3): print("Again")', 'for _ in range(3): print("다시")'),
     ("문장형", "Sentence", "repeat 3 times … end", "3번 반복해 … 끝", "for _ in range(3):", 'for _ in range(3):'),
+    ("문장형", "Sentence", "repeat forever", "계속 반복해", "while True:"),
+    ("문장형", "Sentence", "repeat forever and show Again", "계속 반복해서 다시 말해줘", 'while True: print("Again")', 'while True: print("다시")'),
     ("초급", "Beginner", '3 times: say "Hi"', '3번: 말해 "안녕"', 'for _ in range(3): print("Hi")', 'for _ in range(3): print("안녕")'),
     ("고급", "Advanced", "for i in range(3):", "for i in range(3):", "unchanged"),
 ]
@@ -187,7 +189,42 @@ LISTS = [
     ("문장형", "Sentence", "push Mina to friends", "친구들에 민수 추가해", 'friends.append("Mina")', '친구들.append("민수")'),
     ("문장형", "Sentence", "add Mina to friends", "친구들에 민수 더해", 'friends.append("Mina")', '친구들.append("민수")'),
     ("문장형", "Sentence", "to friends append Mina", "민수를 친구들에 넣어", 'friends.append("Mina")', '친구들.append("민수")'),
+    ("문장형", "Sentence", "set friends to an empty list", "친구들은 빈 목록", "friends = []", '친구들 = []'),
+    ("문장형", "Sentence", "remove Mina from friends", "친구들에서 민수 빼", 'friends.remove("Mina")', '친구들.remove("민수")'),
+    ("문장형", "Sentence", "show how many friends", "친구들 개수 말해줘", "print(len(friends))", 'print(len(친구들))'),
+    ("문장형", "Sentence", "set total to how many friends", "총합은 친구들 개수", "total = len(friends)", '총합 = len(친구들)'),
+    ("문장형", "Sentence", "sort friends", "친구들 정렬해", "friends.sort()", '친구들.sort()'),
+    ("문장형", "Sentence", "reverse friends", "친구들 거꾸로 해", "friends.reverse()", '친구들.reverse()'),
+    ("문장형", "Sentence", "shuffle friends", "친구들 섞어", '__import__("random").shuffle(friends)', '__import__("random").shuffle(친구들)'),
+    ("문장형", "Sentence", "show the first of friends", "친구들 첫 번째 말해줘", "print(friends[0])", 'print(친구들[0])'),
+    ("문장형", "Sentence", "show the last of friends", "친구들 마지막 말해줘", "print(friends[-1])", 'print(친구들[-1])'),
+    ("문장형", "Sentence", "show item 2 of friends", "친구들 2번째 말해줘", "print(friends[1])", 'print(친구들[1])'),
+    ("문장형", "Sentence", "show the total of scores", "점수들 합 말해줘", "print(sum(scores))", 'print(sum(점수들))'),
+    ("문장형", "Sentence", "show the biggest of scores", "점수들 중 가장 큰 것 말해줘", "print(max(scores))", 'print(max(점수들))'),
+    ("문장형", "Sentence", "show the smallest of scores", "점수들 중 가장 작은 것 말해줘", "print(min(scores))", 'print(min(점수들))'),
+    ("문장형", "Sentence", "show friends joined by comma", "친구들을 쉼표로 이어 말해줘", 'print(", ".join(map(str, friends)))', 'print(", ".join(map(str, 친구들)))'),
+    ("문장형", "Sentence", "show friends joined by space", "친구들을 빈칸으로 이어 말해줘", 'print(" ".join(map(str, friends)))', 'print(" ".join(map(str, 친구들)))'),
+    ("문장형", "Sentence", "if friends contains Mina", "만약에 친구들에 민수가 있으면", 'if ("Mina" in friends):', 'if ("민수" in 친구들):'),
+    ("문장형", "Sentence", "if friends does not contain Ada", "만약에 친구들에 지안이 없으면", 'if ("Ada" not in friends):', 'if ("지안" not in 친구들):'),
+    ("문장형", "Sentence", "if friends is empty", "만약에 친구들이 비었으면", "if (not (friends)):", 'if (not (친구들)):'),
+    ("초급", "Beginner", "say len(friends)", "말해 len(친구들)", "print(len(friends))", 'print(len(친구들))'),
     ("고급", "Advanced", 'friends = ["Mina"]', '친구들 = ["민수"]', "unchanged"),
+]
+
+NUMBERS = [
+    ("문장형", "Sentence", "show the remainder of score divided by 4", "점수를 4로 나눈 나머지 말해줘", "print(score % 4)", 'print(점수 % 4)'),
+    ("문장형", "Sentence", "set left to the remainder of score divided by 4", "남은것은 점수를 4로 나눈 나머지", "left = score % 4", '남은것 = 점수 % 4'),
+    ("문장형", "Sentence", "if the remainder of score divided by 4 equals 0", "만약에 점수를 4로 나눈 나머지가 0과 같으면", "if (score % 4 == 0):", 'if (점수 % 4 == 0):'),
+    ("초급", "Beginner", "say score % 4", "말해 점수 % 4", "print(score % 4)", 'print(점수 % 4)'),
+    ("고급", "Advanced", "left = score % 4", "남은것 = 점수 % 4", "unchanged"),
+]
+
+TEXT = [
+    ("문장형", "Sentence", "show the length of name", "이름 길이 말해줘", "print(len(name))", 'print(len(이름))'),
+    ("문장형", "Sentence", "show name in capitals", "이름 대문자로 말해줘", "print(str(name).upper())", 'print(str(이름).upper())'),
+    ("문장형", "Sentence", "show name in small letters", "이름 소문자로 말해줘", "print(str(name).lower())", 'print(str(이름).lower())'),
+    ("초급", "Beginner", "say len(name)", "말해 len(이름)", "print(len(name))", 'print(len(이름))'),
+    ("고급", "Advanced", "name.upper()", "이름.upper()", "unchanged"),
 ]
 
 RANDOM = [
@@ -211,6 +248,8 @@ MODULES = [
     ("초급", "Beginner", "use zero_knowledge", "영지식 사용", "(binds zk_secret, zk_public, zk_nizk_prove, … and their Korean twins)"),
     ("초급", "Beginner", "use random latest", "랜덤 사용 최신", "(the newest bundled adapter)"),
     ("초급", "Beginner", 'use random version "0.0.1"', '랜덤 사용 버전 "0.0.1"', "(that exact adapter)"),
+    ("문장형", "Sentence", 'use greet from "helper.nme"', '"helper.nme"에서 greet 가져와', "(from helper import greet — needs helper.nme next to the program)"),
+    ("초급", "Beginner", 'from "helper.nme" import greet', '"helper.nme"에서 greet 가져오기', "(from helper import greet — needs helper.nme next to the program)"),
     ("고급", "Advanced", 'from "helper.nme" import greet', 'from "helper.nme" import greet', "(from helper import greet — needs helper.nme next to the program)"),
 ]
 
@@ -345,8 +384,34 @@ def spelling_table(korean: bool) -> str:
         ("건너뛰기 / Skip", "CONTINUE_WORDS_EN", "CONTINUE_WORDS_KO"),
         ("블록 닫기 / End", "END_WORDS_EN", "END_WORDS_KO"),
         ("모듈 쓰기 / Use", "USE_WORDS_EN", "USE_WORDS_KO"),
+        ("다른 파일에서 / Import from a file", "NME_IMPORT_WORDS_EN", "NME_IMPORT_WORDS_KO"),
         ("목록에 넣기 / Append", "APPEND_WORDS_EN", "APPEND_WORDS_KO"),
         ("목록 표시 / List", "LIST_WORDS_EN", "LIST_WORDS_KO"),
+        ("빈 목록 / Empty list", "EMPTY_WORDS_EN", "EMPTY_WORDS_KO"),
+        ("개수 / How many", "COUNT_WORDS_EN", "COUNT_WORDS_KO"),
+        ("개수 앞말 / Reading lead", "READING_LEAD_WORDS_EN", None),
+        ("길이 / Length", "LENGTH_WORDS_EN", "LENGTH_WORDS_KO"),
+        ("합 / Total", "TOTAL_WORDS_EN", "TOTAL_WORDS_KO"),
+        ("최댓값 / Biggest", "LARGEST_WORDS_EN", "LARGEST_WORDS_KO"),
+        ("최솟값 / Smallest", "SMALLEST_WORDS_EN", "SMALLEST_WORDS_KO"),
+        ("최댓값 앞말 / Extreme scope", "EXTREME_SCOPE_WORDS_KO", None),
+        ("가장 / Most", "EXTREME_MOST_WORDS_KO", None),
+        ("것 / Thing", "EXTREME_THING_WORDS_KO", None),
+        ("첫 번째 / First", "FIRST_WORDS_EN", "FIRST_WORDS_KO"),
+        ("마지막 / Last", "LAST_WORDS_EN", "LAST_WORDS_KO"),
+        ("몇 번째 / Item", "ITEM_WORDS_EN", "ITEM_WORDS_KO"),
+        ("대문자 / Capitals", "CAPITALS_WORDS_EN", "CAPITALS_WORDS_KO"),
+        ("소문자 / Small letters", "SMALL_LETTERS_WORDS_EN", "SMALL_LETTERS_WORDS_KO"),
+        ("이어 붙이기 / Join", "JOIN_WORDS_EN", "JOIN_WORDS_KO"),
+        ("나머지 / Remainder", "REMAINDER_WORDS_EN", "REMAINDER_WORDS_KO"),
+        ("나누기 말 / Divided", "DIVIDED_WORDS_EN", "DIVIDED_WORDS_KO"),
+        ("이음말 / Separator", "SEPARATOR_WORDS_EN", "SEPARATOR_WORDS_KO"),
+        ("정렬 / Sort", "SORT_WORDS_EN", "SORT_WORDS_KO"),
+        ("거꾸로 / Reverse", "REVERSE_WORDS_EN", "REVERSE_WORDS_KO"),
+        ("섞기 / Shuffle", "SHUFFLE_WORDS_EN", "SHUFFLE_WORDS_KO"),
+        ("들어있는지 / Contains", "CONTAINS_WORDS_EN", "CONTAINS_WORDS_KO"),
+        ("무한 반복 / Forever", "FOREVER_WORDS_EN", "FOREVER_WORDS_KO"),
+        ("읽기 조사 / Reading particle", "READING_PARTICLES_KO", None),
         ("숫자로 / As a number", "NUMBER_WORDS", None),
         ("숫자 낱말 / Number words", "NUMBER_WORDS_EN", "NUMBER_WORDS_KO"),
         ("횟수 단위 / Count unit", "TIMES_WORDS_EN", "TIMES_WORDS_KO"),
@@ -515,19 +580,47 @@ NME 명령이 됩니다. 블록 밖에서는 Python 그대로 남습니다.
 `목록`/`list of` 표시가 없으면 쉼표가 들어간 줄은 그냥 글입니다.
 `친구들에 민수 넣어`(목록에 넣기)와 `점수에 1 더해`(값 바꾸기)는 다른 명령입니다.
 
-## 13. 값과 리터럴
+**몇 번째인지는 1부터 셉니다.** `친구들 첫 번째`가 곧 `친구들 1번째`이고,
+Python으로는 `친구들[0]`이 됩니다. 0번째는 없으며 적으면 `E0229`로 알려 줍니다.
+
+목록을 읽고 바꾸는 문장(`개수`·`정렬해`·`섞어`·`첫 번째`·`합`·`빼`…)은
+**프로그램이 이미 목록으로 만든 이름에만** 씁니다. 그래야 `친구들 이야기를
+들었습니다`처럼 그 낱말이 들어간 평범한 문장이 명령으로 바뀌지 않습니다.
+목록이 아닌 이름에 쓰면 `E0231`로 알려 줍니다.
+
+`쉼표`/`comma`는 쉼표와 빈칸(`", "`), `빈칸`·`공백`/`space`는 빈칸 하나,
+`줄바꿈`/`newline`은 줄바꿈입니다. 항목이 숫자여도 되도록 `map(str, …)`을
+거쳐서 잇습니다.
+
+## 13. 글자 다루기
+
+{level_table(TEXT, True)}
+
+`길이`/`the length of`는 글자 수를, `대문자로`/`in capitals`와
+`소문자로`/`in small letters`는 같은 글을 대·소문자로 바꾼 것을 돌려줍니다.
+셋 다 값이므로 출력·저장·조건 어디에나 쓸 수 있습니다. 앞에서 만든 이름에만
+쓸 수 있고, 그래서 그 낱말이 들어간 평범한 문장은 그대로 글로 남습니다.
+
+## 14. 숫자 나머지
+
+{level_table(NUMBERS, True)}
+
+`나머지`/`the remainder of`는 나눗셈에서 남는 수입니다. 값이라서 출력·저장·조건
+어디에나 쓸 수 있고, 나누는 수는 숫자이거나 앞에서 만든 이름이어야 합니다.
+
+## 15. 값과 리터럴
 
 | 영어 표기 | 한국어 표기 | Python |
 | --- | --- | --- |
 """ + "\n".join(f"| {english} | {hangul} | `{python}` |" for english, hangul, python in LITERALS) + f"""
 
-## 14. 무작위
+## 16. 무작위
 
 {level_table(RANDOM, True)}
 
 숫자로 적은 선택지는 숫자로 남습니다(`1 또는 2 중에서 랜덤선택` → `choice((1, 2,))`).
 
-## 15. 확률
+## 17. 확률
 
 {level_table(CHANCE, True)}
 
@@ -541,24 +634,24 @@ NME 명령이 됩니다. 블록 밖에서는 Python 그대로 남습니다.
 이름에 저장한 확률은 참·거짓 값이라서 `만약에 운이 있으면`처럼 그대로 물어볼 수
 있습니다.
 
-## 16. 파일
+## 18. 파일
 
 {level_table(FILES, True)}
 
 파일 경로는 항상 따옴표로 감쌉니다. 이것만은 문장형에서도 예외입니다.
 
-## 17. 모듈
+## 19. 모듈
 
 {level_table(MODULES, True)}
 
-## 18. 천천히 말하기
+## 20. 천천히 말하기
 
 {level_table(SLOW_TEXT, True)}
 
 글자를 하나씩 내보내고 사이에 잠깐 쉽니다. 쉬는 시간은 기본 0.04초, `아주`를
 붙이면 0.12초이며, `3초씩`처럼 직접 정할 수도 있습니다.
 
-## 19. 이야기
+## 21. 이야기
 
 {level_table(STORY, True)}
 
@@ -569,7 +662,7 @@ NME 명령이 됩니다. 블록 밖에서는 Python 그대로 남습니다.
 띄우고, 앞에서 만든 이름은 글 안에서 값으로 바뀝니다. 콜론은 반각 `:`과 전각
 `：` 둘 다 됩니다.
 
-## 20. 화면
+## 22. 화면
 
 {level_table(SCREEN, True)}
 
@@ -577,7 +670,7 @@ NME 명령이 됩니다. 블록 밖에서는 Python 그대로 남습니다.
 그대로 보일 수 있습니다. 상자와 가운데 맞춤은 한글을 두 칸으로 세기 때문에
 한국어 문장도 반듯하게 나오며, 가로 폭은 40칸입니다.
 
-## 21. 시간 재기
+## 23. 시간 재기
 
 {level_table(TIMER, True)}
 
@@ -586,7 +679,7 @@ NME 명령이 됩니다. 블록 밖에서는 Python 그대로 남습니다.
 있습니다(`만약 잰시간이 3보다 크면`). 켜지 않고 읽으면 컴파일할 때 `E0226`으로
 알려 줍니다. 프로그램이 `잰시간`이라는 이름을 직접 만들었으면 그 이름이 이깁니다.
 
-## 22. 쿨타임
+## 24. 쿨타임
 
 {level_table(COOLDOWN, True)}
 
@@ -596,26 +689,26 @@ NME 명령이 됩니다. 블록 밖에서는 Python 그대로 남습니다.
 `wait for door`는 영어 문장으로도 읽히므로, 그 이름이 이미 다른 값으로 저장돼
 있으면 쿨타임으로 읽지 않습니다.
 
-## 23. 동작 단어 전수 목록
+## 25. 동작 단어 전수 목록
 
 같은 뜻으로 받아들이는 표기를 하나도 빠뜨리지 않고 적은 표입니다.
 
 {spelling_table(True)}
 
-## 24. 조사 부록
+## 26. 조사 부록
 
 이름 뒤에 붙어도 이름의 일부로 보지 않는 조사입니다.
 
 {spellings(words("KOREAN_PARTICLES"))}
 
-## 25. 오타 복구
+## 27. 오타 복구
 
 동작 단어와 연결어에 한해, Python이 그 줄을 거부한 다음에만 한 글자 오타를
 고쳐서 다시 읽어 봅니다(넣기·빼기·바꾸기·이웃 자리 바꿈 한 번). 고칠 방법이
 둘 이상이면 고치지 않고 그 자리를 짚어 알려 줍니다. **문자열과 주석은 절대
 건드리지 않습니다.**
 
-## 26. 오류 코드
+## 28. 오류 코드
 
 {diagnostics_table(True)}
 
@@ -735,20 +828,51 @@ Without the `list of` / `목록` marker a comma-separated line is ordinary text.
 `append Mina to friends` (a list) and `add 1 to score` (a number) are different
 commands and keep their own meanings.
 
-## 13. Values and literals
+**Items are counted from one.** `the first of friends` is `item 1 of friends`
+and becomes `friends[0]`. There is no item 0; writing one is `E0229`.
+
+The statements that read or rearrange a list (`how many`, `sort`, `shuffle`,
+`the first of`, `the total of`, `remove`, …) only work on a name the program
+already made a list. That is what keeps `sort out your things` and `the first
+of many` ordinary sentences. Using one on a name that is not a list is
+`E0231`.
+
+`comma` joins with a comma and a space (`", "`), `space` with one space, and
+`newline` with a line break. Items go through `map(str, …)`, so a list of
+numbers joins as readily as a list of words.
+
+## 13. Working with text
+
+{level_table(TEXT, False)}
+
+`the length of` gives how many characters a piece of text has, and
+`in capitals` / `in small letters` give the same text with its letters
+changed. All three are values, so they work in output, in a saved name, and in
+a condition. They only read a name the program already made, which is what
+keeps an ordinary sentence containing one of those words a sentence.
+
+## 14. Number remainders
+
+{level_table(NUMBERS, False)}
+
+`the remainder of` is what is left over after a division. It is a value, so it
+works in output, in a saved name, and in a condition; the number being divided
+by must be a number or a name the program already made.
+
+## 15. Values and literals
 
 | English | Korean | Python |
 | --- | --- | --- |
 """ + "\n".join(f"| {english} | {hangul} | `{python}` |" for english, hangul, python in LITERALS) + f"""
 
-## 14. Randomness
+## 16. Randomness
 
 {level_table(RANDOM, False)}
 
 A choice written as a number stays a number (`pick from 1 or 2` →
 `choice((1, 2,))`).
 
-## 15. Chance
+## 17. Chance
 
 {level_table(CHANCE, False)}
 
@@ -762,18 +886,18 @@ floating-point rounding can creep in.
 A chance saved in a name is an ordinary true/false value, so the usual
 condition words can ask about it: `if luck then show You win`.
 
-## 16. Files
+## 18. Files
 
 {level_table(FILES, False)}
 
 A file path is always quoted. This is the one place the sentence level asks for
 a quote character.
 
-## 17. Modules
+## 19. Modules
 
 {level_table(MODULES, False)}
 
-## 18. Slow text
+## 20. Slow text
 
 {level_table(SLOW_TEXT, False)}
 
@@ -781,7 +905,7 @@ Each character is printed on its own with a short pause after it. The pause is
 0.04 seconds by default, 0.12 with `very`, and whatever you name with
 `every 3 seconds` / `3초씩`.
 
-## 19. Stories
+## 21. Stories
 
 {level_table(STORY, False)}
 
@@ -793,7 +917,7 @@ indenting, by ending the indentation. A blank line prints an empty line, names
 you made earlier are still substituted into the text, and the colon may be the
 plain `:` or the full-width `：` a Korean keyboard writes.
 
-## 20. Screen
+## 22. Screen
 
 {level_table(SCREEN, False)}
 
@@ -802,7 +926,7 @@ a terminal it may show up as text. The box and the centred line count a Korean
 character as two columns, so a Korean sentence comes out straight; the width is
 40 columns.
 
-## 21. The stopwatch
+## 23. The stopwatch
 
 {level_table(TIMER, False)}
 
@@ -812,7 +936,7 @@ in output, in a saved name, and in a condition (`if elapsed is greater than 3`).
 Reading it without starting the clock is reported at compile time as `E0226`. A
 name the program made itself always wins over the word.
 
-## 22. Cooldowns
+## 24. Cooldowns
 
 {level_table(COOLDOWN, False)}
 
@@ -823,19 +947,19 @@ whether that moment has passed. They are conditions, so they work with `when`,
 reads as an ordinary English sentence, so a name the program already saved as
 something else is not read as a cooldown.
 
-## 23. Every action word
+## 25. Every action word
 
 Every spelling accepted for each action, with nothing left out.
 
 {spelling_table(False)}
 
-## 24. Korean particles
+## 26. Korean particles
 
 These endings are not treated as part of the name they follow.
 
 {spellings(words("KOREAN_PARTICLES"))}
 
-## 25. Typo recovery
+## 27. Typo recovery
 
 For action words and connectors only, and only after Python has rejected the
 line, NME retries once with a single edit repaired (one insertion, deletion,
@@ -843,7 +967,7 @@ substitution, or adjacent swap). If more than one repair is possible it repairs
 nothing and points at the exact span instead. **Strings and comments are never
 touched.**
 
-## 26. Error codes
+## 28. Error codes
 
 {diagnostics_table(False)}
 

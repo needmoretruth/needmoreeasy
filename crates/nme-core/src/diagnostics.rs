@@ -240,6 +240,14 @@ pub enum DiagnosticCode {
     ChanceTooPrecise,
     /// A chance was written outside 0% to 100%.
     ChanceOutOfRange,
+    /// An item of a list was asked for by a position below one.
+    ItemCountsFromOne,
+    /// A name was written with a space in it.
+    NameHasSpace,
+    /// A list statement named something the program never made a list.
+    ListNameUnknown,
+    /// A story block was opened with nothing inside it.
+    StoryEmpty,
 }
 
 impl DiagnosticCode {
@@ -281,6 +289,10 @@ impl DiagnosticCode {
             Self::TimerNotStarted => "E0226",
             Self::ChanceTooPrecise => "E0227",
             Self::ChanceOutOfRange => "E0228",
+            Self::ItemCountsFromOne => "E0229",
+            Self::NameHasSpace => "E0230",
+            Self::ListNameUnknown => "E0231",
+            Self::StoryEmpty => "E0232",
             Self::ConditionMissing => "E0301",
             Self::ConditionInvalid => "E0302",
             Self::RepeatBodyUnparseable => "E0303",
@@ -346,7 +358,7 @@ impl DiagnosticCode {
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 97] = [
+    pub const ALL: [DiagnosticCode; 101] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -444,6 +456,10 @@ impl DiagnosticCode {
         Self::CliNativeActionRepeated,
         Self::ChanceTooPrecise,
         Self::ChanceOutOfRange,
+        Self::ItemCountsFromOne,
+        Self::NameHasSpace,
+        Self::ListNameUnknown,
+        Self::StoryEmpty,
     ];
 
     pub fn from_code(code: &str) -> Option<Self> {
@@ -721,6 +737,34 @@ impl DiagnosticCode {
                 "확률은 0%부터 100% 사이여야 합니다",
                 "`0%` never happens and `100%` always happens, so every chance sits between them. A number above 100 or below 0 cannot mean anything: check for a stray digit, or write `100%` if you meant always.",
                 "`0%`는 절대 일어나지 않고 `100%`는 항상 일어나므로, 모든 확률은 그 사이에 있습니다. 100보다 크거나 0보다 작은 수는 뜻이 없습니다. 숫자를 잘못 적지 않았는지 확인하고, 항상 일어나게 하려면 `100%`라고 적으세요.",
+            ),
+            Self::ItemCountsFromOne => (
+                "E0229",
+                "items are counted from 1",
+                "몇 번째인지는 1부터 셉니다",
+                "`the first of friends` is `item 1 of friends`, so there is no item 0 and no item below it. Write `item 1 of friends` for the first one, or `the last of friends` for the one at the end.",
+                "`친구들 첫 번째`가 곧 `친구들 1번째`이므로 0번째나 그보다 앞은 없습니다. 맨 앞은 `친구들 1번째`, 맨 뒤는 `친구들 마지막`이라고 적으세요.",
+            ),
+            Self::NameHasSpace => (
+                "E0230",
+                "a name cannot have a space in it",
+                "이름에는 띄어쓰기를 쓸 수 없습니다",
+                "NME reads a name as one word, so `할 일` is two words and not a name. Join it up — `할일은 목록` — or use an underscore, as in `to_do`.",
+                "NME는 이름을 한 낱말로 읽습니다. `할 일`은 두 낱말이라 이름이 되지 못합니다. `할일은 목록`처럼 붙여 쓰거나, `할_일`처럼 밑줄로 이으세요.",
+            ),
+            Self::ListNameUnknown => (
+                "E0231",
+                "this name was never made into a list",
+                "이 이름을 목록으로 만든 적이 없습니다",
+                "`sort`, `shuffle` and the other list statements only work on a name the program already made a list, so that an ordinary sentence containing one of those words is never turned into a command. Write `set friends to an empty list` (or `친구들은 빈 목록`) first.",
+                "`정렬해`, `섞어` 같은 목록 문장은 프로그램이 이미 목록으로 만든 이름에만 씁니다. 그래야 그 낱말이 들어간 평범한 문장이 명령으로 바뀌지 않습니다. 먼저 `친구들은 빈 목록`(또는 `set friends to an empty list`)이라고 적으세요.",
+            ),
+            Self::StoryEmpty => (
+                "E0232",
+                "this story has nothing in it",
+                "이 이야기 안에 글이 한 줄도 없습니다",
+                "`story:` / `이야기:` opens a block, and every line under it is told as prose. With no lines under it there is nothing to tell, and the Python it becomes is not a program. Write the story below the line that opens it, and close it with `end` / `끝`.",
+                "`이야기:`/`story:`는 블록을 엽니다. 그 아래의 모든 줄은 글로 그대로 나옵니다. 아래에 아무 줄도 없으면 할 이야기가 없고, 만들어지는 Python도 프로그램이 되지 못합니다. 여는 줄 아래에 이야기를 적고 `끝`/`end`으로 닫아 주세요.",
             ),
             Self::ConditionMissing => (
                 "E0301",

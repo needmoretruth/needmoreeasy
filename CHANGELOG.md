@@ -6,6 +6,95 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+- **Lists can be built and read entirely in sentences.** An empty list
+  (`set friends to an empty list` / `친구들은 빈 목록`), how many items it holds
+  (`show how many friends` / `친구들 개수 말해줘`), one item by its position
+  (`the first of friends`, `the last of friends`, `item 3 of friends` /
+  `친구들 첫 번째`, `친구들 마지막`, `친구들 3번째`), the total, the biggest and
+  the smallest (`the total of scores` / `점수들 합`), putting the list in order
+  (`sort friends`, `reverse friends`, `shuffle friends` / `친구들 정렬해`,
+  `친구들 거꾸로 해`, `친구들 섞어`), taking an item back out
+  (`remove Mina from friends` / `친구들에서 민수 빼`), joining every item into
+  one piece of text (`show friends joined by comma` /
+  `친구들을 쉼표로 이어 말해줘`), and asking whether a list holds something or
+  holds nothing (`if friends contains Mina`, `if friends is empty` /
+  `만약에 친구들에 민수가 있으면`, `만약에 친구들이 비었으면`).
+- **Positions are counted from one.** `the first of friends` is
+  `item 1 of friends`, and both become `friends[0]`. `item 0 of friends` is
+  refused with `E0229` instead of quietly handing back the last item.
+- **`remove Mina from friends` no longer compiles to `friends = friends - Mina`.**
+  That line looked right, compiled, and then died at run time. Subtracting from
+  a name the program made a list is now the removal it plainly means, and
+  subtracting a word that was never saved from a name that is not a list is
+  refused with the reason.
+- **Every list statement is gated on a name that was already made a list.**
+  `sort out your things`, `the first of many`, `count me in` and
+  `친구들 이야기를 들었습니다` therefore stay ordinary sentences and print
+  themselves; using one of the statements on a name that is not a list is
+  refused with `E0231` rather than guessed at.
+- **A loop with no counter**: `repeat forever` / `계속 반복해`, closed by
+  `end` / `끝` and left with `break` / `멈춰`.
+- **Text has a length and a case**: `the length of name` / `이름 길이`,
+  `name in capitals` / `이름 대문자로`, `name in small letters` /
+  `이름 소문자로`. All three read any saved name and are values, so they work in
+  output, in a saved name, and in a condition.
+- **The five missing English zero-knowledge sentence forms exist.**
+  `challenge different zero knowledge challenge make`,
+  `nonce secret challenge zero knowledge response make`,
+  `public commitment challenge response zero knowledge verify`,
+  `zero knowledge simulated response make` and
+  `public challenge response zero knowledge simulated commitment make`. Until
+  now an attempt at one of them was saved as a *sentence*:
+  `set ok to p c e z zero knowledge verify` stored a string, so the program
+  ran, verified nothing, and said nothing.
+- **`skip` and `멈춰` work inside an indented `3 times:` block.** They used to
+  be left there as bare Python names, so the program compiled and then raised
+  `NameError`; Python's own `continue` was refused in the same place even
+  though `break` was accepted.
+- **`아니면:` and `아니면 만약에 …:` work inside an indented block**, the way
+  English got `else:` and `elif …:` for free from Python. `else if …:` now
+  works there too.
+- **Another `.nme` program can be imported in a sentence, in both languages**:
+  `use greet from "helper.nme"` / `"helper.nme"에서 greet 가져와`. The quoted
+  path ending in `.nme` is what makes the line an import, so `use random`
+  still loads the bundled module.
+- **`ask` followed by a question needs no name in between.**
+  `ask what is your name`, `ask how old are you`, `물어봐 이름이 뭐예요?` and
+  `물어봐 몇 살이에요?` now save into the name those questions already answer
+  (`name`, `age`, `이름`, `나이`). The Korean forms used to keep the particle
+  and save into `이름이`, or into `몇`. A question with no name to save into,
+  such as `ask who is there`, is still refused.
+- **`할 일은 목록` is refused instead of printed.** A name is one word, so
+  `할 일` is two and the line quietly became its own sentence — guide 05
+  taught exactly that. The refusal names the spelling that works (`할일`).
+- The mistake corpus grew from 587 short programs to 723: the list and text
+  grammar, the parity holes this release closes, and the ordinary prose that
+  contains each new word. The number that matters — accepted but compiled to
+  something the writer did not mean — is **still 11**, and all thirty prose
+  sentences still print themselves.
+- **What is left over after a division has a spelling**:
+  `the remainder of pile divided by 4` / `쌓인돌을 4로 나눈 나머지`. It is a
+  value, so it works in output, in a saved name, and in a condition — which is
+  what a counting game such as Nim is decided by.
+- **`set left to score divided by 4` no longer becomes `set = set / 4`.** A
+  line that opens with a saving word is a save, not arithmetic on a name
+  called `set`.
+- **A story that opens with nothing in it says so.** `story:` alone used to
+  become `if True:` with no body, and the reader met CPython's own
+  `SyntaxError` pointing into generated code; `얘기: 그만하자` was a valid
+  Python annotation that compiled, did nothing, and said nothing. Both are
+  now named, with the two readings spelled out.
+- **`목록을 보여 주세요` no longer prints `[]`.** A bare `목록` / `list` is an
+  empty list only where a value is being **saved into a name**; given to an
+  output word the same words are the ones somebody wrote, so
+  `목록 보여줘` prints `목록` and `show list` prints `list`. `친구들은 목록`,
+  `친구들은 빈 목록` and `set friends to an empty list` are unchanged.
+- **Two ordinary words stopped being read as misspelled commands.** `가장`
+  ("most") is one keystroke from `저장` ("save"), so `가장 좋은 하루였습니다`
+  quietly became `좋 = "하루였습니다"`; `how` is `show` without its `s`, so
+  `how are you` printed `are you`. A word the sentence grammar spells out
+  itself is no longer read as a misspelling of something else.
+
 - **Far more of what a beginner actually types is accepted, and what cannot be
   read is said out loud instead of guessed at.** Measured against a 566-mistake
   corpus (`scripts/mistake-probes/`), the number that compiled to something the

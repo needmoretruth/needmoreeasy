@@ -114,6 +114,8 @@ The unit word (`seconds`, `초`) is optional. A line with no number in it
 | Sentence | `repeat three times and show Again` | `for _ in range(3): print("Again")` |
 | Sentence | `repeat 3 rounds and show Again` | `for _ in range(3): print("Again")` |
 | Sentence | `repeat 3 times … end` | `for _ in range(3):` |
+| Sentence | `repeat forever` | `while True:` |
+| Sentence | `repeat forever and show Again` | `while True: print("Again")` |
 | Beginner | `3 times: say "Hi"` | `for _ in range(3): print("Hi")` |
 | Advanced | `for i in range(3):` | unchanged |
 
@@ -207,13 +209,75 @@ they are read as NME **only inside a loop block**. Outside one they stay Python.
 | Sentence | `push Mina to friends` | `friends.append("Mina")` |
 | Sentence | `add Mina to friends` | `friends.append("Mina")` |
 | Sentence | `to friends append Mina` | `friends.append("Mina")` |
+| Sentence | `set friends to an empty list` | `friends = []` |
+| Sentence | `remove Mina from friends` | `friends.remove("Mina")` |
+| Sentence | `show how many friends` | `print(len(friends))` |
+| Sentence | `set total to how many friends` | `total = len(friends)` |
+| Sentence | `sort friends` | `friends.sort()` |
+| Sentence | `reverse friends` | `friends.reverse()` |
+| Sentence | `shuffle friends` | `__import__("random").shuffle(friends)` |
+| Sentence | `show the first of friends` | `print(friends[0])` |
+| Sentence | `show the last of friends` | `print(friends[-1])` |
+| Sentence | `show item 2 of friends` | `print(friends[1])` |
+| Sentence | `show the total of scores` | `print(sum(scores))` |
+| Sentence | `show the biggest of scores` | `print(max(scores))` |
+| Sentence | `show the smallest of scores` | `print(min(scores))` |
+| Sentence | `show friends joined by comma` | `print(", ".join(map(str, friends)))` |
+| Sentence | `show friends joined by space` | `print(" ".join(map(str, friends)))` |
+| Sentence | `if friends contains Mina` | `if ("Mina" in friends):` |
+| Sentence | `if friends does not contain Ada` | `if ("Ada" not in friends):` |
+| Sentence | `if friends is empty` | `if (not (friends)):` |
+| Beginner | `say len(friends)` | `print(len(friends))` |
 | Advanced | `friends = ["Mina"]` | unchanged |
 
 Without the `list of` / `목록` marker a comma-separated line is ordinary text.
 `append Mina to friends` (a list) and `add 1 to score` (a number) are different
 commands and keep their own meanings.
 
-## 13. Values and literals
+**Items are counted from one.** `the first of friends` is `item 1 of friends`
+and becomes `friends[0]`. There is no item 0; writing one is `E0229`.
+
+The statements that read or rearrange a list (`how many`, `sort`, `shuffle`,
+`the first of`, `the total of`, `remove`, …) only work on a name the program
+already made a list. That is what keeps `sort out your things` and `the first
+of many` ordinary sentences. Using one on a name that is not a list is
+`E0231`.
+
+`comma` joins with a comma and a space (`", "`), `space` with one space, and
+`newline` with a line break. Items go through `map(str, …)`, so a list of
+numbers joins as readily as a list of words.
+
+## 13. Working with text
+
+| Level | NME | Python produced |
+| --- | --- | --- |
+| Sentence | `show the length of name` | `print(len(name))` |
+| Sentence | `show name in capitals` | `print(str(name).upper())` |
+| Sentence | `show name in small letters` | `print(str(name).lower())` |
+| Beginner | `say len(name)` | `print(len(name))` |
+| Advanced | `name.upper()` | unchanged |
+
+`the length of` gives how many characters a piece of text has, and
+`in capitals` / `in small letters` give the same text with its letters
+changed. All three are values, so they work in output, in a saved name, and in
+a condition. They only read a name the program already made, which is what
+keeps an ordinary sentence containing one of those words a sentence.
+
+## 14. Number remainders
+
+| Level | NME | Python produced |
+| --- | --- | --- |
+| Sentence | `show the remainder of score divided by 4` | `print(score % 4)` |
+| Sentence | `set left to the remainder of score divided by 4` | `left = score % 4` |
+| Sentence | `if the remainder of score divided by 4 equals 0` | `if (score % 4 == 0):` |
+| Beginner | `say score % 4` | `print(score % 4)` |
+| Advanced | `left = score % 4` | unchanged |
+
+`the remainder of` is what is left over after a division. It is a value, so it
+works in output, in a saved name, and in a condition; the number being divided
+by must be a number or a name the program already made.
+
+## 15. Values and literals
 
 | English | Korean | Python |
 | --- | --- | --- |
@@ -221,7 +285,7 @@ commands and keep their own meanings.
 | `False` · `false` | `거짓` | `False` |
 | `None` · `none` · `null` | `없음` | `None` |
 
-## 14. Randomness
+## 16. Randomness
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -234,7 +298,7 @@ commands and keep their own meanings.
 A choice written as a number stays a number (`pick from 1 or 2` →
 `choice((1, 2,))`).
 
-## 15. Chance
+## 17. Chance
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -256,7 +320,7 @@ floating-point rounding can creep in.
 A chance saved in a name is an ordinary true/false value, so the usual
 condition words can ask about it: `if luck then show You win`.
 
-## 16. Files
+## 18. Files
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -268,7 +332,7 @@ condition words can ask about it: `if luck then show You win`.
 A file path is always quoted. This is the one place the sentence level asks for
 a quote character.
 
-## 17. Modules
+## 19. Modules
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -277,9 +341,11 @@ a quote character.
 | Beginner | `use zero_knowledge` | (binds zk_secret, zk_public, zk_nizk_prove, … and their Korean twins) |
 | Beginner | `use random latest` | (the newest bundled adapter) |
 | Beginner | `use random version "0.0.1"` | (that exact adapter) |
+| Sentence | `use greet from "helper.nme"` | (from helper import greet — needs helper.nme next to the program) |
+| Beginner | `from "helper.nme" import greet` | (from helper import greet — needs helper.nme next to the program) |
 | Advanced | `from "helper.nme" import greet` | (from helper import greet — needs helper.nme next to the program) |
 
-## 18. Slow text
+## 20. Slow text
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -292,7 +358,7 @@ Each character is printed on its own with a short pause after it. The pause is
 0.04 seconds by default, 0.12 with `very`, and whatever you name with
 `every 3 seconds` / `3초씩`.
 
-## 19. Stories
+## 21. Stories
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -311,7 +377,7 @@ indenting, by ending the indentation. A blank line prints an empty line, names
 you made earlier are still substituted into the text, and the colon may be the
 plain `:` or the full-width `：` a Korean keyboard writes.
 
-## 20. Screen
+## 22. Screen
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -327,7 +393,7 @@ a terminal it may show up as text. The box and the centred line count a Korean
 character as two columns, so a Korean sentence comes out straight; the width is
 40 columns.
 
-## 21. The stopwatch
+## 23. The stopwatch
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -342,7 +408,7 @@ in output, in a saved name, and in a condition (`if elapsed is greater than 3`).
 Reading it without starting the clock is reported at compile time as `E0226`. A
 name the program made itself always wins over the word.
 
-## 22. Cooldowns
+## 24. Cooldowns
 
 | Level | NME | Python produced |
 | --- | --- | --- |
@@ -360,7 +426,7 @@ whether that moment has passed. They are conditions, so they work with `when`,
 reads as an ordinary English sentence, so a name the program already saved as
 something else is not read as a cooldown.
 
-## 23. Every action word
+## 25. Every action word
 
 Every spelling accepted for each action, with nothing left out.
 
@@ -382,8 +448,34 @@ Every spelling accepted for each action, with nothing left out.
 | 건너뛰기 / Skip | `skip` · `skipthis` · `skipit` · `nextone` | `건너뛰어` · `건너뛰어줘` · `건너뛰기` · `건너뛰자` · `넘어가` · `넘어가줘` · `계속해` · `넘겨` · `다음` |
 | 블록 닫기 / End | `end` · `finish` · `done` | `끝` · `종료` · `마침` |
 | 모듈 쓰기 / Use | `use` · `load` · `get` · `import` | `사용` · `사용해` · `사용해줘` · `사용해주세요` · `불러와` · `불러와줘` · `가져와` · `가져와줘` · `받아` · `받아줘` |
+| 다른 파일에서 / Import from a file | `use` · `take` · `borrow` | `가져와` · `가져와줘` · `가져오기` · `불러와` · `불러오기` |
 | 목록에 넣기 / Append | `append` · `push` | `넣어` · `넣어줘` · `추가해` · `추가해줘` · `붙여` · `붙여줘` |
 | 목록 표시 / List | `list` | `목록` · `리스트` |
+| 빈 목록 / Empty list | `empty` · `blank` | `빈` · `비어있는` · `새` |
+| 개수 / How many | `count` · `number` · `many` | `개수` · `갯수` |
+| 개수 앞말 / Reading lead | `how` | — |
+| 길이 / Length | `length` · `size` | `길이` · `글자수` |
+| 합 / Total | `total` · `sum` | `합` · `합계` · `총합` |
+| 최댓값 / Biggest | `biggest` · `largest` · `highest` · `maximum` | `최댓값` · `최대값` · `큰` |
+| 최솟값 / Smallest | `smallest` · `lowest` · `minimum` | `최솟값` · `최소값` · `작은` |
+| 최댓값 앞말 / Extreme scope | — | `중` · `중에서` · `가운데` |
+| 가장 / Most | — | `가장` · `제일` |
+| 것 / Thing | — | `것` · `값` |
+| 첫 번째 / First | `first` | `첫번째` · `첫째` · `처음` · `첫` |
+| 마지막 / Last | `last` | `마지막` · `맨뒤` |
+| 몇 번째 / Item | `item` · `element` | `번째` · `째` |
+| 대문자 / Capitals | `capitals` · `capital` · `uppercase` | `대문자로` · `대문자` |
+| 소문자 / Small letters | `lowercase` · `small` | `소문자로` · `소문자` |
+| 이어 붙이기 / Join | `joined` · `join` | `이어` · `이어서` · `이어붙여` |
+| 나머지 / Remainder | `remainder` · `rest` · `leftover` | `나머지` |
+| 나누기 말 / Divided | `divided` · `shared` · `split` | `나눈` · `나눈뒤` · `나누고` |
+| 이음말 / Separator | `comma` · `space` · `newline` | `쉼표` · `빈칸` · `공백` · `줄바꿈` |
+| 정렬 / Sort | `sort` | `정렬해` · `정렬해줘` · `정렬` |
+| 거꾸로 / Reverse | `reverse` | `거꾸로` · `거꾸로해` · `거꾸로해줘` · `뒤집어` · `뒤집어줘` |
+| 섞기 / Shuffle | `shuffle` | `섞어` · `섞어줘` · `섞어주세요` |
+| 들어있는지 / Contains | `contains` · `contain` · `includes` · `include` · `holds` | `안에는` · `속에는` · `안에` · `속에` · `에는` · `에` |
+| 무한 반복 / Forever | `forever` · `always` | `계속` · `무한` · `끝없이` |
+| 읽기 조사 / Reading particle | — | `이` · `가` · `은` · `는` · `을` · `를` |
 | 숫자로 / As a number | `number` · `numeric` | `숫자` · `숫자로` · `수로` |
 | 숫자 낱말 / Number words | `zero` · `one` · `two` · `three` · `four` · `five` · `six` · `seven` · `eight` · `nine` · `ten` · `once` · `twice` | `하나` · `한` · `둘` · `두` · `셋` · `세` · `넷` · `네` · `다섯` · `여섯` · `일곱` · `여덟` · `아홉` · `열` · `일` · `이` · `삼` · `사` · `오` · `육` · `칠` · `팔` · `구` · `십` |
 | 횟수 단위 / Count unit | `times` · `time` · `loops` · `loop` · `rounds` · `round` | `번` · `회` · `차례` · `판` |
@@ -423,13 +515,13 @@ Every spelling accepted for each action, with nothing left out.
 | 확률 저장 / Chance saved in a name | `is` · `equals` | — |
 | 군말 / Filler | `please` | `좀` · `혹시` · `제발` |
 
-## 24. Korean particles
+## 26. Korean particles
 
 These endings are not treated as part of the name they follow.
 
 `에게서는` · `한테서는` · `에게서` · `한테서` · `으로는` · `로는` · `에게` · `한테` · `에서` · `으로` · `까지` · `부터` · `처럼` · `보다` · `이라도` · `라도` · `에는` · `에서` · `은` · `는` · `이` · `가` · `을` · `를` · `와` · `과` · `도` · `의` · `에` · `로` · `아` · `야` · `랑` · `이랑` · `예요` · `이에요`
 
-## 25. Typo recovery
+## 27. Typo recovery
 
 For action words and connectors only, and only after Python has rejected the
 line, NME retries once with a single edit repaired (one insertion, deletion,
@@ -437,7 +529,7 @@ substitution, or adjacent swap). If more than one repair is possible it repairs
 nothing and points at the exact span instead. **Strings and comments are never
 touched.**
 
-## 26. Error codes
+## 28. Error codes
 
 | Code | Meaning |
 | --- | --- |
@@ -477,6 +569,9 @@ touched.**
 | `E0226` | the timer has not been started yet |
 | `E0227` | a chance can only go to one decimal place |
 | `E0228` | a chance must be between 0% and 100% |
+| `E0229` | items are counted from 1 |
+| `E0230` | a name cannot have a space in it |
+| `E0231` | this name was never made into a list |
 | `E0301` | the condition is missing |
 | `E0302` | the condition could not be understood |
 | `E0303` | the repeated body could not be understood |

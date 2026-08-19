@@ -140,6 +140,107 @@ Small value changes can also be written without `+`, `-`, or `=`. Use
 `score add 1`, `add 1 to score`, or `score increase by 1`; subtraction uses
 `subtract 1 from score`.
 
+### Lists
+
+A list is made with `list of` / `목록`, and an empty one with `an empty list` /
+`빈 목록`:
+
+```nme
+set friends to list of Mina, Ada
+친구들은 목록 민수, 지안
+set pals to an empty list
+할일은 빈 목록
+```
+
+Once a name holds a list, the sentences that read it and rearrange it work on
+it:
+
+```nme
+append Grace to friends
+친구들에 지수 넣어
+remove Mina from friends
+친구들에서 민수 빼
+show how many friends
+친구들 개수 말해줘
+sort friends
+친구들 정렬해
+reverse friends
+친구들 거꾸로 해
+shuffle friends
+친구들 섞어
+show the first of friends
+친구들 첫 번째 말해줘
+show the last of friends
+친구들 마지막 말해줘
+show item 2 of friends
+친구들 2번째 말해줘
+show the total of scores
+점수들 합 말해줘
+show the biggest of scores
+점수들 중 가장 큰 것 말해줘
+show friends joined by comma
+친구들을 쉼표로 이어 말해줘
+```
+
+**Items are counted from one.** `the first of friends` is `item 1 of friends`,
+and both become `friends[0]`. There is no item 0: writing one is refused with
+`E0229` rather than quietly handing back the last item, which is what Python's
+`friends[-1]` would do.
+
+Two of these read a list inside a condition:
+
+```nme
+if friends contains Mina
+만약에 친구들에 민수가 있으면
+if friends is empty
+만약에 친구들이 비었으면
+```
+
+Every one of them needs a name the program **already made a list**. That is
+the whole reason `sort out your things`, `the first of many` and
+`친구들 이야기를 들었습니다` stay ordinary sentences and print themselves. Using
+one on a name that is not a list is refused with `E0231`, so a mistake is a
+message and not a program that means something else.
+
+`how many` is also a value and a condition, not only something to show:
+
+```nme
+set total to how many friends
+총합은 친구들 개수
+if how many friends is greater than 3
+만약에 친구들 개수가 3보다 크면
+```
+
+### What is left over
+
+```nme
+show the remainder of pile divided by 4
+쌓인돌을 4로 나눈 나머지 말해줘
+set left to the remainder of pile divided by 4
+if the remainder of pile divided by 4 equals 0
+만약에 쌓인돌을 4로 나눈 나머지가 0과 같으면
+```
+
+The remainder is `%` in Python, and it decides most counting games. It is a
+value, so it works in output, in a saved name, and in a condition. The number
+being divided by has to be a written number or a name the program already made.
+
+### Working with text
+
+```nme
+show the length of name
+이름 길이 말해줘
+show name in capitals
+이름 대문자로 말해줘
+show name in small letters
+이름 소문자로 말해줘
+```
+
+These read any saved name, not only a list. `the length of` gives how many
+characters there are; the other two give the same text with its letters
+changed. All three are values, so they may be saved or compared as well as
+shown.
+
 ### Repeat
 
 One sentence on one line:
@@ -169,6 +270,35 @@ repeat 3 times
 
 `repeat`, `반복`, `반복해`, and `반복해서` may be mixed with `times` or
 `번`. The count is any valid Python expression.
+
+A block written with a colon and ordinary indentation takes its branches the
+same way, in both languages:
+
+```nme
+만약 score > 10:
+    print(1)
+아니면 만약에 score == 0:
+    print(2)
+아니면:
+    print(3)
+```
+
+`skip` / `건너뛰어` and `break` / `멈춰` work inside an indented `3 times:`
+block too. Until this release they were left as bare Python names there, so
+the program compiled and then raised `NameError`.
+
+A loop with no count at all is written `repeat forever` / `계속 반복해`, and
+`break` / `멈춰` is the way out of it:
+
+```nme
+repeat forever
+    show still going
+    break
+
+계속 반복해
+    아직 진행 중 말해줘
+    멈춰
+```
 
 The compact colon form can also use an explicit closing word, so indentation is
 optional while you are learning:
@@ -548,11 +678,28 @@ from Python's `secrets` module.
 | `zk_simulated_commitment(A,c,r)` | `영지식모의약속(공개값,도전값,응답값)` | simulate a transcript for a preselected challenge |
 
 Both Korean and English sentence surfaces can remove function punctuation
-for the complete proof flow. English forms include `zero knowledge secret
-make`, `secret zero knowledge public make`, `zero knowledge nonce make`, `nonce
-zero knowledge commitment make`, `secret context zero knowledge proof make`,
-`public proof context zero knowledge verify`, and `public commitment context
-zero knowledge challenge make`. See `examples/needmorecoin-sentence.en.nme` for
+for the complete proof flow, and each of the thirteen values has a spelling in
+both languages:
+
+| English sentence form | Korean sentence form |
+| --- | --- |
+| `zero knowledge secret make` | `영지식 비밀 만들기` |
+| `secret zero knowledge public make` | `비밀로 영지식 공개값 만들기` |
+| `zero knowledge nonce make` | `영지식 일회값 만들기` |
+| `nonce zero knowledge commitment make` | `일회값으로 영지식 약속 만들기` |
+| `zero knowledge challenge make` | `영지식 도전 만들기` |
+| `challenge different zero knowledge challenge make` | `도전과 다른 영지식 도전 만들기` |
+| `nonce secret challenge zero knowledge response make` | `일회값과 비밀과 도전으로 영지식 응답 만들기` |
+| `public commitment challenge response zero knowledge verify` | `공개값과 약속과 도전과 응답으로 영지식 검증` |
+| `zero knowledge simulated response make` | `영지식 모의 응답 만들기` |
+| `public challenge response zero knowledge simulated commitment make` | `공개값과 도전과 응답으로 영지식 모의 약속 만들기` |
+| `public commitment context zero knowledge challenge make` | `공개값과 약속과 문맥으로 영지식 비대화 도전 만들기` |
+| `secret context zero knowledge proof make` | `비밀과 문맥으로 영지식 비대화 증명 만들기` |
+| `public proof context zero knowledge verify` | `공개값과 증명과 문맥으로 영지식 비대화 검증` |
+
+Until this release the last five English forms did not exist, and an attempt
+at one was saved as a **sentence**: `set ok to p c e z zero knowledge verify`
+stored a string, so the program ran, checked nothing, and said nothing. See `examples/needmorecoin-sentence.en.nme` for
 a strict ASCII-letters/digits/whitespace example and
 `examples/zk-schnorr-relay.ko.nme` for the Korean proof flow. The verifier
 validates subgroup membership and scalar/challenge ranges before checking the
@@ -602,6 +749,19 @@ name; that collision is reported as E9028 with a repair suggestion. `nme compile
 does not support module imports yet and reports E9029; use `nme run`, `nme check`,
 or `nme build` for a program that imports another `.nme` file. If an imported
 file cannot be opened, the CLI reports E9007 and names the module path.
+
+The same import has a sentence spelling in each language, so a program can be
+split across files without meeting `from … import …`:
+
+```nme
+use greet from "helper.nme"
+use greet, score from "helper.nme"
+"helper.nme"에서 greet 가져와
+"helper.nme"에서 greet, score 불러와
+```
+
+The quoted path ending in `.nme` is what makes these lines an import and
+nothing else, so `use random` still loads the bundled random module.
 
 Sentence syntax can read and write files without the module line or Python
 punctuation. The path is always a quoted string:

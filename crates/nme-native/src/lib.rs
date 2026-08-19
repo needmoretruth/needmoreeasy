@@ -1527,6 +1527,9 @@ fn check_condition(
                 ConditionValue::Text(_) => {
                     return Err(not_supported("text in a truthy condition", span));
                 }
+                ConditionValue::Reading { .. } | ConditionValue::Remainder { .. } => {
+                    return Err(not_supported("list and text readings", span));
+                }
             };
             if kind == ExprType::Str {
                 return Err(not_supported("a text value in a truthy condition", span));
@@ -1594,6 +1597,9 @@ fn condition_operand(
             nme_core::syntax::Literal::False => Ok(("0".to_string(), ExprType::Bool)),
             nme_core::syntax::Literal::None => Err(not_supported("null in a condition", span)),
         },
+        ConditionValue::Reading { .. } | ConditionValue::Remainder { .. } => {
+            Err(not_supported("list and text readings", span))
+        }
     }
 }
 
@@ -1719,6 +1725,13 @@ fn emit_say(
             Err(not_supported("random values", span_of_value(value)))
         }
         Value::List(_) => Err(not_supported("list values", span_of_value(value))),
+        Value::Reading { .. }
+        | Value::Item { .. }
+        | Value::Joined { .. }
+        | Value::Remainder { .. } => Err(not_supported(
+            "list and text readings",
+            span_of_value(value),
+        )),
         Value::ZeroKnowledge(_) => {
             Err(not_supported("zero-knowledge values", span_of_value(value)))
         }
@@ -1835,6 +1848,10 @@ fn emit_set(
         | Value::RandomChoice { .. }
         | Value::Chance { .. }
         | Value::List(_)
+        | Value::Reading { .. }
+        | Value::Item { .. }
+        | Value::Joined { .. }
+        | Value::Remainder { .. }
         | Value::ZeroKnowledge(_) => Err(not_supported("this value", span_of_value(value))),
     }
 }
@@ -2668,6 +2685,7 @@ fn not_supported(what: &str, span: Span) -> Diagnostic {
         "repeating over a list" => "목록 반복",
         "waiting" => "기다리기",
         "adding to a list" => "목록에 넣기",
+        "list and text readings" => "목록·글자 읽기",
         "skipping to the next round" => "다음 반복으로 건너뛰기",
         _ => what,
     };

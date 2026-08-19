@@ -16,7 +16,8 @@ sys.path.insert(0, HERE)
 from probes import PROBES  # noqa: E402
 from probes2 import PROBES2  # noqa: E402
 from probes3 import PROBES3  # noqa: E402
-PROBES = PROBES + PROBES2 + PROBES3
+from probes4 import PROBES4  # noqa: E402
+PROBES = PROBES + PROBES2 + PROBES3 + PROBES4
 
 ROOT = os.path.dirname(os.path.dirname(HERE))
 NME = (sys.argv[1] if len(sys.argv) > 1

@@ -1,9 +1,15 @@
 # Mistake probes — how forgiving is the compiler?
 
-566 short programs a beginner would plausibly write **wrongly**, in English and
-Korean: keyword typos, a different word order, missing or extra spaces, a full
-stop at the end, Korean particles and endings, number words, capitals, and the
-synonyms someone guesses before they have read anything.
+723 short programs, in English and Korean: mostly things a beginner would
+plausibly write **wrongly** — keyword typos, a different word order, missing or
+extra spaces, a full stop at the end, Korean particles and endings, number
+words, capitals, and the synonyms someone guesses before they have read
+anything — beside the correct spellings of each grammar form, so that a
+capability cannot quietly stop working either.
+
+The number that matters is the last one `probe.py` prints: **how many were
+accepted and compiled to something the writer plainly did not mean.** It is 11,
+and it must not rise.
 
 There are two corpora of ordinary sentences beside the mistakes:
 

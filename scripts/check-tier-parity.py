@@ -107,38 +107,8 @@ LANGUAGES = ("en", "ko")
 # reason a reader can act on.
 # --------------------------------------------------------------------------
 KNOWN_GAPS = {
-    # The English zero-knowledge sentence grammar stops after the
-    # non-interactive forms. Korean has all thirteen. Worse than missing: the
-    # English attempt is silently read as text, so `set z to r s e zero
-    # knowledge response make` saves a sentence instead of a response.
-    "zk_challenge_except/sentence-en": "no English sentence spelling; the attempt becomes text",
-    "zk_response/sentence-en": "no English sentence spelling; the attempt becomes text",
-    "zk_verify/sentence-en": "no English sentence spelling; the attempt becomes text",
-    "zk_sim_response/sentence-en": "no English sentence spelling; the attempt becomes text",
-    "zk_sim_commitment/sentence-en": "no English sentence spelling; the attempt becomes text",
-    # `CompareOp::Contains` is declared in syntax.rs and lowered in lower.rs,
-    # but parser.rs never builds it, so neither documented spelling parses.
-    "cmp_contains/sentence-en": "parser never produces CompareOp::Contains",
-    "cmp_contains/sentence-ko": "parser never produces CompareOp::Contains",
-    # `아니면` / `아니면 만약에` are only read in the flat `끝`-terminated block.
-    # Inside an indented block the line falls through to Python, where English
-    # gets `else:` for free because Python spells it the same way and Korean
-    # gets nothing at all.
-    "else_indented/beginner-ko": "`아니면:` is not read inside an indented block",
-    "elif_indented/beginner-ko": "`아니면 만약에 …:` is not read inside an indented block",
-    # Splitting a program across files exists only in the Python-shaped form.
-    "nme_import/sentence-en": "no sentence spelling for a .nme import",
-    "nme_import/sentence-ko": "no sentence spelling for a .nme import",
-    "nme_import/beginner-ko": "the import line is spelled with the English words `from` and `import`",
-    # Inside a beginner colon block a skip is unreachable in both languages:
-    # `skip` / `건너뛰어` stay bare Python names that do nothing, and Python's
-    # own `continue` is refused with E0107 even though `break` is accepted.
-    "continue/beginner-en": "`skip` is a no-op and `continue` is refused inside a `times:` block",
-    "continue/beginner-ko": "`건너뛰어` is a no-op and `continue` is refused inside a `번:` block",
-    # Sentence grammar has no spelling for two of the bundled helpers; they are
-    # reachable only after `use random` / `use file`.
-    "shuffle/sentence-en": "no sentence spelling; reachable after `use random`",
-    "shuffle/sentence-ko": "no sentence spelling; reachable after `랜덤 사용`",
+    # Sentence grammar has no spelling for the bundled JSON helpers; they are
+    # reachable only after `use file`.
     "json/sentence-en": "no sentence spelling; reachable after `use file`",
     "json/sentence-ko": "no sentence spelling; reachable after `파일 사용`",
 }
@@ -165,6 +135,11 @@ WORD_LIST_EXCEPTIONS = {
     "CHANCE_TIME_WORDS_EN": "`one time in ten`; Korean counts with CHANCE_PERCENT_WORDS_KO",
     "CHANCE_IS_WORDS_EN": "`the chance is 30 percent`; Korean uses the verb ending",
     "CHANCE_PARTICLES_KO": "particles; English uses CHANCE_LEAD_WORDS_EN",
+    "EXTREME_SCOPE_WORDS_KO": "scaffolding of `점수들 중 가장 큰 것`; English says `the biggest of scores`",
+    "EXTREME_MOST_WORDS_KO": "scaffolding of `점수들 중 가장 큰 것`; English says `the biggest of scores`",
+    "EXTREME_THING_WORDS_KO": "scaffolding of `점수들 중 가장 큰 것`; English says `the biggest of scores`",
+    "READING_PARTICLES_KO": "particles a reading carries in a condition; English has none",
+    "READING_LEAD_WORDS_EN": "`how many friends`; Korean puts the counting word after the name (COUNT_WORDS_KO)",
 }
 
 
@@ -200,7 +175,9 @@ PREAMBLE = {
         "set ready to True",
         "set waiting to False",
         "set gap to 3",
-        "set friends to list of Mina",
+        "set friends to list of Mina, Ada",
+        "set scores to list of 1, 2",
+        "set greeting to Hello",
         "start the timer",
         "put door on cooldown for 3 seconds",
     ],
@@ -209,7 +186,9 @@ PREAMBLE = {
         "ready는 참",
         "waiting은 거짓",
         "gap은 3",
-        "friends는 목록 Mina",
+        "friends는 목록 Mina, Ada",
+        "scores는 목록 1, 2",
+        "greeting은 Hello",
         "시간 재기 시작해",
         "door 쿨타임 3초 걸어",
     ],
@@ -331,6 +310,12 @@ MATRIX = [
         line("repeat 3 times and show hi"), line("3번 반복해서 hi 말해줘"),
         line('3 times: say "hi"'), line('3번: 말해 "hi"'),
         line('for _ in range(3): print("hi")')),
+    row("forever", "Repeat with no end", ["NmeStmt::Forever"],
+        (["repeat forever", "break", "end"], 0),
+        (["계속 반복해", "멈춰", "끝"], 0),
+        (["repeat forever", "break", "end"], 0),
+        (["무한 반복해", "멈춰", "끝"], 0),
+        (["while True:", "    break"], 0)),
     row("for_each", "Repeat over a list", ["NmeStmt::ForEach"],
         block("for each friend in friends", "show friend", "end"),
         block("friends의 friend마다 반복해", "friend 말해줘", "끝"),
@@ -366,7 +351,7 @@ MATRIX = [
     row("elif_indented", "Another branch inside an indented block", [],
         (["if score > 10", "    print(1)", "else if score == 0", "    print(2)", "end"], 2),
         (["만약 score > 10", "    print(1)", "아니면 만약에 score == 0", "    print(2)", "끝"], 2),
-        (["when score > 10:", "    print(1)", "elif score == 0:", "    print(2)"], 2),
+        (["when score > 10:", "    print(1)", "else if score == 0:", "    print(2)"], 2),
         (["만약 score > 10:", "    print(1)", "아니면 만약에 score == 0:", "    print(2)"], 2),
         (["if score > 10:", "    print(1)", "elif score == 0:", "    print(2)"], 2)),
     row("else_indented", "The remaining branch inside an indented block", [],
@@ -392,8 +377,8 @@ MATRIX = [
     row("continue", "Skip to the next round", ["NmeStmt::Continue"],
         (["repeat 2 times", "skip", "end"], 1),
         (["2번 반복해", "건너뛰어", "끝"], 1),
-        (["2 times:", "    continue"], 1),
-        (["2번:", "    continue"], 1),
+        (["2 times:", "    skip"], 1),
+        (["2번:", "    건너뛰어"], 1),
         (["for _ in range(2):", "    continue"], 1)),
 
     # ---------------------------------------------------------------- conditions
@@ -467,6 +452,104 @@ MATRIX = [
         line("append Mina to friends"), line("friends에 Mina 넣어"),
         line('append "Mina" to friends'), line('friends에 "Mina" 넣어'),
         line('friends.append("Mina")')),
+    row("list_empty", "Make a list with nothing in it", [],
+        line("set pals to an empty list"), line("pals는 빈 목록"),
+        line("save pals to []"), line("저장 pals []"),
+        line("pals = []")),
+    row("list_count", "How many items a list holds",
+        ["Value::Reading", "Reading::Count"],
+        line("show how many friends"), line("friends 개수 말해줘"),
+        line("say len(friends)"), line("말해 len(friends)"),
+        line("print(len(friends))")),
+    row("list_count_value", "Save how many items a list holds", [],
+        line("set total to how many friends"), line("total은 friends 개수"),
+        line("save total to len(friends)"), line("저장 total len(friends)"),
+        line("total = len(friends)")),
+    row("list_count_if", "Decide on how many items a list holds",
+        ["ConditionValue::Reading"],
+        block("if how many friends is greater than 1", "show hi", "end"),
+        block("만약에 friends 개수가 1보다 크면", "hi 말해줘", "끝"),
+        (["when len(friends) > 1", "    print(1)", "end"], 0),
+        (["만약 len(friends) > 1", "    print(1)", "끝"], 0),
+        (["if len(friends) > 1:", "    print(1)"], 0)),
+    row("list_remove", "Take an item out of a list", ["NmeStmt::Remove"],
+        line("remove Mina from friends"), line("friends에서 Mina 빼"),
+        line('remove "Mina" from friends'), line('friends에서 "Mina" 빼'),
+        line('friends.remove("Mina")')),
+    row("list_sort", "Put a list in order",
+        ["NmeStmt::Arrange", "ListOrder::Sorted"],
+        line("sort friends"), line("friends 정렬해"),
+        line("sort friends"), line("friends 정렬"),
+        line("friends.sort()")),
+    row("list_reverse", "Turn a list back to front", ["ListOrder::Reversed"],
+        line("reverse friends"), line("friends 거꾸로 해"),
+        line("reverse friends"), line("friends 뒤집어"),
+        line("friends.reverse()")),
+    row("list_first", "The first item of a list",
+        ["Value::Item", "ItemPosition::First"],
+        line("show the first of friends"), line("friends 첫 번째 말해줘"),
+        line("say friends[0]"), line("말해 friends[0]"),
+        line("print(friends[0])")),
+    row("list_last", "The last item of a list", ["ItemPosition::Last"],
+        line("show the last of friends"), line("friends 마지막 말해줘"),
+        line("say friends[-1]"), line("말해 friends[-1]"),
+        line("print(friends[-1])")),
+    row("list_item", "One item of a list by its position, counting from one",
+        ["ItemPosition::Numbered"],
+        line("show item 2 of friends"), line("friends 2번째 말해줘"),
+        line("say friends[1]"), line("말해 friends[1]"),
+        line("print(friends[1])")),
+    row("list_total", "Add up every item of a list", ["Reading::Total"],
+        line("show the total of scores"), line("scores 합 말해줘"),
+        line("say sum(scores)"), line("말해 sum(scores)"),
+        line("print(sum(scores))")),
+    row("list_biggest", "The biggest item of a list", ["Reading::Largest"],
+        line("show the biggest of scores"), line("scores 중 가장 큰 것 말해줘"),
+        line("say max(scores)"), line("말해 max(scores)"),
+        line("print(max(scores))")),
+    row("list_smallest", "The smallest item of a list", ["Reading::Smallest"],
+        line("show the smallest of scores"), line("scores 중 가장 작은 것 말해줘"),
+        line("say min(scores)"), line("말해 min(scores)"),
+        line("print(min(scores))")),
+    row("list_is_empty", "Condition: a list has nothing in it", [],
+        block("if friends is empty", "show hi", "end"),
+        block("만약에 friends가 비었으면", "hi 말해줘", "끝"),
+        (["when not friends", "    print(1)", "end"], 0),
+        (["만약 not friends", "    print(1)", "끝"], 0),
+        (["if not friends:", "    print(1)"], 0)),
+    row("list_join", "Every item of a list in one piece of text",
+        ["Value::Joined"],
+        line("show friends joined by comma"), line("friends를 쉼표로 이어 말해줘"),
+        line('say ", ".join(map(str, friends))'), line('말해 ", ".join(map(str, friends))'),
+        line('print(", ".join(map(str, friends)))')),
+
+    # -------------------------------------------------------------- numbers
+    row("remainder", "What is left over after a division", ["Value::Remainder"],
+        line("show the remainder of score divided by 4"),
+        line("score를 4로 나눈 나머지 말해줘"),
+        line("say score % 4"), line("말해 score % 4"),
+        line("print(score % 4)")),
+    row("remainder_if", "Decide on what is left over", [],
+        block("if the remainder of score divided by 4 equals 0", "show hi", "end"),
+        block("만약에 score를 4로 나눈 나머지가 0과 같으면", "hi 말해줘", "끝"),
+        (["when score % 4 == 0", "    print(1)", "end"], 0),
+        (["만약 score % 4 == 0", "    print(1)", "끝"], 0),
+        (["if score % 4 == 0:", "    print(1)"], 0)),
+
+    # ---------------------------------------------------------------- text
+    row("text_length", "How many characters a piece of text has", [],
+        line("show the length of greeting"), line("greeting 길이 말해줘"),
+        line("say len(greeting)"), line("말해 len(greeting)"),
+        line("print(len(greeting))")),
+    row("text_capitals", "The same text in capitals", ["Reading::Capitals"],
+        line("show greeting in capitals"), line("greeting 대문자로 말해줘"),
+        line("say str(greeting).upper()"), line("말해 str(greeting).upper()"),
+        line("print(str(greeting).upper())")),
+    row("text_small_letters", "The same text in small letters",
+        ["Reading::SmallLetters"],
+        line("show greeting in small letters"), line("greeting 소문자로 말해줘"),
+        line("say str(greeting).lower()"), line("말해 str(greeting).lower()"),
+        line("print(str(greeting).lower())")),
 
     # ---------------------------------------------------------------- randomness
     row("random_int", "A random whole number in a range", ["Value::RandomInteger"],
@@ -481,8 +564,8 @@ MATRIX = [
         (["use random", 'save colour to random_pick(["red", "green"])'], 1),
         (["랜덤 사용", '저장 colour 랜덤선택(["red", "green"])'], 1),
         (["import random", 'colour = random.choice(["red", "green"])'], 1)),
-    row("shuffle", "Shuffle a list", [],
-        None, None,
+    row("shuffle", "Shuffle a list", ["ListOrder::Shuffled"],
+        line("shuffle friends"), line("friends 섞어"),
         (["use random", "shuffle(friends)"], 1),
         (["랜덤 사용", "섞기(friends)"], 1),
         (["import random", "random.shuffle(friends)"], 1)),
@@ -553,8 +636,8 @@ MATRIX = [
         line('use random version "0.0.1"'), line('랜덤 사용 버전 "0.0.1"'),
         line("import random")),
     row("nme_import", "Use names from another .nme file", ["NmeStmt::ModuleImport"],
-        None, None,
-        line('from "helper.nme" import greet'), None,
+        line('use greet from "helper.nme"'), line('"helper.nme"에서 greet 가져와'),
+        line('from "helper.nme" import greet'), line('"helper.nme"에서 greet 가져오기'),
         line("from helper import greet")),
 
     # ---------------------------------------------------------------- slow text
@@ -706,14 +789,17 @@ MATRIX = [
 
     row("zk_challenge_except", "Zero knowledge: make a different challenge",
         ["ZeroKnowledgeValue::ChallengeExcept"],
-        None,
+        (["use zero_knowledge", "set e to zero knowledge challenge make",
+          "set f to e different zero knowledge challenge make"], 2),
         (["영지식 사용", "e는 영지식 도전 만들기", "f는 e와 다른 영지식 도전 만들기"], 2),
         (["use zero_knowledge", "save f to zk_challenge_except(1)"], 1),
         (["영지식 사용", "저장 f 영지식다른도전(1)"], 1),
         (['import secrets', 'f = secrets.randbelow(255) + 1'], 1)),
 
     row("zk_response", "Zero knowledge: make a response", ["ZeroKnowledgeValue::Response"],
-        None,
+        (["use zero_knowledge", "set r to zero knowledge nonce make",
+          "set s to zero knowledge secret make", "set e to zero knowledge challenge make",
+          "set z to r s e zero knowledge response make"], 4),
         (["영지식 사용", "r는 영지식 일회값 만들기", "s는 영지식 비밀 만들기",
           "e는 영지식 도전 만들기", "z는 r와 s와 e로 영지식 응답 만들기"], 4),
         (["use zero_knowledge", "save z to zk_response(1, 2, 3)"], 1),
@@ -721,7 +807,8 @@ MATRIX = [
         (['import secrets', 'z = (1 - 2 * 3) % 11'], 1)),
 
     row("zk_verify", "Zero knowledge: check a proof", ["ZeroKnowledgeValue::Verify"],
-        None,
+        (["use zero_knowledge", "set p to 1", "set c to 2", "set e to 3", "set z to 4",
+          "set ok to p c e z zero knowledge verify"], 5),
         (["영지식 사용", "p는 1", "c는 2", "e는 3", "z는 4",
           "ok는 p와 c와 e와 z로 영지식 검증"], 5),
         (["use zero_knowledge", "save ok to zk_verify(1, 2, 3, 4)"], 1),
@@ -730,7 +817,7 @@ MATRIX = [
 
     row("zk_sim_response", "Zero knowledge: make a simulated response",
         ["ZeroKnowledgeValue::SimulatedResponse"],
-        None,
+        (["use zero_knowledge", "set z to zero knowledge simulated response make"], 1),
         (["영지식 사용", "z는 영지식 모의 응답 만들기"], 1),
         (["use zero_knowledge", "save z to zk_simulated_response()"], 1),
         (["영지식 사용", "저장 z 영지식모의응답만들기()"], 1),
@@ -738,7 +825,8 @@ MATRIX = [
 
     row("zk_sim_commitment", "Zero knowledge: make a simulated commitment",
         ["ZeroKnowledgeValue::SimulatedCommitment"],
-        None,
+        (["use zero_knowledge", "set p to 1", "set e to 2", "set z to 3",
+          "set c to p e z zero knowledge simulated commitment make"], 4),
         (["영지식 사용", "p는 1", "e는 2", "z는 3", "c는 p와 e와 z로 영지식 모의 약속 만들기"], 4),
         (["use zero_knowledge", "save c to zk_simulated_commitment(1, 2, 3)"], 1),
         (["영지식 사용", "저장 c 영지식모의약속(1, 2, 3)"], 1),
@@ -789,6 +877,11 @@ DIAGNOSTIC_PARITY = [
      "30.55% chance show hi", "30.55% 확률로 말해줘 당첨"),
     ("E0228", "a chance stays between 0% and 100%",
      "150% chance show hi", "150% 확률로 말해줘 당첨"),
+    ("E0229", "items of a list are counted from one",
+     "set friends to list of Mina\nshow item 0 of friends",
+     "friends는 목록 Mina\nfriends 0번째 말해줘"),
+    ("E0231", "a list statement needs a name that was made a list",
+     "sort pals", "pals 정렬해"),
 ]
 
 
@@ -810,6 +903,8 @@ INVENTORY_EXCEPTIONS = {
     "ConditionValue::Name": "how one side of a condition is stored",
     "ConditionValue::Text": "how one side of a condition is stored",
     "ConditionValue::Literal": "how one side of a condition is stored",
+    "ConditionValue::Reading": "how one side of a condition is stored",
+    "ConditionValue::Remainder": "how one side of a condition is stored",
     "CompareOp::NotEqual": "the negated form of CompareOp::Equal",
     "InlineStmt::Python": "a Python line inside an NME block, covered by times",
 }
@@ -818,6 +913,7 @@ INVENTORY_ENUMS = (
     "NmeStmt", "ZeroKnowledgeValue", "CompareOp", "UpdateOp", "InputKind",
     "BundledModuleId", "ModuleVersion", "LogicalOp", "Condition", "Value",
     "Literal", "InlineStmt", "TextPart", "ConditionValue", "Code", "Spelling",
+    "Reading", "ItemPosition", "ListOrder",
 )
 
 

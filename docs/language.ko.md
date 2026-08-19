@@ -137,6 +137,103 @@ greeting save Hello
 `score add 1`, `add 1 to score`, `score increase by 1`,
 `subtract 1 from score`도 사용할 수 있습니다.
 
+### 목록 다루기
+
+목록은 `목록`/`list of`로 만들고, 빈 목록은 `빈 목록`/`an empty list`로
+만듭니다.
+
+```nme
+친구들은 목록 민수, 지안
+set friends to list of Mina, Ada
+할일은 빈 목록
+set pals to an empty list
+```
+
+이름이 목록을 담고 나면, 목록을 읽고 바꾸는 문장을 쓸 수 있습니다.
+
+```nme
+친구들에 지수 넣어
+append Grace to friends
+친구들에서 민수 빼
+remove Mina from friends
+친구들 개수 말해줘
+show how many friends
+친구들 정렬해
+sort friends
+친구들 거꾸로 해
+reverse friends
+친구들 섞어
+shuffle friends
+친구들 첫 번째 말해줘
+show the first of friends
+친구들 마지막 말해줘
+show the last of friends
+친구들 2번째 말해줘
+show item 2 of friends
+점수들 합 말해줘
+show the total of scores
+점수들 중 가장 큰 것 말해줘
+show the biggest of scores
+친구들을 쉼표로 이어 말해줘
+show friends joined by comma
+```
+
+**몇 번째인지는 1부터 셉니다.** `친구들 첫 번째`가 곧 `친구들 1번째`이고, 둘 다
+`친구들[0]`이 됩니다. 0번째는 없습니다. 적으면 `E0229`로 알려 주며, Python의
+`친구들[-1]`처럼 조용히 맨 뒤를 돌려주지 않습니다.
+
+목록은 조건 안에서도 읽습니다.
+
+```nme
+만약에 친구들에 민수가 있으면
+if friends contains Mina
+만약에 친구들이 비었으면
+if friends is empty
+```
+
+이 문장들은 모두 **프로그램이 이미 목록으로 만든 이름**에만 씁니다. 그래서
+`친구들 이야기를 들었습니다`나 `sort out your things`, `the first of many`는
+그대로 글로 남아 출력됩니다. 목록이 아닌 이름에 쓰면 `E0231`로 알려 주므로,
+잘못 적었을 때 돌아오는 것은 다른 뜻의 프로그램이 아니라 설명입니다.
+
+`개수`는 보여 주기만 하는 것이 아니라 값이자 조건이기도 합니다.
+
+```nme
+총합은 친구들 개수
+set total to how many friends
+만약에 친구들 개수가 3보다 크면
+if how many friends is greater than 3
+```
+
+### 나누고 남는 수
+
+```nme
+쌓인돌을 4로 나눈 나머지 말해줘
+show the remainder of pile divided by 4
+남은것은 쌓인돌을 4로 나눈 나머지
+만약에 쌓인돌을 4로 나눈 나머지가 0과 같으면
+if the remainder of pile divided by 4 equals 0
+```
+
+나머지는 Python의 `%`이고, 수 세기 놀이의 승부는 대개 이것으로 갈립니다. 값이라서
+출력·저장·조건 어디에나 쓸 수 있습니다. 나누는 수는 적어 놓은 숫자이거나 앞에서
+만든 이름이어야 합니다.
+
+### 글자 다루기
+
+```nme
+이름 길이 말해줘
+show the length of name
+이름 대문자로 말해줘
+show name in capitals
+이름 소문자로 말해줘
+show name in small letters
+```
+
+목록이 아니어도 저장한 이름이면 읽습니다. `길이`는 글자 수를, 나머지 둘은 같은
+글을 대문자·소문자로 바꾼 것을 돌려줍니다. 셋 다 값이므로 저장하거나 조건에서
+비교할 수도 있습니다.
+
 ### 반복하기
 
 한 문장을 한 줄에서 반복합니다.
@@ -166,6 +263,34 @@ repeat 3 times
 
 `반복`, `반복해`, `반복해서`, `repeat`를 `번` 또는 `times`와 섞어도
 됩니다. 횟수에는 올바른 Python 표현식을 사용할 수 있습니다.
+
+콜론과 들여쓰기로 쓴 블록도 두 언어 모두에서 갈래를 받습니다.
+
+```nme
+만약 score > 10:
+    print(1)
+아니면 만약에 score == 0:
+    print(2)
+아니면:
+    print(3)
+```
+
+들여쓴 `3번:` 블록 안에서도 `건너뛰어`/`skip`와 `멈춰`/`break`가 동작합니다.
+이번 판 전까지는 그 자리에서 그냥 Python 이름으로 남아, 컴파일은 되고 실행할 때
+`NameError`가 났습니다.
+
+횟수 없이 계속 도는 반복은 `계속 반복해`/`repeat forever`로 적고,
+`멈춰`/`break`로 빠져나옵니다.
+
+```nme
+계속 반복해
+    아직 진행 중 말해줘
+    멈춰
+
+repeat forever
+    show still going
+    break
+```
 
 초급형 콜론 표기도 명시적인 닫는 말과 함께 쓰면 들여쓰기를 생략할 수
 있습니다.
@@ -535,11 +660,28 @@ RFC 3526 MODP 그룹 15, 생성원 2, 소수 차수 부분군 `q = (p - 1) / 2`,
 | `영지식모의응답만들기()` | `zk_simulated_response()` | 모의 응답 고르기 |
 | `영지식모의약속(공개값,도전값,응답값)` | `zk_simulated_commitment(A,c,r)` | 미리 고른 도전용 전사록 모의하기 |
 
-완전한 증명 흐름은 괄호 없이 한국어와 영어 문장형으로도 쓸 수 있습니다.
-영어에서는 `zero knowledge secret make`, `secret zero knowledge public make`,
-`zero knowledge nonce make`, `nonce zero knowledge commitment make`,
-`secret context zero knowledge proof make`, `public proof context zero knowledge verify`,
-`public commitment context zero knowledge challenge make`를 사용합니다. 순수 영어
+완전한 증명 흐름은 괄호 없이 한국어와 영어 문장형으로도 쓸 수 있고, 값 열세
+가지 모두 두 언어에 표기가 있습니다.
+
+| 한국어 문장형 | 영어 문장형 |
+| --- | --- |
+| `영지식 비밀 만들기` | `zero knowledge secret make` |
+| `비밀로 영지식 공개값 만들기` | `secret zero knowledge public make` |
+| `영지식 일회값 만들기` | `zero knowledge nonce make` |
+| `일회값으로 영지식 약속 만들기` | `nonce zero knowledge commitment make` |
+| `영지식 도전 만들기` | `zero knowledge challenge make` |
+| `도전과 다른 영지식 도전 만들기` | `challenge different zero knowledge challenge make` |
+| `일회값과 비밀과 도전으로 영지식 응답 만들기` | `nonce secret challenge zero knowledge response make` |
+| `공개값과 약속과 도전과 응답으로 영지식 검증` | `public commitment challenge response zero knowledge verify` |
+| `영지식 모의 응답 만들기` | `zero knowledge simulated response make` |
+| `공개값과 도전과 응답으로 영지식 모의 약속 만들기` | `public challenge response zero knowledge simulated commitment make` |
+| `공개값과 약속과 문맥으로 영지식 비대화 도전 만들기` | `public commitment context zero knowledge challenge make` |
+| `비밀과 문맥으로 영지식 비대화 증명 만들기` | `secret context zero knowledge proof make` |
+| `공개값과 증명과 문맥으로 영지식 비대화 검증` | `public proof context zero knowledge verify` |
+
+이번 판 전까지는 영어 표기 다섯 개가 없었고, 그렇게 적으면 **문장으로 저장**
+되었습니다. `set ok to p c e z zero knowledge verify`가 글이 되어 버려서
+프로그램은 아무것도 검증하지 않고 아무 말도 하지 않았습니다. 순수 영어
 문장형 예시는 `examples/needmorecoin-sentence.en.nme`, 한국어 증명 흐름은
 `examples/zk-schnorr-relay.ko.nme`를 보세요. 검증 함수는 슈노르 등식을 확인하기
 전에 공개값과 약속값의 부분군 소속, 응답 범위, 도전 범위를 검사합니다.
@@ -586,6 +728,19 @@ score = 0
 모듈 가져오기를 지원하지 않아 E9029를 표시하므로, 다른 `.nme` 파일을 가져오는
 프로그램은 `nme 실행`, `nme 검사`, 또는 `nme 빌드`를 사용하세요. 가져온 파일을
 열 수 없으면 CLI가 모듈 경로와 함께 E9007을 표시합니다.
+
+같은 가져오기를 두 언어 모두 문장으로 쓸 수 있습니다. `from … import …`를
+만나지 않고도 프로그램을 여러 파일로 나눌 수 있습니다.
+
+```nme
+"helper.nme"에서 greet 가져와
+"helper.nme"에서 greet, score 불러와
+use greet from "helper.nme"
+use greet, score from "helper.nme"
+```
+
+`.nme`로 끝나는 따옴표 경로가 이 줄을 가져오기로 만듭니다. 그래서 `랜덤 사용`은
+그대로 내장 랜덤 모듈을 불러옵니다.
 
 문장형에서는 모듈 줄이나 Python 특수문자 없이도 파일을 읽고 쓸 수 있습니다.
 경로는 항상 따옴표로 감싼 문자열입니다.

@@ -91,6 +91,8 @@ on one line. This document describes version `0.0.1-beta.160`.
 | Sentence | `repeat three times and show Again` | `for _ in range(3): print("Again")` |
 | Sentence | `repeat 3 rounds and show Again` | `for _ in range(3): print("Again")` |
 | Sentence | `repeat 3 times … end` | `for _ in range(3):` |
+| Sentence | `repeat forever` | `while True:` |
+| Sentence | `repeat forever and show Again` | `while True: print("Again")` |
 
 ### Repeating over a list
 
@@ -163,6 +165,40 @@ on one line. This document describes version `0.0.1-beta.160`.
 | Sentence | `push Mina to friends` | `friends.append("Mina")` |
 | Sentence | `add Mina to friends` | `friends.append("Mina")` |
 | Sentence | `to friends append Mina` | `friends.append("Mina")` |
+| Sentence | `set friends to an empty list` | `friends = []` |
+| Sentence | `remove Mina from friends` | `friends.remove("Mina")` |
+| Sentence | `show how many friends` | `print(len(friends))` |
+| Sentence | `set total to how many friends` | `total = len(friends)` |
+| Sentence | `sort friends` | `friends.sort()` |
+| Sentence | `reverse friends` | `friends.reverse()` |
+| Sentence | `shuffle friends` | `__import__("random").shuffle(friends)` |
+| Sentence | `show the first of friends` | `print(friends[0])` |
+| Sentence | `show the last of friends` | `print(friends[-1])` |
+| Sentence | `show item 2 of friends` | `print(friends[1])` |
+| Sentence | `show the total of scores` | `print(sum(scores))` |
+| Sentence | `show the biggest of scores` | `print(max(scores))` |
+| Sentence | `show the smallest of scores` | `print(min(scores))` |
+| Sentence | `show friends joined by comma` | `print(", ".join(map(str, friends)))` |
+| Sentence | `show friends joined by space` | `print(" ".join(map(str, friends)))` |
+| Sentence | `if friends contains Mina` | `if ("Mina" in friends):` |
+| Sentence | `if friends does not contain Ada` | `if ("Ada" not in friends):` |
+| Sentence | `if friends is empty` | `if (not (friends)):` |
+
+### Working with text — length and case
+
+| Level | NME | Python produced |
+| --- | --- | --- |
+| Sentence | `show the length of name` | `print(len(name))` |
+| Sentence | `show name in capitals` | `print(str(name).upper())` |
+| Sentence | `show name in small letters` | `print(str(name).lower())` |
+
+### Number remainders
+
+| Level | NME | Python produced |
+| --- | --- | --- |
+| Sentence | `show the remainder of score divided by 4` | `print(score % 4)` |
+| Sentence | `set left to the remainder of score divided by 4` | `left = score % 4` |
+| Sentence | `if the remainder of score divided by 4 equals 0` | `if (score % 4 == 0):` |
 
 ### Story — letters one at a time
 
@@ -310,7 +346,22 @@ on one line. This document describes version `0.0.1-beta.160`.
 
 | Level | NME | Python produced |
 | --- | --- | --- |
+| Beginner | `say len(friends)` | `print(len(friends))` |
 | Advanced | `friends = ["Mina"]` | unchanged |
+
+### Working with text
+
+| Level | NME | Python produced |
+| --- | --- | --- |
+| Beginner | `say len(name)` | `print(len(name))` |
+| Advanced | `name.upper()` | unchanged |
+
+### Number remainders
+
+| Level | NME | Python produced |
+| --- | --- | --- |
+| Beginner | `say score % 4` | `print(score % 4)` |
+| Advanced | `left = score % 4` | unchanged |
 
 ### Randomness
 
@@ -335,6 +386,7 @@ on one line. This document describes version `0.0.1-beta.160`.
 | Beginner | `use zero_knowledge` | (binds zk_secret, zk_public, zk_nizk_prove, … and their Korean twins) |
 | Beginner | `use random latest` | (the newest bundled adapter) |
 | Beginner | `use random version "0.0.1"` | (that exact adapter) |
+| Beginner | `from "helper.nme" import greet` | (from helper import greet — needs helper.nme next to the program) |
 | Advanced | `from "helper.nme" import greet` | (from helper import greet — needs helper.nme next to the program) |
 
 ## The advanced level — it is just Python
@@ -386,8 +438,34 @@ One import binds **both** the English and the Korean names.
 | 건너뛰기 / Skip | `skip` · `skipthis` · `skipit` · `nextone` | `건너뛰어` · `건너뛰어줘` · `건너뛰기` · `건너뛰자` · `넘어가` · `넘어가줘` · `계속해` · `넘겨` · `다음` |
 | 블록 닫기 / End | `end` · `finish` · `done` | `끝` · `종료` · `마침` |
 | 모듈 쓰기 / Use | `use` · `load` · `get` · `import` | `사용` · `사용해` · `사용해줘` · `사용해주세요` · `불러와` · `불러와줘` · `가져와` · `가져와줘` · `받아` · `받아줘` |
+| 다른 파일에서 / Import from a file | `use` · `take` · `borrow` | `가져와` · `가져와줘` · `가져오기` · `불러와` · `불러오기` |
 | 목록에 넣기 / Append | `append` · `push` | `넣어` · `넣어줘` · `추가해` · `추가해줘` · `붙여` · `붙여줘` |
 | 목록 표시 / List | `list` | `목록` · `리스트` |
+| 빈 목록 / Empty list | `empty` · `blank` | `빈` · `비어있는` · `새` |
+| 개수 / How many | `count` · `number` · `many` | `개수` · `갯수` |
+| 개수 앞말 / Reading lead | `how` | — |
+| 길이 / Length | `length` · `size` | `길이` · `글자수` |
+| 합 / Total | `total` · `sum` | `합` · `합계` · `총합` |
+| 최댓값 / Biggest | `biggest` · `largest` · `highest` · `maximum` | `최댓값` · `최대값` · `큰` |
+| 최솟값 / Smallest | `smallest` · `lowest` · `minimum` | `최솟값` · `최소값` · `작은` |
+| 최댓값 앞말 / Extreme scope | — | `중` · `중에서` · `가운데` |
+| 가장 / Most | — | `가장` · `제일` |
+| 것 / Thing | — | `것` · `값` |
+| 첫 번째 / First | `first` | `첫번째` · `첫째` · `처음` · `첫` |
+| 마지막 / Last | `last` | `마지막` · `맨뒤` |
+| 몇 번째 / Item | `item` · `element` | `번째` · `째` |
+| 대문자 / Capitals | `capitals` · `capital` · `uppercase` | `대문자로` · `대문자` |
+| 소문자 / Small letters | `lowercase` · `small` | `소문자로` · `소문자` |
+| 이어 붙이기 / Join | `joined` · `join` | `이어` · `이어서` · `이어붙여` |
+| 나머지 / Remainder | `remainder` · `rest` · `leftover` | `나머지` |
+| 나누기 말 / Divided | `divided` · `shared` · `split` | `나눈` · `나눈뒤` · `나누고` |
+| 이음말 / Separator | `comma` · `space` · `newline` | `쉼표` · `빈칸` · `공백` · `줄바꿈` |
+| 정렬 / Sort | `sort` | `정렬해` · `정렬해줘` · `정렬` |
+| 거꾸로 / Reverse | `reverse` | `거꾸로` · `거꾸로해` · `거꾸로해줘` · `뒤집어` · `뒤집어줘` |
+| 섞기 / Shuffle | `shuffle` | `섞어` · `섞어줘` · `섞어주세요` |
+| 들어있는지 / Contains | `contains` · `contain` · `includes` · `include` · `holds` | `안에는` · `속에는` · `안에` · `속에` · `에는` · `에` |
+| 무한 반복 / Forever | `forever` · `always` | `계속` · `무한` · `끝없이` |
+| 읽기 조사 / Reading particle | — | `이` · `가` · `은` · `는` · `을` · `를` |
 | 숫자로 / As a number | `number` · `numeric` | `숫자` · `숫자로` · `수로` |
 | 숫자 낱말 / Number words | `zero` · `one` · `two` · `three` · `four` · `five` · `six` · `seven` · `eight` · `nine` · `ten` · `once` · `twice` | `하나` · `한` · `둘` · `두` · `셋` · `세` · `넷` · `네` · `다섯` · `여섯` · `일곱` · `여덟` · `아홉` · `열` · `일` · `이` · `삼` · `사` · `오` · `육` · `칠` · `팔` · `구` · `십` |
 | 횟수 단위 / Count unit | `times` · `time` · `loops` · `loop` · `rounds` · `round` | `번` · `회` · `차례` · `판` |
@@ -467,6 +545,10 @@ One import binds **both** the English and the Korean names.
 | `E0226` | the timer has not been started yet |
 | `E0227` | a chance can only go to one decimal place |
 | `E0228` | a chance must be between 0% and 100% |
+| `E0229` | items are counted from 1 |
+| `E0230` | a name cannot have a space in it |
+| `E0231` | this name was never made into a list |
+| `E0232` | this story has nothing in it |
 | `E0301` | the condition is missing |
 | `E0302` | the condition could not be understood |
 | `E0303` | the repeated body could not be understood |

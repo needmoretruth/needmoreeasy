@@ -10,10 +10,10 @@
 //! line numbers the user actually sees in their `.nme` file.
 
 use crate::syntax::{
-    BundledModuleId, Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, Literal,
-    LogicalOp, NmeLine, NmeStmt, TextPart, TextTemplate, UpdateOp, Value, ZeroKnowledgeValue,
-    CHANCE_SCALE, COOLDOWN_PREFIX, ELAPSED_PYTHON, FILE_MODULE_VERSION, RANDOM_MODULE_VERSION,
-    TIMER_NAME, ZERO_KNOWLEDGE_MODULE_VERSION,
+    BundledModuleId, Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind,
+    ItemPosition, ListOrder, Literal, LogicalOp, NmeLine, NmeStmt, Reading, TextPart, TextTemplate,
+    UpdateOp, Value, ZeroKnowledgeValue, CHANCE_SCALE, COOLDOWN_PREFIX, ELAPSED_PYTHON,
+    FILE_MODULE_VERSION, RANDOM_MODULE_VERSION, TIMER_NAME, ZERO_KNOWLEDGE_MODULE_VERSION,
 };
 
 /// Counts one character's screen width the way a terminal does, so a Korean
@@ -218,6 +218,20 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
         NmeStmt::Append { target, value } => {
             format!("{target}.append({})", lower_value(value, source))
         }
+        NmeStmt::Remove { target, value } => {
+            format!("{target}.remove({})", lower_value(value, source))
+        }
+        // `random` is imported inline here for the same reason `time` is: one
+        // NME line stays one Python line, so there is nowhere to put a
+        // separate import statement.
+        NmeStmt::Arrange { target, order } => match order {
+            ListOrder::Sorted => format!("{target}.sort()"),
+            ListOrder::Reversed => format!("{target}.reverse()"),
+            ListOrder::Shuffled => format!("__import__(\"random\").shuffle({target})"),
+        },
+        NmeStmt::Forever { inline } => {
+            lower_suite("while True:".to_string(), inline.as_ref(), source)
+        }
         NmeStmt::Chance { permille, inline } => {
             lower_suite(format!("if {}:", chance_python(*permille)), inline.as_ref(), source)
         }
@@ -416,6 +430,28 @@ fn lower_condition_value(value: &ConditionValue, source: &str) -> String {
         ConditionValue::Name(name) => name.clone(),
         ConditionValue::Text(text) => python_string(text),
         ConditionValue::Literal(literal) => lower_literal(*literal).to_string(),
+        ConditionValue::Reading { of, reading } => lower_reading(of, *reading),
+        ConditionValue::Remainder { of, by } => lower_value(
+            &Value::Remainder {
+                of: of.clone(),
+                by: by.clone(),
+            },
+            source,
+        ),
+    }
+}
+
+/// The one place a reading becomes Python, shared by values and conditions.
+fn lower_reading(of: &str, reading: Reading) -> String {
+    match reading {
+        Reading::Count => format!("len({of})"),
+        Reading::Total => format!("sum({of})"),
+        Reading::Largest => format!("max({of})"),
+        Reading::Smallest => format!("min({of})"),
+        // `str(...)` so a number read in with `ask` can be upper-cased
+        // without an `AttributeError` on a line that looks right.
+        Reading::Capitals => format!("str({of}).upper()"),
+        Reading::SmallLetters => format!("str({of}).lower()"),
     }
 }
 
@@ -452,6 +488,39 @@ fn lower_value(value: &Value, source: &str) -> String {
                 .collect::<Vec<_>>()
                 .join(", ");
             format!("[{values}]")
+        }
+        Value::Reading { of, reading } => lower_reading(of, *reading),
+        Value::Item { of, position } => match position {
+            ItemPosition::First => format!("{of}[0]"),
+            ItemPosition::Last => format!("{of}[-1]"),
+            ItemPosition::Numbered(code) => {
+                let written = lower_code(code, source);
+                // The sentence counts from one and Python counts from zero.
+                // A number written in the sentence is subtracted here, so the
+                // Python a learner reads back says `friends[2]` rather than
+                // `friends[3 - 1]`; anything else keeps its expression.
+                match written.trim().parse::<i64>() {
+                    Ok(number) => format!("{of}[{}]", number - 1),
+                    Err(_) => format!("{of}[({written}) - 1]"),
+                }
+            }
+        },
+        // `map(str, …)` so a list of numbers joins as readily as a list of
+        // words. Without it `", ".join([1, 2])` is a `TypeError` a beginner
+        // has no way to read.
+        Value::Joined { of, separator } => {
+            format!("{}.join(map(str, {of}))", python_string(separator))
+        }
+        // The divisor keeps its parentheses unless it is one plain atom, for
+        // the same reason a value change does: `pile % 2 + 1` is a different
+        // number from `pile % (2 + 1)`.
+        Value::Remainder { of, by } => {
+            let divisor = lower_code(by, source);
+            if is_simple_atom(&divisor) {
+                format!("{of} % {divisor}")
+            } else {
+                format!("{of} % ({divisor})")
+            }
         }
         Value::Elapsed => ELAPSED_PYTHON.to_string(),
         Value::Chance { permille } => chance_python(*permille),

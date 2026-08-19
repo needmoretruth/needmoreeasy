@@ -90,6 +90,8 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 | 문장형 | `세 번 반복해서 다시 말해줘` | `for _ in range(3): print("다시")` |
 | 문장형 | `3회 반복해서 다시 말해줘` | `for _ in range(3): print("다시")` |
 | 문장형 | `3번 반복해 … 끝` | `for _ in range(3):` |
+| 문장형 | `계속 반복해` | `while True:` |
+| 문장형 | `계속 반복해서 다시 말해줘` | `while True: print("다시")` |
 
 ### 목록 하나씩 반복
 
@@ -162,6 +164,40 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 | 문장형 | `친구들에 민수 추가해` | `친구들.append("민수")` |
 | 문장형 | `친구들에 민수 더해` | `친구들.append("민수")` |
 | 문장형 | `민수를 친구들에 넣어` | `친구들.append("민수")` |
+| 문장형 | `친구들은 빈 목록` | `친구들 = []` |
+| 문장형 | `친구들에서 민수 빼` | `친구들.remove("민수")` |
+| 문장형 | `친구들 개수 말해줘` | `print(len(친구들))` |
+| 문장형 | `총합은 친구들 개수` | `총합 = len(친구들)` |
+| 문장형 | `친구들 정렬해` | `친구들.sort()` |
+| 문장형 | `친구들 거꾸로 해` | `친구들.reverse()` |
+| 문장형 | `친구들 섞어` | `__import__("random").shuffle(친구들)` |
+| 문장형 | `친구들 첫 번째 말해줘` | `print(친구들[0])` |
+| 문장형 | `친구들 마지막 말해줘` | `print(친구들[-1])` |
+| 문장형 | `친구들 2번째 말해줘` | `print(친구들[1])` |
+| 문장형 | `점수들 합 말해줘` | `print(sum(점수들))` |
+| 문장형 | `점수들 중 가장 큰 것 말해줘` | `print(max(점수들))` |
+| 문장형 | `점수들 중 가장 작은 것 말해줘` | `print(min(점수들))` |
+| 문장형 | `친구들을 쉼표로 이어 말해줘` | `print(", ".join(map(str, 친구들)))` |
+| 문장형 | `친구들을 빈칸으로 이어 말해줘` | `print(" ".join(map(str, 친구들)))` |
+| 문장형 | `만약에 친구들에 민수가 있으면` | `if ("민수" in 친구들):` |
+| 문장형 | `만약에 친구들에 지안이 없으면` | `if ("지안" not in 친구들):` |
+| 문장형 | `만약에 친구들이 비었으면` | `if (not (친구들)):` |
+
+### 글자 다루기 — 길이·대문자·소문자
+
+| 단계 | NME | 만들어지는 Python |
+| --- | --- | --- |
+| 문장형 | `이름 길이 말해줘` | `print(len(이름))` |
+| 문장형 | `이름 대문자로 말해줘` | `print(str(이름).upper())` |
+| 문장형 | `이름 소문자로 말해줘` | `print(str(이름).lower())` |
+
+### 숫자 나머지
+
+| 단계 | NME | 만들어지는 Python |
+| --- | --- | --- |
+| 문장형 | `점수를 4로 나눈 나머지 말해줘` | `print(점수 % 4)` |
+| 문장형 | `남은것은 점수를 4로 나눈 나머지` | `남은것 = 점수 % 4` |
+| 문장형 | `만약에 점수를 4로 나눈 나머지가 0과 같으면` | `if (점수 % 4 == 0):` |
 
 ### 이야기 — 글자를 하나씩 내보내기
 
@@ -309,7 +345,22 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 
 | 단계 | NME | 만들어지는 Python |
 | --- | --- | --- |
+| 초급 | `말해 len(친구들)` | `print(len(친구들))` |
 | 고급 | `친구들 = ["민수"]` | unchanged |
+
+### 글자 다루기
+
+| 단계 | NME | 만들어지는 Python |
+| --- | --- | --- |
+| 초급 | `말해 len(이름)` | `print(len(이름))` |
+| 고급 | `이름.upper()` | unchanged |
+
+### 숫자 나머지
+
+| 단계 | NME | 만들어지는 Python |
+| --- | --- | --- |
+| 초급 | `말해 점수 % 4` | `print(점수 % 4)` |
+| 고급 | `남은것 = 점수 % 4` | unchanged |
 
 ### 무작위
 
@@ -334,6 +385,7 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 | 초급 | `영지식 사용` | (binds zk_secret, zk_public, zk_nizk_prove, … and their Korean twins) |
 | 초급 | `랜덤 사용 최신` | (the newest bundled adapter) |
 | 초급 | `랜덤 사용 버전 "0.0.1"` | (that exact adapter) |
+| 초급 | `"helper.nme"에서 greet 가져오기` | (from helper import greet — needs helper.nme next to the program) |
 | 고급 | `from "helper.nme" import greet` | (from helper import greet — needs helper.nme next to the program) |
 
 ## 고급 단계 — 그냥 Python입니다
@@ -384,8 +436,34 @@ Python이므로, NME 문장으로 읽히지 않습니다.
 | 건너뛰기 / Skip | `skip` · `skipthis` · `skipit` · `nextone` | `건너뛰어` · `건너뛰어줘` · `건너뛰기` · `건너뛰자` · `넘어가` · `넘어가줘` · `계속해` · `넘겨` · `다음` |
 | 블록 닫기 / End | `end` · `finish` · `done` | `끝` · `종료` · `마침` |
 | 모듈 쓰기 / Use | `use` · `load` · `get` · `import` | `사용` · `사용해` · `사용해줘` · `사용해주세요` · `불러와` · `불러와줘` · `가져와` · `가져와줘` · `받아` · `받아줘` |
+| 다른 파일에서 / Import from a file | `use` · `take` · `borrow` | `가져와` · `가져와줘` · `가져오기` · `불러와` · `불러오기` |
 | 목록에 넣기 / Append | `append` · `push` | `넣어` · `넣어줘` · `추가해` · `추가해줘` · `붙여` · `붙여줘` |
 | 목록 표시 / List | `list` | `목록` · `리스트` |
+| 빈 목록 / Empty list | `empty` · `blank` | `빈` · `비어있는` · `새` |
+| 개수 / How many | `count` · `number` · `many` | `개수` · `갯수` |
+| 개수 앞말 / Reading lead | `how` | — |
+| 길이 / Length | `length` · `size` | `길이` · `글자수` |
+| 합 / Total | `total` · `sum` | `합` · `합계` · `총합` |
+| 최댓값 / Biggest | `biggest` · `largest` · `highest` · `maximum` | `최댓값` · `최대값` · `큰` |
+| 최솟값 / Smallest | `smallest` · `lowest` · `minimum` | `최솟값` · `최소값` · `작은` |
+| 최댓값 앞말 / Extreme scope | — | `중` · `중에서` · `가운데` |
+| 가장 / Most | — | `가장` · `제일` |
+| 것 / Thing | — | `것` · `값` |
+| 첫 번째 / First | `first` | `첫번째` · `첫째` · `처음` · `첫` |
+| 마지막 / Last | `last` | `마지막` · `맨뒤` |
+| 몇 번째 / Item | `item` · `element` | `번째` · `째` |
+| 대문자 / Capitals | `capitals` · `capital` · `uppercase` | `대문자로` · `대문자` |
+| 소문자 / Small letters | `lowercase` · `small` | `소문자로` · `소문자` |
+| 이어 붙이기 / Join | `joined` · `join` | `이어` · `이어서` · `이어붙여` |
+| 나머지 / Remainder | `remainder` · `rest` · `leftover` | `나머지` |
+| 나누기 말 / Divided | `divided` · `shared` · `split` | `나눈` · `나눈뒤` · `나누고` |
+| 이음말 / Separator | `comma` · `space` · `newline` | `쉼표` · `빈칸` · `공백` · `줄바꿈` |
+| 정렬 / Sort | `sort` | `정렬해` · `정렬해줘` · `정렬` |
+| 거꾸로 / Reverse | `reverse` | `거꾸로` · `거꾸로해` · `거꾸로해줘` · `뒤집어` · `뒤집어줘` |
+| 섞기 / Shuffle | `shuffle` | `섞어` · `섞어줘` · `섞어주세요` |
+| 들어있는지 / Contains | `contains` · `contain` · `includes` · `include` · `holds` | `안에는` · `속에는` · `안에` · `속에` · `에는` · `에` |
+| 무한 반복 / Forever | `forever` · `always` | `계속` · `무한` · `끝없이` |
+| 읽기 조사 / Reading particle | — | `이` · `가` · `은` · `는` · `을` · `를` |
 | 숫자로 / As a number | `number` · `numeric` | `숫자` · `숫자로` · `수로` |
 | 숫자 낱말 / Number words | `zero` · `one` · `two` · `three` · `four` · `five` · `six` · `seven` · `eight` · `nine` · `ten` · `once` · `twice` | `하나` · `한` · `둘` · `두` · `셋` · `세` · `넷` · `네` · `다섯` · `여섯` · `일곱` · `여덟` · `아홉` · `열` · `일` · `이` · `삼` · `사` · `오` · `육` · `칠` · `팔` · `구` · `십` |
 | 횟수 단위 / Count unit | `times` · `time` · `loops` · `loop` · `rounds` · `round` | `번` · `회` · `차례` · `판` |
@@ -465,6 +543,10 @@ Python이므로, NME 문장으로 읽히지 않습니다.
 | `E0226` | 시간 재기를 아직 시작하지 않았습니다 |
 | `E0227` | 확률은 소수점 첫째 자리까지만 정할 수 있습니다 |
 | `E0228` | 확률은 0%부터 100% 사이여야 합니다 |
+| `E0229` | 몇 번째인지는 1부터 셉니다 |
+| `E0230` | 이름에는 띄어쓰기를 쓸 수 없습니다 |
+| `E0231` | 이 이름을 목록으로 만든 적이 없습니다 |
+| `E0232` | 이 이야기 안에 글이 한 줄도 없습니다 |
 | `E0301` | 조건이 비어 있습니다 |
 | `E0302` | 조건을 이해하지 못했습니다 |
 | `E0303` | 반복할 내용을 이해하지 못했습니다 |
