@@ -1311,10 +1311,8 @@ pub fn parse_program(
     // never become logical lines.
     let line_starts = crate::lexer::line_start_offsets(source);
     let mut story_blank_lines = Vec::<(Span, String)>::new();
-    // Tracks whether any NME statement has been seen. A lone `end`/`끝`
-    // after that is almost always a leftover block terminator, so it gets a
-    // friendly diagnostic instead of silently staying Python (where it would
-    // fail at runtime). Pure-Python files still keep `end` byte-identical.
+    // Whether any NME statement has been seen, so a leftover `end`/`끝` under
+    // one is answered instead of silently staying Python.
     let mut saw_nme = false;
     // Physical indentation of the previous logical line, and whether that
     // line was allowed to open a deeper one.
@@ -1634,8 +1632,8 @@ pub fn parse_program(
         // `end` and a bare `break` are valid Python-shaped words in a few
         // contexts, so an already-open explicit block claims them before
         // Python-wins. Outside a block, a stray `end` after any NME
-        // statement is reported (it would only fail at runtime as Python);
-        // in a pure-Python file `end`/`끝` remain untouched identifiers.
+        // statement is reported; with nothing above it the line says itself,
+        // which is the decision `python_wins.rs` records.
         let direct_stmt = if is_end.is_some() && depth > 0 {
             Some(Ok(Some(NmeStmt::End)))
         } else if is_end.is_some() && saw_nme {
@@ -3852,6 +3850,16 @@ fn classify_written_line(
         }
     }
 
+    // `show a; show b` is two things to do on one line. Python needs whole
+    // statements on both sides of a `;` — and where it has them the line is
+    // Python and was claimed above — so in NME the mark used to be swallowed
+    // into the message: `print("a; show b")`. Only a line with an action word
+    // on both sides is answered, so ordinary writing that uses a semicolon
+    // still prints itself.
+    if let Some(problem) = two_statements_on_one_line(tokens) {
+        return Err(problem);
+    }
+
     // Future Python grammar may be newer than rustpython-parser. A
     // call/attribute/subscript shape is never NME's whitespace-led beginner
     // form, so preserve it for the selected CPython instead of hijacking it.
@@ -6002,10 +6010,40 @@ fn wait_from(
     if !mentions_a_number && !names_a_known_value {
         return Ok(None);
     }
+    // `wait -3 seconds` reached `time.sleep(-3)`, which stops the program
+    // with a `ValueError` the reader has no way to connect to their line.
+    if let Some(problem) = negative_wait_diagnostic(amount) {
+        return Err(problem);
+    }
     if let Some(seconds) = parse_wait_amount(source, amount) {
         return Ok(Some(NmeStmt::Wait { seconds }));
     }
     Err(wait_amount_diagnostic(span_of(tokens)))
+}
+
+/// A waiting length written with a minus in front of it.
+fn negative_wait_diagnostic(amount: &[Token]) -> Option<Diagnostic> {
+    let core = wait_amount_core(amount);
+    let [minus, number] = core else {
+        return None;
+    };
+    if !matches!(minus.tok, Tok::Minus)
+        || !matches!(number.tok, Tok::Int { .. } | Tok::Float { .. })
+    {
+        return None;
+    }
+    Some(
+        Diagnostic::bilingual(
+            DiagnosticCode::WaitAmountUnparseable,
+            "a wait cannot be shorter than no time at all",
+            "기다리는 시간은 0보다 짧을 수 없습니다",
+            span_of(core),
+        )
+        .with_bilingual_hint(
+            "write how long to wait as a number that is not below zero: `wait 3 seconds`",
+            "`3초 기다려`처럼 0보다 작지 않은 수로 적어 주세요",
+        ),
+    )
 }
 
 fn wait_action_at(tokens: &[Token], start: usize, mode: MatchMode) -> Option<usize> {
@@ -6247,6 +6285,12 @@ fn match_append(
         let Some(target) = name_word(&target_tokens[0]).map(str::to_string) else {
             return refuse(append_diagnostic(target_tokens[0].span));
         };
+        // `put Mina in ages`, where the program made `ages` a record, is a
+        // record line with its value left out — `put Mina at 90 in ages` —
+        // and not a sentence. Left to the rule below it printed itself.
+        if is_record_name(known_names, &target) {
+            return Err(record_put_diagnostic(span_of(tokens)));
+        }
         // `put the car in reverse` names no list, and with an everyday verb
         // that is all it takes for the line to stay a sentence. `append` and
         // `push` still name the mistake, because they can mean nothing else.
@@ -7092,34 +7136,54 @@ fn korean_item_position(
     Some((position, 2))
 }
 
-/// `item 0 of friends` / `친구들 0번째`.
+/// `item 0 of friends` / `친구들 0번째`, and the same with a minus in front.
 ///
-/// Reading it as `friends[-1]` would quietly hand back the *last* item, which
-/// is the opposite of what the writer asked for, so the line is refused with
-/// the rule spelled out instead.
+/// Reading `item 0` as `friends[-1]` would quietly hand back the *last* item,
+/// which is the opposite of what the writer asked for. A written minus is the
+/// same mistake from the other side: `item -1 of friends` printed itself as a
+/// sentence, so the reader got the words back instead of an item. Both are
+/// refused with the rule spelled out.
 fn zero_item_position(tokens: &[Token], known_names: &HashSet<String>) -> Option<Diagnostic> {
-    let zero_at = tokens.iter().position(is_zero_position)?;
-    let english = zero_at >= 1
-        && token_matches_exact(&tokens[zero_at - 1], ITEM_WORDS_EN)
+    let (number_at, starts_at, negative) = tokens.iter().enumerate().find_map(|(at, token)| {
+        if is_zero_position(token) {
+            return Some((at, at, false));
+        }
+        let minus = matches!(token.tok, Tok::Minus);
+        let number_follows = tokens
+            .get(at + 1)
+            .is_some_and(|next| matches!(next.tok, Tok::Int { .. }));
+        (minus && number_follows).then_some((at + 1, at, true))
+    })?;
+    let english = starts_at >= 1
+        && token_matches_exact(&tokens[starts_at - 1], ITEM_WORDS_EN)
         && tokens
-            .get(zero_at + 1)
+            .get(number_at + 1)
             .is_some_and(|token| token_matches_exact(token, &["of", "in"]))
         && tokens
-            .get(zero_at + 2)
+            .get(number_at + 2)
             .is_some_and(|token| list_name_at(token, known_names).is_some());
-    let korean = zero_at >= 1
-        && list_name_at(&tokens[zero_at - 1], known_names).is_some()
-        && tokens.get(zero_at + 1).is_some_and(|token| {
+    let korean = starts_at >= 1
+        && list_name_at(&tokens[starts_at - 1], known_names).is_some()
+        && tokens.get(number_at + 1).is_some_and(|token| {
             name_word(token).is_some_and(|word| reading_word_matches(word, ITEM_WORDS_KO))
         });
     (english || korean).then(|| {
-        Diagnostic::bilingual(
-            DiagnosticCode::ItemCountsFromOne,
-            "items are counted from 1",
-            "몇 번째인지는 1부터 셉니다",
-            tokens[zero_at].span,
-        )
-        .with_bilingual_hint(
+        let problem = if negative {
+            Diagnostic::bilingual(
+                DiagnosticCode::ItemCountsFromOne,
+                "a position cannot be less than 1",
+                "몇 번째인지는 1보다 작을 수 없습니다",
+                span_of(&tokens[starts_at..=number_at]),
+            )
+        } else {
+            Diagnostic::bilingual(
+                DiagnosticCode::ItemCountsFromOne,
+                "items are counted from 1",
+                "몇 번째인지는 1부터 셉니다",
+                tokens[number_at].span,
+            )
+        };
+        problem.with_bilingual_hint(
             "write `item 1 of friends` for the first one, or `the last of friends`",
             "맨 앞은 `친구들 1번째`, 맨 뒤는 `친구들 마지막`이라고 적어 주세요",
         )
@@ -7472,13 +7536,13 @@ fn not_a_record(
 fn record_put_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
         DiagnosticCode::RecordNameUnknown,
-        "I couldn't understand what to put in the record",
-        "표에 무엇을 넣을지 이해하지 못했습니다",
+        "this line puts something into a record, but does not say under which name",
+        "이 줄은 표에 무엇인가를 넣는데, 어느 이름으로 넣을지가 없습니다",
         span,
     )
     .with_bilingual_hint(
-        "write `put Mina at 90 in ages` or `나이표에 민수를 90으로 넣어`",
-        "`나이표에 민수를 90으로 넣어` 또는 `put Mina at 90 in ages`처럼 적어 주세요",
+        "write `put Mina at 90 in ages`",
+        "`나이표에 민수를 90으로 넣어`처럼 적어 주세요",
     )
 }
 
@@ -12755,6 +12819,12 @@ fn match_use_module(
         .filter(|name| known_names.contains(**name))
         .copied()
         .collect::<Vec<_>>();
+    // Every one of the module's own words is taken: nobody names ten of them
+    // by hand, so the module is already loaded. Listing them as a collision
+    // read as if the reader had chosen `random_pick` and `랜덤선택`.
+    if collisions.len() == module_binding_names(module).len() {
+        return Err(module_loaded_twice_diagnostic(module, span_of(tokens)));
+    }
     if !collisions.is_empty() {
         return Err(module_name_collision_diagnostic(
             module,
@@ -12954,6 +13024,32 @@ fn name_taken_by_module_diagnostic(module: BundledModuleId, span: Span, name: &s
         ),
         format!(
             "이 값에 다른 이름을 붙이거나, {} 모듈을 불러오지 마세요",
+            module.name_ko()
+        ),
+    )
+}
+
+/// A second `use` line for a module the program already loaded.
+fn module_loaded_twice_diagnostic(module: BundledModuleId, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::ModuleLoadedTwice,
+        format!(
+            "the {} module is already loaded, so this line does nothing",
+            module.name_en()
+        ),
+        format!(
+            "{} 모듈은 이미 불러왔기 때문에 이 줄은 아무 일도 하지 않습니다",
+            module.name_ko()
+        ),
+        span,
+    )
+    .with_bilingual_hint(
+        format!(
+            "delete this line — one `use {}` covers the whole program",
+            module.name_en()
+        ),
+        format!(
+            "이 줄을 지워 주세요. `{} 사용` 한 줄이면 프로그램 전체에서 쓸 수 있습니다",
             module.name_ko()
         ),
     )
@@ -13341,6 +13437,13 @@ fn match_set(
                 "`저장 인사 안녕하세요` 또는 `set greeting to Hello`처럼 쓰세요",
             ));
         };
+        // `set x.count to 3` used to save the *text* `.count to 3` into `x`:
+        // the target stopped at `x` and everything after it became a value.
+        // A dotted name is Python's own way of naming something inside a
+        // value, and NME's `set` only ever writes a plain name.
+        if let Some(problem) = dotted_target_diagnostic(source, tokens, consumed, target_word) {
+            return Err(problem);
+        }
         let marked_by_a_connector = tokens
             .get(consumed + 1)
             .is_some_and(|token| token_matches_exact(token, &["to", "as", "is", "into"]));
@@ -13984,6 +14087,50 @@ fn korean_value_marks_what_it_becomes(token: &Token) -> bool {
             .iter()
             .any(|ending| word.eq_ignore_ascii_case(ending))
     })
+}
+
+/// `set x.count to 3` — a name with a dot in it.
+///
+/// Python writes `x.count = 3` for this, and NME never claims that shape.
+/// Saying so beats saving the words `.count to 3` into `x`, which is what a
+/// target that stops at the first name does.
+fn dotted_target_diagnostic(
+    source: &str,
+    tokens: &[Token],
+    consumed: usize,
+    target: &str,
+) -> Option<Diagnostic> {
+    if !matches!(tokens.get(consumed + 1)?.tok, Tok::Dot) {
+        return None;
+    }
+    let field = name_word(tokens.get(consumed + 2)?)?;
+    // `set x.count to 3` marks the value with `to`; `save x.count 3` does
+    // not. Either way the hint should show the reader's own value.
+    let after_field = tokens.get(consumed + 3);
+    let value_at = match after_field {
+        Some(token) if token_matches_exact(token, SET_VALUE_CONNECTORS) => consumed + 4,
+        _ => consumed + 3,
+    };
+    let value = tokens.get(value_at).map(|token| {
+        let line = span_of(tokens);
+        source[token.span.start..line.end].trim()
+    });
+    let python = match value {
+        Some(value) => format!("{target}.{field} = {value}"),
+        None => format!("{target}.{field} = 3"),
+    };
+    Some(
+        Diagnostic::bilingual(
+            DiagnosticCode::SaveNameNotSimple,
+            format!("`{target}.{field}` is a name inside a value, and this line only writes plain names"),
+            format!("`{target}.{field}`은 값 안에 든 이름이라서, 이 줄로는 정할 수 없습니다"),
+            span_of(&tokens[consumed..=consumed + 2]),
+        )
+        .with_bilingual_hint(
+            format!("write it as Python: `{python}`"),
+            format!("Python 문장으로 적어 주세요: `{python}`"),
+        ),
+    )
 }
 
 fn set_action_at(tokens: &[Token], start: usize, mode: MatchMode) -> Option<(Spelling, usize)> {
@@ -14986,7 +15133,7 @@ fn parse_suite_body(
 
     let body_span = span_of(body);
     if has_top_level_semicolon(body) {
-        return Err(one_statement_diagnostic(kind, body_span));
+        return Err(one_statement_diagnostic(body_span));
     }
     if branch_shape(body).is_some() {
         return Err(branch_without_condition_diagnostic(body_span));
@@ -15054,7 +15201,30 @@ fn inline_block_diagnostic(_kind: SuiteKind, span: Span) -> Diagnostic {
     )
 }
 
-fn one_statement_diagnostic(_kind: SuiteKind, span: Span) -> Diagnostic {
+/// Two NME statements joined by a `;`.
+///
+/// English puts its action word first and Korean puts it last, so each half
+/// is looked at from both ends.
+fn two_statements_on_one_line(tokens: &[Token]) -> Option<Diagnostic> {
+    let is_action =
+        |token: &Token| name_word(token).is_some_and(|word| is_action_word(&word.to_lowercase()));
+    let holds_an_action = |part: &[Token]| {
+        part.first().is_some_and(&is_action) || part.last().is_some_and(&is_action)
+    };
+    let at = tokens
+        .iter()
+        .position(|token| matches!(token.tok, Tok::Semi))?;
+    let (before, after) = (&tokens[..at], &tokens[at + 1..]);
+    // Both halves have to be written in words. `say = print; say(t"hello")`
+    // is Python this parser is too old to read, and a `=` or a bracket says
+    // so; that line belongs to the CPython the reader has, not to NME.
+    let written_statement =
+        |part: &[Token]| holds_an_action(part) && looks_like_written_sentence(part);
+    (written_statement(before) && written_statement(after))
+        .then(|| one_statement_diagnostic(tokens[at].span))
+}
+
+fn one_statement_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
         DiagnosticCode::OneStatementPerLine,
         "only one statement fits on this line",
@@ -17069,7 +17239,11 @@ fn looks_like_written_prose(tokens: &[Token]) -> bool {
 fn is_sentence_word_token(index: usize, token: &Token) -> bool {
     token_word(token).is_some()
         || is_command_ending(token)
+        // A semicolon is punctuation in writing as much as a comma is.
+        // Without it `It was late; nobody spoke` was handed to CPython, and
+        // the reader got an English `SyntaxError` for a line of prose.
         || matches!(token.tok, Tok::Comma | Tok::In | Tok::Not)
+        || (index > 0 && matches!(token.tok, Tok::Semi))
         || (index > 0
             && matches!(
                 token.tok,
@@ -17850,6 +18024,41 @@ fn rebound_name(stmt: &NmeStmt) -> Option<&str> {
     }
 }
 
+/// `Hello; goodbye` — names with `;` between them.
+///
+/// Python takes the line and does nothing with it: each half is a name read
+/// and thrown away. Somebody who typed it meant to show the words.
+fn only_names_and_semicolons(tokens: &[Token]) -> Option<Diagnostic> {
+    if !tokens.iter().any(|token| matches!(token.tok, Tok::Semi)) {
+        return None;
+    }
+    if !tokens
+        .iter()
+        .all(|token| name_word(token).is_some() || matches!(token.tok, Tok::Semi))
+    {
+        return None;
+    }
+    let written = tokens
+        .iter()
+        .map(|token| name_word(token).unwrap_or(";"))
+        .collect::<Vec<_>>()
+        .join(" ");
+    Some(
+        Diagnostic::bilingual(
+            DiagnosticCode::StatementDoesNothing,
+            "this line is names with `;` between them. Writing a name does not show it, so \
+             this line does nothing",
+            "이 줄은 이름을 `;`로 늘어놓은 것뿐입니다. 이름만 적으면 보여 주지 않으므로 \
+             아무 일도 일어나지 않습니다",
+            span_of(tokens),
+        )
+        .with_bilingual_hint(
+            format!("to show the words, write `show {written}`"),
+            format!("이 말을 보여 주려면 `{written} 말해줘`처럼 적어 주세요"),
+        ),
+    )
+}
+
 /// The Python builtins NME's own readings are written in terms of.
 ///
 /// `the total of marks` is `sum(marks)` and `how many friends` is
@@ -17925,6 +18134,9 @@ fn job_changes_an_outer_name_diagnostic(name: &str, span: Span) -> Diagnostic {
 }
 
 fn statement_does_nothing(tokens: &[Token]) -> Option<Diagnostic> {
+    if let Some(problem) = only_names_and_semicolons(tokens) {
+        return Some(problem);
+    }
     if let Some(word) = (tokens.len() == 1).then(|| name_word(&tokens[0])).flatten() {
         // A one-word line that is one of NME's own words stays an ordinary
         // Python name, exactly as it does today: `end`, `skip`, `멈춰` close

@@ -1246,13 +1246,12 @@ fn command_build(args: &[String], language: MessageLanguage) -> ExitCode {
     match exec::check_python(&compiled.source, &compiled.path, &python) {
         Ok(output) if output.status.success() => write_stderr(&output.stderr),
         Ok(output) => {
+            let (english, korean) = python_check_failed_message(&output.stderr, "build", "빌드");
             return fail_with_details(
                 nme_core::diagnostics::DiagnosticCode::CliCpythonValidationFailed,
                 language,
-                "the generated Python did not pass CPython's syntax check\n\
-                 hint: fix the Python syntax or indentation shown below, then build again",
-                "만들어진 Python이 CPython 문법 검사를 통과하지 못했습니다\n\
-                 도움말: 아래에 표시된 Python 문법이나 들여쓰기를 고친 뒤 다시 빌드하세요",
+                &english,
+                &korean,
                 &output.stderr,
             );
         }
@@ -1355,15 +1354,16 @@ fn command_check(args: &[String], language: MessageLanguage) -> ExitCode {
             write_stderr(&output.stderr);
             ExitCode::SUCCESS
         }
-        Ok(output) => fail_with_details(
-            nme_core::diagnostics::DiagnosticCode::CliCpythonValidationFailed,
-            language,
-            "CPython found a syntax or indentation problem in the generated program\n\
-             hint: fix the problem shown below, then check again",
-            "CPython이 만들어진 프로그램에서 문법 또는 들여쓰기 문제를 찾았습니다\n\
-             도움말: 아래에 표시된 문제를 고친 뒤 다시 검사하세요",
-            &output.stderr,
-        ),
+        Ok(output) => {
+            let (english, korean) = python_check_failed_message(&output.stderr, "check", "검사");
+            fail_with_details(
+                nme_core::diagnostics::DiagnosticCode::CliCpythonValidationFailed,
+                language,
+                &english,
+                &korean,
+                &output.stderr,
+            )
+        }
         Err(error) => fail(
             nme_core::diagnostics::DiagnosticCode::CliPythonStartFailed,
             language,
@@ -1744,7 +1744,14 @@ fn transpile_file(
                 ));
             }
             let suggestion = suggest_program(&path);
-            let create_name = PathBuf::from(format!("{shown_path}.nme"));
+            // `nme check nosuch.nme` used to be answered with "create a
+            // program named `nosuch.nme.nme`": the extension was appended
+            // whether or not the reader had already typed it.
+            let create_name = if shown_path.ends_with(".nme") {
+                PathBuf::from(shown_path.to_string())
+            } else {
+                PathBuf::from(format!("{shown_path}.nme"))
+            };
             let english_hint = match &suggestion {
                 Some(name) => format!(
                     "hint: did you mean `{name}`? Try `nme run {stem}`",
@@ -1957,6 +1964,76 @@ fn fail(
     }
     eprintln!("error[{}]: {english}", code.code());
     ExitCode::FAILURE
+}
+
+/// What CPython found, said in ordinary words.
+///
+/// The raw report below the message is CPython's own English, with a caret
+/// inside generated Python and a temporary path: evidence, not an
+/// explanation. This reads the two lines that matter out of it — which
+/// physical line, and which of the handful of mistakes — and says them in
+/// both languages first. Anything it does not recognise keeps the old
+/// wording, so nothing is ever claimed that was not read.
+fn python_check_failed_message(
+    stderr: &[u8],
+    action_en: &str,
+    action_ko: &str,
+) -> (String, String) {
+    let report = String::from_utf8_lossy(stderr);
+    let line = report
+        .lines()
+        .find_map(|line| line.rsplit_once(", line "))
+        .and_then(|(_, number)| number.trim().parse::<usize>().ok());
+    let said = |english: String, korean: String| {
+        (
+            format!("{english}\nhint: fix that line, then {action_en} again"),
+            format!("{korean}\n도움말: 그 줄을 고친 뒤 다시 {action_ko}하세요"),
+        )
+    };
+    let at_en = line.map_or_else(|| "one line".to_string(), |at| format!("line {at}"));
+    let at_ko = line.map_or_else(|| "어느 한 줄".to_string(), |at| format!("{at}번째 줄"));
+    if report.contains("expected an indented block") {
+        // CPython names the line that should have been indented, not the one
+        // that opened the block above it.
+        return said(
+            format!("{at_en} is inside the block opened above it, so it has to be indented"),
+            format!("{at_ko}은 바로 위에서 연 블록 안에 있으므로 들여써야 합니다"),
+        );
+    }
+    if report.contains("unexpected indent") {
+        return said(
+            format!("{at_en} is indented, but the line above it does not open a block"),
+            format!("{at_ko}은 들여썼는데, 그 위에 블록을 여는 줄이 없습니다"),
+        );
+    }
+    if report.contains("unindent does not match") {
+        return said(
+            format!("{at_en} is indented differently from the lines around it"),
+            format!("{at_ko}의 들여쓰기가 둘레의 줄들과 맞지 않습니다"),
+        );
+    }
+    if report.contains("was never closed") || report.contains("unexpected EOF") {
+        return said(
+            format!("a bracket opened at {at_en} is never closed"),
+            format!("{at_ko}에서 연 괄호가 닫히지 않았습니다"),
+        );
+    }
+    if report.contains("SyntaxError") {
+        return said(
+            format!("{at_en} is not something Python can read"),
+            format!("{at_ko}은 Python이 읽을 수 있는 내용이 아닙니다"),
+        );
+    }
+    (
+        format!(
+            "the generated Python did not pass CPython's syntax check\n\
+             hint: fix the Python syntax or indentation shown below, then {action_en} again"
+        ),
+        format!(
+            "만들어진 Python이 CPython 문법 검사를 통과하지 못했습니다\n\
+             도움말: 아래에 표시된 Python 문법이나 들여쓰기를 고친 뒤 다시 {action_ko}하세요"
+        ),
+    )
 }
 
 fn fail_with_details(

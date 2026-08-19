@@ -138,6 +138,8 @@ pub enum DiagnosticCode {
     ModuleImportPathInvalid,
     /// The shape of a `from "…" import …` line is not understood.
     ModuleImportShapeInvalid,
+    /// A `use` line for a module the program already loaded.
+    ModuleLoadedTwice,
     /// `set`/`save` with no value.
     SaveValueMissing,
     /// The value to save could not be understood.
@@ -332,6 +334,7 @@ impl DiagnosticCode {
             Self::ModuleShapeInvalid => "E0406",
             Self::ModuleImportPathInvalid => "E0407",
             Self::ModuleImportShapeInvalid => "E0408",
+            Self::ModuleLoadedTwice => "E0409",
             Self::SaveValueMissing => "E0411",
             Self::SaveValueUnparseable => "E0412",
             Self::SaveNameMissing => "E0413",
@@ -385,7 +388,7 @@ impl DiagnosticCode {
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 110] = [
+    pub const ALL: [DiagnosticCode; 111] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -434,6 +437,7 @@ impl DiagnosticCode {
         Self::ModuleShapeInvalid,
         Self::ModuleImportPathInvalid,
         Self::ModuleImportShapeInvalid,
+        Self::ModuleLoadedTwice,
         Self::SaveValueMissing,
         Self::SaveValueUnparseable,
         Self::SaveNameMissing,
@@ -948,6 +952,13 @@ impl DiagnosticCode {
                 "읽지 못한 모듈 가져오기 줄",
                 "A module import is one line with two parts: the other program's path in quotation marks, and the names to bring over. `from \"helper.nme\" import greet, score`. Anything else in the line — one extra word, a missing `import`, a name with a dot in it — leaves NME no way to tell which names should cross.",
                 "모듈 가져오기는 두 부분으로 된 한 줄입니다. 따옴표 안에 적은 다른 프로그램의 경로와, 가져올 이름들입니다. `from \"helper.nme\" import greet, score`처럼 적습니다. 그 밖의 것이 줄에 섞이면 — 낱말이 하나 더 있거나, `import`가 빠졌거나, 이름에 점이 있으면 — 어떤 이름을 가져올지 알 수 없습니다.",
+            ),
+            Self::ModuleLoadedTwice => (
+                "E0409",
+                "a module loaded twice",
+                "이미 불러온 모듈을 다시 부른 줄",
+                "One `use` line makes a module's words available for the whole program, wherever the line stands. A second one for the same module adds nothing, so it is named rather than left to look like it does something. Delete it.",
+                "`사용` 한 줄이면 그 모듈의 낱말을 프로그램 전체에서 쓸 수 있습니다. 같은 모듈을 다시 부르는 줄은 더해 주는 것이 없으므로, 무언가 하는 줄처럼 보이지 않도록 짚어 줍니다. 지우면 됩니다.",
             ),
             Self::SaveValueMissing => (
                 "E0411",

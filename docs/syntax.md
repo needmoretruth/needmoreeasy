@@ -789,6 +789,7 @@ touched.**
 | `E0406` | the use line shape is not understood |
 | `E0407` | a module path this line cannot use |
 | `E0408` | a module import line NME could not read |
+| `E0409` | a module loaded twice |
 | `E0411` | the value to save is missing |
 | `E0412` | the value to save could not be understood |
 | `E0413` | the name to save into is missing |

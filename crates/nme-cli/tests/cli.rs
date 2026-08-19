@@ -1501,8 +1501,10 @@ fn build_validates_with_cpython_before_writing_output() {
         english_error.contains("IndentationError"),
         "{english_error}"
     );
+    // The headline is now the plain-language reading of CPython's report;
+    // the report itself is still printed under it as evidence.
     assert!(
-        english_error.contains("generated Python did not pass CPython's syntax check"),
+        english_error.contains("line 2 is inside the block opened above it, so it has to be indented"),
         "{english_error}"
     );
     assert!(!english_error.contains("오류:"), "{english_error}");
@@ -1517,15 +1519,15 @@ fn build_validates_with_cpython_before_writing_output() {
     assert!(!bilingual.status.success());
     let bilingual_error = stderr(&bilingual);
     assert!(
-        bilingual_error.contains("만들어진 Python이 CPython 문법 검사를 통과하지 못했습니다"),
+        bilingual_error.contains("2번째 줄은 바로 위에서 연 블록 안에 있으므로 들여써야 합니다"),
         "{bilingual_error}"
     );
     assert!(
-        bilingual_error.contains("generated Python did not pass CPython's syntax check"),
+        bilingual_error.contains("line 2 is inside the block opened above it, so it has to be indented"),
         "{bilingual_error}"
     );
     let korean_position = bilingual_error
-        .find("만들어진 Python이 CPython 문법 검사를 통과하지 못했습니다")
+        .find("2번째 줄은 바로 위에서 연 블록 안에 있으므로 들여써야 합니다")
         .unwrap();
     let python_position = bilingual_error.find("IndentationError").unwrap();
     assert!(korean_position < python_position, "{bilingual_error}");
