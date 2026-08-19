@@ -5,6 +5,21 @@ Korean: keyword typos, a different word order, missing or extra spaces, a full
 stop at the end, Korean particles and endings, number words, capitals, and the
 synonyms someone guesses before they have read anything.
 
+There are two corpora of ordinary sentences beside the mistakes:
+
+| file | what it is |
+| --- | --- |
+| `prose_corpus.py` | 30 ordinary sentences, half English half Korean, that **must** print. A gate: 30/30 today, and it stays there. |
+| `english_prose.py` + `english_prose_corpus.py` | 302 ordinary **English** sentences. A ratchet, not a gate — only 61% printed on the day it was written, so it records the three numbers and fails when they get worse. |
+
+    python3 scripts/mistake-probes/english_prose.py
+    영어 산문 302문장 — 그대로 출력 184 · 거절 74 · 다른 프로그램 44
+
+Korean prose is in far better shape than English prose, and the gap is the
+compiler's, not the corpus's: a typo-tolerant match fires on ordinary English
+words (`day` reads as `say`, `shop` as `show`), a digit anywhere switches the
+prose path off, and a one-word line becomes a bare name that raises `NameError`.
+
 This is a **measurement**, not a pass/fail gate. Run it, read the three numbers,
 and decide whether the direction is right:
 
