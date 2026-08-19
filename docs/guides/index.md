@@ -78,7 +78,7 @@ bracket and no equals sign, which `scripts/report-guide-tier.py` measures.
 30. [30 — Shop: stock and a balance](30-shop.md)
 31. [31 — Bank: paying in, taking out, keeping a history](31-bank.md)
 32. [32 — Grade book: a score per name, and an average](32-grade-book.md)
-33. [33 — Project: a habit tracker](33-habit.md)
+33. [33 — Habit tracker: a mark for each day](33-habit.md)
 34. [34 — Chart: seeing numbers as bars](34-chart.md)
 35. [35 — Todo list: adding, dropping, listing](35-todo.md)
 36. [36 — Diary: writing it down with today's date](36-diary.md)
@@ -232,7 +232,7 @@ and validated by hand.
 | 30 | ★★★★☆ | projects | [Shop: stock and a balance](30-shop.md) | a small shop where every sale takes one off the stock and ten off the money |
 | 31 | ★★★☆☆ | projects | [Bank: paying in, taking out, keeping a history](31-bank.md) | an account that pays in, takes out, protects the balance and records what happened |
 | 32 | ★★★★☆ | projects | [Grade book: a score per name, and an average](32-grade-book.md) | a grade book holding a score per name, reporting the average and the best |
-| 33 | ★★★★☆ | projects | [Project: a habit tracker](33-habit.md) | a JSON-persisted habit tracker with add, check, streak, list, quit, and a module file for the storage logic |
+| 33 | ★★★★☆ | projects | [Habit tracker: a mark for each day](33-habit.md) | keeping a yes or no for each date and counting the days it was done |
 | 34 | ★★★☆☆ | screen and time | [Chart: seeing numbers as bars](34-chart.md) | drawing how much was read each day as bars, so the days compare at a glance |
 | 35 | ★★★★☆ | projects | [Todo list: adding, dropping, listing](35-todo.md) | a list that keeps taking commands to add, drop and show what needs doing |
 | 36 | ★★★☆☆ | files | [Diary: writing it down with today's date](36-diary.md) | saving a one-line diary entry stamped with today's date and weekday, then reading it back |
