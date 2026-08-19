@@ -1504,7 +1504,8 @@ fn build_validates_with_cpython_before_writing_output() {
     // The headline is now the plain-language reading of CPython's report;
     // the report itself is still printed under it as evidence.
     assert!(
-        english_error.contains("line 2 is inside the block opened above it, so it has to be indented"),
+        english_error
+            .contains("line 2 is inside the block opened above it, so it has to be indented"),
         "{english_error}"
     );
     assert!(!english_error.contains("오류:"), "{english_error}");
@@ -1523,7 +1524,8 @@ fn build_validates_with_cpython_before_writing_output() {
         "{bilingual_error}"
     );
     assert!(
-        bilingual_error.contains("line 2 is inside the block opened above it, so it has to be indented"),
+        bilingual_error
+            .contains("line 2 is inside the block opened above it, so it has to be indented"),
         "{bilingual_error}"
     );
     let korean_position = bilingual_error

@@ -7,7 +7,7 @@
 
 use rustpython_parser::{parse as parse_python, Mode, Tok};
 
-use crate::diagnostics::{Diagnostic, DiagnosticCode, Span};
+use crate::diagnostics::{korean_particle, Diagnostic, DiagnosticCode, Span};
 use crate::lexer::{self, LogicalLine, Token};
 use crate::lower::{apply_edits, Edit};
 
@@ -423,11 +423,16 @@ fn convert_input(
             )
         }
         (SyntaxLevel::Sentence, Language::Korean, InputFlavor::Text) => {
-            format!("{target}을 물어봐{}", prompt_with_space.unwrap_or_default())
+            format!(
+                "{target}{} 물어봐{}",
+                korean_particle(target, "을", "를"),
+                prompt_with_space.unwrap_or_default()
+            )
         }
         (SyntaxLevel::Sentence, Language::Korean, InputFlavor::Number) => {
             format!(
-                "{target}을 숫자로 물어봐{}",
+                "{target}{} 숫자로 물어봐{}",
+                korean_particle(target, "을", "를"),
                 prompt_with_space.unwrap_or_default()
             )
         }
@@ -594,7 +599,7 @@ fn convert_assignment(
     let value = sentence_value(source, value);
     Some(match language {
         Language::English => format!("set {target} to {value}"),
-        Language::Korean => format!("{target}은 {value}"),
+        Language::Korean => format!("{target}{} {value}", korean_particle(target, "은", "는")),
     })
 }
 

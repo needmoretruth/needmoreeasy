@@ -1504,17 +1504,25 @@ pub fn korean_particle(
     let consonant = match last {
         '가'..='힣' => (u32::from(last) - 0xAC00) % 28 != 0,
         'a'..='z' | 'A'..='Z' => {
-            let lowered = last.to_ascii_lowercase();
-            let two: String = word
+            // The particle follows how the word is *read* in Korean, not how
+            // it is spelled in English. A silent `e` at the end is not read —
+            // `name` is 네임 and takes 은 — but the `e` in `age` is, and 에이지
+            // takes 는, so the letter is only dropped where it falls silent.
+            const SILENT_AFTER: &[char] = &[
+                'b', 'd', 'f', 'k', 'l', 'm', 'n', 'p', 'r', 's', 't', 'v', 'z',
+            ];
+            let letters: Vec<char> = word
+                .trim_end()
                 .chars()
-                .rev()
-                .take(2)
-                .collect::<Vec<_>>()
-                .into_iter()
-                .rev()
+                .map(|letter| letter.to_ascii_lowercase())
                 .collect();
-            matches!(lowered, 'n' | 'm' | 'l' | 'p' | 'k' | 'b' | 'g')
-                || two.to_ascii_lowercase().ends_with("ng")
+            let mut end = letters.len();
+            if end >= 2 && letters[end - 1] == 'e' && SILENT_AFTER.contains(&letters[end - 2]) {
+                end -= 1;
+            }
+            let read = letters[end - 1];
+            let ends_in_ng = end >= 2 && letters[end - 2] == 'n' && read == 'g';
+            matches!(read, 'n' | 'm' | 'l' | 'p' | 'k' | 'b' | 'g') || ends_in_ng
         }
         '0'..='9' => matches!(last, '0' | '1' | '3' | '6' | '7' | '8'),
         _ => false,

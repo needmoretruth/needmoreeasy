@@ -8,6 +8,7 @@
 //! writer wrote it.
 
 use crate::convert::{Language, SyntaxLevel};
+use crate::diagnostics::korean_particle;
 use crate::lower::lower_reading;
 use crate::syntax::{
     Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, ItemPosition, ListOrder,
@@ -242,7 +243,10 @@ impl Rewrite<'_> {
                     }
                     (Language::Korean, UpdateOp::Multiply) => format!("{target}에 {amount} 곱해"),
                     (Language::Korean, UpdateOp::Divide) => {
-                        format!("{target}를 {amount}로 나눠")
+                        format!(
+                            "{target}{} {amount}로 나눠",
+                            korean_particle(target, "을", "를")
+                        )
                     }
                 })
             }
@@ -418,8 +422,13 @@ impl Rewrite<'_> {
                 Some(match (self.language, given) {
                     (Language::English, None) => format!("to {name}:"),
                     (Language::English, Some(given)) => format!("to {name} {given}:"),
-                    (Language::Korean, None) => format!("{name}라는 일:"),
-                    (Language::Korean, Some(given)) => format!("{given}에게 {name}라는 일:"),
+                    (Language::Korean, None) => {
+                        format!("{name}{} 일:", korean_particle(name, "이라는", "라는"))
+                    }
+                    (Language::Korean, Some(given)) => format!(
+                        "{given}에게 {name}{} 일:",
+                        korean_particle(name, "이라는", "라는")
+                    ),
                 })
             }
             NmeStmt::RunJob { name, arguments } => {
@@ -509,9 +518,17 @@ impl Rewrite<'_> {
         Some(match (self.language, kind) {
             (Language::English, InputKind::Text) => format!("ask {target}{question}"),
             (Language::English, InputKind::Number) => format!("ask number {target}{question}"),
-            (Language::Korean, InputKind::Text) => format!("{target}을 물어봐{question}"),
+            (Language::Korean, InputKind::Text) => {
+                format!(
+                    "{target}{} 물어봐{question}",
+                    korean_particle(target, "을", "를")
+                )
+            }
             (Language::Korean, InputKind::Number) => {
-                format!("{target}을 숫자로 물어봐{question}")
+                format!(
+                    "{target}{} 숫자로 물어봐{question}",
+                    korean_particle(target, "을", "를")
+                )
             }
         })
     }
@@ -524,20 +541,23 @@ impl Rewrite<'_> {
             Value::List(items) if items.is_empty() => {
                 return Some(self.either(
                     &format!("set {target} to an empty list"),
-                    &format!("{target}은 빈 목록"),
+                    &format!("{target}{} 빈 목록", korean_particle(target, "은", "는")),
                 ))
             }
             Value::EmptyRecord => {
                 return Some(self.either(
                     &format!("set {target} to an empty record"),
-                    &format!("{target}은 빈 표"),
+                    &format!("{target}{} 빈 표", korean_particle(target, "은", "는")),
                 ))
             }
             Value::Chance { permille } => {
                 let chance = percentage(*permille);
                 return Some(self.either(
                     &format!("{target} is a {chance}% chance"),
-                    &format!("{target}은 {chance}% 확률"),
+                    &format!(
+                        "{target}{} {chance}% 확률",
+                        korean_particle(target, "은", "는")
+                    ),
                 ));
             }
             _ => {}
@@ -545,7 +565,7 @@ impl Rewrite<'_> {
         let value = self.value(value)?;
         Some(self.either(
             &format!("set {target} to {value}"),
-            &format!("{target}은 {value}"),
+            &format!("{target}{} {value}", korean_particle(target, "은", "는")),
         ))
     }
 
@@ -705,7 +725,10 @@ impl Rewrite<'_> {
                     return None;
                 };
                 let ending = if *negated { "없으면" } else { "있으면" };
-                Some((format!("{value}이 {ending}"), true))
+                Some((
+                    format!("{value}{} {ending}", korean_particle(value, "이", "가")),
+                    true,
+                ))
             }
             Condition::Compare {
                 left,
@@ -719,12 +742,22 @@ impl Rewrite<'_> {
                         return None;
                     };
                     let ending = if *negated { "없으면" } else { "있으면" };
-                    return Some((format!("{container}에 {right}가 {ending}"), true));
+                    return Some((
+                        format!(
+                            "{container}에 {right}{} {ending}",
+                            korean_particle(&right, "이", "가")
+                        ),
+                        true,
+                    ));
                 }
                 let left = self.condition_value(left)?;
                 let comparison = match (operator, negated) {
-                    (CompareOp::Equal, false) => format!("{right}과 같으면"),
-                    (CompareOp::Equal, true) => format!("{right}과 같지 않으면"),
+                    (CompareOp::Equal, false) => {
+                        format!("{right}{} 같으면", korean_particle(&right, "과", "와"))
+                    }
+                    (CompareOp::Equal, true) => {
+                        format!("{right}{} 같지 않으면", korean_particle(&right, "과", "와"))
+                    }
                     (CompareOp::Greater, false) => format!("{right}보다 크면"),
                     (CompareOp::Less, false) => format!("{right}보다 작으면"),
                     (CompareOp::GreaterOrEqual, false) => format!("{right}보다 크거나 같으면"),
@@ -771,7 +804,9 @@ impl Rewrite<'_> {
                 let comparison = match (operator, negated) {
                     (CompareOp::Greater, false) => format!("{right}보다 큰"),
                     (CompareOp::Less, false) => format!("{right}보다 작을"),
-                    (CompareOp::Equal, true) => format!("{right}과 같지 않을"),
+                    (CompareOp::Equal, true) => {
+                        format!("{right}{} 같지 않을", korean_particle(&right, "과", "와"))
+                    }
                     _ => return None,
                 };
                 Some(format!("{} {comparison}", korean_marked(&left, "가")))
@@ -908,8 +943,12 @@ impl Rewrite<'_> {
                 Some(match (self.language, separator.as_str()) {
                     (Language::English, "") => format!("{of} joined together"),
                     (Language::English, _) => format!("{of} joined by {english}"),
-                    (Language::Korean, "") => format!("{of}을 붙여"),
-                    (Language::Korean, _) => format!("{of}을 {korean} 이어"),
+                    (Language::Korean, "") => {
+                        format!("{of}{} 붙여", korean_particle(of, "을", "를"))
+                    }
+                    (Language::Korean, _) => {
+                        format!("{of}{} {korean} 이어", korean_particle(of, "을", "를"))
+                    }
                 })
             }
             Value::Split { of, by } => {
@@ -922,14 +961,20 @@ impl Rewrite<'_> {
                 };
                 Some(match self.language {
                     Language::English => format!("{of} split by {english}"),
-                    Language::Korean => format!("{of}을 {korean} 나눈 것"),
+                    Language::Korean => {
+                        format!("{of}{} {korean} 나눈 것", korean_particle(of, "을", "를"))
+                    }
                 })
             }
             Value::Repeated { of, times } => {
                 let times = self.code(times);
                 Some(self.either(
                     &format!("{of} repeated {times} times"),
-                    &format!("{of}을 {} 붙인 것", korean_counted(&times, "개")),
+                    &format!(
+                        "{of}{} {} 붙인 것",
+                        korean_particle(of, "을", "를"),
+                        korean_counted(&times, "개")
+                    ),
                 ))
             }
             Value::Remainder { of, by } => Some(self.remainder(of, by)),
@@ -969,7 +1014,11 @@ impl Rewrite<'_> {
         let by = self.code(by);
         self.either(
             &format!("the remainder of {of} divided by {by}"),
-            &format!("{of}을 {} 나눈 나머지", korean_counted(&by, "로")),
+            &format!(
+                "{of}{} {} 나눈 나머지",
+                korean_particle(of, "을", "를"),
+                korean_counted(&by, "로")
+            ),
         )
     }
 

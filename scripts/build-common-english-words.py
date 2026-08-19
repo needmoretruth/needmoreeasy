@@ -248,7 +248,11 @@ def main() -> int:
     start = source.index(f"const {CONST}: &[&str] = &[")
     end = source.index("];", start) + 2
     replacement = f"const {CONST}: &[&str] = &[\n" + "\n".join(lines) + ",\n];"
-    if source[start:end] == replacement:
+    # Compare the words, not the layout. This script packs them to fill each
+    # line; `cargo fmt` may lay the same list out one word per line, and both
+    # are the same list. Comparing text made the two tools contradict each
+    # other — one demanding what the other had just rewritten.
+    if re.findall(r'"([^"]*)"', source[start:end]) == listed:
         print(f"common-english-words: ok, {len(listed)} words")
         return 0
     if checking:
