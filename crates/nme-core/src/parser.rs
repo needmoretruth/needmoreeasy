@@ -14,10 +14,11 @@ use crate::lexer::{LogicalLine, Token};
 use crate::syntax::{
     BundledModuleId, Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind,
     ItemPosition, ListOrder, Literal, LogicalOp, ModuleVersion, NmeLine, NmeStmt, Reading,
-    Spelling, TextPart, TextTemplate, UpdateOp, Value, CHANCE_MAX_PERMILLE, COOLDOWN_PREFIX,
-    ELAPSED_PYTHON, FILE_MODULE, FILE_MODULE_KO, FILE_READ_WORDS_EN, FILE_READ_WORDS_KO,
-    FILE_WRITE_WORDS_EN, FILE_WRITE_WORDS_KO, RANDOM_MODULE, RANDOM_MODULE_KO, SAY_KEYWORD,
-    SAY_KEYWORD_KO, SAY_WORDS_EN, TIMER_NAME, TIMES_KEYWORD, TIMES_KEYWORD_KO,
+    Spelling, SplitBy, TextPart, TextTemplate, UpdateOp, Value, CHANCE_MAX_PERMILLE,
+    COOLDOWN_PREFIX, ELAPSED_PYTHON, FILE_MODULE, FILE_MODULE_KO, FILE_READ_WORDS_EN,
+    FILE_READ_WORDS_KO, FILE_WRITE_WORDS_EN, FILE_WRITE_WORDS_KO, MATH_MODULE, MATH_MODULE_KO,
+    RANDOM_MODULE, RANDOM_MODULE_KO, SAY_KEYWORD, SAY_KEYWORD_KO, SAY_WORDS_EN, TIMER_NAME,
+    TIMES_KEYWORD, TIMES_KEYWORD_KO,
 };
 
 const SAY_WORDS_KO: &[&str] = &[
@@ -243,14 +244,51 @@ const AUXILIARY_VERBS_KO: &[&str] = &[
 /// `멈춰 주시면 좋겠습니다` are sentences in exactly the same way that
 /// `말해 봐야 소용없습니다` is.
 fn korean_action_word_carries_an_auxiliary(tokens: &[Token]) -> bool {
-    tokens.windows(2).any(|pair| {
-        name_word(&pair[0]).is_some_and(is_hangul)
-            && (is_nme_vocabulary_word(&pair[0])
-                || token_matches_exact(&pair[0], SORT_WORDS_KO)
-                || token_matches_exact(&pair[0], REVERSE_WORDS_KO)
-                || token_matches_exact(&pair[0], SHUFFLE_WORDS_KO))
-            && token_matches_exact(&pair[1], AUXILIARY_VERBS_KO)
-    })
+    korean_auxiliary_pairs(tokens).next().is_some()
+}
+
+/// Where each compound verb on the line starts, in source order.
+fn korean_auxiliary_pairs(tokens: &[Token]) -> impl Iterator<Item = usize> + '_ {
+    tokens
+        .windows(2)
+        .enumerate()
+        .filter(|(_, pair)| {
+            name_word(&pair[0]).is_some_and(is_hangul)
+                && (is_nme_vocabulary_word(&pair[0])
+                    || token_matches_exact(&pair[0], SORT_WORDS_KO)
+                    || token_matches_exact(&pair[0], REVERSE_WORDS_KO)
+                    || token_matches_exact(&pair[0], SHUFFLE_WORDS_KO))
+                && token_matches_exact(&pair[1], AUXILIARY_VERBS_KO)
+        })
+        .map(|(at, _)| at)
+}
+
+/// True when every compound verb on this line stands inside the question of
+/// an explicit `<이름>을 물어봐 …` line.
+///
+/// Such a line is a question: the name comes first, then the asking word, and
+/// everything after the asking word is the text shown while it waits. That
+/// text is ordinary Korean, so it may perfectly well contain a compound verb.
+/// `주문을 물어봐 마법의 주문을 말해 보세요` does, and reading `말해 보세요` as a
+/// sentence threw the question away — the line printed itself instead of
+/// asking, and a loop written around it never got an answer and never ended.
+///
+/// `물어봐 주셔서 감사합니다` is the opposite shape and must stay prose: no
+/// name stands in front of the asking word, and the helper verb hangs off the
+/// asking word itself rather than off a word inside a question. So the test
+/// is not "does the line contain an asking word" but "does every compound
+/// verb sit after the question has begun".
+fn korean_question_owns_every_auxiliary(tokens: &[Token]) -> bool {
+    let Some(shape) = find_ask_shape(tokens, MatchMode::Exact) else {
+        return false;
+    };
+    if !matches!(shape.spelling, Spelling::Korean) || shape.target_at >= shape.action_start {
+        return false;
+    }
+    if shape.prompt_start >= tokens.len() {
+        return false;
+    }
+    korean_auxiliary_pairs(tokens).all(|at| at >= shape.prompt_start)
 }
 
 const SET_WORDS_EN: &[&str] = &["set", "save", "remember"];
@@ -389,6 +427,45 @@ const JOIN_WORDS_KO: &[&str] = &["이어", "이어서", "이어붙여"];
 /// The separators that have a name of their own. A written one works too.
 const SEPARATOR_WORDS_EN: &[&str] = &["comma", "space", "newline"];
 const SEPARATOR_WORDS_KO: &[&str] = &["쉼표", "빈칸", "공백", "줄바꿈"];
+/// `친구들을 붙여` / `friends joined together` — one join word that carries
+/// its own separator, and that separator is nothing at all. It is a word of
+/// its own rather than an empty [`SEPARATOR_WORDS_KO`] entry because Korean
+/// says it as the verb and English says it as an adverb after `joined`.
+const JOIN_TOGETHER_WORDS_EN: &[&str] = &["together"];
+const JOIN_TOGETHER_WORDS_KO: &[&str] = &["붙여", "붙여서", "붙여줘", "이어붙여", "이어붙여줘"];
+/// `friends joined by nothing` / `친구들을 그대로 이어` — the same meaning
+/// written where a separator goes.
+const EMPTY_SEPARATOR_WORDS_EN: &[&str] = &["nothing"];
+const EMPTY_SEPARATOR_WORDS_KO: &[&str] = &["그대로"];
+/// `메모를 쉼표로 나눈 것` / `memo split by comma` — the opposite of joining.
+///
+/// `split` is deliberately the only English word here. `divided` and `cut`
+/// would both be one edit from something else the grammar already reads, and
+/// this statement is gated on a name rather than on an anchor word.
+const SPLIT_WORDS_EN: &[&str] = &["split"];
+const SPLIT_WORDS_KO: &[&str] = &["나눈", "쪼갠", "자른"];
+/// `줄마다 나눈 것` / `split by line` — cut wherever a line ends.
+const SPLIT_LINE_WORDS_EN: &[&str] = &["line", "lines"];
+const SPLIT_LINE_WORDS_KO: &[&str] = &["줄마다", "줄별로", "한줄씩"];
+/// The noun that closes the Korean phrase: `… 나눈 것`. Without it `나눈` is a
+/// modifier waiting for a noun, and `이야기를 둘로 나눈 뒤에` is still a
+/// sentence. English needs no such word — it says `memo split by comma`.
+const SPLIT_THING_WORDS_KO: &[&str] = &["것", "거", "것들"];
+/// `별표를 5개 붙인 것` / `star repeated 5 times` — one piece of text, that many
+/// times over.
+///
+/// This is the shape an earlier round left out on purpose, because
+/// `별표를 5번 이어 말해줘` cannot be told apart from the counted loop, where
+/// `5번` already means *five times*. What makes it safe now is that it is a
+/// **noun phrase and not a command**: it is gated on a name the program has
+/// already saved, the count is followed by a counting word, and the whole
+/// thing closes with `붙인 것`, which no loop ever says. So `5번` may be
+/// written here after all.
+const REPEAT_TEXT_WORDS_EN: &[&str] = &["repeated"];
+const REPEAT_TEXT_WORDS_KO: &[&str] = &["붙인", "이어붙인"];
+/// The counting word after the number: `5 times` / `5개`, `5번`.
+const COPIES_WORDS_EN: &[&str] = &["times"];
+const COPIES_WORDS_KO: &[&str] = &["개", "번"];
 /// `sort friends` / `친구들 정렬해`.
 const SORT_WORDS_EN: &[&str] = &["sort"];
 const SORT_WORDS_KO: &[&str] = &["정렬해", "정렬해줘", "정렬"];
@@ -416,6 +493,12 @@ const REMAINDER_WORDS_KO: &[&str] = &["나머지"];
 /// The dividing word each language puts before the number.
 const DIVIDED_WORDS_EN: &[&str] = &["divided", "shared", "split"];
 const DIVIDED_WORDS_KO: &[&str] = &["나눈", "나눈뒤", "나누고"];
+/// `for each friend in friends with place` /
+/// `친구들의 친구마다 순서와 함께 반복해` — a loop that also holds which turn it
+/// is on. The word after `with`, and the word before `와 함께`, is the name
+/// that holds it, so the writer chooses it rather than the compiler.
+const POSITION_WORDS_EN: &[&str] = &["with"];
+const POSITION_WORDS_KO: &[&str] = &["함께", "같이"];
 /// `use greet from "helper.nme"` / `"helper.nme"에서 greet 가져와`.
 const NME_IMPORT_WORDS_EN: &[&str] = &["use", "take", "borrow"];
 const NME_IMPORT_WORDS_KO: &[&str] = &["가져와", "가져와줘", "가져오기", "불러와", "불러오기"];
@@ -3137,6 +3220,13 @@ fn classify(
         return Err(problem);
     }
 
+    // `별들을 이어 말해줘` · `show stars joined`. A join with no separator used
+    // to print itself, which reads like success. Named here, before any
+    // matcher can turn it into text.
+    if let Some(problem) = join_without_a_separator(tokens, known_names) {
+        return Err(problem);
+    }
+
     // A story block and a chance are read before every other sentence
     // matcher. Both hang on punctuation the rest of the grammar never uses —
     // a closing colon, and a `%` — so no ordinary sentence can reach them.
@@ -3155,8 +3245,14 @@ fn classify(
     // and the line ends the way a written Korean sentence ends. Both halves
     // are needed: without the helper `말해줘 비가 쏟아졌습니다` would stop
     // printing the rain, and without the ending `말해 봐` is still output.
+    //
+    // Unless the compound verb is inside a question. `주문을 물어봐 마법의
+    // 주문을 말해 보세요` names what it is asking for before it asks, and the
+    // rest of the line is the text shown while it waits; a helper verb in
+    // that text is not the line's own verb.
     if korean_action_word_carries_an_auxiliary(tokens)
         && is_written_korean_sentence(tokens, known_names)
+        && !korean_question_owns_every_auxiliary(tokens)
     {
         return Ok(Some(NmeStmt::Say {
             value: Value::Text(make_text_template(source, tokens, known_names)),
@@ -5242,19 +5338,43 @@ fn english_reading_prefix(
             }
         }
     }
-    // `friends joined by comma` — likewise, and gated on a real list.
+    // `friends joined by comma` · `friends joined together` — likewise, and
+    // gated on a real list.
     if tokens.len() > 2 {
         if let Some(of) = list_name_at(&tokens[0], known_names) {
             if token_matches_exact(&tokens[1], JOIN_WORDS_EN) {
                 let mut cursor = 2;
-                if tokens
-                    .get(cursor)
-                    .is_some_and(|token| token_matches_exact(token, &["by", "with"]))
-                {
+                if tokens.get(cursor).is_some_and(is_separator_connector) {
                     cursor += 1;
                 }
                 let (separator, used) = english_separator(tokens, cursor)?;
                 return Some((Value::Joined { of, separator }, cursor + used));
+            }
+        }
+    }
+    // `star repeated 5 times` — the same text over and over, and gated on a
+    // saved name for the same reason.
+    if tokens.len() > 3 {
+        if let Some(of) = saved_name_at(&tokens[0], known_names) {
+            if token_matches_exact(&tokens[1], REPEAT_TEXT_WORDS_EN)
+                && token_matches_exact(&tokens[3], COPIES_WORDS_EN)
+            {
+                if let Some(times) = remainder_divisor(&tokens[2], known_names) {
+                    return Some((Value::Repeated { of, times }, 4));
+                }
+            }
+        }
+    }
+    // `memo split by line` · `line split by comma` — the opposite, and gated
+    // on any saved name, because what is cut up is text rather than a list.
+    if tokens.len() > 3 {
+        if let Some(of) = saved_name_at(&tokens[0], known_names) {
+            if token_matches_exact(&tokens[1], SPLIT_WORDS_EN)
+                && token_matches_exact(&tokens[2], &["by", "on", "at", "into"])
+            {
+                if let Some(by) = english_split_target(&tokens[3]) {
+                    return Some((Value::Split { of, by }, 4));
+                }
             }
         }
     }
@@ -5414,14 +5534,59 @@ fn english_separator(tokens: &[Token], at: usize) -> Option<(String, usize)> {
 /// `comma` · `space` · `newline` and their Korean twins, with the Korean
 /// `로`/`으로` taken off. The comma is a comma and a space, because that is
 /// how a list is read out loud.
+///
+/// `nothing` and `그대로` are separators too, and what they name is the empty
+/// one: `친구들을 그대로 이어` runs the items together. They are matched before
+/// the particle is stripped, because `그대로` ends in what is also a particle.
 fn named_separator(token: &Token) -> Option<String> {
     let word = name_word(token)?;
+    if EMPTY_SEPARATOR_WORDS_EN.contains(&word)
+        || EMPTY_SEPARATOR_WORDS_KO.contains(&word)
+        || JOIN_TOGETHER_WORDS_EN.contains(&word)
+    {
+        return Some(String::new());
+    }
     let word = strip_any_suffix(word, &["으로", "로"]).unwrap_or(word);
     if !SEPARATOR_WORDS_EN.contains(&word) && !SEPARATOR_WORDS_KO.contains(&word) {
         return None;
     }
     let text = match word {
         "comma" | "쉼표" => ", ",
+        "space" | "빈칸" | "공백" => " ",
+        "newline" | "줄바꿈" => "\n",
+        _ => return None,
+    };
+    Some(text.to_string())
+}
+
+/// `line` · `comma` · `space` · `newline`, or the comma mark itself.
+fn english_split_target(token: &Token) -> Option<SplitBy> {
+    if token_matches_exact(token, SPLIT_LINE_WORDS_EN) {
+        return Some(SplitBy::Lines);
+    }
+    if matches!(token.tok, Tok::Comma) {
+        return Some(SplitBy::Text(",".to_string()));
+    }
+    split_separator(token).map(SplitBy::Text)
+}
+
+/// `줄마다` · `쉼표로` · `빈칸으로` · `줄바꿈으로`.
+fn korean_split_target(token: &Token) -> Option<SplitBy> {
+    if token_matches_exact(token, SPLIT_LINE_WORDS_KO) {
+        return Some(SplitBy::Lines);
+    }
+    split_separator(token).map(SplitBy::Text)
+}
+
+/// The separator a **split** cuts on, which is not always the one a join puts
+/// in. A joined list reads `Mina, Ada` out loud, so its comma carries a space;
+/// a line read back out of a file says `Mina,Ada`, and looking for `", "`
+/// there would find nothing. So the comma is `","` here and `", "` there.
+fn split_separator(token: &Token) -> Option<String> {
+    let word = name_word(token)?;
+    let word = strip_any_suffix(word, &["으로", "로"]).unwrap_or(word);
+    let text = match word {
+        "comma" | "쉼표" => ",",
         "space" | "빈칸" | "공백" => " ",
         "newline" | "줄바꿈" => "\n",
         _ => return None,
@@ -5479,8 +5644,54 @@ fn korean_reading_prefix(
             return Some((Value::Remainder { of: name, by }, 5));
         }
     }
+    // `별표를 5개 붙인 것`, and `별표를 5개 이어 붙인 것` written with the two
+    // halves of the verb apart, which is how people type it.
+    if rest.len() > 3 && token_matches_exact(&rest[1], COPIES_WORDS_KO) {
+        let verb_at = 2 + usize::from(token_matches_exact(&rest[2], JOIN_WORDS_KO));
+        if rest.len() > verb_at + 1
+            && token_matches_exact(&rest[verb_at], REPEAT_TEXT_WORDS_KO)
+            && token_matches_exact(&rest[verb_at + 1], SPLIT_THING_WORDS_KO)
+        {
+            if let Some(times) = remainder_divisor(&rest[0], known_names) {
+                return Some((
+                    Value::Repeated {
+                        of: name.clone(),
+                        times,
+                    },
+                    verb_at + 3,
+                ));
+            }
+        }
+    }
+    // `메모를 줄마다 나눈 것` — one piece of text cut into a list. Read before
+    // the list readings because what is cut up is text, and a name holding
+    // text is not a list name.
+    if rest.len() > 2
+        && token_matches_exact(&rest[1], SPLIT_WORDS_KO)
+        && token_matches_exact(&rest[2], SPLIT_THING_WORDS_KO)
+    {
+        if let Some(by) = korean_split_target(&rest[0]) {
+            return Some((Value::Split { of: name, by }, 4));
+        }
+    }
     if listed {
-        // `친구들을 쉼표로 이어` — every item in one piece of text.
+        // `친구들을 붙여` — every item run together with nothing between them.
+        // The verb carries its own separator, so no separator word stands in
+        // front of it.
+        if rest
+            .first()
+            .is_some_and(|token| token_matches_exact(token, JOIN_TOGETHER_WORDS_KO))
+        {
+            return Some((
+                Value::Joined {
+                    of: name,
+                    separator: String::new(),
+                },
+                2,
+            ));
+        }
+        // `친구들을 쉼표로 이어`, `친구들을 그대로 이어` — every item in one
+        // piece of text.
         if rest.len() > 1 {
             if let Some(separator) = named_separator(&rest[0]) {
                 if token_matches_exact(&rest[1], JOIN_WORDS_KO) {
@@ -5743,6 +5954,96 @@ fn match_arrange(
         return Ok(Some(NmeStmt::Arrange { target, order }));
     }
     Ok(None)
+}
+
+/// `별들을 이어 말해줘` · `show stars joined` — a list and a joining word, and
+/// nothing saying what goes between the items.
+///
+/// Left alone these printed themselves — `print(str(별들) + "을 이어")` — which
+/// looks like success and is not. Naming them is safe because the list name is
+/// the anchor: `이어` and `join` are ordinary words, and only a name the
+/// program has already made a list can reach this at all.
+fn join_without_a_separator(tokens: &[Token], known_names: &HashSet<String>) -> Option<Diagnostic> {
+    for at in 0..tokens.len().saturating_sub(1) {
+        let Some(name) = list_name_at(&tokens[at], known_names) else {
+            continue;
+        };
+        let english = token_matches_exact(&tokens[at + 1], JOIN_WORDS_EN);
+        let korean = token_matches_exact(&tokens[at + 1], JOIN_WORDS_KO);
+        if !english && !korean {
+            continue;
+        }
+        // `이어붙여` is in both lists: it is a joining word, and it carries its
+        // own separator, which is nothing. So it is never missing one.
+        if token_matches_exact(&tokens[at + 1], JOIN_TOGETHER_WORDS_KO) {
+            continue;
+        }
+        // English writes the separator after the joining word. Korean writes
+        // it before, so a joining word standing right after the name has
+        // none — which is the whole of this shape.
+        if english && english_separator_at(tokens, at + 2).is_some() {
+            continue;
+        }
+        // Anything else left on the line means it is a sentence that happens
+        // to hold both words: `친구들을 이어 갔습니다`, `friends join us`.
+        // A dangling `by`/`with` is part of the half-written join, not part of
+        // a sentence, so it is stepped over first.
+        let mut after = at + 2;
+        if english && tokens.get(after).is_some_and(is_separator_connector) {
+            after += 1;
+        }
+        if !only_command_furniture(&tokens[after..]) {
+            continue;
+        }
+        return Some(join_separator_missing_diagnostic(&name, span_of(tokens)));
+    }
+    None
+}
+
+/// The separator a join names, wherever the optional `by`/`with` leaves it.
+fn english_separator_at(tokens: &[Token], at: usize) -> Option<(String, usize)> {
+    let mut cursor = at;
+    if tokens.get(cursor).is_some_and(is_separator_connector) {
+        cursor += 1;
+    }
+    english_separator(tokens, cursor)
+}
+
+/// `by` and `with`, either of which may stand between `joined` and the
+/// separator it names. `with` is a Python keyword, so it never arrives as an
+/// ordinary word and has to be named by its token — until this was written,
+/// `friends joined with comma` was documented and printed itself.
+fn is_separator_connector(token: &Token) -> bool {
+    matches!(token.tok, Tok::With) || token_matches_exact(token, &["by", "with"])
+}
+
+/// True when every token left is an ending, a politeness word, or an output
+/// word — the furniture a command may carry, and nothing that could be the
+/// rest of a sentence.
+fn only_command_furniture(tokens: &[Token]) -> bool {
+    tokens.iter().all(|token| {
+        is_command_ending(token)
+            || token_matches_exact(token, SENTENCE_FILLERS)
+            || token_matches_exact(token, SAY_WORDS_EN)
+            || token_matches_exact(token, SAY_WORDS_KO)
+    })
+}
+
+fn join_separator_missing_diagnostic(name: &str, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::JoinSeparatorMissing,
+        format!("this says to join `{name}` but not what to put between the items"),
+        format!("`{name}`을(를) 이어 붙이라고 했지만 사이에 무엇을 넣을지가 없어요"),
+        span,
+    )
+    .with_bilingual_hint(
+        format!(
+            "write `{name} joined by comma`, `{name} joined by space`, or `{name} joined together` for nothing between"
+        ),
+        format!(
+            "`{name}을 쉼표로 이어`, `{name}을 빈칸으로 이어`처럼 쓰세요. 사이에 아무것도 넣지 않으려면 `{name}을 붙여`라고 씁니다"
+        ),
+    )
 }
 
 fn not_a_list_diagnostic(token: &Token, span: Span) -> Diagnostic {
@@ -6928,6 +7229,14 @@ fn match_english_for_each(
         matches!(token.tok, Tok::Colon | Tok::And) || token_matches_exact(token, &["then"])
     });
     let items_tokens = colon_at.map_or(tail, |at| &tail[..at]);
+    // `for each friend in friends with place` — the tail names a second name
+    // to hold which turn the loop is on. It is looked for only inside a
+    // header that is already a complete loop, so the ordinary word `with`
+    // cannot reach this from an ordinary sentence.
+    let (position, items_tokens) = match english_position_phrase(items_tokens) {
+        Some((position, from)) => (Some(position), &items_tokens[..from]),
+        None => (None, items_tokens),
+    };
     let Some(items) = expression_code(source, items_tokens) else {
         return Err(for_each_diagnostic(span_of(tokens)));
     };
@@ -6936,6 +7245,9 @@ fn match_english_for_each(
     // The loop name is bound by the header, so the body may already use it.
     let mut body_names = known_names.clone();
     body_names.insert(name.clone());
+    if let Some(position) = &position {
+        body_names.insert(position.clone());
+    }
     let inline = parse_suite_body(
         source,
         body,
@@ -6947,8 +7259,34 @@ fn match_english_for_each(
     Ok(Some(NmeStmt::ForEach {
         name,
         items,
+        position,
         inline,
     }))
+}
+
+/// `… in friends with place` — the name that holds which turn the loop is on,
+/// and where the collection stops.
+///
+/// The `with` has to be the last one on the line and has to be followed by a
+/// plain name and nothing else, so `for each row in read_csv(path, with_head)`
+/// keeps its whole expression.
+fn english_position_phrase(items_tokens: &[Token]) -> Option<(String, usize)> {
+    let at = items_tokens.iter().rposition(is_english_position_word)?;
+    if at == 0 {
+        return None;
+    }
+    let mut name_at = at + 1;
+    while items_tokens
+        .get(name_at)
+        .is_some_and(|token| token_matches_exact(token, &["its", "the", "a"]))
+    {
+        name_at += 1;
+    }
+    if name_at + 1 != items_tokens.len() {
+        return None;
+    }
+    let name = name_word(items_tokens.get(name_at)?)?;
+    (is_plain_python_name(name) && is_bindable_english_name(name)).then(|| (name.to_string(), at))
 }
 
 /// Position of the loop variable and of the first token after it, for
@@ -6975,11 +7313,17 @@ fn korean_for_each_shape(tokens: &[Token]) -> bool {
     let Some((name_at, rest_at)) = korean_for_each_variable(tokens) else {
         return false;
     };
+    let rest = &tokens[rest_at..];
+    // `순서와 함께` stands between the loop name and the repeat word, so it has
+    // to be stepped over here as well; otherwise the line is not seen as a
+    // block header and its body is asked to indent.
+    let rest = match korean_position_phrase(rest) {
+        Some((_, used)) => &rest[used..],
+        None => rest,
+    };
     name_at > 0
-        && (repeat_action_at(&tokens[rest_at..], 0, MatchMode::Recover).is_some()
-            || tokens[rest_at..]
-                .iter()
-                .any(|token| matches!(token.tok, Tok::Colon)))
+        && (repeat_action_at(rest, 0, MatchMode::Recover).is_some()
+            || rest.iter().any(|token| matches!(token.tok, Tok::Colon)))
 }
 
 fn match_korean_for_each(
@@ -6998,6 +7342,12 @@ fn match_korean_for_each(
         return Ok(None);
     }
     let rest = &tokens[rest_at..];
+    // `친구들의 친구마다 순서와 함께 반복해` — the name in front of `와 함께`
+    // holds which turn the loop is on, and the loop goes on from there.
+    let (position, rest) = match korean_position_phrase(rest) {
+        Some((position, used)) => (Some(position), &rest[used..]),
+        None => (None, rest),
+    };
     let colon_at = rest
         .iter()
         .position(|token| matches!(token.tok, Tok::Colon));
@@ -7022,6 +7372,9 @@ fn match_korean_for_each(
     let header_end = colon_at.map_or(tokens[name_at].span.end, |at| rest[at].span.end);
     let mut body_names = known_names.clone();
     body_names.insert(name.clone());
+    if let Some(position) = &position {
+        body_names.insert(position.clone());
+    }
     let inline = parse_suite_body(
         source,
         &rest[body_at.min(rest.len())..],
@@ -7033,8 +7386,38 @@ fn match_korean_for_each(
     Ok(Some(NmeStmt::ForEach {
         name,
         items,
+        position,
         inline,
     }))
+}
+
+/// `순서와 함께` — the name that holds which turn the loop is on, and how many
+/// tokens it took. `함께`/`같이` is the anchor: without it a name carrying
+/// `와`/`과` is just part of the sentence.
+fn korean_position_phrase(rest: &[Token]) -> Option<(String, usize)> {
+    if !token_matches_exact(rest.get(1)?, POSITION_WORDS_KO) {
+        return None;
+    }
+    let word = name_word(rest.first()?)?;
+    let name = strip_any_suffix(word, &["와", "과"])?;
+    (!name.is_empty() && is_plain_python_name(name)).then(|| (name.to_string(), 2))
+}
+
+/// `with`, which Python spells as a keyword of its own, so it never arrives as
+/// an ordinary word the way `each` and `in` do.
+fn is_english_position_word(token: &Token) -> bool {
+    matches!(token.tok, Tok::With) || token_matches_exact(token, POSITION_WORDS_EN)
+}
+
+/// True when a word can stand as a Python name on its own: it starts with a
+/// letter or an underscore and holds nothing else. Hangul counts as letters,
+/// which is what lets `순서` be the name that holds the position.
+fn is_plain_python_name(word: &str) -> bool {
+    let mut characters = word.chars();
+    characters
+        .next()
+        .is_some_and(|first| first == '_' || first.is_alphabetic())
+        && characters.all(|character| character == '_' || character.is_alphanumeric())
 }
 
 fn expression_code(source: &str, tokens: &[Token]) -> Option<Code> {
@@ -9983,6 +10366,16 @@ fn match_use_module(
         return Err(unsupported_module_diagnostic(span_of(tokens)));
     };
 
+    // `list`, `text` and `math` are words people write in ordinary sentences,
+    // so they name a module only when they stand beside the `use`/`사용` word.
+    // Without this, `get the list of names` was answered with the list of
+    // modules NME bundles instead of being printed.
+    if module.name_is_an_ordinary_word()
+        && !module_touches_the_action(tokens, action_start, action_end, module_at)
+    {
+        return Ok(None);
+    }
+
     let latest_positions = tokens
         .iter()
         .enumerate()
@@ -10099,6 +10492,14 @@ fn match_use_module(
         {
             continue;
         }
+        // A word left over on a `random`, `file` or `zero_knowledge` line is a
+        // module line written wrongly, and saying so is worth a bad minute.
+        // A word left over beside `list`, `text` or `math` is far more likely
+        // to be the sentence those words belong to — `I use text messages
+        // every day` — so the line is handed back unclaimed.
+        if module.name_is_an_ordinary_word() {
+            return Ok(None);
+        }
         return Err(module_shape_diagnostic(spelling, token.span));
     }
 
@@ -10194,6 +10595,68 @@ fn module_binding_names(module: BundledModuleId) -> &'static [&'static str] {
             "zero_knowledge_version",
             "영지식버전",
         ],
+        BundledModuleId::List => &[
+            "count",
+            "개수",
+            "sort",
+            "정렬",
+            "reverse",
+            "뒤집기",
+            "remove",
+            "빼기",
+            "first",
+            "첫번째",
+            "last",
+            "마지막",
+            "sum",
+            "합계",
+            "largest",
+            "최대",
+            "smallest",
+            "최소",
+            "list_version",
+            "목록버전",
+        ],
+        BundledModuleId::Text => &[
+            "upper",
+            "대문자",
+            "lower",
+            "소문자",
+            "trim",
+            "공백없애기",
+            "split",
+            "나누기",
+            "join",
+            "합치기",
+            "replace",
+            "바꾸기",
+            "starts_with",
+            "로시작",
+            "length",
+            "길이",
+            "text_version",
+            "글자버전",
+        ],
+        BundledModuleId::Math => &[
+            MATH_MODULE,
+            MATH_MODULE_KO,
+            "root",
+            "제곱근",
+            "round_to",
+            "반올림",
+            "pi",
+            "원주율",
+            "power",
+            "거듭제곱",
+            "absolute",
+            "절댓값",
+            "floor",
+            "내림",
+            "ceil",
+            "올림",
+            "math_version",
+            "수학버전",
+        ],
     }
 }
 
@@ -10222,6 +10685,15 @@ fn module_name_collision_diagnostic(
 }
 
 fn module_word_matches(token: &Token, module: BundledModuleId, mode: MatchMode) -> bool {
+    // `list` is one edit from `last`, `text` from `next`, and `math` from
+    // `path`. Repairing a typo into one of those names would let an ordinary
+    // sentence name a module, so the three ordinary names are matched exactly
+    // and only the rarer ones earn a one-edit repair.
+    let mode = if module.name_is_an_ordinary_word() {
+        MatchMode::Exact
+    } else {
+        mode
+    };
     name_word(token).is_some_and(|word| {
         word_matches(word, module.name_en(), mode)
             || (module == BundledModuleId::ZeroKnowledge
@@ -10231,16 +10703,45 @@ fn module_word_matches(token: &Token, module: BundledModuleId, mode: MatchMode) 
     })
 }
 
+/// True when the module name stands directly beside the `use`/`사용` word.
+///
+/// English writes `use list`, Korean writes `목록 사용`, and either language
+/// may put `latest` between the two (`use latest list`, `최신 목록 사용`).
+/// Anything further apart — `get the list of names`, `use the text I sent` —
+/// has a word in between that a module line never has, and is a sentence.
+fn module_touches_the_action(
+    tokens: &[Token],
+    action_start: usize,
+    action_end: usize,
+    module_at: usize,
+) -> bool {
+    let after_action = |at: usize| {
+        at == action_end
+            || (at == action_end + 1
+                && tokens
+                    .get(action_end)
+                    .is_some_and(|token| word_matches_any(token, LATEST_WORDS, MatchMode::Exact)))
+    };
+    let before_action = |at: usize| {
+        at + 1 == action_start
+            || (at + 2 == action_start
+                && tokens
+                    .get(at + 1)
+                    .is_some_and(|token| word_matches_any(token, LATEST_WORDS, MatchMode::Exact)))
+    };
+    after_action(module_at) || before_action(module_at)
+}
+
 fn unsupported_module_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
         DiagnosticCode::UnsupportedModule,
-        "NME bundles `use random`, `use file`, and `use zero_knowledge`",
-        "NME에는 쉬운 `랜덤`, `파일`, `영지식` 모듈이 들어 있어요",
+        "NME bundles `use random`, `use file`, `use list`, `use text`, `use math`, and `use zero_knowledge`",
+        "NME에는 쉬운 `랜덤`, `파일`, `목록`, `글자`, `수학`, `영지식` 모듈이 들어 있어요",
         span,
     )
     .with_bilingual_hint(
-        "write one module line such as `use random latest`, `use file latest`, or `use zero_knowledge latest`",
-        "`랜덤 사용 최신`, `파일 사용 최신`, `영지식 사용 최신` 중 하나를 적어 주세요",
+        "write one module line such as `use random latest`, `use list latest`, or `use math latest`",
+        "`랜덤 사용 최신`, `목록 사용 최신`, `수학 사용 최신`처럼 한 줄로 적어 주세요",
     )
 }
 
@@ -11776,16 +12277,27 @@ fn push_literal(parts: &mut Vec<TextPart>, text: &str) {
     }
 }
 
+/// Which name inside a sentence is shown as a value, and what is left over.
+///
+/// **A name a bundled module bound is never one of them.** The writer did not
+/// choose those names and mostly does not know them, so a sentence holding one
+/// is a sentence: after `use math`, `the floor is cold` printed
+/// `the <built-in function floor> is cold`, and after `글자 사용`,
+/// `길이가 조금 짧습니다` showed a function where the length should have been.
+/// A name the *program* made is different — the writer wrote it, and showing
+/// its value in a sentence is the whole point of the form.
 fn split_template_variable<'a>(
     word: &'a str,
     known_names: &'a HashSet<String>,
 ) -> Option<(&'a str, &'a str)> {
     if known_names.contains(word) {
-        return Some((word, ""));
+        return (!is_module_name(known_names, word)).then_some((word, ""));
     }
     let mut candidates: Vec<&String> = known_names
         .iter()
-        .filter(|name| word.starts_with(name.as_str()))
+        .filter(|name| {
+            word.starts_with(name.as_str()) && !is_module_name(known_names, name.as_str())
+        })
         .collect();
     candidates.sort_by_key(|name| std::cmp::Reverse(name.chars().count()));
     for name in candidates {
@@ -12278,6 +12790,20 @@ fn is_list_name(names: &HashSet<String>, name: &str) -> bool {
     names.contains(&format!("{LIST_NAME_MARKER}{name}"))
 }
 
+/// Prefix under which a name a bundled module bound is remembered beside the
+/// ordinary name set, the same way a list name is. `[` cannot occur in a
+/// Python identifier, so it can never collide with a name a program binds.
+const MODULE_NAME_MARKER: &str = "[module]";
+
+fn remember_module_name(names: &mut HashSet<String>, name: &str) {
+    names.insert(format!("{MODULE_NAME_MARKER}{name}"));
+}
+
+/// True when `name` came from a `use` line rather than from the program.
+fn is_module_name(names: &HashSet<String>, name: &str) -> bool {
+    names.contains(&format!("{MODULE_NAME_MARKER}{name}"))
+}
+
 fn remember_bindings(stmt: &NmeStmt, names: &mut HashSet<String>) {
     match stmt {
         NmeStmt::Append { target, .. } => {
@@ -12285,8 +12811,10 @@ fn remember_bindings(stmt: &NmeStmt, names: &mut HashSet<String>) {
         }
         NmeStmt::Set {
             target,
-            value: Value::List(_),
+            value: Value::List(_) | Value::Split { .. },
         } => {
+            // A split hands back a list, so the name it is saved into is one:
+            // `이름들은 메모를 줄마다 나눈 것` then `이름들 개수` counts them.
             names.insert(target.clone());
             remember_list_name(names, target);
         }
@@ -12305,8 +12833,16 @@ fn remember_bindings(stmt: &NmeStmt, names: &mut HashSet<String>) {
         NmeStmt::Cooldown { target, .. } => {
             names.insert(format!("{COOLDOWN_PREFIX}{target}"));
         }
-        NmeStmt::ForEach { name, inline, .. } => {
+        NmeStmt::ForEach {
+            name,
+            position,
+            inline,
+            ..
+        } => {
             names.insert(name.clone());
+            if let Some(position) = position {
+                names.insert(position.clone());
+            }
             if let Some(InlineStmt::Nme(inner)) = inline {
                 remember_bindings(inner, names);
             }
@@ -12319,11 +12855,10 @@ fn remember_bindings(stmt: &NmeStmt, names: &mut HashSet<String>) {
             }
         }
         NmeStmt::UseModule { module, .. } => {
-            names.extend(
-                module_binding_names(*module)
-                    .iter()
-                    .map(|name| (*name).to_string()),
-            );
+            for name in module_binding_names(*module) {
+                names.insert((*name).to_string());
+                remember_module_name(names, name);
+            }
         }
         NmeStmt::Forever {
             inline: Some(InlineStmt::Nme(inner)),

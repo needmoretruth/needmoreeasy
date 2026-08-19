@@ -182,7 +182,15 @@ show the biggest of scores
 점수들 중 가장 큰 것 말해줘
 show friends joined by comma
 친구들을 쉼표로 이어 말해줘
+show friends joined together
+친구들을 붙여 말해줘
 ```
+
+The separators are `comma`, `space` and `newline` (`쉼표`, `빈칸`, `줄바꿈`), and
+`joined together` / `붙여` puts nothing at all between the items, which is how
+a row of stars is drawn. A join that names no separator is refused with
+`E0233`: `show friends joined` used to print `friends joined` back at you,
+which reads like success and is not.
 
 **Items are counted from one.** `the first of friends` is `item 1 of friends`,
 and both become `friends[0]`. There is no item 0: writing one is refused with
@@ -242,6 +250,37 @@ These read any saved name, not only a list. `the length of` gives how many
 characters there are; the other two give the same text with its letters
 changed. All three are values, so they may be saved or compared as well as
 shown.
+
+Text can also be cut into a list, which is the step after reading a file:
+
+```nme
+set names to memo split by line
+이름들은 메모를 줄마다 나눈 것
+set fields to line split by comma
+칸들은 줄을 쉼표로 나눈 것
+set words to sentence split by space
+말들은 문장을 빈칸으로 나눈 것
+```
+
+`split by line` / `줄마다` is Python's `splitlines()`, which copes with a file
+that ends in a newline and with the Windows line ending. The others cut on the
+separator itself: **a comma here is `","` and not `", "`**, because a line read
+back out of a file says `Mina,Ada`. What a split saves is a list, so
+`how many names` / `이름들 개수` works on it straight away.
+
+And one piece of text can be written over and over:
+
+```nme
+set bar to star repeated 5 times
+막대는 별표를 5개 붙인 것
+show star repeated 20 times
+별표를 20번 붙인 것 말해줘
+```
+
+`5번` may be written here even though it means *five times* in a counted loop,
+because this is a noun phrase closing with `붙인 것` and no loop ever says that.
+The text is wrapped in `str(...)` first, so a name holding `3` gives `"33333"`
+and not `15`: the sentence asked for five copies, not for arithmetic.
 
 ### Repeat
 
@@ -614,17 +653,27 @@ NME.
 
 ## Versioned bundled modules
 
-Three beginner modules ship with NME: `random` (dice and picks), `file`
-(reading, writing, and JSON), and `zero_knowledge` / `영지식` (a Schnorr
-proof-of-knowledge reference implementation). Random and file are bundled at
-`0.0.1`; zero knowledge is bundled at `0.0.2`. One `use` line per module is
-enough; importing the same module twice is a collision error:
+Six beginner modules ship with NME: `random` (dice and picks), `file`
+(reading, writing, and JSON), `zero_knowledge` / `영지식` (a Schnorr
+proof-of-knowledge reference implementation), `list` / `목록`, `text` / `글자`,
+and `math` / `수학`. Everything is bundled at `0.0.1` except zero knowledge,
+which is at `0.0.2`. One `use` line per module is enough; importing the same
+module twice is a collision error:
 
 ```nme
 use random
 use file
 use zero_knowledge
+use list
+use text
+use math
 ```
+
+`list`, `text`, `math` and their Korean names are words people write in
+ordinary sentences, so NME only reads one as a module when it stands directly
+beside the `use` / `사용` word and no other word is left over on the line.
+`get the list of names` and `장 볼 목록을 사용해 보세요` are sentences, and they
+print.
 
 `use random latest`, `use latest random`, and `use random version "0.0.1"` are
 equivalents, and so are the Korean spellings `랜덤 사용`, `랜덤 사용 최신`,
@@ -655,6 +704,51 @@ Every spelling exposes both vocabularies:
 | `json_load(path)` | `json읽기(path)` | `json.loads(pathlib.Path(path).read_text())` |
 | `json_save(path, value)` | `json저장(path, value)` | `pathlib.Path(path).write_text(json.dumps(value))` |
 | `file_version` | `파일버전` | adapter version string |
+
+| English | Korean | Python meaning |
+| --- | --- | --- |
+| `count(values)` | `개수(값들)` | `len(values)` |
+| `sort(values)` | `정렬(값들)` | `sorted(values)`, a new list |
+| `reverse(values)` | `뒤집기(값들)` | `list(reversed(values))` |
+| `remove(values, x)` | `빼기(값들, x)` | a new list without `x` in it |
+| `first(values)` | `첫번째(값들)` | `values[0]` |
+| `last(values)` | `마지막(값들)` | `values[-1]` |
+| `sum(values)` | `합계(값들)` | `sum(values)` |
+| `largest(values)` | `최대(값들)` | `max(values)` |
+| `smallest(values)` | `최소(값들)` | `min(values)` |
+| `list_version` | `목록버전` | adapter version string |
+
+`sort`, `reverse` and `remove` hand back a new list and leave the original
+alone. The sentence statements `sort friends`, `reverse friends` and
+`remove Mina from friends` change the list itself; both exist because both are
+things people mean.
+
+| English | Korean | Python meaning |
+| --- | --- | --- |
+| `upper(text)` | `대문자(글)` | `str(text).upper()` |
+| `lower(text)` | `소문자(글)` | `str(text).lower()` |
+| `trim(text)` | `공백없애기(글)` | `str(text).strip()` |
+| `split(text, sep)` | `나누기(글, 구분자)` | `str(text).split(sep)` |
+| `join(sep, values)` | `합치기(구분자, 값들)` | `str(sep).join(map(str, values))` |
+| `replace(text, a, b)` | `바꾸기(글, a, b)` | `str(text).replace(a, b)` |
+| `starts_with(text, a)` | `로시작(글, a)` | `str(text).startswith(a)` |
+| `length(text)` | `길이(글)` | `len(text)` |
+| `text_version` | `글자버전` | adapter version string |
+
+| English | Korean | Python meaning |
+| --- | --- | --- |
+| `root(x)` | `제곱근(x)` | `math.sqrt(x)` |
+| `round_to(x, places)` | `반올림(x, 자리)` | `round(x, places)`; `places` may be left out |
+| `pi` | `원주율` | `math.pi` |
+| `power(x, y)` | `거듭제곱(x, y)` | `pow(x, y)`; whole numbers stay whole |
+| `absolute(x)` | `절댓값(x)` | `abs(x)` |
+| `floor(x)` | `내림(x)` | `math.floor(x)` |
+| `ceil(x)` | `올림(x)` | `math.ceil(x)` |
+| `math_version` | `수학버전` | adapter version string |
+
+Every one of these is a plain Python builtin or one call into `math`, so a
+program using them runs unchanged in the browser as well as on a desktop
+Python.
 
 All bundled adapters reserve their helper names. If one already exists, NME stops
 and asks you to rename it instead of silently overwriting your value.

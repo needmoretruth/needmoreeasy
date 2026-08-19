@@ -11,9 +11,10 @@
 
 use crate::syntax::{
     BundledModuleId, Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind,
-    ItemPosition, ListOrder, Literal, LogicalOp, NmeLine, NmeStmt, Reading, TextPart, TextTemplate,
-    UpdateOp, Value, ZeroKnowledgeValue, CHANCE_SCALE, COOLDOWN_PREFIX, ELAPSED_PYTHON,
-    FILE_MODULE_VERSION, RANDOM_MODULE_VERSION, TIMER_NAME, ZERO_KNOWLEDGE_MODULE_VERSION,
+    ItemPosition, ListOrder, Literal, LogicalOp, NmeLine, NmeStmt, Reading, SplitBy, TextPart,
+    TextTemplate, UpdateOp, Value, ZeroKnowledgeValue, CHANCE_SCALE, COOLDOWN_PREFIX,
+    ELAPSED_PYTHON, FILE_MODULE_VERSION, LIST_MODULE_VERSION, MATH_MODULE_VERSION,
+    RANDOM_MODULE_VERSION, TEXT_MODULE_VERSION, TIMER_NAME, ZERO_KNOWLEDGE_MODULE_VERSION,
 };
 
 /// Counts one character's screen width the way a terminal does, so a Korean
@@ -48,6 +49,62 @@ const BILINGUAL_FILE_TOOLS_PREFIX: &str = concat!(
     "json읽기 = json_load; ",
     "json저장 = json_save; ",
     "file_version = 파일버전 = ",
+);
+
+/// Nine list readings, each of them one plain Python builtin so that the
+/// program a learner reads back is something they can look up. Everything here
+/// gives a new list back rather than changing the one it was handed: `sorted`
+/// and not `list.sort`, a rebuilt list and not `list.remove`. A beginner who
+/// writes `말해 정렬(친구들)` expects to be shown the sorted list, and a helper
+/// that answered `None` and quietly reordered their names would be the worst
+/// kind of surprise.
+///
+/// The bare names `list` and `목록` are deliberately **not** bound: `list` is
+/// a Python builtin, and taking it away would break `list(range(3))` on a line
+/// nobody touched.
+const BILINGUAL_LIST_TOOLS_PREFIX: &str = concat!(
+    "count = 개수 = len; ",
+    "sort = 정렬 = sorted; ",
+    "reverse = 뒤집기 = lambda 값들: list(reversed(값들)); ",
+    "remove = 빼기 = lambda 값들, 뺄값: [항목 for 항목 in 값들 if 항목 != 뺄값]; ",
+    "first = 첫번째 = lambda 값들: 값들[0]; ",
+    "last = 마지막 = lambda 값들: 값들[-1]; ",
+    "sum = 합계 = sum; ",
+    "largest = 최대 = max; ",
+    "smallest = 최소 = min; ",
+    "list_version = 목록버전 = ",
+);
+
+/// Eight text readings. Each wraps its subject in `str(...)` first, so a
+/// number that came back from `ask` can be upper-cased or trimmed without an
+/// `AttributeError` on a line that looks perfectly right.
+const BILINGUAL_TEXT_TOOLS_PREFIX: &str = concat!(
+    "upper = 대문자 = lambda 값: str(값).upper(); ",
+    "lower = 소문자 = lambda 값: str(값).lower(); ",
+    "trim = 공백없애기 = lambda 값: str(값).strip(); ",
+    "split = 나누기 = lambda 값, 구분자: str(값).split(구분자); ",
+    "join = 합치기 = lambda 구분자, 값들: str(구분자).join(map(str, 값들)); ",
+    "replace = 바꾸기 = lambda 값, 찾을말, 바꿀말: str(값).replace(찾을말, 바꿀말); ",
+    "starts_with = 로시작 = lambda 값, 앞말: str(값).startswith(앞말); ",
+    "length = 길이 = len; ",
+    "text_version = 글자버전 = ",
+);
+
+/// Seven maths readings. `power` is the builtin `pow` rather than `math.pow`,
+/// because the builtin keeps whole numbers whole: `pow(2, 10)` is `1024` and
+/// `math.pow(2, 10)` is `1024.0`, and a beginner counting things should not be
+/// handed a decimal point they did not ask for.
+const BILINGUAL_MATH_TOOLS_PREFIX: &str = concat!(
+    "import math as 수학; ",
+    "math = 수학; ",
+    "root = 제곱근 = 수학.sqrt; ",
+    "round_to = 반올림 = lambda 값, 자리=None: round(값, 자리); ",
+    "pi = 원주율 = 수학.pi; ",
+    "power = 거듭제곱 = pow; ",
+    "absolute = 절댓값 = abs; ",
+    "floor = 내림 = 수학.floor; ",
+    "ceil = 올림 = 수학.ceil; ",
+    "math_version = 수학버전 = ",
 );
 
 const SCHNORR_GROUP15_PRIME: &str = "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F83655D23DCA3AD961C62F356208552BB9ED529077096966D670C354E4ABC9804F1746C08CA18217C32905E462E36CE3BE39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9DE2BCBF6955817183995497CEA956AE515D2261898FA051015728E5A8AAAC42DAD33170D04507A33A85521ABDF1CBA64ECFB850458DBEF0A8AEA71575D060C7DB3970F85A6E1E4C7ABF5AE8CDB0933D71E8C94E04A25619DCEE3D2261AD2EE6BF12FFA06D98A0864D87602733EC86A64521F2B18177B200CBBE117577A615D6C770988C0BAD946E208E24FA074E5AB3143DB5BFCE0FD108E4B82D120A93AD2CAFFFFFFFFFFFFFFFF";
@@ -164,9 +221,19 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
         NmeStmt::ForEach {
             name,
             items,
+            position,
             inline,
         } => {
-            let header = format!("for {name} in {}:", lower_code(items, source));
+            // `enumerate(..., 1)` counts from one, because the sentence that
+            // asks for the position says `첫 번째` for the first one and
+            // `친구들 3번째` already means the third.
+            let header = match position {
+                Some(position) => format!(
+                    "for {position}, {name} in enumerate({}, 1):",
+                    lower_code(items, source)
+                ),
+                None => format!("for {name} in {}:", lower_code(items, source)),
+            };
             lower_suite(header, inline.as_ref(), source)
         }
         // `time` is imported inline for the same reason the file and random
@@ -266,6 +333,15 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
                 format!(
                     "{BILINGUAL_ZERO_KNOWLEDGE_TOOLS_PREFIX}\"{ZERO_KNOWLEDGE_MODULE_VERSION}\""
                 )
+            }
+            BundledModuleId::List => {
+                format!("{BILINGUAL_LIST_TOOLS_PREFIX}\"{LIST_MODULE_VERSION}\"")
+            }
+            BundledModuleId::Text => {
+                format!("{BILINGUAL_TEXT_TOOLS_PREFIX}\"{TEXT_MODULE_VERSION}\"")
+            }
+            BundledModuleId::Math => {
+                format!("{BILINGUAL_MATH_TOOLS_PREFIX}\"{MATH_MODULE_VERSION}\"")
             }
         },
         NmeStmt::FileRead { target, path } => {
@@ -511,6 +587,27 @@ fn lower_value(value: &Value, source: &str) -> String {
         Value::Joined { of, separator } => {
             format!("{}.join(map(str, {of}))", python_string(separator))
         }
+        // `str(...)` for the same reason the case readings use it: a number
+        // read in with `ask` can be cut up without an `AttributeError` on a
+        // line that looks right.
+        // `str(...)` is not caution here, it is the meaning: the sentence
+        // says to put that many copies of the text together. Without it a
+        // name holding `3` would be multiplied to `15` and the program would
+        // quietly be doing arithmetic nobody asked for.
+        Value::Repeated { of, times } => {
+            let count = lower_code(times, source);
+            if is_simple_atom(&count) {
+                format!("str({of}) * {count}")
+            } else {
+                format!("str({of}) * ({count})")
+            }
+        }
+        Value::Split { of, by } => match by {
+            SplitBy::Lines => format!("str({of}).splitlines()"),
+            SplitBy::Text(separator) => {
+                format!("str({of}).split({})", python_string(separator))
+            }
+        },
         // The divisor keeps its parentheses unless it is one plain atom, for
         // the same reason a value change does: `pile % 2 + 1` is a different
         // number from `pile % (2 + 1)`.

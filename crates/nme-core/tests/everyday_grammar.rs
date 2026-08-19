@@ -1675,3 +1675,63 @@ fn a_one_word_line_says_itself() {
     assert_eq!(ok("say\n"), "say\n");
     assert_eq!(ok("목록\n"), "목록\n");
 }
+
+// ------------------------------------- a question whose prompt has a verb in it
+
+#[test]
+fn a_helper_verb_inside_a_question_does_not_stop_it_asking() {
+    // `주문을 물어봐 마법의 주문을 말해 보세요` is the `ko/password` example on
+    // the site, and it sits inside a loop. When the compound verb `말해 보세요`
+    // in its prompt made the whole line prose, the line printed itself, the
+    // loop never got an answer, and the program ran forever.
+    //
+    // The line names what it is asking for before it asks, so everything
+    // after the asking word is the text shown while it waits — including any
+    // ordinary Korean verb.
+    assert_eq!(
+        ok("주문을 물어봐 마법의 주문을 말해 보세요\n"),
+        "주문 = input(\"마법의 주문을 말해 보세요\" + \" \")\n"
+    );
+    assert_eq!(
+        ok("색을 물어봐 좋아하는 색을 말해 보세요\n"),
+        "색 = input(\"좋아하는 색을 말해 보세요\" + \" \")\n"
+    );
+    // The four neighbours that were right throughout, so the boundary is
+    // pinned from both sides.
+    assert_eq!(
+        ok("이름을 물어봐 이름을 적어 보세요\n"),
+        "이름 = input(\"이름을 적어 보세요\" + \" \")\n"
+    );
+    assert_eq!(
+        ok("이름을 물어봐 이름이 뭐예요?\n"),
+        "이름 = input(\"이름이 뭐예요?\" + \" \")\n"
+    );
+    assert_eq!(
+        ok("나이를 숫자로 물어봐 몇 살인지 알려 주세요\n"),
+        "나이 = int(input(\"몇 살인지 알려 주세요\" + \" \"))\n"
+    );
+    assert_eq!(
+        ok("색을 물어봐 좋아하는 색을 말해 주세요\n"),
+        "색 = input(\"좋아하는 색을 말해 주세요\" + \" \")\n"
+    );
+}
+
+#[test]
+fn a_helper_verb_on_the_asking_word_itself_is_still_a_sentence() {
+    // No name stands in front of the asking word, so `주셔서` hangs off
+    // `물어봐` and the line is a thank-you, not a question.
+    assert_eq!(
+        ok("물어봐 주셔서 감사합니다\n"),
+        "print(\"물어봐 주셔서 감사합니다\")\n"
+    );
+    // A name in front is not enough on its own: the compound verb is still
+    // the asking word's, and nothing follows it that could be a prompt.
+    assert_eq!(
+        ok("말씀을 물어봐 주셔서 감사합니다\n"),
+        "print(\"말씀을 물어봐 주셔서 감사합니다\")\n"
+    );
+    assert_eq!(
+        ok("말해 봐야 소용없는 일이었습니다\n"),
+        "print(\"말해 봐야 소용없는 일이었습니다\")\n"
+    );
+}

@@ -332,3 +332,142 @@ P("tt-ko-07", "listword", "ko", "친구들은 목록", "친구들 = []", r'^친�
 P("tt-ko-08", "listword", "ko", "친구들은 빈 목록", "친구들 = []", r'^친구들 = \[\]$')
 P("tt-en-03", "listword", "en", "set scores to an empty list", "scores = []",
   r'^scores = \[\]$')
+
+
+# --- UU. a question whose prompt contains a compound verb ---------------
+#
+# `주문을 물어봐 마법의 주문을 말해 보세요` stopped asking and printed itself.
+# The line is inside a loop in the site's `ko/password` example, so the loop
+# never got an answer and ran forever; the site's example check ran out of
+# memory and the deploy stopped. The four neighbours were right throughout and
+# are here so the boundary stays where it is: a helper verb inside the question
+# belongs to the question, a helper verb on the asking word itself does not.
+P("uu-ko-01", "askprompt", "ko", "주문을 물어봐 마법의 주문을 말해 보세요",
+  "ask, and print the prompt", r'^주문 = input\("마법의 주문을 말해 보세요" \+ " "\)$')
+P("uu-ko-02", "askprompt", "ko", "이름을 물어봐 이름을 적어 보세요",
+  "ask", r'^이름 = input\("이름을 적어 보세요" \+ " "\)$')
+P("uu-ko-03", "askprompt", "ko", "이름을 물어봐 이름이 뭐예요?",
+  "ask", r'^이름 = input\("이름이 뭐예요\?" \+ " "\)$')
+P("uu-ko-04", "askprompt", "ko", "나이를 숫자로 물어봐 몇 살인지 알려 주세요",
+  "ask for a number", r'^나이 = int\(input\("몇 살인지 알려 주세요" \+ " "\)\)$')
+P("uu-ko-05", "askprompt", "ko", "색을 물어봐 좋아하는 색을 말해 주세요",
+  "ask", r'^색 = input\("좋아하는 색을 말해 주세요" \+ " "\)$')
+# The opposite shape: no name in front of the asking word, so the helper verb
+# is the line's own verb and the line is a thank-you.
+P("uu-ko-06", "askprompt", "ko", "물어봐 주셔서 감사합니다",
+  "print the sentence", r'^print\("물어봐 주셔서 감사합니다"\)$')
+P("uu-ko-07", "askprompt", "ko", "말씀을 물어봐 주셔서 감사합니다",
+  "print the sentence", r'^print\("말씀을 물어봐 주셔서 감사합니다"\)$')
+
+
+# --- VV. the three newest bundled modules -------------------------------
+P("vv-en-01", "newmodule", "en", "use list", "the bundled list module",
+  r'^count = 개수 = len; ')
+P("vv-ko-01", "newmodule", "ko", "목록 사용", "the bundled list module",
+  r'^count = 개수 = len; ')
+P("vv-en-02", "newmodule", "en", "use text", "the bundled text module",
+  r'^upper = 대문자 = ')
+P("vv-ko-02", "newmodule", "ko", "글자 사용", "the bundled text module",
+  r'^upper = 대문자 = ')
+P("vv-en-03", "newmodule", "en", "use math", "the bundled maths module",
+  r'^import math as 수학; ')
+P("vv-ko-03", "newmodule", "ko", "수학 사용", "the bundled maths module",
+  r'^import math as 수학; ')
+P("vv-en-04", "newmodule", "en", "use list latest", "the newest adapter",
+  r'list_version = 목록버전 = "0\.0\.1"')
+P("vv-ko-04", "newmodule", "ko", '수학 사용 버전 "0.0.1"', "that exact adapter",
+  r'math_version = 수학버전 = "0\.0\.1"')
+# The three module names are ordinary words in both languages. Every one of
+# these was answered with the list of bundled modules while the gate that
+# keeps them apart was being built.
+P("vv-en-05", "newmodule", "en", "get the list of names", "print the sentence",
+  r'^print\("get the list of names"\)$')
+P("vv-en-06", "newmodule", "en", "I use text messages every day.", "print the sentence",
+  r'^print\("I use text messages every day\."\)$')
+P("vv-en-07", "newmodule", "en", "list your favourite films for me", "print the sentence",
+  r'^print\("list your favourite films for me"\)$')
+P("vv-ko-05", "newmodule", "ko", "장 볼 목록을 사용해 보세요", "print the sentence",
+  r'^print\("장 볼 목록을 사용해 보세요"\)$')
+P("vv-ko-06", "newmodule", "ko", "글자를 사용해 보세요", "print the sentence",
+  r'^print\("글자를 사용해 보세요"\)$')
+P("vv-ko-07", "newmodule", "ko", "수학 시간에 계산기를 사용했습니다", "print the sentence",
+  r'^print\("수학 시간에 계산기를 사용했습니다"\)$')
+
+# --- WW. joining with nothing between, and the join that says nothing ----
+P("ww-en-01", "jointogether", "en", LIST_EN + "show friends joined together",
+  "join with nothing between", r'print\(""\.join\(map\(str, friends\)\)\)')
+P("ww-en-02", "jointogether", "en", LIST_EN + "show friends joined by nothing",
+  "join with nothing between", r'print\(""\.join\(map\(str, friends\)\)\)')
+P("ww-ko-01", "jointogether", "ko", LIST_KO + "친구들을 붙여 말해줘",
+  "join with nothing between", r'print\(""\.join\(map\(str, 친구들\)\)\)')
+P("ww-ko-02", "jointogether", "ko", LIST_KO + "친구들을 그대로 이어 말해줘",
+  "join with nothing between", r'print\(""\.join\(map\(str, 친구들\)\)\)')
+P("ww-en-03", "jointogether", "en", LIST_EN + "show friends joined", "refuse: no separator")
+P("ww-ko-03", "jointogether", "ko", LIST_KO + "친구들을 이어 말해줘", "refuse: no separator")
+P("ww-en-04", "jointogether", "en", LIST_EN + "show friends join us at noon",
+  "print the sentence", r'print\(')
+P("ww-ko-04", "jointogether", "ko", LIST_KO + "친구들을 이어 갔습니다",
+  "print the sentence", r'print\(')
+
+# --- XX. cutting text into a list ----------------------------------------
+P("xx-en-01", "split", "en", NAME_EN + "set names to greeting split by line",
+  "splitlines", r'names = str\(greeting\)\.splitlines\(\)')
+P("xx-ko-01", "split", "ko", NAME_KO + "이름들은 인사를 줄마다 나눈 것",
+  "splitlines", r'이름들 = str\(인사\)\.splitlines\(\)')
+P("xx-en-02", "split", "en", NAME_EN + "set fields to greeting split by comma",
+  "split on a comma alone", r'fields = str\(greeting\)\.split\(","\)')
+P("xx-ko-02", "split", "ko", NAME_KO + "칸들은 인사를 쉼표로 나눈 것",
+  "split on a comma alone", r'칸들 = str\(인사\)\.split\(","\)')
+P("xx-en-03", "split", "en", NAME_EN + "set words to greeting split by space",
+  "split on a space", r'words = str\(greeting\)\.split\(" "\)')
+P("xx-ko-03", "split", "ko", NAME_KO + "말들은 인사를 빈칸으로 나눈 것",
+  "split on a space", r'말들 = str\(인사\)\.split\(" "\)')
+P("xx-ko-04", "split", "ko", "이야기를 둘로 나눈 것이 좋겠습니다",
+  "print the sentence", r'^print\("이야기를 둘로 나눈 것이 좋겠습니다"\)$')
+P("xx-en-04", "split", "en", "The vote split by party.", "print the sentence",
+  r'^print\("The vote split by party\."\)$')
+
+# --- YY. one piece of text, that many times over -------------------------
+P("yy-en-01", "repeattext", "en", NAME_EN + "set bar to greeting repeated 5 times",
+  "five copies", r'bar = str\(greeting\) \* 5')
+P("yy-ko-01", "repeattext", "ko", NAME_KO + "막대는 인사를 5개 붙인 것",
+  "five copies", r'막대 = str\(인사\) \* 5')
+P("yy-ko-02", "repeattext", "ko", NAME_KO + "인사를 5번 붙인 것 말해줘",
+  "five copies", r'print\(str\(인사\) \* 5\)')
+P("yy-ko-03", "repeattext", "ko", "그 말을 5번 반복했습니다", "print the sentence",
+  r'^print\("그 말을 5번 반복했습니다"\)$')
+P("yy-en-02", "repeattext", "en", "She repeated 5 times that she was sorry.",
+  "print the sentence", r'^print\("She repeated 5 times that she was sorry\."\)$')
+P("yy-ko-04", "repeattext", "ko", "5번 반복해\n안녕 말해줘\n끝", "a counted loop",
+  r'for _ in range\(5\):')
+
+# --- ZZ. a loop that knows which turn it is on ---------------------------
+P("zz-en-01", "loopplace", "en",
+  LIST_EN + "for each friend in friends with place\nshow place\nend",
+  "enumerate from one", r'for place, friend in enumerate\(friends, 1\):')
+P("zz-ko-01", "loopplace", "ko",
+  LIST_KO + "친구들의 친구마다 순서와 함께 반복해\n순서 말해줘\n끝",
+  "enumerate from one", r'for 순서, 친구 in enumerate\(친구들, 1\):')
+P("zz-en-02", "loopplace", "en",
+  LIST_EN + "for each friend in friends with its place\nshow place\nend",
+  "enumerate from one", r'for place, friend in enumerate\(friends, 1\):')
+P("zz-ko-02", "loopplace", "ko", "동생과 함께 저녁을 먹었습니다", "print the sentence",
+  r'^print\("동생과 함께 저녁을 먹었습니다"\)$')
+P("zz-en-03", "loopplace", "en", "Come with us tomorrow.", "print the sentence",
+  r'^print\("Come with us tomorrow\."\)$')
+
+# A name a bundled module bound is never shown inside a sentence: the writer
+# did not write it. `use math` used to turn `the floor is cold` into
+# `the <built-in function floor> is cold`.
+P("vv-en-08", "newmodule", "en", "use math\nthe floor is cold", "print the sentence",
+  r'print\("the floor is cold"\)')
+P("vv-ko-08", "newmodule", "ko", "글자 사용\n길이가 조금 짧습니다", "print the sentence",
+  r'print\("길이가 조금 짧습니다"\)')
+P("vv-ko-09", "newmodule", "ko", "목록 사용\n개수를 세어 보았습니다", "print the sentence",
+  r'print\("개수를 세어 보았습니다"\)')
+P("vv-en-09", "newmodule", "en", "use random\nshuffle the cards", "print the sentence",
+  r'print\("shuffle the cards"\)')
+P("vv-en-10", "newmodule", "en", "use math\nshow pi", "the value, not the word",
+  r'print\(pi\)')
+P("vv-ko-10", "newmodule", "ko", "수학 사용\n말해줘 원주율", "the value, not the word",
+  r'print\(원주율\)')

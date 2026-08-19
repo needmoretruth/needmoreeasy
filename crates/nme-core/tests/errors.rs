@@ -1151,9 +1151,12 @@ fn sentence_repeat_inline_branches_without_a_condition_get_a_stable_diagnostic()
 
 #[test]
 fn only_the_bundled_modules_are_available() {
-    let message = err("use math\n");
+    // This test used to name `use math` as the module NME does not bundle.
+    // NME bundles it now, so the example moved rather than the rule: a name
+    // NME has never shipped still gets the whole list back.
+    let message = err("use network\n");
     assert!(
-        message.contains("bundles `use random`, `use file`, and `use zero_knowledge`"),
+        message.contains("bundles `use random`, `use file`, `use list`, `use text`, `use math`, and `use zero_knowledge`"),
         "{message}"
     );
 }
@@ -1190,7 +1193,7 @@ fn file_module_does_not_overwrite_existing_names() {
 fn two_modules_on_one_line_are_rejected() {
     let message = err("use random and file\n");
     assert!(
-        message.contains("bundles `use random`, `use file`, and `use zero_knowledge`"),
+        message.contains("bundles `use random`, `use file`, `use list`, `use text`, `use math`, and `use zero_knowledge`"),
         "{message}"
     );
 }

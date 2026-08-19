@@ -130,7 +130,9 @@ FOR_EACH = [
     ("문장형", "Sentence", "for each friend in friends and show friend", "친구들의 친구마다 반복해서 친구 말해줘", "for friend in friends: print(friend)", 'for 친구 in 친구들: print(친구)'),
     ("문장형", "Sentence", "repeat for each name in names", "이름들에서 이름마다 반복해", "for name in names:", 'for 이름 in 이름들:'),
     ("문장형", "Sentence", "foreach friend in friends", "친구들의 친구 마다 반복해", "for friend in friends:", 'for 친구 in 친구들:'),
+    ("문장형", "Sentence", "for each friend in friends with place", "친구들의 친구마다 순서와 함께 반복해", "for place, friend in enumerate(friends, 1):", 'for 순서, 친구 in enumerate(친구들, 1):'),
     ("초급", "Beginner", "for each friend in friends:", "친구들의 친구마다:", "for friend in friends:", 'for 친구 in 친구들:'),
+    ("초급", "Beginner", "for each friend in friends with place:", "친구들의 친구마다 순서와 함께:", "for place, friend in enumerate(friends, 1):", 'for 순서, 친구 in enumerate(친구들, 1):'),
     ("고급", "Advanced", "for friend in friends:", "for 친구 in 친구들:", "unchanged"),
 ]
 
@@ -204,6 +206,8 @@ LISTS = [
     ("문장형", "Sentence", "show the smallest of scores", "점수들 중 가장 작은 것 말해줘", "print(min(scores))", 'print(min(점수들))'),
     ("문장형", "Sentence", "show friends joined by comma", "친구들을 쉼표로 이어 말해줘", 'print(", ".join(map(str, friends)))', 'print(", ".join(map(str, 친구들)))'),
     ("문장형", "Sentence", "show friends joined by space", "친구들을 빈칸으로 이어 말해줘", 'print(" ".join(map(str, friends)))', 'print(" ".join(map(str, 친구들)))'),
+    ("문장형", "Sentence", "show friends joined together", "친구들을 붙여 말해줘", 'print("".join(map(str, friends)))', 'print("".join(map(str, 친구들)))'),
+    ("문장형", "Sentence", "show friends joined by nothing", "친구들을 그대로 이어 말해줘", 'print("".join(map(str, friends)))', 'print("".join(map(str, 친구들)))'),
     ("문장형", "Sentence", "if friends contains Mina", "만약에 친구들에 민수가 있으면", 'if ("Mina" in friends):', 'if ("민수" in 친구들):'),
     ("문장형", "Sentence", "if friends does not contain Ada", "만약에 친구들에 지안이 없으면", 'if ("Ada" not in friends):', 'if ("지안" not in 친구들):'),
     ("문장형", "Sentence", "if friends is empty", "만약에 친구들이 비었으면", "if (not (friends)):", 'if (not (친구들)):'),
@@ -223,6 +227,11 @@ TEXT = [
     ("문장형", "Sentence", "show the length of name", "이름 길이 말해줘", "print(len(name))", 'print(len(이름))'),
     ("문장형", "Sentence", "show name in capitals", "이름 대문자로 말해줘", "print(str(name).upper())", 'print(str(이름).upper())'),
     ("문장형", "Sentence", "show name in small letters", "이름 소문자로 말해줘", "print(str(name).lower())", 'print(str(이름).lower())'),
+    ("문장형", "Sentence", "set names to memo split by line", "이름들은 memo를 줄마다 나눈 것", "names = str(memo).splitlines()", '이름들 = str(memo).splitlines()'),
+    ("문장형", "Sentence", "set fields to memo split by comma", "칸들은 memo를 쉼표로 나눈 것", 'fields = str(memo).split(",")', '칸들 = str(memo).split(",")'),
+    ("문장형", "Sentence", "set words to memo split by space", "말들은 memo를 빈칸으로 나눈 것", 'words = str(memo).split(" ")', '말들 = str(memo).split(" ")'),
+    ("문장형", "Sentence", "set bar to name repeated 5 times", "막대는 이름을 5개 붙인 것", "bar = str(name) * 5", '막대 = str(이름) * 5'),
+    ("문장형", "Sentence", "show name repeated 3 times", "이름을 3번 붙인 것 말해줘", "print(str(name) * 3)", 'print(str(이름) * 3)'),
     ("초급", "Beginner", "say len(name)", "말해 len(이름)", "print(len(name))", 'print(len(이름))'),
     ("고급", "Advanced", "name.upper()", "이름.upper()", "unchanged"),
 ]
@@ -246,12 +255,76 @@ MODULES = [
     ("초급", "Beginner", "use random", "랜덤 사용", "(binds random, random_number, random_pick, shuffle and their Korean twins)"),
     ("초급", "Beginner", "use file", "파일 사용", "(binds file_read, file_write, json_load, json_save and their Korean twins)"),
     ("초급", "Beginner", "use zero_knowledge", "영지식 사용", "(binds zk_secret, zk_public, zk_nizk_prove, … and their Korean twins)"),
+    ("초급", "Beginner", "use list", "목록 사용", "(binds count, sort, reverse, remove, first, last, sum, largest, smallest and their Korean twins)"),
+    ("초급", "Beginner", "use text", "글자 사용", "(binds upper, lower, trim, split, join, replace, starts_with, length and their Korean twins)"),
+    ("초급", "Beginner", "use math", "수학 사용", "(binds math, root, round_to, pi, power, absolute, floor, ceil and their Korean twins)"),
     ("초급", "Beginner", "use random latest", "랜덤 사용 최신", "(the newest bundled adapter)"),
     ("초급", "Beginner", 'use random version "0.0.1"', '랜덤 사용 버전 "0.0.1"', "(that exact adapter)"),
     ("문장형", "Sentence", 'use greet from "helper.nme"', '"helper.nme"에서 greet 가져와', "(from helper import greet — needs helper.nme next to the program)"),
     ("초급", "Beginner", 'from "helper.nme" import greet', '"helper.nme"에서 greet 가져오기', "(from helper import greet — needs helper.nme next to the program)"),
     ("고급", "Advanced", 'from "helper.nme" import greet', 'from "helper.nme" import greet', "(from helper import greet — needs helper.nme next to the program)"),
 ]
+
+
+# Every name the three newest bundled adapters bind, written once and emitted
+# into both reference files. These are Python names rather than NME statements,
+# so they are a plain table rather than a level table; `check-tier-parity.py`
+# is what compiles each of them at all three levels in both languages.
+MODULE_HELPERS = [
+    ("use list", "목록 사용", [
+        ("count(values)", "개수(값들)", "`len(values)`"),
+        ("sort(values)", "정렬(값들)", "`sorted(values)` — a new list; the original is left alone"),
+        ("reverse(values)", "뒤집기(값들)", "`list(reversed(values))`"),
+        ("remove(values, x)", "빼기(값들, x)", "every item that is not `x`, as a new list"),
+        ("first(values)", "첫번째(값들)", "`values[0]`"),
+        ("last(values)", "마지막(값들)", "`values[-1]`"),
+        ("sum(values)", "합계(값들)", "`sum(values)`"),
+        ("largest(values)", "최대(값들)", "`max(values)`"),
+        ("smallest(values)", "최소(값들)", "`min(values)`"),
+        ("list_version", "목록버전", '`"0.0.1"`'),
+    ]),
+    ("use text", "글자 사용", [
+        ("upper(text)", "대문자(글)", "`str(text).upper()`"),
+        ("lower(text)", "소문자(글)", "`str(text).lower()`"),
+        ("trim(text)", "공백없애기(글)", "`str(text).strip()`"),
+        ("split(text, sep)", "나누기(글, 구분자)", "`str(text).split(sep)`"),
+        ("join(sep, values)", "합치기(구분자, 값들)", "`str(sep).join(map(str, values))`"),
+        ("replace(text, a, b)", "바꾸기(글, a, b)", "`str(text).replace(a, b)`"),
+        ("starts_with(text, a)", "로시작(글, a)", "`str(text).startswith(a)`"),
+        ("length(text)", "길이(글)", "`len(text)`"),
+        ("text_version", "글자버전", '`"0.0.1"`'),
+    ]),
+    ("use math", "수학 사용", [
+        ("root(x)", "제곱근(x)", "`math.sqrt(x)`"),
+        ("round_to(x, places)", "반올림(x, 자리)", "`round(x, places)` — `places` may be left out"),
+        ("pi", "원주율", "`math.pi`"),
+        ("power(x, y)", "거듭제곱(x, y)", "`pow(x, y)` — whole numbers stay whole"),
+        ("absolute(x)", "절댓값(x)", "`abs(x)`"),
+        ("floor(x)", "내림(x)", "`math.floor(x)`"),
+        ("ceil(x)", "올림(x)", "`math.ceil(x)`"),
+        ("math_version", "수학버전", '`"0.0.1"`'),
+    ]),
+]
+
+
+def module_helper_tables(korean_first: bool) -> str:
+    """The helper tables for `use list`, `use text` and `use math`."""
+    blocks = []
+    for english_line, korean_line, rows in MODULE_HELPERS:
+        lead = f"`{korean_line}`" if korean_first else f"`{english_line}`"
+        other = f"`{english_line}`" if korean_first else f"`{korean_line}`"
+        header = ("| 한국어 표기 | 영어 표기 | Python |"
+                  if korean_first else
+                  "| English | Korean | Python |")
+        body = []
+        for english, hangul, python in rows:
+            left, right = (hangul, english) if korean_first else (english, hangul)
+            body.append(f"| `{left}` | `{right}` | {python} |")
+        blocks.append(
+            f"{lead} ({other}):\n\n{header}\n| --- | --- | --- |\n"
+            + "\n".join(body)
+        )
+    return "\n\n".join(blocks)
 
 
 # The stopwatch and every cooldown bind one Python name each
@@ -403,6 +476,14 @@ def spelling_table(korean: bool) -> str:
         ("대문자 / Capitals", "CAPITALS_WORDS_EN", "CAPITALS_WORDS_KO"),
         ("소문자 / Small letters", "SMALL_LETTERS_WORDS_EN", "SMALL_LETTERS_WORDS_KO"),
         ("이어 붙이기 / Join", "JOIN_WORDS_EN", "JOIN_WORDS_KO"),
+        ("사이 없이 이어 붙이기 / Join together", "JOIN_TOGETHER_WORDS_EN", "JOIN_TOGETHER_WORDS_KO"),
+        ("빈 이음말 / Empty separator", "EMPTY_SEPARATOR_WORDS_EN", "EMPTY_SEPARATOR_WORDS_KO"),
+        ("나누기(글) / Split", "SPLIT_WORDS_EN", "SPLIT_WORDS_KO"),
+        ("줄마다 / By line", "SPLIT_LINE_WORDS_EN", "SPLIT_LINE_WORDS_KO"),
+        ("나눈 것 / Split thing", "SPLIT_THING_WORDS_KO", None),
+        ("붙인 것 / Repeated text", "REPEAT_TEXT_WORDS_EN", "REPEAT_TEXT_WORDS_KO"),
+        ("몇 개 / Copies", "COPIES_WORDS_EN", "COPIES_WORDS_KO"),
+        ("몇 번째와 함께 / With its position", "POSITION_WORDS_EN", "POSITION_WORDS_KO"),
         ("나머지 / Remainder", "REMAINDER_WORDS_EN", "REMAINDER_WORDS_KO"),
         ("나누기 말 / Divided", "DIVIDED_WORDS_EN", "DIVIDED_WORDS_KO"),
         ("이음말 / Separator", "SEPARATOR_WORDS_EN", "SEPARATOR_WORDS_KO"),
@@ -643,6 +724,19 @@ Python으로는 `친구들[0]`이 됩니다. 0번째는 없으며 적으면 `E02
 ## 19. 모듈
 
 {level_table(MODULES, True)}
+
+`랜덤 사용`·`파일 사용`·`영지식 사용` 다음으로 자주 쓰는 세 가지가 `목록 사용`,
+`글자 사용`, `수학 사용`입니다. 한 줄이면 아래 이름들이 한국어와 영어 두 가지로
+모두 준비되고, 안에 들어 있는 것은 전부 평범한 Python 기본 기능이라 브라우저에서도
+그대로 돕니다. `목록`·`글자`·`수학`은 평범한 낱말이라서, `사용`/`use` 바로 옆에
+있고 그 줄에 다른 낱말이 없을 때만 모듈로 읽습니다. `장 볼 목록을 사용해 보세요`는
+그대로 출력되는 문장입니다.
+
+{module_helper_tables(True)}
+
+`정렬`·`뒤집기`·`빼기`는 새 목록을 돌려주고 원래 목록은 그대로 둡니다. 원래 목록을
+직접 바꾸려면 문장형 `친구들 정렬해`·`친구들 거꾸로 해`·`친구들에서 민수 빼`를
+쓰세요.
 
 ## 20. 천천히 말하기
 
@@ -896,6 +990,20 @@ a quote character.
 ## 19. Modules
 
 {level_table(MODULES, False)}
+
+After `use random`, `use file` and `use zero_knowledge`, the three most asked
+for are `use list`, `use text` and `use math`. One line makes every name below
+ready in both languages, and everything inside them is plain Python builtins,
+so they run in the browser as they stand. `list`, `text` and `math` are
+ordinary words, so they name a module only when they stand beside `use`/`사용`
+and nothing else is left over on the line; `get the list of names` is a
+sentence and prints.
+
+{module_helper_tables(False)}
+
+`sort`, `reverse` and `remove` hand back a new list and leave the original
+alone. To change the list itself, use the sentence statements `sort friends`,
+`reverse friends` and `remove Mina from friends`.
 
 ## 20. Slow text
 

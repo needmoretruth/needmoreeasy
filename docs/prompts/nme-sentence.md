@@ -102,6 +102,7 @@ on one line. This document describes version `0.0.1-beta.160`.
 | Sentence | `for each friend in friends and show friend` | `for friend in friends: print(friend)` |
 | Sentence | `repeat for each name in names` | `for name in names:` |
 | Sentence | `foreach friend in friends` | `for friend in friends:` |
+| Sentence | `for each friend in friends with place` | `for place, friend in enumerate(friends, 1):` |
 
 ### Repeating while a condition holds
 
@@ -180,6 +181,8 @@ on one line. This document describes version `0.0.1-beta.160`.
 | Sentence | `show the smallest of scores` | `print(min(scores))` |
 | Sentence | `show friends joined by comma` | `print(", ".join(map(str, friends)))` |
 | Sentence | `show friends joined by space` | `print(" ".join(map(str, friends)))` |
+| Sentence | `show friends joined together` | `print("".join(map(str, friends)))` |
+| Sentence | `show friends joined by nothing` | `print("".join(map(str, friends)))` |
 | Sentence | `if friends contains Mina` | `if ("Mina" in friends):` |
 | Sentence | `if friends does not contain Ada` | `if ("Ada" not in friends):` |
 | Sentence | `if friends is empty` | `if (not (friends)):` |
@@ -191,6 +194,11 @@ on one line. This document describes version `0.0.1-beta.160`.
 | Sentence | `show the length of name` | `print(len(name))` |
 | Sentence | `show name in capitals` | `print(str(name).upper())` |
 | Sentence | `show name in small letters` | `print(str(name).lower())` |
+| Sentence | `set names to memo split by line` | `names = str(memo).splitlines()` |
+| Sentence | `set fields to memo split by comma` | `fields = str(memo).split(",")` |
+| Sentence | `set words to memo split by space` | `words = str(memo).split(" ")` |
+| Sentence | `set bar to name repeated 5 times` | `bar = str(name) * 5` |
+| Sentence | `show name repeated 3 times` | `print(str(name) * 3)` |
 
 ### Number remainders
 
@@ -317,6 +325,14 @@ on one line. This document describes version `0.0.1-beta.160`.
 | 대문자 / Capitals | `capitals` · `capital` · `uppercase` | `대문자로` · `대문자` |
 | 소문자 / Small letters | `lowercase` · `small` | `소문자로` · `소문자` |
 | 이어 붙이기 / Join | `joined` · `join` | `이어` · `이어서` · `이어붙여` |
+| 사이 없이 이어 붙이기 / Join together | `together` | `붙여` · `붙여서` · `붙여줘` · `이어붙여` · `이어붙여줘` |
+| 빈 이음말 / Empty separator | `nothing` | `그대로` |
+| 나누기(글) / Split | `split` | `나눈` · `쪼갠` · `자른` |
+| 줄마다 / By line | `line` · `lines` | `줄마다` · `줄별로` · `한줄씩` |
+| 나눈 것 / Split thing | — | `것` · `거` · `것들` |
+| 붙인 것 / Repeated text | `repeated` | `붙인` · `이어붙인` |
+| 몇 개 / Copies | `times` | `개` · `번` |
+| 몇 번째와 함께 / With its position | `with` | `함께` · `같이` |
 | 나머지 / Remainder | `remainder` · `rest` · `leftover` | `나머지` |
 | 나누기 말 / Divided | `divided` · `shared` · `split` | `나눈` · `나눈뒤` · `나누고` |
 | 이음말 / Separator | `comma` · `space` · `newline` | `쉼표` · `빈칸` · `공백` · `줄바꿈` |

@@ -1,6 +1,6 @@
 # Mistake probes — how forgiving is the compiler?
 
-723 short programs, in English and Korean: mostly things a beginner would
+804 short programs, in English and Korean: mostly things a beginner would
 plausibly write **wrongly** — keyword typos, a different word order, missing or
 extra spaces, a full stop at the end, Korean particles and endings, number
 words, capitals, and the synonyms someone guesses before they have read
@@ -81,9 +81,11 @@ python scripts/check-prose-blocks.py              # and no guide line may drift
 | 2026-08-18, after accepting more | 496 | 70 | 46 | 20/30 |
 | 2026-08-18, after refusing loudly | 461 | 105 | 11 | 30/30 |
 | 2026-08-19, after the English-prose round | 628 | 122 | 11 | 30/30 |
+| 2026-08-19, after the Korean-prose round | 635 | 122 | 11 | 30/30 |
+| 2026-08-19, after the modules-and-text round | 680 | 124 | 11 | 30/30 |
 
-The first three rows were measured over 566 probes; the last over 750, so read
-the mis-compile column across them and the other two only within a row.
+The first three rows were measured over 566 probes, then 750, 757 and 804, so
+read the mis-compile column across them and the other two only within a row.
 
 Accepting more and refusing loudly pull in opposite directions, which is why
 both numbers are here: the second round gave back 35 acceptances to remove 35

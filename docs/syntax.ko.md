@@ -127,7 +127,9 @@ NME가 **실제로 받아들이는 표기를 빠짐없이** 모아 둔 목록입
 | 문장형 | `친구들의 친구마다 반복해서 친구 말해줘` | `for 친구 in 친구들: print(친구)` |
 | 문장형 | `이름들에서 이름마다 반복해` | `for 이름 in 이름들:` |
 | 문장형 | `친구들의 친구 마다 반복해` | `for 친구 in 친구들:` |
+| 문장형 | `친구들의 친구마다 순서와 함께 반복해` | `for 순서, 친구 in enumerate(친구들, 1):` |
 | 초급 | `친구들의 친구마다:` | `for 친구 in 친구들:` |
+| 초급 | `친구들의 친구마다 순서와 함께:` | `for 순서, 친구 in enumerate(친구들, 1):` |
 | 고급 | `for 친구 in 친구들:` | unchanged |
 
 `마다` 앞의 이름이 항목을 하나씩 받는 이름이고, 그 이름은 블록 안에서 바로
@@ -219,6 +221,8 @@ NME 명령이 됩니다. 블록 밖에서는 Python 그대로 남습니다.
 | 문장형 | `점수들 중 가장 작은 것 말해줘` | `print(min(점수들))` |
 | 문장형 | `친구들을 쉼표로 이어 말해줘` | `print(", ".join(map(str, 친구들)))` |
 | 문장형 | `친구들을 빈칸으로 이어 말해줘` | `print(" ".join(map(str, 친구들)))` |
+| 문장형 | `친구들을 붙여 말해줘` | `print("".join(map(str, 친구들)))` |
+| 문장형 | `친구들을 그대로 이어 말해줘` | `print("".join(map(str, 친구들)))` |
 | 문장형 | `만약에 친구들에 민수가 있으면` | `if ("민수" in 친구들):` |
 | 문장형 | `만약에 친구들에 지안이 없으면` | `if ("지안" not in 친구들):` |
 | 문장형 | `만약에 친구들이 비었으면` | `if (not (친구들)):` |
@@ -247,6 +251,11 @@ Python으로는 `친구들[0]`이 됩니다. 0번째는 없으며 적으면 `E02
 | 문장형 | `이름 길이 말해줘` | `print(len(이름))` |
 | 문장형 | `이름 대문자로 말해줘` | `print(str(이름).upper())` |
 | 문장형 | `이름 소문자로 말해줘` | `print(str(이름).lower())` |
+| 문장형 | `이름들은 memo를 줄마다 나눈 것` | `이름들 = str(memo).splitlines()` |
+| 문장형 | `칸들은 memo를 쉼표로 나눈 것` | `칸들 = str(memo).split(",")` |
+| 문장형 | `말들은 memo를 빈칸으로 나눈 것` | `말들 = str(memo).split(" ")` |
+| 문장형 | `막대는 이름을 5개 붙인 것` | `막대 = str(이름) * 5` |
+| 문장형 | `이름을 3번 붙인 것 말해줘` | `print(str(이름) * 3)` |
 | 초급 | `말해 len(이름)` | `print(len(이름))` |
 | 고급 | `이름.upper()` | unchanged |
 
@@ -328,11 +337,67 @@ Python으로는 `친구들[0]`이 됩니다. 0번째는 없으며 적으면 `E02
 | 초급 | `랜덤 사용` | (binds random, random_number, random_pick, shuffle and their Korean twins) |
 | 초급 | `파일 사용` | (binds file_read, file_write, json_load, json_save and their Korean twins) |
 | 초급 | `영지식 사용` | (binds zk_secret, zk_public, zk_nizk_prove, … and their Korean twins) |
+| 초급 | `목록 사용` | (binds count, sort, reverse, remove, first, last, sum, largest, smallest and their Korean twins) |
+| 초급 | `글자 사용` | (binds upper, lower, trim, split, join, replace, starts_with, length and their Korean twins) |
+| 초급 | `수학 사용` | (binds math, root, round_to, pi, power, absolute, floor, ceil and their Korean twins) |
 | 초급 | `랜덤 사용 최신` | (the newest bundled adapter) |
 | 초급 | `랜덤 사용 버전 "0.0.1"` | (that exact adapter) |
 | 문장형 | `"helper.nme"에서 greet 가져와` | (from helper import greet — needs helper.nme next to the program) |
 | 초급 | `"helper.nme"에서 greet 가져오기` | (from helper import greet — needs helper.nme next to the program) |
 | 고급 | `from "helper.nme" import greet` | (from helper import greet — needs helper.nme next to the program) |
+
+`랜덤 사용`·`파일 사용`·`영지식 사용` 다음으로 자주 쓰는 세 가지가 `목록 사용`,
+`글자 사용`, `수학 사용`입니다. 한 줄이면 아래 이름들이 한국어와 영어 두 가지로
+모두 준비되고, 안에 들어 있는 것은 전부 평범한 Python 기본 기능이라 브라우저에서도
+그대로 돕니다. `목록`·`글자`·`수학`은 평범한 낱말이라서, `사용`/`use` 바로 옆에
+있고 그 줄에 다른 낱말이 없을 때만 모듈로 읽습니다. `장 볼 목록을 사용해 보세요`는
+그대로 출력되는 문장입니다.
+
+`목록 사용` (`use list`):
+
+| 한국어 표기 | 영어 표기 | Python |
+| --- | --- | --- |
+| `개수(값들)` | `count(values)` | `len(values)` |
+| `정렬(값들)` | `sort(values)` | `sorted(values)` — a new list; the original is left alone |
+| `뒤집기(값들)` | `reverse(values)` | `list(reversed(values))` |
+| `빼기(값들, x)` | `remove(values, x)` | every item that is not `x`, as a new list |
+| `첫번째(값들)` | `first(values)` | `values[0]` |
+| `마지막(값들)` | `last(values)` | `values[-1]` |
+| `합계(값들)` | `sum(values)` | `sum(values)` |
+| `최대(값들)` | `largest(values)` | `max(values)` |
+| `최소(값들)` | `smallest(values)` | `min(values)` |
+| `목록버전` | `list_version` | `"0.0.1"` |
+
+`글자 사용` (`use text`):
+
+| 한국어 표기 | 영어 표기 | Python |
+| --- | --- | --- |
+| `대문자(글)` | `upper(text)` | `str(text).upper()` |
+| `소문자(글)` | `lower(text)` | `str(text).lower()` |
+| `공백없애기(글)` | `trim(text)` | `str(text).strip()` |
+| `나누기(글, 구분자)` | `split(text, sep)` | `str(text).split(sep)` |
+| `합치기(구분자, 값들)` | `join(sep, values)` | `str(sep).join(map(str, values))` |
+| `바꾸기(글, a, b)` | `replace(text, a, b)` | `str(text).replace(a, b)` |
+| `로시작(글, a)` | `starts_with(text, a)` | `str(text).startswith(a)` |
+| `길이(글)` | `length(text)` | `len(text)` |
+| `글자버전` | `text_version` | `"0.0.1"` |
+
+`수학 사용` (`use math`):
+
+| 한국어 표기 | 영어 표기 | Python |
+| --- | --- | --- |
+| `제곱근(x)` | `root(x)` | `math.sqrt(x)` |
+| `반올림(x, 자리)` | `round_to(x, places)` | `round(x, places)` — `places` may be left out |
+| `원주율` | `pi` | `math.pi` |
+| `거듭제곱(x, y)` | `power(x, y)` | `pow(x, y)` — whole numbers stay whole |
+| `절댓값(x)` | `absolute(x)` | `abs(x)` |
+| `내림(x)` | `floor(x)` | `math.floor(x)` |
+| `올림(x)` | `ceil(x)` | `math.ceil(x)` |
+| `수학버전` | `math_version` | `"0.0.1"` |
+
+`정렬`·`뒤집기`·`빼기`는 새 목록을 돌려주고 원래 목록은 그대로 둡니다. 원래 목록을
+직접 바꾸려면 문장형 `친구들 정렬해`·`친구들 거꾸로 해`·`친구들에서 민수 빼`를
+쓰세요.
 
 ## 20. 천천히 말하기
 
@@ -451,6 +516,14 @@ Python으로는 `친구들[0]`이 됩니다. 0번째는 없으며 적으면 `E02
 | 대문자 / Capitals | `capitals` · `capital` · `uppercase` | `대문자로` · `대문자` |
 | 소문자 / Small letters | `lowercase` · `small` | `소문자로` · `소문자` |
 | 이어 붙이기 / Join | `joined` · `join` | `이어` · `이어서` · `이어붙여` |
+| 사이 없이 이어 붙이기 / Join together | `together` | `붙여` · `붙여서` · `붙여줘` · `이어붙여` · `이어붙여줘` |
+| 빈 이음말 / Empty separator | `nothing` | `그대로` |
+| 나누기(글) / Split | `split` | `나눈` · `쪼갠` · `자른` |
+| 줄마다 / By line | `line` · `lines` | `줄마다` · `줄별로` · `한줄씩` |
+| 나눈 것 / Split thing | — | `것` · `거` · `것들` |
+| 붙인 것 / Repeated text | `repeated` | `붙인` · `이어붙인` |
+| 몇 개 / Copies | `times` | `개` · `번` |
+| 몇 번째와 함께 / With its position | `with` | `함께` · `같이` |
 | 나머지 / Remainder | `remainder` · `rest` · `leftover` | `나머지` |
 | 나누기 말 / Divided | `divided` · `shared` · `split` | `나눈` · `나눈뒤` · `나누고` |
 | 이음말 / Separator | `comma` · `space` · `newline` | `쉼표` · `빈칸` · `공백` · `줄바꿈` |
@@ -555,13 +628,15 @@ Python으로는 `친구들[0]`이 됩니다. 0번째는 없으며 적으면 `E02
 | `E0229` | 몇 번째인지는 1부터 셉니다 |
 | `E0230` | 이름에는 띄어쓰기를 쓸 수 없습니다 |
 | `E0231` | 이 이름을 목록으로 만든 적이 없습니다 |
+| `E0232` | 이 이야기 안에 글이 한 줄도 없습니다 |
+| `E0233` | 이어 붙일 때 사이에 무엇을 넣을지가 없습니다 |
 | `E0301` | 조건이 비어 있습니다 |
 | `E0302` | 조건을 이해하지 못했습니다 |
 | `E0303` | 반복할 내용을 이해하지 못했습니다 |
 | `E0304` | 반복 횟수를 이해하지 못했습니다 |
 | `E0305` | 반복 횟수가 비어 있습니다 |
 | `E0306` | 목록 반복 줄을 이해하지 못했습니다 |
-| `E0401` | NME에는 `랜덤 사용`과 `파일 사용`이 내장되어 있습니다 |
+| `E0401` | NME에 내장된 모듈은 여섯 개이고 이것은 그중에 없습니다 |
 | `E0402` | 최신과 정확한 버전을 함께 적었습니다 |
 | `E0403` | 모듈 버전이 비어 있습니다 |
 | `E0404` | 내장되어 있지 않은 모듈 버전입니다 |

@@ -101,6 +101,7 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 | 문장형 | `친구들의 친구마다 반복해서 친구 말해줘` | `for 친구 in 친구들: print(친구)` |
 | 문장형 | `이름들에서 이름마다 반복해` | `for 이름 in 이름들:` |
 | 문장형 | `친구들의 친구 마다 반복해` | `for 친구 in 친구들:` |
+| 문장형 | `친구들의 친구마다 순서와 함께 반복해` | `for 순서, 친구 in enumerate(친구들, 1):` |
 
 ### 조건이 참인 동안 반복
 
@@ -179,6 +180,8 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 | 문장형 | `점수들 중 가장 작은 것 말해줘` | `print(min(점수들))` |
 | 문장형 | `친구들을 쉼표로 이어 말해줘` | `print(", ".join(map(str, 친구들)))` |
 | 문장형 | `친구들을 빈칸으로 이어 말해줘` | `print(" ".join(map(str, 친구들)))` |
+| 문장형 | `친구들을 붙여 말해줘` | `print("".join(map(str, 친구들)))` |
+| 문장형 | `친구들을 그대로 이어 말해줘` | `print("".join(map(str, 친구들)))` |
 | 문장형 | `만약에 친구들에 민수가 있으면` | `if ("민수" in 친구들):` |
 | 문장형 | `만약에 친구들에 지안이 없으면` | `if ("지안" not in 친구들):` |
 | 문장형 | `만약에 친구들이 비었으면` | `if (not (친구들)):` |
@@ -190,6 +193,11 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 | 문장형 | `이름 길이 말해줘` | `print(len(이름))` |
 | 문장형 | `이름 대문자로 말해줘` | `print(str(이름).upper())` |
 | 문장형 | `이름 소문자로 말해줘` | `print(str(이름).lower())` |
+| 문장형 | `이름들은 memo를 줄마다 나눈 것` | `이름들 = str(memo).splitlines()` |
+| 문장형 | `칸들은 memo를 쉼표로 나눈 것` | `칸들 = str(memo).split(",")` |
+| 문장형 | `말들은 memo를 빈칸으로 나눈 것` | `말들 = str(memo).split(" ")` |
+| 문장형 | `막대는 이름을 5개 붙인 것` | `막대 = str(이름) * 5` |
+| 문장형 | `이름을 3번 붙인 것 말해줘` | `print(str(이름) * 3)` |
 
 ### 숫자 나머지
 
@@ -316,6 +324,14 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 | 대문자 / Capitals | `capitals` · `capital` · `uppercase` | `대문자로` · `대문자` |
 | 소문자 / Small letters | `lowercase` · `small` | `소문자로` · `소문자` |
 | 이어 붙이기 / Join | `joined` · `join` | `이어` · `이어서` · `이어붙여` |
+| 사이 없이 이어 붙이기 / Join together | `together` | `붙여` · `붙여서` · `붙여줘` · `이어붙여` · `이어붙여줘` |
+| 빈 이음말 / Empty separator | `nothing` | `그대로` |
+| 나누기(글) / Split | `split` | `나눈` · `쪼갠` · `자른` |
+| 줄마다 / By line | `line` · `lines` | `줄마다` · `줄별로` · `한줄씩` |
+| 나눈 것 / Split thing | — | `것` · `거` · `것들` |
+| 붙인 것 / Repeated text | `repeated` | `붙인` · `이어붙인` |
+| 몇 개 / Copies | `times` | `개` · `번` |
+| 몇 번째와 함께 / With its position | `with` | `함께` · `같이` |
 | 나머지 / Remainder | `remainder` · `rest` · `leftover` | `나머지` |
 | 나누기 말 / Divided | `divided` · `shared` · `split` | `나눈` · `나눈뒤` · `나누고` |
 | 이음말 / Separator | `comma` · `space` · `newline` | `쉼표` · `빈칸` · `공백` · `줄바꿈` |

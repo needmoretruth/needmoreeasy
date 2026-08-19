@@ -102,6 +102,7 @@ on one line. This document describes version `0.0.1-beta.160`.
 | Sentence | `for each friend in friends and show friend` | `for friend in friends: print(friend)` |
 | Sentence | `repeat for each name in names` | `for name in names:` |
 | Sentence | `foreach friend in friends` | `for friend in friends:` |
+| Sentence | `for each friend in friends with place` | `for place, friend in enumerate(friends, 1):` |
 
 ### Repeating while a condition holds
 
@@ -180,6 +181,8 @@ on one line. This document describes version `0.0.1-beta.160`.
 | Sentence | `show the smallest of scores` | `print(min(scores))` |
 | Sentence | `show friends joined by comma` | `print(", ".join(map(str, friends)))` |
 | Sentence | `show friends joined by space` | `print(" ".join(map(str, friends)))` |
+| Sentence | `show friends joined together` | `print("".join(map(str, friends)))` |
+| Sentence | `show friends joined by nothing` | `print("".join(map(str, friends)))` |
 | Sentence | `if friends contains Mina` | `if ("Mina" in friends):` |
 | Sentence | `if friends does not contain Ada` | `if ("Ada" not in friends):` |
 | Sentence | `if friends is empty` | `if (not (friends)):` |
@@ -191,6 +194,11 @@ on one line. This document describes version `0.0.1-beta.160`.
 | Sentence | `show the length of name` | `print(len(name))` |
 | Sentence | `show name in capitals` | `print(str(name).upper())` |
 | Sentence | `show name in small letters` | `print(str(name).lower())` |
+| Sentence | `set names to memo split by line` | `names = str(memo).splitlines()` |
+| Sentence | `set fields to memo split by comma` | `fields = str(memo).split(",")` |
+| Sentence | `set words to memo split by space` | `words = str(memo).split(" ")` |
+| Sentence | `set bar to name repeated 5 times` | `bar = str(name) * 5` |
+| Sentence | `show name repeated 3 times` | `print(str(name) * 3)` |
 
 ### Number remainders
 
@@ -326,6 +334,7 @@ on one line. This document describes version `0.0.1-beta.160`.
 | Level | NME | Python produced |
 | --- | --- | --- |
 | Beginner | `for each friend in friends:` | `for friend in friends:` |
+| Beginner | `for each friend in friends with place:` | `for place, friend in enumerate(friends, 1):` |
 | Advanced | `for friend in friends:` | unchanged |
 
 ### Repeating while
@@ -384,6 +393,9 @@ on one line. This document describes version `0.0.1-beta.160`.
 | Beginner | `use random` | (binds random, random_number, random_pick, shuffle and their Korean twins) |
 | Beginner | `use file` | (binds file_read, file_write, json_load, json_save and their Korean twins) |
 | Beginner | `use zero_knowledge` | (binds zk_secret, zk_public, zk_nizk_prove, … and their Korean twins) |
+| Beginner | `use list` | (binds count, sort, reverse, remove, first, last, sum, largest, smallest and their Korean twins) |
+| Beginner | `use text` | (binds upper, lower, trim, split, join, replace, starts_with, length and their Korean twins) |
+| Beginner | `use math` | (binds math, root, round_to, pi, power, absolute, floor, ceil and their Korean twins) |
 | Beginner | `use random latest` | (the newest bundled adapter) |
 | Beginner | `use random version "0.0.1"` | (that exact adapter) |
 | Beginner | `from "helper.nme" import greet` | (from helper import greet — needs helper.nme next to the program) |
@@ -403,7 +415,7 @@ restart a project in a different language.
 ⚠ One thing to watch: a one-word line, and anything shaped like `name = value`,
 is already valid Python and will not be read as an NME sentence.
 
-## Three bundled toolboxes
+## Six bundled toolboxes
 
 One line of `use random` brings in the random tools, `use file` the file tools,
 and `use zero_knowledge` a Schnorr proof-of-knowledge reference implementation.
@@ -417,6 +429,25 @@ One import binds **both** the English and the Korean names.
 | | `json_save(path, value)` / `json저장(경로, 값)` | write JSON |
 
 `random` is not suitable for passwords or any security decision.
+
+Three more: `use list`, `use text` and `use math`. Everything inside them is a
+plain Python builtin, so they run in the browser as they stand.
+
+| List | Text | Maths |
+| --- | --- | --- |
+| `count(values)` / `개수(값들)` | `upper(text)` / `대문자(글)` | `root(x)` / `제곱근(x)` |
+| `sort(values)` / `정렬(값들)` | `lower(text)` / `소문자(글)` | `round_to(x, places)` / `반올림(x, 자리)` |
+| `reverse(values)` / `뒤집기(값들)` | `trim(text)` / `공백없애기(글)` | `pi` / `원주율` |
+| `remove(values, x)` / `빼기(값들, x)` | `split(text, sep)` / `나누기(글, 구분자)` | `power(x, y)` / `거듭제곱(x, y)` |
+| `first(values)` / `첫번째(값들)` | `join(sep, values)` / `합치기(구분자, 값들)` | `absolute(x)` / `절댓값(x)` |
+| `last(values)` / `마지막(값들)` | `replace(text, a, b)` / `바꾸기(글, a, b)` | `floor(x)` / `내림(x)` |
+| `sum(values)` / `합계(값들)` | `starts_with(text, a)` / `로시작(글, a)` | `ceil(x)` / `올림(x)` |
+| `largest(values)` / `최대(값들)` | `length(text)` / `길이(글)` | |
+| `smallest(values)` / `최소(값들)` | | |
+
+`sort`, `reverse` and `remove` hand back a new list and leave the original
+alone. `list`, `text` and `math` are ordinary words, so they name a module only
+when they stand beside `use` and nothing else is left over on the line.
 
 ### Every word you may use
 
@@ -457,6 +488,14 @@ One import binds **both** the English and the Korean names.
 | 대문자 / Capitals | `capitals` · `capital` · `uppercase` | `대문자로` · `대문자` |
 | 소문자 / Small letters | `lowercase` · `small` | `소문자로` · `소문자` |
 | 이어 붙이기 / Join | `joined` · `join` | `이어` · `이어서` · `이어붙여` |
+| 사이 없이 이어 붙이기 / Join together | `together` | `붙여` · `붙여서` · `붙여줘` · `이어붙여` · `이어붙여줘` |
+| 빈 이음말 / Empty separator | `nothing` | `그대로` |
+| 나누기(글) / Split | `split` | `나눈` · `쪼갠` · `자른` |
+| 줄마다 / By line | `line` · `lines` | `줄마다` · `줄별로` · `한줄씩` |
+| 나눈 것 / Split thing | — | `것` · `거` · `것들` |
+| 붙인 것 / Repeated text | `repeated` | `붙인` · `이어붙인` |
+| 몇 개 / Copies | `times` | `개` · `번` |
+| 몇 번째와 함께 / With its position | `with` | `함께` · `같이` |
 | 나머지 / Remainder | `remainder` · `rest` · `leftover` | `나머지` |
 | 나누기 말 / Divided | `divided` · `shared` · `split` | `나눈` · `나눈뒤` · `나누고` |
 | 이음말 / Separator | `comma` · `space` · `newline` | `쉼표` · `빈칸` · `공백` · `줄바꿈` |
@@ -549,13 +588,14 @@ One import binds **both** the English and the Korean names.
 | `E0230` | a name cannot have a space in it |
 | `E0231` | this name was never made into a list |
 | `E0232` | this story has nothing in it |
+| `E0233` | this join does not say what to put between the items |
 | `E0301` | the condition is missing |
 | `E0302` | the condition could not be understood |
 | `E0303` | the repeated body could not be understood |
 | `E0304` | the repeat count could not be understood |
 | `E0305` | the repeat count is missing |
 | `E0306` | the repeat-over-a-list line could not be understood |
-| `E0401` | NME bundles `use random` and `use file` |
+| `E0401` | NME bundles six modules, and this is not one of them |
 | `E0402` | latest and an exact version on one line |
 | `E0403` | the module version is missing |
 | `E0404` | this module version is not bundled |

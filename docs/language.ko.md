@@ -178,7 +178,14 @@ show the total of scores
 show the biggest of scores
 친구들을 쉼표로 이어 말해줘
 show friends joined by comma
+친구들을 붙여 말해줘
+show friends joined together
 ```
+
+이음말은 `쉼표`·`빈칸`·`줄바꿈`(`comma`, `space`, `newline`)이고, `붙여`
+(`joined together`)는 사이에 아무것도 넣지 않습니다. 별 한 줄을 그릴 때 쓰는
+형태입니다. 이음말을 적지 않은 이어 붙이기는 `E0233`으로 알려 줍니다. 전에는
+`친구들을 이어 말해줘`가 그 문장을 그대로 출력해서 성공한 것처럼 보였습니다.
 
 **몇 번째인지는 1부터 셉니다.** `친구들 첫 번째`가 곧 `친구들 1번째`이고, 둘 다
 `친구들[0]`이 됩니다. 0번째는 없습니다. 적으면 `E0229`로 알려 주며, Python의
@@ -235,6 +242,37 @@ show name in small letters
 목록이 아니어도 저장한 이름이면 읽습니다. `길이`는 글자 수를, 나머지 둘은 같은
 글을 대문자·소문자로 바꾼 것을 돌려줍니다. 셋 다 값이므로 저장하거나 조건에서
 비교할 수도 있습니다.
+
+글을 목록으로 나눌 수도 있습니다. 파일을 읽은 다음 늘 하게 되는 일입니다.
+
+```nme
+이름들은 메모를 줄마다 나눈 것
+set names to memo split by line
+칸들은 줄을 쉼표로 나눈 것
+set fields to line split by comma
+말들은 문장을 빈칸으로 나눈 것
+set words to sentence split by space
+```
+
+`줄마다`(`split by line`)는 Python의 `splitlines()`입니다. 줄바꿈으로 끝나는
+파일이나 윈도우 줄바꿈도 알아서 처리합니다. 나머지는 이음말 그대로 자릅니다.
+**여기서 쉼표는 `", "`가 아니라 `","`입니다.** 파일에서 읽어 온 줄은
+`민수,지안`처럼 적혀 있기 때문입니다. 나눈 결과는 목록이라서, 바로
+`이름들 개수`(`how many names`)를 쓸 수 있습니다.
+
+글 하나를 여러 번 이어 붙일 수도 있습니다.
+
+```nme
+막대는 별표를 5개 붙인 것
+set bar to star repeated 5 times
+별표를 20번 붙인 것 말해줘
+show star repeated 20 times
+```
+
+여기서는 `5번`이라고 적어도 됩니다. 세는 반복문에서 `5번`은 *다섯 번*이지만,
+이것은 `붙인 것`으로 끝나는 이름꼴이고 반복문은 그렇게 끝나지 않기 때문입니다.
+글은 먼저 `str(...)`로 감쌉니다. 그래서 `3`이 든 이름은 `"33333"`이 되고 `15`가
+되지 않습니다. 문장이 부탁한 것은 다섯 벌이지 곱셈이 아닙니다.
 
 ### 반복하기
 
@@ -595,17 +633,26 @@ for 단어 in 단어들("notes.txt"):
 
 ## 버전이 있는 내장 모듈
 
-NME에는 초보자용 모듈 세 개가 들어 있습니다: 주사위·선택용
+NME에는 초보자용 모듈 여섯 개가 들어 있습니다: 주사위·선택용
 `random`(`랜덤`), 읽기·쓰기·JSON용 `file`(`파일`), 실제 슈노르 지식 증명
-계산을 제공하는 `zero_knowledge`(`영지식`)입니다. 랜덤과 파일 어댑터는
-`0.0.1`, 영지식 어댑터는 `0.0.2`가 내장됩니다. 모듈마다 `사용` 줄 하나면
-충분하며 같은 모듈을 두 번 가져오면 충돌 오류가 납니다.
+계산을 제공하는 `zero_knowledge`(`영지식`), 그리고 `list`(`목록`),
+`text`(`글자`), `math`(`수학`)입니다. 영지식 어댑터만 `0.0.2`이고 나머지는
+모두 `0.0.1`이 내장됩니다. 모듈마다 `사용` 줄 하나면 충분하며 같은 모듈을 두 번
+가져오면 충돌 오류가 납니다.
 
 ```nme
 랜덤 사용
 파일 사용
 영지식 사용
+목록 사용
+글자 사용
+수학 사용
 ```
+
+`목록`·`글자`·`수학`과 영어 이름 `list`·`text`·`math`는 평범한 낱말입니다.
+그래서 `사용`/`use` 바로 옆에 있고 그 줄에 다른 낱말이 남지 않을 때만 모듈로
+읽습니다. `장 볼 목록을 사용해 보세요`나 `get the list of names`는 문장이고,
+그대로 출력됩니다.
 
 `랜덤 사용 최신`, `최신 랜덤 사용`, `랜덤 사용 버전 "0.0.1"`도 같은 뜻이며,
 영어 표기 `use random`, `use random latest`, `use latest random`,
@@ -638,6 +685,51 @@ NME에는 초보자용 모듈 세 개가 들어 있습니다: 주사위·선택�
 | `json읽기(경로)` | `json_load(path)` | `json.loads(pathlib.Path(path).read_text())` |
 | `json저장(경로, 값)` | `json_save(path, value)` | `pathlib.Path(path).write_text(json.dumps(value))` |
 | `파일버전` | `file_version` | 어댑터 버전 문자열 |
+
+| 한국어 | 영어 | Python 뜻 |
+| --- | --- | --- |
+| `개수(값들)` | `count(values)` | `len(values)` |
+| `정렬(값들)` | `sort(values)` | `sorted(values)`, 새 목록 |
+| `뒤집기(값들)` | `reverse(values)` | `list(reversed(values))` |
+| `빼기(값들, x)` | `remove(values, x)` | `x`가 빠진 새 목록 |
+| `첫번째(값들)` | `first(values)` | `values[0]` |
+| `마지막(값들)` | `last(values)` | `values[-1]` |
+| `합계(값들)` | `sum(values)` | `sum(values)` |
+| `최대(값들)` | `largest(values)` | `max(values)` |
+| `최소(값들)` | `smallest(values)` | `min(values)` |
+| `목록버전` | `list_version` | 어댑터 버전 문자열 |
+
+`정렬`·`뒤집기`·`빼기`는 새 목록을 돌려주고 원래 목록은 그대로 둡니다. 원래
+목록 자체를 바꾸는 것은 문장형 `친구들 정렬해`·`친구들 거꾸로 해`·
+`친구들에서 민수 빼`입니다. 둘 다 사람들이 실제로 뜻하는 것이라서 둘 다
+있습니다.
+
+| 한국어 | 영어 | Python 뜻 |
+| --- | --- | --- |
+| `대문자(글)` | `upper(text)` | `str(text).upper()` |
+| `소문자(글)` | `lower(text)` | `str(text).lower()` |
+| `공백없애기(글)` | `trim(text)` | `str(text).strip()` |
+| `나누기(글, 구분자)` | `split(text, sep)` | `str(text).split(sep)` |
+| `합치기(구분자, 값들)` | `join(sep, values)` | `str(sep).join(map(str, values))` |
+| `바꾸기(글, a, b)` | `replace(text, a, b)` | `str(text).replace(a, b)` |
+| `로시작(글, a)` | `starts_with(text, a)` | `str(text).startswith(a)` |
+| `길이(글)` | `length(text)` | `len(text)` |
+| `글자버전` | `text_version` | 어댑터 버전 문자열 |
+
+| 한국어 | 영어 | Python 뜻 |
+| --- | --- | --- |
+| `제곱근(x)` | `root(x)` | `math.sqrt(x)` |
+| `반올림(x, 자리)` | `round_to(x, places)` | `round(x, places)`, 자리는 생략 가능 |
+| `원주율` | `pi` | `math.pi` |
+| `거듭제곱(x, y)` | `power(x, y)` | `pow(x, y)`, 정수는 정수로 남습니다 |
+| `절댓값(x)` | `absolute(x)` | `abs(x)` |
+| `내림(x)` | `floor(x)` | `math.floor(x)` |
+| `올림(x)` | `ceil(x)` | `math.ceil(x)` |
+| `수학버전` | `math_version` | 어댑터 버전 문자열 |
+
+여기 있는 것은 모두 평범한 Python 기본 기능이거나 `math` 호출 하나입니다.
+그래서 이 이름들을 쓴 프로그램은 데스크톱 Python에서도, 브라우저에서도 그대로
+돕니다.
 
 모든 내장 모듈은 위의 도우미 이름을 예약합니다. 이미 같은 이름을 쓰고 있으면
 값을 조용히 덮어쓰지 않고 이름을 바꾸라는 오류를 보여 줍니다.

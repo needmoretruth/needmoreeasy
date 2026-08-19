@@ -104,7 +104,12 @@ fn modules_uses_the_language_of_the_command() {
     assert!(english.status.success(), "{}", stderr(&english));
     assert_eq!(
         stdout(&english),
-        "random  0.0.1  bundled, latest\nfile  0.0.1  bundled, latest\nzero_knowledge  0.0.2  bundled, latest\n"
+        "random  0.0.1  bundled, latest\n\
+         file  0.0.1  bundled, latest\n\
+         zero_knowledge  0.0.2  bundled, latest\n\
+         list  0.0.1  bundled, latest\n\
+         text  0.0.1  bundled, latest\n\
+         math  0.0.1  bundled, latest\n"
     );
     assert!(!stdout(&english).contains("내장"));
 
@@ -112,7 +117,12 @@ fn modules_uses_the_language_of_the_command() {
     assert!(bilingual.status.success(), "{}", stderr(&bilingual));
     assert_eq!(
         stdout(&bilingual),
-        "랜덤  0.0.1  내장, 최신\nrandom  0.0.1  bundled, latest\n파일  0.0.1  내장, 최신\nfile  0.0.1  bundled, latest\n영지식  0.0.2  내장, 최신\nzero_knowledge  0.0.2  bundled, latest\n"
+        "랜덤  0.0.1  내장, 최신\nrandom  0.0.1  bundled, latest\n\
+         파일  0.0.1  내장, 최신\nfile  0.0.1  bundled, latest\n\
+         영지식  0.0.2  내장, 최신\nzero_knowledge  0.0.2  bundled, latest\n\
+         목록  0.0.1  내장, 최신\nlist  0.0.1  bundled, latest\n\
+         글자  0.0.1  내장, 최신\ntext  0.0.1  bundled, latest\n\
+         수학  0.0.1  내장, 최신\nmath  0.0.1  bundled, latest\n"
     );
 }
 

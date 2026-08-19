@@ -1068,6 +1068,131 @@ fn file_tools_are_ready_after_one_easy_line() {
 }
 
 #[test]
+fn list_tools_are_ready_after_one_easy_line() {
+    let tools = concat!(
+        "count = 개수 = len; ",
+        "sort = 정렬 = sorted; ",
+        "reverse = 뒤집기 = lambda 값들: list(reversed(값들)); ",
+        "remove = 빼기 = lambda 값들, 뺄값: [항목 for 항목 in 값들 if 항목 != 뺄값]; ",
+        "first = 첫번째 = lambda 값들: 값들[0]; ",
+        "last = 마지막 = lambda 값들: 값들[-1]; ",
+        "sum = 합계 = sum; ",
+        "largest = 최대 = max; ",
+        "smallest = 최소 = min; ",
+        "list_version = 목록버전 = \"0.0.1\"\n",
+    );
+    assert_eq!(
+        ok("use list\nshow count([1, 2, 3])\n"),
+        format!("{tools}print(count([1, 2, 3]))\n")
+    );
+    assert_eq!(
+        ok("목록 사용\n말해 정렬([3, 1, 2])\n"),
+        format!("{tools}print(정렬([3, 1, 2]))\n")
+    );
+    assert_eq!(ok("목록 사용 최신\n"), tools);
+    assert_eq!(ok("use latest list\n"), tools);
+    assert_eq!(ok("use list version \"0.0.1\"\n"), tools);
+    assert_eq!(ok("목록 사용 버전 \"0.0.1\"\n"), tools);
+}
+
+#[test]
+fn text_tools_are_ready_after_one_easy_line() {
+    let tools = concat!(
+        "upper = 대문자 = lambda 값: str(값).upper(); ",
+        "lower = 소문자 = lambda 값: str(값).lower(); ",
+        "trim = 공백없애기 = lambda 값: str(값).strip(); ",
+        "split = 나누기 = lambda 값, 구분자: str(값).split(구분자); ",
+        "join = 합치기 = lambda 구분자, 값들: str(구분자).join(map(str, 값들)); ",
+        "replace = 바꾸기 = lambda 값, 찾을말, 바꿀말: str(값).replace(찾을말, 바꿀말); ",
+        "starts_with = 로시작 = lambda 값, 앞말: str(값).startswith(앞말); ",
+        "length = 길이 = len; ",
+        "text_version = 글자버전 = \"0.0.1\"\n",
+    );
+    assert_eq!(
+        ok("use text\nshow upper(\"hello\")\n"),
+        format!("{tools}print(upper(\"hello\"))\n")
+    );
+    assert_eq!(
+        ok("글자 사용\n말해 대문자(\"hello\")\n"),
+        format!("{tools}print(대문자(\"hello\"))\n")
+    );
+    assert_eq!(ok("글자 사용 최신\n"), tools);
+    assert_eq!(ok("use latest text\n"), tools);
+    assert_eq!(ok("use text version \"0.0.1\"\n"), tools);
+    assert_eq!(ok("글자 사용 버전 \"0.0.1\"\n"), tools);
+}
+
+#[test]
+fn math_tools_are_ready_after_one_easy_line() {
+    let tools = concat!(
+        "import math as 수학; ",
+        "math = 수학; ",
+        "root = 제곱근 = 수학.sqrt; ",
+        "round_to = 반올림 = lambda 값, 자리=None: round(값, 자리); ",
+        "pi = 원주율 = 수학.pi; ",
+        "power = 거듭제곱 = pow; ",
+        "absolute = 절댓값 = abs; ",
+        "floor = 내림 = 수학.floor; ",
+        "ceil = 올림 = 수학.ceil; ",
+        "math_version = 수학버전 = \"0.0.1\"\n",
+    );
+    assert_eq!(
+        ok("use math\nshow root(9)\n"),
+        format!("{tools}print(root(9))\n")
+    );
+    assert_eq!(
+        ok("수학 사용\n말해 제곱근(9)\n"),
+        format!("{tools}print(제곱근(9))\n")
+    );
+    assert_eq!(ok("수학 사용 최신\n"), tools);
+    assert_eq!(ok("use latest math\n"), tools);
+    assert_eq!(ok("use math version \"0.0.1\"\n"), tools);
+    assert_eq!(ok("수학 사용 버전 \"0.0.1\"\n"), tools);
+}
+
+#[test]
+fn an_ordinary_sentence_containing_a_module_name_is_still_a_sentence() {
+    // `list`, `text` and `math` are ordinary words, so they name a module only
+    // when they stand beside the `use`/`사용` word and nothing else is left
+    // over on the line. Every one of these was answered with the list of
+    // bundled modules while that gate was being built.
+    for source in [
+        "get the list of names\n",
+        "I use text messages every day.\n",
+        "list your favourite films for me\n",
+        "use the list I gave you\n",
+        "we use maths at school\n",
+        "장 볼 목록을 사용해 보세요\n",
+        "이 목록을 사용했습니다\n",
+        "글자를 사용해 보세요\n",
+        "수학 시간에 계산기를 사용했습니다\n",
+    ] {
+        let python = ok(source);
+        assert!(
+            python.starts_with("print("),
+            "expected a printed sentence for {source:?}, got {python:?}"
+        );
+    }
+
+    // And a one-word line holding one of those names is still that word.
+    assert_eq!(ok("show list\n"), "print(\"list\")\n");
+    assert_eq!(ok("목록 보여줘\n"), "print(\"목록\")\n");
+}
+
+#[test]
+fn a_new_module_refuses_to_overwrite_an_existing_name() {
+    let message = transpile("count = 3\nuse list\n").expect_err("expected a refusal");
+    let rendered = format!("{message:?}");
+    assert!(rendered.contains("count"), "{rendered}");
+    let message = transpile("길이 = 3\n글자 사용\n").expect_err("expected a refusal");
+    let rendered = format!("{message:?}");
+    assert!(rendered.contains("길이"), "{rendered}");
+    let message = transpile("pi = 3\nuse math\n").expect_err("expected a refusal");
+    let rendered = format!("{message:?}");
+    assert!(rendered.contains("pi"), "{rendered}");
+}
+
+#[test]
 fn both_modules_can_be_loaded_in_one_program() {
     let source = "use random\nuse file\nshow random_number(1, 6)\nshow file_read(\"x.txt\")\n";
     let python = ok(source);
@@ -1842,4 +1967,81 @@ fn flat_nme_blocks_virtual_indent_an_ordinary_python_suite() {
         "# end\n",
     );
     assert_eq!(ok(source), expected);
+}
+
+#[test]
+fn a_name_a_module_bound_is_never_shown_inside_a_sentence() {
+    // A sentence shows the value of a name the *program* made — that is what
+    // the text form is for. A name a bundled module bound is different: the
+    // writer never wrote it and mostly does not know it exists. Before this,
+    // `use math` turned `the floor is cold` into
+    // `the <built-in function floor> is cold`, and `글자 사용` turned
+    // `길이가 조금 짧습니다` into a printed function.
+    assert_eq!(
+        ok("use math\nthe floor is cold\n").lines().last().unwrap(),
+        "print(\"the floor is cold\")"
+    );
+    assert_eq!(
+        ok("use text\nthe length of the room is four metres\n")
+            .lines()
+            .last()
+            .unwrap(),
+        "print(\"the length of the room is four metres\")"
+    );
+    assert_eq!(
+        ok("글자 사용\n길이가 조금 짧습니다\n")
+            .lines()
+            .last()
+            .unwrap(),
+        "print(\"길이가 조금 짧습니다\")"
+    );
+    assert_eq!(
+        ok("수학 사용\n원주율은 삼점일사입니다\n")
+            .lines()
+            .last()
+            .unwrap(),
+        "print(\"원주율은 삼점일사입니다\")"
+    );
+    assert_eq!(
+        ok("목록 사용\n개수를 세어 보았습니다\n")
+            .lines()
+            .last()
+            .unwrap(),
+        "print(\"개수를 세어 보았습니다\")"
+    );
+    // `use random` gets the same answer, and always should have.
+    assert_eq!(
+        ok("use random\nshuffle the cards\n")
+            .lines()
+            .last()
+            .unwrap(),
+        "print(\"shuffle the cards\")"
+    );
+
+    // The names still work as values, which is the whole point of loading a
+    // module: a bare one shows what it holds, and a call is a call.
+    assert_eq!(
+        ok("use math\nshow pi\n").lines().last().unwrap(),
+        "print(pi)"
+    );
+    assert_eq!(
+        ok("수학 사용\n말해줘 원주율\n").lines().last().unwrap(),
+        "print(원주율)"
+    );
+    assert_eq!(
+        ok("use list\nset friends to list of Mina\nshow count(friends)\n")
+            .lines()
+            .last()
+            .unwrap(),
+        "print(count(friends))"
+    );
+
+    // A name the program made is still shown, module or no module.
+    assert_eq!(
+        ok("use math\nset friends to list of Mina\nfriends come and go\n")
+            .lines()
+            .last()
+            .unwrap(),
+        "print(str(friends) + \" come and go\")"
+    );
 }

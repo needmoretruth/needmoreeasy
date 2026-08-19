@@ -248,6 +248,8 @@ pub enum DiagnosticCode {
     ListNameUnknown,
     /// A story block was opened with nothing inside it.
     StoryEmpty,
+    /// A list and a joining word, with nothing saying what goes between.
+    JoinSeparatorMissing,
 }
 
 impl DiagnosticCode {
@@ -293,6 +295,7 @@ impl DiagnosticCode {
             Self::NameHasSpace => "E0230",
             Self::ListNameUnknown => "E0231",
             Self::StoryEmpty => "E0232",
+            Self::JoinSeparatorMissing => "E0233",
             Self::ConditionMissing => "E0301",
             Self::ConditionInvalid => "E0302",
             Self::RepeatBodyUnparseable => "E0303",
@@ -358,7 +361,7 @@ impl DiagnosticCode {
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 101] = [
+    pub const ALL: [DiagnosticCode; 102] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -460,6 +463,7 @@ impl DiagnosticCode {
         Self::NameHasSpace,
         Self::ListNameUnknown,
         Self::StoryEmpty,
+        Self::JoinSeparatorMissing,
     ];
 
     pub fn from_code(code: &str) -> Option<Self> {
@@ -766,6 +770,13 @@ impl DiagnosticCode {
                 "`story:` / `이야기:` opens a block, and every line under it is told as prose. With no lines under it there is nothing to tell, and the Python it becomes is not a program. Write the story below the line that opens it, and close it with `end` / `끝`.",
                 "`이야기:`/`story:`는 블록을 엽니다. 그 아래의 모든 줄은 글로 그대로 나옵니다. 아래에 아무 줄도 없으면 할 이야기가 없고, 만들어지는 Python도 프로그램이 되지 못합니다. 여는 줄 아래에 이야기를 적고 `끝`/`end`으로 닫아 주세요.",
             ),
+            Self::JoinSeparatorMissing => (
+                "E0233",
+                "this join does not say what to put between the items",
+                "이어 붙일 때 사이에 무엇을 넣을지가 없습니다",
+                "`friends joined` and `친구들을 이어` name a list and say to join it, but not with what. Write `friends joined by comma`, `by space`, or `by newline` — or `friends joined together` / `친구들을 붙여` to run the items together with nothing between them. NME will not choose one for you: a program must never quietly mean something you did not write.",
+                "`친구들을 이어`, `friends joined`는 목록과 이어 붙이라는 말은 있지만 무엇으로 이을지가 없습니다. `친구들을 쉼표로 이어`, `빈칸으로 이어`, `줄바꿈으로 이어`처럼 적거나, 사이에 아무것도 넣지 않으려면 `친구들을 붙여`(`friends joined together`)라고 적으세요. NME는 대신 골라 주지 않습니다. 프로그램이 쓴 사람 몰래 다른 뜻이 되면 안 되기 때문입니다.",
+            ),
             Self::ConditionMissing => (
                 "E0301",
                 "the condition is missing",
@@ -810,10 +821,10 @@ impl DiagnosticCode {
             ),
             Self::UnsupportedModule => (
                 "E0401",
-                "NME bundles `use random` and `use file`",
-                "NME에는 `랜덤 사용`과 `파일 사용`이 내장되어 있습니다",
-                "NME ships a small set of beginner modules: `random` (or `랜덤`) for dice and picks, and `file` (or `파일`) for reading, writing, and JSON. Anything else is a Python import: write `import name` on its own line.",
-                "NME는 초보자용 모듈을 소수만 제공합니다: 주사위·선택용 `random`(`랜덤`)과 읽기·쓰기·JSON용 `file`(`파일`)입니다. 다른 것은 Python import로 쓸 수 있습니다: `import name`을 한 줄로 쓰세요.",
+                "NME bundles six modules, and this is not one of them",
+                "NME에 내장된 모듈은 여섯 개이고 이것은 그중에 없습니다",
+                "NME ships a small set of beginner modules: `random` (`랜덤`) for dice and picks, `file` (`파일`) for reading, writing and JSON, `list` (`목록`), `text` (`글자`), `math` (`수학`), and `zero_knowledge` (`영지식`). Anything else is a Python import: write `import name` on its own line.",
+                "NME는 초보자용 모듈을 여섯 개만 제공합니다: 주사위·선택용 `random`(`랜덤`), 읽기·쓰기·JSON용 `file`(`파일`), 그리고 `list`(`목록`), `text`(`글자`), `math`(`수학`), `zero_knowledge`(`영지식`)입니다. 다른 것은 Python import로 쓸 수 있습니다: `import name`을 한 줄로 쓰세요.",
             ),
             Self::LatestAndVersion => (
                 "E0402",
@@ -833,22 +844,22 @@ impl DiagnosticCode {
                 "E0404",
                 "this module version is not bundled",
                 "내장되어 있지 않은 모듈 버전입니다",
-                "NME only ships specific versions of `random`. Run `nme modules` to see the bundled version, then write `use random version \"<that version>\"` or simply `use random latest`.",
-                "NME는 `random`의 특정 버전만 제공합니다. `nme 모듈`로 내장 버전을 확인한 뒤 `use random version \"<그 버전>\"` 또는 그냥 `use random latest`라고 쓰세요.",
+                "NME ships one specific version of each bundled module. Run `nme modules` to see them, then write `use <module> version \"<that version>\"` or simply `use <module> latest`.",
+                "NME는 내장 모듈마다 특정 버전 하나만 제공합니다. `nme 모듈`로 내장 버전을 확인한 뒤 `use <모듈> version \"<그 버전>\"` 또는 그냥 `use <모듈> latest`라고 쓰세요.",
             ),
             Self::ModuleNameCollision => (
                 "E0405",
                 "the module would overwrite your names",
                 "모듈이 기존 이름을 덮어씁니다",
-                "The bundled module needs helper names such as `random_number`, `랜덤선택`, `file_read`, and `파일읽기`. One of those names is already in use in this file. Rename your variable or import the module before using that name.",
-                "내장 모듈은 `random_number`, `랜덤선택`, `file_read`, `파일읽기` 같은 도우미 이름을 사용합니다. 그 이름 중 하나가 이 파일에서 이미 쓰이고 있습니다. 변수 이름을 바꾸거나 그 이름을 쓰기 전에 모듈을 불러오세요.",
+                "The bundled module needs helper names such as `random_number`, `랜덤선택`, `file_read`, `count`, `개수` and `제곱근`. One of those names is already in use in this file. Rename your variable or load the module before using that name.",
+                "내장 모듈은 `random_number`, `랜덤선택`, `file_read`, `count`, `개수`, `제곱근` 같은 도우미 이름을 사용합니다. 그 이름 중 하나가 이 파일에서 이미 쓰이고 있습니다. 변수 이름을 바꾸거나 그 이름을 쓰기 전에 모듈을 불러오세요.",
             ),
             Self::ModuleShapeInvalid => (
                 "E0406",
                 "the use line shape is not understood",
                 "use 줄의 형태를 이해하지 못했습니다",
-                "Write the module line as `use random` (or `랜덤 사용`), optionally with `latest` or `version \"0.0.1\"`. Other word orders are not accepted.",
-                "모듈 줄은 `use random`(`랜덤 사용`) 형태로 쓰고, 원하면 `latest`나 `version \"0.0.1\"`를 붙이세요. 다른 단어 순서는 받아들이지 않습니다.",
+                "Write the module line as `use random` (or `랜덤 사용`), optionally with `latest` or `version \"0.0.1\"`. Other word orders are not accepted. `list`, `text` and `math` are stricter still: the name has to stand right beside `use`/`사용`, because those words appear in ordinary sentences.",
+                "모듈 줄은 `use random`(`랜덤 사용`) 형태로 쓰고, 원하면 `latest`나 `version \"0.0.1\"`를 붙이세요. 다른 단어 순서는 받아들이지 않습니다. `목록`·`글자`·`수학`은 조건이 하나 더 있습니다. 평범한 문장에도 나오는 낱말이라서 `사용`/`use` 바로 옆에 있어야 합니다.",
             ),
             Self::SaveValueMissing => (
                 "E0411",

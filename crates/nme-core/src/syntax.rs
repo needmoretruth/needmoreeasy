@@ -27,6 +27,16 @@ pub const FILE_MODULE: &str = "file";
 pub const FILE_MODULE_KO: &str = "파일";
 pub const ZERO_KNOWLEDGE_MODULE: &str = "zero_knowledge";
 pub const ZERO_KNOWLEDGE_MODULE_KO: &str = "영지식";
+/// The three modules a beginner reaches for first. Every one of their names is
+/// an ordinary word in both languages, which is why the parser only reads one
+/// as a module when it stands directly beside the `use`/`사용` word and
+/// nothing else on the line is left over. See `match_use_module`.
+pub const LIST_MODULE: &str = LIST_KEYWORD;
+pub const LIST_MODULE_KO: &str = LIST_KEYWORD_KO;
+pub const TEXT_MODULE: &str = "text";
+pub const TEXT_MODULE_KO: &str = "글자";
+pub const MATH_MODULE: &str = "math";
+pub const MATH_MODULE_KO: &str = "수학";
 pub const USE_KEYWORD_KO: &str = "사용";
 pub const WAIT_KEYWORD: &str = "wait";
 pub const WAIT_KEYWORD_KO: &str = "기다려";
@@ -64,6 +74,12 @@ pub const RANDOM_MODULE_VERSION: &str = "0.0.1";
 pub const FILE_MODULE_VERSION: &str = "0.0.1";
 /// Version of the Schnorr zero-knowledge adapter bundled with this compiler.
 pub const ZERO_KNOWLEDGE_MODULE_VERSION: &str = "0.0.2";
+/// Version of the easy list adapter bundled with this compiler.
+pub const LIST_MODULE_VERSION: &str = "0.0.1";
+/// Version of the easy text adapter bundled with this compiler.
+pub const TEXT_MODULE_VERSION: &str = "0.0.1";
+/// Version of the easy maths adapter bundled with this compiler.
+pub const MATH_MODULE_VERSION: &str = "0.0.1";
 
 /// One bundled beginner module. Both languages are always exposed after one
 /// import, and each module has one explicit local version.
@@ -72,16 +88,29 @@ pub enum BundledModuleId {
     Random,
     File,
     ZeroKnowledge,
+    List,
+    Text,
+    Math,
 }
 
 impl BundledModuleId {
-    pub const ALL: [BundledModuleId; 3] = [Self::Random, Self::File, Self::ZeroKnowledge];
+    pub const ALL: [BundledModuleId; 6] = [
+        Self::Random,
+        Self::File,
+        Self::ZeroKnowledge,
+        Self::List,
+        Self::Text,
+        Self::Math,
+    ];
 
     pub fn name_en(self) -> &'static str {
         match self {
             Self::Random => RANDOM_MODULE,
             Self::File => FILE_MODULE,
             Self::ZeroKnowledge => ZERO_KNOWLEDGE_MODULE,
+            Self::List => LIST_MODULE,
+            Self::Text => TEXT_MODULE,
+            Self::Math => MATH_MODULE,
         }
     }
 
@@ -90,6 +119,9 @@ impl BundledModuleId {
             Self::Random => RANDOM_MODULE_KO,
             Self::File => FILE_MODULE_KO,
             Self::ZeroKnowledge => ZERO_KNOWLEDGE_MODULE_KO,
+            Self::List => LIST_MODULE_KO,
+            Self::Text => TEXT_MODULE_KO,
+            Self::Math => MATH_MODULE_KO,
         }
     }
 
@@ -98,7 +130,21 @@ impl BundledModuleId {
             Self::Random => RANDOM_MODULE_VERSION,
             Self::File => FILE_MODULE_VERSION,
             Self::ZeroKnowledge => ZERO_KNOWLEDGE_MODULE_VERSION,
+            Self::List => LIST_MODULE_VERSION,
+            Self::Text => TEXT_MODULE_VERSION,
+            Self::Math => MATH_MODULE_VERSION,
         }
+    }
+
+    /// True when the module's own name is a word people write in ordinary
+    /// sentences. `list`, `text`, `math`, `목록`, `글자` and `수학` are all such
+    /// words: `get the list of names` and `장 볼 목록을 사용해 보세요` are
+    /// sentences, not module lines. The parser therefore reads these three
+    /// only when the name stands beside the `use`/`사용` word **and** every
+    /// other word on the line is module wording; anything else is not a module
+    /// line at all, and goes on to be read as the sentence it is.
+    pub fn name_is_an_ordinary_word(self) -> bool {
+        matches!(self, Self::List | Self::Text | Self::Math)
     }
 }
 
@@ -176,10 +222,24 @@ pub enum Value {
     },
     /// `친구들을 쉼표로 이어` / `friends joined by comma` — every item of a
     /// list in one piece of text. `separator` is the finished text, so the
-    /// named separators and a written one lower through the same path.
+    /// named separators, a written one, and the empty one (`친구들을 붙여` /
+    /// `friends joined together`) all lower through the same path.
     Joined {
         of: String,
         separator: String,
+    },
+    /// `메모를 줄마다 나눈 것` / `memo split by line` — the opposite of
+    /// `Joined`: one piece of text cut into a list.
+    Split {
+        of: String,
+        by: SplitBy,
+    },
+    /// `별표를 5개 붙인 것` / `star repeated 5 times` — one piece of text, that
+    /// many times over, which is how a row of stars or a bar of a chart is
+    /// drawn.
+    Repeated {
+        of: String,
+        times: Code,
     },
     /// `쌓인돌을 4로 나눈 나머지` / `the remainder of pile divided by 4` —
     /// what is left over, which is how most counting games are decided.
@@ -287,6 +347,24 @@ pub enum ItemPosition {
     Last,
     /// `친구들 3번째` / `item 3 of friends`. One-based; `0` is refused.
     Numbered(Code),
+}
+
+/// Where a piece of text is cut when it is split into a list.
+///
+/// Line by line is its own variant rather than the separator `"\n"`, because
+/// `splitlines()` is what a file read from disk needs: it copes with the
+/// Windows line ending and with a file that ends in a newline, and neither of
+/// those is something a beginner should have to know about.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SplitBy {
+    /// `줄마다 나눈 것` / `split by line` — `str(...).splitlines()`.
+    Lines,
+    /// `쉼표로 나눈 것` / `split by comma` — the finished separator text.
+    ///
+    /// A comma is `","` here and `", "` in [`Value::Joined`], and that is on
+    /// purpose: reading a line back out of a file has to find the comma that
+    /// is actually there, while reading a list out loud wants the space.
+    Text(String),
 }
 
 /// How a list is put back in order.
@@ -411,6 +489,11 @@ pub enum NmeStmt {
     ForEach {
         name: String,
         items: Code,
+        /// `for each friend in friends with place` /
+        /// `친구들의 친구마다 순서와 함께 반복해` — a second name holding which
+        /// turn the loop is on, counted from **one**, because that is what
+        /// `친구들 3번째` means. `None` is the plain loop.
+        position: Option<String>,
         inline: Option<InlineStmt>,
     },
     /// `wait 3 seconds` / `3초 기다려`.

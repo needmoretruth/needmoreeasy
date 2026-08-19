@@ -595,7 +595,7 @@ restart a project in a different language.
 is already valid Python and will not be read as an NME sentence."""
 
 
-MODULES_KO = """## 딸려 오는 도구 세 가지
+MODULES_KO = """## 딸려 오는 도구 여섯 가지
 
 `랜덤 사용` 한 줄이면 무작위 도구가, `파일 사용` 한 줄이면 파일 도구가,
 `영지식 사용` 한 줄이면 영지식 증명 도구가 준비됩니다. 한 번 부르면 한국어
@@ -608,9 +608,28 @@ MODULES_KO = """## 딸려 오는 도구 세 가지
 | `섞기(목록)` / `shuffle(values)` | `json읽기(경로)` / `json_load(path)` | 섞기 · JSON 읽기 |
 | | `json저장(경로, 값)` / `json_save(path, value)` | JSON 쓰기 |
 
-`랜덤`은 비밀번호나 보안에 쓰면 안 됩니다."""
+`랜덤`은 비밀번호나 보안에 쓰면 안 됩니다.
 
-MODULES_EN = """## Three bundled toolboxes
+`목록 사용`, `글자 사용`, `수학 사용` 세 가지가 더 있습니다. 안에 든 것은 전부
+평범한 Python 기본 기능이라 브라우저에서도 그대로 돕니다.
+
+| 목록 | 글자 | 수학 |
+| --- | --- | --- |
+| `개수(값들)` / `count(values)` | `대문자(글)` / `upper(text)` | `제곱근(x)` / `root(x)` |
+| `정렬(값들)` / `sort(values)` | `소문자(글)` / `lower(text)` | `반올림(x, 자리)` / `round_to(x, places)` |
+| `뒤집기(값들)` / `reverse(values)` | `공백없애기(글)` / `trim(text)` | `원주율` / `pi` |
+| `빼기(값들, x)` / `remove(values, x)` | `나누기(글, 구분자)` / `split(text, sep)` | `거듭제곱(x, y)` / `power(x, y)` |
+| `첫번째(값들)` / `first(values)` | `합치기(구분자, 값들)` / `join(sep, values)` | `절댓값(x)` / `absolute(x)` |
+| `마지막(값들)` / `last(values)` | `바꾸기(글, a, b)` / `replace(text, a, b)` | `내림(x)` / `floor(x)` |
+| `합계(값들)` / `sum(values)` | `로시작(글, a)` / `starts_with(text, a)` | `올림(x)` / `ceil(x)` |
+| `최대(값들)` / `largest(values)` | `길이(글)` / `length(text)` | |
+| `최소(값들)` / `smallest(values)` | | |
+
+`정렬`·`뒤집기`·`빼기`는 새 목록을 돌려주고 원래 목록은 그대로 둡니다.
+`목록`·`글자`·`수학`은 평범한 낱말이라, `사용` 바로 옆에 있고 그 줄에 다른 낱말이
+없을 때만 모듈로 읽습니다."""
+
+MODULES_EN = """## Six bundled toolboxes
 
 One line of `use random` brings in the random tools, `use file` the file tools,
 and `use zero_knowledge` a Schnorr proof-of-knowledge reference implementation.
@@ -623,7 +642,26 @@ One import binds **both** the English and the Korean names.
 | `shuffle(values)` / `섞기(목록)` | `json_load(path)` / `json읽기(경로)` | shuffle · read JSON |
 | | `json_save(path, value)` / `json저장(경로, 값)` | write JSON |
 
-`random` is not suitable for passwords or any security decision."""
+`random` is not suitable for passwords or any security decision.
+
+Three more: `use list`, `use text` and `use math`. Everything inside them is a
+plain Python builtin, so they run in the browser as they stand.
+
+| List | Text | Maths |
+| --- | --- | --- |
+| `count(values)` / `개수(값들)` | `upper(text)` / `대문자(글)` | `root(x)` / `제곱근(x)` |
+| `sort(values)` / `정렬(값들)` | `lower(text)` / `소문자(글)` | `round_to(x, places)` / `반올림(x, 자리)` |
+| `reverse(values)` / `뒤집기(값들)` | `trim(text)` / `공백없애기(글)` | `pi` / `원주율` |
+| `remove(values, x)` / `빼기(값들, x)` | `split(text, sep)` / `나누기(글, 구분자)` | `power(x, y)` / `거듭제곱(x, y)` |
+| `first(values)` / `첫번째(값들)` | `join(sep, values)` / `합치기(구분자, 값들)` | `absolute(x)` / `절댓값(x)` |
+| `last(values)` / `마지막(값들)` | `replace(text, a, b)` / `바꾸기(글, a, b)` | `floor(x)` / `내림(x)` |
+| `sum(values)` / `합계(값들)` | `starts_with(text, a)` / `로시작(글, a)` | `ceil(x)` / `올림(x)` |
+| `largest(values)` / `최대(값들)` | `length(text)` / `길이(글)` | |
+| `smallest(values)` / `최소(값들)` | | |
+
+`sort`, `reverse` and `remove` hand back a new list and leave the original
+alone. `list`, `text` and `math` are ordinary words, so they name a module only
+when they stand beside `use` and nothing else is left over on the line."""
 
 
 def build(binary: Path) -> None:

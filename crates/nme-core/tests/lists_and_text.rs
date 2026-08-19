@@ -624,3 +624,231 @@ fn the_same_words_saved_into_a_name_are_still_an_empty_list() {
         "print([\"Mina\", \"Ada\"])\n"
     );
 }
+
+// ------------------------------------------------- joining with nothing between
+
+#[test]
+fn a_list_can_be_joined_with_nothing_between_the_items() {
+    let stars = "set stars to list of a, b\n";
+    let korean = "별들은 목록 a, b\n";
+    let joined = "print(\"\".join(map(str, stars)))\n";
+    let joined_ko = "print(\"\".join(map(str, 별들)))\n";
+    assert!(ok(&format!("{stars}show stars joined together\n")).ends_with(joined));
+    assert!(ok(&format!("{stars}show stars joined by nothing\n")).ends_with(joined));
+    assert!(ok(&format!("{stars}show stars joined with nothing\n")).ends_with(joined));
+    assert!(ok(&format!("{korean}별들을 붙여 말해줘\n")).ends_with(joined_ko));
+    assert!(ok(&format!("{korean}별들을 붙여서 말해줘\n")).ends_with(joined_ko));
+    assert!(ok(&format!("{korean}별들을 그대로 이어 말해줘\n")).ends_with(joined_ko));
+    // The named separators are unchanged.
+    assert!(ok(&format!("{stars}show stars joined by comma\n"))
+        .ends_with("print(\", \".join(map(str, stars)))\n"));
+    assert!(ok(&format!("{korean}별들을 쉼표로 이어 말해줘\n"))
+        .ends_with("print(\", \".join(map(str, 별들)))\n"));
+}
+
+#[test]
+fn a_join_that_does_not_say_what_goes_between_is_refused() {
+    // These printed themselves — `print(str(별들) + "을 이어")` — which reads
+    // like success and is not. A refusal is a bad minute; that was a bad
+    // afternoon.
+    assert_eq!(
+        error_code("set stars to list of a, b\nshow stars joined\n"),
+        "E0233"
+    );
+    assert_eq!(
+        error_code("별들은 목록 a, b\n별들을 이어 말해줘\n"),
+        "E0233"
+    );
+    assert_eq!(
+        error_code("set stars to list of a, b\nset row to stars joined\n"),
+        "E0233"
+    );
+    // The message names the list, so the writer knows which line to fix.
+    let problems = transpile("set stars to list of a, b\nshow stars joined\n")
+        .expect_err("expected a refusal");
+    assert!(format!("{problems:?}").contains("stars"), "{problems:?}");
+}
+
+#[test]
+fn a_joining_word_in_an_ordinary_sentence_is_left_alone() {
+    // The refusal is gated on the list name and on nothing else being left on
+    // the line, so a sentence holding both words keeps its meaning.
+    for source in [
+        "set stars to list of a, b\nshow stars join us at noon\n",
+        "별들은 목록 a, b\n별들을 이어 갔습니다\n",
+        "show stars joined the parade\n",
+        "이어 달리기를 했습니다\n",
+    ] {
+        let python = ok(source);
+        assert!(
+            python
+                .lines()
+                .last()
+                .is_some_and(|line| line.starts_with("print(")),
+            "expected a printed sentence for {source:?}, got {python:?}"
+        );
+    }
+}
+
+// ------------------------------------------------------------- splitting text
+
+#[test]
+fn text_can_be_split_into_a_list() {
+    assert_eq!(
+        ok("set memo to hello\nset names to memo split by line\n"),
+        "memo = \"hello\"\nnames = str(memo).splitlines()\n"
+    );
+    assert_eq!(
+        ok("메모는 hello\n이름들은 메모를 줄마다 나눈 것\n"),
+        "메모 = \"hello\"\n이름들 = str(메모).splitlines()\n"
+    );
+    assert_eq!(
+        ok("set memo to hello\nset words to memo split by space\n"),
+        "memo = \"hello\"\nwords = str(memo).split(\" \")\n"
+    );
+    assert_eq!(
+        ok("메모는 hello\n말들은 메모를 빈칸으로 나눈 것\n"),
+        "메모 = \"hello\"\n말들 = str(메모).split(\" \")\n"
+    );
+    // A comma splits on the comma alone. Joining a list writes `", "` because
+    // that is how a list is read out loud; a line read back out of a file says
+    // `Mina,Ada`, and looking for `", "` there would find nothing.
+    assert_eq!(
+        ok("set line to hello\nset fields to line split by comma\n"),
+        "line = \"hello\"\nfields = str(line).split(\",\")\n"
+    );
+    assert_eq!(
+        ok("줄은 hello\n칸들은 줄을 쉼표로 나눈 것\n"),
+        "줄 = \"hello\"\n칸들 = str(줄).split(\",\")\n"
+    );
+    assert_eq!(
+        ok("set memo to hello\nset parts to memo split into lines\n"),
+        "memo = \"hello\"\nparts = str(memo).splitlines()\n"
+    );
+}
+
+#[test]
+fn what_a_split_saves_is_a_list() {
+    // So the list statements work on it straight away.
+    assert_eq!(
+        ok("set memo to hello\nset names to memo split by line\nshow how many names\n"),
+        "memo = \"hello\"\nnames = str(memo).splitlines()\nprint(len(names))\n"
+    );
+    assert_eq!(
+        ok("메모는 hello\n이름들은 메모를 줄마다 나눈 것\n이름들 개수 말해줘\n"),
+        "메모 = \"hello\"\n이름들 = str(메모).splitlines()\nprint(len(이름들))\n"
+    );
+}
+
+#[test]
+fn a_dividing_word_in_an_ordinary_sentence_is_not_a_split() {
+    // The split needs a saved name, a separator NME knows, and the closing
+    // `것`. None of these has all three.
+    for source in [
+        "이야기를 둘로 나눈 것이 좋겠습니다\n",
+        "The vote split by party.\n",
+        "케이크를 반으로 나눈 뒤에 나눠 먹었습니다\n",
+    ] {
+        let python = ok(source);
+        assert!(
+            python.starts_with("print("),
+            "expected a printed sentence for {source:?}, got {python:?}"
+        );
+    }
+}
+
+// ------------------------------------------------------ repeating a piece of text
+
+#[test]
+fn a_piece_of_text_can_be_repeated() {
+    assert_eq!(
+        ok("set star to \"*\"\nset bar to star repeated 5 times\n"),
+        "star = \"*\"\nbar = str(star) * 5\n"
+    );
+    assert_eq!(
+        ok("별표는 \"*\"\n막대는 별표를 5개 붙인 것\n"),
+        "별표 = \"*\"\n막대 = str(별표) * 5\n"
+    );
+    // `5번` may be written here, even though it means *five times* in a
+    // counted loop: this is a noun phrase closing with `붙인 것`, and no loop
+    // ever says that.
+    assert_eq!(
+        ok("별표는 \"*\"\n별표를 5번 붙인 것 말해줘\n"),
+        "별표 = \"*\"\nprint(str(별표) * 5)\n"
+    );
+    // The count may be a saved number.
+    assert_eq!(
+        ok("set star to \"*\"\nset score to 3\nshow star repeated score times\n"),
+        "star = \"*\"\nscore = 3\nprint(str(star) * score)\n"
+    );
+    // `str(...)` is the meaning, not caution: a name holding `3` would
+    // otherwise be multiplied to `15`, which is arithmetic nobody asked for.
+    assert_eq!(
+        ok("set n to 3\nshow n repeated 5 times\n"),
+        "n = 3\nprint(str(n) * 5)\n"
+    );
+}
+
+#[test]
+fn a_counted_loop_is_still_a_counted_loop() {
+    assert_eq!(
+        ok("5번 반복해\n안녕 말해줘\n끝\n"),
+        "for _ in range(5):\n    print(\"안녕\")\n# end\n"
+    );
+    for source in [
+        "그 말을 5번 반복했습니다\n",
+        "She repeated 5 times that she was sorry.\n",
+        "종이를 5개 붙였습니다\n",
+    ] {
+        let python = ok(source);
+        assert!(
+            python.starts_with("print("),
+            "expected a printed sentence for {source:?}, got {python:?}"
+        );
+    }
+}
+
+// -------------------------------------------- a loop that knows its position
+
+#[test]
+fn a_list_loop_can_hold_which_turn_it_is_on() {
+    assert_eq!(
+        ok("set friends to list of Mina, Ada\nfor each friend in friends with place\nshow place\nend\n"),
+        "friends = [\"Mina\", \"Ada\"]\nfor place, friend in enumerate(friends, 1):\n    print(place)\n# end\n"
+    );
+    assert_eq!(
+        ok("친구들은 목록 민수, 지안\n친구들의 친구마다 순서와 함께 반복해\n순서 말해줘\n끝\n"),
+        "친구들 = [\"민수\", \"지안\"]\nfor 순서, 친구 in enumerate(친구들, 1):\n    print(순서)\n# end\n"
+    );
+    // `with its place` is the same header written the way people say it.
+    assert_eq!(
+        ok("set friends to list of Mina\nfor each friend in friends with its place\nshow place\nend\n"),
+        "friends = [\"Mina\"]\nfor place, friend in enumerate(friends, 1):\n    print(place)\n# end\n"
+    );
+    // Counting starts at one, because `친구들 3번째` already means the third.
+    assert!(ok(
+        "set friends to list of Mina\nfor each friend in friends with place\nshow place\nend\n"
+    )
+    .contains("enumerate(friends, 1)"));
+    // The plain loop is untouched.
+    assert_eq!(
+        ok("set friends to list of Mina\nfor each friend in friends\nshow friend\nend\n"),
+        "friends = [\"Mina\"]\nfor friend in friends:\n    print(friend)\n# end\n"
+    );
+}
+
+#[test]
+fn with_and_together_in_an_ordinary_sentence_are_left_alone() {
+    for source in [
+        "친구들과 함께 갔습니다\n",
+        "동생과 함께 저녁을 먹었습니다\n",
+        "I went with my brother.\n",
+        "Come with us tomorrow.\n",
+    ] {
+        let python = ok(source);
+        assert!(
+            python.starts_with("print("),
+            "expected a printed sentence for {source:?}, got {python:?}"
+        );
+    }
+}

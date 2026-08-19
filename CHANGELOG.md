@@ -6,6 +6,78 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+- **Text can be cut into a list.** `set names to memo split by line` /
+  `이름들은 메모를 줄마다 나눈 것`, and the same with `by comma`, `by space` and
+  `by newline` (`쉼표로`, `빈칸으로`, `줄바꿈으로`). `join` landed in round 2 and
+  its opposite did not, which is where the whole of Part 3 stopped: reading a
+  file gives you one piece of text, and every next step needs a list. `by line`
+  is Python's `splitlines()`. **A comma splits on `","` and joins with `", "`**,
+  and that difference is deliberate — a line read back out of a file says
+  `Mina,Ada`, and looking for `", "` there would find nothing. What a split
+  saves is a list, so `how many names` works on it at once. It is gated on a
+  name the program has already saved, so `이야기를 둘로 나눈 것이 좋겠습니다` and
+  `The vote split by party.` stay sentences.
+- **Joining with nothing between the items.** `show friends joined together`,
+  `friends joined by nothing`, `친구들을 붙여`, `친구들을 그대로 이어`. Drawing a
+  row of stars needed it and there was no way to say it.
+- **A join that does not say what goes between is refused (`E0233`).**
+  `show stars joined` used to print `stars joined` back at you and
+  `별들을 이어 말해줘` printed `별들을 이어`, both of which look like success. The
+  refusal is gated on the list name and on nothing else being left on the line,
+  so `friends join us at noon` and `별들을 이어 갔습니다` still print.
+  `friends joined with comma` also works now; `with` is a Python keyword, so it
+  had never reached the separator it named, although the reference said it did.
+- **One piece of text, that many times over.** `set bar to star repeated 5
+  times` / `막대는 별표를 5개 붙인 것`, which is what draws ASCII art, a progress
+  bar and a chart. An earlier round left this out because `별표를 5번 이어` cannot
+  be told from the counted loop, where `5번` already means *five times*. It is
+  safe now because it is a **noun phrase and not a command**: a name the program
+  saved, then a count, then a counting word, then `붙인 것`, which no loop ever
+  says. So `5번` may be written here after all. The text is wrapped in
+  `str(...)` first, so a name holding `3` gives `"33333"` and not `15`.
+- **A list loop that knows which turn it is on.** `for each friend in friends
+  with place` / `친구들의 친구마다 순서와 함께 반복해` becomes
+  `for place, friend in enumerate(friends, 1):`. Counting starts at **one**,
+  because `친구들 3번째` already means the third. The name is the writer's to
+  choose — the word after `with`, and the word before `와 함께`. Comparing two
+  lists position by position is what mastermind and tic-tac-toe are made of,
+  and there was no way to hold the position at all.
+
+- **Three more bundled modules: `use list`, `use text` and `use math`.** One
+  line each, and both languages of every name are ready at once —
+  `말해 개수(친구들)` and `say count(friends)` are the same program. `list`
+  binds `count`/`개수`, `sort`/`정렬`, `reverse`/`뒤집기`, `remove`/`빼기`,
+  `first`/`첫번째`, `last`/`마지막`, `sum`/`합계`, `largest`/`최대`,
+  `smallest`/`최소`; `text` binds `upper`/`대문자`, `lower`/`소문자`,
+  `trim`/`공백없애기`, `split`/`나누기`, `join`/`합치기`, `replace`/`바꾸기`,
+  `starts_with`/`로시작`, `length`/`길이`; `math` binds `root`/`제곱근`,
+  `round_to`/`반올림`, `pi`/`원주율`, `power`/`거듭제곱`, `absolute`/`절댓값`,
+  `floor`/`내림`, `ceil`/`올림`. Each has the same version story as `use
+  random`: `use list latest`, `목록 사용 버전 "0.0.1"`. Everything inside them
+  is a plain Python builtin or one call into `math`, so a program that uses
+  them runs in the browser unchanged.
+- **`list`, `text` and `math` still print when they are just words.** They are
+  the first module names that are also ordinary words, in both languages, so
+  they name a module only when they stand directly beside `use` / `사용` and no
+  other word is left over on the line. `get the list of names`,
+  `I use text messages every day` and `장 볼 목록을 사용해 보세요` are
+  sentences, and they print. They are also never repaired from a typo, because
+  `list` is one letter from `last` and `math` one from `path`.
+- **A name a bundled module bound is never shown inside a sentence.** A
+  sentence shows the value of a name the *program* made — that is what the text
+  form is for — but the writer never wrote `floor` or `길이`, and mostly does
+  not know they exist. After `use math`, `the floor is cold` printed
+  `the <built-in function floor> is cold`; after `글자 사용`,
+  `길이가 조금 짧습니다` showed a function where the length should have been.
+  This was true of `use random` too — `shuffle the cards` — and is fixed for
+  every bundled module at once. The names still work as values: `show pi`,
+  `말해줘 원주율` and `say count(friends)` are unchanged.
+- **`sort`, `reverse` and `remove` from `use list` hand back a new list.** The
+  sentence statements `sort friends` / `친구들 정렬해` still change the list
+  itself. Both exist because both are things people mean, and a helper that
+  answered `None` while quietly reordering your names would be the worse
+  surprise.
+
 - **Ordinary Korean sentences print themselves far more often.** Measured over
   353 sentences a person really types — a line of a story, a note to self, a
   message in a game — 294 printed themselves character for character and 38
@@ -32,6 +104,14 @@ All notable changes to NME are recorded here.
   `말해 봐야 소용없는 일이었습니다` printed only its second half and
   `저장해 둔 사진을 다시 봤습니다` made a value called `둔`. `말해줘 비가
   쏟아졌습니다` still prints the rain.
+- **A helper verb inside a question belongs to the question.** The rule above
+  reached one line too far. `주문을 물어봐 마법의 주문을 말해 보세요` names what
+  it is asking for before it asks, so everything after `물어봐` is the text
+  shown while it waits — `말해 보세요` included. Read as a sentence, the line
+  printed itself instead of asking, and the loop written around it in the
+  site's `ko/password` example never got an answer and never ended.
+  `물어봐 주셔서 감사합니다` is still a thank-you: no name stands in front of
+  the asking word there, so the helper verb is the line's own.
 - **A Korean sentence with a hyphen, a slash, a wave dash or a bracket in it
   prints.** `K-POP을 좋아합니다`, `A/S 센터에 맡겼습니다`,
   `오전 9시~오후 6시까지 문을 엽니다` and `(괄호 안은 나중에 지우겠습니다)` were

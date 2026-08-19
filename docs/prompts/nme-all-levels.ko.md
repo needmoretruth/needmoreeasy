@@ -101,6 +101,7 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 | 문장형 | `친구들의 친구마다 반복해서 친구 말해줘` | `for 친구 in 친구들: print(친구)` |
 | 문장형 | `이름들에서 이름마다 반복해` | `for 이름 in 이름들:` |
 | 문장형 | `친구들의 친구 마다 반복해` | `for 친구 in 친구들:` |
+| 문장형 | `친구들의 친구마다 순서와 함께 반복해` | `for 순서, 친구 in enumerate(친구들, 1):` |
 
 ### 조건이 참인 동안 반복
 
@@ -179,6 +180,8 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 | 문장형 | `점수들 중 가장 작은 것 말해줘` | `print(min(점수들))` |
 | 문장형 | `친구들을 쉼표로 이어 말해줘` | `print(", ".join(map(str, 친구들)))` |
 | 문장형 | `친구들을 빈칸으로 이어 말해줘` | `print(" ".join(map(str, 친구들)))` |
+| 문장형 | `친구들을 붙여 말해줘` | `print("".join(map(str, 친구들)))` |
+| 문장형 | `친구들을 그대로 이어 말해줘` | `print("".join(map(str, 친구들)))` |
 | 문장형 | `만약에 친구들에 민수가 있으면` | `if ("민수" in 친구들):` |
 | 문장형 | `만약에 친구들에 지안이 없으면` | `if ("지안" not in 친구들):` |
 | 문장형 | `만약에 친구들이 비었으면` | `if (not (친구들)):` |
@@ -190,6 +193,11 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 | 문장형 | `이름 길이 말해줘` | `print(len(이름))` |
 | 문장형 | `이름 대문자로 말해줘` | `print(str(이름).upper())` |
 | 문장형 | `이름 소문자로 말해줘` | `print(str(이름).lower())` |
+| 문장형 | `이름들은 memo를 줄마다 나눈 것` | `이름들 = str(memo).splitlines()` |
+| 문장형 | `칸들은 memo를 쉼표로 나눈 것` | `칸들 = str(memo).split(",")` |
+| 문장형 | `말들은 memo를 빈칸으로 나눈 것` | `말들 = str(memo).split(" ")` |
+| 문장형 | `막대는 이름을 5개 붙인 것` | `막대 = str(이름) * 5` |
+| 문장형 | `이름을 3번 붙인 것 말해줘` | `print(str(이름) * 3)` |
 
 ### 숫자 나머지
 
@@ -325,6 +333,7 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 | 단계 | NME | 만들어지는 Python |
 | --- | --- | --- |
 | 초급 | `친구들의 친구마다:` | `for 친구 in 친구들:` |
+| 초급 | `친구들의 친구마다 순서와 함께:` | `for 순서, 친구 in enumerate(친구들, 1):` |
 | 고급 | `for 친구 in 친구들:` | unchanged |
 
 ### 조건 반복
@@ -383,6 +392,9 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 | 초급 | `랜덤 사용` | (binds random, random_number, random_pick, shuffle and their Korean twins) |
 | 초급 | `파일 사용` | (binds file_read, file_write, json_load, json_save and their Korean twins) |
 | 초급 | `영지식 사용` | (binds zk_secret, zk_public, zk_nizk_prove, … and their Korean twins) |
+| 초급 | `목록 사용` | (binds count, sort, reverse, remove, first, last, sum, largest, smallest and their Korean twins) |
+| 초급 | `글자 사용` | (binds upper, lower, trim, split, join, replace, starts_with, length and their Korean twins) |
+| 초급 | `수학 사용` | (binds math, root, round_to, pi, power, absolute, floor, ceil and their Korean twins) |
 | 초급 | `랜덤 사용 최신` | (the newest bundled adapter) |
 | 초급 | `랜덤 사용 버전 "0.0.1"` | (that exact adapter) |
 | 초급 | `"helper.nme"에서 greet 가져오기` | (from helper import greet — needs helper.nme next to the program) |
@@ -401,7 +413,7 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 ⚠ 한 가지만 조심합니다. 낱말 하나짜리 줄과 `이름 = 값` 모양은 이미 올바른
 Python이므로, NME 문장으로 읽히지 않습니다.
 
-## 딸려 오는 도구 세 가지
+## 딸려 오는 도구 여섯 가지
 
 `랜덤 사용` 한 줄이면 무작위 도구가, `파일 사용` 한 줄이면 파일 도구가,
 `영지식 사용` 한 줄이면 영지식 증명 도구가 준비됩니다. 한 번 부르면 한국어
@@ -415,6 +427,25 @@ Python이므로, NME 문장으로 읽히지 않습니다.
 | | `json저장(경로, 값)` / `json_save(path, value)` | JSON 쓰기 |
 
 `랜덤`은 비밀번호나 보안에 쓰면 안 됩니다.
+
+`목록 사용`, `글자 사용`, `수학 사용` 세 가지가 더 있습니다. 안에 든 것은 전부
+평범한 Python 기본 기능이라 브라우저에서도 그대로 돕니다.
+
+| 목록 | 글자 | 수학 |
+| --- | --- | --- |
+| `개수(값들)` / `count(values)` | `대문자(글)` / `upper(text)` | `제곱근(x)` / `root(x)` |
+| `정렬(값들)` / `sort(values)` | `소문자(글)` / `lower(text)` | `반올림(x, 자리)` / `round_to(x, places)` |
+| `뒤집기(값들)` / `reverse(values)` | `공백없애기(글)` / `trim(text)` | `원주율` / `pi` |
+| `빼기(값들, x)` / `remove(values, x)` | `나누기(글, 구분자)` / `split(text, sep)` | `거듭제곱(x, y)` / `power(x, y)` |
+| `첫번째(값들)` / `first(values)` | `합치기(구분자, 값들)` / `join(sep, values)` | `절댓값(x)` / `absolute(x)` |
+| `마지막(값들)` / `last(values)` | `바꾸기(글, a, b)` / `replace(text, a, b)` | `내림(x)` / `floor(x)` |
+| `합계(값들)` / `sum(values)` | `로시작(글, a)` / `starts_with(text, a)` | `올림(x)` / `ceil(x)` |
+| `최대(값들)` / `largest(values)` | `길이(글)` / `length(text)` | |
+| `최소(값들)` / `smallest(values)` | | |
+
+`정렬`·`뒤집기`·`빼기`는 새 목록을 돌려주고 원래 목록은 그대로 둡니다.
+`목록`·`글자`·`수학`은 평범한 낱말이라, `사용` 바로 옆에 있고 그 줄에 다른 낱말이
+없을 때만 모듈로 읽습니다.
 
 ### 쓸 수 있는 낱말 전부
 
@@ -455,6 +486,14 @@ Python이므로, NME 문장으로 읽히지 않습니다.
 | 대문자 / Capitals | `capitals` · `capital` · `uppercase` | `대문자로` · `대문자` |
 | 소문자 / Small letters | `lowercase` · `small` | `소문자로` · `소문자` |
 | 이어 붙이기 / Join | `joined` · `join` | `이어` · `이어서` · `이어붙여` |
+| 사이 없이 이어 붙이기 / Join together | `together` | `붙여` · `붙여서` · `붙여줘` · `이어붙여` · `이어붙여줘` |
+| 빈 이음말 / Empty separator | `nothing` | `그대로` |
+| 나누기(글) / Split | `split` | `나눈` · `쪼갠` · `자른` |
+| 줄마다 / By line | `line` · `lines` | `줄마다` · `줄별로` · `한줄씩` |
+| 나눈 것 / Split thing | — | `것` · `거` · `것들` |
+| 붙인 것 / Repeated text | `repeated` | `붙인` · `이어붙인` |
+| 몇 개 / Copies | `times` | `개` · `번` |
+| 몇 번째와 함께 / With its position | `with` | `함께` · `같이` |
 | 나머지 / Remainder | `remainder` · `rest` · `leftover` | `나머지` |
 | 나누기 말 / Divided | `divided` · `shared` · `split` | `나눈` · `나눈뒤` · `나누고` |
 | 이음말 / Separator | `comma` · `space` · `newline` | `쉼표` · `빈칸` · `공백` · `줄바꿈` |
@@ -547,13 +586,14 @@ Python이므로, NME 문장으로 읽히지 않습니다.
 | `E0230` | 이름에는 띄어쓰기를 쓸 수 없습니다 |
 | `E0231` | 이 이름을 목록으로 만든 적이 없습니다 |
 | `E0232` | 이 이야기 안에 글이 한 줄도 없습니다 |
+| `E0233` | 이어 붙일 때 사이에 무엇을 넣을지가 없습니다 |
 | `E0301` | 조건이 비어 있습니다 |
 | `E0302` | 조건을 이해하지 못했습니다 |
 | `E0303` | 반복할 내용을 이해하지 못했습니다 |
 | `E0304` | 반복 횟수를 이해하지 못했습니다 |
 | `E0305` | 반복 횟수가 비어 있습니다 |
 | `E0306` | 목록 반복 줄을 이해하지 못했습니다 |
-| `E0401` | NME에는 `랜덤 사용`과 `파일 사용`이 내장되어 있습니다 |
+| `E0401` | NME에 내장된 모듈은 여섯 개이고 이것은 그중에 없습니다 |
 | `E0402` | 최신과 정확한 버전을 함께 적었습니다 |
 | `E0403` | 모듈 버전이 비어 있습니다 |
 | `E0404` | 내장되어 있지 않은 모듈 버전입니다 |

@@ -1728,6 +1728,8 @@ fn emit_say(
         Value::Reading { .. }
         | Value::Item { .. }
         | Value::Joined { .. }
+        | Value::Split { .. }
+        | Value::Repeated { .. }
         | Value::Remainder { .. } => Err(not_supported(
             "list and text readings",
             span_of_value(value),
@@ -1851,6 +1853,8 @@ fn emit_set(
         | Value::Reading { .. }
         | Value::Item { .. }
         | Value::Joined { .. }
+        | Value::Split { .. }
+        | Value::Repeated { .. }
         | Value::Remainder { .. }
         | Value::ZeroKnowledge(_) => Err(not_supported("this value", span_of_value(value))),
     }
