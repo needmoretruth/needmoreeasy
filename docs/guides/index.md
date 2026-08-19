@@ -86,7 +86,7 @@ bracket and no equals sign, which `scripts/report-guide-tier.py` measures.
 ### Part 3 — Files and data
 
 For someone who wants a program to remember things after it stops: files,
-JSON, CSV and reports. **Guides 37 and 38 are written in sentences** — except
+JSON, CSV and reports. **Guides 37, 38 and 40 are written in sentences** — except
 that a file name is wrapped in quotes. That is the only place sentence syntax
 uses them, and [guide 37](37-files.md) says why.
 
@@ -297,7 +297,7 @@ and validated by hand.
 | 37 | ★★★☆☆ | files | [Files: save and read text](37-files.md) | a program that writes text to a file and reads it back |
 | 38 | ★★★☆☆ | files and lists | [Name list: read lines from a file](38-name-list.md) | a program that saves names one per line and reads them back as a list |
 | 39 | ★★★☆☆ | json | [JSON: save and load data](39-json.md) | a program that saves a name and a score and loads them back |
-| 40 | ★★★★☆ | data | [CSV: rows of data](40-csv.md) | reading a comma-separated text file with split(","), computing a column's average, and writing a summary CSV |
+| 40 | ★★★☆☆ | files and data | [CSV: rows of data](40-csv.md) | a program that reads a file of comma-separated fields |
 | 41 | ★★★★☆ | records | [Records: a small address book](41-address-book.md) | a JSON-file address book that adds, lists, and searches contacts |
 | 42 | ★★★★☆ | data | [Word count: how often each word appears](42-word-count.md) | reading a text file and counting how often each word appears, using a dict and collections.Counter |
 | 43 | ★★★★☆ | text & data | [Text stats: letters and words](43-text-stats.md) | reading a text file and reporting character count, word count, longest word, and most common word (with collections.Counter) |

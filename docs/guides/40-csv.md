@@ -1,109 +1,99 @@
-# 40 — CSV: rows of data
+# 40 — CSV: several fields on one line
 
 English | [한국어](40-csv.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- Difficulty: ★★★★☆ (4/5)
-- Prerequisites: [37 — Files](37-files.md), [38 — Name list](38-name-list.md)
-- Topic: data
-- Result: reading a comma-separated text file with split(","), computing a column's average, and writing a summary CSV
+- Difficulty: ★★★☆☆ (3/5)
+- Prerequisites: [38 — Name list](38-name-list.md)
+- Topic: files and data
+- Result: a program that reads a file of comma-separated fields
 
-A CSV file is plain text — one row per line, fields separated by commas; a small file only needs `split(",")`.
+[Guide 38](38-name-list.md) put one thing on each line. To put **two or more**
+on a line — a name and a count, say — separate them with a comma. A file made
+that way is called a CSV.
+
+> A program that uses files does not run on the site.
 
 ## Steps
 
-1. Create `data.csv` with one `name,score` row per line:
+1. **Split one line by comma:**
 
    ```nme
-   Mina,90
-   Yuna,70
-   Sora,85
-   Jun,75
+   set text to apples,3
+   set fields to text split by comma
+   show the first of fields
+   show the last of fields
    ```
 
-2. Read the file and cut it into rows: `splitlines()` splits the text into
-   lines, and `line.split(",")` splits one row into fields:
+   `apples` and `3` come out separately.
+
+2. **Several lines go in a list.** A comma separates items when a list is
+   written out, so a line that itself contains a comma is kept in a name first
+   and appended:
 
    ```nme
-   use file latest
-   lines = file_read("data.csv").splitlines()
-   parts = lines[0].split(",")
-   show parts[0]
-   show int(parts[1])
+   set first to apples,3
+   set second to grapes,5
+   set rows to an empty list
+   append first to rows
+   append second to rows
    ```
 
-3. Total the scores and divide by the row count for the average. Save it as
-   `scores.nme` — it collects every row and writes a summary:
+3. **Save it and read it back**, joined by newline and split by line:
 
    ```nme
-   # scores.nme — read a CSV, average the score column, write a summary.
-   # Run: nme r scores
-
-   use file latest
-
-   raw = file_read("data.csv")
-   lines = raw.splitlines()
-
-   names = []
-   scores = []
-   for line in lines:
-       parts = line.split(",")
-       names.append(parts[0])
-       scores.append(int(parts[1]))
-
-   total = 0
-   biggest = scores[0]
-   for score in scores:
-       total = total + score
-       if score > biggest:
-           biggest = score
-   average = total / len(scores)
-
-   show f"Read {len(lines)} rows from data.csv"
-   for i in range(len(names)):
-       show f"{names[i]}: {scores[i]}"
-   show f"Total: {total}"
-   show f"Average: {average}"
-   show f"Highest: {biggest}"
-
-   summary = f"rows,{len(lines)}\ntotal,{total}\naverage,{average}\nhighest,{biggest}\n"
-   file_write("summary.csv", summary)
-   show "Wrote summary.csv"
+   set rows to list of a, b
+   set text to rows joined by newline
+   write text to "stock.csv"
+   read "stock.csv" into memo
+   set lines to memo split by line
    ```
 
-4. Run it next to `data.csv`, then look at the new `summary.csv`:
+4. **Split each line by comma and you have the fields:**
 
-   ```sh
-   nme r scores
+   ```nme
+   set lines to list of apples,3
+   for each row in lines
+       set fields to row split by comma
+       show the first of fields
+       show the last of fields
+   end
    ```
 
-   ```text
-   Read 4 rows from data.csv
-   Mina: 90
-   Yuna: 70
-   Sora: 85
-   Jun: 75
-   Total: 320
-   Average: 80.0
-   Highest: 90
-   Wrote summary.csv
+5. All of it:
+
+   ```nme
+   set first to apples,3
+   set second to grapes,5
+   set rows to an empty list
+   append first to rows
+   append second to rows
+   set text to rows joined by newline
+   write text to "stock.csv"
+   read "stock.csv" into memo
+   set lines to memo split by line
+   for each row in lines
+       set fields to row split by comma
+       show the first of fields
+       show the last of fields
+   end
    ```
 
-   ```text
-   rows,4
-   total,320
-   average,80.0
-   highest,90
-   ```
+   **The comma you split on and the comma you join with are different.**
+   Splitting cuts on a bare comma; joining puts a comma and a space (`, `)
+   between. Text a person reads wants the space; a file being cut apart does
+   not have one.
 
 ## Try it yourself
 
-Track the lowest score too — a `lowest = scores[0]` start, an `if score < lowest` check, and a `lowest,<value>` line in `summary`.
+Add a third field — `apples,3,red` — and take the middle one with
+`item 2 of fields`.
 
 ## What you learned
 
-- `file_read(...).splitlines()` cuts a file into rows.
-- `line.split(",")` splits a row into fields; `parts[1]` is the second field.
-- `int(parts[1])` turns text into a number before adding.
-- `file_write` writes the summary back out as CSV.
+- `<text> split by comma` turns one line into a list of fields.
+- A comma separates items when a list is written out, so a line containing one
+  goes into a name first.
+- Join by newline to save, split by line to read, split by comma for the fields.
+- Splitting uses `,`; joining uses `, `.
