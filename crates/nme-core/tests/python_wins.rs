@@ -107,7 +107,11 @@ fn korean_spellings_are_still_ordinary_python_names() {
     unchanged("랜덤 = object()\n사용 = 랜덤\n");
     unchanged("아니면 = True\nprint(아니면)\n");
     unchanged("아니면.foo\n");
-    unchanged("아니면 + 1\n");
+    // Written on its own, `아니면 + 1` works out a number and drops it, and
+    // E0604 says so — the same answer a Python name would get. What this
+    // line has to prove is that `아니면` is still a name, so it does
+    // something with the answer.
+    unchanged("print(아니면 + 1)\n");
     unchanged("멈춰 = 1\n멈춰\n");
     // Alone, with no loop above it, `멈춰` is the writer asking to leave a
     // loop that is not there — which is what they are told.

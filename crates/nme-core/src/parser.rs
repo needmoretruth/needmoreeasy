@@ -75,6 +75,14 @@ const SAY_TRAILING_OBJECT_FREE_WORDS_KO: &[&str] = &[
     "나타내",
     "나타내줘",
     "나타내주세요",
+    // `편지를 써줘` writes a letter and `안녕하세요 써줘` says hello, and the
+    // mark on the word in front is the whole difference. These used to be
+    // reached by repairing them into `해줘`, which stopped when `해줘` became
+    // a word only its own spelling may claim.
+    "써줘",
+    "써주세요",
+    "적어줘",
+    "적어주세요",
 ];
 /// The one-syllable short form of the output word.
 ///
@@ -5065,6 +5073,7 @@ fn match_update(
     // every real value change is untouched.
     if korean_line_is_a_sentence(tokens, known_names)
         && prose_beats_recovery(source, tokens, known_names)
+        && !korean_marked_target_with_a_number(tokens, known_names)
     {
         return Ok(None);
     }
@@ -5241,7 +5250,78 @@ fn match_update(
         .map(Some);
     }
 
+    // `점수에 1` · `점수에서 1` — the verb dropped off the end.
+    //
+    // Korean marks the name with `에` (into) or `에서` (out of) and then says
+    // the amount, and everyday speech leaves `더해`/`빼` off when the marks
+    // already say the direction. Read as a save it was worse than useless:
+    // `점수에 1` became `점수 = 1` and the score being counted up was gone,
+    // with nothing on screen to show it. Only a name the program already made
+    // and a plain number qualify.
+    if let Some(stmt) = korean_marked_update_without_a_verb(source, tokens, known_names)? {
+        return Ok(Some(stmt));
+    }
+
     Ok(None)
+}
+
+/// `점수에서 1 …` — a name the program made, marked with the particle that
+/// says which way the number goes, and then a number.
+///
+/// No written sentence wears that shape, so a last word NME does not know is
+/// a mistyped verb rather than the end of a sentence. Without this, `점수에서
+/// 1 뺴줘` printed `7에서 1` and left the score alone, with the misspelled
+/// word missing from the output so that nothing on screen pointed at the
+/// typo. A typo in any later syllable (`빼줌`, `더헤줘`) always recovered;
+/// only the first one fell through here.
+fn korean_marked_target_with_a_number(tokens: &[Token], known_names: &HashSet<String>) -> bool {
+    let Some(written) = tokens.first().and_then(name_word) else {
+        return false;
+    };
+    let Some(base) = strip_any_suffix(written, &["에서", "에"]) else {
+        return false;
+    };
+    known_names.contains(base)
+        && tokens[1..]
+            .iter()
+            .any(|token| matches!(token.tok, Tok::Int { .. } | Tok::Float { .. }))
+}
+
+/// See the call site: `점수에 1` and `점수에서 1`, the value change with its
+/// verb left off.
+fn korean_marked_update_without_a_verb(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    let body = trim_command_endings(tokens);
+    let [first, rest @ ..] = body else {
+        return Ok(None);
+    };
+    if rest.is_empty() || !rest.iter().all(|token| matches!(token.tok, Tok::Int { .. } | Tok::Float { .. })) {
+        return Ok(None);
+    }
+    let written = name_word(first).unwrap_or("");
+    let operation = if written.ends_with("에서") {
+        UpdateOp::Subtract
+    } else if written.ends_with('에') {
+        UpdateOp::Add
+    } else {
+        return Ok(None);
+    };
+    let base = strip_any_suffix(written, &["에서", "에"]).unwrap_or(written);
+    if !known_names.contains(base) {
+        return Ok(None);
+    }
+    finish_update(
+        source,
+        tokens,
+        known_names,
+        base.to_string(),
+        rest,
+        operation,
+    )
+    .map(Some)
 }
 
 /// True when the amount is a single word the program never set. Such a word
@@ -5281,6 +5361,28 @@ fn finish_update(
             return Ok(NmeStmt::Append { target, value });
         }
         return Err(add_unset_word_diagnostic(word, span_of(tokens)));
+    }
+    // `add 1 to bag` · `가방에 1 더해`, where `bag` is a list. Python cannot
+    // add a number to a list, so `bag = bag + 1` was a `TypeError` waiting on
+    // a line that reads perfectly. Putting the number in is the only thing
+    // the sentence can mean. Adding one *list* to another still joins them,
+    // which is what Python does and what the words say.
+    if operation == UpdateOp::Add
+        && is_list_name(known_names, &target)
+        && matches!(
+            amount_tokens,
+            [Token {
+                tok: Tok::Int { .. } | Tok::Float { .. } | Tok::String { .. },
+                ..
+            }]
+        )
+    {
+        if let Some(problem) = not_a_list(&target, known_names, span_of(tokens)) {
+            return Err(problem);
+        }
+        let value = parse_value(source, amount_tokens, known_names, true)
+            .map_err(|()| append_diagnostic(span_of(tokens)))?;
+        return Ok(NmeStmt::Append { target, value });
     }
     // `remove Mina from friends` used to compile to `friends = friends -
     // Mina`, which is a `TypeError` even when both names exist: nothing can
@@ -7940,7 +8042,11 @@ fn chance_set_target(tokens: &[Token], known_names: &HashSet<String>) -> Option<
         let name_at = consumed;
         let target = name_word(tokens.get(name_at)?)?;
         let mut value_at = name_at + 1;
-        if is_update_connector(tokens.get(value_at)?, UPDATE_CONNECTOR_WORDS_EN) {
+        // Every word that may stand between a name and its value, not just
+        // `to`. `set luck is 30% chance` used to save the Python expression
+        // `30 % chance` — a name nothing had made — and die at run time,
+        // while `set luck to 30% chance` was the chance it reads like.
+        if token_matches_exact(tokens.get(value_at)?, SET_VALUE_CONNECTORS) {
             value_at += 1;
         }
         return update_target_name(target).map(|target| (target, value_at));
@@ -13374,12 +13480,18 @@ fn korean_target_first_set(
     known_names: &HashSet<String>,
     mode: MatchMode,
 ) -> Result<Option<NmeStmt>, Diagnostic> {
-    let Some(target) = name_word(&tokens[0])
-        .and_then(|word| strip_any_suffix(word, SET_TARGET_PARTICLES_KO))
-        .map(str::to_string)
-    else {
+    let Some(written) = name_word(&tokens[0]) else {
         return Ok(None);
     };
+    let Some(target) = strip_any_suffix(written, SET_TARGET_PARTICLES_KO).map(str::to_string) else {
+        return Ok(None);
+    };
+    // `에` marks where something goes, not what is being named. `점수에 0
+    // 저장해` says to save, so the particle is fine there; `점수에 1` on its
+    // own said nothing about saving and became `점수 = 1`, wiping the score
+    // that the writer was adding one to. Without a saving word the line
+    // belongs to the value-change reading, which is checked before this one.
+    let goes_into = written.ends_with('에');
     let mut end = trim_command_endings(tokens).len();
     let mut saving_word = false;
     if let Some(start) = (end.saturating_sub(2)..end).find(|&start| {
@@ -13389,6 +13501,9 @@ fn korean_target_first_set(
     }) {
         end = start;
         saving_word = true;
+    }
+    if goes_into && !saving_word {
+        return Ok(None);
     }
     // `이름을 5로 해` · `이름을 5라고 하자` — the everyday light verb closing the
     // sentence instead of a saving word. It only counts when the value says
@@ -13676,25 +13791,41 @@ fn empty_record_phrase(tokens: &[Token]) -> bool {
 /// word before them as a Korean particle (`민수와 지안`).
 const LIST_JOINERS: &[&str] = &["and", "그리고", "와", "과", "이랑", "랑"];
 
+/// True when a Korean joining particle written at the end of a word is the
+/// particle at all.
+///
+/// Korean picks the shape from the sound in front of it: `과` and `이랑`
+/// follow a syllable that ends in a consonant, `와` and `랑` follow one that
+/// ends in a vowel. So `감과 배` really is two items, while `사과` — where
+/// `사` ends in a vowel and could only take `와` — is the word for apple.
+/// Without this rule `가방은 목록 사과` built a bag holding `사`, and
+/// `과일은 목록 사과 배 감` held `사` and `배 감`. Nothing said so.
+fn korean_joiner_agrees(base: &str, joiner: &str) -> bool {
+    match joiner {
+        "과" | "와" => korean_particle(base, "과", "와") == joiner,
+        "이랑" | "랑" => korean_particle(base, "이랑", "랑") == joiner,
+        _ => true,
+    }
+}
+
 /// Cuts a list into its items. A Korean joining particle is part of the word
 /// it follows, so the particle is trimmed off and the item ends there.
 fn split_list_items(tokens: &[Token]) -> Vec<Vec<Token>> {
     let mut items = Vec::new();
     let mut current: Vec<Token> = Vec::new();
-    // `사과` ends in `과`, which is also the Korean word for `and`. Once the
-    // writer has shown their separator by using a comma, trust it and stop
-    // reading a joiner out of the end of a word.
-    let comma_separated = tokens.iter().any(|token| matches!(token.tok, Tok::Comma));
     for token in tokens {
         if matches!(token.tok, Tok::Comma | Tok::And) || token_matches_exact(token, LIST_JOINERS) {
             items.push(std::mem::take(&mut current));
             continue;
         }
-        if let (false, Tok::Name { name }) = (comma_separated, &token.tok) {
+        if let Tok::Name { name } = &token.tok {
             if let Some(base) = LIST_JOINERS
                 .iter()
                 .filter(|joiner| joiner.chars().next().is_some_and(|c| !c.is_ascii()))
-                .find_map(|joiner| name.strip_suffix(joiner).filter(|base| !base.is_empty()))
+                .find_map(|joiner| {
+                    name.strip_suffix(*joiner)
+                        .filter(|base| !base.is_empty() && korean_joiner_agrees(base, joiner))
+                })
             {
                 current.push(Token {
                     tok: Tok::Name {
@@ -13712,6 +13843,12 @@ fn split_list_items(tokens: &[Token]) -> Vec<Vec<Token>> {
         current.push(token.clone());
     }
     items.push(current);
+    // A joiner written right before a comma (`감과, 배`) leaves nothing
+    // between the two, and an item nobody wrote is not an item. One empty
+    // list stays one empty list.
+    if items.len() > 1 {
+        items.retain(|item| !item.is_empty());
+    }
     items
 }
 
@@ -15299,10 +15436,19 @@ fn arranging_list(expected: &[&str]) -> bool {
 /// is one from six words at once. The words that were always NME's own
 /// (`set`, `show`, `말해줘`) keep their repair — nobody writes them by
 /// accident.
+/// Action words a typo may never be repaired *into*.
+///
+/// Each one is an ordinary word of its language, so a one-edit guess at it
+/// claims sentences nobody meant as commands: `story:` became `store`,
+/// `Let's` became a name called `s`, `put fire` became arithmetic. `해줘` is
+/// the widest of all — it is Korean for "do it", so every two-syllable
+/// request in the language sits one letter from it, and `점수에서 1 뺴줘`
+/// printed `7에서 1` instead of subtracting.
 const EXACT_ONLY_ACTION_WORDS: &[&str] = &[
     "store", "let", "make", "give", "list", "write", "report", "present", "output", "speak",
     "puts", "echo", "reveal", "announce", "order", "arrange", "mix", "flip", "invert", "jumble",
     "scramble", "request", "enter", "input", "up", "down", "goesup", "goesdown", "plus", "minus",
+    "해줘", "해주세요",
 ];
 
 fn best_action_rank(actual: &str, expected: &[&str], mode: MatchMode) -> Option<(u8, usize)> {
@@ -17002,12 +17148,28 @@ fn statement_does_nothing(tokens: &[Token]) -> Option<Diagnostic> {
             ),
         );
     }
+    if bare_arithmetic(tokens) {
+        return Some(
+            Diagnostic::bilingual(
+                DiagnosticCode::StatementDoesNothing,
+                "this line works out a number and throws it away",
+                "이 줄은 수를 계산해 놓고 그 값을 버립니다",
+                span_of(tokens),
+            )
+            .with_bilingual_hint(
+                "to change a name write `add 1 to score`; to see the answer write \
+                 `show score + 1`",
+                "이름을 바꾸려면 `점수에 1 더해`처럼, 답을 보려면 `점수 + 1 말해줘`처럼 \
+                 적어 주세요",
+            ),
+        );
+    }
     if bare_comparison(tokens) {
         return Some(
             Diagnostic::bilingual(
                 DiagnosticCode::StatementDoesNothing,
                 "this line only compares two things and throws the answer away",
-                "이 줄은 두 값을 비교만 하고 그 답을 버려요",
+                "이 줄은 두 값을 비교만 하고 그 답을 버립니다",
                 span_of(tokens),
             )
             .with_bilingual_hint(
@@ -17108,6 +17270,33 @@ fn token_text_without_colon(tokens: &[Token]) -> String {
 /// `score is 0` — a comparison as a whole statement. Brackets, an `=`, a
 /// call, or a Python keyword mean the line is doing something else, so those
 /// are left alone.
+/// `score+1` — arithmetic written as a whole line.
+///
+/// Python computes it and drops the answer, so the program runs, prints
+/// nothing and leaves `score` exactly as it was. It looks like the shortest
+/// way to say "add one", and it is the one shape where doing nothing is
+/// indistinguishable from working.
+///
+/// Only names, numbers and arithmetic count, and at least one of each: that
+/// keeps `30% chance` (a number and a name, no name in front) and every
+/// written sentence away from it, because prose does not carry `+` or `*`.
+fn bare_arithmetic(tokens: &[Token]) -> bool {
+    if tokens.len() < 3 || !matches!(tokens[0].tok, Tok::Name { .. }) {
+        return false;
+    }
+    let mut operators = 0usize;
+    for token in tokens {
+        match token.tok {
+            Tok::Plus | Tok::Minus | Tok::Star | Tok::Slash | Tok::DoubleSlash | Tok::DoubleStar => {
+                operators += 1;
+            }
+            Tok::Name { .. } | Tok::Int { .. } | Tok::Float { .. } => {}
+            _ => return false,
+        }
+    }
+    operators > 0
+}
+
 fn bare_comparison(tokens: &[Token]) -> bool {
     if tokens.len() < 3 || !matches!(tokens[0].tok, Tok::Name { .. }) {
         return false;

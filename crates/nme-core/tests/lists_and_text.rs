@@ -852,3 +852,43 @@ fn with_and_together_in_an_ordinary_sentence_are_left_alone() {
         );
     }
 }
+
+/// `사과` is not `사` and `과`.
+///
+/// Korean picks the joining particle from the sound before it: `과` follows a
+/// consonant, `와` follows a vowel. Reading every trailing `과` as "and" cut
+/// the word for apple in half — `가방은 목록 사과` built a bag holding `사`,
+/// and nothing on screen said so.
+#[test]
+fn a_korean_word_ending_in_the_joining_particle_stays_whole() {
+    assert_eq!(ok("가방은 목록 사과\n"), "가방 = [\"사과\"]\n");
+    assert_eq!(ok("과일은 목록 사과 배 감\n"), "과일 = [\"사과 배 감\"]\n");
+    assert_eq!(ok("가방은 목록 사과, 배\n"), "가방 = [\"사과\", \"배\"]\n");
+    // The particle really used as "and" still joins, in both shapes.
+    assert_eq!(ok("과일은 목록 사과와 배\n"), "과일 = [\"사과\", \"배\"]\n");
+    assert_eq!(ok("과일은 목록 감과 배\n"), "과일 = [\"감\", \"배\"]\n");
+    assert_eq!(ok("친구들은 목록 민수랑 지영\n"), "친구들 = [\"민수\", \"지영\"]\n");
+    assert_eq!(ok("친구들은 목록 지영이랑 민수\n"), "친구들 = [\"지영\", \"민수\"]\n");
+}
+
+/// A number added to a list goes *into* it.
+///
+/// `bag = bag + 1` is a `TypeError` in every Python there has ever been, so
+/// the line could only have meant putting the number in the bag.
+#[test]
+fn adding_a_number_to_a_list_puts_it_in() {
+    assert_eq!(
+        ok("set bag to list of apple\nadd 1 to bag\n"),
+        "bag = [\"apple\"]\nbag.append(1)\n"
+    );
+    assert_eq!(
+        ok("가방은 목록 사과\n가방에 1 더해\n"),
+        "가방 = [\"사과\"]\n가방.append(1)\n"
+    );
+    // Two lists still join, because that is what Python does and what the
+    // words say.
+    assert_eq!(
+        ok("set a to list of 1\nset b to list of 2\nadd b to a\n"),
+        "a = [1]\nb = [2]\na = a + b\n"
+    );
+}

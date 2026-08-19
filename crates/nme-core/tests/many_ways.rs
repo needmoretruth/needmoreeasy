@@ -857,3 +857,65 @@ fn ordinary_words_are_not_read_as_typos() {
         "n = 1\nif (n < 5):\n  print(\"low\")\n# end\n",
     );
 }
+
+/// `점수에 1` — the value change with its verb left off.
+///
+/// Korean's `에` says "into" and `에서` says "out of", so the direction is
+/// already on the page and everyday speech drops the verb. Read as a save it
+/// was worse than useless: `점수 = 1` threw away the score being counted.
+#[test]
+fn korean_marks_say_which_way_even_without_the_verb() {
+    assert_eq!(
+        ok("점수는 5\n점수에 1\n"),
+        "점수 = 5\n점수 = 점수 + 1\n"
+    );
+    assert_eq!(
+        ok("점수는 5\n점수에서 2\n"),
+        "점수 = 5\n점수 = 점수 - 2\n"
+    );
+    // `에` with a saving word is still a save, and a name the program never
+    // made is still a sentence.
+    assert_eq!(ok("점수는 5\n점수에 0 저장해\n"), "점수 = 5\n점수 = 0\n");
+    assert_eq!(ok("학교에 1\n"), "print(\"학교에 1\")\n");
+}
+
+/// Any word that may stand between a name and its value reaches the chance.
+///
+/// Only `to` did. `set luck is 30% chance` saved the Python expression
+/// `30 % chance` — a name nothing had made — and died at run time on a line
+/// that reads like the documented one.
+#[test]
+fn a_chance_can_be_saved_with_any_of_the_joining_words() {
+    for line in [
+        "set luck to a 30% chance",
+        "set luck is a 30% chance",
+        "set luck is 30% chance",
+        "set luck as a 30% chance",
+        "set luck equals a 30% chance",
+        "set luck be a 30% chance",
+        "luck is a 30% chance",
+    ] {
+        assert_eq!(
+            ok(&format!("{line}\n")),
+            "luck = __import__(\"random\").randrange(1000) < 300\n",
+            "for {line}"
+        );
+    }
+}
+
+/// `해줘` is Korean for "do it", so every two-syllable request in the
+/// language sits one letter away from it. Only its own spelling may claim it.
+#[test]
+fn the_widest_korean_verb_is_never_guessed_at() {
+    // A typo in the subtract verb used to be eaten by `해줘`, which printed
+    // the line and deleted the misspelled word, so nothing pointed at it.
+    assert_eq!(
+        ok("점수는 7\n점수에서 1 뺴줘\n"),
+        "점수 = 7\n점수 = 점수 - 1\n"
+    );
+    assert_eq!(ok("안녕 해줘\n"), "print(\"안녕\")\n");
+    // `써줘` says it on its own now instead of borrowing `해줘`'s spelling,
+    // and writing a file still means writing a file.
+    assert_eq!(ok("안녕하세요 써줘\n"), "print(\"안녕하세요\")\n");
+    assert_eq!(ok("편지를 써줘\n"), "print(\"편지를 써줘\")\n");
+}

@@ -1366,3 +1366,19 @@ fn a_flat_block_still_requires_its_own_end() {
     let message = err("점수가 5와 같으면\n만약 true라면\n    say \"a\"\n끝\n");
     assert!(message.contains("missing its closing `end`"), "{message}");
 }
+
+#[test]
+fn arithmetic_on_a_line_of_its_own_is_refused() {
+    // `score+1` looks like the shortest way to say "add one" and is the one
+    // shape where doing nothing is indistinguishable from working: Python
+    // computes the answer and drops it.
+    for line in ["score+1", "score + 1", "score*2"] {
+        let message = err(&format!("set score to 0\n{line}\n"));
+        assert!(message.contains("throws it away"), "{message}");
+        assert!(message.contains("add 1 to score"), "{message}");
+    }
+    let korean = bilingual_err("점수는 0\n점수+1\n");
+    assert!(korean.contains("버립니다"), "{korean}");
+    // Doing something with the answer is not this error.
+    assert!(transpile("set score to 0\nshow score + 1\n").is_ok());
+}
