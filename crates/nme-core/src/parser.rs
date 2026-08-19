@@ -4695,6 +4695,9 @@ fn finish_update(
     if operation == UpdateOp::Add && is_unset_word(amount_tokens, known_names) {
         let word = name_word(&amount_tokens[0]).expect("checked by is_unset_word");
         if is_list_name(known_names, &target) {
+            if let Some(problem) = not_a_list(&target, known_names, span_of(tokens)) {
+                return Err(problem);
+            }
             let value = parse_value(source, amount_tokens, known_names, true)
                 .map_err(|()| append_diagnostic(span_of(tokens)))?;
             return Ok(NmeStmt::Append { target, value });
@@ -5229,6 +5232,38 @@ fn match_continue(tokens: &[Token], mode: MatchMode) -> Result<Option<NmeStmt>, 
 ///
 /// `add` is deliberately not an append word: `add 1 to score` already means a
 /// value change, and one spelling may not mean two things.
+/// A list statement written on a name that holds a record.
+///
+/// The opposite direction has been refused since records landed
+/// (`not_a_record`), but this one was not, so `표에 사과 넣어` and
+/// `append apple to ages` compiled to `표.append("사과")` — a program that
+/// dies with `AttributeError: 'dict' object has no attribute 'append'` on a
+/// line that reads perfectly. A record is written to by name, and saying so
+/// is the whole of the fix.
+fn not_a_list(target: &str, known_names: &HashSet<String>, span: Span) -> Option<Diagnostic> {
+    if !is_record_name(known_names, target) {
+        return None;
+    }
+    Some(
+        Diagnostic::bilingual(
+            DiagnosticCode::RecordNameUnknown,
+            format!("`{target}` holds a record, not a list"),
+            format!("`{target}`에는 목록이 아니라 표가 들어 있어요"),
+            span,
+        )
+        .with_bilingual_hint(
+            format!(
+                "a record keeps every value under a name, so say which name: \
+                 `put Mina at 90 in {target}`"
+            ),
+            format!(
+                "표는 값마다 이름을 붙여 담으니 어느 이름인지 적어 주세요: \
+                 `{target}에 민수를 90으로 넣어`"
+            ),
+        ),
+    )
+}
+
 fn match_append(
     source: &str,
     tokens: &[Token],
@@ -5255,6 +5290,9 @@ fn match_append(
             if value_tokens.is_empty() {
                 return Err(append_diagnostic(span_of(tokens)));
             }
+            if let Some(problem) = not_a_list(&target, known_names, span_of(tokens)) {
+                return Err(problem);
+            }
             let value = parse_value(source, value_tokens, known_names, true)
                 .map_err(|()| append_diagnostic(span_of(tokens)))?;
             return Ok(Some(NmeStmt::Append { target, value }));
@@ -5279,6 +5317,9 @@ fn match_append(
         let target = name_word(&target_tokens[0])
             .map(str::to_string)
             .ok_or_else(|| append_diagnostic(target_tokens[0].span))?;
+        if let Some(problem) = not_a_list(&target, known_names, span_of(tokens)) {
+            return Err(problem);
+        }
         let value = parse_value(source, value_tokens, known_names, true)
             .map_err(|()| append_diagnostic(span_of(tokens)))?;
         return Ok(Some(NmeStmt::Append { target, value }));
@@ -5342,6 +5383,9 @@ fn match_append(
     if value_tokens.is_empty() {
         return Ok(None);
     }
+    if let Some(problem) = not_a_list(&target, known_names, span_of(tokens)) {
+        return Err(problem);
+    }
     let value = parse_value(source, &value_tokens, known_names, true)
         .map_err(|()| append_diagnostic(span_of(tokens)))?;
     Ok(Some(NmeStmt::Append { target, value }))
@@ -5387,6 +5431,9 @@ fn korean_leading_append(
     let value_tokens = trim_suffix_say_value(&rest[1..]);
     if value_tokens.is_empty() {
         return Ok(None);
+    }
+    if let Some(problem) = not_a_list(&target, known_names, span_of(tokens)) {
+        return Err(problem);
     }
     let value = parse_value(source, &value_tokens, known_names, true)
         .map_err(|()| append_diagnostic(span_of(tokens)))?;

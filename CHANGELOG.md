@@ -10,6 +10,11 @@ All notable changes to NME are recorded here.
   shape refused — with `E0101` pointing at a header that was already correct.
   A job now closes the way `repeat 3 times` and `story:` do: an indented body
   ends where its indentation ends, a flat one waits for `end`.
+- **A list line written on a record is refused.** `표에 사과 넣어` and
+  `append apple to ages` compiled to `표.append("사과")` and died at run time
+  with `AttributeError: 'dict' object has no attribute 'append'` on a line
+  that reads perfectly. The opposite direction was refused from the start
+  (`E0234`); this one was not. It now says to write the name to put it under.
 - **A record — one name holding many named values.** `set ages to an empty
   record` / `나이표는 빈 표`, then `put Mina at 90 in ages` /
   `나이표에 민수를 90으로 넣어`, `show Mina in ages` / `나이표의 민수 말해줘`,

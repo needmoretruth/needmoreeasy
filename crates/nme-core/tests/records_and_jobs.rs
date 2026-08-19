@@ -191,6 +191,32 @@ fn a_record_line_naming_a_list_is_refused_rather_than_appended() {
 }
 
 #[test]
+fn a_list_line_naming_a_record_is_refused_rather_than_appended() {
+    // The mirror of `a_record_line_naming_a_list_is_refused`. Without it,
+    // `표에 사과 넣어` and `append apple to ages` compiled to
+    // `표.append("사과")` — `AttributeError: 'dict' object has no attribute
+    // 'append'` at run time, on a line that reads perfectly.
+    assert_eq!(error_code("나이표는 빈 표\n나이표에 사과 넣어\n"), "E0234");
+    assert_eq!(
+        error_code("set ages to an empty record\nappend apple to ages\n"),
+        "E0234"
+    );
+    assert_eq!(
+        error_code("set ages to an empty record\nto ages append apple\n"),
+        "E0234"
+    );
+    // A list still takes the same line without complaint.
+    assert_eq!(
+        ok("set friends to an empty list\nappend Mina to friends\n"),
+        "friends = []\nfriends.append(\"Mina\")\n"
+    );
+    assert_eq!(
+        ok("친구들은 빈 목록\n친구들에 민수 넣어\n"),
+        "친구들 = []\n친구들.append(\"민수\")\n"
+    );
+}
+
+#[test]
 fn a_python_dictionary_is_a_record_to_the_sentence_statements() {
     assert_eq!(
         ok("ages = {}\nput Mina at 90 in ages\n"),
