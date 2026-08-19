@@ -74,7 +74,7 @@ bracket and no equals sign, which `scripts/report-guide-tier.py` measures.
 26. [26 — Game: tic-tac-toe](26-tic-tac-toe.md)
 27. [27 — Game: guessing a hidden set of colours](27-mastermind.md)
 28. [28 — Game: an opponent that knows the rule](28-ai.md)
-29. [29 — Playlist: a random music player](29-playlist.md)
+29. [29 — Playlist: shuffling the order once](29-playlist.md)
 30. [30 — Shop — an inventory store](30-shop.md)
 31. [31 — Project — a mini bank](31-bank.md)
 32. [32 — Project — a grade book](32-grade-book.md)
@@ -228,7 +228,7 @@ and validated by hand.
 | 26 | ★★★★☆ | games | [Game: tic-tac-toe](26-tic-tac-toe.md) | a playable two-player tic-tac-toe with a win check |
 | 27 | ★★★☆☆ | games | [Game: guessing a hidden set of colours](27-mastermind.md) | guessing the three colours the computer hid, in five tries |
 | 28 | ★★★★☆ | games | [Game: an opponent that knows the rule](28-ai.md) | a game against an opponent that follows a winning rule |
-| 29 | ★★★★☆ | random and chance | [Playlist: a random music player](29-playlist.md) | a playlist loaded from JSON with shuffle, next, and a loop of songs |
+| 29 | ★★★☆☆ | random and chance | [Playlist: shuffling the order once](29-playlist.md) | shuffling a list of songs and playing through it one at a time |
 | 30 | ★★★★☆ | projects | [Shop — an inventory store](30-shop.md) | a JSON-persisted store with buy/sell/stock/list and a money balance |
 | 31 | ★★★★☆ | projects | [Project — a mini bank](31-bank.md) | a JSON-persisted bank account with deposit, withdraw, balance, history, and a storage module |
 | 32 | ★★★★☆ | projects | [Project — a grade book](32-grade-book.md) | a JSON-persisted grade book with add-student, add-grade, report-averages, and a storage module |
