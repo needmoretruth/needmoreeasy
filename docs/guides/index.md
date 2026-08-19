@@ -4,9 +4,14 @@ English | [한국어](index.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-88 short guides, written to be read in order and grouped into eight parts.
-Each one teaches a single idea, ends with something to try and a summary of
-what it taught, and every piece of code in them passes `nme check`.
+90 short guides, written to be read in order and grouped into eight parts.
+Each one teaches a single idea and ends with something to try and a summary of
+what it taught.
+
+**Nothing needs installing.** Every code block has a "run it" link that carries
+the program into the writing box on
+[needmoreeasy.com](https://needmoreeasy.com/), phone included. Every program
+printed here has been through the real compiler.
 
 ## Difficulty
 
