@@ -256,7 +256,7 @@ and validated by hand.
 | 14 | ★★☆☆☆ | arranging the screen | [Screen: clearing, ruling and boxing](14-screen.md) | a program that clears the screen, centres a title and draws a box |
 | 15 | ★★☆☆☆ | stopwatch and cooldowns | [Time: a stopwatch and cooldowns](15-timer.md) | a program that times itself and stops an action from repeating too soon |
 | 16 | ★★☆☆☆ | using the tools | [Check & Build: see the Python](16-check-build.md) | the habit of verifying programs and reading the generated Python |
-| 17 | ★★★★☆ | game | [Word guess: a hidden-word game](17-word-guess.md) | a hangman-style game where you guess letters of a hidden word with limited tries |
+| 17 | ★★★☆☆ | game | [Word guess: a hidden-word game](17-word-guess.md) | a hangman-style game where you guess letters of a hidden word with limited tries |
 | 18 | ★★★★☆ | a small project | [Adventure — a small text game](18-adventure.md) | a room-by-room text adventure with choices |
 | 19 | ★★★★☆ | game & timing | [Game: a reaction time test](19-reaction.md) | a game that measures reaction time with time.time() and reports the best of several rounds |
 | 20 | ★★★★☆ | output & loops | [ASCII art — drawing with characters](20-ascii-art.md) | building a right triangle, an upside-down triangle, and a diamond with nested loops and string multiplication |
