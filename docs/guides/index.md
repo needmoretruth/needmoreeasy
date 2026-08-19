@@ -56,9 +56,9 @@ guide.
 ### Part 2 — Small programs you can build
 
 For someone who has finished Part 1 and wants games, menus and small projects
-to keep. **Guides 17, 18, 19, 20, 22, 23, 27 and 28 are written in sentences alone** — no
-quote, no bracket, no equals sign. The rest still mix in beginner syntax and
-Python. The
+to keep. **Seventeen of the twenty are written in sentences alone** — no
+quote, no bracket, no equals sign. The three that are not (26, 33, 36) still mix in
+beginner syntax and Python. The
 guides written in sentences alone are Part 1 — its code contains no quote, no
 bracket and no equals sign, which `scripts/report-guide-tier.py` measures.
 
@@ -86,7 +86,7 @@ bracket and no equals sign, which `scripts/report-guide-tier.py` measures.
 ### Part 3 — Files and data
 
 For someone who wants a program to remember things after it stops: files,
-JSON, CSV and reports. **Guides 37, 38 and 40 are written in sentences** — except
+JSON, CSV and reports. **Guides 37, 38, 40, 42 and 43 are written in sentences** — except
 that a file name is wrapped in quotes. That is the only place sentence syntax
 uses them, and [guide 37](37-files.md) says why.
 
