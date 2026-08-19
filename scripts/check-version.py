@@ -38,17 +38,20 @@ ROOT = Path(__file__).resolve().parents[1]
 VERSION = re.compile(r"^(\d+)\.(\d+)\.(\d+)$")
 ANY_VERSION = re.compile(r"\b0\.\d+\.\d+\b")
 
-# Every document that names the current version. The prompts and the syntax
-# reference are generated, so they are checked but never edited here.
-QUOTES_VERSION = (
+# Every document that tells a reader which version they should have. The
+# prompts are generated, so they are checked but never edited here.
+NAMES_VERSION = (
     "README.md", "README.ko.md",
     "docs/install.md", "docs/install.ko.md",
     "docs/ai-assistants.md", "docs/ai-assistants.ko.md",
-    "docs/versioning.md", "docs/versioning.ko.md",
     "docs/prompts/nme-sentence.md", "docs/prompts/nme-sentence.ko.md",
     "docs/prompts/nme-all-levels.md", "docs/prompts/nme-all-levels.ko.md",
     "docs/prompts/nme-complete.md", "docs/prompts/nme-complete.ko.md",
 )
+
+# Documents that talk *about* versions without telling anyone which one to
+# install. They still may not be left holding the last release's number.
+MENTIONS_VERSION = ("docs/versioning.md", "docs/versioning.ko.md")
 
 CHANGELOGS = ("CHANGELOG.md", "CHANGELOG.ko.md")
 
@@ -104,18 +107,19 @@ def main() -> None:
                 )
 
     problems: list[str] = []
-    for name in QUOTES_VERSION:
+    # Bundled modules carry their own versions (`use random 0.0.1`), so a
+    # document is not asked to hold one version number — it is asked to hold
+    # *this* one, and not to be left holding the one before it.
+    for name in NAMES_VERSION + MENTIONS_VERSION:
         path = ROOT / name
         if not path.is_file():
             problems.append(f"missing: {name}")
             continue
         text = path.read_text(encoding="utf-8")
-        found = set(ANY_VERSION.findall(text))
-        if current not in found:
+        if name in NAMES_VERSION and current not in ANY_VERSION.findall(text):
             problems.append(f"{name} never names the current version {current}")
-        stale = found - {current}
-        if stale:
-            problems.append(f"{name} still names {', '.join(sorted(stale))}")
+        if before is not None and before != current and before in text:
+            problems.append(f"{name} still names the last release {before}")
 
     for name in CHANGELOGS:
         text = (ROOT / name).read_text(encoding="utf-8")

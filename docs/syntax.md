@@ -130,6 +130,7 @@ line containing only `end` / `끝`.
 | Sentence | `for each friend in friends and show friend` | `for friend in friends: print(friend)` |
 | Sentence | `repeat for each name in names` | `for name in names:` |
 | Sentence | `foreach friend in friends` | `for friend in friends:` |
+| Sentence | `for every friend in friends` | `for friend in friends:` |
 | Sentence | `for each friend in friends with place` | `for place, friend in enumerate(friends, 1):` |
 | Beginner | `for each friend in friends:` | `for friend in friends:` |
 | Beginner | `for each friend in friends with place:` | `for place, friend in enumerate(friends, 1):` |
@@ -600,8 +601,8 @@ Every spelling accepted for each action, with nothing left out.
 | 출력 / Output | `say` · `show` · `display` · `tell` · `print` | `말해` · `말해줘` · `말해주세요` · `보여줘` · `보여주세요` · `출력해` · `출력해줘` · `출력해주세요` · `해줘` · `해주세요` · `읽어줘` |
 | 입력 / Input | `ask` · `prompt` · `question` | `물어봐` · `물어봐줘` · `물어보세요` · `질문해` · `질문해줘` · `입력받아` · `입력받아줘` · `입력받아주세요` · `물어봐요` · `물어봐주세요` · `질문해주세요` |
 | 저장 / Save | `set` · `save` · `remember` · `store` · `let` · `make` | `저장` · `저장해` · `저장해줘` · `기억해` · `기억해줘` · `설정` · `설정해` · `설정해줘` · `지정` · `지정해` · `정해` · `만들어` |
-| 더하기 / Add | `add` · `increase` · `increment` · `plus` · `up` · `goesup`(`goes up`) | `더해` · `더해줘` · `올려` · `올려줘` · `늘려` · `늘려줘` · `더하기` · `증가` · `증가해` · `증가시켜` |
-| 빼기 / Subtract | `subtract` · `decrease` · `decrement` · `minus` · `remove` · `down` · `goesdown`(`goes down`) | `빼` · `빼줘` · `내려` · `내려줘` · `줄여` · `줄여줘` · `빼기` · `감소` · `감소해` · `감소시켜` |
+| 더하기 / Add | `add` · `increase` · `increment` · `plus` · `up` · `goesup` | `더해` · `더해줘` · `올려` · `올려줘` · `늘려` · `늘려줘` · `더하기` · `증가` · `증가해` · `증가시켜` |
+| 빼기 / Subtract | `subtract` · `decrease` · `decrement` · `minus` · `remove` · `down` · `goesdown` | `빼` · `빼줘` · `내려` · `내려줘` · `줄여` · `줄여줘` · `빼기` · `감소` · `감소해` · `감소시켜` |
 | 곱하기 / Multiply | `multiply` · `multiplied` | `곱해` · `곱해줘` · `곱하기해` |
 | 나누기 / Divide | `divide` · `divided` | `나눠` · `나눠줘` · `나누어줘` |
 | 기다리기 / Wait | `wait` · `pause` · `sleep` | `기다려` · `기다려줘` · `기다리세요` · `기다려주세요` · `쉬어` · `쉬어줘` · `쉬세요` |
@@ -611,7 +612,7 @@ Every spelling accepted for each action, with nothing left out.
 | 다른 갈래 / Else | `else` · `otherwise` | `아니면` · `그렇지않으면` · `아니면만약` · `아니면만약에` · `그렇지않으면만약` · `그렇지않으면만약에` |
 | 반복 중단 / Break | `break` · `breakhere` | `멈춰` · `멈춰줘` · `멈춰라` · `멈추기` · `그만해` · `정지해` · `종료해` · `중단` · `반복멈춰` · `여기서멈춰` |
 | 말끝 출력 / Output written last | — | `말하기` · `말해라` · `알려줘` · `알려주세요` · `알려줘요` · `얘기해` · `얘기해줘` · `얘기해주세요` · `표시해` · `표시해줘` · `출력하기` · `보여주기` · `프린트해` · `프린트` · `프린트해줘` · `프린트해주세요` · `표시하기` |
-| 목적어가 없을 때만 말끝 출력 / Output written last, with no object | — | `띄워` · `띄워줘` · `띄워주세요` · `나타내` · `나타내줘` · `나타내주세요` |
+| 목적어가 없을 때만 말끝 출력 / Output written last, with no object | — | `띄워` · `띄워줘` · `띄워주세요` · `나타내` · `나타내줘` · `나타내주세요` · `써줘` · `써주세요` · `적어줘` · `적어주세요` |
 | 한 낱말만 보여 주기 / Show the one word after it | `output` · `write` · `echo` · `reveal` · `report` · `give` · `list` · `present` · `announce` · `speak` · `puts` | — |
 | 한 글자 출력 / Short output word | — | `말` |
 | 화면에 / On the screen | `screen` | `화면에` · `화면에다` · `화면에다가` · `스크린에` |
@@ -676,7 +677,7 @@ Every spelling accepted for each action, with nothing left out.
 | 건너뛰기(블록 안) / Skip inside a block | `keepgoing` · `carryon` | — |
 | 무작위 고르기 / Random pick | `randomchoice` · `pick` · `choose` | `랜덤선택` · `하나골라` · `골라` · `하나뽑아` · `뽑아` |
 | 값 바꾸기 연결어 / Value-change connector | `to` · `by` · `from` · `of` · `into` · `onto` | — |
-| 목록 연결어 / List connector | `to` · `into` · `onto` | `에다가` · `에다` · `에` · `한테` · `에게` |
+| 목록 연결어 / List connector | `to` · `into` · `onto` · `in` | `에다가` · `에다` · `에` · `한테` · `에게` |
 | 저장 대상 조사 / Saved-name particle | — | `을` · `를` · `이` · `가` · `에` |
 | 문장 어미 / Sentence ending | — | `입니다` · `이에요` · `예요` · `이다` · `으로` · `로` · `라고` · `이라고` |
 | 최신판 / Latest | `latest` · `newest` | `최신` · `최신판` · `최신버전` |

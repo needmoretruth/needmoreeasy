@@ -130,6 +130,9 @@ FOR_EACH = [
     ("문장형", "Sentence", "for each friend in friends and show friend", "친구들의 친구마다 반복해서 친구 말해줘", "for friend in friends: print(friend)", 'for 친구 in 친구들: print(친구)'),
     ("문장형", "Sentence", "repeat for each name in names", "이름들에서 이름마다 반복해", "for name in names:", 'for 이름 in 이름들:'),
     ("문장형", "Sentence", "foreach friend in friends", "친구들의 친구 마다 반복해", "for friend in friends:", 'for 친구 in 친구들:'),
+    # `친구들마다` on its own: Korean drops the singular name when the plural
+    # already says it, and NME calls each one by the plural without its `들`.
+    ("문장형", "Sentence", "for every friend in friends", "친구들마다 반복해", "for friend in friends:", 'for 친구 in 친구들:'),
     ("문장형", "Sentence", "for each friend in friends with place", "친구들의 친구마다 순서와 함께 반복해", "for place, friend in enumerate(friends, 1):", 'for 순서, 친구 in enumerate(친구들, 1):'),
     ("초급", "Beginner", "for each friend in friends:", "친구들의 친구마다:", "for friend in friends:", 'for 친구 in 친구들:'),
     ("초급", "Beginner", "for each friend in friends with place:", "친구들의 친구마다 순서와 함께:", "for place, friend in enumerate(friends, 1):", 'for 순서, 친구 in enumerate(친구들, 1):'),
@@ -498,6 +501,9 @@ def spelling_table(korean: bool) -> str:
         ("다른 갈래 / Else", "ELSE_WORDS_EN", "ELSE_WORDS_KO"),
         ("반복 중단 / Break", "BREAK_WORDS_EN", "BREAK_WORDS_KO"),
         ("말끝 출력 / Output written last", "SAY_TRAILING_WORDS_KO", None),
+        ("목적어가 없을 때만 말끝 출력 / Output written last, with no object",
+         "SAY_TRAILING_OBJECT_FREE_WORDS_KO", None),
+        ("한 낱말만 보여 주기 / Show the one word after it", "SAY_ONE_WORD_WORDS_EN", None),
         ("한 글자 출력 / Short output word", "SAY_SHORT_WORDS_KO", None),
         ("화면에 / On the screen", "SCREEN_TAIL_WORDS_EN", "SCREEN_TAIL_WORDS_KO"),
         ("화면 동사 / Screen verb", "SCREEN_VERB_WORDS_EN", "SCREEN_VERB_WORDS_KO"),

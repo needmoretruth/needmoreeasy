@@ -4,7 +4,7 @@
 
 [README](../README.ko.md) | [5분 시작](getting-started.ko.md) | [학습 과정](tutorial.ko.md) | [문법 안내](language.ko.md)
 
-현재 NME `0.0.1-beta.160`는 beta 브랜치의 소스에서 설치합니다. Git, Cargo가
+현재 NME `0.1.0`는 소스에서 설치합니다. Git, Cargo가
 포함된 안정 Rust, Python 3.8 이상이 필요합니다. 공식
 [Rust 설치](https://www.rust-lang.org/tools/install),
 [Python 다운로드](https://www.python.org/downloads/),
@@ -23,14 +23,14 @@
    CPython 명령에는 일반 PowerShell이면 충분합니다.
 
 ```powershell
-git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
+git clone https://github.com/needmoretruth/needmoreeasy.git
 cd needmoreeasy
 cargo install --path crates/nme-cli --locked
 $env:Path = "$HOME\.cargo\bin;$env:Path"
 nme --version
 ```
 
-NME 버전은 `0.0.1-beta.160`가 표시되어야 합니다. `$env:Path` 줄은 방금 설치한
+NME 버전은 `0.1.0`가 표시되어야 합니다. `$env:Path` 줄은 방금 설치한
 명령을 현재 PowerShell에서 바로 찾게 합니다.
 
 **다음 터미널을 위한 PATH 설정.** 새 PowerShell에서도 `nme`를 찾지 못하면
@@ -70,14 +70,14 @@ Windows 10은 Windows 11과 같은 방식으로 설치합니다. 이 절만으�
    CPython 명령에는 일반 PowerShell이면 충분합니다.
 
 ```powershell
-git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
+git clone https://github.com/needmoretruth/needmoreeasy.git
 cd needmoreeasy
 cargo install --path crates/nme-cli --locked
 $env:Path = "$HOME\.cargo\bin;$env:Path"
 nme --version
 ```
 
-NME 버전은 `0.0.1-beta.160`가 표시되어야 합니다. `$env:Path` 줄은 방금 설치한
+NME 버전은 `0.1.0`가 표시되어야 합니다. `$env:Path` 줄은 방금 설치한
 명령을 현재 PowerShell에서 바로 찾게 합니다.
 
 **다음 터미널을 위한 PATH 설정.** 새 PowerShell에서도 `nme`를 찾지 못하면
@@ -127,14 +127,14 @@ python.org에서 현재 Python을 설치하고 공식 rustup 페이지의 명령
 열고 (리포지토리를 복제한 `needmoreeasy` 폴더에서) 실행하세요.
 
 ```sh
-git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
+git clone https://github.com/needmoretruth/needmoreeasy.git
 cd needmoreeasy
 cargo install --path crates/nme-cli --locked
 export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 ```
 
-NME 버전은 `0.0.1-beta.160`가 표시되어야 합니다. Cargo가 바이너리 폴더가
+NME 버전은 `0.1.0`가 표시되어야 합니다. Cargo가 바이너리 폴더가
 `PATH`에 없다고 경고하면 첫 `nme` 명령보다 `export` 줄을 먼저 실행해야
 합니다.
 
@@ -173,14 +173,14 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 (리포지토리를 복제한 `needmoreeasy` 폴더에서) 실행합니다.
 
 ```sh
-git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
+git clone https://github.com/needmoretruth/needmoreeasy.git
 cd needmoreeasy
 cargo install --path crates/nme-cli --locked
 export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 ```
 
-NME 버전은 `0.0.1-beta.160`가 표시되어야 합니다. `export` 줄을 의도적으로 첫
+NME 버전은 `0.1.0`가 표시되어야 합니다. `export` 줄을 의도적으로 첫
 `nme` 명령보다 앞에 두었습니다.
 
 **첫 NME 실행:**
@@ -218,14 +218,14 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 (리포지토리를 복제한 `needmoreeasy` 폴더에서) 실행합니다.
 
 ```sh
-git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
+git clone https://github.com/needmoretruth/needmoreeasy.git
 cd needmoreeasy
 cargo install --path crates/nme-cli --locked
 export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 ```
 
-NME 버전은 `0.0.1-beta.160`가 표시되어야 합니다. `export` 줄을 의도적으로 첫
+NME 버전은 `0.1.0`가 표시되어야 합니다. `export` 줄을 의도적으로 첫
 `nme` 명령보다 앞에 두었습니다.
 
 **첫 NME 실행:**
@@ -262,14 +262,14 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 (리포지토리를 복제한 `needmoreeasy` 폴더에서) 실행합니다.
 
 ```sh
-git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
+git clone https://github.com/needmoretruth/needmoreeasy.git
 cd needmoreeasy
 cargo install --path crates/nme-cli --locked
 export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 ```
 
-NME 버전은 `0.0.1-beta.160`가 표시되어야 합니다. `export` 줄을 의도적으로 첫
+NME 버전은 `0.1.0`가 표시되어야 합니다. `export` 줄을 의도적으로 첫
 `nme` 명령보다 앞에 두었습니다.
 
 **첫 NME 실행:**
@@ -302,7 +302,7 @@ nme 검사 examples/three-levels
 nme 실행 examples/hello-sentence
 ```
 
-NME는 `0.0.1-beta.160`, 랜덤 어댑터는 `0.0.1`이 표시되어야 합니다.
+NME는 `0.1.0`, 랜덤 어댑터는 `0.0.1`이 표시되어야 합니다.
 
 ## 고급: 다른 Python 명령 고르기
 

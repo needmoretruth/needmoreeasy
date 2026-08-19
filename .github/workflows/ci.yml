@@ -22,8 +22,8 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: '3.14'
-      - name: Enforce one beta version per beta commit
-        run: python scripts/check-beta-step.py
+      - name: Enforce the version shape, the step, and that it is not 1.0.0
+        run: python scripts/check-version.py
 
   docs:
     name: documentation-parity

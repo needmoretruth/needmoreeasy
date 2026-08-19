@@ -4,7 +4,7 @@ English | [한국어](install.ko.md)
 
 [Home](../README.md) | [Getting started](getting-started.md) | [Tutorial](tutorial.md) | [Language reference](language.md)
 
-NME `0.0.1-beta.160` currently installs from the beta branch. You need Git,
+NME `0.1.0` installs from source. You need Git,
 stable Rust with Cargo, and Python 3.8 or newer. Use the official
 [Rust installer](https://www.rust-lang.org/tools/install),
 [Python downloads](https://www.python.org/downloads/), and
@@ -23,14 +23,14 @@ below; each section is complete on its own.
    PowerShell is enough for the CPython commands:
 
 ```powershell
-git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
+git clone https://github.com/needmoretruth/needmoreeasy.git
 cd needmoreeasy
 cargo install --path crates/nme-cli --locked
 $env:Path = "$HOME\.cargo\bin;$env:Path"
 nme --version
 ```
 
-Expected NME version: `0.0.1-beta.160`. The `$env:Path` line makes the
+Expected NME version: `0.1.0`. The `$env:Path` line makes the
 just-installed command available in the current PowerShell session.
 
 **Set up PATH for future terminals.** If a new PowerShell still cannot find
@@ -70,14 +70,14 @@ repeated here so this section can be followed on its own:
    PowerShell is enough for the CPython commands:
 
 ```powershell
-git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
+git clone https://github.com/needmoretruth/needmoreeasy.git
 cd needmoreeasy
 cargo install --path crates/nme-cli --locked
 $env:Path = "$HOME\.cargo\bin;$env:Path"
 nme --version
 ```
 
-Expected NME version: `0.0.1-beta.160`. The `$env:Path` line makes the
+Expected NME version: `0.1.0`. The `$env:Path` line makes the
 just-installed command available in the current PowerShell session.
 
 **Set up PATH for future terminals.** If a new PowerShell still cannot find
@@ -129,14 +129,14 @@ new Terminal and run (from the `needmoreeasy` folder where you cloned the
 repository):
 
 ```sh
-git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
+git clone https://github.com/needmoretruth/needmoreeasy.git
 cd needmoreeasy
 cargo install --path crates/nme-cli --locked
 export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 ```
 
-Expected NME version: `0.0.1-beta.160`. The `export` line must run before the
+Expected NME version: `0.1.0`. The `export` line must run before the
 first `nme` command when Cargo warns that its binary directory is not on
 `PATH`.
 
@@ -176,14 +176,14 @@ shell, then run (from the `needmoreeasy` folder where you cloned the
 repository):
 
 ```sh
-git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
+git clone https://github.com/needmoretruth/needmoreeasy.git
 cd needmoreeasy
 cargo install --path crates/nme-cli --locked
 export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 ```
 
-Expected NME version: `0.0.1-beta.160`. The `export` line is deliberately
+Expected NME version: `0.1.0`. The `export` line is deliberately
 before `nme --version`.
 
 **First NME run:**
@@ -223,14 +223,14 @@ shell, then run (from the `needmoreeasy` folder where you cloned the
 repository):
 
 ```sh
-git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
+git clone https://github.com/needmoretruth/needmoreeasy.git
 cd needmoreeasy
 cargo install --path crates/nme-cli --locked
 export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 ```
 
-Expected NME version: `0.0.1-beta.160`. The `export` line is deliberately
+Expected NME version: `0.1.0`. The `export` line is deliberately
 before `nme --version`.
 
 **First NME run:**
@@ -270,14 +270,14 @@ shell, then run (from the `needmoreeasy` folder where you cloned the
 repository):
 
 ```sh
-git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
+git clone https://github.com/needmoretruth/needmoreeasy.git
 cd needmoreeasy
 cargo install --path crates/nme-cli --locked
 export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 ```
 
-Expected NME version: `0.0.1-beta.160`. The `export` line is deliberately
+Expected NME version: `0.1.0`. The `export` line is deliberately
 before `nme --version`.
 
 **First NME run:**
@@ -311,7 +311,7 @@ nme check examples/three-levels
 nme run examples/hello-sentence
 ```
 
-Expected NME version: `0.0.1-beta.160`. Expected random adapter: `0.0.1`.
+Expected NME version: `0.1.0`. Expected random adapter: `0.0.1`.
 
 ## Advanced: choose a different Python command
 

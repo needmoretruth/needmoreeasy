@@ -5,6 +5,98 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+
+## 0.1.0
+- **A word English already has is never read as a misspelling.** NME repairs
+  one typo, and one typo is all that separates most short words: `shop milk`
+  printed `milk`, `well done` printed `done`, `bell rings` printed `rings`.
+  The compiler now carries the 3,030 real English words that sit one typo away
+  from a word of its own, generated from the system spelling dictionary by
+  `scripts/build-common-english-words.py` and checked on every build. Repair
+  still catches what it is for — `shwo`, `tel`, `sya` and `pirnt` are not
+  English words.
+- **A sentence that ends in an output word keeps its verb.** English tolerates
+  the message-first order (`Hello world show`), and read without care it
+  claimed the last word of every sentence that ends in one: `time will tell`
+  printed `time will`, `what did she say` printed `what did she`, and `I have
+  nothing to say` lost its verb. A subject, a modal, `to` or a conjunction in
+  front of the word settles which one it is.
+- **A line that opens with `in`, `is`, `and`, `or` or `as` is a sentence.** It
+  used to be handed to Python, so `in the beginning there was light` came back
+  as CPython's `SyntaxError` with a caret under the first two letters. None of
+  those five can begin a Python statement, so a line that starts with one is
+  not Python that went wrong.
+- **`사과` is not `사` and `과`.** Korean picks its joining particle from the
+  sound before it — `과` after a consonant, `와` after a vowel — and reading
+  every trailing `과` as *and* cut the word for apple in half: `가방은 목록
+  사과` built a bag holding `사`. `감과 배` is still two items.
+- **`점수에 1` counts, and no longer wipes the score.** `에` says *into* and
+  `에서` says *out of*, so everyday Korean drops the verb when the marks
+  already carry the direction. It was read as a save — `점수 = 1` — and the
+  count being kept was gone with nothing on screen to show it.
+- **A number added to a list goes into it.** `add 1 to bag` compiled to `bag =
+  bag + 1`, which is a `TypeError` in every Python there has ever been. Two
+  lists still join, because that is what Python does and what the words say.
+- **`score+1` is refused.** Python works out the answer and drops it, so the
+  program ran, printed nothing and left `score` exactly as it was — the one
+  shape where doing nothing is indistinguishable from working. `E0604` now
+  says so and points at `add 1 to score`.
+- **A job can count something made outside it.** Python decides for a whole
+  function at once whether a name is local, so `to tally: add 1 to total end`
+  built a function that read `total` before it had one and died with
+  `UnboundLocalError` — a word the reader has never met, on a line that looks
+  right. The declaration now rides on the same physical line as the change,
+  because one NME statement is one line of Python and a line of its own would
+  move every traceback number after it. Reading the name before changing it
+  cannot be written at all, and `E0236` says why.
+- **`save entry to the file "diary.txt"` writes the file.** `save` is both
+  NME's saving word and the everyday English for writing a file, and the two
+  collided in silence: the diary was never written and `entry` quietly became
+  the text `diary.txt`. Saying `file` settles it, exactly as `파일에` does in
+  Korean. The bare `save entry to "diary.txt"` still saves the file name into
+  the name, which is a real thing to do.
+- **The joining words between a header and the line under it are not the
+  message.** `repeat 3 times after that show Again` printed `after that show
+  Again`, `3번 반복: 다시 말해줘` printed `: 다시`, and `만약에 점수가 1보다
+  크면, 좋아 말해줘` printed `, 좋아`. Nothing is dropped unless what is left
+  still reads as a command, so `repeat 3 times next week` keeps saying it.
+- **A Korean loop written on one line loops.** `점수가 5보다 작은 동안 안녕
+  말해줘` was claimed by the condition matcher, which then failed on a
+  condition ending in `작은`; with `동안에` it came out as an `if` whose message
+  began with the loop word. `동안` after the verb is still part of what gets
+  said (`커서가 깜빡이는 동안 말해줘`).
+- **A name written as two words is named.** `set full name to Mina` made a name
+  called `full` holding the words `name to Mina`, and printing it showed all of
+  them. The connector standing further along is the evidence, so `E0230` now
+  fires and offers `full_name`. `set greeting Hello world`, which has no
+  connector anywhere, still saves the greeting.
+- **A name the language itself needs is refused (`E0237`).** `the total of
+  marks` is Python's `sum(...)` and `how many friends` is `len(...)`, so `set
+  sum to 3` took the reading away from every later line — and the error landed
+  on one of those lines as `'int' object is not callable`. Python written as
+  Python is left alone: whoever writes `sum = 0` in Python has said what they
+  mean.
+- **`이번` is a word, not the number two and a counter.** `이번 달 예산 말해줘`
+  looped twice and printed `달 예산`, the writer's first word gone. `두번` and
+  `3번` are still counts.
+- **The remainder can be taken by a name.** `총점을 인원으로 나눈 나머지` came
+  out as writing: only a number was read, because a number has its particle cut
+  off where a name keeps it attached. `docs/syntax.ko.md` §15 had promised
+  both.
+- **A name cannot take a loaded module's word away.** `use date` and then `set
+  today to Monday` replaced the module's `today`, and `show today()` died with
+  `'str' object is not callable`. The other order was refused from the start;
+  this is that rule from the other side. A question that happens to end on one
+  of those words is still a question — `use date` may not change what a line
+  means.
+- **`show Today is today()` is a sentence.** It is valid Python — `is`
+  compares — so it came out as one and printed the words back unevaluated after
+  dying on `Today`, a name nothing ever made. `is` is an English verb far more
+  often than it is Python's identity test.
+- **More ways to say the same thing.** `rep 3 times`, `go round 2 times`, `run
+  through 2 times`; `should n be greater than 3`, `whenever`, `incase`; and
+  Korean `친구들마다 반복해`, which loops over `친구들` with `친구` as the name
+  for each one.
 - **A date module.** One line — `use date latest` / `날짜 사용 최신` — brings
   `today()`, `now()`, `year()`, `month()`, `day_of_month()`, `weekday()` and
   `days_after(7)`. It is the seventh bundled module, and it replaces the

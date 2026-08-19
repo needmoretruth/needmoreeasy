@@ -80,14 +80,14 @@ score is greater than 5 then show high
 색이 빨강과 같으면 맞아요 말해줘
 ```
 
-## Install the beta (pre-release)
+## Install it on your own machine
 
 This is the public beta, not a stable 1.0 release. It builds from source.
 Install stable Rust, Python 3.8+, and Git, then follow the
 [platform installation guide](docs/install.md) or run:
 
 ```sh
-git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
+git clone https://github.com/needmoretruth/needmoreeasy.git
 cd needmoreeasy
 cargo install --path crates/nme-cli --locked
 export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
@@ -99,7 +99,7 @@ warns that its `bin` directory is not on `PATH`. It does not reinstall NME.
 Windows PowerShell uses the PATH step in the
 [installation guide](docs/install.md#windows-11).
 
-Expected version: `nme 0.0.1-beta.160`.
+Expected version: `nme 0.1.0`.
 
 Windows, macOS, and Linux instructions are in the
 [installation guide](docs/install.md). The [five-minute guide](docs/getting-started.md)
