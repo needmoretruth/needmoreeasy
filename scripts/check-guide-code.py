@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-"""Compiles every NME program in the guides.
+"""Compiles every NME program in the documentation.
 
-A guide that shows a program which does not compile teaches the wrong thing, so
-every ```nme block in `docs/guides/` is run through `nme check`. Blocks fenced
+A page that shows a program which does not compile teaches the wrong thing, so
+every ```nme block under `docs/` and in the two READMEs is run through
+`nme check`. That includes the three AI prompts, which are the whole of what an
+assistant reads before writing NME for someone — a wrong line there is repeated
+to every person who pastes the prompt. Blocks fenced
 as ```text are what the program prints, or a data file, or the mini-language a
 guide is building — never NME, and never checked.
 
@@ -13,6 +16,10 @@ placeholders, a line shown as an example of an error — opt out with a marker
 comment on the line above the fence:
 
     <!-- nme-check: skip -->
+    <!-- nme-check: skip — why this block is not a program -->
+
+Say why whenever it is not obvious; a bare marker on a block that later grows
+into a real program is how a broken example gets to stay broken.
 
 The compiler binary defaults to `target/release/nme`, then `target/debug/nme`.
 """
@@ -26,8 +33,7 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-GUIDES = ROOT / "docs/guides"
-SKIP = "<!-- nme-check: skip -->"
+SKIP = "<!-- nme-check: skip"
 FENCE = re.compile(r"^\s*```(\w*)\s*$")
 
 
@@ -51,6 +57,14 @@ def blocks(path: Path):
             yield start, "\n".join(body)
 
 
+def pages() -> list[Path]:
+    """Every page that shows NME: the guides, the reference, the prompts, the
+    two READMEs. Sorted so a failure always reports in the same order."""
+    return sorted(
+        {*ROOT.glob("docs/**/*.md"), ROOT / "README.md", ROOT / "README.ko.md"}
+    )
+
+
 def main() -> None:
     arguments = [a for a in sys.argv[1:] if not a.startswith("--")]
     only = None
@@ -71,7 +85,7 @@ def main() -> None:
     problems, checked = [], 0
     with tempfile.TemporaryDirectory() as folder:
         source = Path(folder) / "block.nme"
-        for path in sorted(GUIDES.glob("*.md")):
+        for path in pages():
             if only and path.name.split("-")[0] not in only:
                 continue
             for line_number, body in blocks(path):
@@ -90,7 +104,9 @@ def main() -> None:
                 if result.returncode != 0:
                     message = (result.stdout + result.stderr).strip().splitlines()
                     first = next((m for m in message if "error" in m or "오류" in m), "")
-                    problems.append(f"{path.name}:{line_number}: {first}")
+                    problems.append(
+                        f"{path.relative_to(ROOT)}:{line_number}: {first}"
+                    )
 
     print(f"check-guide-code: compiled {checked} blocks")
     for problem in problems:

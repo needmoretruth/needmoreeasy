@@ -157,6 +157,7 @@ set pals to an empty list
 Once a name holds a list, the sentences that read it and rearrange it work on
 it:
 
+<!-- nme-check: skip — a side-by-side vocabulary listing, not a program. -->
 ```nme
 append Grace to friends
 친구들에 지수 넣어
@@ -199,6 +200,7 @@ and both become `friends[0]`. There is no item 0: writing one is refused with
 
 Two of these read a list inside a condition:
 
+<!-- nme-check: skip — a side-by-side vocabulary listing, not a program. -->
 ```nme
 if friends contains Mina
 만약에 친구들에 민수가 있으면
@@ -214,6 +216,7 @@ message and not a program that means something else.
 
 `how many` is also a value and a condition, not only something to show:
 
+<!-- nme-check: skip — a side-by-side vocabulary listing, not a program. -->
 ```nme
 set total to how many friends
 총합은 친구들 개수
@@ -223,6 +226,7 @@ if how many friends is greater than 3
 
 ### What is left over
 
+<!-- nme-check: skip — a side-by-side vocabulary listing, not a program. -->
 ```nme
 show the remainder of pile divided by 4
 쌓인돌을 4로 나눈 나머지 말해줘

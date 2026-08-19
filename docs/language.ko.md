@@ -153,6 +153,7 @@ set pals to an empty list
 
 이름이 목록을 담고 나면, 목록을 읽고 바꾸는 문장을 쓸 수 있습니다.
 
+<!-- nme-check: skip — 프로그램이 아니라 문장 낱말을 나란히 보여 주는 목록입니다. -->
 ```nme
 친구들에 지수 넣어
 append Grace to friends
@@ -193,6 +194,7 @@ show friends joined together
 
 목록은 조건 안에서도 읽습니다.
 
+<!-- nme-check: skip — 프로그램이 아니라 문장 낱말을 나란히 보여 주는 목록입니다. -->
 ```nme
 만약에 친구들에 민수가 있으면
 if friends contains Mina
@@ -207,6 +209,7 @@ if friends is empty
 
 `개수`는 보여 주기만 하는 것이 아니라 값이자 조건이기도 합니다.
 
+<!-- nme-check: skip — 프로그램이 아니라 문장 낱말을 나란히 보여 주는 목록입니다. -->
 ```nme
 총합은 친구들 개수
 set total to how many friends
@@ -216,6 +219,7 @@ if how many friends is greater than 3
 
 ### 나누고 남는 수
 
+<!-- nme-check: skip — 프로그램이 아니라 문장 낱말을 나란히 보여 주는 목록입니다. -->
 ```nme
 쌓인돌을 4로 나눈 나머지 말해줘
 show the remainder of pile divided by 4
