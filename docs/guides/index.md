@@ -66,7 +66,7 @@ bracket and no equals sign, which `scripts/report-guide-tier.py` measures.
 18. [18 — Adventure — a small text game](18-adventure.md)
 19. [19 — Game: how fast are you?](19-reaction.md)
 20. [20 — ASCII art — drawing with characters](20-ascii-art.md)
-21. [21 — Progress — a bar in the terminal](21-progress.md)
+21. [21 — Progress — showing how far along you are](21-progress.md)
 22. [22 — Terminal menu — a small TUI](22-terminal-menu.md)
 23. [23 — High score: a small project](23-high-score.md)
 24. [24 — Quiz — questions from a file](24-quiz.md)
@@ -220,7 +220,7 @@ and validated by hand.
 | 18 | ★★★★☆ | projects | [Adventure — a small text game](18-adventure.md) | a room-by-room text adventure with choices |
 | 19 | ★★★☆☆ | games | [Game: how fast are you?](19-reaction.md) | a program that measures how fast you react |
 | 20 | ★★★☆☆ | screen and time | [ASCII art — drawing with characters](20-ascii-art.md) | a program that draws shapes by repeating a character |
-| 21 | ★★★★☆ | screen and time | [Progress — a bar in the terminal](21-progress.md) | a terminal progress bar that fills a row as a loop runs |
+| 21 | ★★★☆☆ | screen and time | [Progress — showing how far along you are](21-progress.md) | working through a list of jobs while a bar grows to show the progress |
 | 22 | ★★★★☆ | projects | [Terminal menu — a small TUI](22-terminal-menu.md) | a menu program that clears the screen and draws it again |
 | 23 | ★★★☆☆ | projects | [High score: a small project](23-high-score.md) | a dice game of three rounds that tells you your best |
 | 24 | ★★★★☆ | games | [Quiz — questions from a file](24-quiz.md) | a multiple-choice quiz that loads questions from a JSON file, scores answers, and reports the result |

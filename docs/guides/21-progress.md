@@ -1,110 +1,101 @@
-# 21 — Progress — a bar in the terminal
+# 21 — Progress — showing how far along you are
 
 English | [한국어](21-progress.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- Difficulty: ★★★★☆ (4/5)
-- Prerequisites: [07 — Repeat](07-repeat.md), [20 — ASCII art](20-ascii-art.md)
+- Difficulty: ★★★☆☆ (3/5)
+- Prerequisites: [14 — Screen](14-screen.md), [20 — ASCII art](20-ascii-art.md)
 - Topic: screen and time
-- Result: a terminal progress bar that fills a row as a loop runs
+- Result: working through a list of jobs while a bar grows to show the progress
 
-Long tasks deserve feedback. A progress bar is a row of `#` that grows while a
-loop runs. Instead of printing new lines, it redraws the same line — so the
-terminal shows one row filling up. This guide builds one with `print` and `\r`
-(a carriage return).
+A long job should show how far along it is. With nothing on screen it looks
+like the program has stopped. One bar is enough — a bar that gets one block
+longer with every step.
 
 ## Steps
 
-1. `print()` normally ends with a newline, so a second `print` drops to a new
-   row. `end="\r"` replaces the newline with a carriage return, which sends the
-   cursor back to the start of the same row — the next `print` overwrites it:
+1. **A bar is one block repeated.** It is the same sentence as in
+   [guide 20](20-ascii-art.md):
 
    ```nme
-   print("Hello", end="\r")
-   print("World")
+   set block to *
+   show block repeated 3 times
    ```
 
-   Only `World` is visible at the end; the second call overwrote the first row.
+   You get `***`.
 
-2. Repeat the overwrite with a `for` loop and a growing row of `#`. `"#" * i`
-   is a string of `i` hashes — `"#" * 3` is `"###"`:
+2. **To choose the length you need to know which step you are on.** Adding
+   `with place` to a list loop tells you:
 
    ```nme
-   for i in range(1, 11):
-       print("#" * i, end="\r")
-   print()
+   set jobs to list of reading, adding up, saving
+   for each job in jobs with place
+       show place
+       show job
+   end
    ```
 
-   Each pass redraws the row one hash longer, so the bar fills left to right.
-   The bare `print()` after the loop ends with a newline, so later output
-   starts on a fresh row.
+   You get `1` and `reading`, then `2` and `adding up`, then `3` and `saving`.
+   **Places are counted from 1.**
 
-3. The bar moves too fast to watch. `import time` loads the clock, and
-   `time.sleep(0.2)` pauses for two tenths of a second each pass:
+3. **Use that place as the length.** One block on the first step, three on the
+   third:
 
    ```nme
-   import time
-
-   for i in range(1, 11):
-       print("#" * i, end="\r")
-       time.sleep(0.2)
-   print()
+   set block to *
+   set jobs to list of reading, adding up, saving
+   for each job in jobs with place
+       set bar to block repeated place times
+       show bar
+   end
    ```
 
-4. The whole program. Save `progress.nme`:
+   Each bar is one longer than the last, but they pile up.
+
+4. **Clear the screen before each one so they do not pile up.** That is
+   `clear the screen` from [guide 14](14-screen.md), and now the bar looks
+   like it is growing:
 
    ```nme
-   # progress.nme — a terminal progress bar that fills a row.
-   # Run: nme r progress
-   #
-   # A row of # grows from 1 to 10. The \r returns to the start
-   # of the row, so each longer row overwrites the one before it,
-   # and time.sleep pauses so you can watch the bar fill.
-   # The bar runs 10 steps, then a final print() moves to a new row.
-
-   import time
-
-   steps = 10
-   show "Working..."
-   # Each pass builds one row and redraws it in place.
-   for i in range(1, steps + 1):
-       filled = "#" * i
-       percent = i * 10
-       print(f"{filled} {percent}%", end="\r")
-       time.sleep(0.2)
-   print()
-   show "Done!"
+   set block to *
+   set jobs to list of reading, adding up, saving
+   for each job in jobs with place
+       set bar to block repeated place times
+       clear the screen
+       show job
+       show bar
+       wait 0.2 seconds
+   end
    ```
 
-   The bar grew a percent column: `percent = i * 10` turns step 1 into `10%`
-   and step 10 into `100%`.
+   Without `wait 0.2 seconds` it is over before you can see it. A real program
+   does the real work there instead of waiting.
 
-5. Run it:
+5. The whole thing:
 
-   ```sh
-   nme r progress
+   ```nme
+   set block to *
+   set jobs to list of reading, adding up, drawing, saving
+   for each job in jobs with place
+       set bar to block repeated place times
+       clear the screen
+       show job
+       show bar
+       wait 0.2 seconds
+   end
+   show "all done"
    ```
-
-   ```text
-   Working...
-   ########## 100%
-   Done!
-   ```
-
-   On a real terminal the ten rows `# 10%` through `########## 100%` replace
-   each other on the same line, so you see the bar fill one hash at a time. In
-   printed output only the final full bar survives.
 
 ## Try it yourself
 
-Change the loop to count down: `range(10, 0, -1)` draws a full bar that empties
-to one hash. Or replace `"#"` with `"="` and watch a different character fill
-the row.
+Change `set block to *` to `set block to #` or `set block to =`. Then add more
+jobs to the list — the bar gets longer to match, and there is no length to fix
+anywhere.
 
 ## What you learned
 
-- `print(..., end="\r")` replaces the newline with a carriage return.
-- `"#" * i` repeats a string — the loop draws a growing bar on one row.
-- `import time` and `time.sleep(0.2)` pause between steps.
-- A progress bar is just a loop that redraws one row until it is full.
+- `<block> repeated <n> times` makes one row of a bar.
+- `with place` on a list loop tells you which step you are on, counting from 1.
+- Using that place as the length makes the bar grow one block per step.
+- `clear the screen` before each draw keeps it growing in place instead of piling up.
