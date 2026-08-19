@@ -7891,7 +7891,7 @@ fn match_arrange(
             return Ok(None);
         }
         let Some(target) = list_name_at(&body[consumed], known_names) else {
-            return Err(not_a_list_diagnostic(&body[consumed], span_of(tokens)));
+            return Err(not_a_list_diagnostic(&body[consumed], body[consumed].span));
         };
         return Ok(Some(NmeStmt::Arrange { target, order }));
     }
@@ -7917,7 +7917,7 @@ fn match_arrange(
             // much room for an ordinary sentence — `모두 잘 섞어` — so the line
             // is left to print itself.
             if at == 1 {
-                return Err(not_a_list_diagnostic(&body[0], span_of(tokens)));
+                return Err(not_a_list_diagnostic(&body[0], body[0].span));
             }
             continue;
         };
