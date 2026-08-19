@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Runs the guides' programs and compares what they print with what the guide says.
 
-    python scripts/report-guide-output.py            # only the mismatches
-    python scripts/report-guide-output.py --all      # every program it ran
+    python scripts/check-guide-output.py            # only the mismatches
+    python scripts/check-guide-output.py --all      # every program it ran
 
 `check-guide-code.py` proves a program compiles. It cannot tell that the guide
 promises one thing and the program prints another — which is how guide 13 came
@@ -13,8 +13,15 @@ Only self-contained programs are run: no input, no randomness, no clock, no
 network. Anything else is skipped and counted, because a report that quietly
 covers a third of the guides is worse than one that says so.
 
-It reports; it does not fail a build. Some ```text blocks are data files or an
-abridged run, and deciding which is editorial.
+A program it cannot run on its own — one that wants a file, an argument, the
+clock or a die — is skipped and counted. Coverage was 32 of 153 candidates when
+this was written, and the count is printed every run so nobody reads a green
+line as "every guide was checked".
+
+A block that is not a program at all opts out the same way as in
+`check-guide-code.py`:
+
+    <!-- nme-check: skip — why this block is not a program -->
 """
 
 from __future__ import annotations
@@ -165,7 +172,7 @@ def main() -> None:
         None,
     )
     if binary is None:
-        raise SystemExit("report-guide-output: no nme binary found")
+        raise SystemExit("check-guide-output: no nme binary found")
 
     ran = skipped = mismatched = 0
     for guide in sorted(GUIDES.glob("[0-9]*.md")):
@@ -217,6 +224,8 @@ def main() -> None:
                 print(f"{guide.name}:{line}: ok")
 
     print(f"\n돌려 본 프로그램 {ran}개 · 건너뛴 것 {skipped}개 · 어긋난 것 {mismatched}개")
+    if mismatched:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

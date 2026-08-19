@@ -100,6 +100,7 @@ jobs:
           python scripts/check-guide-code.py
           python scripts/check-guide-silent.py
           python scripts/check-guide-index.py
+          python scripts/check-guide-output.py
           python scripts/check-tier-parity.py
       # A program that fails to compile announces itself; one that compiles into
       # a different program does not. These two guard the quiet half: thirty
