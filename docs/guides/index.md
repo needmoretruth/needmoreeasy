@@ -288,7 +288,7 @@ and validated by hand.
 | 34 | ★★★★☆ | visualization | [Chart: a bar chart in the terminal](34-chart.md) | drawing a horizontal bar chart with # blocks from a JSON list, scaled to the largest value |
 | 35 | ★★★★☆ | a project | [Todo: a growing project](35-todo.md) | a JSON-persisted todo list with add, done, list, and a module file for the storage logic |
 | 36 | ★★★★☆ | files | [Diary: notes saved by date](36-diary.md) | a diary that saves each day's note to a dated file and can read it back |
-| 37 | ★★★☆☆ | files | [Files: save and read text](37-files.md) | a program that saves text to a file and reads it back |
+| 37 | ★★★☆☆ | files | [Files: save and read text](37-files.md) | a program that writes text to a file and reads it back |
 | 38 | ★★★☆☆ | files and lists | [Name list: read lines from a file](38-name-list.md) | a program that reads a list of names from a file and picks from it |
 | 39 | ★★★☆☆ | json | [JSON: save and load data](39-json.md) | a program that saves a name and a score and loads them back |
 | 40 | ★★★★☆ | data | [CSV: rows of data](40-csv.md) | reading a comma-separated text file with split(","), computing a column's average, and writing a summary CSV |
