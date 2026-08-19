@@ -2908,13 +2908,21 @@ fn inline_branch_without_a_condition_reports_the_shared_branch_diagnostic() {
     assert!(!english.status.success());
     let english_error = stderr(&english);
     assert!(english_error.contains("error[E0103]:"), "{english_error}");
-    assert!(english_error.contains("open condition"), "{english_error}");
+    // Both halves name the word the writer typed, not the other language's
+    // synonym for it.
+    assert!(
+        english_error.contains("`else` needs a condition block open above it"),
+        "{english_error}"
+    );
 
     let korean = nme(&["검사", &korean_file.to_string_lossy()]);
     assert!(!korean.status.success());
     let korean_error = stderr(&korean);
     assert!(korean_error.contains("오류[E0103]:"), "{korean_error}");
-    assert!(korean_error.contains("열린 조건"), "{korean_error}");
+    assert!(
+        korean_error.contains("`아니면` 앞에 열린 조건 블록이 필요합니다"),
+        "{korean_error}"
+    );
 
     let _ = std::fs::remove_dir_all(&dir);
 }

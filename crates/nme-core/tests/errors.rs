@@ -62,13 +62,13 @@ fn say_with_ununderstandable_value() {
 #[test]
 fn inline_block_cannot_open_a_block() {
     let message = err("2 times: 3 times:\n    say \"x\"\n");
-    assert!(message.contains("can't start"), "{message}");
+    assert!(message.contains("nothing to do in it"), "{message}");
 }
 
 #[test]
 fn inline_body_allows_only_one_statement() {
     let message = err("5 times: say \"a\"; say \"b\"\n");
-    assert!(message.contains("only one statement"), "{message}");
+    assert!(message.contains("only one thing to do"), "{message}");
 }
 
 #[test]
@@ -98,7 +98,10 @@ fn diagnostics_render_with_location_code_and_hint() {
 #[test]
 fn ask_requires_a_simple_target() {
     let target = err("ask 123, \"Number? \"\n");
-    assert!(target.contains("where to put what the person types"), "{target}");
+    assert!(
+        target.contains("where to put what the person types"),
+        "{target}"
+    );
 }
 
 #[test]
@@ -138,7 +141,10 @@ fn korean_forms_return_korean_guidance() {
 
     let repeat = bilingual_err("3번:\n말해 \"들여쓰기 없음\"\n");
     assert!(repeat.contains("들여쓴 줄이 없어서"), "{repeat}");
-    assert!(repeat.contains("nothing below this line is indented"), "{repeat}");
+    assert!(
+        repeat.contains("nothing below this line is indented"),
+        "{repeat}"
+    );
 
     let when = bilingual_err("만약 준비됨\n");
     assert!(when.contains("조건이 맞아도 할 일이 없습니다"), "{when}");
@@ -1117,7 +1123,7 @@ fn inline_branches_without_an_open_condition_get_a_stable_diagnostic() {
             "core case: {label}"
         );
         assert!(
-            problem.message.contains("open condition"),
+            problem.message.contains("condition block open above it"),
             "{label}: {problem:?}"
         );
         assert!(
@@ -1175,22 +1181,22 @@ fn unavailable_random_version_reports_the_bundled_version() {
 #[test]
 fn random_module_does_not_overwrite_existing_names() {
     let message = err("random_number = 42\nuse random\n");
-    assert!(message.contains("overwrite existing name"), "{message}");
+    assert!(message.contains("would take over names"), "{message}");
     assert!(message.contains("random_number"), "{message}");
 
     let imported = err("import random_number\nuse random\n");
-    assert!(imported.contains("overwrite existing name"), "{imported}");
+    assert!(imported.contains("would take over names"), "{imported}");
     assert!(imported.contains("random_number"), "{imported}");
 }
 
 #[test]
 fn file_module_does_not_overwrite_existing_names() {
     let message = err("file_read = \"mine\"\nuse file\n");
-    assert!(message.contains("overwrite existing name"), "{message}");
+    assert!(message.contains("would take over names"), "{message}");
     assert!(message.contains("file_read"), "{message}");
 
     let korean = bilingual_err("파일버전 = 1\n파일 사용\n");
-    assert!(korean.contains("덮어쓸 수 있습니다"), "{korean}");
+    assert!(korean.contains("이미 만든 이름을 가져갑니다"), "{korean}");
 }
 
 #[test]
@@ -1239,10 +1245,7 @@ fn a_module_import_needs_a_python_identifier_file_name() {
 #[test]
 fn a_file_write_without_a_path_is_reported() {
     let message = err("write \"hello\" to\n");
-    assert!(
-        message.contains("not inside quotation marks"),
-        "{message}"
-    );
+    assert!(message.contains("not inside quotation marks"), "{message}");
 }
 
 #[test]
@@ -1347,7 +1350,10 @@ fn explicit_blocks_report_structural_mistakes() {
         "{missing}"
     );
     let unmatched = err("else\n");
-    assert!(unmatched.contains("open condition block"), "{unmatched}");
+    assert!(
+        unmatched.contains("`else` needs a condition block open above it"),
+        "{unmatched}"
+    );
     let outside = err("break\n");
     assert!(outside.contains("inside a loop"), "{outside}");
 }

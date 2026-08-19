@@ -785,8 +785,8 @@ touched.**
 | `E0402` | latest and an exact version on one line |
 | `E0403` | the module version is missing |
 | `E0404` | this module version is not bundled |
-| `E0405` | the module would overwrite your names |
-| `E0406` | the use line shape is not understood |
+| `E0405` | the module would take over a name you made |
+| `E0406` | a module line NME could not read |
 | `E0407` | a module path this line cannot use |
 | `E0408` | a module import line NME could not read |
 | `E0409` | a module loaded twice |
@@ -796,8 +796,8 @@ touched.**
 | `E0414` | the save target is not a simple name |
 | `E0501` | the lines to repeat are not indented |
 | `E0502` | nothing to do when the condition is true |
-| `E0503` | a block that starts without a statement |
-| `E0504` | one statement per line |
+| `E0503` | a one-line block with nothing in it |
+| `E0504` | one thing to do per line |
 | `E0505` | the block body is not a statement NME knows |
 | `E0506` | this line starts with a space |
 | `E0601` | the sentence could mean more than one action |
