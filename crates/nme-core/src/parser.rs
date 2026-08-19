@@ -3460,7 +3460,13 @@ fn classify(
     // Future Python grammar may be newer than rustpython-parser. A
     // call/attribute/subscript shape is never NME's whitespace-led beginner
     // form, so preserve it for the selected CPython instead of hijacking it.
-    if looks_like_python_invocation(tokens) && !is_header_shape(tokens) {
+    // `Hello. Goodbye` wears that shape too, and it is not Python anybody
+    // wrote: no name on it was ever given a value, so the "call" is a
+    // `NameError` waiting to happen on a line the writer read as a sentence.
+    if looks_like_python_invocation(tokens)
+        && !is_header_shape(tokens)
+        && !is_dotted_words_only(tokens, known_names)
+    {
         return Ok(None);
     }
     // rustpython-parser can lag behind the CPython selected by the CLI (for
@@ -16010,6 +16016,17 @@ fn valid_python_is_a_sentence(tokens: &[Token], known_names: &HashSet<String>) -
             return true;
         }
     }
+    // `Hello. Goodbye`, `안녕. 잘가`, `Yes. No`. A full stop between two words
+    // is attribute access to Python: valid, useless, and a `NameError` at run
+    // time naming a word the writer thought was a sentence. Five of the seven
+    // most ordinary lines of that shape were passing straight through on
+    // 2026-08-19. Nothing in such a line is a name the program made and
+    // nothing is called, so there is no reading in which it is code — and
+    // handing it back to the NME path also lets `안녕하세요. 말해줘` be the
+    // output statement it plainly is.
+    if is_dotted_words_only(tokens, known_names) {
+        return true;
+    }
     // One word on a line of its own, and the program never gave that name a
     // value. Python reads the name, throws the answer away, and dies with a
     // `NameError` pointing at a line that is not the mistake. Nothing else
@@ -16032,6 +16049,33 @@ fn valid_python_is_a_sentence(tokens: &[Token], known_names: &HashSet<String>) -
 /// `내일 다시 해 보세요`, `입력해 주세요`. A line that ends in a question mark
 /// is excluded: there the writer is asking something, and a misspelled `ask`
 /// is worth reporting rather than printing.
+/// True for a line that is nothing but plain words joined by full stops, none
+/// of which the program ever gave a value: `Hello. Goodbye`, `안녕. 잘가`.
+///
+/// The shape has to be exact — word, stop, word, stop, word — so anything with
+/// a bracket, a number, an operator or a call in it is left to Python, which is
+/// where every real dotted line lives. A name the program *did* make also keeps
+/// the line: `친구들.sort` is somebody's Python, however little it does.
+///
+/// The spacing decides the rest, and it decides it well: writing puts the stop
+/// against the word before it and a space after it (`Hello. Goodbye`), while
+/// attribute access has no space at all (`아니면.foo`, which is a perfectly
+/// good Python name followed by a field). Requiring the writing shape is what
+/// keeps every NME word usable as an ordinary Python name.
+fn is_dotted_words_only(tokens: &[Token], known_names: &HashSet<String>) -> bool {
+    if tokens.len() < 3 || tokens.len().is_multiple_of(2) {
+        return false;
+    }
+    tokens.iter().enumerate().all(|(at, token)| {
+        if at % 2 == 0 {
+            return name_word(token).is_some_and(|word| !known_names.contains(word));
+        }
+        matches!(token.tok, Tok::Dot)
+            && tokens[at - 1].span.end == token.span.start
+            && token.span.end < tokens[at + 1].span.start
+    })
+}
+
 fn prose_beats_recovery(source: &str, tokens: &[Token], known_names: &HashSet<String>) -> bool {
     // A written Korean sentence counts as prose here even with a number or a
     // `%` in it: `나는 100% 동의합니다` is agreement, and the nearest command

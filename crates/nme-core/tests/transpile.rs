@@ -1288,6 +1288,40 @@ fn a_python_from_import_stays_byte_identical() {
     assert_eq!(python, "from helper import greet\nprint(greet)\n");
 }
 
+/// A full stop between two words is attribute access to Python, so five of the
+/// seven most ordinary lines of that shape used to pass straight through and
+/// die with a `NameError` at run time. They are sentences.
+#[test]
+fn a_full_stop_between_two_words_is_a_sentence_not_attribute_access() {
+    for (source, python) in [
+        ("Hello. Goodbye\n", "print(\"Hello. Goodbye\")\n"),
+        ("Yes. No\n", "print(\"Yes. No\")\n"),
+        ("Wait. Listen\n", "print(\"Wait. Listen\")\n"),
+        ("안녕. 잘가\n", "print(\"안녕. 잘가\")\n"),
+        ("아니. 그래\n", "print(\"아니. 그래\")\n"),
+        // Three words joined the same way, and the command word that follows a
+        // full stop still owns the line.
+        ("One. Two. Three\n", "print(\"One. Two. Three\")\n"),
+        ("안녕하세요. 말해줘\n", "print(\"안녕하세요.\")\n"),
+    ] {
+        assert_eq!(ok(source), python, "for {source:?}");
+    }
+}
+
+/// The rule is narrow on purpose: a name the program made keeps its line, and
+/// so does anything with a call, a bracket or a number in it.
+#[test]
+fn real_python_attribute_lines_are_left_alone() {
+    for source in [
+        "import math\nmath.pi\n",
+        "friends = [\"Mina\"]\nfriends.sort()\n",
+        "name = \"Mina\"\nname.upper()\n",
+        "import os.path\nos.path\n",
+    ] {
+        assert_eq!(ok(source), source, "for {source:?}");
+    }
+}
+
 #[test]
 fn prose_with_read_or_write_words_stays_sentence_output() {
     // `write hello` used to print itself, and that assertion used to live
