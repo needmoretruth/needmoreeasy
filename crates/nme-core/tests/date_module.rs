@@ -223,3 +223,44 @@ fn use_with_a_date_word_further_along_the_line_is_a_sentence() {
         );
     }
 }
+
+/// A name may not take a module's word away, whichever line comes first.
+///
+/// `set today to Monday` before `use date` has always been refused. The other
+/// order was accepted and died at run time with `'str' object is not
+/// callable`, on the later line that called `today()`.
+#[test]
+fn a_name_cannot_take_a_loaded_module_word() {
+    let problems = transpile("use date\nset today to Monday\nshow today()\n")
+        .expect_err("expected this to be refused");
+    assert_eq!(problems[0].code.code(), "E0405");
+    assert!(problems[0].message.contains("today"), "{problems:?}");
+    let korean = transpile("날짜 사용\n오늘은 월요일\n").expect_err("expected this to be refused");
+    assert_eq!(korean[0].code.code(), "E0405");
+    // A name of its own is untouched, and so is a question that happens to
+    // end on one of the module's words — see the test above.
+    assert!(transpile("use date\nset weekday_name to Monday\n").is_ok());
+    assert!(transpile("use date\nWhat is the date today?\n").is_ok());
+}
+
+/// `show Today is today()` is a sentence, not Python's identity test.
+///
+/// It is valid Python, so it came out as one and printed the words back
+/// unevaluated after dying on `Today` — a name nothing ever made.
+#[test]
+fn a_sentence_with_is_in_it_is_not_an_identity_test() {
+    assert_eq!(
+        ok("use date\nshow Today is today()\n").lines().last().unwrap(),
+        "print(\"Today is today()\")"
+    );
+    assert_eq!(
+        ok("use date\nshow It is weekday()\n").lines().last().unwrap(),
+        "print(\"It is weekday()\")"
+    );
+    // Names the program made are still put into the sentence, which is what
+    // the sentence level has always done with `show <words with names in>`.
+    assert_eq!(
+        ok("a = 1\nb = 1\nshow a is b\n").lines().last().unwrap(),
+        "print(str(a) + \" is \" + str(b))"
+    );
+}

@@ -1241,6 +1241,9 @@ pub fn parse_program(
 ) -> Result<ParsedProgram, Vec<Diagnostic>> {
     let mut found = Vec::new();
     let mut problems = Vec::new();
+    // Which bundled modules this program has loaded, so a later name cannot
+    // take one of their words away. See the call site below.
+    let mut loaded_modules: Vec<BundledModuleId> = Vec::new();
     let mut bindings = BindingEnv::new();
     let mut virtual_indents = vec![0; lines.len()];
     let mut blocks = Vec::<ExplicitBlock>::new();
@@ -1814,6 +1817,35 @@ pub fn parse_program(
                 if let Some(taken) = rebound_name(&stmt).filter(|name| name_python_needs(name)) {
                     problems.push(name_taken_by_python_diagnostic(taken, line.span));
                     continue;
+                }
+                // The same thing one step later: `use date` and then `set
+                // today to Monday` replaced the module's own `today`, and
+                // `show today()` died with `'str' object is not callable`.
+                // Writing the two lines the other way round has always been
+                // refused (E0405); this is that rule from the other side.
+                // Only a deliberate naming counts. A question binds the
+                // word it ends on, and `use date` may not change what a line
+                // means — `What is the date today?` asks before and after it,
+                // which `scripts/mistake-probes/date_words.py` checks over
+                // 310 sentences.
+                if let Some(taken) = match &stmt {
+                    NmeStmt::Set { target, .. } => Some(target.as_str()),
+                    _ => None,
+                } {
+                    if let Some(module) = loaded_modules
+                        .iter()
+                        .find(|module| module_binding_names(**module).contains(&taken))
+                    {
+                        problems.push(name_taken_by_module_diagnostic(
+                            *module,
+                            line.span,
+                            taken,
+                        ));
+                        continue;
+                    }
+                }
+                if let NmeStmt::UseModule { module, .. } = &stmt {
+                    loaded_modules.push(*module);
                 }
                 // A job that changes a name made outside it needs Python
                 // told so, on this very line. See `NmeLine::globals`.
@@ -4319,6 +4351,19 @@ fn match_say(
                 "`안녕하세요 말해줘`처럼 평범한 문장으로 적어도 됩니다",
             )
         })?;
+        // `show Today is today()` is valid Python — `is` compares — so it
+        // came out as one and printed `Today is today()` after dying on
+        // `Today`, a name nothing ever made. Both halves are needed: `is` is
+        // an English verb far more often than Python's identity test, and a
+        // name nothing made cannot be the thing being tested.
+        if matches!(value, Value::Python(_))
+            && body.iter().any(|token| matches!(token.tok, Tok::Is))
+            && body_names_something_unmade(body, known_names)
+        {
+            return Ok(Some(NmeStmt::Say {
+                value: Value::Text(make_text_template(source, body, known_names)),
+            }));
+        }
         return Ok(Some(NmeStmt::Say { value }));
     }
 
@@ -12658,6 +12703,33 @@ fn module_binding_names(module: BundledModuleId) -> &'static [&'static str] {
     }
 }
 
+/// The same collision as [`module_name_collision_diagnostic`], seen from the
+/// other side: the module was loaded first and this line is taking one of its
+/// words. The hint has to point the other way — the module is already there,
+/// so what can move is the name.
+fn name_taken_by_module_diagnostic(
+    module: BundledModuleId,
+    span: Span,
+    name: &str,
+) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::ModuleNameCollision,
+        format!(
+            "`{name}` is already the {} module's, so this line would take it away",
+            module.name_en()
+        ),
+        format!(
+            "`{name}`은(는) 이미 {} 모듈의 이름이라서 이 줄이 그것을 덮어씁니다",
+            module.name_ko()
+        ),
+        span,
+    )
+    .with_bilingual_hint(
+        format!("pick another name for this value, or stop loading the {} module", module.name_en()),
+        format!("이 값에 다른 이름을 붙이거나, {} 모듈을 불러오지 마세요", module.name_ko()),
+    )
+}
+
 fn module_name_collision_diagnostic(
     module: BundledModuleId,
     span: Span,
@@ -14525,6 +14597,31 @@ const TEXT_COMMON_NOUN_MARKERS_KO: &[&str] = &["모든", "각", "어떤", "여�
 fn is_common_noun_marker(tokens: &[Token], at: usize) -> bool {
     token_matches_exact_at(tokens, at, TEXT_COMMON_NOUN_MARKERS_EN)
         || token_matches_exact_at(tokens, at, TEXT_COMMON_NOUN_MARKERS_KO)
+}
+
+/// True when a Python expression names something the program never made.
+///
+/// Only a bare name counts: `today()` is a call and `math.pi` is a piece of
+/// something, and both are the writer reaching for a tool. A name standing on
+/// its own that nothing ever set is a word in a sentence — see the call site.
+fn body_names_something_unmade(tokens: &[Token], known_names: &HashSet<String>) -> bool {
+    tokens.iter().enumerate().any(|(at, token)| {
+        let Some(word) = name_word(token) else {
+            return false;
+        };
+        if known_names.contains(word) || name_python_needs(word) {
+            return false;
+        }
+        // A call, an attribute, or the thing an attribute is taken from.
+        if matches!(
+            tokens.get(at + 1).map(|next| &next.tok),
+            Some(Tok::Lpar | Tok::Dot | Tok::Equal)
+        ) || matches!(tokens.get(at.wrapping_sub(1)).map(|before| &before.tok), Some(Tok::Dot))
+        {
+            return false;
+        }
+        true
+    })
 }
 
 fn make_text_template(
