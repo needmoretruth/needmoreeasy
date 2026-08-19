@@ -5,98 +5,113 @@ English | [한국어](22-terminal-menu.ko.md)
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
 - Difficulty: ★★★★☆ (4/5)
-- Prerequisites: [12 — Random](12-random.md), [08 — If](08-if.md), [10 — While](10-while.md)
-- Topic: terminal menus
-- Result: a loop-driven terminal menu
+- Prerequisites: [14 — Screen](14-screen.md), [18 — Adventure](18-adventure.md)
+- Topic: a small project
+- Result: a menu program that clears the screen and draws it again
 
-A TUI (text user interface) is a menu you drive with the keyboard. The example
-`examples/terminal-menu.nme` shows three choices, waits for an answer, does
-what you picked, and then shows the menu again. It is a learning project, not
-advice.
-
-Run it and feed it two answers — `1` greets you, then `3` quits. Because the
-loop goes back to the menu after the first answer, the menu appears twice:
-
-```sh
-printf '1\n3\n' | nme r examples/terminal-menu
-```
-
-```text
-1) greet
-2) dice
-3) quit
-choose: hello!
-1) greet
-2) dice
-3) quit
-choose: bye
-```
+A menu shows what can be done, lets you choose one, does it, and comes back to
+the menu. Because it clears the screen and draws it again, one window seems to
+stay alive. The clearing, the box and the rule from
+[14 — Screen](14-screen.md) all appear here. **No quotes, no brackets, no
+equals sign.**
 
 ## Steps
 
-1. The `use random latest` line loads the dice function, and a text value holds
-   the menu. `\n` means "new line" — it is how one string becomes three rows:
+1. Draw **just the menu screen** first:
 
    ```nme
-   # part of examples/terminal-menu.nme
-   use random latest
-
-   menu = "1) greet\n2) dice\n3) quit"
+   clear the screen
+   say in a box A small menu
+   show greet
+   show dice
+   show quit
+   draw a line
    ```
 
-2. `while True:` makes an endless loop; `show menu` prints the choices and
-   `ask choice, "choose: "` stores your answer:
+   The screen goes clean, the title sits in a box, the three things you can do
+   appear, and a rule closes them off.
+
+2. **Let them choose, and branch:**
 
    ```nme
-   # part of examples/terminal-menu.nme
-   while True:
-       show menu
-       ask choice, "choose: "
+   ask choice What now?
+   if choice equals greet
+       show Hello there!
+   else if choice equals quit
+       show Goodbye
+   else
+       show There is no such thing
+   end
    ```
 
-   The block starts at the indentation, exactly like Python.
+   Words are easier answers than numbers. What someone types is always text, so
+   an answer of `1` is the letter `1` and never equals the number 1.
 
-3. The `if`/`elif`/`else` from guide [08](08-if.md) runs one branch per
-   answer. The plain Python headers `if choice == "1":` mix freely with the
-   NME lines `show`/`break` inside the same block:
+3. **To come back to the menu**, wrap the whole thing in `repeat forever`. The
+   only way out is `stop`, so it belongs in the `quit` branch alone:
 
    ```nme
-   # part of examples/terminal-menu.nme
-   while True:
-       show menu
-       ask choice, "choose: "
-       if choice == "1":
-           show "hello!"
-       elif choice == "2":
-           show random_number(1, 6)
-       else:
-           show "bye"
-           break
+   repeat forever
+       clear the screen
+       say in a box A small menu
+       show quit
+       draw a line
+       ask choice What now?
+       if choice equals quit
+           show Goodbye
+           stop
+       end
+   end
    ```
 
-   `show random_number(1, 6)` rolls the die from guide [12](12-random.md) on
-   the spot; any other answer falls into `else`, prints `bye`, and leaves the
-   loop with `break` — the one way out of `while True:`.
+4. **Pause so the answer can be read.** Without it the screen is wiped before
+   anyone sees what just appeared:
 
-4. `nme check` verifies the syntax without running the loop:
-
-   ```sh
-   nme check examples/terminal-menu
+   ```nme
+   show Hello there!
+   wait 1 second
    ```
 
-   The Korean twin `examples/terminal-menu.ko.nme` uses the same `while True:`
-   loop with `ask 선택, "고르세요: "`; `nme r examples/terminal-menu.ko` picks
-   the same numbers and gets the same flow in Korean.
+5. The whole thing is
+   [`examples/terminal-menu.nme`](../../examples/terminal-menu.nme), and the
+   Korean twin is
+   [`examples/terminal-menu.ko.nme`](../../examples/terminal-menu.ko.nme).
+
+   ```nme
+   repeat forever
+       clear the screen
+       say in a box A small menu
+       show greet
+       show dice
+       show quit
+       draw a line
+       ask choice What now?
+       if choice equals greet
+           show Hello there!
+           wait 1 second
+       else if choice equals dice
+           set roll to random number from 1 to 6
+           show roll
+           wait 1 second
+       else if choice equals quit
+           show Goodbye
+           stop
+       else
+           show There is no such thing
+           wait 1 second
+       end
+   end
+   ```
 
 ## Try it yourself
 
-Add a fourth row `4) coin` to `menu`, then a new `elif choice == "4":` branch
-that shows a random pick between two sides — guide [12](12-random.md) shows
-how. `break` still works; the extra number just adds another branch.
+Add one more thing it can do. An answer of `time` could show how many seconds
+the program has been running, using the stopwatch from [15 — Time](15-timer.md).
 
 ## What you learned
 
-- `while True:` loops forever; `break` is the way out.
-- A menu is show, ask, branch, then loop back.
-- `show`/`ask` NME lines mix with plain Python `if choice == "1":` headers.
-- `\n` inside a string makes a new line.
+- A menu is `repeat forever` plus a chain of conditions. Nothing more.
+- Clearing the screen at the top of the loop makes one window seem to live on.
+- Words are better answers than numbers: what is typed is always text.
+- `wait 1 second` before the screen is wiped is what makes it readable.
+- `stop` is the only way out.

@@ -1,19 +1,25 @@
-# TUI — a small menu in the terminal
-# Educational only. This is a learning project, not advice.
-# Run: nme r terminal-menu
-# The program asks three times, then quits on "3".
-
-use random latest
-
-menu = "1) greet\n2) dice\n3) quit"
-
-while True:
-    show menu
-    ask choice, "choose: "
-    if choice == "1":
-        show "hello!"
-    elif choice == "2":
-        show random_number(1, 6)
-    else:
-        show "bye"
-        break
+# A small terminal menu, written in sentence syntax only.
+# Run: nme r examples/terminal-menu
+repeat forever
+    clear the screen
+    say in a box A small menu
+    show greet
+    show dice
+    show quit
+    draw a line
+    ask choice What now?
+    if choice equals greet
+        show Hello there!
+        wait 1 second
+    else if choice equals dice
+        set roll to random number from 1 to 6
+        show roll
+        wait 1 second
+    else if choice equals quit
+        show Goodbye
+        stop
+    else
+        show There is no such thing
+        wait 1 second
+    end
+end
