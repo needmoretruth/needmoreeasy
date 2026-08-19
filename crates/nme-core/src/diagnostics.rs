@@ -675,8 +675,8 @@ impl DiagnosticCode {
             ),
             Self::SayValueBroken => (
                 "E0201",
-                "`say` value could not be understood",
-                "`say`의 값을 이해하지 못했습니다",
+                "a sum after `say` with a piece missing",
+                "`말해` 뒤의 계산이 하다 말았습니다",
                 "After `say` (or `말해`) NME expects something to show: words, a number, a name the program made, or a small sum of those. What stands here is none of them.",
                 "`say`(`말해`) 뒤에는 보여 줄 것이 와야 합니다. 글자, 숫자, 프로그램이 만든 이름, 또는 그것들을 더한 것입니다. 여기 있는 것은 그 가운데 어느 것도 아닙니다.",
             ),

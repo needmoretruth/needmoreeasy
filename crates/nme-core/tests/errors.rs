@@ -56,7 +56,9 @@ fn times_with_ununderstandable_count() {
 #[test]
 fn say_with_ununderstandable_value() {
     let message = err("say 1 +\n");
-    assert!(message.contains("what you want to `say`"), "{message}");
+    // The message quotes the half-finished sum rather than saying only that
+    // something could not be understood.
+    assert!(message.contains("`1 +` is a sum with a piece missing"), "{message}");
 }
 
 #[test]
@@ -136,8 +138,8 @@ fn when_requires_a_condition_colon_and_body() {
 #[test]
 fn korean_forms_return_korean_guidance() {
     let say = bilingual_err("말해 1 +\n");
-    assert!(say.contains("이해하지 못했습니다"), "{say}");
-    assert!(say.contains("couldn't understand"), "{say}");
+    assert!(say.contains("계산이 하다 만 채로 끝나서"), "{say}");
+    assert!(say.contains("a sum with a piece missing"), "{say}");
 
     let repeat = bilingual_err("3번:\n말해 \"들여쓰기 없음\"\n");
     assert!(repeat.contains("들여쓴 줄이 없어서"), "{repeat}");

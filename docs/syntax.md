@@ -749,7 +749,7 @@ touched.**
 | `E0118` | return value inside an async generator |
 | `E0119` | conflicting `global` declaration |
 | `E0120` | conflicting `nonlocal` declaration |
-| `E0201` | `say` value could not be understood |
+| `E0201` | a sum after `say` with a piece missing |
 | `E0202` | the value after `say` is not one Python can read |
 | `E0203` | the sentence to show is not valid |
 | `E0204` | `say` has nothing to show |

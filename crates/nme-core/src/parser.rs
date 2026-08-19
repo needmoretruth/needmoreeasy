@@ -4465,15 +4465,16 @@ fn match_say(
             let span = span_of(body);
             let text = &source[span.start..span.end];
             if looks_like_broken_expression(body) && !is_valid_python_expression(text) {
+                let written = shortened(text.trim());
                 return Err(Diagnostic::bilingual(
                     DiagnosticCode::SayValueBroken,
-                    "I couldn't understand what you want to `say`",
-                    "`말해` 뒤의 값을 이해하지 못했습니다",
+                    format!("`{written}` is a sum with a piece missing, so there is nothing to show"),
+                    format!("`{written}`은 계산이 하다 만 채로 끝나서, 보여 줄 것이 없습니다"),
                     span,
                 )
                 .with_bilingual_hint(
-                    "finish the value, or use plain words such as `show Hello world`",
-                    "값을 완성하거나 `안녕하세요 말해줘`처럼 평범한 문장으로 쓰세요",
+                    "finish it — `show 1 + 2` — or write plain words: `show Hello world`",
+                    "`1 + 2 말해줘`처럼 끝까지 적거나, `안녕하세요 말해줘`처럼 평범한 문장으로 적어 주세요",
                 ));
             }
         }
