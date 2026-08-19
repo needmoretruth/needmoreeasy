@@ -84,7 +84,7 @@ longer with every step.
        show bar
        wait 0.2 seconds
    end
-   show "all done"
+   show all done
    ```
 
 ## Try it yourself

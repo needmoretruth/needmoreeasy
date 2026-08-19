@@ -72,17 +72,15 @@ There are only two sentences for putting a list in order.
 
    ```nme
    set scores to list of 5, 3, 9, 1
-   show "as written"
+   show as written
    show scores joined by comma
    sort scores
-   show "smallest first"
+   show smallest first
    show scores joined by comma
-   show "the smallest score"
    show the first of scores
-   show "the biggest score"
    show the last of scores
    reverse scores
-   show "biggest first"
+   show biggest first
    show scores joined by comma
    ```
 
