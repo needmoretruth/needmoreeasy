@@ -76,8 +76,8 @@ bracket and no equals sign, which `scripts/report-guide-tier.py` measures.
 28. [28 — Game: an opponent that knows the rule](28-ai.md)
 29. [29 — Playlist: shuffling the order once](29-playlist.md)
 30. [30 — Shop: stock and a balance](30-shop.md)
-31. [31 — Project — a mini bank](31-bank.md)
-32. [32 — Project — a grade book](32-grade-book.md)
+31. [31 — Bank: paying in, taking out, keeping a history](31-bank.md)
+32. [32 — Grade book: a score per name, and an average](32-grade-book.md)
 33. [33 — Project: a habit tracker](33-habit.md)
 34. [34 — Chart: seeing numbers as bars](34-chart.md)
 35. [35 — Todo: a growing project](35-todo.md)
@@ -230,8 +230,8 @@ and validated by hand.
 | 28 | ★★★★☆ | games | [Game: an opponent that knows the rule](28-ai.md) | a game against an opponent that follows a winning rule |
 | 29 | ★★★☆☆ | random and chance | [Playlist: shuffling the order once](29-playlist.md) | shuffling a list of songs and playing through it one at a time |
 | 30 | ★★★★☆ | projects | [Shop: stock and a balance](30-shop.md) | a small shop where every sale takes one off the stock and ten off the money |
-| 31 | ★★★★☆ | projects | [Project — a mini bank](31-bank.md) | a JSON-persisted bank account with deposit, withdraw, balance, history, and a storage module |
-| 32 | ★★★★☆ | projects | [Project — a grade book](32-grade-book.md) | a JSON-persisted grade book with add-student, add-grade, report-averages, and a storage module |
+| 31 | ★★★☆☆ | projects | [Bank: paying in, taking out, keeping a history](31-bank.md) | an account that pays in, takes out, protects the balance and records what happened |
+| 32 | ★★★★☆ | projects | [Grade book: a score per name, and an average](32-grade-book.md) | a grade book holding a score per name, reporting the average and the best |
 | 33 | ★★★★☆ | projects | [Project: a habit tracker](33-habit.md) | a JSON-persisted habit tracker with add, check, streak, list, quit, and a module file for the storage logic |
 | 34 | ★★★☆☆ | screen and time | [Chart: seeing numbers as bars](34-chart.md) | drawing how much was read each day as bars, so the days compare at a glance |
 | 35 | ★★★★☆ | projects | [Todo: a growing project](35-todo.md) | a JSON-persisted todo list with add, done, list, and a module file for the storage logic |

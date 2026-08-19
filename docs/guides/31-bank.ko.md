@@ -1,162 +1,99 @@
-# 31 — 프로젝트 — 미니 은행
+# 31 — 은행: 넣고 빼고 내역 남기기
 
 [English](31-bank.md) | 한국어
 
 [README](../../README.ko.md) | [설치](../install.ko.md) | [시작하기](../getting-started.ko.md) | [학습 과정](../tutorial.ko.md) | [문법 안내](../language.ko.md) | [가이드](index.ko.md)
 
-- 난이도: ★★★★☆ (4/5)
-- 선수 지식: [30 — 상점](30-shop.ko.md), [22 — 터미널 메뉴](22-terminal-menu.ko.md)
+- 난이도: ★★★☆☆ (3/5)
+- 선수 지식: [25 — 계산기](25-calculator.ko.md), [05 — 값 저장](05-set.ko.md)
 - 주제: 프로젝트
-- 결과물: 입금·출금·잔액·거래 내역을 모듈로 저장하는 JSON 은행 계좌
+- 결과물: 돈을 넣고 빼며 잔액을 지키고 한 일을 내역에 남기는 계좌
 
-[30](30-shop.ko.md)은 상점의 돈을 딕셔너리에 담았고,
-[33](33-habit.ko.md)은 저장 로직을 모듈에 넣습니다. 은행 계좌는 같은
-쌍을 한 단계 더 키운 것입니다: `balance`와 거래마다 자라는 `history`
-목록이 든 딕셔너리, `bank_ko.nme` 모듈이 `account.json`에 저장합니다.
+계좌가 기억할 것은 두 가지입니다 — **지금 얼마인지**와 **무슨 일이
+있었는지**입니다. 앞은 숫자 하나, 뒤는 목록입니다. 그리고 규칙이 하나
+있습니다: **잔액보다 많이 뺄 수는 없습니다.**
 
 ## 단계
 
-1. 계좌는 두 부분으로 된 딕셔너리 하나입니다: `balance`는 0으로 시작하고,
-   `history`는 입금·출금마다 자라는 목록입니다. `100`과 `['+100']`이
-   출력됩니다:
+1. **잔액과 내역을 만듭니다:**
 
    ```nme
-   계좌 = {"balance": 0, "history": []}
-   계좌["balance"] = 계좌["balance"] + 100
-   계좌["history"].append("+100")
-   말해 계좌["balance"]
-   말해 계좌["history"]
+   잔액은 0
+   내역은 빈 목록
+   잔액 말해줘
+   내역 개수 말해줘
    ```
 
-   거래 하나는 history 목록의 문자열 하나이고, 입금은 `+`, 출금은
-   `-`로 시작합니다.
+   `0`과 `0`이 나옵니다.
 
-2. 저장은 모듈에 둡니다. `bank_ko.nme`이 `load()`와 `save`를 내보냅니다.
-   `load()`는 파일이 없으면 새 계좌를 돌려줍니다 — [30](30-shop.ko.md)의
-   상점 모듈과 같은 패턴입니다:
+2. **넣는 것은 한 줄입니다.** 넣은 다음 무슨 일이 있었는지 적어 둡니다:
 
    ```nme
-   # bank_ko.nme — 미니 은행의 파일 저장 모듈.
-
-   import os
-   파일 사용 최신
-
-   def load():
-       if os.path.exists("account.json"):
-           return json읽기("account.json")
-       return {"balance": 0, "history": []}
-
-   def save(계좌):
-       json저장("account.json", 계좌)
+   잔액은 0
+   내역은 빈 목록
+   잔액에 100 더해
+   내역에 입금 넣어
+   잔액 말해줘
+   내역 개수 말해줘
    ```
 
-   `json읽기`는 저장된 딕셔너리를 돌려주므로 `balance`와 `history`가 쓴
-   그대로 돌아옵니다.
+   `100`과 `1`이 나옵니다.
 
-3. 은행 전체입니다. `bank_ko.nme` 옆에 `account.ko.nme`으로 저장합니다:
+3. **빼기 전에 잔액을 봅니다.** 이 확인이 없으면 잔액이 음수가 됩니다:
 
    ```nme
-   # account.ko.nme — JSON 파일에 보관하는 미니 은행.
-   # 실행: nme 실행 account.ko
-   # deposit, withdraw, balance, history, quit 중 하나를 입력하세요.
-
-   from "bank_ko.nme" import load, save
-   계좌 = load()
-
-   말해 "미니 은행 — 잔액은 account.json에 보관"
-   while True:
-       말해 "명령: deposit, withdraw, balance, history, quit"
-       물어봐 명령, "? "
-       if 명령 == "deposit":
-           물어봐 금액, "금액? "
-           amount = int(금액)
-           계좌["balance"] = 계좌["balance"] + amount
-           계좌["history"].append(f"+{amount}")
-           save(계좌)
-           말해 f"{amount} 입금"
-       elif 명령 == "withdraw":
-           물어봐 금액, "금액? "
-           amount = int(금액)
-           if amount <= 계좌["balance"]:
-               계좌["balance"] = 계좌["balance"] - amount
-               계좌["history"].append(f"-{amount}")
-               save(계좌)
-               말해 f"{amount} 출금"
-           else:
-               말해 "잔액 부족"
-       elif 명령 == "balance":
-           말해 f"잔액: {계좌['balance']}"
-       elif 명령 == "history":
-           말해 f"거래 {len(계좌['history'])}건"
-           for 기록 in 계좌["history"]:
-               말해 기록
-       elif 명령 == "quit":
-           말해 "안녕!"
-           break
-       else:
-           말해 "알 수 없는 명령"
+   잔액은 50
+   뺄돈은 80
+   만약에 뺄돈이 잔액보다 크면
+       잔액이 모자랍니다 말해줘
+   아니면
+       잔액에서 뺄돈 빼
+   끝
+   잔액 말해줘
    ```
 
-   `deposit`은 잔액에 더하고 `+금액`을 기록하며, `withdraw`는 먼저 잔액을
-   확인하고 `-금액`을 기록합니다. 둘 다 `save`를 불러 변경을 즉시
-   `account.json`에 씁니다. `history`는 [41](41-address-book.ko.md)의
-   `list`처럼 목록을 훑습니다.
+   `잔액이 모자랍니다`와 `50`이 나옵니다. 아무 일도 일어나지 않았습니다.
 
-4. 파이프로 명령을 넣어 실행합니다. `deposit 100` 다음 `withdraw 30`이
-   70을 남기고, `history`가 두 거래를 보여 줍니다:
-
-   ```sh
-   printf 'deposit\n100\nwithdraw\n30\nbalance\nhistory\nquit\n' | nme 실행 account.ko
-   ```
-
-   ```text
-   미니 은행 — 잔액은 account.json에 보관
-   명령: deposit, withdraw, balance, history, quit
-   ? 금액? 100 입금
-   명령: deposit, withdraw, balance, history, quit
-   ? 금액? 30 출금
-   명령: deposit, withdraw, balance, history, quit
-   ? 잔액: 70
-   명령: deposit, withdraw, balance, history, quit
-   ? 거래 2건
-   +100
-   -30
-   명령: deposit, withdraw, balance, history, quit
-   ? 안녕!
-   ```
-
-   `account.json`을 열어 보면 전체 상태가 들어 있습니다:
+4. **내역은 쉼표로 이어 한 줄로 보여 줍니다:**
 
    ```nme
-   {"balance": 70, "history": ["+100", "-30"]}
+   내역은 빈 목록
+   내역에 입금 넣어
+   내역에 출금 넣어
+   내역을 쉼표로 이어 말해줘
    ```
 
-   잔액보다 많이 출금하면 `잔액 부족`이 출력되고 아무것도 저장되지
-   않으므로 계좌는 마이너스가 되지 않습니다:
+   `입금, 출금`이 나옵니다.
 
-   ```sh
-   printf 'withdraw\n500\nbalance\nquit\n' | nme 실행 account.ko
-   ```
+5. 전체입니다:
 
-   ```text
-   미니 은행 — 잔액은 account.json에 보관
-   명령: deposit, withdraw, balance, history, quit
-   ? 금액? 잔액 부족
-   명령: deposit, withdraw, balance, history, quit
-   ? 잔액: 70
-   명령: deposit, withdraw, balance, history, quit
-   ? 안녕!
+   ```nme
+   잔액은 0
+   내역은 빈 목록
+   넣을돈을 숫자로 물어봐 얼마를 넣을까요
+   잔액에 넣을돈 더해
+   내역에 입금 넣어
+   뺄돈을 숫자로 물어봐 얼마를 뺄까요
+   만약에 뺄돈이 잔액보다 크면
+       잔액이 모자랍니다 말해줘
+   아니면
+       잔액에서 뺄돈 빼
+       내역에 출금 넣어
+   끝
+   잔액 말해줘
+   내역을 쉼표로 이어 말해줘
+   내역 개수 말해줘
    ```
 
 ## 직접 해보기
 
-계좌 하나에서 출금해 다른 계좌에 입금하는 `transfer` 명령을 추가해
-보세요 — 둘을 모두 불러오고, 바꾸고, 저장합니다. 또는 `if amount <= 0:`
-검사로 0이나 마이너스 입금을 거절해 보세요.
+`뺄돈`에 잔액보다 큰 수를 넣어 보세요 — 잔액이 그대로이고 내역에도 아무것도
+남지 않습니다. **막을 때는 아무 일도 하지 않는 것**이 맞습니다. 그다음 넣고
+빼기를 여러 번 할 수 있게 `계속 반복해`로 감싸 보세요.
 
 ## 배운 것
 
-- 계좌는 `{balance, history}` 딕셔너리고, `history`는 문자열 목록입니다.
-- `bank_ko.nme`의 `load()` / `save`가 파일 형식을 한 모듈에 둡니다.
-- `withdraw`는 쓰기 전에 `amount <= 계좌["balance"]`을 확인합니다.
-- 변경마다 `save`가 실행되어 계좌가 실행 사이에도 남습니다.
+- 숫자 하나와 목록 하나면 계좌 하나가 됩니다.
+- `더해`·`빼`가 잔액을 바꾸고, `넣어`가 내역을 쌓습니다.
+- 빼기 전에 잔액을 보는 확인이 규칙을 지키는 자리입니다.
+- 막을 때는 값을 그대로 두고 아무것도 적지 않습니다.

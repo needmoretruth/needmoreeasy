@@ -1,162 +1,101 @@
-# 31 — Project — a mini bank
+# 31 — Bank: paying in, taking out, keeping a history
 
 English | [한국어](31-bank.ko.md)
 
 [Home](../../README.md) | [Install](../install.md) | [Getting started](../getting-started.md) | [Tutorial](../tutorial.md) | [Language reference](../language.md) | [Guides](index.md)
 
-- Difficulty: ★★★★☆ (4/5)
-- Prerequisites: [30 — Shop](30-shop.md), [22 — Terminal menu](22-terminal-menu.md)
+- Difficulty: ★★★☆☆ (3/5)
+- Prerequisites: [25 — Calculator](25-calculator.md), [05 — Set](05-set.md)
 - Topic: projects
-- Result: a JSON-persisted bank account with deposit, withdraw, balance, history, and a storage module
+- Result: an account that pays in, takes out, protects the balance and records what happened
 
-Guide [30](30-shop.md) kept a shop's money in a dict; guide
-[33](33-habit.md) puts the storage logic in a module. A bank account is the
-same pair one step further: a dict with a `balance` and a `history` list of
-every transaction, saved to `account.json` by a `bank.nme` module.
+An account remembers two things — **how much there is** and **what happened**.
+The first is one number, the second is a list. And there is one rule: **you
+cannot take out more than is there.**
 
 ## Steps
 
-1. An account is one dict with two parts: `balance` starts at 0, and
-   `history` is a list that grows with every deposit or withdrawal. It prints
-   `100` and `['+100']`:
+1. **Make the balance and the history:**
 
    ```nme
-   account = {"balance": 0, "history": []}
-   account["balance"] = account["balance"] + 100
-   account["history"].append("+100")
-   show account["balance"]
-   show account["history"]
+   set balance to 0
+   set history to an empty list
+   show balance
+   show how many history
    ```
 
-   Each transaction is one string in the history list, with a `+` for deposits
-   and a `-` for withdrawals.
+   `0` and `0`.
 
-2. Storage lives in a module, `bank.nme`, exporting `load()` and `save`.
-   `load()` returns a fresh account when no file exists yet — the same pattern
-   as the store module in guide [30](30-shop.md):
+2. **Paying in is one line.** Write down what happened after it:
 
    ```nme
-   # bank.nme — file storage for the mini bank.
-
-   import os
-   use file latest
-
-   def load():
-       if os.path.exists("account.json"):
-           return json_load("account.json")
-       return {"balance": 0, "history": []}
-
-   def save(account):
-       json_save("account.json", account)
+   set balance to 0
+   set history to an empty list
+   add 100 to balance
+   append paid in to history
+   show balance
+   show how many history
    ```
 
-   `json_load` returns the saved dict, so `balance` and `history` come back
-   exactly as they were written.
+   `100` and `1`.
 
-3. The whole bank. Save `account.nme` next to `bank.nme`:
+3. **Look at the balance before taking anything out.** Without that check the
+   balance goes below nothing:
 
    ```nme
-   # account.nme — a mini bank kept in a JSON file.
-   # Run: nme r account
-   # Type deposit, withdraw, balance, history, or quit.
-
-   from "bank.nme" import load, save
-   account = load()
-
-   show "Mini bank — balance is kept in account.json"
-   while True:
-       show "Commands: deposit, withdraw, balance, history, quit"
-       ask command, "? "
-       if command == "deposit":
-           ask amount_text, "Amount? "
-           amount = int(amount_text)
-           account["balance"] = account["balance"] + amount
-           account["history"].append(f"+{amount}")
-           save(account)
-           show f"Deposited {amount}"
-       elif command == "withdraw":
-           ask amount_text, "Amount? "
-           amount = int(amount_text)
-           if amount <= account["balance"]:
-               account["balance"] = account["balance"] - amount
-               account["history"].append(f"-{amount}")
-               save(account)
-               show f"Withdrew {amount}"
-           else:
-               show "Not enough money"
-       elif command == "balance":
-           show f"Balance: {account['balance']}"
-       elif command == "history":
-           show f"{len(account['history'])} transactions"
-           for entry in account["history"]:
-               show entry
-       elif command == "quit":
-           show "Bye!"
-           break
-       else:
-           show "Unknown command"
+   set balance to 50
+   set wanted to 80
+   if wanted is greater than balance
+       show there is not enough
+   else
+       subtract wanted from balance
+   end
+   show balance
    ```
 
-   `deposit` adds to the balance and records `+amount`; `withdraw` checks the
-   balance first and records `-amount`. Both call `save`, so every change is
-   written to `account.json` immediately. `history` walks the list the way
-   `list` does in guide [41](41-address-book.md).
+   `there is not enough`, then `50`. Nothing happened at all.
 
-4. Run it and feed the commands through a pipe. `deposit 100` then
-   `withdraw 30` leaves 70, and `history` shows both transactions:
-
-   ```sh
-   printf 'deposit\n100\nwithdraw\n30\nbalance\nhistory\nquit\n' | nme r account
-   ```
-
-   ```text
-   Mini bank — balance is kept in account.json
-   Commands: deposit, withdraw, balance, history, quit
-   ? Amount? Deposited 100
-   Commands: deposit, withdraw, balance, history, quit
-   ? Amount? Withdrew 30
-   Commands: deposit, withdraw, balance, history, quit
-   ? Balance: 70
-   Commands: deposit, withdraw, balance, history, quit
-   ? 2 transactions
-   +100
-   -30
-   Commands: deposit, withdraw, balance, history, quit
-   ? Bye!
-   ```
-
-   Look at `account.json` — it now holds the whole state:
+4. **The history reads as one line, joined by commas:**
 
    ```nme
-   {"balance": 70, "history": ["+100", "-30"]}
+   set history to an empty list
+   append paid in to history
+   append took out to history
+   show history joined by comma
    ```
 
-   Withdrawing more than the balance prints `Not enough money` and saves
-   nothing, so the account can never go negative:
+   `paid in, took out`.
 
-   ```sh
-   printf 'withdraw\n500\nbalance\nquit\n' | nme r account
-   ```
+5. The whole thing:
 
-   ```text
-   Mini bank — balance is kept in account.json
-   Commands: deposit, withdraw, balance, history, quit
-   ? Amount? Not enough money
-   Commands: deposit, withdraw, balance, history, quit
-   ? Balance: 70
-   Commands: deposit, withdraw, balance, history, quit
-   ? Bye!
+   ```nme
+   set balance to 0
+   set history to an empty list
+   ask number paying how much to pay in
+   add paying to balance
+   append paid in to history
+   ask number wanted how much to take out
+   if wanted is greater than balance
+       show there is not enough
+   else
+       subtract wanted from balance
+       append took out to history
+   end
+   show balance
+   show history joined by comma
+   show how many history
    ```
 
 ## Try it yourself
 
-Add a `transfer` command that withdraws from this account and deposits into a
-second one — load both, change both, save both. Or refuse deposits of zero or
-negative amounts with an `if amount <= 0:` check.
+Ask for more than the balance — the balance stays as it was and nothing is
+written to the history either. **Refusing means doing nothing at all.** Then
+wrap the whole thing in `repeat forever` so you can pay in and out again and
+again.
 
 ## What you learned
 
-- An account is a dict of `{balance, history}`; `history` is a list of strings.
-- `load()` / `save()` in `bank.nme` keep the file format in one module.
-- `withdraw` checks `amount <= account["balance"]` before spending.
-- Every change calls `save`, so the account survives between runs.
+- One number and one list make an account.
+- `add` and `subtract` move the balance; `append` builds the history.
+- The check before taking out is where the rule lives.
+- When a program refuses, it leaves the value alone and writes nothing down.
