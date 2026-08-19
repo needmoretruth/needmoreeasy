@@ -479,7 +479,21 @@ fn korean_question_owns_every_auxiliary(tokens: &[Token]) -> bool {
     korean_auxiliary_pairs(tokens).all(|at| at >= shape.prompt_start)
 }
 
-const SET_WORDS_EN: &[&str] = &["set", "save", "remember"];
+/// `store score as 1`, `let score be 2`, `make score 3` — the other ways a
+/// beginner says *save this*. They are ordinary verbs, and what keeps them
+/// from eating sentences is the name they would have to create: `store the
+/// milk in the fridge`, `let me know`, `make it quick` all try to name a word
+/// in [`NOT_A_NAME_EN`] and stay sentences because of it.
+const SET_WORDS_EN: &[&str] = &["set", "save", "remember", "store", "let", "make"];
+/// The word that may stand between the name and the value being saved.
+/// English writes one (`set score to 0`, `let score be 0`); Korean attaches a
+/// particle instead.
+/// Saving words that may not be read without one of [`SET_VALUE_CONNECTORS`]
+/// after the name. See the guard in `match_set`.
+const SET_WORDS_NEEDING_A_CONNECTOR_EN: &[&str] = &["let"];
+const SET_VALUE_CONNECTORS: &[&str] = &[
+    "to", "as", "is", "be", "equals", "equal", "로", "으로", "을", "를", "은", "는", "에",
+];
 const SET_WORDS_KO: &[&str] = &[
     "저장",
     "저장해",
@@ -3520,7 +3534,35 @@ fn missing_end_diagnostic(block: &ExplicitBlock, offset: usize) -> Diagnostic {
 }
 
 #[allow(clippy::too_many_lines)]
+/// Reads one line, and if that fails, reads it again without the politeness
+/// word in front.
+///
+/// `please repeat 3 times` and `좀 기다려 3초` are how people ask for things,
+/// and every matcher that was taught about politeness handles its own case.
+/// This catches the rest in one place instead of thirty. Output is the one
+/// reading it may not produce: a printed sentence must keep its first word,
+/// so `please come in` still prints all three of them.
 fn classify(
+    source: &str,
+    tokens: &[Token],
+    block: &BlockCtx<'_>,
+    known_names: &HashSet<String>,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    let outcome = classify_written_line(source, tokens, block, known_names);
+    if matches!(outcome, Ok(Some(_))) {
+        return outcome;
+    }
+    let polite = leading_sentence_fillers(tokens);
+    if polite == 0 || polite >= tokens.len() {
+        return outcome;
+    }
+    match classify_written_line(source, &tokens[polite..], block, known_names) {
+        Ok(Some(stmt)) if !matches!(stmt, NmeStmt::Say { .. }) => Ok(Some(stmt)),
+        _ => outcome,
+    }
+}
+
+fn classify_written_line(
     source: &str,
     tokens: &[Token],
     block: &BlockCtx<'_>,
@@ -4837,6 +4879,31 @@ fn ask_target_diagnostic(_spelling: Spelling, span: Span) -> Diagnostic {
 /// to front rather than naming a variable.
 const UPDATE_CONNECTOR_WORDS_EN: &[&str] = &["to", "by", "from", "of", "into", "onto"];
 
+/// `1 더해 점수에` written back as `점수에 1 더해`.
+///
+/// Only a name the program already made counts, and only with the particle
+/// that marks what is being changed, so an ordinary sentence that happens to
+/// end in a name is never turned into arithmetic.
+fn korean_target_last_update(
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+) -> Option<Vec<Token>> {
+    if tokens.len() < 3 {
+        return None;
+    }
+    let last = tokens.last()?;
+    let (_, particle) = split_template_variable(name_word(last)?, known_names)?;
+    if !matches!(particle, "에" | "에서" | "에게" | "한테") {
+        return None;
+    }
+    let body = &tokens[..tokens.len() - 1];
+    update_action_ending(body, MatchMode::Exact)?;
+    let mut reordered = Vec::with_capacity(tokens.len());
+    reordered.push(last.clone());
+    reordered.extend_from_slice(body);
+    Some(reordered)
+}
+
 fn match_update(
     source: &str,
     tokens: &[Token],
@@ -4859,6 +4926,15 @@ fn match_update(
         && prose_beats_recovery(source, tokens, known_names)
     {
         return Ok(None);
+    }
+    // `1 더해 점수에` — the name moved to the end and took its particle with
+    // it. Korean lets the pieces of a sentence stand in any order as long as
+    // the marks stay on them, so this is the ordinary line written another
+    // way, and reading it in the ordinary order is reading what it says.
+    if let Some(reordered) = korean_target_last_update(tokens, known_names) {
+        if let Some(stmt) = match_update(source, &reordered, known_names, MatchMode::Exact)? {
+            return Ok(Some(stmt));
+        }
     }
     // `to score add 1` / `by 1 increase score` — the connector moved to the
     // front. Reading the line without it gives the ordinary order back;
@@ -12291,7 +12367,7 @@ fn match_set(
         if tokens.get(value_start).is_some_and(|token| {
             token_matches_exact(
                 token,
-                &["to", "as", "is", "로", "으로", "을", "를", "은", "는", "에"],
+                SET_VALUE_CONNECTORS,
             )
         }) {
             value_start += 1;
@@ -12434,6 +12510,16 @@ fn match_set(
         let marked_by_a_connector = tokens
             .get(consumed + 1)
             .is_some_and(|token| token_matches_exact(token, &["to", "as", "is", "into"]));
+        // `Let's not talk about it tonight.` splits into `Let` + `s`, which
+        // reads as a name called `s` unless `let` is made to say where the
+        // value starts. `let score be 0` says it; the sentence does not.
+        if token_matches_exact(&tokens[0], SET_WORDS_NEEDING_A_CONNECTOR_EN)
+            && !tokens
+                .get(consumed + 1)
+                .is_some_and(|token| token_matches_exact(token, SET_VALUE_CONNECTORS))
+        {
+            return Ok(None);
+        }
         if spelling == Spelling::English
             && !marked_by_a_connector
             && !is_bindable_english_name(target_word)
@@ -12453,7 +12539,7 @@ fn match_set(
         if tokens.get(value_start).is_some_and(|token| {
             token_matches_exact(
                 token,
-                &["to", "as", "is", "로", "으로", "을", "를", "은", "는", "에"],
+                SET_VALUE_CONNECTORS,
             )
         }) {
             value_start += 1;
@@ -14869,7 +14955,45 @@ fn arranging_list(expected: &[&str]) -> bool {
         .any(|list| list.len() == expected.len() && list.iter().zip(expected).all(|(a, b)| a == b))
 }
 
+/// Action words that are ordinary words as well, and are therefore only ever
+/// read when they are spelled exactly.
+///
+/// A one-edit repair reaches much too far from these: `story:` is one letter
+/// from `store` and opened a story block until it became a save, `late` is
+/// one from `let`, `mask` one from `make`, `live` one from `list`, and `mix`
+/// is one from six words at once. The words that were always NME's own
+/// (`set`, `show`, `말해줘`) keep their repair — nobody writes them by
+/// accident.
+const EXACT_ONLY_ACTION_WORDS: &[&str] = &[
+    "store", "let", "make", "give", "list", "write", "report", "present", "output", "speak",
+    "puts", "echo", "reveal", "announce", "order", "arrange", "mix", "flip", "invert", "jumble",
+    "scramble", "request", "enter", "input",
+];
+
 fn best_action_rank(actual: &str, expected: &[&str], mode: MatchMode) -> Option<(u8, usize)> {
+    let repaired = |rank: u8| rank > 0;
+    if expected
+        .iter()
+        .any(|word| EXACT_ONLY_ACTION_WORDS.contains(word))
+    {
+        // Try the exact reading first, then the same list without the words
+        // that may not be repaired into.
+        if let Some(found) = best_action_rank_over(actual, expected, mode) {
+            if !repaired(found.0) {
+                return Some(found);
+            }
+        }
+        let strict: Vec<&str> = expected
+            .iter()
+            .copied()
+            .filter(|word| !EXACT_ONLY_ACTION_WORDS.contains(word))
+            .collect();
+        return best_action_rank_over(actual, &strict, mode);
+    }
+    best_action_rank_over(actual, expected, mode)
+}
+
+fn best_action_rank_over(actual: &str, expected: &[&str], mode: MatchMode) -> Option<(u8, usize)> {
     let mut best: Option<u8> = None;
     let mut matches = 0usize;
     for candidate in expected {
@@ -15823,9 +15947,21 @@ fn unreadable_action_token(tokens: &[Token], known_names: &HashSet<String>) -> u
     let start = leading_sentence_fillers(tokens);
     let hangul_line = tokens.iter().filter_map(name_word).any(is_hangul);
     if hangul_line {
+        // A name the program already made is never the unknown action, even
+        // when it stands last: `점수에 1 더하기` used to blame `점수에`.
+        let names_something = |index: &usize| {
+            name_word(&tokens[*index]).is_some_and(|word| {
+                split_template_variable(word, known_names).is_none()
+            })
+        };
         (start..tokens.len())
             .rev()
-            .find(|index| name_word(&tokens[*index]).is_some())
+            .find(names_something)
+            .or_else(|| {
+                (start..tokens.len())
+                    .rev()
+                    .find(|index| name_word(&tokens[*index]).is_some())
+            })
             .unwrap_or(tokens.len() - 1)
     } else {
         (start..tokens.len())
@@ -15845,9 +15981,22 @@ fn unknown_action_word_diagnostic(tokens: &[Token], known_names: &HashSet<String
         token.span,
     );
     match suggest_action_word(word) {
+        // The word is spelled right and is an action word — it simply cannot
+        // stand where it stands. Telling the writer to write the word they
+        // already wrote (`did you mean \`저장해\`?`) helps nobody.
+        Some(action) if action == word => problem.with_bilingual_hint(
+            format!(
+                "`{word}` is an action word, but this line does not say what it acts on; \
+                 write the whole line, such as `set score to 0`"
+            ),
+            format!(
+                "`{word}`는 동작 낱말이지만, 이 줄에는 무엇을 대상으로 삼을지가 없습니다. \
+                 `점수는 0`처럼 줄 전체를 적어 주세요"
+            ),
+        ),
         Some(action) => problem.with_bilingual_hint(
             format!("`{word}` is not an action word here; did you mean `{action}`?"),
-            format!("여기서 `{word}`는 동작 단어가 아니에요. 혹시 `{action}`인가요?"),
+            format!("여기서 `{word}`는 동작 낱말이 아닙니다. 혹시 `{action}`입니까?"),
         ),
         None => problem.with_bilingual_hint(
             format!(

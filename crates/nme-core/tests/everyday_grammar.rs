@@ -1653,9 +1653,13 @@ fn a_glued_word_only_comes_apart_into_words() {
 
 #[test]
 fn a_word_that_is_never_an_action_is_not_repaired_into_one() {
-    // `let` is in the table of words NME refuses and explains; repairing it
-    // into `set` is the translation that table exists to refuse.
-    assert_eq!(error_code("let score be 0\n"), "E0603");
+    // `let` used to be refused and explained, on the grounds that repairing
+    // it into `set` is a translation, not a spelling. The owner asked on
+    // 2026-08-19 for the near-synonyms to be accepted instead, so `let` saves
+    // a value — but only where it says where the value starts. That is also
+    // what keeps the apostrophe line below a sentence.
+    assert_eq!(ok("let score be 0\n"), "score = 0\n");
+    assert_eq!(ok("let me know\n"), "print(\"let me know\")\n");
     assert_eq!(
         ok("Let's not talk about it tonight.\n"),
         "print(\"Let's not talk about it tonight.\")\n"

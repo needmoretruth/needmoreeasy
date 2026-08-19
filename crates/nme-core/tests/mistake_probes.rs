@@ -158,13 +158,6 @@ fn raw_cpython_errors_become_nme_diagnostics() {
             names: "add",
         },
         Refusal {
-            probe: "o-ko-07",
-            source: "점수는 0\n1 더해 점수에\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 2,
-            names: "점수에",
-        },
-        Refusal {
             probe: "o-ko-08",
             source: "0 점수에 저장해\n",
             code: DiagnosticCode::UnknownActionWord,
@@ -186,25 +179,11 @@ fn raw_cpython_errors_become_nme_diagnostics() {
             names: "setscore",
         },
         Refusal {
-            probe: "y-en-16",
-            source: "store score as 0\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "store",
-        },
-        Refusal {
             probe: "y-en-18",
             source: "assign 0 to score\n",
             code: DiagnosticCode::UnknownActionWord,
             line: 1,
             names: "assign",
-        },
-        Refusal {
-            probe: "y-en-19",
-            source: "make score 0\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "make",
         },
         Refusal {
             probe: "y-en-20",
@@ -396,13 +375,6 @@ fn a_word_that_is_not_an_action_is_named() {
             names: "add",
         },
         Refusal {
-            probe: "o-ko-07",
-            source: "점수는 0\n1 더해 점수에\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 2,
-            names: "점수에",
-        },
-        Refusal {
             probe: "o-ko-08",
             source: "0 점수에 저장해\n",
             code: DiagnosticCode::UnknownActionWord,
@@ -452,25 +424,11 @@ fn a_word_that_is_not_an_action_is_named() {
             names: "번반복해서",
         },
         Refusal {
-            probe: "y-en-16",
-            source: "store score as 0\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "store",
-        },
-        Refusal {
             probe: "y-en-18",
             source: "assign 0 to score\n",
             code: DiagnosticCode::UnknownActionWord,
             line: 1,
             names: "assign",
-        },
-        Refusal {
-            probe: "y-en-19",
-            source: "make score 0\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "make",
         },
         Refusal {
             probe: "y-en-20",

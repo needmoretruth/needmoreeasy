@@ -599,7 +599,7 @@ Every spelling accepted for each action, with nothing left out.
 | --- | --- | --- |
 | 출력 / Output | `say` · `show` · `display` · `tell` · `print` | `말해` · `말해줘` · `말해주세요` · `보여줘` · `보여주세요` · `출력해` · `출력해줘` · `출력해주세요` · `해줘` · `해주세요` · `읽어줘` |
 | 입력 / Input | `ask` · `prompt` · `question` | `물어봐` · `물어봐줘` · `물어보세요` · `질문해` · `질문해줘` · `입력받아` · `입력받아줘` · `입력받아주세요` · `물어봐요` · `물어봐주세요` · `질문해주세요` |
-| 저장 / Save | `set` · `save` · `remember` | `저장` · `저장해` · `저장해줘` · `기억해` · `기억해줘` · `설정` · `설정해` · `설정해줘` · `지정` · `지정해` · `정해` · `만들어` |
+| 저장 / Save | `set` · `save` · `remember` · `store` · `let` · `make` | `저장` · `저장해` · `저장해줘` · `기억해` · `기억해줘` · `설정` · `설정해` · `설정해줘` · `지정` · `지정해` · `정해` · `만들어` |
 | 더하기 / Add | `add` · `increase` · `increment` · `plus` | `더해` · `더해줘` · `올려` · `올려줘` · `늘려` · `늘려줘` |
 | 빼기 / Subtract | `subtract` · `decrease` · `decrement` · `minus` · `remove` | `빼` · `빼줘` · `내려` · `내려줘` · `줄여` · `줄여줘` |
 | 곱하기 / Multiply | `multiply` · `multiplied` | `곱해` · `곱해줘` · `곱하기해` |

@@ -160,6 +160,7 @@ WORD_LIST_EXCEPTIONS = {
     "CHOICE_SCOPE_WORDS_KO": "`빨강 또는 초록 중에서 골라`; English writes the scope as `from` inside `pick from red or green`",
     "NOT_A_NAME_EN": "words a sentence may never turn into a name; Korean marks its target with a particle instead",
     "SAY_TRAILING_WORDS_KO": "output words Korean may only write last; English takes any output word in either place (`show hello` and `hello show`)",
+    "SET_WORDS_NEEDING_A_CONNECTOR_EN": "`let score be 0` — English needs to say where the value starts; Korean marks it with a particle (SET_TARGET_PARTICLES_KO)",
     "SAY_ONE_WORD_WORDS_EN": "everyday verbs that show one word (`write hello`); Korean writes its verb last, where a whole message may stand in front of it (SAY_TRAILING_WORDS_KO)",
     "SAY_TRAILING_OBJECT_FREE_WORDS_KO": "trailing output words that are transitive verbs too (`배를 띄워` floats a boat); English has no attached object mark to tell the two apart",
     "SAY_SHORT_WORDS_KO": "`말`, one syllable; the English output words are one short word already (`say`)",
