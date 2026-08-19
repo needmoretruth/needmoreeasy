@@ -70,8 +70,8 @@ def newest_nme():
 NME = sys.argv[1] if len(sys.argv) > 1 else newest_nme()
 
 # The numbers this file refuses to let get worse.
-BASELINE_PRINTED = 249
-BASELINE_CHANGED = 12
+BASELINE_PRINTED = 251
+BASELINE_CHANGED = 10
 
 
 def outcome(sentence):

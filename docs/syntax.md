@@ -606,7 +606,7 @@ Every spelling accepted for each action, with nothing left out.
 | 나누기 / Divide | `divide` · `divided` | `나눠` · `나눠줘` · `나누어줘` |
 | 기다리기 / Wait | `wait` · `pause` · `sleep` | `기다려` · `기다려줘` · `기다리세요` · `기다려주세요` · `쉬어` · `쉬어줘` · `쉬세요` |
 | 반복 / Repeat | `repeat` · `again` · `do` | `반복` · `반복해` · `반복해줘` · `반복해주세요` · `반복하세요` · `반복해서` · `반복하고` · `반복한다음` · `다시해` · `다시해주세요` |
-| 조건 / If | `when` · `if` | `만약` · `만약에` · `만일` · `혹시` |
+| 조건 / If | `when` · `if` · `should` · `incase` · `whenever` | `만약` · `만약에` · `만일` · `혹시` |
 | 조건 반복 / While | `while` | `동안` · `하는동안` · `할동안` |
 | 다른 갈래 / Else | `else` · `otherwise` | `아니면` · `그렇지않으면` · `아니면만약` · `아니면만약에` · `그렇지않으면만약` · `그렇지않으면만약에` |
 | 반복 중단 / Break | `break` · `breakhere` | `멈춰` · `멈춰줘` · `멈춰라` · `멈추기` · `그만해` · `정지해` · `종료해` · `중단` · `반복멈춰` · `여기서멈춰` |
@@ -620,7 +620,7 @@ Every spelling accepted for each action, with nothing left out.
 | 짧은 물어보기 / Short asking word | — | `물어` |
 | ~로 해 / Save with the everyday verb | `becomes` · `become` · `call` | `해` · `하자` · `합시다` · `하죠` · `부르자` |
 | ~로 / ~라고 표시 / What the name becomes | — | `으로` · `로` · `이라고` · `라고` |
-| 횟수가 있을 때만 반복 / Repeat, only with a count | `loop` · `iterate` · `cycle` | `돌려` · `돌려줘` · `돌려주세요` · `되풀이` · `되풀이해` · `되풀이해줘` · `되풀이해서` · `되풀이하기` |
+| 횟수가 있을 때만 반복 / Repeat, only with a count | `loop` · `iterate` · `cycle` · `rep` · `goround` · `runthrough` | `돌려` · `돌려줘` · `돌려주세요` · `되풀이` · `되풀이해` · `되풀이해줘` · `되풀이해서` · `되풀이하기` |
 | 건너뛰기 / Skip | `skip` · `skipthis` · `skipit` · `nextone` | `건너뛰어` · `건너뛰어줘` · `건너뛰기` · `건너뛰자` · `넘어가` · `넘어가줘` · `계속해` · `넘겨` · `다음` |
 | 블록 닫기 / End | `end` · `finish` · `done` | `끝` · `종료` · `마침` |
 | 모듈 쓰기 / Use | `use` · `load` · `get` · `import` | `사용` · `사용해` · `사용해줘` · `사용해주세요` · `불러와` · `불러와줘` · `가져와` · `가져와줘` · `받아` · `받아줘` |

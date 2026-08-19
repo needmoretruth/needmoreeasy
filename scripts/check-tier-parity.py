@@ -158,6 +158,7 @@ WORD_LIST_EXCEPTIONS = {
     "OR_EQUAL_SECOND_WORDS_KO": "spoken Korean splits `<=`/`>=` into two words; English writes `is greater than or equal to` in one run",
     "READING_LEAD_WORDS_EN": "`how many friends`; Korean puts the counting word after the name (COUNT_WORDS_KO)",
     "CHOICE_SCOPE_WORDS_KO": "`빨강 또는 초록 중에서 골라`; English writes the scope as `from` inside `pick from red or green`",
+    "VERB_EXPECTING_WORDS_EN": "words after which an English output word is the sentence's own verb (`time will tell`); Korean writes its verb last on purpose, so the order itself carries no doubt",
     "NOT_A_NAME_EN": "words a sentence may never turn into a name; Korean marks its target with a particle instead",
     "SAY_TRAILING_WORDS_KO": "output words Korean may only write last; English takes any output word in either place (`show hello` and `hello show`)",
     "UPDATE_TRAILING_ONLY_WORDS_KO": "`더하기`·`빼기` are the names of the operations as well, so they count as the verb only where Korean puts a verb — at the end of the line; English says `add`/`subtract` and has no such pair",

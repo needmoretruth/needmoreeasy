@@ -17,6 +17,7 @@ for check in \
   check-doc-parity \
   check-prose-blocks \
   check-syntax-reference \
+  check-common-english-words \
   check-tier-parity
 do
   printf '── %s\n' "$check"

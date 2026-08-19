@@ -215,7 +215,7 @@ const REPEAT_WORDS_KO: &[&str] = &[
 /// They are also read **exactly**, never repaired. `되풀이해` is one character
 /// from `되풀이할`, and `같은 하루를 최대 10회 되풀이할 수 있어요 말해줘` is a line
 /// of an example program that has to keep printing.
-const REPEAT_COUNT_WORDS_EN: &[&str] = &["loop", "iterate", "cycle"];
+const REPEAT_COUNT_WORDS_EN: &[&str] = &["loop", "iterate", "cycle", "rep", "goround", "runthrough"];
 const REPEAT_COUNT_WORDS_KO: &[&str] = &[
     "돌려",
     "돌려줘",
@@ -226,7 +226,14 @@ const REPEAT_COUNT_WORDS_KO: &[&str] = &[
     "되풀이해서",
     "되풀이하기",
 ];
-const WHEN_WORDS_EN: &[&str] = &["when", "if"];
+/// `should the score be above ten`, `whenever the door is open` and `incase
+/// it rains` open a condition the same way `if` does.
+///
+/// `in case` written as two words is deliberately absent: `in` is a Python
+/// keyword, and every attempt to read the pair as one word left the line
+/// somewhere between a header and a sentence. One word works, and the
+/// two-word spelling stays a sentence rather than becoming a half-read block.
+const WHEN_WORDS_EN: &[&str] = &["when", "if", "should", "incase", "whenever"];
 const WHEN_WORDS_KO: &[&str] = &["만약", "만약에", "만일", "혹시"];
 const WHILE_WORDS_EN: &[&str] = &["while"];
 const WHILE_WORDS_KO: &[&str] = &["동안", "하는동안", "할동안"];
@@ -3818,7 +3825,7 @@ fn classify_written_line(
         return match_for_each(source, tokens, block, known_names, MatchMode::Recover);
     }
 
-    if is_python_keyword(&tokens[0].tok) && !matches!(tokens[0].tok, Tok::If) {
+    if is_python_keyword(&tokens[0].tok) && !opens_no_python_statement(&tokens[0].tok) {
         return Ok(None);
     }
 
@@ -4156,7 +4163,7 @@ fn classify_written_line(
     // Invalid Python led by another Python keyword belongs to Python. This
     // preserves its own context-sensitive diagnostics (`elif`, `except`, ...)
     // while still allowing the deliberately supported mixed `if 조건` form.
-    if is_python_keyword(&tokens[0].tok) {
+    if is_python_keyword(&tokens[0].tok) && !opens_no_python_statement(&tokens[0].tok) {
         return Ok(None);
     }
     if is_written_prose_line(tokens) {
@@ -4217,7 +4224,10 @@ fn match_say(
             // The action word was only a guess, so an empty message means the
             // guess was wrong: `입력해 주세요` is a sentence, not `출력해주세요`
             // with nothing to show.
-            if mode == MatchMode::Recover {
+            if mode == MatchMode::Recover
+                || (spelling == Spelling::English
+                    && english_verb_expected_before(tokens, action_start))
+            {
                 return Ok(None);
             }
             return Err(say_missing(spelling, tokens[action_start].span));
@@ -8839,11 +8849,26 @@ fn korean_for_each_variable(tokens: &[Token]) -> Option<(usize, usize)> {
         .then_some((suffix_at - 1, suffix_at + 1))
 }
 
-/// True when the line looks like `<목록>의 <이름>마다 ...`.
+/// True when the line looks like `<목록>의 <이름>마다 ...`, or like the one-word
+/// plural form `<목록>마다 ...` that means the same thing.
 fn korean_for_each_shape(tokens: &[Token]) -> bool {
     let Some((name_at, rest_at)) = korean_for_each_variable(tokens) else {
         return false;
     };
+    // `값들마다 반복해` — the collection and the item in one word. Whether the
+    // name really is a list is asked in `match_korean_for_each`; here the
+    // question is only whether the line opens a block, and a plural word with
+    // a repeat word after it does.
+    if name_at == 0 {
+        let plural = name_word(&tokens[0])
+            .and_then(|word| word.strip_suffix(EACH_SUFFIX_KO))
+            .is_some_and(|base| base.ends_with('들') && base.chars().count() > 1);
+        return plural
+            && (repeat_action_at(&tokens[rest_at..], 0, MatchMode::Recover).is_some()
+                || tokens[rest_at..]
+                    .iter()
+                    .any(|token| matches!(token.tok, Tok::Colon)));
+    }
     let rest = &tokens[rest_at..];
     // `순서와 함께` stands between the loop name and the repeat word, so it has
     // to be stepped over here as well; otherwise the line is not seen as a
@@ -8855,6 +8880,35 @@ fn korean_for_each_shape(tokens: &[Token]) -> bool {
     name_at > 0
         && (repeat_action_at(rest, 0, MatchMode::Recover).is_some()
             || rest.iter().any(|token| matches!(token.tok, Tok::Colon)))
+}
+
+/// `값들마다` written out as the two words it means: `값들` and `값마다`.
+///
+/// The collection keeps the span of its own syllables, so the loop still
+/// reads the name out of the source the writer typed; only the item name is
+/// made here, and it is made by taking off the `들` that made the word plural.
+fn korean_plural_for_each(token: &Token, known_names: &HashSet<String>) -> Option<Vec<Token>> {
+    let word = name_word(token)?;
+    let base = word.strip_suffix(EACH_SUFFIX_KO)?;
+    let item = base.strip_suffix('들').filter(|item| !item.is_empty())?;
+    if !is_list_name(known_names, base) {
+        return None;
+    }
+    let split = token.span.end - EACH_SUFFIX_KO.len();
+    Some(vec![
+        Token {
+            tok: Tok::Name {
+                name: base.to_string(),
+            },
+            span: Span::new(token.span.start, split),
+        },
+        Token {
+            tok: Tok::Name {
+                name: format!("{item}{EACH_SUFFIX_KO}"),
+            },
+            span: Span::new(split, token.span.end),
+        },
+    ])
 }
 
 fn match_korean_for_each(
@@ -8870,7 +8924,16 @@ fn match_korean_for_each(
         return Ok(None);
     };
     if name_at == 0 {
-        return Ok(None);
+        // `값들마다 반복해` — the collection and the loop name written as one
+        // word. Korean makes a plural with `들`, so the item of `값들` is
+        // `값`, and the line means `값들의 값마다 반복해`. Only a name the
+        // program already made a list is read this way.
+        let Some(split) = korean_plural_for_each(&tokens[0], known_names) else {
+            return Ok(None);
+        };
+        let mut written = split;
+        written.extend_from_slice(&tokens[1..]);
+        return match_korean_for_each(source, &written, block, known_names, mode);
     }
     let rest = &tokens[rest_at..];
     // `친구들의 친구마다 순서와 함께 반복해` — the name in front of `와 함께`
@@ -9669,8 +9732,9 @@ fn find_exact_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionC
         .enumerate()
         .filter_map(|(index, token)| {
             if is_or_equal_phrase_at(tokens, index)
-                || tokens.get(index.saturating_sub(1)).is_some_and(|previous| {
-                    token_word(previous) == Some("or") && is_or_equal_phrase_at(tokens, index - 1)
+                || index.checked_sub(1).is_some_and(|before| {
+                    token_word(&tokens[before]) == Some("or")
+                        && is_or_equal_phrase_at(tokens, before)
                 })
             {
                 return None;
@@ -9781,8 +9845,9 @@ fn find_condition_connector(tokens: &[Token]) -> Option<(usize, ConditionConnect
         .enumerate()
         .filter_map(|(index, token)| {
             if is_or_equal_phrase_at(tokens, index)
-                || tokens.get(index.saturating_sub(1)).is_some_and(|previous| {
-                    token_word(previous) == Some("or") && is_or_equal_phrase_at(tokens, index - 1)
+                || index.checked_sub(1).is_some_and(|before| {
+                    token_word(&tokens[before]) == Some("or")
+                        && is_or_equal_phrase_at(tokens, before)
                 })
             {
                 return None;
@@ -10545,7 +10610,9 @@ fn parse_english_condition(
     let (left, mut cursor) = condition_reading_at(tokens, known_names)
         .filter(|&(_, used)| used < tokens.len())
         .unwrap_or_else(|| (condition_left(tokens[0], known_names), 1));
-    if token_word(tokens[cursor]) == Some("is") {
+    // `should the score be greater than ten` — English moves the verb to the
+    // front when it asks, and `be` then stands where `is` would.
+    if matches!(token_word(tokens[cursor]), Some("is" | "be" | "are" | "was" | "were")) {
         cursor += 1;
     }
     if tokens
@@ -10927,13 +10994,12 @@ fn condition_connector_recovered(token: &Token, is_last: bool) -> Option<Conditi
             words
                 .iter()
                 .any(|candidate| {
+                    // See `COMMON_ENGLISH_WORDS`. `than` is in it because it
+                    // is a normal part of `greater than`/`less than`, not a
+                    // misspelled `then`; `they` because a sentence about
+                    // other people is not a condition with a body.
                     !word.eq_ignore_ascii_case(candidate)
-                        && word != "the"
-                        // `than` is a normal part of `greater than`/`less
-                        // than`, not a misspelled `then` connector.  Keeping
-                        // it out avoids making an otherwise clear condition
-                        // ambiguous when the real connector is also mistyped.
-                        && word != "than"
+                        && !is_common_english_word(word)
                         && word.chars().count() >= 2
                         && one_typo_away(word, candidate)
                 })
@@ -14988,6 +15054,23 @@ fn is_connector_word(token: &Token) -> bool {
         || token_matches_exact(token, &["and", "then", "해서", "그리고", "그러면"])
 }
 
+/// Keywords that can never begin a Python statement, and are ordinary English
+/// words as well.
+///
+/// The rule above hands a line that opens with a Python keyword back to
+/// Python so that CPython's own message about `elif` or `except` survives.
+/// These five open nothing: a line beginning with them is not Python that
+/// went wrong, it is a sentence — `in the beginning there was light` and `as
+/// far as I know` used to reach the reader as CPython's `SyntaxError` with a
+/// caret under the first two letters. `if` is here for the mixed `if 조건`
+/// form NME supports on purpose.
+fn opens_no_python_statement(tok: &Tok) -> bool {
+    matches!(
+        tok,
+        Tok::If | Tok::In | Tok::Is | Tok::And | Tok::Or | Tok::As
+    )
+}
+
 fn is_python_keyword(tok: &Tok) -> bool {
     matches!(
         tok,
@@ -15267,6 +15350,345 @@ fn best_action_rank_over(actual: &str, expected: &[&str], mode: MatchMode) -> Op
 /// Worst repair rank an action word may still be recovered from.
 const RECOVERY_RANK_WORST: u8 = 3;
 
+/// Ordinary English words, which are never read as a *mistyped* NME word.
+///
+/// NME repairs one typo, and one typo is all that separates most short words
+/// from each other. Without this list `shop milk` printed `milk` (`shop` read
+/// as `show`), `well done` printed `done`, `snow falls` printed `falls`,
+/// `sad news` printed `news` and `or so they say` asked what the condition
+/// `or so` meant, because `they` is one letter from `then`. Every one of
+/// those is a sentence, and a sentence prints whole.
+///
+/// The rule the list states is simply: a word that ordinary English already
+/// has is not a misspelling of anything. Repair still catches what it is for
+/// — `shwo`, `tel`, `sya`, `pirnt` are not English words.
+///
+/// Writing one of these exactly still means whatever NME says it means. The
+/// exact reading is settled before this list is consulted, so `do it 3
+/// times`, `if ready`, `say hello` and `score is greater than 3` are
+/// untouched; only the repair is off.
+const COMMON_ENGLISH_WORDS: &[&str] = &[
+    "a", "aback", "abide", "able", "abode", "abort", "abound", "about", "abouts", "above",
+    "aboved", "aboves", "abut", "acre", "across", "adds", "aded", "adly", "adown", "aero",
+    "aery", "afted", "after", "again", "againg", "agains", "against", "againsts", "agently",
+    "aground", "ahas", "ahem", "aide", "aits", "aling", "all", "allays", "alls", "ally",
+    "almost", "aloing", "alone", "along", "alongs", "aloudly", "alow", "alowly", "already",
+    "also", "alsos", "alter", "although", "althoughs", "alto", "always", "am", "amain", "amide",
+    "aming", "among", "amongs", "an", "and", "ands", "anear", "anearly", "aned", "anly",
+    "announced", "announcer", "announces", "another", "anothers", "answer", "anther", "any",
+    "anybody", "anyone", "anyoned", "anyones", "anything", "anythings", "anyway", "anyways",
+    "apace", "apeak", "apped", "appends", "apter", "are", "area", "areally", "ared", "arely",
+    "ares", "around", "arounds", "arranged", "arranger", "arranges", "as", "asided", "asides",
+    "ask", "asks", "asleep", "aster", "at", "atop", "await", "away", "aways", "awhile", "awly",
+    "awry", "azide", "baaly", "babely", "bach", "back", "backs", "bact", "bad", "badely",
+    "badly", "bag", "bagly", "bahly", "bait", "bake", "bakely", "baldly", "baldy", "bale",
+    "balely", "balk", "ball", "bally", "band", "bandly", "banely", "bank", "banly", "baply",
+    "barbly", "bardely", "bardly", "bare", "barely", "barfly", "bargely", "bark", "barkly",
+    "barley", "barly", "barmly", "barnly", "barrely", "barrow", "baryely", "basely", "bask",
+    "bast", "bately", "bath", "bather", "batly", "baudly", "bawdly", "bayly", "bding", "bdly",
+    "be", "beach", "bead", "beadly", "beady", "beak", "bean", "bear", "bearly", "beautiful",
+    "became", "becames", "because", "becaused", "becauses", "beck", "become", "becomed",
+    "becomes", "bed", "beding", "bedly", "bedside", "beed", "beef", "been", "beens", "beep",
+    "beer", "bees", "beet", "before", "befored", "befores", "began", "begin", "beging",
+    "behind", "behinds", "being", "beings", "believe", "beling", "bell", "bellow", "below",
+    "belows", "bend", "bently", "bequest", "beside", "besided", "besides", "best", "betide",
+    "beting", "better", "between", "betweens", "beying", "beyonds", "bfing", "bicely", "bidly",
+    "big", "biggests", "bight", "biing", "bill", "binally", "bindly", "bine", "bines", "bing",
+    "bird", "bit", "bits", "bize", "bking", "black", "bland", "blanks", "blarely", "blast",
+    "bleak", "blear", "blearly", "bleep", "bling", "blink", "blip", "block", "bloop", "bloops",
+    "blow", "blowly", "blue", "board", "boat", "bock", "bodly", "body", "bolds", "bonce",
+    "bone", "book", "boon", "booth", "border", "borely", "born", "borrows", "bort", "bosh",
+    "botch", "both", "bother", "bothing", "boths", "bothy", "bots", "bott", "bottom", "bound",
+    "bounds", "bout", "bowl", "box", "boxy", "boy", "bping", "bradly", "braely", "braw",
+    "bread", "break", "breaks", "bream", "breing", "bright", "bring", "broth", "brother",
+    "brown", "brut", "buck", "budly", "build", "built", "buing", "bumble", "bunt", "buring",
+    "burrow", "burs", "bush", "business", "bust", "busy", "but", "buts", "butt", "buy", "bxing",
+    "by", "bying", "byrely", "cable", "cadly", "cafely", "cain", "cake", "calf", "calk", "call",
+    "calla", "calls", "cally", "calm", "cals", "calx", "caly", "came", "can", "canc", "cane",
+    "cannon", "cannot", "cannots", "cans", "cant", "capita", "capital", "capitals", "capitaly",
+    "capitas", "capitol", "capitols", "car", "cardly", "care", "carely", "carl", "carrion",
+    "carry", "carryons", "case", "cask", "cast", "cat", "catch", "cater", "caul", "cause",
+    "cave", "cell", "center", "cently", "centre", "cere", "cero", "certainty", "chad", "chair",
+    "chance", "chanced", "chancel", "chancels", "chances", "chancies", "chancre", "chancres",
+    "chancy", "change", "changes", "chappily", "chardly", "chared", "chas", "chat", "check",
+    "chem", "child", "children", "chis", "choose", "choosed", "chooser", "chooses", "choosy",
+    "chose", "chough", "chow", "church", "cicely", "cine", "cines", "cist", "cither", "cits",
+    "city", "clan", "clank", "class", "clean", "cleanly", "clear", "clears", "cleat", "cleatly",
+    "clement", "cline", "clines", "clip", "close", "cloudly", "coff", "coin", "coined", "cold",
+    "colds", "coll", "colour", "coma", "come", "comm", "commas", "common", "comms", "company",
+    "competely", "complete", "completedly", "cone", "cont", "contain", "contains", "conto",
+    "cool", "coon", "coop", "coops", "copy", "corner", "cost", "costly", "could", "coulds",
+    "count", "country", "counts", "county", "couple", "course", "court", "cover", "coward",
+    "cowards", "craw", "creak", "crest", "crop", "cross", "crowd", "cry", "cull", "cumber",
+    "cunt", "cup", "curing", "curs", "curtainly", "cut", "cuts", "cyan", "cycled", "cycles",
+    "dace", "dad", "dadly", "dale", "dame", "dare", "dared", "darely", "darer", "dares", "darg",
+    "daring", "dark", "darn", "dart", "date", "dater", "daughter", "dawn", "day", "daze",
+    "dead", "deal", "deally", "dear", "dearly", "death", "decide", "decrements", "deep",
+    "degrease", "dell", "dently", "deport", "dering", "ders", "dhow", "dicely", "dick", "did",
+    "diddle", "dido", "dids", "die", "died", "dies", "difference", "different", "difficult",
+    "dight", "dill", "dime", "dimes", "dimply", "dine", "dines", "dinner", "dire", "direction",
+    "diring", "dist", "dither", "dits", "dive", "divide", "divided", "divideds", "dividend",
+    "divider", "divides", "divine", "divined", "dlring", "do", "dobs", "docs", "doed", "doer",
+    "doers", "does", "doff", "dog", "doge", "doges", "dogs", "dole", "doles", "dols", "dome",
+    "domes", "doms", "dona", "done", "doned", "donee", "dones", "dong", "donne", "dons", "door",
+    "dope", "dopes", "doring", "dorp", "dors", "dose", "doses", "doss", "dostly", "dote",
+    "dotes", "dots", "double", "doubt", "dour", "douring", "dours", "dove", "doves", "down",
+    "downs", "downy", "dows", "doze", "dozes", "drab", "drag", "dram", "drat", "draw", "drawl",
+    "drawn", "draws", "dray", "dread", "dream", "dress", "drew", "dring", "drink", "drip",
+    "drive", "drone", "droop", "drop", "drops", "drown", "dry", "dubing", "ducing", "duding",
+    "dues", "duging", "duhing", "duing", "duking", "dune", "duning", "duoing", "duping",
+    "during", "durings", "duroing", "dust", "duxing", "dyes", "dyne", "dzes", "each", "ear",
+    "early", "earth", "ease", "easely", "east", "eastly", "easy", "eat", "eater", "eave",
+    "echos", "echt", "edge", "egg", "eight", "eighth", "eights", "eighty", "either", "eithers",
+    "elapse", "elapses", "elements", "else", "elsed", "elses", "elver", "emery", "empty",
+    "enactly", "encase", "end", "ends", "ened", "enjoy", "enough", "enoughs", "enow", "enter",
+    "enters", "enticely", "entire", "entirety", "epactly", "equal", "erst", "esse", "ester",
+    "estop", "etch", "ether", "eved", "evely", "even", "evening", "evens", "event", "ever",
+    "everly", "evers", "evert", "every", "everybody", "everyone", "everyoned", "everyones",
+    "everything", "everythings", "eves", "ewer", "exactly", "exaltly", "example", "except",
+    "excepts", "excerpt", "exch", "expect", "eye", "fable", "face", "fact", "fadly", "fail",
+    "fake", "fall", "family", "famous", "far", "fardly", "fare", "farely", "farm", "fast",
+    "father", "fave", "feally", "fear", "fearly", "fecs", "feel", "feet", "feing", "fell",
+    "felt", "fend", "fest", "fever", "few", "fiddle", "field", "fife", "fight", "file", "fill",
+    "film", "final", "finalely", "find", "findly", "fine", "fines", "finfish", "finger",
+    "finially", "finis", "finish", "fire", "firs", "first", "firsts", "fish", "fist", "fits",
+    "five", "fived", "fives", "fix", "flank", "flap", "flips", "flit", "flong", "floor", "flop",
+    "flor", "flour", "flow", "flower", "flowly", "flus", "fly", "foes", "foin", "foined",
+    "folds", "follow", "food", "foot", "for", "fora", "forb", "force", "ford", "fore", "forest",
+    "forevers", "forget", "fork", "form", "fors", "fort", "foul", "found", "founds", "fount",
+    "four", "fours", "fous", "freak", "free", "fresh", "friend", "froe", "frog", "from",
+    "froms", "front", "fros", "frow", "full", "fumble", "fun", "funny", "furing", "furs",
+    "fuse", "futs", "gable", "gadly", "gain", "gait", "gale", "gall", "game", "gappily",
+    "garden", "gather", "gave", "gear", "gearly", "geing", "genely", "genetly", "genitly",
+    "gent", "gentle", "gentry", "genuly", "get", "getly", "gets", "ghat", "gibe", "gill",
+    "gimply", "girl", "gist", "gite", "gits", "give", "gived", "given", "giver", "gives",
+    "glace", "glad", "glass", "glow", "glowly", "go", "goad", "goes", "gold", "golds", "gone",
+    "good", "goon", "goop", "goops", "got", "gout", "gown", "great", "green", "grep", "grew",
+    "ground", "grounds", "group", "grow", "guess", "gush", "gust", "guts", "guy", "gyve",
+    "hack", "had", "hade", "hadly", "hads", "haed", "haes", "hags", "hair", "hajs", "hake",
+    "hale", "half", "hall", "halve", "hame", "hams", "hance", "hances", "hand", "handly",
+    "happen", "happy", "haps", "hard", "hardily", "hardy", "hare", "hared", "harely", "harkly",
+    "harlly", "harmly", "harpily", "harply", "hartly", "has", "hash", "hasp", "hast", "hat",
+    "hate", "hater", "hats", "have", "haved", "haven", "haver", "haves", "haws", "hays", "haze",
+    "he", "head", "heady", "heally", "hear", "heard", "heardly", "hearly", "hears", "heart",
+    "heat", "heave", "heavy", "height", "heir", "heirs", "held", "helds", "hell", "hello",
+    "help", "heme", "hems", "hens", "hently", "heps", "her", "herb", "herbs", "herd", "herdly",
+    "herds", "here", "hered", "heres", "herl", "herls", "herm", "herms", "hern", "herns",
+    "hero", "heros", "herp", "herps", "herself", "herselfs", "hews", "hey", "heys", "hick",
+    "hics", "hids", "hies", "high", "hight", "hill", "him", "hims", "himself", "himselfs",
+    "hindly", "hins", "hippily", "hips", "hire", "his", "hiss", "hist", "history", "hit",
+    "hither", "hits", "hive", "hoardly", "hods", "hoer", "hoers", "hoes", "hold", "hole",
+    "holes", "holiday", "holms", "holps", "hols", "holts", "home", "hone", "hoods", "hoop",
+    "hoops", "hope", "hors", "horse", "hort", "hose", "hospital", "hostly", "hot", "hotel",
+    "hough", "hound", "hounds", "hour", "hours", "house", "hove", "hover", "how", "however",
+    "howevers", "howl", "hows", "huge", "human", "humble", "hundred", "hungry", "hurry", "hurt",
+    "husband", "hush", "huts", "i", "ice", "icely", "idea", "idem", "if", "ill", "impart",
+    "imply", "important", "imports", "impost", "in", "incise", "include", "included",
+    "includes", "increments", "incudes", "incuse", "indly", "inert", "info", "insert",
+    "inserts", "inside", "insided", "insider", "insides", "instead", "insteads", "insted",
+    "inter", "interest", "inti", "into", "intro", "ints", "invent", "invert", "inverts",
+    "invest", "iolitely", "is", "it", "ited", "items", "iterated", "iterates", "its", "itself",
+    "itselfs", "jack", "jell", "jest", "jill", "jive", "job", "john", "johned", "join",
+    "joiner", "joing", "joins", "joint", "jointed", "joust", "joy", "jumbled", "jumbles",
+    "jump", "jupon", "just", "justs", "juts", "kale", "kalong", "keen", "keep", "kently",
+    "kept", "kero", "key", "khan", "khat", "kick", "kid", "kidly", "kill", "kinaly", "kind",
+    "kindaly", "kindle", "kindsly", "kine", "kinely", "kines", "king", "kingly", "kinkly",
+    "kinly", "kinoly", "kist", "kitchen", "kith", "kits", "klong", "knew", "knife", "knot",
+    "know", "known", "koined", "lace", "lack", "ladly", "lady", "lager", "lake", "land", "lane",
+    "lanes", "language", "lank", "lapsed", "lardly", "large", "larges", "largess", "lase",
+    "laser", "lash", "lass", "last", "lasts", "late", "lated", "latent", "later", "lates",
+    "latests", "latex", "lather", "lats", "latter", "laudly", "laugh", "lave", "law", "lay",
+    "layer", "leach", "lead", "leally", "learn", "lease", "least", "leave", "lect", "led",
+    "leet", "left", "leftovers", "leg", "leing", "lend", "lengths", "lengthy", "lent", "lently",
+    "less", "lesson", "let", "lets", "letter", "level", "lever", "lice", "licely", "lices",
+    "lick", "lie", "lien", "liens", "lies", "life", "lifes", "lift", "light", "like", "likes",
+    "lilt", "lime", "limes", "limply", "line", "lined", "lineds", "linen", "linens", "liner",
+    "liners", "lines", "ling", "lings", "linies", "link", "links", "linn", "linns", "lino",
+    "linos", "lins", "lint", "lints", "liny", "lion", "lip", "lire", "lires", "lisp", "list",
+    "listen", "lists", "lite", "liter", "literate", "lites", "lits", "little", "live", "lives",
+    "livided", "lixes", "loadly", "loads", "loaf", "loam", "loan", "loed", "loftly", "loin",
+    "loined", "lone", "lones", "long", "look", "looks", "loom", "looms", "loon", "loons",
+    "loop", "loops", "loopy", "loos", "loot", "loots", "lops", "lord", "lordly", "lose", "lost",
+    "lostly", "lot", "loud", "loup", "louply", "loups", "lour", "lourly", "lours", "lout",
+    "loutly", "love", "lover", "low", "lowercased", "lowercases", "lowly", "luck", "lumber",
+    "lunch", "lune", "lunes", "luring", "lurs", "lush", "lust", "mace", "mach", "machine",
+    "mad", "made", "madly", "mage", "main", "make", "maked", "maker", "makes", "mako", "male",
+    "mall", "maly", "man", "mana", "mane", "mangy", "manky", "manly", "mans", "many", "map",
+    "mare", "marely", "mark", "market", "marry", "mask", "mast", "mastly", "match", "mate",
+    "matter", "maximums", "may", "maya", "maybe", "mayo", "mays", "maze", "mazy", "me", "mead",
+    "meally", "mean", "meany", "meat", "meddle", "meet", "member", "men", "mend", "menus",
+    "mere", "message", "met", "micely", "mick", "middle", "middled", "middles", "might",
+    "mights", "mighty", "mike", "mile", "milk", "mill", "mime", "mimes", "mince", "mind",
+    "mindly", "minds", "mine", "mines", "minimums", "minimus", "minis", "minium", "minks",
+    "mins", "mints", "minute", "minx", "misplay", "miss", "mist", "mistake", "mistly", "mither",
+    "mize", "mkay", "moatly", "moistly", "moke", "molds", "moltly", "moment", "money", "mong",
+    "month", "moon", "mootly", "more", "morning", "morrow", "mort", "mortly", "moshly",
+    "mossly", "most", "moth", "mother", "mothing", "motly", "mound", "mounds", "mount",
+    "mountain", "mouth", "move", "mover", "movie", "much", "muddle", "multily", "multiple",
+    "multipled", "multiplier", "multiplies", "mumble", "muring", "muse", "mush", "music",
+    "musk", "muss", "must", "mustly", "musts", "musty", "muts", "mutt", "my", "myself",
+    "myselfs", "name", "nappily", "nardly", "nave", "neap", "neaply", "near", "nearby",
+    "nearly", "nears", "neat", "neatly", "neck", "need", "needed", "neighbour", "neing",
+    "neither", "neithers", "neper", "nest", "nether", "never", "nevers", "new", "newlined",
+    "newlines", "news", "next", "nice", "nicety", "nichely", "nick", "nickly", "nide", "nidely",
+    "niecely", "night", "nine", "nined", "ninely", "nines", "ning", "nits", "no", "nobody",
+    "node", "noes", "noise", "nonce", "none", "noned", "nones", "nonet", "nons", "noon", "nope",
+    "nor", "norm", "nors", "north", "northing", "nose", "noshing", "not", "notching", "note",
+    "nothing", "nothings", "notice", "noting", "nots", "now", "nows", "nowt", "numbed",
+    "number", "numbers", "numerics", "nuts", "oars", "oast", "ocher", "odes", "of", "off",
+    "offer", "office", "offs", "ofted", "often", "oftens", "oftly", "ogive", "oh", "oil",
+    "okay", "old", "olds", "on", "once", "onced", "onces", "one", "oned", "ones", "only",
+    "onside", "onto", "ontos", "oolitely", "oops", "open", "or", "orded", "order", "orders",
+    "oread", "other", "others", "otherwised", "otherwises", "otter", "otto", "ouch", "oudly",
+    "ouds", "ouis", "ounce", "our", "ouring", "ours", "ourself", "oust", "out", "outputs",
+    "outride", "outs", "outside", "outsided", "outsider", "outsides", "outsize", "oven", "over",
+    "overs", "overt", "own", "oyer", "pace", "pack", "pact", "padly", "page", "pain", "paint",
+    "pair", "palace", "pale", "pall", "pant", "paper", "pappily", "pardly", "pare", "parely",
+    "parent", "park", "parse", "part", "party", "pase", "pash", "pass", "passe", "past",
+    "pasta", "paste", "pasts", "pasty", "pats", "paused", "pauses", "pave", "pay", "payt",
+    "pcts", "peace", "peach", "peak", "peally", "pear", "pearly", "peck", "pecs", "peen",
+    "peing", "pelitely", "pen", "pend", "pently", "people", "peopled", "peoples", "percentaged",
+    "percentages", "percents", "percept", "pere", "perhaps", "person", "pertainly", "pest",
+    "pets", "phat", "phis", "phone", "photo", "pica", "pice", "picely", "pick", "picks",
+    "picky", "pics", "picture", "piddle", "piece", "pill", "pimply", "pine", "pines", "pink",
+    "pint", "pinto", "pish", "pith", "pits", "pkts", "place", "placed", "placer", "places",
+    "placet", "plage", "plaice", "plan", "plane", "plank", "plant", "plate", "play", "pleas",
+    "please", "pleased", "pleases", "ploce", "plow", "plowly", "plug", "plugs", "plum", "plums",
+    "plur", "plurs", "plush", "pock", "pocket", "poditely", "point", "police", "policely",
+    "politily", "politly", "pome", "ponce", "pone", "poon", "poop", "poops", "poor", "port",
+    "posh", "possible", "post", "postly", "pother", "pots", "pound", "pounds", "pour", "pours",
+    "pout", "pouts", "power", "practice", "prep", "prepare", "present", "presents", "preset",
+    "press", "pretty", "prevent", "price", "prick", "pring", "prink", "prints", "probable",
+    "problem", "prom", "promise", "prompts", "prop", "provability", "provably", "psst", "pubs",
+    "puck", "puds", "pugs", "pull", "puls", "puns", "punt", "punts", "pups", "puring", "push",
+    "pushy", "puss", "put", "puts", "putt", "putts", "putz", "pvts", "pwts", "quackly",
+    "question", "questions", "quick", "quid", "quiet", "quilt", "quiltly", "quin", "quine",
+    "quint", "quinte", "quintly", "quip", "quire", "quirkly", "quirt", "quirtly", "quit",
+    "quite", "quited", "quitely", "quites", "quitly", "quits", "quiz", "quoit", "quot", "quote",
+    "racely", "rack", "radio", "radly", "rafter", "ragely", "rain", "raise", "rake", "rakely",
+    "rale", "ralely", "rall", "rally", "ran", "rand", "randomize", "randomized", "randomizes",
+    "rang", "rapely", "rare", "rarefy", "rarely", "rasher", "rately", "rater", "rathe",
+    "rathed", "rather", "rathes", "ratter", "rave", "ravely", "razely", "reach", "ready",
+    "real", "really", "realmly", "realty", "ream", "reamly", "reap", "reaply", "rear", "rearly",
+    "reason", "receive", "records", "recrement", "recs", "rect", "red", "redd", "reed", "reedy",
+    "reelly", "reest", "reflly", "regally", "relly", "remainders", "remember", "remembers",
+    "reminder", "remote", "removed", "renally", "rend", "rent", "renter", "rently", "repeal",
+    "repealed", "repeateds", "repeater", "repeats", "repent", "repented", "reports", "repp",
+    "reps", "resat", "resent", "reside", "rest", "rests", "result", "retd", "retort", "return",
+    "reveals", "revel", "revere", "reveres", "reverie", "revers", "reversed", "reverses",
+    "reverso", "rially", "ricely", "rich", "rick", "riddle", "ride", "right", "rill", "rime",
+    "rimes", "rindly", "ring", "rise", "rite", "rits", "rive", "river", "road", "rock", "rode",
+    "roes", "roll", "room", "rose", "rotund", "rotunds", "roued", "round", "rounds", "rout",
+    "rover", "row", "ruin", "rule", "rumble", "run", "rune", "rung", "runless", "runs", "runt",
+    "ruse", "rush", "rust", "ruts", "sable", "sack", "sacly", "sacs", "sad", "saddenly",
+    "sadly", "safe", "safesly", "safety", "sage", "sagely", "sagly", "said", "saidly", "sail",
+    "sake", "sakely", "sale", "salely", "sally", "salt", "salve", "same", "samely", "sand",
+    "sandly", "sane", "sanely", "sang", "saply", "sappily", "sardly", "sat", "sate", "sately",
+    "satly", "save", "saved", "savely", "saver", "saves", "saw", "sawly", "saxly", "say",
+    "sayly", "says", "scadly", "scan", "scared", "school", "scop", "score", "scow", "scowly",
+    "scrabble", "scrambled", "scrambler", "scrambles", "scree", "screed", "screens", "screes",
+    "scuffle", "scum", "sdly", "sea", "seally", "sear", "seared", "searly", "seas", "season",
+    "seat", "sech", "second", "seconds", "secret", "secs", "sect", "sects", "secund", "secunds",
+    "secy", "see", "seem", "seen", "seep", "sees", "seing", "seize", "sell", "semen", "sems",
+    "send", "sense", "sent", "sently", "sept", "seqs", "sere", "serve", "service", "set",
+    "seta", "sets", "sett", "seven", "sevens", "sever", "several", "sews", "sext", "sgdly",
+    "shad", "shaded", "shadly", "shaged", "shahed", "shaked", "shale", "shaled", "shall",
+    "shalls", "shalt", "shamed", "shape", "shaped", "shard", "sharded", "shardly", "share",
+    "shareds", "sharer", "shares", "sharked", "sharp", "sharped", "shave", "shaved", "shaw",
+    "shawed", "shawl", "shay", "shayed", "she", "sheared", "shed", "sheep", "shell", "shes",
+    "shew", "shill", "shim", "ship", "shired", "shirt", "shod", "shoe", "shoo", "shoot", "shop",
+    "shore", "shored", "short", "shot", "should", "shoulder", "shoulds", "shout", "show",
+    "showly", "shown", "shows", "showy", "shred", "shuffled", "shuffler", "shuffles", "shut",
+    "sick", "sics", "side", "siftly", "sight", "sign", "sike", "sill", "silver", "simaly",
+    "simly", "simple", "since", "sinced", "sinces", "sine", "sines", "sing", "singe", "single",
+    "sinus", "siply", "sire", "sister", "sit", "site", "sits", "six", "size", "sized", "sizer",
+    "sizes", "skep", "skid", "skill", "skim", "skimp", "skimply", "skin", "skips", "skis",
+    "skit", "sky", "slave", "slaw", "slawly", "slay", "sldly", "sleek", "sleep", "sleeps",
+    "sleepy", "sleet", "slew", "slewly", "slip", "slit", "slob", "slobly", "sloe", "sloely",
+    "slog", "slogly", "sloop", "sloops", "slop", "sloply", "slot", "slotly", "slow", "slows",
+    "slum", "small", "smalls", "smalt", "smart", "smell", "smile", "smoke", "snared", "sneak",
+    "snip", "snore", "snort", "snot", "snow", "snowly", "snuffle", "so", "soared", "soave",
+    "socs", "soddenly", "sodly", "sofaly", "soft", "softaly", "soften", "softily", "softy",
+    "soil", "soke", "sold", "soldier", "solds", "sole", "solon", "soma", "some", "somebody",
+    "somed", "someone", "someoned", "someones", "somes", "something", "somethings", "sometime",
+    "sometimed", "sometimes", "soms", "son", "sone", "song", "soon", "soons", "soot", "sootly",
+    "sora", "sorb", "sore", "sori", "sorn", "sorrow", "sorry", "sort", "sorta", "sortly",
+    "sorts", "sotly", "souffle", "sound", "sounds", "soup", "sour", "sours", "south", "sowly",
+    "sown", "space", "spaced", "spacer", "spaces", "spacey", "spade", "spae", "spake", "spall",
+    "spare", "spared", "spate", "spay", "speak", "speaks", "spear", "spec", "special", "speck",
+    "specs", "speed", "spend", "spent", "spice", "spill", "spit", "splat", "splint", "splits",
+    "spoke", "spoon", "spore", "sport", "spot", "spread", "spring", "sprint", "sprit", "square",
+    "stable", "stake", "stale", "stall", "stand", "star", "stare", "stared", "stark", "stars",
+    "start", "starts", "stat", "state", "station", "stave", "stay", "stdly", "steak", "steep",
+    "stem", "step", "stere", "stet", "stick", "stile", "still", "stills", "stilly", "stilt",
+    "stily", "stoa", "stob", "stoke", "stole", "stomp", "stone", "stony", "stood", "stoop",
+    "stop", "stope", "stops", "stor", "store", "stored", "stores", "stork", "storly", "storm",
+    "stormy", "stors", "story", "stoup", "stove", "stow", "stowly", "straight", "strange",
+    "street", "strong", "strop", "stroy", "student", "study", "stuff", "stull", "suave",
+    "subject", "subtracts", "such", "suck", "sudden", "sudly", "suet", "sugar", "suit", "suite",
+    "summer", "sumo", "sump", "sumply", "sums", "sun", "sunder", "sunless", "supper", "suppose",
+    "sure", "suring", "surprise", "surtout", "swart", "sway", "sweep", "sweet", "sweven",
+    "swill", "swim", "swoon", "swore", "swum", "tabla", "table", "tabled", "tables", "tablet",
+    "tably", "tace", "tach", "tack", "tadly", "tael", "tail", "taka", "take", "taked", "taken",
+    "taker", "takes", "tala", "talc", "tale", "taled", "tales", "tali", "talk", "tall", "taly",
+    "tame", "tamer", "tames", "tape", "tare", "tarely", "tart", "task", "taste", "tater",
+    "teach", "teacher", "teal", "teally", "team", "tear", "tearly", "teat", "teem", "teen",
+    "teing", "tell", "tells", "telly", "tels", "ten", "tend", "tens", "tent", "tenter",
+    "tently", "term", "tern", "test", "than", "thane", "thank", "thans", "thar", "thared",
+    "that", "thats", "thaw", "the", "thebe", "thed", "thee", "thees", "thegn", "their",
+    "theirs", "thely", "them", "theme", "thems", "themselves", "then", "thens", "there",
+    "thered", "theres", "therm", "therme", "thes", "these", "thesed", "theses", "thew", "thewy",
+    "they", "theys", "thick", "thies", "thin", "thing", "think", "thins", "third", "this",
+    "thole", "thorough", "thos", "those", "thosed", "thoses", "though", "thoughs", "thought",
+    "three", "threed", "threes", "threw", "throe", "through", "throughouts", "throughput",
+    "throughs", "throw", "thus", "tick", "tide", "tides", "tie", "tier", "ties", "tiger",
+    "tight", "tile", "tiler", "tiles", "till", "timber", "time", "timed", "timer", "timers",
+    "times", "tine", "tines", "tiny", "tire", "tired", "tires", "tither", "tits", "to", "toad",
+    "today", "toes", "toff", "toftly", "together", "togethers", "toke", "told", "tolds", "tole",
+    "toll", "tome", "tomes", "tomorrow", "tonal", "tonally", "tone", "tonight", "too", "took",
+    "tool", "toos", "toot", "tooth", "top", "tore", "tort", "total", "totals", "tother",
+    "touch", "tough", "tour", "tours", "tout", "toward", "towards", "town", "train", "travel",
+    "tread", "tree", "trey", "trice", "trip", "trite", "trouble", "trough", "true", "trust",
+    "try", "tuis", "tumble", "turn", "tush", "tuts", "twas", "twat", "twelve", "twenty",
+    "twice", "twiced", "twices", "twill", "twine", "two", "twos", "tyke", "type", "udder",
+    "umber", "uncle", "under", "understand", "until", "untils", "up", "upon", "upons",
+    "uppercased", "uppercases", "us", "use", "used", "user", "uses", "usual", "vale", "vary",
+    "vast", "veally", "veer", "veery", "vend", "venter", "vently", "verb", "vert", "very",
+    "vest", "vicely", "village", "vine", "vines", "visit", "vivided", "voes", "voice", "wack",
+    "wadly", "wads", "waft", "wags", "waif", "wail", "wain", "waist", "wait", "waits", "wake",
+    "wale", "walk", "wall", "wand", "wans", "want", "war", "wardly", "ware", "warely", "warm",
+    "wars", "wart", "was", "wash", "wasp", "wast", "watch", "water", "wats", "watt", "wave",
+    "waws", "way", "ways", "we", "weally", "wear", "wearly", "weather", "week", "ween",
+    "weight", "weing", "welcome", "well", "wend", "went", "wently", "were", "wered", "weres",
+    "wert", "west", "wet", "wether", "whale", "wham", "whap", "what", "whatevers", "whats",
+    "wheat", "whee", "wheel", "wheen", "when", "whenevers", "whens", "where", "whered",
+    "wheres", "wherever", "whet", "whether", "whethers", "whetter", "whew", "whey", "which",
+    "while", "whiled", "whiles", "whily", "whim", "whin", "whine", "whish", "whit", "white",
+    "whither", "who", "whoa", "whoevers", "whole", "whom", "whomever", "whomp", "whoms", "whop",
+    "whore", "whos", "whose", "whosed", "whoses", "whosever", "whoso", "whsle", "why", "whys",
+    "wick", "wide", "width", "wife", "wight", "wild", "wile", "will", "wills", "willy", "wilt",
+    "wily", "wimply", "win", "wince", "wind", "windly", "window", "wine", "wines", "wing",
+    "winter", "wire", "wise", "wish", "wist", "witch", "wite", "with", "withe", "wither",
+    "within", "withing", "withins", "without", "withouts", "withs", "withy", "wits", "wive",
+    "woad", "woald", "woes", "wold", "wolds", "woman", "women", "wonder", "wood", "woops",
+    "word", "wore", "work", "world", "worry", "worse", "wort", "worth", "would", "woulds",
+    "wound", "wounds", "wreak", "wren", "wrest", "writ", "write", "writed", "writer", "writes",
+    "writhe", "writs", "wrong", "wrote", "yappily", "yard", "yardly", "yare", "yarely", "year",
+    "yearly", "yell", "yellow", "yes", "yest", "yesterday", "yet", "yeti", "yets", "you",
+    "young", "your", "yours", "yourself", "yourselfs", "yourselves", "yous", "zany", "zappily",
+    "zeally", "zeing", "zeros", "zest", "zine", "zines", "zither", "zits", "zone", "zoon",
+    "zounds",
+];
+
+fn is_common_english_word(word: &str) -> bool {
+    debug_assert!(COMMON_ENGLISH_WORDS.windows(2).all(|pair| pair[0] < pair[1]));
+    if !word.is_ascii() {
+        return false;
+    }
+    let lowered = word.to_ascii_lowercase();
+    COMMON_ENGLISH_WORDS.binary_search(&lowered.as_str()).is_ok()
+}
+
 /// How far a written word is from one action word, lower being a better
 /// repair. Ranking matters because the Korean output words overlap by design:
 /// `말해조` is a whole-word repair of `말해줘` (rank 1) but only a
@@ -15277,7 +15699,11 @@ fn action_recovery_rank(actual: &str, expected: &str, mode: MatchMode) -> Option
     if actual.eq_ignore_ascii_case(expected) {
         return Some(0);
     }
-    if mode == MatchMode::Exact || actual.chars().count() < 2 || is_own_vocabulary(actual) {
+    if mode == MatchMode::Exact
+        || actual.chars().count() < 2
+        || is_own_vocabulary(actual)
+        || is_common_english_word(actual)
+    {
         return None;
     }
     let actual = actual
@@ -15498,7 +15924,9 @@ fn adjacent_transposition_away(left: &[char], right: &[char]) -> bool {
 fn condition_word_matches(actual: &str, expected: &[&str]) -> bool {
     expected.iter().any(|candidate| {
         actual.eq_ignore_ascii_case(candidate)
-            || (actual != "the" && actual.chars().count() >= 2 && one_typo_away(actual, candidate))
+            || (!is_common_english_word(actual)
+                && actual.chars().count() >= 2
+                && one_typo_away(actual, candidate))
     })
 }
 
@@ -15539,7 +15967,9 @@ fn output_action_ending(
     let start_at = end.saturating_sub(3);
     for start in start_at..end {
         if let Some((spelling, consumed)) = output_action_at(tokens, start, mode) {
-            if start + consumed == end {
+            if start + consumed == end
+                && !(spelling == Spelling::English && english_verb_expected_before(tokens, start))
+            {
                 return Some((start, spelling, end));
             }
         }
@@ -15550,6 +15980,35 @@ fn output_action_ending(
         }
     }
     None
+}
+
+/// Words that can only be followed by a verb, so an English output word
+/// standing right after one is the sentence's own verb, not NME's.
+///
+/// English tolerates `Hello world show`, the message-first order documented in
+/// `docs/syntax.md`. Read without care that order claims the last word of
+/// every sentence that ends in one: `time will tell` printed `time will`,
+/// `what did she say` printed `what did she`, and `I have nothing to say`
+/// lost its verb too. A subject, a modal, `to` or a conjunction in front of
+/// the word settles it — a message never ends that way.
+const VERB_EXPECTING_WORDS_EN: &[&str] = &[
+    "and", "but", "ca", "can", "cannot", "could", "dare", "did", "do", "does", "he", "i", "it",
+    "just", "may", "might", "must", "never", "nor", "not", "often", "or", "people", "rarely",
+    "really", "shall", "she", "should", "simply", "sometimes", "still", "that", "then", "they",
+    "to", "we", "which", "who", "will", "would", "you",
+];
+
+/// True when the token in front of `index` is one of
+/// [`VERB_EXPECTING_WORDS_EN`].
+fn english_verb_expected_before(tokens: &[Token], index: usize) -> bool {
+    index
+        .checked_sub(1)
+        .and_then(|before| token_word(&tokens[before]))
+        .is_some_and(|word| {
+            VERB_EXPECTING_WORDS_EN
+                .iter()
+                .any(|expecting| word.eq_ignore_ascii_case(expecting))
+        })
 }
 
 /// An output word that counts only where Korean puts its verb — at the end of

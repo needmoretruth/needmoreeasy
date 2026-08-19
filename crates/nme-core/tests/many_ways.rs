@@ -756,3 +756,104 @@ fn a_value_goes_up_and_down_in_the_words_people_use() {
         );
     }
 }
+
+/// One more sweep of near-synonyms and orders a writer may reach for. Each
+/// line here failed before the widening it belongs to.
+#[test]
+fn more_ways_to_write_the_same_command() {
+    for (line, python) in [
+        ("rep 3 times and show hi", "for _ in range(3): print(\"hi\")"),
+        ("go round 2 times and show ok", "for _ in range(2): print(\"ok\")"),
+        (
+            "run through 2 times and show ok",
+            "for _ in range(2): print(\"ok\")",
+        ),
+    ] {
+        assert_eq!(ok(&format!("{line}\n")), format!("{python}\n"), "for {line}");
+    }
+
+    let start = "set n to 5\n";
+    for line in [
+        "when n is greater than 3 then show big",
+        "should n be greater than 3 then show big",
+        "whenever n is greater than 3 then show big",
+        "incase n is greater than 3 then show big",
+    ] {
+        assert_eq!(
+            ok(&format!("{start}{line}\n")),
+            "n = 5\nif (n > 3): print(\"big\")\n",
+            "for {line}"
+        );
+    }
+
+    assert_eq!(
+        ok("친구들은 목록 하나 둘\n친구들마다 반복해\n  친구 말해줘\n끝\n"),
+        "친구들 = [\"하나 둘\"]\nfor 친구 in 친구들:\n  print(친구)\n# end\n",
+    );
+}
+
+/// A sentence that ends in an output word keeps its verb.
+///
+/// English tolerates the message-first order (`Hello world show`), and read
+/// without care that order eats the last word of ordinary writing. A subject,
+/// a modal, `to` or a conjunction in front of the output word settles which
+/// one it is.
+#[test]
+fn a_sentence_ending_in_an_output_word_still_prints_whole() {
+    for sentence in [
+        "time will tell",
+        "what did she say",
+        "I have nothing to say",
+        "that is what they say",
+        "so they say",
+        "or so they say",
+        "go on and tell",
+        "in the beginning there was light",
+        "as far as I know she left",
+        "and then it rained",
+    ] {
+        assert_eq!(
+            ok(&format!("{sentence}\n")),
+            format!("print(\"{sentence}\")\n"),
+            "{sentence} stopped being a sentence"
+        );
+    }
+    // The documented message-first order still works.
+    assert_eq!(ok("Hello world show\n"), "print(\"Hello world\")\n");
+}
+
+/// A word English already has is never a misspelling of an NME word.
+///
+/// One typo is all that separates most short words, so without that rule
+/// `shop milk` printed `milk`, `well done` printed `done` and `bell rings`
+/// printed `rings`. Repair still catches what it is for.
+#[test]
+fn ordinary_words_are_not_read_as_typos() {
+    for sentence in [
+        "shop milk",
+        "snow falls",
+        "bell rings",
+        "well done",
+        "fell over",
+        "sell it",
+        "sad news",
+        "sick day",
+        "tall tree",
+        "shot down",
+        "saw it",
+    ] {
+        assert_eq!(
+            ok(&format!("{sentence}\n")),
+            format!("print(\"{sentence}\")\n"),
+            "{sentence} stopped being a sentence"
+        );
+    }
+    for typo in ["shwo hello", "sohw hello", "sya hello", "pirnt hello", "tel hello"] {
+        assert_eq!(ok(&format!("{typo}\n")), "print(\"hello\")\n", "for {typo}");
+    }
+    // The rule may not cost the comparison words their own reading.
+    assert_eq!(
+        ok("set n to 1\nif n is less than 5\n  show low\nend\n"),
+        "n = 1\nif (n < 5):\n  print(\"low\")\n# end\n",
+    );
+}
