@@ -133,7 +133,7 @@ pub fn convert_python(
         return Err(vec![Diagnostic::bilingual(
             DiagnosticCode::ConvertInvalidPython,
             format!("the Python source is not valid: {}", error.error),
-            format!("올바른 Python 코드가 아니에요: {}", error.error),
+            format!("올바른 Python 코드가 아닙니다: {}", error.error),
             Span::new(start, (start + 1).min(source.len())),
         )
         .with_bilingual_hint(

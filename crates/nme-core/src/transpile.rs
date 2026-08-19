@@ -93,12 +93,12 @@ pub fn transpile_with_modules(
             Diagnostic::bilingual(
                 DiagnosticCode::MultilineSentence,
                 "sentence-style NME must stay on one physical line",
-                "문장형 NME 한 문장은 실제 한 줄 안에 써야 해요",
+                "문장형 NME 한 문장은 실제 한 줄 안에 써야 합니다",
                 Span::new(edit.span.start, edit.span.end),
             )
             .with_bilingual_hint(
                 "keep this easy statement on one line; multiline Python expressions remain supported",
-                "이 쉬운 문장은 한 줄에 쓰세요. 여러 줄 Python 표현식은 그대로 지원해요",
+                "이 쉬운 문장은 한 줄에 쓰세요. 여러 줄 Python 표현식은 그대로 지원합니다",
             )
         })
         .collect::<Vec<_>>();

@@ -1638,7 +1638,7 @@ fn check_rejects_broken_nme_with_a_friendly_error() {
     assert!(!bilingual.status.success());
     let bilingual_error = stderr(&bilingual);
     let korean_position = bilingual_error
-        .find("반복할 다음 줄은 들여써야 해요")
+        .find("반복할 다음 줄은 들여써야 합니다")
         .unwrap();
     let english_position = bilingual_error
         .find("the lines that should repeat must be indented")
@@ -1948,7 +1948,7 @@ fn a_directory_argument_explains_that_it_is_a_folder() {
     assert!(!korean.status.success());
     let korean_error = stderr(&korean);
     assert!(
-        korean_error.contains("폴더이지 프로그램이 아니에요"),
+        korean_error.contains("폴더이지 프로그램이 아닙니다"),
         "{korean_error}"
     );
 
@@ -1971,7 +1971,7 @@ fn a_directory_argument_explains_that_it_is_a_folder() {
         "{korean_native_error}"
     );
     assert!(
-        korean_native_error.contains("폴더이지 프로그램이 아니에요"),
+        korean_native_error.contains("폴더이지 프로그램이 아닙니다"),
         "{korean_native_error}"
     );
     assert!(

@@ -2358,7 +2358,7 @@ fn native_break_outside_loop(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
         DiagnosticCode::BreakOutsideLoop,
         "`break` can only be used inside a loop",
-        "`멈춰`는 반복문 안에서만 쓸 수 있어요",
+        "`멈춰`는 반복문 안에서만 쓸 수 있습니다",
         span,
     )
     .with_bilingual_hint(

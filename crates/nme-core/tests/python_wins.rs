@@ -32,10 +32,18 @@ fn say_as_a_variable() {
 }
 
 #[test]
-fn bare_say_is_valid_python_and_untouched() {
-    // A bare name expression is valid Python (it will raise NameError at
-    // runtime, which is Python's own, correct behavior).
-    unchanged("say\n");
+fn a_bare_name_wins_for_python_once_the_program_has_made_it() {
+    // A bare name expression is valid Python, and while the program has made
+    // that name it stays untouched — however it was made.
+    unchanged("say = print\nsay\n");
+    unchanged("import say\nsay\n");
+    unchanged("from mod import say\nsay\n");
+    unchanged("def say():\n    pass\nsay\n");
+    // A name nothing ever made is a different thing. It used to come out as
+    // itself and raise `NameError` at run time, on a line the writer had read
+    // as a command; since 2026-08-19 such a line is read as NME instead, and
+    // an action word alone is told what it is missing.
+    assert_eq!(transpile("say\n").unwrap_err()[0].code.code(), "E0204");
 }
 
 #[test]
@@ -100,7 +108,10 @@ fn korean_spellings_are_still_ordinary_python_names() {
     unchanged("아니면 = True\nprint(아니면)\n");
     unchanged("아니면.foo\n");
     unchanged("아니면 + 1\n");
-    unchanged("멈춰\n");
+    unchanged("멈춰 = 1\n멈춰\n");
+    // Alone, with no loop above it, `멈춰` is the writer asking to leave a
+    // loop that is not there — which is what they are told.
+    assert_eq!(transpile("멈춰\n").unwrap_err()[0].code.code(), "E0102");
     unchanged("보여줘 = print\n보여줘('안녕')\n");
     unchanged("반복해 = 3\n설정해 = {'정답': 7}\nprint(반복해, 설정해)\n");
 }
@@ -122,8 +133,11 @@ fn future_python_call_shapes_are_left_for_the_selected_cpython() {
 #[test]
 fn control_words_in_valid_python_keep_python_priority() {
     unchanged("end = 1\nprint(end)\n");
-    unchanged("end\n");
-    unchanged("끝\n");
+    unchanged("end = 1\nend\n");
+    // `end` and `끝` with nothing above them close no block and name nothing,
+    // so they say themselves rather than becoming a `NameError`.
+    assert_eq!(transpile("end\n").as_deref(), Ok("print(\"end\")\n"));
+    assert_eq!(transpile("끝\n").as_deref(), Ok("print(\"끝\")\n"));
     unchanged("obj.end = 1\n");
     unchanged("breakpoint()\n");
     unchanged("while True:\n    break\n");

@@ -19,6 +19,8 @@ use std::io::Write as _;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
+use nme_core::diagnostics::korean_particle;
+
 const HELP_ENGLISH: &str = r"nme — NeedMoreEasy: start simpler, then grow into Python.
 
 START HERE:
@@ -238,7 +240,10 @@ fn command_modules(args: &[String], language: MessageLanguage) -> ExitCode {
             nme_core::diagnostics::DiagnosticCode::CliModulesExtraArgument,
             language,
             &format!("`modules` does not take `{extra}`. Try `nme modules`."),
-            &format!("`모듈` 명령에는 `{extra}`을(를) 적지 않습니다. `nme 모듈`을 사용하세요."),
+            &format!(
+                "`모듈` 명령에는 `{extra}`{} 적지 않습니다. `nme 모듈`을 사용하세요.",
+                korean_particle(extra, "을", "를")
+            ),
         );
     }
     let mut list = String::new();
@@ -376,9 +381,10 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
                 path.display()
             ),
             &format!(
-                "`{}`은(는) 폴더이지 프로그램이 아니에요.\n\
+                "`{}`{} 폴더이지 프로그램이 아닙니다.\n\
                  도움말: .nme 프로그램이 있는 폴더에서 `nme 실행`을 실행하거나, 프로그램 이름을 적어 주세요",
-                path.display()
+                path.display(),
+                korean_particle(&path.display().to_string(), "은", "는")
             ),
         );
     }
@@ -1658,8 +1664,9 @@ fn discover_current_program(
                      Tip: `nme {action_en} <file>` picks a program by name."
                 ),
                 &format!(
-                    "`{answer}`은(는) 위 목록에 없어요.\n\
-                     팁: `nme {action_ko} <파일>`처럼 이름을 적으면 됩니다."
+                    "`{answer}`{} 위 목록에 없습니다.\n\
+                     팁: `nme {action_ko} <파일>`처럼 이름을 적으면 됩니다.",
+                    korean_particle(answer, "은", "는")
                 ),
             ))
         }
@@ -1721,9 +1728,10 @@ fn transpile_file(
                         path.display()
                     ),
                     &format!(
-                        "`{}`은(는) 폴더이지 프로그램이 아니에요.\n\
+                        "`{}`{} 폴더이지 프로그램이 아닙니다.\n\
                          도움말: .nme 프로그램이 있는 폴더에서 `nme 실행`을 실행하거나, 프로그램 이름을 적어 주세요",
-                        path.display()
+                        path.display(),
+                        korean_particle(&path.display().to_string(), "은", "는")
                     ),
                 ));
             }
@@ -1750,7 +1758,7 @@ fn transpile_file(
             };
             let korean_hint = match &suggestion {
                 Some(name) => format!(
-                    "도움말: `{name}`을(를) 찾으셨나요? `nme 실행 {stem}`으로 실행할 수 있어요",
+                    "도움말: 찾으시던 것이 `{name}`이라면 `nme 실행 {stem}`으로 실행할 수 있습니다",
                     stem = name.trim_end_matches(".nme")
                 ),
                 None => format!(

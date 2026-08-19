@@ -250,7 +250,7 @@ fn curly_quote_diagnostic(
     Diagnostic::bilingual(
         DiagnosticCode::CurlyQuote,
         format!("this line has the curly quote `{character}`, which NME cannot read"),
-        format!("이 줄에 NME가 읽을 수 없는 둥근 따옴표 `{character}`가 있어요"),
+        format!("이 줄에 NME가 읽을 수 없는 둥근 따옴표 `{character}`가 있습니다"),
         Span::new(start, start + character.len_utf8()),
     )
     .with_bilingual_hint(

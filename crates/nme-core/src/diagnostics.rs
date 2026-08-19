@@ -1394,6 +1394,46 @@ impl Diagnostic {
 }
 
 /// Renders several diagnostics, separated by blank lines.
+/// The Korean particle that goes after `word`, chosen the way a Korean reader
+/// would say it out loud.
+///
+/// Korean marks a noun with one of a pair, and which one depends on the sound
+/// the noun ends with: `점수는`, `이름은`. Printing both — `점수은(는)` — is
+/// what a form letter does, and every message a beginner reads here is about
+/// a name they chose themselves, so it is worth getting right.
+///
+/// * Hangul: the final consonant of the last syllable decides it, which is
+///   exactly what the syllable block encodes.
+/// * Latin letters: Korean says an English word through its own syllables,
+///   and the last one keeps its consonant only for `n`, `m`, `l`, `ng` and
+///   the stops `p`, `k`, `b`, `g` (`Kim은`, `mail은`, `bag은`, `skip은`).
+///   Everything else — vowels and the consonants that gain one in Korean
+///   (`s` → 스, `t` → 트, `d` → 드) — takes the vowel-ending form (`score는`,
+///   `friends는`, `count는`, `Ada는`).
+/// * A digit is read as its Korean number word: 0, 1, 3, 6, 7, 8 end with a
+///   consonant (영, 일, 삼, 육, 칠, 팔) and 2, 4, 5, 9 do not.
+///
+/// Anything else falls back to the vowel-ending form, which is the one that
+/// reads as a slip rather than as broken grammar.
+#[must_use]
+pub fn korean_particle(word: &str, after_consonant: &'static str, after_vowel: &'static str) -> &'static str {
+    let Some(last) = word.chars().rev().find(|letter| !letter.is_whitespace()) else {
+        return after_vowel;
+    };
+    let consonant = match last {
+        '가'..='힣' => (u32::from(last) - 0xAC00) % 28 != 0,
+        'a'..='z' | 'A'..='Z' => {
+            let lowered = last.to_ascii_lowercase();
+            let two: String = word.chars().rev().take(2).collect::<Vec<_>>().into_iter().rev().collect();
+            matches!(lowered, 'n' | 'm' | 'l' | 'p' | 'k' | 'b' | 'g')
+                || two.to_ascii_lowercase().ends_with("ng")
+        }
+        '0'..='9' => matches!(last, '0' | '1' | '3' | '6' | '7' | '8'),
+        _ => false,
+    };
+    if consonant { after_consonant } else { after_vowel }
+}
+
 pub fn render_all(diagnostics: &[Diagnostic], source: &str, path: &str) -> String {
     diagnostics
         .iter()
@@ -1511,14 +1551,14 @@ mod tests {
         let diag = Diagnostic::bilingual(
             DiagnosticCode::SayMissing,
             "there is nothing to show",
-            "말할 내용이 비어 있어요",
+            "말할 내용이 비어 있습니다",
             Span::new(0, 6),
         )
         .with_bilingual_hint("write `show Hello`", "`안녕하세요 말해줘`처럼 적어 주세요");
         let rendered = diag.render_bilingual(source, "hello.nme");
 
         let korean_at = rendered
-            .find("오류[E0204]: 말할 내용이 비어 있어요")
+            .find("오류[E0204]: 말할 내용이 비어 있습니다")
             .unwrap();
         let english_at = rendered
             .find("error[E0204]: there is nothing to show")
@@ -1645,5 +1685,50 @@ mod tests {
             );
         }
         assert_eq!(DiagnosticCode::from_code("E9999"), None);
+    }
+}
+
+#[cfg(test)]
+mod korean_particle_tests {
+    use super::korean_particle;
+
+    fn topic(word: &str) -> String {
+        format!("{word}{}", korean_particle(word, "은", "는"))
+    }
+
+    /// `점수은(는)` in a message about the reader's own name is the one place
+    /// a form letter shows through. Hangul decides on the final consonant of
+    /// the last syllable, and English on the sound Korean gives its last
+    /// letter.
+    #[test]
+    fn the_particle_matches_the_sound_the_word_ends_with() {
+        for (word, want) in [
+            ("점수", "점수는"),
+            ("이름", "이름은"),
+            ("가방", "가방은"),
+            ("친구들", "친구들은"),
+            ("나이", "나이는"),
+            ("score", "score는"),
+            ("Ada", "Ada는"),
+            ("Mina", "Mina는"),
+            ("friends", "friends는"),
+            ("Kim", "Kim은"),
+            ("mail", "mail은"),
+            ("spring", "spring은"),
+            ("bag", "bag은"),
+            ("skip", "skip은"),
+            ("count", "count는"),
+        ] {
+            assert_eq!(topic(word), want);
+        }
+        // The other pairs come out of the same choice.
+        assert_eq!(korean_particle("점수", "을", "를"), "를");
+        assert_eq!(korean_particle("이름", "을", "를"), "을");
+        assert_eq!(korean_particle("3", "이", "가"), "이");
+        assert_eq!(korean_particle("2", "이", "가"), "가");
+        // Nothing to read: the softer form, which reads as a slip and not as
+        // broken grammar.
+        assert_eq!(korean_particle("", "은", "는"), "는");
+        assert_eq!(korean_particle("?", "은", "는"), "는");
     }
 }

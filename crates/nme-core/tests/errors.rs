@@ -130,7 +130,7 @@ fn when_requires_a_condition_colon_and_body() {
 #[test]
 fn korean_forms_return_korean_guidance() {
     let say = bilingual_err("말해 1 +\n");
-    assert!(say.contains("이해하지 못했어요"), "{say}");
+    assert!(say.contains("이해하지 못했습니다"), "{say}");
     assert!(say.contains("couldn't understand"), "{say}");
 
     let repeat = bilingual_err("3번:\n말해 \"들여쓰기 없음\"\n");
@@ -138,7 +138,7 @@ fn korean_forms_return_korean_guidance() {
     assert!(repeat.contains("must be indented"), "{repeat}");
 
     let when = bilingual_err("만약 준비됨\n");
-    assert!(when.contains("필요해요"), "{when}");
+    assert!(when.contains("필요합니다"), "{when}");
     assert!(when.contains("needs `:`"), "{when}");
 }
 
@@ -1186,7 +1186,7 @@ fn file_module_does_not_overwrite_existing_names() {
     assert!(message.contains("file_read"), "{message}");
 
     let korean = bilingual_err("파일버전 = 1\n파일 사용\n");
-    assert!(korean.contains("덮어쓸 수 있어요"), "{korean}");
+    assert!(korean.contains("덮어쓸 수 있습니다"), "{korean}");
 }
 
 #[test]
@@ -1350,7 +1350,7 @@ fn a_stray_end_after_nme_code_is_reported() {
 
     let korean = bilingual_err("안녕 말해줘\n끝\n");
     assert!(
-        korean.contains("이 `끝`을 닫을 열린 NME 블록이 없어요"),
+        korean.contains("이 `끝`을 닫을 열린 NME 블록이 없습니다"),
         "{korean}"
     );
 }

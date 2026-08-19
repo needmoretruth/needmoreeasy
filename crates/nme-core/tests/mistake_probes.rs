@@ -868,11 +868,13 @@ fn a_separator_or_a_dash_inside_a_message_is_ordinary_text() {
 
 #[test]
 fn a_one_word_line_that_nme_uses_as_a_word_stays_python() {
-    // A word NME spells out itself keeps its Python meaning: `say`, `end`,
-    // `skip` and `목록` are names a Python program is free to use, and a line
-    // holding one of them opens or closes nothing.
-    assert_eq!(transpile("say\n").unwrap(), "say\n");
-    assert_eq!(transpile("end\n").unwrap(), "end\n");
+    // An action word alone used to keep its Python meaning, and the program
+    // died with `NameError: name 'say' is not defined`. It is now read as the
+    // word it is and told what is missing; a word that names no action prints
+    // itself like any other one-word line.
+    assert_eq!(transpile("say\n").unwrap_err()[0].code.code(), "E0204");
+    assert_eq!(transpile("end\n").unwrap(), "print(\"end\")\n");
+    assert_eq!(transpile("say = 1\nsay\n").unwrap(), "say = 1\nsay\n");
     // A name the program set earlier is Python doing nothing, and that is not
     // NME's to change.
     assert_eq!(transpile("Mina = 1\nMina\n").unwrap(), "Mina = 1\nMina\n");

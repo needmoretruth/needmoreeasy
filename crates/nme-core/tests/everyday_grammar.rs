@@ -101,9 +101,16 @@ fn skipping_a_round_works_in_both_languages() {
 }
 
 #[test]
-fn skip_outside_a_block_stays_ordinary_python() {
-    // A bare name is valid Python, and Python always wins.
-    assert_eq!(ok("skip\n"), "skip\n");
+fn skip_outside_a_block_says_it_needs_a_loop() {
+    // `skip` used to be left alone as an ordinary Python name, on the grounds
+    // that Python always wins a bare name. It ran, and died with `NameError:
+    // name 'skip' is not defined` on a line the writer had read as a command.
+    // Now it is read as the skip word it is, and skipping outside a loop is
+    // the thing that gets explained.
+    assert_eq!(error_code("skip\n"), "E0107");
+    assert_eq!(error_code("건너뛰어\n"), "E0107");
+    // A name the program made is still Python doing nothing.
+    assert_eq!(ok("skip = 1\nskip\n"), "skip = 1\nskip\n");
 }
 
 // -------------------------------------------------- multiplying and dividing
@@ -1675,9 +1682,15 @@ fn a_one_word_line_says_itself() {
     assert_eq!(ok("안녕\n"), "print(\"안녕\")\n");
     // A name the program set is Python doing nothing, and stays Python.
     assert_eq!(ok("score = 1\nscore\n"), "score = 1\nscore\n");
-    // So does a word NME spells out itself.
-    assert_eq!(ok("say\n"), "say\n");
-    assert_eq!(ok("목록\n"), "목록\n");
+    // A word NME spells out itself used to stay Python, which meant `say` on
+    // its own compiled to the bare name `say` and the program died with a
+    // `NameError`. An action word alone is now handed to its own matcher,
+    // which says what is missing; a word that names no action still prints.
+    assert_eq!(error_code("say\n"), "E0204");
+    assert_eq!(error_code("말해줘\n"), "E0204");
+    assert_eq!(ok("목록\n"), "print(\"목록\")\n");
+    // And a name the program made stays Python doing nothing.
+    assert_eq!(ok("say = 1\nsay\n"), "say = 1\nsay\n");
 }
 
 // ------------------------------------- a question whose prompt has a verb in it
