@@ -623,6 +623,8 @@ Every spelling accepted for each action, with nothing left out.
 | ~로 해 / Save with the everyday verb | `becomes` · `become` · `call` | `해` · `하자` · `합시다` · `하죠` · `부르자` · `두어` · `둬` · `두자` |
 | ~로 / ~라고 표시 / What the name becomes | — | `으로` · `로` · `이라고` · `라고` |
 | 횟수가 있을 때만 반복 / Repeat, only with a count | `loop` · `iterate` · `cycle` · `rep` · `goround` · `runthrough` | `돌려` · `돌려줘` · `돌려주세요` · `되풀이` · `되풀이해` · `되풀이해줘` · `되풀이해서` · `되풀이하기` |
+| 반복할 것을 가리키는 말 / What is being repeated | `it` · `this` · `that` | `그거` · `그걸` · `그것` · `그것을` · `이거` · `이걸` · `이것` · `이것을` |
+| 조건을 닫는 말 / Word that closes a condition | — | `때` · `때에` · `때는` · `경우` · `경우에` · `경우에는` |
 | 건너뛰기 / Skip | `skip` · `skipthis` · `skipit` · `nextone` | `건너뛰어` · `건너뛰어줘` · `건너뛰기` · `건너뛰자` · `넘어가` · `넘어가줘` · `계속해` · `넘겨` · `다음` |
 | 블록 닫기 / End | `end` · `finish` · `done` | `끝` · `종료` · `마침` |
 | 모듈 쓰기 / Use | `use` · `load` · `get` · `import` | `사용` · `사용해` · `사용해줘` · `사용해주세요` · `불러와` · `불러와줘` · `가져와` · `가져와줘` · `받아` · `받아줘` |

@@ -5,6 +5,18 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+- **Five more ways of writing the same thing now do it.** Measured against the
+  103-variant corpus, 96 of them worked; 102 do now. `5를 이름에 저장해` says
+  the value first, `이름을 5로 두어` uses the everyday verb for putting
+  something down, `친구들에 민수 넣기` uses the naming form of the verb,
+  `do it 3 times` and `그거 3번 반복해` say out loud what is being repeated,
+  `수가 3보다 클 때` closes the condition with `때`, and English `ask for name`
+  asks *for* something. `name is 5` is still refused: in Python that line is a
+  comparison, and reading it as a save would change what valid Python means.
+- **`사진을 폴더에 저장해` no longer becomes `사진 = "폴더에"`.** Korean marks
+  where something goes with `에`, so that is the name being saved into — and a
+  line whose value is not a value is a sentence about saving, which prints
+  itself.
 
 ## 0.2.0
 - **Errors say what is wrong, where, and why.** Twenty of the messages a
