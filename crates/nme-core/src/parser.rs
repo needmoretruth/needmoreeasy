@@ -1490,7 +1490,12 @@ pub fn parse_program(
         let branch_shape = branch_shape(line.tokens.as_slice());
 
         let opens_suite = opens_a_suite(source, line);
-        if line.indent > previous_indent && !previous_opens_suite {
+        // The very first line has nothing above it to be indented under, so
+        // its indentation is the file's own left margin rather than a
+        // mistake. A phone keyboard and a copied block of text both start a
+        // program one step in, and CPython answers that with
+        // `IndentationError` before anything else has been read.
+        if index > 0 && line.indent > previous_indent && !previous_opens_suite {
             problems.push(unexpected_indent_diagnostic(source, line));
         }
         previous_indent = line.indent;

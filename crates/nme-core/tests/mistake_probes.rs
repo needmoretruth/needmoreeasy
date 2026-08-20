@@ -95,46 +95,11 @@ fn accepts(probe: &str, source: &str, expected: &str) {
 fn raw_cpython_errors_become_nme_diagnostics() {
     for case in [
         Refusal {
-            probe: "f-en-01",
-            source: "  say hello\n",
-            code: DiagnosticCode::UnexpectedIndent,
-            line: 1,
-            names: "",
-        },
-        Refusal {
-            probe: "f-en-02",
-            source: "	say hello\n",
-            code: DiagnosticCode::UnexpectedIndent,
-            line: 1,
-            names: "",
-        },
-        Refusal {
-            probe: "f-ko-01",
-            source: "  안녕 말해줘\n",
-            code: DiagnosticCode::UnexpectedIndent,
-            line: 1,
-            names: "",
-        },
-        Refusal {
-            probe: "f-ko-02",
-            source: "	안녕 말해줘\n",
-            code: DiagnosticCode::UnexpectedIndent,
-            line: 1,
-            names: "",
-        },
-        Refusal {
             probe: "o-en-10",
             source: "set score to 0\n1 add to score\n",
             code: DiagnosticCode::UnknownActionWord,
             line: 2,
             names: "add",
-        },
-        Refusal {
-            probe: "s-en-03",
-            source: "  say hello\n",
-            code: DiagnosticCode::UnexpectedIndent,
-            line: 1,
-            names: "",
         },
         Refusal {
             probe: "s-en-12",
@@ -155,47 +120,33 @@ fn raw_cpython_errors_become_nme_diagnostics() {
     }
 }
 
+/// A line indented under nothing is still named — but the *first* line of a
+/// file has nothing above it, so its indentation is the file's own left
+/// margin. Text copied out of a page arrives that way, and since 2026-08-20
+/// NME reads it and hands back Python without the margin.
 #[test]
 fn a_line_that_starts_with_a_space_is_named() {
-    for case in [
-        Refusal {
-            probe: "f-en-01",
-            source: "  say hello\n",
-            code: DiagnosticCode::UnexpectedIndent,
-            line: 1,
-            names: "",
-        },
-        Refusal {
-            probe: "f-en-02",
-            source: "	say hello\n",
-            code: DiagnosticCode::UnexpectedIndent,
-            line: 1,
-            names: "",
-        },
-        Refusal {
-            probe: "f-ko-01",
-            source: "  안녕 말해줘\n",
-            code: DiagnosticCode::UnexpectedIndent,
-            line: 1,
-            names: "",
-        },
-        Refusal {
-            probe: "f-ko-02",
-            source: "	안녕 말해줘\n",
-            code: DiagnosticCode::UnexpectedIndent,
-            line: 1,
-            names: "",
-        },
-        Refusal {
-            probe: "s-en-03",
-            source: "  say hello\n",
-            code: DiagnosticCode::UnexpectedIndent,
-            line: 1,
-            names: "",
-        },
+    check(&Refusal {
+        probe: "f-en-03",
+        source: "show a\n  show b\n",
+        code: DiagnosticCode::UnexpectedIndent,
+        line: 2,
+        names: "",
+    });
+    for source in [
+        "  say hello\n",
+        "\tsay hello\n",
+        "  안녕 말해줘\n",
+        "\t안녕 말해줘\n",
     ] {
-        check(&case);
+        transpile(source).unwrap_or_else(|problems| {
+            panic!("{source:?} should read as a program, got {problems:?}")
+        });
     }
+    assert_eq!(
+        transpile("  repeat 3 times\n    show hi\n  end\n").unwrap(),
+        "for _ in range(3):\n  print(\"hi\")\n# end\n"
+    );
 }
 
 /// `0 점수에 저장해` — the value first, the name after it. Korean says it both

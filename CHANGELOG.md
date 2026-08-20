@@ -5,6 +5,14 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+- **A program written one step in is read, and its Python comes back without
+  the margin.** `  say hello` is what a block of text copied out of a page
+  looks like, and CPython answers it with `IndentationError` before anything
+  else is read. The first line of a file has nothing above it to be indented
+  under, so its indentation is the file's own left margin. Only whitespace
+  every line shares is taken off, so nothing inside the program moves, and a
+  program holding a triple-quoted string is left exactly as it is. A line
+  indented further down with nothing opening a block is still named.
 - **A `:` written where Python puts one is read past.** `say: hello`,
   `말해줘: 안녕`, `3번 반복해:`, `if score is greater than 10: show won` and
   `만약에 점수가 10보다 크면: 성공 말해줘` all work. Every Python page ends a

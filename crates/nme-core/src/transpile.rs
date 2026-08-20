@@ -109,7 +109,55 @@ pub fn transpile_with_modules(
     if !line_break_problems.is_empty() {
         return Err(line_break_problems);
     }
-    Ok((lower::apply_edits(source, &edits), imports))
+    Ok((
+        without_the_left_margin(&lower::apply_edits(source, &edits)),
+        imports,
+    ))
+}
+
+/// The program with the space every line of it starts with taken off.
+///
+/// A block of text copied out of a page, and a program typed into an editor
+/// that was already one step in, both arrive with every line indented. The
+/// parser reads such a file — the first line has nothing above it to be
+/// indented under — but the Python it lowers to keeps the same left margin,
+/// and CPython refuses an indented first statement. Only whitespace shared by
+/// every line that has anything on it is taken, so nothing inside the program
+/// moves relative to anything else.
+///
+/// A triple-quoted string may carry its own indentation as data, so a program
+/// holding one is left exactly as it is.
+fn without_the_left_margin(python: &str) -> String {
+    if !python.starts_with([' ', '\t']) || python.contains(r#"""""#) || python.contains("'''") {
+        return python.to_string();
+    }
+    let Some(margin) = python
+        .lines()
+        .filter(|line| !line.trim().is_empty())
+        .map(|line| &line[..line.len() - line.trim_start().len()])
+        .reduce(|left, right| {
+            let shared = left
+                .char_indices()
+                .zip(right.chars())
+                .take_while(|((_, mine), theirs)| mine == theirs)
+                .last()
+                .map_or(0, |((at, mine), _)| at + mine.len_utf8());
+            &left[..shared]
+        })
+        .filter(|margin| !margin.is_empty())
+    else {
+        return python.to_string();
+    };
+    let body = python
+        .lines()
+        .map(|line| line.strip_prefix(margin).unwrap_or(line.trim_start()))
+        .collect::<Vec<_>>()
+        .join("\n");
+    if python.ends_with('\n') {
+        body + "\n"
+    } else {
+        body
+    }
 }
 
 fn count_line_breaks(text: &str) -> usize {
