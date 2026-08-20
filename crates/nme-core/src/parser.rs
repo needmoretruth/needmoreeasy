@@ -4326,6 +4326,7 @@ fn classify_written_line(
     if looks_like_python_invocation(tokens)
         && !is_header_shape(tokens)
         && !is_dotted_words_only(tokens, known_names)
+        && !opens_with_a_written_full_stop(tokens, known_names)
     {
         return Ok(None);
     }
@@ -22994,6 +22995,33 @@ fn valid_python_is_a_sentence(tokens: &[Token], known_names: &HashSet<String>) -
 /// attribute access has no space at all (`아니면.foo`, which is a perfectly
 /// good Python name followed by a field). Requiring the writing shape is what
 /// keeps every NME word usable as an ordinary Python name.
+/// True when the first stop on the line is the one a person writes at the end
+/// of a sentence rather than the one Python writes between a name and a field.
+///
+/// [`is_dotted_words_only`] already reads `Hello. Goodbye`, but it asks the
+/// whole line to be nothing but dotted words, so the moment an action word is
+/// written last — `Hello. Goodbye show`, `아쉽습니다. 줄은 이랬습니다 말해줘` —
+/// the line stopped being a sentence and was handed to Python as an attribute
+/// lookup. It is not Python: `nme check` reports a `SyntaxError` for it, and
+/// in a browser, where there is no CPython to ask, it compiled without a word
+/// and died when it ran. The action-word-last form is the ordinary way to
+/// write the sentence in Korean, so this was one full stop away from every
+/// Korean program.
+///
+/// The same spacing decides it here as there: writing puts the stop against
+/// the word before it and a space after it, while `friends.sort` has no space
+/// at all. A name the program really made keeps the line, so `friends. sort`
+/// is still somebody's Python.
+fn opens_with_a_written_full_stop(tokens: &[Token], known_names: &HashSet<String>) -> bool {
+    let [first, stop, after, ..] = tokens else {
+        return false;
+    };
+    matches!(stop.tok, Tok::Dot)
+        && first.span.end == stop.span.start
+        && stop.span.end < after.span.start
+        && name_word(first).is_some_and(|word| !known_names.contains(word))
+}
+
 fn is_dotted_words_only(tokens: &[Token], known_names: &HashSet<String>) -> bool {
     if tokens.len() < 3 || tokens.len().is_multiple_of(2) {
         return false;

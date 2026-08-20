@@ -1308,6 +1308,23 @@ fn a_full_stop_between_two_words_is_a_sentence_not_attribute_access() {
     }
 }
 
+/// The same full stop, with the action word written last. That is the ordinary
+/// way to write the sentence in Korean, and it used to undo the rule above: the
+/// line went to Python as an attribute lookup, `nme check` reported a
+/// `SyntaxError`, and in a browser — where there is no CPython to ask — it
+/// compiled without a word and died when it ran.
+#[test]
+fn a_full_stop_survives_the_action_word_being_written_last() {
+    for (source, python) in [
+        ("Hello. Goodbye show\n", "print(\"Hello. Goodbye\")\n"),
+        ("아쉽습니다. 줄은 이랬습니다 말해줘\n", "print(\"아쉽습니다. 줄은 이랬습니다\")\n"),
+        ("안녕. 잘가 말해줘\n", "print(\"안녕. 잘가\")\n"),
+        ("One. Two. Three show\n", "print(\"One. Two. Three\")\n"),
+    ] {
+        assert_eq!(ok(source), python, "for {source:?}");
+    }
+}
+
 /// The rule is narrow on purpose: a name the program made keeps its line, and
 /// so does anything with a call, a bracket or a number in it.
 #[test]
