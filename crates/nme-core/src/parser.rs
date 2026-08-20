@@ -6542,7 +6542,8 @@ fn not_a_list_kind_diagnostic(target: &str, span: Span) -> Diagnostic {
         ),
         format!(
             "숫자를 바꾸려면 `{target}에 1 더해`라고 적고, 여러 개를 모으려면 넣기 전에 \
-             `{target}은 빈 목록`이라고 먼저 적어 주세요"
+             `{target}{} 빈 목록`이라고 먼저 적어 주세요",
+            korean_particle(target, "은", "는")
         ),
     )
 }
@@ -16876,7 +16877,7 @@ fn module_tool_used_bare(tokens: &[Token], known_names: &HashSet<String>) -> Opt
 /// `개수 말해줘` with nothing to count.
 fn module_tool_without_its_work(name: &str, span: Span) -> Diagnostic {
     Diagnostic::bilingual(
-        DiagnosticCode::ModuleShapeInvalid,
+        DiagnosticCode::ModuleToolWithoutWork,
         format!("`{name}` is a tool, and this line does not say what it works on"),
         format!(
             "`{name}`{} 도구인데, 이 줄에는 무엇에 쓸지가 없습니다",

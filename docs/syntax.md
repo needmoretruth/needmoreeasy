@@ -805,6 +805,7 @@ touched.**
 | `E0407` | a module path this line cannot use |
 | `E0408` | a module import line NME could not read |
 | `E0409` | a module loaded twice |
+| `E0410` | a module tool with nothing to work on |
 | `E0411` | the value to save is missing |
 | `E0412` | NME could not read the value to save |
 | `E0413` | the name to save into is missing |

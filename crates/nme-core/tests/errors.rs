@@ -1485,7 +1485,7 @@ fn a_module_tool_on_its_own_says_what_is_missing() {
         "use math\nshow root\n",
         "날짜 사용\n며칠뒤 말해줘\n",
     ] {
-        assert_eq!(error_code(source), "E0406", "{source}");
+        assert_eq!(error_code(source), "E0410", "{source}");
     }
     let message = err("use list\nshow count\n");
     assert!(message.contains("`count` is a tool"), "{message}");

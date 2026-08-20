@@ -5,6 +5,12 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+- **A module tool with nothing to work on has its own code, E0410.** It was
+  borrowing E0406, whose title is about an unreadable module line — so the
+  code a reader looked up said something else than the message they were
+  reading.
+- **`점수는 빈 목록`, not `점수은 빈 목록`.** The hint under E0240 wrote the
+  Korean topic mark by hand instead of choosing it from the name.
 - **`yesterday`, `2 days ago` and `3 days from now` are sentences.** Korean
   writes `어제`, `2일 전`, `3일 뒤`. They mean a date only after `use date
   latest` is above them, because that line is what binds what they lower to —

@@ -270,6 +270,8 @@ pub enum DiagnosticCode {
     FilePathNotQuoted,
     /// A list statement written on a name that never became a list.
     NameIsNotAList,
+    /// A module tool written with nothing for it to work on.
+    ModuleToolWithoutWork,
 }
 
 impl DiagnosticCode {
@@ -338,6 +340,7 @@ impl DiagnosticCode {
             Self::ModuleImportPathInvalid => "E0407",
             Self::ModuleImportShapeInvalid => "E0408",
             Self::ModuleLoadedTwice => "E0409",
+            Self::ModuleToolWithoutWork => "E0410",
             Self::SaveValueMissing => "E0411",
             Self::SaveValueUnparseable => "E0412",
             Self::SaveNameMissing => "E0413",
@@ -391,7 +394,7 @@ impl DiagnosticCode {
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 111] = [
+    pub const ALL: [DiagnosticCode; 113] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -441,6 +444,7 @@ impl DiagnosticCode {
         Self::ModuleImportPathInvalid,
         Self::ModuleImportShapeInvalid,
         Self::ModuleLoadedTwice,
+        Self::ModuleToolWithoutWork,
         Self::SaveValueMissing,
         Self::SaveValueUnparseable,
         Self::SaveNameMissing,
@@ -503,6 +507,7 @@ impl DiagnosticCode {
         Self::NameTakenByPython,
         Self::FileReadTargetMissing,
         Self::FilePathNotQuoted,
+        Self::NameIsNotAList,
     ];
 
     pub fn from_code(code: &str) -> Option<Self> {
@@ -862,8 +867,8 @@ impl DiagnosticCode {
                 "E0240",
                 "putting something in requires a list",
                 "무엇을 넣으려면 목록이어야 합니다",
-                "`append`, `push` and `넣어` put one more item into a list. The name on this line either was never made at all, or holds something else — a number, a piece of text, a record. Make it a list first (`set friends to an empty list`), or write the line the way that value is changed.",
-                "`append`, `push`, `넣어`는 목록에 항목을 하나 더 넣습니다. 이 줄의 이름은 만든 적이 없거나, 숫자·글자·표처럼 다른 것이 들어 있습니다. 먼저 `친구들은 빈 목록`처럼 목록으로 만들거나, 그 값에 맞는 문장으로 적어 주세요.",
+                "`append`, `push` and `넣어` put one more item into a list. The name on this line holds something else — a number, a piece of text, a record — so there is nothing to put anything into. Make it a list first (`set friends to an empty list`), or write the line the way that value is changed: a number is changed with `score add 1`. A name the program never made at all is left alone, because NME does not ask for names to be declared.",
+                "`append`, `push`, `넣어`는 목록에 항목을 하나 더 넣습니다. 이 줄의 이름에는 숫자·글자·표처럼 목록이 아닌 것이 들어 있어서 넣을 자리가 없습니다. 먼저 `친구들은 빈 목록`처럼 목록으로 만들거나, 그 값에 맞는 문장으로 적어 주세요. 숫자는 `점수에 1 더해`로 바꿉니다. 프로그램이 아예 만든 적 없는 이름은 짚지 않습니다. NME는 이름을 미리 선언하라고 하지 않기 때문입니다.",
             ),
             Self::ConditionMissing => (
                 "E0301",
@@ -969,6 +974,13 @@ impl DiagnosticCode {
                 "이미 불러온 모듈을 다시 부른 줄",
                 "One `use` line makes a module's words available for the whole program, wherever the line stands. A second one for the same module adds nothing, so it is named rather than left to look like it does something. Delete it.",
                 "`사용` 한 줄이면 그 모듈의 낱말을 프로그램 전체에서 쓸 수 있습니다. 같은 모듈을 다시 부르는 줄은 더해 주는 것이 없으므로, 무언가 하는 줄처럼 보이지 않도록 짚어 줍니다. 지우면 됩니다.",
+            ),
+            Self::ModuleToolWithoutWork => (
+                "E0410",
+                "a module tool with nothing to work on",
+                "무엇에 쓸지 없는 모듈 도구",
+                "A toolbox opened with `use` binds names such as `count`, `root` and `며칠뒤`. Each of them works on something, and that something is written after it in brackets: `count(friends)`. Written on its own the name is the tool itself, and showing a tool shows `<function …>` — which is why NME says so instead. The six date names that answer with nothing written after them (`today`, `weekday`, `오늘`, `요일`, …) are not affected.",
+                "`사용`으로 연 도구 상자는 `개수`·`제곱근`·`며칠뒤` 같은 이름을 묶습니다. 각각은 무엇인가에 쓰는 도구이고, 그 무엇을 괄호 안에 뒤에 적습니다: `개수(친구들)`. 이름만 적으면 그것은 도구 자체이고, 도구를 보여 주면 `<function …>`이 나옵니다. 그래서 NME가 대신 짚어 줍니다. 뒤에 아무것도 적지 않아도 답을 내놓는 날짜 이름 여섯 개(`오늘`·`요일`·`today`·`weekday` 등)는 해당하지 않습니다.",
             ),
             Self::SaveValueMissing => (
                 "E0411",
