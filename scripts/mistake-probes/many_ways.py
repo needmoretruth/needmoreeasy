@@ -52,14 +52,33 @@ BINARY = next(
     None,
 )
 
-# Recorded on 2026-08-19 against the 103-variant corpus. Raise these when the
+# Recorded on 2026-08-20 against the 211-variant corpus. Raise these when the
 # compiler gets better; never lower them to make a run pass.
 #
-# 68 · 11 was the first reading, on the morning of that day. The round that
-# followed it drove the silent count to zero, which was the whole point: a
-# writer who used a command word now either gets what they meant or is told
-# what to write instead.
-FLOOR_WORKS = 102
+# 68 · 11 was the first reading, on the morning of 2026-08-19, over the first
+# 103 variants. The round that followed drove the silent count to zero, which
+# was the whole point: a writer who used a command word now either gets what
+# they meant or is told what to write instead. 2026-08-20 doubled the corpus —
+# fourteen more intentions, so the number measures the language rather than
+# its opening lesson — and the first reading over all 211 was 163 · 5.
+# The eight that do not work, and why each is left alone (2026-08-20):
+#
+#   name is 5                  E0604 — in Python that line compares. Reading it
+#                              as a save would change what valid Python means.
+#   set Mina to 90 in ages     already means *read `Mina` out of `ages`*, which
+#                              `records_and_jobs.rs` pins. One spelling, one
+#                              meaning.
+#   raise score by 1           `raise` is a Python keyword and the line is
+#                              handed to CPython, which answers it.
+#   if not / in every other    four words or an opening `if`: both readings are
+#   case                       live, and NME never picks one of two.
+#   go through names as name   names the list first and the loop name last,
+#                              which is the opposite order to every other
+#                              header. A shape, not a word, and not written yet.
+#   수가 3보다 작은 한 / 작으면 계속  `한` and `계속` are among the commonest words in
+#                              Korean; claiming them would cost more prose than
+#                              the two spellings are worth.
+FLOOR_WORKS = 203
 CEILING_SILENT = 0
 
 

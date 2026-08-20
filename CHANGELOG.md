@@ -32,6 +32,23 @@ All notable changes to NME are recorded here.
   and `대기` in Korean.
 - **Fifteen Python-level error explanations rewritten in plain words**
   (E0106–E0120), and the two places NME called itself `I` now say `NME`.
+- **Twenty-five more ways of writing the same thing now do it.** Over the
+  211-variant corpus, 163 worked when it was first measured and 203 do now,
+  with nothing printing itself instead of running. Among them: `for name in
+  names` and `for each name of names`; `이름들의 이름마다` with the lines to
+  repeat written underneath, and `이름들의 각 이름마다`; `otherwise`, `or else`,
+  `그렇지 않으면`, `안 그러면`, `그 외에는`, `아니라면`; `as long as n < 3`,
+  `repeat while n < 3`, `keep going while n < 3` and `수가 3보다 작은동안` with
+  the space left out; `민수를 90으로 나이표에 넣어` and `나이표에 민수 90 넣어`;
+  `in ages put Mina at 90` and `put Mina 90 in ages`; `민수를 친구들에서 빼`;
+  `take Mina out of friends`; and `grow`/`bump`/`up score by 1`.
+- **`점수에 1 추가해` adds one to the score.** The word puts an item into a
+  list, and the name says which is meant: a list takes an item, a number takes
+  arithmetic. Something the program never made is refused rather than guessed.
+- **Eight spellings are deliberately still refused**, each for a reason
+  written down beside the corpus: `name is 5` is a comparison in Python,
+  `set Mina to 90 in ages` already means reading a value out, and `한` and
+  `계속` are too common in Korean to claim.
 - **Narrower carets.** A value change that could not be read underlines the
   amount rather than the whole line; a list line underlines what was to go in;
   a loop over a list underlines the part that could not be read, and says when

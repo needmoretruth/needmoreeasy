@@ -158,13 +158,6 @@ fn raw_cpython_errors_become_nme_diagnostics() {
             names: "assign",
         },
         Refusal {
-            probe: "y-en-29",
-            source: "set score to 0\nbump score by 1\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 2,
-            names: "bump",
-        },
-        Refusal {
             probe: "y-ko-16",
             source: "2초 멈춰줘\n",
             code: DiagnosticCode::UnknownActionWord,
@@ -357,13 +350,6 @@ fn a_word_that_is_not_an_action_is_named() {
             code: DiagnosticCode::UnknownActionWord,
             line: 1,
             names: "assign",
-        },
-        Refusal {
-            probe: "y-en-29",
-            source: "set score to 0\nbump score by 1\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 2,
-            names: "bump",
         },
         Refusal {
             probe: "y-ko-08",
