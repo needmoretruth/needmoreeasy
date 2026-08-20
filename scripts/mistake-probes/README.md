@@ -8,8 +8,15 @@ anything — beside the correct spellings of each grammar form, so that a
 capability cannot quietly stop working either.
 
 The number that matters is the last one `probe.py` prints: **how many were
-accepted and compiled to something the writer plainly did not mean.** It is 11,
+accepted and compiled to something the writer plainly did not mean.** It is 10,
 and it must not rise.
+
+The ten that remain are all deliberate. Four are dictionary words a typo repair
+must not claim (`shoe hello`, `sett score to 0`); two are Korean output verbs
+that only mean the verb at the end of a line, because `말하기 연습` is speaking
+practice; three are a full stop kept as part of the text (`say hello.` prints
+`hello.`); and one is a line beginning `then`, where telling it from *Then show
+me the way* would cost more prose than the probe is worth.
 
 There are two corpora of ordinary sentences beside the mistakes:
 
@@ -83,6 +90,7 @@ python scripts/check-prose-blocks.py              # and no guide line may drift
 | 2026-08-19, after the English-prose round | 628 | 122 | 11 | 30/30 |
 | 2026-08-19, after the Korean-prose round | 635 | 122 | 11 | 30/30 |
 | 2026-08-19, after the modules-and-text round | 680 | 124 | 11 | 30/30 |
+| 2026-08-20, after the many-ways round | 708 | 96 | 10 | 30/30 |
 
 The first three rows were measured over 566 probes, then 750, 757 and 804, so
 read the mis-compile column across them and the other two only within a row.

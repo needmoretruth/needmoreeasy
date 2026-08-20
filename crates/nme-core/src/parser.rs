@@ -397,6 +397,14 @@ const KOREAN_PARTICLES: &[&str] = &[
     "이랑",
     "예요",
     "이에요",
+    // Not a particle but written the same way: the polite form of address a
+    // greeting reaches for first. `이름님 안녕하세요` printed the word `이름`
+    // where the answer belonged. `씨` is deliberately absent — `날씨` would
+    // become the name `날` plus `씨` in any program that has one.
+    "님",
+    "님께",
+    "님은",
+    "님이",
 ];
 
 /// Korean makes a compound verb by putting a helper verb straight after an
@@ -9790,6 +9798,42 @@ fn is_for_each_connector(token: &Token) -> bool {
     token_matches_exact(token, &["in", "of", "from", "through"])
 }
 
+/// `for eachfriend in friends` — `each` typed against the loop name. The two
+/// halves are the same two words either way, so the glued token is split into
+/// them; without this the loop bound a name called `eachfriend` and every line
+/// under it that said `friend` printed the word.
+fn split_glued_each_word(tokens: &[Token]) -> Option<Vec<Token>> {
+    let opener = tokens.first()?;
+    if !matches!(opener.tok, Tok::For) && !token_matches_exact(opener, &["for"]) {
+        return None;
+    }
+    let glued = tokens.get(1)?;
+    let word = name_word(glued)?;
+    let each = EACH_WORDS_EN
+        .iter()
+        .find(|each| word.len() > each.len() && word.to_lowercase().starts_with(*each))?;
+    let name = &word[each.len()..];
+    if !is_plain_python_name(name) {
+        return None;
+    }
+    let split_at = glued.span.start + each.len();
+    let mut written = vec![opener.clone()];
+    written.push(Token {
+        tok: Tok::Name {
+            name: (*each).to_string(),
+        },
+        span: Span::new(glued.span.start, split_at),
+    });
+    written.push(Token {
+        tok: Tok::Name {
+            name: name.to_string(),
+        },
+        span: Span::new(split_at, glued.span.end),
+    });
+    written.extend_from_slice(&tokens[2..]);
+    Some(written)
+}
+
 fn match_english_for_each(
     source: &str,
     tokens: &[Token],
@@ -9797,6 +9841,9 @@ fn match_english_for_each(
     known_names: &HashSet<String>,
     mode: MatchMode,
 ) -> Result<Option<NmeStmt>, Diagnostic> {
+    if let Some(written) = split_glued_each_word(tokens) {
+        return match_english_for_each(source, &written, block, known_names, mode);
+    }
     let Some(name_at) = english_for_each_start(tokens, mode) else {
         return Ok(None);
     };
@@ -16755,8 +16802,16 @@ fn remember_bindings(stmt: &NmeStmt, names: &mut HashSet<String>) {
     }
 }
 
+/// The name a Korean line asks into, with the mark that pointed at it taken
+/// off.
+///
+/// `은`/`는` were missing, so `이름은 물어봐` bound a name called `이름은` and
+/// every line after it that said `이름` was talking about something the
+/// program never made.
 fn strip_target_particle(word: &str) -> &str {
-    for particle in ["에게", "한테", "으로", "로", "을", "를"] {
+    for particle in [
+        "에게", "한테", "으로", "로", "을", "를", "은", "는", "이", "가",
+    ] {
         if let Some(base) = word.strip_suffix(particle) {
             if !base.is_empty() {
                 return base;
