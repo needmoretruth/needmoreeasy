@@ -14,7 +14,7 @@ not exist.
 
 NME (NeedMoreEasy) is **a small programming language that turns ordinary
 sentences into Python**. You can write it in English, in Korean, or mix the two
-on one line. This document describes version `0.4.0`.
+on one line. This document describes version `0.5.0`.
 
 **Three rules that matter.**
 
@@ -508,6 +508,12 @@ line. `weekday` and `요일` are the one place where two names hold different
 values: a weekday name is a word, so it belongs to a language, and the name you
 write chooses the language of the answer. The clock a browser hands Python is
 UTC.
+
+Six of the date names — `today`, `now`, `year`, `month`, `day_of_month`,
+`weekday` — answer with nothing written after them, so they may be written
+without brackets: `show today`, `set stamp to today`. `days_after` is not one
+of them: it needs the number written after it. A tool name written with
+nothing to work on is refused (E0406) rather than shown as a function.
 
 ### Every word you may use
 

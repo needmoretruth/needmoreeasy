@@ -668,7 +668,65 @@ MODULES_KO = """## 딸려 오는 도구 일곱 가지
 `목록`·`글자`·`수학`·`날짜`는 평범한 낱말이라, `사용` 바로 옆에 있고 그 줄에 다른
 낱말이 없을 때만 모듈로 읽습니다. `요일`과 `weekday`는 두 이름이 서로 다른 값을
 갖는 유일한 자리입니다. 요일 이름은 낱말이라서 어느 한 언어에 속하고, 적은 이름이
-답의 언어를 정합니다. 브라우저가 Python에 주는 시계는 UTC입니다."""
+답의 언어를 정합니다. 브라우저가 Python에 주는 시계는 UTC입니다.
+
+날짜 이름 여섯 개(`오늘`·`지금`·`올해`·`이번달`·`오늘일자`·`요일`)는 뒤에
+아무것도 적지 않아도 답을 내놓으므로 괄호 없이 쓸 수 있습니다.
+`오늘 말해줘`·`오늘날짜는 오늘`처럼 적으면 됩니다. `며칠뒤`는 며칠인지를 뒤에
+적어야 하므로 여기 들지 않습니다. 도구 이름을 무엇에 쓸지 없이 혼자 적으면
+컴파일러가 거절합니다(E0406)."""
+
+DATE_SENTENCE_EN = """## The one toolbox a sentence program needs
+
+Everything else has a sentence spelling of its own — `random number from 1 to
+6`, `how many friends`, `sort friends` — but there is no way to say *today*
+without opening the date toolbox. One line does it, and the six names below
+answer with nothing written after them, so no brackets are needed:
+
+```nme
+use date latest
+show today
+show weekday
+set stamp to today
+```
+
+| Name | Korean | What it answers |
+| --- | --- | --- |
+| `today` | `오늘` | today's date, text such as `2026-08-20` |
+| `now` | `지금` | the time now, text such as `09:06` |
+| `year` | `올해` | which year it is |
+| `month` | `이번달` | which month it is |
+| `day_of_month` | `오늘일자` | which day of the month it is |
+| `weekday` | `요일` | `Wednesday` in English, `수요일` in Korean |
+
+Korean writes the same line as `날짜 사용 최신` and then `오늘 말해줘`. Anything
+that needs a number written after it — `days_after(3)` / `며칠뒤(3)` — is
+beginner syntax, not sentence syntax."""
+
+DATE_SENTENCE_KO = """## 문장 프로그램에 필요한 도구 상자 하나
+
+나머지는 모두 문장문법에 제 표기가 있습니다 — `1부터 6까지 무작위 숫자`,
+`친구들 개수`, `친구들 정렬해`. 그런데 *오늘*을 말할 방법만은 날짜 도구 상자를
+열어야 있습니다. 한 줄이면 되고, 아래 여섯 이름은 뒤에 아무것도 적지 않아도
+답을 내놓으므로 괄호가 필요 없습니다.
+
+```nme
+날짜 사용 최신
+오늘 말해줘
+요일 말해줘
+오늘날짜는 오늘
+```
+
+| 이름 | 영어 | 무엇을 답하나 |
+| --- | --- | --- |
+| `오늘` | `today` | 오늘 날짜. `2026-08-20` 같은 글 |
+| `지금` | `now` | 지금 시각. `09:06` 같은 글 |
+| `올해` | `year` | 올해가 몇 년인지 |
+| `이번달` | `month` | 이번 달이 몇 월인지 |
+| `오늘일자` | `day_of_month` | 오늘이 며칠인지 |
+| `요일` | `weekday` | 한국어로는 `수요일`, 영어 이름은 `Wednesday` |
+
+뒤에 숫자를 적어야 하는 `며칠뒤(3)`은 문장문법이 아니라 초급 문법입니다."""
 
 MODULES_EN = """## Seven bundled toolboxes
 
@@ -716,7 +774,13 @@ module only when they stand beside `use` and nothing else is left over on the
 line. `weekday` and `요일` are the one place where two names hold different
 values: a weekday name is a word, so it belongs to a language, and the name you
 write chooses the language of the answer. The clock a browser hands Python is
-UTC."""
+UTC.
+
+Six of the date names — `today`, `now`, `year`, `month`, `day_of_month`,
+`weekday` — answer with nothing written after them, so they may be written
+without brackets: `show today`, `set stamp to today`. `days_after` is not one
+of them: it needs the number written after it. A tool name written with
+nothing to work on is refused (E0406) rather than shown as a function."""
 
 
 def build(binary: Path) -> None:
@@ -743,6 +807,8 @@ def build(binary: Path) -> None:
         + "\n\n같은 칸에 있는 낱말은 서로 바꿔 써도 뜻이 같습니다. 이 표는 **동작을 나타내는 "
           "낱말**만 모은 것입니다. `부터`·`까지`·`초`·`마다`·`보다 크면`·`랜덤정수`처럼 문장을 "
           "이루는 나머지 말은 위 표들에 나온 모양 그대로 쓰면 됩니다.\n\n"
+        + DATE_SENTENCE_KO
+        + "\n\n"
         + PITFALLS_KO
         + "\n\n"
         + short_examples(rows, True, 6)
@@ -769,6 +835,8 @@ def build(binary: Path) -> None:
           "words** only; the rest of a sentence — `from`, `to`, `seconds`, `for each`, "
           "`greater than`, `random number` — is written exactly as the tables above "
           "show it.\n\n"
+        + DATE_SENTENCE_EN
+        + "\n\n"
         + PITFALLS_EN
         + "\n\n"
         + short_examples(rows, False, 6)

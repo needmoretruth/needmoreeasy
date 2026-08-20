@@ -5,6 +5,11 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+
+## 0.5.0
+- **The sentence-level AI prompt now covers the date toolbox.** It is the one
+  thing a sentence program cannot say without a `use` line, and guides 33 and
+  36 use it, so an assistant handed that prompt could not write them.
 - **`show today` shows today's date.** The date module binds `today`,
   `weekday`, `year` and their Korean twins as functions, so a line that wrote
   one without brackets printed `<function <lambda>>` — a program that runs,

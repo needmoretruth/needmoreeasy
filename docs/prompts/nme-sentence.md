@@ -14,7 +14,7 @@ not exist.
 
 NME (NeedMoreEasy) is **a small programming language that turns ordinary
 sentences into Python**. You can write it in English, in Korean, or mix the two
-on one line. This document describes version `0.4.0`.
+on one line. This document describes version `0.5.0`.
 
 **Three rules that matter.**
 
@@ -435,6 +435,33 @@ on one line. This document describes version `0.4.0`.
 | 군말 / Filler | `please` | `좀` · `혹시` · `제발` |
 
 Words in the same cell mean the same thing. This table lists the **action words** only; the rest of a sentence — `from`, `to`, `seconds`, `for each`, `greater than`, `random number` — is written exactly as the tables above show it.
+
+## The one toolbox a sentence program needs
+
+Everything else has a sentence spelling of its own — `random number from 1 to
+6`, `how many friends`, `sort friends` — but there is no way to say *today*
+without opening the date toolbox. One line does it, and the six names below
+answer with nothing written after them, so no brackets are needed:
+
+```nme
+use date latest
+show today
+show weekday
+set stamp to today
+```
+
+| Name | Korean | What it answers |
+| --- | --- | --- |
+| `today` | `오늘` | today's date, text such as `2026-08-20` |
+| `now` | `지금` | the time now, text such as `09:06` |
+| `year` | `올해` | which year it is |
+| `month` | `이번달` | which month it is |
+| `day_of_month` | `오늘일자` | which day of the month it is |
+| `weekday` | `요일` | `Wednesday` in English, `수요일` in Korean |
+
+Korean writes the same line as `날짜 사용 최신` and then `오늘 말해줘`. Anything
+that needs a number written after it — `days_after(3)` / `며칠뒤(3)` — is
+beginner syntax, not sentence syntax.
 
 ## How a name becomes a value inside a sentence
 
