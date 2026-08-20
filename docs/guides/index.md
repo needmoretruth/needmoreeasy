@@ -56,9 +56,9 @@ guide.
 ### Part 2 — Small programs you can build
 
 For someone who has finished Part 1 and wants games, menus and small projects
-to keep. **Seventeen of the twenty are written in sentences alone** — no
-quote, no bracket, no equals sign. The three that are not (26, 33, 36) still mix in
-beginner syntax and Python. The
+to keep. **Eighteen of the twenty are written in sentences alone** — no
+quote, no bracket, no equals sign. The two that are not are 26, which needs a
+list of lists, and 36, which writes a date out by hand between quotes. The
 guides written in sentences alone are Part 1 — its code contains no quote, no
 bracket and no equals sign, which `scripts/report-guide-tier.py` measures.
 
