@@ -55,6 +55,18 @@ needed. NME puts whatever follows `show` on the screen. No quotes, no brackets.
    show This is the second line
    ```
 
+6. A line that starts with a `#` does **nothing at all.** The computer skips
+   it. It is a note left for a person to read:
+
+   ```nme
+   # This line does nothing at all.
+   show Hello world!
+   ```
+
+   Running that prints one line, `Hello world!`. Delete every `#` line and the
+   program does exactly the same thing. Examples often have several of them at
+   the top: those are the explanation, not the program.
+
 ## Try it
 
 Change the words to your own name, or a place you like, and press **Run**
@@ -82,4 +94,5 @@ this while you are learning — the result is the same as on the site.
 - Sentences need no quotes, no commas and no brackets.
 - A line that reads as an ordinary sentence prints itself.
 - Several lines run from top to bottom.
+- A line starting with `#` does nothing: it is a note for a person to read.
 - Everything works on needmoreeasy.com with nothing installed.
