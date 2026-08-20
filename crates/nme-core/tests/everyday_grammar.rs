@@ -1752,3 +1752,52 @@ fn a_helper_verb_on_the_asking_word_itself_is_still_a_sentence() {
         "print(\"말해 봐야 소용없는 일이었습니다\")\n"
     );
 }
+
+// ------------------------------------------------------- a date on either side
+
+/// `yesterday`, `2 days ago` and `3 days from now` — and their Korean twins —
+/// are the sentence way to step off today. They mean a date only after the
+/// date toolbox is open, because that is what binds what they lower to.
+#[test]
+fn stepping_off_today_works_in_both_languages() {
+    for (source, expected) in [
+        ("use date\nshow yesterday\n", "print(days_after(-1))"),
+        ("use date\nshow tomorrow\n", "print(days_after(1))"),
+        (
+            "use date\nset before to 1 day ago\n",
+            "before = days_after(-1)",
+        ),
+        (
+            "use date\nset later to 3 days from now\n",
+            "later = days_after(3)",
+        ),
+        ("날짜 사용\n어제 말해줘\n", "print(days_after(-1))"),
+        ("날짜 사용\n내일 말해줘\n", "print(days_after(1))"),
+        (
+            "날짜 사용\n어제날짜는 1일 전\n",
+            "어제날짜 = days_after(-1)",
+        ),
+        ("날짜 사용\n모레날짜는 2일 뒤\n", "모레날짜 = days_after(2)"),
+    ] {
+        let python = ok(source);
+        assert!(python.contains(expected), "{source} -> {python}");
+    }
+}
+
+/// Without the toolbox the same words are ordinary speech, so a sentence that
+/// happens to hold them keeps every word it has.
+#[test]
+fn stepping_off_today_needs_the_toolbox() {
+    assert_eq!(
+        ok("3 days ago I saw her\n"),
+        "print(\"3 days ago I saw her\")\n"
+    );
+    assert_eq!(
+        ok("약속은 3일 전이었습니다\n"),
+        "print(\"약속은 3일 전이었습니다\")\n"
+    );
+    assert_eq!(
+        ok("어제 비가 왔습니다\n"),
+        "print(\"어제 비가 왔습니다\")\n"
+    );
+}

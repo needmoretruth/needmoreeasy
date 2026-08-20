@@ -830,6 +830,11 @@ Python으로 `나이표 = {{}}`라고 쓴 이름도 표로 봅니다.
 `장 볼 목록을 사용해 보세요`와 `이 날짜 사용법을 알려 주세요`는 그대로 출력되는
 문장입니다.
 
+`어제`·`내일`·`3일 전`·`3일 뒤`(영어로는 `yesterday`·`tomorrow`·`3 days ago`·
+`3 days from now`)는 오늘에서 며칠 옮긴 날을 가리키는 문장 표기입니다. 도구 상자를
+연 뒤에만 날짜가 되므로, `약속은 3일 전이었습니다`와 `3 days ago I saw her`는
+그대로 출력되는 문장입니다.
+
 날짜 이름 여섯 개는 뒤에 아무것도 적지 않아도 답을 내놓습니다. 그래서 괄호 없이
 쓸 수 있고, 날짜를 다루는 프로그램도 문장문법만으로 쓸 수 있습니다.
 `오늘 말해줘`·`요일 말해줘`·`올해 말해줘`, 영어로는 `show today`·`show weekday`·
@@ -1161,6 +1166,11 @@ builtins, so they run in the browser as they stand. `list`, `text`, `math` and
 `date` are ordinary words, so they name a module only when they stand beside
 `use`/`사용` and nothing else is left over on the line; `get the list of names`
 and `What is the date today?` are sentences and print.
+
+`yesterday`, `tomorrow`, `3 days ago` and `3 days from now` — Korean `어제`,
+`내일`, `3일 전`, `3일 뒤` — are the sentence way to step off today. They mean a
+date only after the toolbox is open, so `3 days ago I saw her` and
+`약속은 3일 전이었습니다` are sentences and print.
 
 Six of the date names answer with nothing written after them, so they may be
 written without brackets and a whole date program stays sentences:

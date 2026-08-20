@@ -5,6 +5,11 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+- **`yesterday`, `2 days ago` and `3 days from now` are sentences.** Korean
+  writes `어제`, `2일 전`, `3일 뒤`. They mean a date only after `use date
+  latest` is above them, because that line is what binds what they lower to —
+  so `3 days ago I saw her` and `약속은 3일 전이었습니다` are ordinary
+  sentences and print. Guide 33 is written in sentences from end to end now.
 
 ## 0.5.0
 - **The sentence-level AI prompt now covers the date toolbox.** It is the one

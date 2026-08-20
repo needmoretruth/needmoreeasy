@@ -405,6 +405,11 @@ builtins, so they run in the browser as they stand. `list`, `text`, `math` and
 `use`/`사용` and nothing else is left over on the line; `get the list of names`
 and `What is the date today?` are sentences and print.
 
+`yesterday`, `tomorrow`, `3 days ago` and `3 days from now` — Korean `어제`,
+`내일`, `3일 전`, `3일 뒤` — are the sentence way to step off today. They mean a
+date only after the toolbox is open, so `3 days ago I saw her` and
+`약속은 3일 전이었습니다` are sentences and print.
+
 Six of the date names answer with nothing written after them, so they may be
 written without brackets and a whole date program stays sentences:
 `show today`, `show weekday`, `show year`, `오늘 말해줘`, `요일 말해줘`,

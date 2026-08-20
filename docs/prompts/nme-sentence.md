@@ -459,9 +459,11 @@ set stamp to today
 | `day_of_month` | `오늘일자` | which day of the month it is |
 | `weekday` | `요일` | `Wednesday` in English, `수요일` in Korean |
 
-Korean writes the same line as `날짜 사용 최신` and then `오늘 말해줘`. Anything
-that needs a number written after it — `days_after(3)` / `며칠뒤(3)` — is
-beginner syntax, not sentence syntax.
+Stepping off today is written the same way: `yesterday`, `tomorrow`,
+`2 days ago`, `3 days from now`. Korean writes the same line as
+`날짜 사용 최신` and then `오늘 말해줘`, `어제`, `내일`, `2일 전`, `3일 뒤`.
+These mean a date only after the toolbox is open, so `3 days ago I saw her`
+is an ordinary sentence and prints.
 
 ## How a name becomes a value inside a sentence
 

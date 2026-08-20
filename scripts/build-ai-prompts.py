@@ -699,9 +699,11 @@ set stamp to today
 | `day_of_month` | `오늘일자` | which day of the month it is |
 | `weekday` | `요일` | `Wednesday` in English, `수요일` in Korean |
 
-Korean writes the same line as `날짜 사용 최신` and then `오늘 말해줘`. Anything
-that needs a number written after it — `days_after(3)` / `며칠뒤(3)` — is
-beginner syntax, not sentence syntax."""
+Stepping off today is written the same way: `yesterday`, `tomorrow`,
+`2 days ago`, `3 days from now`. Korean writes the same line as
+`날짜 사용 최신` and then `오늘 말해줘`, `어제`, `내일`, `2일 전`, `3일 뒤`.
+These mean a date only after the toolbox is open, so `3 days ago I saw her`
+is an ordinary sentence and prints."""
 
 DATE_SENTENCE_KO = """## 문장 프로그램에 필요한 도구 상자 하나
 
@@ -726,7 +728,9 @@ DATE_SENTENCE_KO = """## 문장 프로그램에 필요한 도구 상자 하나
 | `오늘일자` | `day_of_month` | 오늘이 며칠인지 |
 | `요일` | `weekday` | 한국어로는 `수요일`, 영어 이름은 `Wednesday` |
 
-뒤에 숫자를 적어야 하는 `며칠뒤(3)`은 문장문법이 아니라 초급 문법입니다."""
+오늘에서 며칠 옮긴 날도 같은 방식입니다. `어제`·`내일`·`2일 전`·`3일 뒤`이고,
+영어로는 `yesterday`·`tomorrow`·`2 days ago`·`3 days from now`입니다. 도구 상자를
+연 뒤에만 날짜가 되므로 `약속은 3일 전이었습니다`는 그대로 출력되는 문장입니다."""
 
 MODULES_EN = """## Seven bundled toolboxes
 

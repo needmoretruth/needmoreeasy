@@ -9629,6 +9629,80 @@ fn cooldown_target_name(word: &str, known_names: &HashSet<String>) -> String {
 ///
 /// A name the program made itself always wins, so a program with its own
 /// `elapsed` keeps it.
+/// `yesterday` · `어제` · `3 days ago` · `2일 뒤`.
+///
+/// Read only after the date toolbox is open, because the value lowers to
+/// `days_after(n)`, which the toolbox binds. Without that line the same words
+/// are ordinary speech and keep every word they have: `3 days ago I saw her`,
+/// `약속은 3일 전이었습니다`.
+fn parse_relative_date(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+) -> Option<Value> {
+    if !is_module_name(known_names, "days_after") {
+        return None;
+    }
+    if let [token] = tokens {
+        let word = name_word(token)?;
+        let days = match word.to_lowercase().as_str() {
+            "yesterday" | "어제" => "-1",
+            "tomorrow" | "내일" => "1",
+            _ => return None,
+        };
+        return Some(Value::Python(Code::Generated(format!(
+            "days_after({days})"
+        ))));
+    }
+    // The word that says which way: `ago`/`전` go back, `later`/`뒤`/`후` go on.
+    // English writes `from now`/`from today` as two words.
+    let (backwards, direction_words) = match tokens {
+        [.., before, last] if token_matches_exact(before, &["from"]) => (
+            false,
+            usize::from(token_matches_exact(last, &["now", "today"])) * 2,
+        ),
+        [.., last] if token_matches_exact(last, &["ago", "전", "전에", "앞"]) => (true, 1),
+        [.., last] if token_matches_exact(last, &["later", "뒤", "뒤에", "후", "후에"]) => {
+            (false, 1)
+        }
+        _ => return None,
+    };
+    if direction_words == 0 {
+        return None;
+    }
+    let head = &tokens[..tokens.len() - direction_words];
+    let written = how_many_days(source, head, known_names)?;
+    let sign = if backwards { "-" } else { "" };
+    Some(Value::Python(Code::Generated(format!(
+        "days_after({sign}{written})"
+    ))))
+}
+
+/// How many days `3 days` · `1 day` · `3일` · `3 일` · `며칠수 일` says, written
+/// as the Python for it. A whole number, or a name the program made.
+fn how_many_days(source: &str, tokens: &[Token], known_names: &HashSet<String>) -> Option<String> {
+    let (last, head) = tokens.split_last()?;
+    // `3일` written as one word: the number is the part in front of `일`.
+    if head.is_empty() {
+        let word = name_word(last)?;
+        let digits = word.strip_suffix('일').filter(|base| {
+            !base.is_empty() && base.chars().all(|letter| letter.is_ascii_digit())
+        })?;
+        return Some(digits.to_string());
+    }
+    if !token_matches_exact(last, &["days", "day", "일"]) {
+        return None;
+    }
+    let [amount] = head else {
+        return None;
+    };
+    match &amount.tok {
+        Tok::Int { .. } => Some(source[amount.span.start..amount.span.end].to_string()),
+        Tok::Name { name } if known_names.contains(name) => Some(name.clone()),
+        _ => None,
+    }
+}
+
 fn parse_elapsed_value(tokens: &[Token], known_names: &HashSet<String>) -> Option<Value> {
     (tokens.len() == 1 && is_elapsed_word(&tokens[0], known_names)).then_some(Value::Elapsed)
 }
@@ -15130,6 +15204,9 @@ fn parse_value(
         }
     }
     if let Some(value) = parse_elapsed_value(tokens, known_names) {
+        return Ok(value);
+    }
+    if let Some(value) = parse_relative_date(source, tokens, known_names) {
         return Ok(value);
     }
     if let Some(value) = parse_zero_knowledge_value(tokens) {

@@ -16,13 +16,13 @@ by hand — the computer is asked for them.
 ## Steps
 
 1. **Open the date tools and work out today, yesterday and the day before.**
-   A negative number in `days_after` goes backwards:
+   `ago` goes backwards and `from now` goes on:
 
    ```nme
    use date latest
    set stamp to today
-   set before to days_after(-1)
-   set earlier to days_after(-2)
+   set before to yesterday
+   set earlier to 2 days ago
    show stamp
    show before
    show earlier
@@ -77,8 +77,8 @@ by hand — the computer is asked for them.
    use date latest
    set log to an empty record
    set stamp to today
-   set before to days_after(-1)
-   set earlier to days_after(-2)
+   set before to yesterday
+   set earlier to 2 days ago
    put earlier at yes in log
    put before at no in log
    ask reply did you do it today
@@ -106,6 +106,6 @@ first day that is not `yes`. Then keep it in a file the way
 ## What you learned
 
 - One answer per date is a record whose names are dates.
-- `days_after(-1)` is yesterday; a negative number goes backwards.
+- `yesterday` and `2 days ago` are the sentence way to step back; `3 days from now` steps on. Only after `use date latest`, because that is what makes them mean a date.
 - A name in the name position puts the value inside it there instead.
 - Counting is walking, taking the value out, comparing, and adding one.
