@@ -606,7 +606,7 @@ Every spelling accepted for each action, with nothing left out.
 | 빼기 / Subtract | `subtract` · `decrease` · `decrement` · `minus` · `remove` · `down` · `goesdown` | `빼` · `빼줘` · `내려` · `내려줘` · `줄여` · `줄여줘` · `빼기` · `감소` · `감소해` · `감소시켜` |
 | 곱하기 / Multiply | `multiply` · `multiplied` | `곱해` · `곱해줘` · `곱하기해` |
 | 나누기 / Divide | `divide` · `divided` | `나눠` · `나눠줘` · `나누어줘` |
-| 기다리기 / Wait | `wait` · `pause` · `sleep` | `기다려` · `기다려줘` · `기다리세요` · `기다려주세요` · `쉬어` · `쉬어줘` · `쉬세요` |
+| 기다리기 / Wait | `wait` · `pause` · `sleep` · `hold` · `delay` · `rest` | `기다려` · `기다려줘` · `기다리세요` · `기다려주세요` · `쉬어` · `쉬어줘` · `쉬세요` · `대기해` · `대기해줘` · `대기` |
 | 반복 / Repeat | `repeat` · `again` · `do` | `반복` · `반복해` · `반복해줘` · `반복해주세요` · `반복하세요` · `반복해서` · `반복하고` · `반복한다음` · `다시해` · `다시해주세요` |
 | 조건 / If | `when` · `if` · `should` · `incase` · `whenever` | `만약` · `만약에` · `만일` · `혹시` |
 | 조건 반복 / While | `while` | `동안` · `하는동안` · `할동안` |
@@ -663,9 +663,9 @@ Every spelling accepted for each action, with nothing left out.
 | 섞기 / Shuffle | `shuffle` · `mix` · `jumble` · `scramble` · `randomise` · `randomize` | `섞어` · `섞어줘` · `섞어주세요` · `섞기` · `랜덤하게` · `랜덤하게해` · `무작위로해` |
 | 들어있는지 / Contains | `contains` · `contain` · `includes` · `include` · `holds` | `안에는` · `속에는` · `안에` · `속에` · `에는` · `에` |
 | 표 표시 / Record | `record` · `table` | `표` |
-| 표에 넣기 / Put in a record | `put` | `넣어` · `넣어줘` · `넣어주세요` · `두어` · `두어줘` |
+| 표에 넣기 / Put in a record | `put` · `set` · `store` · `save` · `record` · `add` | `넣어` · `넣어줘` · `넣어주세요` · `넣기` · `두어` · `두어줘` · `저장해` · `저장해줘` · `기억해` · `기억해줘` · `적어` · `적어줘` |
 | 표 값 앞말 / Record value connector | `at` · `as` | `으로` · `로` |
-| 표 이름 앞말 / Record container connector | `in` · `into` | `을` · `를` |
+| 표 이름 앞말 / Record container connector | `in` · `into` · `to` | `을` · `를` |
 | 표에서 읽기 조사 / Record reading particle | — | `에서` · `의` |
 | 일 표시 / Job | `to` | `일` · `작업` |
 | 일 이름 어미 / Job name ending | — | `이라는` · `라는` |
@@ -777,6 +777,7 @@ touched.**
 | `E0237` | this name is one the language itself needs |
 | `E0238` | a file read with no name to read into |
 | `E0239` | a file name that is not in quotation marks |
+| `E0240` | putting something in requires a list |
 | `E0301` | the condition is missing |
 | `E0302` | NME could not read the condition |
 | `E0303` | NME could not read what to repeat |

@@ -113,4 +113,125 @@ GROUPS = [
             "should n be greater than 3", "in case n is greater than 3",
         ],
     ),
+
+    # ---- 2026-08-20: fourteen more intentions. The first twelve groups were
+    # written the day the complaint arrived and only covered what a first
+    # lesson reaches for. These are the rest of what guide 1–17 teaches, so
+    # the number below measures the language rather than its opening.
+    dict(
+        name="값 바꾸기", want="점수 = 점수 + 1", setup="점수는 0\n", body="",
+        ways=[
+            "점수에 1 더해", "점수를 1 늘려", "점수에 1을 더해줘", "1을 점수에 더해",
+            "점수를 1만큼 늘려줘", "점수에 1 추가해", "점수를 1 올려", "점수에 1 더하기",
+            "점수 1 증가", "점수를 1 증가시켜",
+        ],
+    ),
+    dict(
+        name="update", want="score = score + 1", setup="set score to 0\n", body="",
+        ways=[
+            "score add 1", "add 1 to score", "increase score by 1",
+            "score increase by 1", "raise score by 1", "bump score by 1",
+            "grow score by 1", "increment score by 1", "up score by 1",
+            "to score add 1",
+        ],
+    ),
+    dict(
+        name="기다리기", want="sleep(3)", setup="", body="",
+        ways=[
+            "3초 기다려", "3초 기다려줘", "3초 쉬어", "3초 대기해", "기다려 3초",
+            "3초간 기다려", "3초 동안 기다려", "3초만 기다려",
+        ],
+    ),
+    dict(
+        name="wait", want="sleep(3)", setup="", body="",
+        ways=[
+            "wait 3 seconds", "wait for 3 seconds", "pause 3 seconds",
+            "sleep 3 seconds", "hold 3 seconds", "delay 3 seconds",
+            "wait 3 second", "rest for 3 seconds",
+        ],
+    ),
+    dict(
+        name="빼기", want='친구들.remove("민수")', setup="친구들은 목록 민수, 지안\n", body="",
+        ways=[
+            "친구들에서 민수 빼", "친구들에서 민수를 빼줘", "민수를 친구들에서 빼",
+            "친구들에서 민수 삭제해", "친구들에서 민수 제거해", "친구들에서 민수 지워",
+            "친구들 민수 빼", "친구들에서 민수 빼기",
+        ],
+    ),
+    dict(
+        name="remove", want='friends.remove("Mina")',
+        setup="set friends to list of Mina, Ada\n", body="",
+        ways=[
+            "remove Mina from friends", "take Mina out of friends",
+            "delete Mina from friends", "drop Mina from friends",
+            "friends remove Mina", "erase Mina from friends",
+            "subtract Mina from friends", "from friends remove Mina",
+        ],
+    ),
+    dict(
+        name="표에 넣기", want='나이표["민수"] = 90', setup="나이표는 빈 표\n", body="",
+        ways=[
+            "나이표에 민수를 90으로 넣어", "나이표에 민수를 90으로 저장해",
+            "민수를 90으로 나이표에 넣어", "나이표에 민수를 90으로 적어",
+            "나이표에 민수를 90으로 기억해", "나이표에 민수 90 넣어",
+            "나이표에 민수를 90으로 넣기", "나이표에 민수를 90으로 두어",
+        ],
+    ),
+    dict(
+        name="record", want='ages["Mina"] = 90', setup="set ages to an empty record\n", body="",
+        ways=[
+            "put Mina at 90 in ages", "set Mina to 90 in ages",
+            "in ages put Mina at 90", "store Mina as 90 in ages",
+            "add Mina at 90 to ages", "record Mina as 90 in ages",
+            "save Mina as 90 in ages", "put Mina 90 in ages",
+        ],
+    ),
+    dict(
+        name="목록마다", want="for 이름 in 이름들:", setup="이름들은 목록 민수, 지안\n",
+        body="\n    이름 말해줘\n끝",
+        ways=[
+            "이름들의 이름마다 반복해", "이름들의 이름마다", "이름들 이름마다 반복해",
+            "이름들의 각 이름마다 반복해", "이름들에서 이름마다 반복해",
+            "이름들의 이름마다 반복하기", "이름들의 이름마다 돌아",
+            "이름들의 이름마다 하나씩",
+        ],
+    ),
+    dict(
+        name="for each", want="for name in names:", setup="set names to list of Mina, Ada\n",
+        body="\n    show name\nend",
+        ways=[
+            "for each name in names", "foreach name in names", "for name in names",
+            "for every name in names", "repeat for each name in names",
+            "go through names as name", "for each name of names",
+            "loop for each name in names",
+        ],
+    ),
+    dict(
+        name="아니면", want="else:", setup="수는 5\n만약 수가 3보다 크면\n    안녕 말해줘\n",
+        body="\n    잘가 말해줘\n끝",
+        ways=[
+            "아니면", "아니면은", "그렇지 않으면", "안 그러면", "그 외에는", "아니라면",
+        ],
+    ),
+    dict(
+        name="else", want="else:", setup="set n to 5\nif n > 3\n    show hi\n",
+        body="\n    show bye\nend",
+        ways=[
+            "else", "otherwise", "or else", "else instead", "if not", "in every other case",
+        ],
+    ),
+    dict(
+        name="동안", want="while (수 < 3):", setup="수는 0\n", body="\n    수에 1 더해\n끝",
+        ways=[
+            "수가 3보다 작은 동안", "수가 3보다 작을 동안", "수가 3 미만인 동안",
+            "수가 3보다 작은동안", "수가 3보다 작은 한", "수가 3보다 작으면 계속",
+        ],
+    ),
+    dict(
+        name="while", want="while (n < 3):", setup="set n to 0\n", body="\n    n add 1\nend",
+        ways=[
+            "while n < 3", "while n is less than 3", "as long as n < 3",
+            "keep going while n < 3", "repeat while n < 3", "while n smaller than 3",
+        ],
+    ),
 ]

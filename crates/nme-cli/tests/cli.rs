@@ -2287,7 +2287,7 @@ fn error_lookup_commands_print_the_requested_explanation() {
         "{continue_english_out}"
     );
     assert!(
-        continue_english_out.contains("next iteration"),
+        continue_english_out.contains("starts the next one"),
         "{continue_english_out}"
     );
 
@@ -2303,7 +2303,7 @@ fn error_lookup_commands_print_the_requested_explanation() {
         "{continue_korean_out}"
     );
     assert!(
-        continue_korean_out.contains("다음 반복"),
+        continue_korean_out.contains("다음 회차로 넘어가라는 말"),
         "{continue_korean_out}"
     );
 

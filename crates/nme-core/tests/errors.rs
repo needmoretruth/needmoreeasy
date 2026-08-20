@@ -1451,3 +1451,25 @@ fn a_name_written_as_two_words_is_named() {
         "greeting = \"Hello world\"\n"
     );
 }
+
+/// A saving word written on its own — a beginner who typed `set` and stopped,
+/// or who dictated `저장해` and never said what into. The audit that read the
+/// code thought this branch was unreachable; running it says otherwise, so it
+/// is pinned here.
+#[test]
+fn a_saving_word_on_its_own_says_the_name_is_missing() {
+    for source in [
+        "set\n",
+        "save\n",
+        "store\n",
+        "remember\n",
+        "let\n",
+        "make\n",
+        "저장해\n",
+        "기억해\n",
+    ] {
+        assert_eq!(error_code(source), "E0413", "{source}");
+    }
+    let message = err("set\n");
+    assert!(message.contains("name to save is missing"), "{message}");
+}

@@ -213,7 +213,7 @@ fn main() -> ExitCode {
                     nme_core::diagnostics::DiagnosticCode::CliUnknownCommand,
                     language,
                     &format!(
-                        "I don't know the command `{path}`. Run `nme help` to see the commands.\n\
+                        "NME does not know the command `{path}`. Run `nme help` to see the commands.\n\
                          Tip: `nme r` runs the single .nme program in the current folder."
                     ),
                     &format!(

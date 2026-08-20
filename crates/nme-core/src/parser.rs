@@ -638,6 +638,27 @@ const UPDATE_SUBTRACT_WORDS_KO: &[&str] = &[
     "감소해",
     "감소시켜",
 ];
+/// Taking one thing back out of a list is written with these far more often
+/// than with `remove`/`빼`, and without them `친구들에서 민수 삭제해` printed itself —
+/// which reads like success and is not.
+///
+/// They are also ordinary verbs: `지금 또 연도를 잘못 적었습니다`,
+/// `기록을 지워 주세요`, `메모를 삭제해`. So they only make a statement when
+/// the name in front of them is one the program already made a list.
+/// Everything else stays the sentence it is.
+const SUBTRACT_SOFT_WORDS_EN: &[&str] = &["delete", "erase", "drop", "discard"];
+const SUBTRACT_SOFT_WORDS_KO: &[&str] = &[
+    "삭제해",
+    "삭제해줘",
+    "삭제",
+    "제거해",
+    "제거해줘",
+    "제거",
+    "지워",
+    "지워줘",
+    "없애",
+    "없애줘",
+];
 // `times` is deliberately absent from the English multiply words: it is the
 // repeat marker, and `score times 2` must keep meaning "repeat".
 const UPDATE_MULTIPLY_WORDS_EN: &[&str] = &["multiply", "multiplied"];
@@ -671,7 +692,7 @@ const POLITE_AUXILIARY_KO: &[&str] = &[
     "주소서",
 ];
 
-const WAIT_WORDS_EN: &[&str] = &["wait", "pause", "sleep"];
+const WAIT_WORDS_EN: &[&str] = &["wait", "pause", "sleep", "hold", "delay", "rest"];
 const WAIT_WORDS_KO: &[&str] = &[
     "기다려",
     "기다려줘",
@@ -680,6 +701,9 @@ const WAIT_WORDS_KO: &[&str] = &[
     "쉬어",
     "쉬어줘",
     "쉬세요",
+    "대기해",
+    "대기해줘",
+    "대기",
 ];
 /// Time units dropped before the wait amount is read as an expression. The
 /// Korean ones are also stripped when written attached, as in `3초`.
@@ -740,12 +764,37 @@ const RECORD_WORDS_KO: &[&str] = &["표"];
 ///
 /// The Korean verbs are the list-adding verbs, on purpose: it is the same act
 /// in the same words, and the name decides which kind of container is meant.
-const RECORD_PUT_WORDS_EN: &[&str] = &["put"];
-const RECORD_PUT_WORDS_KO: &[&str] = &["넣어", "넣어줘", "넣어주세요", "두어", "두어줘"];
+/// The verbs that write one named value into a record.
+///
+/// Only `put` was here at first, and `set Mina to 90 in ages` — the spelling a
+/// reader reaches for straight after learning `set` — compiled to
+/// `Mina = ages[90]`, a different program that says nothing. Every word here
+/// still needs the whole record shape around it (a value word, then `in` and
+/// a name the program made a record), which is what keeps `set name to 5` a
+/// save and `save the note in my diary` a sentence.
+const RECORD_PUT_WORDS_EN: &[&str] = &["put", "set", "store", "save", "record", "add"];
+const RECORD_PUT_WORDS_KO: &[&str] = &[
+    "넣어",
+    "넣어줘",
+    "넣어주세요",
+    "넣기",
+    "두어",
+    "두어줘",
+    "저장해",
+    "저장해줘",
+    "기억해",
+    "기억해줘",
+    "적어",
+    "적어줘",
+];
 /// The word in front of the value in `put Mina at 90 in ages`.
+/// `to` is deliberately absent. `set best to Mina in ages` already means
+/// *read `Mina` out of `ages` and save it into `best`*, and one spelling may
+/// not mean two things. `at` and `as` belong to no other shape, so they are
+/// what opens a record line to the other saving words.
 const RECORD_AT_WORDS_EN: &[&str] = &["at", "as"];
 /// The word in front of the record in `put Mina at 90 in ages`.
-const RECORD_IN_WORDS_EN: &[&str] = &["in", "into"];
+const RECORD_IN_WORDS_EN: &[&str] = &["in", "into", "to"];
 /// `민수를` — the particle that marks which name is being written under.
 const RECORD_KEY_PARTICLES_KO: &[&str] = &["을", "를"];
 /// `90으로` — the particle that marks the value being written.
@@ -3802,7 +3851,7 @@ fn unreadable_block_header_before(
 fn unreadable_block_header_diagnostic(span: Span) -> Diagnostic {
     Diagnostic::bilingual(
         DiagnosticCode::StrayEnd,
-        "this line looks like the start of a block, but I could not read it, so the `end` below closes nothing",
+        "this line looks like the start of a block, but NME could not read it, so the `end` below closes nothing",
         "이 줄은 블록을 여는 줄로 보이는데 읽지 못했습니다. 그래서 아래의 `끝`이 닫을 블록이 없습니다",
         span,
     )
@@ -4514,6 +4563,9 @@ fn match_say(
                 ));
             }
         }
+        // Last resort — see `parse_value_refuses_nothing_but_an_empty_line`:
+        // the only refusal is an empty slice, and that is checked above with
+        // its own message (E0204). Kept as the safe answer if that changes.
         let value = parse_value(source, body, known_names, prefer_text).map_err(|()| {
             Diagnostic::bilingual(
                 DiagnosticCode::SayValueUnparseable,
@@ -4578,6 +4630,8 @@ fn match_say(
         }
         return Err(say_missing(spelling, tokens[action_start].span));
     }
+    // Last resort — the emptiness above is the only thing `parse_value`
+    // refuses, and it is answered there with E0204.
     let value = parse_value(source, &value_tokens, known_names, true).map_err(|()| {
         Diagnostic::bilingual(
             DiagnosticCode::SaySentenceUnparseable,
@@ -5309,6 +5363,12 @@ fn match_update(
     if tokens.first().is_some_and(starts_a_different_statement) {
         return Ok(None);
     }
+    // `add Mina at 90 to ages` names a value with `at` and ends at a record,
+    // which is a record line. Read as a value change it called `Mina at 90`
+    // an amount and refused a line that says exactly what it means.
+    if looks_like_an_english_record_line(tokens, known_names) {
+        return Ok(None);
+    }
     // See `UPDATE_TRAILING_ONLY_WORDS_KO`: one of those words anywhere but the
     // end is a noun in a sentence, not the verb of a value change.
     {
@@ -5403,6 +5463,9 @@ fn match_update(
         let target = name_word(target_token)
             .and_then(update_target_name)
             .ok_or_else(|| update_diagnostic(target_token.span))?;
+        if soft_subtract_needs_a_list(tokens, action_start, &target, known_names) {
+            return Ok(None);
+        }
         let mut amount_tokens = tokens[1..action_start].to_vec();
         while amount_tokens
             .first()
@@ -5446,6 +5509,9 @@ fn match_update(
         let target = name_word(&tokens[0])
             .and_then(update_target_name)
             .ok_or_else(|| update_diagnostic(tokens[0].span))?;
+        if soft_subtract_needs_a_list(tokens, action_start, &target, known_names) {
+            return Ok(None);
+        }
         let mut amount_end = tokens.len();
         if tokens
             .get(amount_end.saturating_sub(1))
@@ -5484,6 +5550,21 @@ fn match_update(
     // `increase score by 1`. Keep this form deliberately exact so a normal
     // Python expression cannot be claimed by the sentence matcher.
     if let Some((operation, consumed)) = update_action_at(tokens, 0, mode) {
+        // `delete the file` and `drop me a line` open with a word that also
+        // takes one thing out of a list. Where `remove` earns a message, an
+        // everyday verb hands the line back instead: only the whole shape,
+        // ending at a name the program made a list, is a statement.
+        let soft = tokens.first().is_some_and(|token| {
+            token_matches_exact(token, SUBTRACT_SOFT_WORDS_EN)
+                || token_matches_exact(token, SUBTRACT_SOFT_WORDS_KO)
+        });
+        let refuse = |problem: Diagnostic| -> Result<Option<NmeStmt>, Diagnostic> {
+            if soft {
+                Ok(None)
+            } else {
+                Err(problem)
+            }
+        };
         let mut remainder_end = tokens.len();
         if tokens
             .get(remainder_end.saturating_sub(1))
@@ -5496,7 +5577,7 @@ fn match_update(
             .iter()
             .position(|token| is_update_connector(token, &["to", "by", "from"]));
         let Some(separator) = separator else {
-            return Err(update_diagnostic(span_of(tokens)));
+            return refuse(update_diagnostic(span_of(tokens)));
         };
         let (left, right) = remainder.split_at(separator);
         let right = &right[1..];
@@ -5509,14 +5590,17 @@ fn match_update(
         } else if !left.is_empty() && !right.is_empty() {
             (left, right)
         } else {
-            return Err(update_diagnostic(span_of(tokens)));
+            return refuse(update_diagnostic(span_of(tokens)));
         };
         if target_tokens.len() != 1 {
-            return Err(update_diagnostic(span_of(tokens)));
+            return refuse(update_diagnostic(span_of(tokens)));
         }
-        let target = name_word(&target_tokens[0])
-            .and_then(update_target_name)
-            .ok_or_else(|| update_diagnostic(span_of(tokens)))?;
+        let Some(target) = name_word(&target_tokens[0]).and_then(update_target_name) else {
+            return refuse(update_diagnostic(span_of(tokens)));
+        };
+        if soft && !is_list_name(known_names, &target) {
+            return Ok(None);
+        }
         return finish_update(
             source,
             tokens,
@@ -5638,11 +5722,12 @@ fn finish_update(
             if let Some(problem) = not_a_list(&target, known_names, span_of(tokens)) {
                 return Err(problem);
             }
-            let value = parse_value(source, amount_tokens, known_names, true)
-                .map_err(|()| append_diagnostic(span_of(tokens)))?;
+            let item = strip_object_particle(amount_tokens);
+            let value = parse_value(source, &item, known_names, true)
+                .map_err(|()| append_diagnostic(span_of_part(amount_tokens, tokens)))?;
             return Ok(NmeStmt::Append { target, value });
         }
-        return Err(add_unset_word_diagnostic(word, span_of(tokens)));
+        return Err(add_unset_word_diagnostic(word, amount_tokens[0].span));
     }
     // `add 1 to bag` · `가방에 1 더해`, where `bag` is a list. Python cannot
     // add a number to a list, so `bag = bag + 1` was a `TypeError` waiting on
@@ -5663,7 +5748,7 @@ fn finish_update(
             return Err(problem);
         }
         let value = parse_value(source, amount_tokens, known_names, true)
-            .map_err(|()| append_diagnostic(span_of(tokens)))?;
+            .map_err(|()| append_diagnostic(span_of_part(amount_tokens, tokens)))?;
         return Ok(NmeStmt::Append { target, value });
     }
     // `remove Mina from friends` used to compile to `friends = friends -
@@ -5676,24 +5761,28 @@ fn finish_update(
         // Python for taking one named value back out.
         if is_record_name(known_names, &target) {
             let [key_token] = amount_tokens else {
-                return Err(record_remove_diagnostic(span_of(tokens)));
+                return Err(record_remove_diagnostic(span_of(amount_tokens)));
             };
             let key = record_key_value(key_token, known_names, READING_PARTICLES_KO)
-                .ok_or_else(|| record_remove_diagnostic(span_of(tokens)))?;
+                .ok_or_else(|| record_remove_diagnostic(key_token.span))?;
             return Ok(NmeStmt::RecordRemove { target, key });
         }
         if is_list_name(known_names, &target) {
-            let value = parse_value(source, amount_tokens, known_names, true)
-                .map_err(|()| remove_diagnostic(span_of(tokens)))?;
+            // `친구들에서 민수를 빼줘` — the object particle is glued to the
+            // word, so `친구들.remove("민수를")` took out something that was
+            // never put in. The item is what is left once the mark is off.
+            let item = strip_object_particle(amount_tokens);
+            let value = parse_value(source, &item, known_names, true)
+                .map_err(|()| remove_diagnostic(span_of(amount_tokens)))?;
             return Ok(NmeStmt::Remove { target, value });
         }
         if is_unset_word(amount_tokens, known_names) {
             let word = name_word(&amount_tokens[0]).expect("checked by is_unset_word");
-            return Err(subtract_unset_word_diagnostic(word, span_of(tokens)));
+            return Err(subtract_unset_word_diagnostic(word, amount_tokens[0].span));
         }
     }
     let amount = parse_update_amount(source, amount_tokens, known_names)
-        .ok_or_else(|| update_diagnostic(span_of(tokens)))?;
+        .ok_or_else(|| update_amount_diagnostic(source, amount_tokens, tokens))?;
     Ok(NmeStmt::Update {
         target,
         amount,
@@ -5838,6 +5927,20 @@ fn update_action_at(tokens: &[Token], start: usize, mode: MatchMode) -> Option<(
         .or_else(|| {
             action_phrase_at(tokens, start, UPDATE_SUBTRACT_WORDS_EN, mode)
                 .or_else(|| action_phrase_at(tokens, start, UPDATE_SUBTRACT_WORDS_KO, mode))
+                // Read exactly, never repaired: `지금` is one character from
+                // `지워`, and repairing it turned `지금 또 연도를 잘못
+                // 적었습니다` into arithmetic. See `SUBTRACT_SOFT_WORDS_KO`.
+                .or_else(|| {
+                    action_phrase_at(tokens, start, SUBTRACT_SOFT_WORDS_EN, MatchMode::Exact)
+                        .or_else(|| {
+                            action_phrase_at(
+                                tokens,
+                                start,
+                                SUBTRACT_SOFT_WORDS_KO,
+                                MatchMode::Exact,
+                            )
+                        })
+                })
                 .map(|consumed| (UpdateOp::Subtract, consumed))
         })
         .or_else(|| {
@@ -5983,8 +6086,47 @@ fn strip_attached_particle_span(
     (end > start && source.is_char_boundary(end)).then(|| Span::new(start, end))
 }
 
+/// True when the value change is written with one of the everyday verbs in
+/// [`SUBTRACT_SOFT_WORDS_KO`] and the name it works on is not a list. Such a
+/// line is a sentence, not a statement, and is handed back.
+fn soft_subtract_needs_a_list(
+    tokens: &[Token],
+    action_start: usize,
+    target: &str,
+    known_names: &HashSet<String>,
+) -> bool {
+    tokens.get(action_start).is_some_and(|token| {
+        token_matches_exact(token, SUBTRACT_SOFT_WORDS_EN)
+            || token_matches_exact(token, SUBTRACT_SOFT_WORDS_KO)
+    }) && !is_list_name(known_names, target)
+}
+
 fn is_update_connector(token: &Token, words: &[&str]) -> bool {
     token_matches_exact(token, words)
+}
+
+/// The name and the action were both read; only the amount was not. Saying
+/// so — and quoting the words that stand there — is nearer than repeating
+/// that a value change needs three parts.
+fn update_amount_diagnostic(source: &str, amount: &[Token], whole: &[Token]) -> Diagnostic {
+    if amount.is_empty() {
+        return update_diagnostic(span_of(whole));
+    }
+    let span = span_of(amount);
+    let written = shortened(source[span.start..span.end].trim());
+    Diagnostic::bilingual(
+        DiagnosticCode::UpdateUnparseable,
+        format!("NME could not read `{written}` as how much to change it by"),
+        format!(
+            "`{written}`{} 얼마만큼 바꿀지로 읽지 못했습니다",
+            korean_particle(&written, "을", "를")
+        ),
+        span,
+    )
+    .with_bilingual_hint(
+        "write a number, or a name the program made: `score add 1`",
+        "`점수에 1 더해`처럼 숫자나 프로그램이 만든 이름을 적어 주세요",
+    )
 }
 
 fn update_diagnostic(span: Span) -> Diagnostic {
@@ -6246,6 +6388,18 @@ fn match_continue(tokens: &[Token], mode: MatchMode) -> Result<Option<NmeStmt>, 
 /// is the whole of the fix.
 fn not_a_list(target: &str, known_names: &HashSet<String>, span: Span) -> Option<Diagnostic> {
     if !is_record_name(known_names, target) {
+        // The same mistake one step further out: the name holds a number or a
+        // piece of text. `점수는 0` then `점수에 1 추가해` compiled to
+        // `점수.append(1)`, which dies with `AttributeError` at run time on a
+        // line that reads perfectly.
+        //
+        // A name the program never made at all is left alone on purpose. NME
+        // does not ask for names to be declared — `add 1 to score` on a fresh
+        // `score` is the same shape and is allowed — so only a name that was
+        // made *something else* is a mistake NME can be sure of.
+        if known_names.contains(target) && !is_list_name(known_names, target) {
+            return Some(not_a_list_kind_diagnostic(target, span));
+        }
         return None;
     }
     Some(
@@ -6270,6 +6424,29 @@ fn not_a_list(target: &str, known_names: &HashSet<String>, span: Span) -> Option
                 "표는 값마다 이름을 붙여 담으니 어느 이름인지 적어 주세요: \
                  `{target}에 민수를 90으로 넣어`"
             ),
+        ),
+    )
+}
+
+/// The half of [`not_a_list`] about a name that was made something else.
+///
+/// It names what the reader can check — the name, and what is in it — rather
+/// than the Python word `append`, which nobody on this path wrote.
+fn not_a_list_kind_diagnostic(target: &str, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::NameIsNotAList,
+        format!("`{target}` does not hold a list, so nothing can be put into it"),
+        format!("`{target}`에는 목록이 들어 있지 않아서 아무것도 넣을 수 없습니다"),
+        span,
+    )
+    .with_bilingual_hint(
+        format!(
+            "to change a number write `{target} add 1`; to collect things write \
+             `set {target} to an empty list` before putting anything in"
+        ),
+        format!(
+            "숫자를 바꾸려면 `{target}에 1 더해`라고 적고, 여러 개를 모으려면 넣기 전에 \
+             `{target}은 빈 목록`이라고 먼저 적어 주세요"
         ),
     )
 }
@@ -6304,7 +6481,7 @@ fn match_append(
                 return Err(problem);
             }
             let value = parse_value(source, value_tokens, known_names, true)
-                .map_err(|()| append_diagnostic(span_of(tokens)))?;
+                .map_err(|()| append_diagnostic(span_of(value_tokens)))?;
             return Ok(Some(NmeStmt::Append { target, value }));
         }
     }
@@ -6318,7 +6495,7 @@ fn match_append(
                 let value_tokens = trim_command_endings(&tokens[1 + consumed..]);
                 if !value_tokens.is_empty() {
                     let value = parse_value(source, value_tokens, known_names, true)
-                        .map_err(|()| append_diagnostic(span_of(tokens)))?;
+                        .map_err(|()| append_diagnostic(span_of(value_tokens)))?;
                     return Ok(Some(NmeStmt::Append { target, value }));
                 }
             }
@@ -6376,7 +6553,7 @@ fn match_append(
             return refuse(problem);
         }
         let value = parse_value(source, value_tokens, known_names, true)
-            .map_err(|()| append_diagnostic(span_of(tokens)))?;
+            .map_err(|()| append_diagnostic(span_of(value_tokens)))?;
         return Ok(Some(NmeStmt::Append { target, value }));
     }
 
@@ -6409,7 +6586,7 @@ fn match_append(
             return Ok(None);
         }
         let value = parse_value(source, &value_tokens, known_names, true)
-            .map_err(|()| append_diagnostic(span_of(tokens)))?;
+            .map_err(|()| append_diagnostic(span_of(&value_tokens)))?;
         return Ok(Some(NmeStmt::Append { target, value }));
     }
     // Two words carrying the particle could each be the list, and guessing
@@ -6458,7 +6635,7 @@ fn match_append(
         return Err(problem);
     }
     let value = parse_value(source, &value_tokens, known_names, true)
-        .map_err(|()| append_diagnostic(span_of(tokens)))?;
+        .map_err(|()| append_diagnostic(span_of(&value_tokens)))?;
     Ok(Some(NmeStmt::Append { target, value }))
 }
 
@@ -6548,6 +6725,26 @@ fn saved_name_at(token: &Token, known_names: &HashSet<String>) -> Option<String>
 /// `None` unless the program made that name a record. Every record statement
 /// hangs off this: `in`, `의`, `넣어` and `빼` are ordinary words, and the
 /// name is the only thing that can say which kind of container is meant.
+/// True when the line has the whole English record shape: a value word, then
+/// `in`/`into`/`to`, then a name the program made a record, and nothing after.
+///
+/// Nothing else in the language ends that way, which is what makes it safe to
+/// read `set Mina to 90 in ages` as a record line even though it opens with a
+/// saving word — and safe for the value-change rule to hand
+/// `add Mina at 90 to ages` back rather than call `Mina at 90` an amount.
+fn looks_like_an_english_record_line(tokens: &[Token], known_names: &HashSet<String>) -> bool {
+    let body = trim_command_endings(tokens);
+    if body.len() < 5 {
+        return false;
+    }
+    let in_at = body.len() - 2;
+    let closes =
+        matches!(body[in_at].tok, Tok::In) || token_matches_exact(&body[in_at], RECORD_IN_WORDS_EN);
+    closes
+        && record_name_at(&body[body.len() - 1], known_names).is_some()
+        && (1..in_at).any(|index| token_matches_exact(&body[index], RECORD_AT_WORDS_EN))
+}
+
 fn record_name_at(token: &Token, known_names: &HashSet<String>) -> Option<String> {
     let word = name_word(token)?;
     let name = resolve_known_particle(word, known_names)?;
@@ -7386,7 +7583,9 @@ fn match_record_put(
     known_names: &HashSet<String>,
     mode: MatchMode,
 ) -> Result<Option<NmeStmt>, Diagnostic> {
-    if tokens.first().is_some_and(starts_a_different_statement) {
+    if tokens.first().is_some_and(starts_a_different_statement)
+        && !looks_like_an_english_record_line(tokens, known_names)
+    {
         return Ok(None);
     }
     let body = trim_command_endings(tokens);
@@ -7457,7 +7656,7 @@ fn english_record_put(
     }
     let name_token = &body[in_index + 1];
     let Some(target) = record_name_at(name_token, known_names) else {
-        return not_a_record(name_token, tokens, known_names);
+        return not_a_record(name_token, known_names);
     };
     let Some(key) = record_key_value(key_token, known_names, READING_PARTICLES_KO) else {
         return Ok(None);
@@ -7497,7 +7696,7 @@ fn korean_record_put(
         return Ok(None);
     }
     if !is_record_name(known_names, container) {
-        return not_a_record(&head[0], tokens, known_names);
+        return not_a_record(&head[0], known_names);
     }
     let value = parse_value(source, &value_tokens, known_names, true)
         .map_err(|()| record_put_diagnostic(span_of(tokens)))?;
@@ -7580,7 +7779,6 @@ fn korean_record_value(tokens: &[Token]) -> Option<Vec<Token>> {
 /// `민수를 90` and append it as one piece of text.
 fn not_a_record(
     token: &Token,
-    tokens: &[Token],
     known_names: &HashSet<String>,
 ) -> Result<Option<NmeStmt>, Diagnostic> {
     let Some(name) = name_word(token).and_then(|word| resolve_known_particle(word, known_names))
@@ -7594,7 +7792,7 @@ fn not_a_record(
         DiagnosticCode::RecordNameUnknown,
         format!("`{name}` holds a list, not a record"),
         format!("`{name}`에는 표가 아니라 목록이 들어 있습니다"),
-        span_of(tokens),
+        token.span,
     )
     .with_bilingual_hint(
         format!(
@@ -8014,7 +8212,10 @@ fn join_without_a_separator(tokens: &[Token], known_names: &HashSet<String>) -> 
         if !only_command_furniture(&tokens[after..]) {
             continue;
         }
-        return Some(join_separator_missing_diagnostic(&name, span_of(tokens)));
+        return Some(join_separator_missing_diagnostic(
+            &name,
+            tokens[at + 1].span,
+        ));
     }
     None
 }
@@ -9392,13 +9593,19 @@ fn match_english_for_each(
         return Ok(None);
     };
     let Some(name) = tokens.get(name_at).and_then(name_word).map(str::to_string) else {
-        return Err(for_each_diagnostic(span_of(tokens)));
+        let span = tokens
+            .get(name_at)
+            .map_or_else(|| span_of(tokens), |token| token.span);
+        return Err(for_each_diagnostic(span));
     };
     if !tokens
         .get(name_at + 1)
         .is_some_and(|token| matches!(token.tok, Tok::In) || token_matches_exact(token, &["in"]))
     {
-        return Err(for_each_diagnostic(span_of(tokens)));
+        let span = tokens
+            .get(name_at + 1)
+            .map_or_else(|| tokens[name_at].span, |token| token.span);
+        return Err(for_each_missing_in_diagnostic(span));
     }
     let tail = &tokens[name_at + 2..];
     let colon_at = tail.iter().position(|token| {
@@ -9414,7 +9621,10 @@ fn match_english_for_each(
         None => (None, items_tokens),
     };
     let Some(items) = expression_code(source, items_tokens) else {
-        return Err(for_each_diagnostic(span_of(tokens)));
+        return Err(for_each_items_diagnostic(span_of_part(
+            items_tokens,
+            tokens,
+        )));
     };
     let header_end = colon_at.map_or(span_of(tokens).end, |at| tail[at].span.end);
     let body = colon_at.map_or(&tail[tail.len()..], |at| &tail[at + 1..]);
@@ -9589,7 +9799,7 @@ fn match_korean_for_each(
         .map(|word| word.strip_suffix(EACH_SUFFIX_KO).unwrap_or(word))
         .filter(|name| !name.is_empty())
         .map(str::to_string)
-        .ok_or_else(|| for_each_diagnostic(span_of(tokens)))?;
+        .ok_or_else(|| for_each_diagnostic(tokens[name_at].span))?;
     let items_tokens = &tokens[..name_at];
     // `친구들의` is a valid Python name on its own, so the particle has to be
     // taken off first or the loop would read over a name nobody defined.
@@ -9597,7 +9807,7 @@ fn match_korean_for_each(
         .filter(|span| is_valid_python_expression(&source[span.start..span.end]))
         .map(Code::Source)
         .or_else(|| expression_code(source, items_tokens))
-        .ok_or_else(|| for_each_diagnostic(span_of(tokens)))?;
+        .ok_or_else(|| for_each_items_diagnostic(span_of_part(items_tokens, tokens)))?;
     let header_end = colon_at.map_or(tokens[name_at].span.end, |at| rest[at].span.end);
     let mut body_names = known_names.clone();
     body_names.insert(name.clone());
@@ -9655,6 +9865,36 @@ fn expression_code(source: &str, tokens: &[Token]) -> Option<Code> {
     }
     let span = span_of(tokens);
     is_valid_python_expression(&source[span.start..span.end]).then_some(Code::Source(span))
+}
+
+/// The name is there and the list is there, but nothing joins them. Saying
+/// which word is missing is nearer than saying the whole line was not read.
+fn for_each_missing_in_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::ForEachUnparseable,
+        "a loop over a list needs `in` between the name and the list",
+        "목록을 하나씩 도는 줄에는 이름과 목록 사이에 `in`이 필요합니다",
+        span,
+    )
+    .with_bilingual_hint(
+        "write `for each name in names`",
+        "`for each name in names`처럼 적거나, 한국어로는 `이름들의 이름마다 반복해`처럼 적어 주세요",
+    )
+}
+
+/// The header is a loop, and what it should go over is the part that could
+/// not be read.
+fn for_each_items_diagnostic(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::ForEachUnparseable,
+        "NME could not read what this loop goes over",
+        "이 반복문이 무엇을 도는지 읽지 못했습니다",
+        span,
+    )
+    .with_bilingual_hint(
+        "name a list the program made: `for each name in names`",
+        "`이름들의 이름마다 반복해`처럼 프로그램이 만든 목록 이름을 적어 주세요",
+    )
 }
 
 fn for_each_diagnostic(span: Span) -> Diagnostic {
@@ -12146,6 +12386,9 @@ fn parse_sentence_repeat_body(
         }
     }
     if plain_words {
+        // Last resort. A repeat header with nothing after it is answered
+        // first by E0501 (nothing below is indented), so an empty body — the
+        // only thing `parse_value` refuses — never arrives here.
         let value = parse_value(source, body, known_names, true).map_err(|()| {
             Diagnostic::bilingual(
                 DiagnosticCode::RepeatBodyUnparseable,
@@ -16915,6 +17158,7 @@ const COMMON_ENGLISH_WORDS: &[&str] = &[
     "behinds",
     "being",
     "beings",
+    "belay",
     "believe",
     "beling",
     "bell",
@@ -16976,6 +17220,7 @@ const COMMON_ENGLISH_WORDS: &[&str] = &[
     "bock",
     "bodly",
     "body",
+    "bold",
     "bolds",
     "bonce",
     "bone",
@@ -17238,12 +17483,20 @@ const COMMON_ENGLISH_WORDS: &[&str] = &[
     "dear",
     "dearly",
     "death",
+    "decay",
     "decide",
     "decrements",
     "deep",
     "degrease",
+    "delate",
+    "delays",
+    "deleted",
+    "deletes",
     "dell",
+    "delly",
+    "dely",
     "dently",
+    "deplete",
     "deport",
     "dering",
     "ders",
@@ -17271,6 +17524,7 @@ const COMMON_ENGLISH_WORDS: &[&str] = &[
     "dire",
     "direction",
     "diring",
+    "discord",
     "dist",
     "dither",
     "dits",
@@ -17426,6 +17680,11 @@ const COMMON_ENGLISH_WORDS: &[&str] = &[
     "entirety",
     "epactly",
     "equal",
+    "eras",
+    "erased",
+    "eraser",
+    "erases",
+    "erose",
     "erst",
     "esse",
     "ester",
@@ -17536,6 +17795,7 @@ const COMMON_ENGLISH_WORDS: &[&str] = &[
     "foes",
     "foin",
     "foined",
+    "fold",
     "folds",
     "follow",
     "food",
@@ -17776,19 +18036,27 @@ const COMMON_ENGLISH_WORDS: &[&str] = &[
     "hive",
     "hoardly",
     "hods",
+    "hoed",
     "hoer",
     "hoers",
     "hoes",
     "hold",
+    "holds",
     "hole",
+    "holed",
     "holes",
     "holiday",
+    "holm",
     "holms",
+    "holp",
     "holps",
     "hols",
+    "holt",
     "holts",
+    "holy",
     "home",
     "hone",
+    "hood",
     "hoods",
     "hoop",
     "hoops",
@@ -18212,6 +18480,7 @@ const COMMON_ENGLISH_WORDS: &[&str] = &[
     "moatly",
     "moistly",
     "moke",
+    "mold",
     "molds",
     "moltly",
     "moment",
@@ -18559,6 +18828,7 @@ const COMMON_ENGLISH_WORDS: &[&str] = &[
     "pouts",
     "power",
     "practice",
+    "prase",
     "prep",
     "prepare",
     "present",
@@ -18692,6 +18962,7 @@ const COMMON_ENGLISH_WORDS: &[&str] = &[
     "reest",
     "reflly",
     "regally",
+    "relay",
     "relly",
     "remainders",
     "remember",
@@ -21146,11 +21417,13 @@ fn comparison_as_a_save(tokens: &[Token]) -> Option<String> {
         return None;
     }
     let target = name_word(name)?;
-    let written = token_word(value).map(str::to_string).or_else(|| match &value.tok {
-        Tok::Int { value } => Some(value.to_string()),
-        Tok::Float { value } => Some(value.to_string()),
-        _ => None,
-    })?;
+    let written = token_word(value)
+        .map(str::to_string)
+        .or_else(|| match &value.tok {
+            Tok::Int { value } => Some(value.to_string()),
+            Tok::Float { value } => Some(value.to_string()),
+            _ => None,
+        })?;
     Some(save_line(target, &written))
 }
 
@@ -22004,6 +22277,19 @@ fn span_of(tokens: &[Token]) -> Span {
     Span::new(tokens[0].span.start, tokens[tokens.len() - 1].span.end)
 }
 
+/// The span of the part that could not be read, or the whole line when that
+/// part is the empty space where something should have been written.
+///
+/// A caret under nothing is a caret under the wrong place, so an empty part
+/// widens back to the line the reader can actually see.
+fn span_of_part(part: &[Token], whole: &[Token]) -> Span {
+    if part.is_empty() {
+        span_of(whole)
+    } else {
+        span_of(part)
+    }
+}
+
 fn token_text<'a>(source: &'a str, tokens: &[Token]) -> &'a str {
     let span = span_of(tokens);
     &source[span.start..span.end]
@@ -22118,6 +22404,49 @@ mod tests {
         assert!(one_typo_away("물어바", "물어봐"));
         assert!(one_typo_away("repaet", "repeat"));
         assert!(!one_typo_away("completely", "repeat"));
+    }
+
+    /// `parse_value` never refuses what somebody wrote: whatever it cannot
+    /// read as a value it reads as text. The one thing it refuses is an empty
+    /// slice — nothing was written at all.
+    ///
+    /// Three diagnostics stand behind a failed `parse_value`
+    /// (E0202 · E0203 · E0303), and every one of their callers checks for an
+    /// empty slice first and reports the proper "there is nothing here" code.
+    /// So those three are last resorts nobody reaches. This test is what keeps
+    /// that sentence true: if `parse_value` ever starts refusing real words,
+    /// it goes red here rather than surfacing as a message that reads like a
+    /// mistake in the reader's line.
+    #[test]
+    fn parse_value_refuses_nothing_but_an_empty_line() {
+        use crate::lexer::logical_lines;
+        use std::collections::HashSet;
+
+        let known = HashSet::new();
+        for source in [
+            "@@@",
+            "1 +",
+            "== ==",
+            "안녕하세요 반갑습니다",
+            "the quick brown fox",
+            "a , , b",
+            "3 3 3 3",
+        ] {
+            let lines = logical_lines(source).expect("the probe lines have to lex");
+            let tokens = &lines[0].tokens;
+            assert!(
+                super::parse_value(source, tokens, &known, true).is_ok(),
+                "parse_value refused `{source}` with prefer_text"
+            );
+            assert!(
+                super::parse_value(source, tokens, &known, false).is_ok(),
+                "parse_value refused `{source}` without prefer_text"
+            );
+        }
+        assert!(
+            super::parse_value("", &[], &known, true).is_err(),
+            "an empty slice is the one refusal"
+        );
     }
 }
 

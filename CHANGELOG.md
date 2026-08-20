@@ -5,6 +5,37 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+- **The corpus of "ways a beginner writes the same thing" is more than twice
+  the size.** It covered twelve intentions and now covers twenty-six — value
+  changes, waiting, taking one thing back out of a list, writing into a
+  record, looping over a list, `else`, and `while`, in both languages. That is
+  211 spellings measured instead of 103, and it is what the entries below were
+  found by.
+- **Putting something into a name that is not a list is named, not left to run
+  time.** `점수는 0` followed by `점수에 1 추가해` compiled to `점수.append(1)`,
+  which reads perfectly and dies with `AttributeError`. The new E0240 says
+  which name and what is in it.
+- **`친구들에서 민수를 빼줘` takes out `민수`, not `민수를`.** The object mark
+  was being kept as part of the word, so the item taken out was one nobody put
+  in.
+- **Four more ways to take one thing out of a list.** `delete`, `erase` and
+  `drop` in English; `삭제해`, `제거해`, `지워` and `없애` in Korean. They are
+  everyday verbs, so they only make a statement when the name is one the
+  program already made a list: `delete the file` and `기록을 지워 주세요` stay
+  sentences.
+- **Four more ways to write one named value into a record.**
+  `store Mina as 90 in ages`, `save Mina as 90 in ages`,
+  `record Mina as 90 in ages` and `add Mina at 90 to ages`, plus Korean
+  `나이표에 민수를 90으로 저장해`, `기억해`, `적어` and `넣기`. `set X to Y in R`
+  is deliberately left alone: it already means *read `Y` out of `R`*.
+- **Six more ways to wait.** `hold`, `delay` and `rest` in English; `대기해`
+  and `대기` in Korean.
+- **Fifteen Python-level error explanations rewritten in plain words**
+  (E0106–E0120), and the two places NME called itself `I` now say `NME`.
+- **Narrower carets.** A value change that could not be read underlines the
+  amount rather than the whole line; a list line underlines what was to go in;
+  a loop over a list underlines the part that could not be read, and says when
+  the missing word is `in`.
 
 ## 0.3.0
 - **Five more ways of writing the same thing now do it.** Measured against the

@@ -83,6 +83,10 @@ pub fn transpile_with_modules(
             replacement: "    ".repeat(level),
         });
     }
+    // One NME statement is one physical Python line — the invariant the whole
+    // pairing of editor lines and Python lines rests on. No lowering breaks it
+    // today, so this is a guard rather than a message a reader is meant to
+    // meet: it turns a silent line-numbering drift into a named refusal.
     let line_break_problems = edits
         .iter()
         .filter(|edit| {
