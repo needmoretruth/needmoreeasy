@@ -3959,8 +3959,17 @@ fn classify(
     block: &BlockCtx<'_>,
     known_names: &HashSet<String>,
 ) -> Result<Option<NmeStmt>, Diagnostic> {
-    let outcome = classify_written_line(source, tokens, block, known_names);
+    let outcome = classify_written_line(source, tokens, block, known_names, LineAsWritten::Yes);
     if matches!(outcome, Ok(Some(_))) {
+        // `안녕 말해줘:` reads as writing rather than failing, so its trailing
+        // `:` has to be taken here as well — otherwise the mark is printed.
+        if let Some(without) = tokens_without_a_trailing_python_colon(tokens) {
+            if let Ok(Some(stmt)) =
+                classify_written_line(source, &without, block, known_names, LineAsWritten::No)
+            {
+                return Ok(Some(stmt));
+            }
+        }
         return outcome;
     }
     if matches!(&outcome, Err(problem) if problem.code == DiagnosticCode::UnknownActionWord) {
@@ -3969,14 +3978,72 @@ fn classify(
             return Ok(Some(stmt));
         }
     }
+    if outcome.is_err() {
+        if let Some(without) = tokens_without_the_python_colon(tokens) {
+            if let Ok(Some(stmt)) =
+                classify_written_line(source, &without, block, known_names, LineAsWritten::No)
+            {
+                return Ok(Some(stmt));
+            }
+        }
+    }
     let polite = leading_sentence_fillers(tokens);
     if polite == 0 || polite >= tokens.len() {
         return outcome;
     }
-    match classify_written_line(source, &tokens[polite..], block, known_names) {
+    match classify_written_line(
+        source,
+        &tokens[polite..],
+        block,
+        known_names,
+        LineAsWritten::Yes,
+    ) {
         Ok(Some(stmt)) if !matches!(stmt, NmeStmt::Say { .. }) => Ok(Some(stmt)),
         _ => outcome,
     }
+}
+
+/// The line without a `:` written straight after its action word.
+///
+/// This is the one place the mark has to be taken from a line that already
+/// reads: `안녕 말해줘:` is a whole sentence, so it printed itself with the
+/// colon still in the message. Only an action word in front of the mark says
+/// the mark is the Python habit and not part of what is being written, which
+/// is what keeps `story:` and `x: int = 5` out of here.
+fn tokens_without_a_trailing_python_colon(tokens: &[Token]) -> Option<Vec<Token>> {
+    if tokens.len() < 3 || !matches!(tokens.last()?.tok, Tok::Colon) {
+        return None;
+    }
+    if !name_word(&tokens[tokens.len() - 2]).is_some_and(is_action_word) {
+        return None;
+    }
+    Some(tokens[..tokens.len() - 1].to_vec())
+}
+
+/// The line without the `:` a reader put where Python puts one.
+///
+/// `3번 반복해:`, `say: hello` and `if score > 10: show won` are all the same
+/// habit: a colon is what every Python page shows at the end of a header, so
+/// a beginner who has seen one writes it. NME does not need it, and a line
+/// carrying one used to be refused for saying nothing (`say: hello` really is
+/// a Python annotation) or for a body it could not read. Only one colon is
+/// taken, never the first token, and never a story block's own mark — that
+/// colon is the statement.
+fn tokens_without_the_python_colon(tokens: &[Token]) -> Option<Vec<Token>> {
+    if story_colon_shape(tokens) {
+        return None;
+    }
+    let mut colons = tokens
+        .iter()
+        .enumerate()
+        .filter(|(_, token)| matches!(token.tok, Tok::Colon));
+    let (at, _) = colons.next()?;
+    if colons.next().is_some() || at == 0 {
+        return None;
+    }
+    let mut written = tokens.to_vec();
+    written.remove(at);
+    Some(written)
 }
 
 /// Reads the line again with the word NME does not know put right.
@@ -4028,7 +4095,9 @@ fn classify_with_the_action_word_put_right(
         written[index].tok = Tok::Name {
             name: action.to_string(),
         };
-        if let Ok(Some(stmt)) = classify_written_line(source, &written, block, known_names) {
+        if let Ok(Some(stmt)) =
+            classify_written_line(source, &written, block, known_names, LineAsWritten::No)
+        {
             // `wait3 seconds` repairs to `wait seconds`, which says no amount
             // and so falls through to printing the line — with the word still
             // in it. A reading that puts the action word into the message did
@@ -4056,16 +4125,29 @@ fn statement_prints_the_word(stmt: &NmeStmt, word: &str) -> bool {
     })
 }
 
+/// Whether these tokens are still the line exactly as it was typed.
+///
+/// A retry that has changed the tokens — a word put right, a Python `:`
+/// dropped — must not ask Python about the text on the page again. Python
+/// already had its turn on the line as written, and the characters there no
+/// longer say what these tokens say.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum LineAsWritten {
+    Yes,
+    No,
+}
+
 fn classify_written_line(
     source: &str,
     tokens: &[Token],
     block: &BlockCtx<'_>,
     known_names: &HashSet<String>,
+    as_written: LineAsWritten,
 ) -> Result<Option<NmeStmt>, Diagnostic> {
     debug_assert!(!tokens.is_empty());
 
     let text = token_text(source, tokens);
-    if is_valid_python_statement(text) || is_valid_python_header(text) {
+    if as_written == LineAsWritten::Yes && (is_valid_python_statement(text) || is_valid_python_header(text)) {
         // Python accepts a few whole lines that cannot do anything at all.
         // Letting Python "win" one of those means shipping a program that
         // silently does nothing, so they are named here instead, and the ones
@@ -10487,9 +10569,21 @@ fn match_while(
                 tokens[condition_start].span.start,
                 tokens[colon_at - 1].span.end,
             );
-            if !is_valid_python_expression(&source[condition_span.start..condition_span.end]) {
-                return Err(condition_invalid(spelling, condition_span));
-            }
+            // See `match_when`: the `:` says where the body starts even when
+            // the condition in front of it is written in words.
+            let condition = if is_valid_python_expression(
+                &source[condition_span.start..condition_span.end],
+            ) {
+                Condition::Python(Code::Source(condition_span))
+            } else {
+                parse_natural_condition(
+                    source,
+                    &tokens[condition_start..colon_at],
+                    None,
+                    known_names,
+                    spelling,
+                )?
+            };
             let inline = parse_suite_body(
                 source,
                 &tokens[colon_at + 1..],
@@ -10498,10 +10592,7 @@ fn match_while(
                 Span::new(tokens[0].span.start, tokens[colon_at].span.end),
                 known_names,
             )?;
-            return Ok(Some(NmeStmt::While {
-                condition: Condition::Python(Code::Source(condition_span)),
-                inline,
-            }));
+            return Ok(Some(NmeStmt::While { condition, inline }));
         }
     }
 
@@ -10530,6 +10621,8 @@ fn match_while(
         let (condition, body_start, connector) =
             condition_tokens_before(tokens, condition_start, relative_at, connector);
         (condition, body_start, Some(connector))
+    } else if let Some(body_start) = comparison_ends_the_condition(tokens, condition_start) {
+        (tokens[condition_start..body_start].to_vec(), body_start, None)
     } else {
         (tokens[condition_start..].to_vec(), tokens.len(), None)
     };
@@ -10948,9 +11041,22 @@ fn match_when(
             return Err(condition_missing(spelling, tokens[colon_at].span));
         }
         let condition_span = Span::new(tokens[consumed].span.start, tokens[colon_at - 1].span.end);
-        if !is_valid_python_expression(&source[condition_span.start..condition_span.end]) {
-            return Err(condition_invalid(spelling, condition_span));
-        }
+        // `if score is greater than 10: show won` — the `:` is where every
+        // Python page puts it, and the condition in front of it is written in
+        // words. The mark still says exactly where the body starts, so the
+        // words are read as NME's own condition rather than refused.
+        let condition = if is_valid_python_expression(&source[condition_span.start..condition_span.end])
+        {
+            Condition::Python(Code::Source(condition_span))
+        } else {
+            parse_natural_condition(
+                source,
+                &tokens[consumed..colon_at],
+                None,
+                known_names,
+                spelling,
+            )?
+        };
         let inline = parse_suite_body(
             source,
             &tokens[colon_at + 1..],
@@ -10959,10 +11065,7 @@ fn match_when(
             Span::new(tokens[0].span.start, tokens[colon_at].span.end),
             known_names,
         )?;
-        return Ok(Some(NmeStmt::When {
-            condition: Condition::Python(Code::Source(condition_span)),
-            inline,
-        }));
+        return Ok(Some(NmeStmt::When { condition, inline }));
     }
 
     // A Korean cooldown condition ends in its own connector (`끝났으면`), so
@@ -10993,7 +11096,10 @@ fn match_when(
                 condition_tokens_before(tokens, consumed, relative_at, connector);
             (condition, body_start, Some(connector))
         }
-        None => (tokens[consumed..].to_vec(), tokens.len(), None),
+        None => match comparison_ends_the_condition(tokens, consumed) {
+            Some(body_start) => (tokens[consumed..body_start].to_vec(), body_start, None),
+            None => (tokens[consumed..].to_vec(), tokens.len(), None),
+        },
     };
     if condition_tokens.is_empty() {
         return Err(condition_missing(spelling, tokens[0].span));
@@ -11606,6 +11712,78 @@ fn contains_comparison_symbol(tokens: &[Token]) -> bool {
                 | Tok::NotEqual
         )
     })
+}
+
+/// Where the body begins on a condition written with a mark and no connector.
+///
+/// `if score > 10 show won` and `만약 점수 > 10 성공 말해줘` are the same line
+/// in two languages: the mark and the value beside it say the comparison is
+/// finished, so everything after that value is what to do. Only a written
+/// mark counts. The comparing *words* carry their own connector — `보다 크면`
+/// ends the condition, `is greater than 10 then` says `then` — and without
+/// one there is nothing to say where a value stops and a message begins, so
+/// `if name is Mina Lee` keeps both of her names.
+fn comparison_ends_the_condition(tokens: &[Token], start: usize) -> Option<usize> {
+    let mark = (start..tokens.len()).find(|at| {
+        matches!(
+            tokens[*at].tok,
+            Tok::Less
+                | Tok::Greater
+                | Tok::LessEqual
+                | Tok::GreaterEqual
+                | Tok::EqEqual
+                | Tok::NotEqual
+        )
+    })?;
+    // Exactly one value after the mark, so `score > 10 + 2` is left whole.
+    let value = tokens.get(mark + 1)?;
+    if !matches!(
+        value.tok,
+        Tok::Int { .. } | Tok::Float { .. } | Tok::String { .. } | Tok::Name { .. }
+    ) {
+        return None;
+    }
+    let mut body = mark + 2;
+    // `if (ready and score > 2)` puts the mark inside brackets, and every
+    // bracket that closes belongs to the condition.
+    while tokens
+        .get(body)
+        .is_some_and(|token| matches!(token.tok, Tok::Rpar | Tok::Rsqb | Tok::Rbrace))
+    {
+        body += 1;
+    }
+    if body >= tokens.len() {
+        return None;
+    }
+    // A body begins with a word, a number or a piece of text. Anything else
+    // is the rest of the value being compared against, not the body:
+    // `if left + "x" == right + "y"` carries on after `right`, and
+    // `if score > len(name)` opens a call.
+    if !matches!(
+        tokens[body].tok,
+        Tok::Name { .. } | Tok::Int { .. } | Tok::Float { .. } | Tok::String { .. }
+    ) {
+        return None;
+    }
+    // `score > 10 and ready` is one condition joined by a logical word, and
+    // `score > 10 이면` ends with the sentence's own ending, not a body.
+    let next = &tokens[body..=body];
+    if logical_operator_at(next, LogicalOp::And).is_some()
+        || logical_operator_at(next, LogicalOp::Or).is_some()
+        || token_matches_exact(&tokens[body], &["이면", "이라면", "면", "먄"])
+        || token_matches_exact(&tokens[body], CONDITION_CLOSING_WORDS_KO)
+    {
+        return None;
+    }
+    let mut depth = 0i32;
+    for token in &tokens[start..body] {
+        match token.tok {
+            Tok::Lpar | Tok::Lsqb | Tok::Lbrace => depth += 1,
+            Tok::Rpar | Tok::Rsqb | Tok::Rbrace => depth -= 1,
+            _ => {}
+        }
+    }
+    (depth == 0).then_some(body)
 }
 
 fn parse_natural_condition(

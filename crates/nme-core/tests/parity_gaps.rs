@@ -249,13 +249,16 @@ fn a_story_with_nothing_in_it_is_named_not_handed_to_cpython() {
     assert_eq!(error_code("story:\nend\n"), "E0232");
 }
 
+/// `얘기: 그만하자` is a valid Python annotation: it compiled, did nothing and
+/// said nothing, so NME used to name it. Since 2026-08-20 a `:` where Python
+/// teaches a reader to put one is read past, and what is left of these three
+/// is a line of writing — which prints, colon and all. That is what
+/// `story: the end` below has always done, and the two now agree.
 #[test]
-fn a_story_word_annotated_with_another_word_is_named() {
-    // `얘기: 그만하자` is a valid Python annotation: it compiled, did nothing,
-    // and said nothing.
-    assert_eq!(error_code("얘기: 그만하자\n"), "E0604");
-    assert_eq!(error_code("이야기: 그만하자\n"), "E0604");
-    assert_eq!(error_code("story: chapter\n"), "E0604");
+fn a_story_word_annotated_with_another_word_prints_itself() {
+    assert_eq!(ok("얘기: 그만하자\n"), "print(\"얘기: 그만하자\")\n");
+    assert_eq!(ok("이야기: 그만하자\n"), "print(\"이야기: 그만하자\")\n");
+    assert_eq!(ok("story: chapter\n"), "print(\"story: chapter\")\n");
 }
 
 #[test]

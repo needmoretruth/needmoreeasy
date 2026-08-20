@@ -5,6 +5,18 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+- **A `:` written where Python puts one is read past.** `say: hello`,
+  `말해줘: 안녕`, `3번 반복해:`, `if score is greater than 10: show won` and
+  `만약에 점수가 10보다 크면: 성공 말해줘` all work. Every Python page ends a
+  header with the mark, so a reader who has seen one writes it; NME does not
+  need it and no longer refuses a line for carrying it. A story block's own
+  `:` and a Python annotation (`x: int = 5`) are untouched, and `안녕 말해줘:`
+  keeps the mark out of what it prints.
+- **A comparison written with a mark ends where the mark's value ends.**
+  `if score > 10 show won` and `만약 점수 > 10 성공 말해줘` say everything the
+  comparison needs before the body starts, so the words after the value are
+  what to do. Only a written mark counts: the comparing words carry their own
+  connector, so `if name is Mina Lee` still keeps both of her names.
 - **A verb NME does not have is read as the action word it stands for.**
   `log hello`, `2초 멈춰줘`, `출력하기 안녕`, `3번 돌려서 안녕 말해줘`,
   `이름을 입력해 이름이 뭐예요?` and `친구들에 민수 집어넣어` all work now.

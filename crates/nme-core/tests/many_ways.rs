@@ -148,6 +148,73 @@ fn a_line_without_a_screen_is_still_a_sentence() {
 
 // ------------------------------------------- words that are not output words
 
+// ------------------------------------------------- the colon Python teaches
+
+/// Every Python page ends a header with `:`, so a beginner who has seen one
+/// writes it. NME does not need the mark and now reads past it, in both
+/// languages and on every line that carries one.
+#[test]
+fn a_python_colon_is_read_past() {
+    assert_eq!(ok("say: hello\n"), "print(\"hello\")\n");
+    assert_eq!(ok("show: hello\n"), "print(\"hello\")\n");
+    assert_eq!(ok("말해줘: 안녕\n"), "print(\"안녕\")\n");
+    assert_eq!(
+        ok("3번 반복해:\n  안녕 말해줘\n"),
+        "for _ in range(3):\n  print(\"안녕\")\n"
+    );
+    assert_eq!(
+        ok("set score to 0\nif score is greater than 10: show won\n"),
+        "score = 0\nif (score > 10): print(\"won\")\n"
+    );
+    assert_eq!(
+        ok("점수는 0\n만약에 점수가 10보다 크면: 성공 말해줘\n"),
+        "점수 = 0\nif (점수 > 10): print(\"성공\")\n"
+    );
+    assert_eq!(
+        ok("set n to 0\nwhile n is less than 3:\n  add 1 to n\n"),
+        "n = 0\nwhile (n < 3):\n  n = n + 1\n"
+    );
+    // A line that already reads keeps its own mark out of the message.
+    assert_eq!(ok("안녕 말해줘:\n"), "print(\"안녕\")\n");
+    assert_eq!(ok("점수는 0\n점수에 1 더해:\n"), "점수 = 0\n점수 = 점수 + 1\n");
+}
+
+/// A story block's own `:` is the statement, and a Python annotation is
+/// Python's. Neither is read past.
+#[test]
+fn the_colons_that_mean_something_are_left_alone() {
+    assert_eq!(ok("story:\n  안녕\nend\n"), "if True:\n  print(\"안녕\")\n# end\n");
+    assert_eq!(ok("x: int = 5\n"), "x: int = 5\n");
+}
+
+// ------------------------------------- a comparison written with a mark and
+//                                       the body straight after it
+
+/// `if score > 10 show won` — the mark and the value beside it finish the
+/// comparison, so the words after them are what to do. Korean writes the same
+/// line with its verb last and means the same thing.
+#[test]
+fn a_written_mark_ends_the_condition() {
+    assert_eq!(
+        ok("set score to 0\nif score > 10 show won\n"),
+        "score = 0\nif (score > 10): print(\"won\")\n"
+    );
+    assert_eq!(
+        ok("점수는 0\n만약 점수 > 10 성공 말해줘\n"),
+        "점수 = 0\nif (점수 > 10): print(\"성공\")\n"
+    );
+    // With nothing after the value the block is written underneath, and a
+    // Korean sentence ending after the mark is still only the ending.
+    assert_eq!(
+        ok("set score to 0\nif score > 10\n  show won\n"),
+        "score = 0\nif (score > 10):\n  print(\"won\")\n"
+    );
+    assert_eq!(
+        ok("점수는 0\n만약 점수 > 10 이면 성공 말해줘\n"),
+        "점수 = 0\nif (점수 > 10): print(\"성공\")\n"
+    );
+}
+
 // ------------------------------- the verb a beginner writes, read as the one
 //                                  NME has
 

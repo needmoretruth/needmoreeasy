@@ -282,4 +282,37 @@ GROUPS = [
             "친구들에 민수 집어넣어", "친구들에 민수 너허", "친구들에 민수 넣어",
         ],
     ),
+    # The `:` every Python page teaches, and a comparison written with a mark
+    # and the body straight after it.
+    dict(
+        name="쌍점-말하기", want='print("안녕")', setup="", body="",
+        ways=[
+            "말해줘: 안녕", "안녕 말해줘", "안녕 말해줘:",
+        ],
+    ),
+    dict(
+        name="colon-say", want='print("hello")', setup="", body="",
+        ways=[
+            "say: hello", "show: hello", "say hello",
+        ],
+    ),
+    dict(
+        name="쌍점-조건", want='if (점수 > 10): print("성공")', setup="점수는 0\n", body="",
+        ways=[
+            "만약에 점수가 10보다 크면: 성공 말해줘",
+            "만약 점수 > 10 성공 말해줘",
+            "만약 점수 > 10: 성공 말해줘",
+            "만약 점수 > 10 이면 성공 말해줘",
+            "만약에 점수가 10보다 크면 성공 말해줘",
+        ],
+    ),
+    dict(
+        name="colon-if", want='if (score > 10): print("won")', setup="set score to 0\n", body="",
+        ways=[
+            "if score is greater than 10: show won",
+            "if score > 10 show won",
+            "if score > 10: show won",
+            "if score is greater than 10 then show won",
+        ],
+    ),
 ]

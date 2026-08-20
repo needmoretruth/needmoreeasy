@@ -84,7 +84,10 @@ BINARY = next(
 # be a command to reach the message naming the right word, so it is now read
 # with that word in it instead. 239 · 231 works · 0 silent; the eight above are
 # still the eight.
-FLOOR_WORKS = 231
+#
+# 2026-08-20, later again: the `:` every Python page teaches, and a comparison
+# written with a mark and the body straight after it. 254 · 246 · 0 silent.
+FLOOR_WORKS = 246
 CEILING_SILENT = 0
 
 

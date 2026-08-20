@@ -296,27 +296,6 @@ fn a_line_that_cannot_do_anything_is_named() {
             names: "",
         },
         Refusal {
-            probe: "p-en-08",
-            source: "say: hello\n",
-            code: DiagnosticCode::StatementDoesNothing,
-            line: 1,
-            names: ":",
-        },
-        Refusal {
-            probe: "p-en-09",
-            source: "show: hello\n",
-            code: DiagnosticCode::StatementDoesNothing,
-            line: 1,
-            names: ":",
-        },
-        Refusal {
-            probe: "p-ko-11",
-            source: "말해줘: 안녕\n",
-            code: DiagnosticCode::StatementDoesNothing,
-            line: 1,
-            names: ":",
-        },
-        Refusal {
             probe: "s-en-04",
             source: "sayhello\n",
             code: DiagnosticCode::StatementDoesNothing,
