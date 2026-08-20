@@ -91,6 +91,7 @@ python scripts/check-prose-blocks.py              # and no guide line may drift
 | 2026-08-19, after the Korean-prose round | 635 | 122 | 11 | 30/30 |
 | 2026-08-19, after the modules-and-text round | 680 | 124 | 11 | 30/30 |
 | 2026-08-20, after the many-ways round | 708 | 96 | 10 | 30/30 |
+| 2026-08-20, reading the verb a beginner wrote | 727 | 77 | 10 | 30/30 |
 
 The first three rows were measured over 566 probes, then 750, 757 and 804, so
 read the mis-compile column across them and the other two only within a row.

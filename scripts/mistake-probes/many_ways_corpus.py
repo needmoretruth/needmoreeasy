@@ -234,4 +234,52 @@ GROUPS = [
             "keep going while n < 3", "repeat while n < 3", "while n smaller than 3",
         ],
     ),
+    # Verbs NME does not have, standing where the action word goes. Since
+    # 2026-08-20 the line is read as the action word it stands for instead of
+    # being handed back a message saying which word to write.
+    dict(
+        name="말하기-격식", want='print("안녕")', setup="", body="",
+        ways=[
+            "말합니다 안녕", "출력하기 안녕", "프린트해 안녕", "보여주기 안녕",
+            "말해라 안녕",
+        ],
+    ),
+    dict(
+        name="say-verbs", want='print("hello")', setup="", body="",
+        ways=[
+            "log hello", "hello write", "puts hello", "speak hello",
+        ],
+    ),
+    dict(
+        name="기다리기-다른말", want="sleep(2)", setup="", body="",
+        ways=[
+            "2초 기다립니다", "2초 멈춰줘", "2초 잠시멈춰", "2초 슬립",
+            "2초 대기해", "2초 대기",
+        ],
+    ),
+    dict(
+        name="wait-verbs", want="sleep(2)", setup="", body="",
+        ways=[
+            "hold 2 seconds", "delay 2 seconds", "rest 2 seconds",
+        ],
+    ),
+    dict(
+        name="반복-다른말", want="range(3)", setup="", body="\n    안녕 말해줘\n끝",
+        ways=[
+            "3번 돌려서", "3번 루프해서", "3번 반복합니다", "3번 되풀이해서",
+        ],
+    ),
+    dict(
+        name="물어보기-다른말", want="이름 = input(", setup="", body="",
+        ways=[
+            "이름을 입력해 이름이 뭐예요?", "이름을 무러봐 이름이 뭐예요?",
+            "이름을 물어봐 이름이 뭐예요?",
+        ],
+    ),
+    dict(
+        name="넣기-다른말", want='친구들.append("민수")', setup="친구들은 목록 지안\n", body="",
+        ways=[
+            "친구들에 민수 집어넣어", "친구들에 민수 너허", "친구들에 민수 넣어",
+        ],
+    ),
 ]

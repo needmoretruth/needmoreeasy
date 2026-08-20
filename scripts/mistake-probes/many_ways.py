@@ -78,7 +78,13 @@ BINARY = next(
 #   수가 3보다 작은 한 / 작으면 계속  `한` and `계속` are among the commonest words in
 #                              Korean; claiming them would cost more prose than
 #                              the two spellings are worth.
-FLOOR_WORKS = 203
+#
+# 2026-08-20, later the same day: seven more intentions, all of them a verb NME
+# does not have standing where the action word goes. Such a line already had to
+# be a command to reach the message naming the right word, so it is now read
+# with that word in it instead. 239 · 231 works · 0 silent; the eight above are
+# still the eight.
+FLOOR_WORKS = 231
 CEILING_SILENT = 0
 
 

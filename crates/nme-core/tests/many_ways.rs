@@ -148,19 +148,108 @@ fn a_line_without_a_screen_is_still_a_sentence() {
 
 // ------------------------------------------- words that are not output words
 
+// ------------------------------- the verb a beginner writes, read as the one
+//                                  NME has
+
+/// Korean writes its verbs a dozen ways, and the formal `-합니다` ending is
+/// how a beginner who has just been taught to be polite writes them. Every
+/// one of these opens the line, which is the unusual order for Korean and so
+/// says the word is doing a command's job.
 #[test]
-fn one_word_after_a_verb_that_is_not_an_action_is_named() {
-    for (source, word) in [
-        ("log hello\n", "log"),
-        ("read hello\n", "read"),
-        ("hello write\n", "write"),
+fn korean_output_verbs_nme_does_not_have_are_read_as_output() {
+    for source in ["말합니다 안녕\n", "출력하기 안녕\n", "프린트해 안녕\n", "보여주기 안녕\n"] {
+        assert_eq!(ok(source), "print(\"안녕\")\n", "{source}");
+    }
+    // The same words at the end of a sentence about someone speaking are
+    // that sentence, because nothing else on the line is a command.
+    assert_eq!(
+        ok("그는 이렇게 말합니다\n"),
+        "print(\"그는 이렇게 말합니다\")\n"
+    );
+    assert_eq!(
+        ok("선생님이 크게 말합니다\n"),
+        "print(\"선생님이 크게 말합니다\")\n"
+    );
+}
+
+#[test]
+fn korean_waiting_verbs_nme_does_not_have_are_read_as_waiting() {
+    for source in [
+        "2초 기다립니다\n",
+        "2초 멈춰줘\n",
+        "2초 잠시멈춰\n",
+        "2초 슬립\n",
+        "2초 대기해\n",
     ] {
-        assert_eq!(error_code(source), "E0603", "{source} was not refused");
-        assert!(
-            refusal_names(source).contains(word),
-            "{source} did not name `{word}`"
+        assert_eq!(ok(source), "__import__(\"time\").sleep(2)\n", "{source}");
+    }
+    // Without an amount beside it none of them is a command.
+    assert_eq!(ok("조금만 기다립니다\n"), "print(\"조금만 기다립니다\")\n");
+    assert_eq!(ok("버스가 곧 멈춰줘\n"), "print(\"버스가 곧 멈춰줘\")\n");
+}
+
+#[test]
+fn korean_repeating_verbs_nme_does_not_have_are_read_as_repeating() {
+    for source in ["3번 돌려서 안녕 말해줘\n", "3번 루프해서 안녕 말해줘\n"] {
+        assert_eq!(ok(source), "for _ in range(3): print(\"안녕\")\n", "{source}");
+    }
+    assert_eq!(
+        ok("3번 반복합니다\n  안녕 말해줘\n끝\n"),
+        "for _ in range(3):\n  print(\"안녕\")\n# end\n"
+    );
+}
+
+#[test]
+fn korean_asking_and_adding_verbs_nme_does_not_have_are_read_as_those() {
+    assert_eq!(
+        ok("이름을 입력해 이름이 뭐예요?\n"),
+        "이름 = input(\"이름이 뭐예요?\" + \" \")\n"
+    );
+    assert_eq!(
+        ok("이름을 무러봐 이름이 뭐예요?\n"),
+        "이름 = input(\"이름이 뭐예요?\" + \" \")\n"
+    );
+    for line in ["친구들에 민수 집어넣어\n", "친구들에 민수 너허\n"] {
+        let source = format!("친구들은 목록 지안\n{line}");
+        assert_eq!(
+            ok(&source),
+            "친구들 = [\"지안\"]\n친구들.append(\"민수\")\n",
+            "{source}"
         );
     }
+    // Asking needs a question mark and adding needs a list the program has,
+    // so neither of these is claimed.
+    assert_eq!(ok("이름을 입력해 주세요\n"), "print(\"이름을 입력해 주세요\")\n");
+    assert_eq!(
+        ok("친구들에 민수 집어넣어야 한다\n"),
+        "print(\"친구들에 민수 집어넣어야 한다\")\n"
+    );
+}
+
+/// A verb NME does not have, standing where an action word goes, is read as
+/// the action word it stands for rather than refused with a message saying
+/// so. The message is still written whenever the corrected line does not read
+/// as a whole statement, which is what keeps the two halves of this file
+/// apart: `log hello` is a command written with the wrong word, and `log the
+/// miles you walked this week` is writing.
+///
+/// `read` is NME's own asking word — `read the file "notes.txt"` uses it, and
+/// it stands beside `get` and `input` — so `read hello` asks rather than
+/// prints. Korean `읽어줘` is an output word and stays one.
+#[test]
+fn one_word_after_a_verb_that_is_not_an_action_is_read_as_that_action() {
+    assert_eq!(ok("log hello\n"), "print(\"hello\")\n");
+    assert_eq!(ok("hello write\n"), "print(\"hello\")\n");
+    assert_eq!(ok("read hello\n"), "hello = input()\n");
+}
+
+/// The corrected reading has to be a whole statement. `wait3 seconds` repairs
+/// to `wait seconds`, which says no amount, so the message stands rather than
+/// the line quietly printing itself with the misspelling still in it.
+#[test]
+fn a_correction_that_does_not_read_as_a_statement_is_still_named() {
+    assert_eq!(error_code("wait3 seconds\n"), "E0603");
+    assert!(refusal_names("wait3 seconds\n").contains("wait3"));
 }
 
 #[test]

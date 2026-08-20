@@ -62,7 +62,11 @@ P("r-ko-02", "writeword", "ko", "적어줘 안녕", "print", P_ANNYEONG)
 P("r-ko-03", "writeword", "ko", "읽어줘 안녕", "print", P_ANNYEONG)
 P("r-ko-04", "writeword", "ko", "안녕 써줘", "print", P_ANNYEONG)
 P("r-en-01", "writeword", "en", "write hello", "print", P_HELLO)
-P("r-en-02", "writeword", "en", "read hello", "print", P_HELLO)
+# `read` is NME's own asking word (`read the file "notes.txt"`, and it is
+# listed beside `get` and `input`), so `read hello` asks and saves the
+# answer under `hello`. Korean `읽어줘` is an output word and stays one:
+# the two scripts differ here because each word already has a job.
+P("r-en-02", "writeword", "en", "read hello", "ask", r'^hello = input\(\)$')
 P("r-en-03", "writeword", "en", "hello write", "print", P_HELLO)
 
 # --- S. repeat-unit word, en vs ko ---------------------------------------

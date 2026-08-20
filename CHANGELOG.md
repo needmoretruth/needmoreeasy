@@ -5,6 +5,26 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+- **A verb NME does not have is read as the action word it stands for.**
+  `log hello`, `2초 멈춰줘`, `출력하기 안녕`, `3번 돌려서 안녕 말해줘`,
+  `이름을 입력해 이름이 뭐예요?` and `친구들에 민수 집어넣어` all work now.
+  Every one of them already had to be a command to reach the message naming
+  the word to write instead, so the line is read with that word in it rather
+  than handed back. The message is still written whenever the corrected line
+  is not a whole statement — `wait3 seconds` repairs to `wait seconds`, which
+  says no amount — and ordinary writing is untouched: `그는 이렇게 말합니다`,
+  `조금만 기다립니다`, `log the miles you walked this week` and `output of the
+  factory fell again` all still print themselves.
+- **A verb NME does not have is read as the action word it stands for.**
+  `log hello`, `2초 멈춰줘`, `출력하기 안녕`, `3번 돌려서 안녕 말해줘`,
+  `이름을 입력해 이름이 뭐예요?` and `친구들에 민수 집어넣어` all work now.
+  Every one of them already had to be a command to reach the message naming
+  the word to write instead, so the line is read with that word in it rather
+  than handed back. The message is still written whenever the corrected line
+  is not a whole statement — `wait3 seconds` repairs to `wait seconds`, which
+  says no amount — and ordinary writing is untouched: `그는 이렇게 말합니다`,
+  `조금만 기다립니다`, `log the miles you walked this week` and `output of the
+  factory fell again` all still print themselves.
 - **A module tool with nothing to work on has its own code, E0410.** It was
   borrowing E0406, whose title is about an unreadable module line — so the
   code a reader looked up said something else than the message they were

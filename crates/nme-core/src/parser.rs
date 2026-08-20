@@ -3963,6 +3963,12 @@ fn classify(
     if matches!(outcome, Ok(Some(_))) {
         return outcome;
     }
+    if matches!(&outcome, Err(problem) if problem.code == DiagnosticCode::UnknownActionWord) {
+        if let Some(stmt) = classify_with_the_action_word_put_right(source, tokens, block, known_names)
+        {
+            return Ok(Some(stmt));
+        }
+    }
     let polite = leading_sentence_fillers(tokens);
     if polite == 0 || polite >= tokens.len() {
         return outcome;
@@ -3971,6 +3977,83 @@ fn classify(
         Ok(Some(stmt)) if !matches!(stmt, NmeStmt::Say { .. }) => Ok(Some(stmt)),
         _ => outcome,
     }
+}
+
+/// Reads the line again with the word NME does not know put right.
+///
+/// A line that reached [`DiagnosticCode::UnknownActionWord`] has already been
+/// judged a command — ordinary writing prints itself long before here — and
+/// the message it is about to carry names the action word that belongs in
+/// that place. Reading the line with that word in it is doing what the
+/// message asks instead of asking the reader to do it, which is the whole
+/// point of taking near misses in the first place. Nothing is guessed: the
+/// swapped line has to read as a whole statement, or the message stands.
+fn classify_with_the_action_word_put_right(
+    source: &str,
+    tokens: &[Token],
+    block: &BlockCtx<'_>,
+    known_names: &HashSet<String>,
+) -> Option<NmeStmt> {
+    if TRYING_A_HINT.with(Cell::get) {
+        return None;
+    }
+    let blamed = unreadable_action_token(tokens, known_names);
+    // The blamed word first, because that is the one the message would have
+    // named. `3번 돌려서 안녕 말해줘` blames `말해줘`, which is spelled right,
+    // and the word actually standing in the way is `돌려서`.
+    let order = std::iter::once(blamed).chain((0..tokens.len()).filter(|at| *at != blamed));
+    for index in order {
+        let Some(word) = name_word(&tokens[index]) else {
+            continue;
+        };
+        let Some(action) = suggest_action_word(word) else {
+            continue;
+        };
+        if action == word {
+            continue;
+        }
+        // `output of the factory fell again` opens with a word from the
+        // tables, and everything after it is a sentence about a factory.
+        // English never writes a message beginning with `of`, `out` or
+        // `back`, so a word that cannot start one says this line is writing,
+        // not a command whose verb was misspelled.
+        if !is_hangul(word)
+            && tokens.get(index + 1).is_some_and(|next| {
+                name_word(next).is_some_and(|after| !is_bindable_english_name(after))
+            })
+        {
+            continue;
+        }
+        let mut written = tokens.to_vec();
+        written[index].tok = Tok::Name {
+            name: action.to_string(),
+        };
+        if let Ok(Some(stmt)) = classify_written_line(source, &written, block, known_names) {
+            // `wait3 seconds` repairs to `wait seconds`, which says no amount
+            // and so falls through to printing the line — with the word still
+            // in it. A reading that puts the action word into the message did
+            // not read it as an action at all, and the message NME was about
+            // to write is the better answer.
+            if !statement_prints_the_word(&stmt, word) {
+                return Some(stmt);
+            }
+        }
+    }
+    None
+}
+
+/// True when the statement would print `word` as part of its own text.
+fn statement_prints_the_word(stmt: &NmeStmt, word: &str) -> bool {
+    let NmeStmt::Say {
+        value: Value::Text(template),
+    } = stmt
+    else {
+        return false;
+    };
+    template.parts.iter().any(|part| match part {
+        TextPart::Literal(text) => text.split_whitespace().any(|piece| piece == word),
+        _ => false,
+    })
 }
 
 fn classify_written_line(

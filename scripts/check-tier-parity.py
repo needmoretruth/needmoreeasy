@@ -1284,8 +1284,13 @@ DIAGNOSTIC_PARITY = [
     ("E0234", "a record line needs a name that was made a record",
      "set pals to an empty list\nput Mina at 90 in pals",
      "pals는 빈 목록\npals에 Mina를 90으로 넣어"),
-    ("E0603", "one word after a verb that is not an action word is named, not printed",
-     "log hello", "출력하기 안녕"),
+    # `log hello` and `출력하기 안녕` used to be here. Since 2026-08-20 a verb
+    # NME does not have is read as the action word it stands for, so both are
+    # accepted. What is still refused in both languages is a correction that
+    # does not read as a whole statement: `wait3` repairs to `wait`, and
+    # `wait seconds` says no amount.
+    ("E0603", "a repaired action word that still makes no statement is named",
+     "wait3 seconds", "2초3 기다립니다"),
 ]
 
 

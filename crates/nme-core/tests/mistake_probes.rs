@@ -123,13 +123,6 @@ fn raw_cpython_errors_become_nme_diagnostics() {
             names: "",
         },
         Refusal {
-            probe: "k-ko-21",
-            source: "2초 기다립니다\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "기다립니다",
-        },
-        Refusal {
             probe: "o-en-10",
             source: "set score to 0\n1 add to score\n",
             code: DiagnosticCode::UnknownActionWord,
@@ -156,27 +149,6 @@ fn raw_cpython_errors_become_nme_diagnostics() {
             code: DiagnosticCode::UnknownActionWord,
             line: 1,
             names: "assign",
-        },
-        Refusal {
-            probe: "y-ko-16",
-            source: "2초 멈춰줘\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "멈춰줘",
-        },
-        Refusal {
-            probe: "y-ko-17",
-            source: "2초 잠시멈춰\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "잠시멈춰",
-        },
-        Refusal {
-            probe: "y-ko-18",
-            source: "2초 슬립\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "슬립",
         },
     ] {
         check(&case);
@@ -254,48 +226,6 @@ fn a_word_that_is_not_an_action_is_named() {
         // meaning `range(3): print("안녕")`, so the two cases for it moved to
         // `many_ways.rs` as an accepted spelling.
         Refusal {
-            probe: "k-ko-13",
-            source: "말합니다 안녕\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "말합니다",
-        },
-        Refusal {
-            probe: "k-ko-14",
-            source: "출력하기 안녕\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "출력하기",
-        },
-        Refusal {
-            probe: "k-ko-21",
-            source: "2초 기다립니다\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "기다립니다",
-        },
-        Refusal {
-            probe: "k-ko-27",
-            source: "이름을 입력해 이름이 뭐예요?\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "입력해",
-        },
-        Refusal {
-            probe: "k-ko-33",
-            source: "3번 반복합니다\n  안녕 말해줘\n끝\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "반복합니다",
-        },
-        Refusal {
-            probe: "m-ko-02",
-            source: "친구들은 목록 민수\n친구들에 민수 너허\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 2,
-            names: "너허",
-        },
-        Refusal {
             probe: "o-en-10",
             source: "set score to 0\n1 add to score\n",
             code: DiagnosticCode::UnknownActionWord,
@@ -324,13 +254,6 @@ fn a_word_that_is_not_an_action_is_named() {
             names: "번반복해서",
         },
         Refusal {
-            probe: "t-ko-26",
-            source: "이름을 무러봐 이름이 뭐예요?\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "무러봐",
-        },
-        Refusal {
             probe: "t2-en-01",
             source: "wait2 seconds\n",
             code: DiagnosticCode::UnknownActionWord,
@@ -351,75 +274,12 @@ fn a_word_that_is_not_an_action_is_named() {
             line: 1,
             names: "assign",
         },
-        Refusal {
-            probe: "y-ko-08",
-            source: "출력하기 안녕\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "출력하기",
-        },
-        Refusal {
-            probe: "y-ko-09",
-            source: "프린트해 안녕\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "프린트해",
-        },
-        Refusal {
-            probe: "y-ko-12",
-            source: "보여주기 안녕\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "보여주기",
-        },
         // `y-ko-13` is the same line as `j-ko-04` above, and left for the
         // same reason: `probes.py` records it as a working loop.
-        Refusal {
-            probe: "y-ko-14",
-            source: "3번 돌려서 안녕 말해줘\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "말해줘",
-        },
-        Refusal {
-            probe: "y-ko-15",
-            source: "3번 루프해서 안녕 말해줘\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "말해줘",
-        },
-        Refusal {
-            probe: "y-ko-16",
-            source: "2초 멈춰줘\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "멈춰줘",
-        },
-        Refusal {
-            probe: "y-ko-17",
-            source: "2초 잠시멈춰\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "잠시멈춰",
-        },
-        Refusal {
-            probe: "y-ko-18",
-            source: "2초 슬립\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 1,
-            names: "슬립",
-        },
         // `y-ko-22` (`이름을 여쭤봐 이름이 뭐예요?`) is accepted now: `여쭤봐` is
         // the polite word for asking, the line ends in a question mark, and
         // `probes.py` has always recorded it as `이름 = input(...)`. It moved
         // to `many_ways.rs`.
-        Refusal {
-            probe: "y-ko-25",
-            source: "친구들은 목록 민수\n친구들에 민수 집어넣어\n",
-            code: DiagnosticCode::UnknownActionWord,
-            line: 2,
-            names: "집어넣어",
-        },
     ] {
         check(&case);
     }
