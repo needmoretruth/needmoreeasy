@@ -5,6 +5,8 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+
+## 0.7.0
 - **The tidier lands one program in one place, whichever of the six it came
   from.** A file written as sentences, at beginner level, in Korean, in
   English, or as ordinary Python now converts into any of the other five and
@@ -51,6 +53,22 @@ All notable changes to NME are recorded here.
   word NME knows and the whole reads as a statement, which is why
   `story of a small town doctor`, `Nearly finished` and `a story worth
   telling` are still sentences, and why `wait3 apples` is still named.
+- **Writing into a record and reading out of one are told apart by the shape
+  of the value.** `set Mina to 90 in ages` and `set best to Mina in ages` are
+  the same six words in the same order and mean opposite things. The first is
+  somebody writing 90 down under Mina, and it used to become
+  `Mina = ages[90]` and die when it ran. What follows `to` now decides: a
+  number or a quoted string is a value being written, a word is a name being
+  read. Both stay, and a record kept under numbers is still readable by
+  putting the number in a name first.
+- **A full stop stays punctuation when the action word is written last.**
+  `Hello. Goodbye` already printed, but `Hello. Goodbye show` — and every
+  Korean line, where the verb goes last — went to Python as an attribute
+  lookup, compiled without a word in a browser and died when it ran.
+- **The first guide explains a line that starts with `#`.** Beginners read the
+  comments at the top of an example as part of the program. One step now shows
+  that they are notes left for a person and that deleting every one of them
+  changes nothing.
 
 ## 0.6.0
 - **A program written one step in is read, and its Python comes back without
