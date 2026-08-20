@@ -14,7 +14,7 @@ not exist.
 
 NME (NeedMoreEasy) is **a small programming language that turns ordinary
 sentences into Python**. You can write it in English, in Korean, or mix the two
-on one line. This document describes version `0.3.0`.
+on one line. This document describes version `0.4.0`.
 
 **Three rules that matter.**
 
@@ -516,15 +516,15 @@ UTC.
 | 출력 / Output | `say` · `show` · `display` · `tell` · `print` | `말해` · `말해줘` · `말해주세요` · `보여줘` · `보여주세요` · `출력해` · `출력해줘` · `출력해주세요` · `해줘` · `해주세요` · `읽어줘` |
 | 입력 / Input | `ask` · `prompt` · `question` | `물어봐` · `물어봐줘` · `물어보세요` · `질문해` · `질문해줘` · `입력받아` · `입력받아줘` · `입력받아주세요` · `물어봐요` · `물어봐주세요` · `질문해주세요` |
 | 저장 / Save | `set` · `save` · `remember` · `store` · `let` · `make` | `저장` · `저장해` · `저장해줘` · `기억해` · `기억해줘` · `설정` · `설정해` · `설정해줘` · `지정` · `지정해` · `정해` · `만들어` |
-| 더하기 / Add | `add` · `increase` · `increment` · `plus` · `up` · `goesup` | `더해` · `더해줘` · `올려` · `올려줘` · `늘려` · `늘려줘` · `더하기` · `증가` · `증가해` · `증가시켜` |
+| 더하기 / Add | `add` · `increase` · `increment` · `plus` · `up` · `goesup` · `grow` · `bump` · `boost` | `더해` · `더해줘` · `올려` · `올려줘` · `늘려` · `늘려줘` · `더하기` · `증가` · `증가해` · `증가시켜` |
 | 빼기 / Subtract | `subtract` · `decrease` · `decrement` · `minus` · `remove` · `down` · `goesdown` | `빼` · `빼줘` · `내려` · `내려줘` · `줄여` · `줄여줘` · `빼기` · `감소` · `감소해` · `감소시켜` |
 | 곱하기 / Multiply | `multiply` · `multiplied` | `곱해` · `곱해줘` · `곱하기해` |
 | 나누기 / Divide | `divide` · `divided` | `나눠` · `나눠줘` · `나누어줘` |
-| 기다리기 / Wait | `wait` · `pause` · `sleep` | `기다려` · `기다려줘` · `기다리세요` · `기다려주세요` · `쉬어` · `쉬어줘` · `쉬세요` |
+| 기다리기 / Wait | `wait` · `pause` · `sleep` · `hold` · `delay` · `rest` | `기다려` · `기다려줘` · `기다리세요` · `기다려주세요` · `쉬어` · `쉬어줘` · `쉬세요` · `대기해` · `대기해줘` · `대기` |
 | 반복 / Repeat | `repeat` · `again` · `do` | `반복` · `반복해` · `반복해줘` · `반복해주세요` · `반복하세요` · `반복해서` · `반복하고` · `반복한다음` · `다시해` · `다시해주세요` |
 | 조건 / If | `when` · `if` · `should` · `incase` · `whenever` | `만약` · `만약에` · `만일` · `혹시` |
-| 조건 반복 / While | `while` | `동안` · `하는동안` · `할동안` |
-| 다른 갈래 / Else | `else` · `otherwise` | `아니면` · `그렇지않으면` · `아니면만약` · `아니면만약에` · `그렇지않으면만약` · `그렇지않으면만약에` |
+| 조건 반복 / While | `while` · `aslongas` · `repeatwhile` · `keepgoingwhile` | `동안` · `하는동안` · `할동안` |
+| 다른 갈래 / Else | `else` · `otherwise` · `orelse` · `elseinstead` | `아니면` · `아니면은` · `아니라면` · `그렇지않으면` · `그렇지않다면` · `안그러면` · `안그렇다면` · `그외에는` · `그외에` · `아니면만약` · `아니면만약에` · `그렇지않으면만약` · `그렇지않으면만약에` |
 | 반복 중단 / Break | `break` · `breakhere` | `멈춰` · `멈춰줘` · `멈춰라` · `멈추기` · `그만해` · `정지해` · `종료해` · `중단` · `반복멈춰` · `여기서멈춰` |
 | 말끝 출력 / Output written last | — | `말하기` · `말해라` · `알려줘` · `알려주세요` · `알려줘요` · `얘기해` · `얘기해줘` · `얘기해주세요` · `표시해` · `표시해줘` · `출력하기` · `보여주기` · `프린트해` · `프린트` · `프린트해줘` · `프린트해주세요` · `표시하기` |
 | 목적어가 없을 때만 말끝 출력 / Output written last, with no object | — | `띄워` · `띄워줘` · `띄워주세요` · `나타내` · `나타내줘` · `나타내주세요` · `써줘` · `써주세요` · `적어줘` · `적어주세요` |
@@ -577,9 +577,9 @@ UTC.
 | 섞기 / Shuffle | `shuffle` · `mix` · `jumble` · `scramble` · `randomise` · `randomize` | `섞어` · `섞어줘` · `섞어주세요` · `섞기` · `랜덤하게` · `랜덤하게해` · `무작위로해` |
 | 들어있는지 / Contains | `contains` · `contain` · `includes` · `include` · `holds` | `안에는` · `속에는` · `안에` · `속에` · `에는` · `에` |
 | 표 표시 / Record | `record` · `table` | `표` |
-| 표에 넣기 / Put in a record | `put` | `넣어` · `넣어줘` · `넣어주세요` · `두어` · `두어줘` |
+| 표에 넣기 / Put in a record | `put` · `set` · `store` · `save` · `record` · `add` | `넣어` · `넣어줘` · `넣어주세요` · `넣기` · `두어` · `두어줘` · `저장해` · `저장해줘` · `기억해` · `기억해줘` · `적어` · `적어줘` |
 | 표 값 앞말 / Record value connector | `at` · `as` | `으로` · `로` |
-| 표 이름 앞말 / Record container connector | `in` · `into` | `을` · `를` |
+| 표 이름 앞말 / Record container connector | `in` · `into` · `to` | `을` · `를` |
 | 표에서 읽기 조사 / Record reading particle | — | `에서` · `의` |
 | 일 표시 / Job | `to` | `일` · `작업` |
 | 일 이름 어미 / Job name ending | — | `이라는` · `라는` |
@@ -677,6 +677,7 @@ UTC.
 | `E0237` | this name is one the language itself needs |
 | `E0238` | a file read with no name to read into |
 | `E0239` | a file name that is not in quotation marks |
+| `E0240` | putting something in requires a list |
 | `E0301` | the condition is missing |
 | `E0302` | NME could not read the condition |
 | `E0303` | NME could not read what to repeat |

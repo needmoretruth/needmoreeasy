@@ -5,6 +5,8 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+
+## 0.4.0
 - **The corpus of "ways a beginner writes the same thing" is more than twice
   the size.** It covered twelve intentions and now covers twenty-six — value
   changes, waiting, taking one thing back out of a list, writing into a
