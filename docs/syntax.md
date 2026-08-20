@@ -405,6 +405,13 @@ builtins, so they run in the browser as they stand. `list`, `text`, `math` and
 `use`/`사용` and nothing else is left over on the line; `get the list of names`
 and `What is the date today?` are sentences and print.
 
+Six of the date names answer with nothing written after them, so they may be
+written without brackets and a whole date program stays sentences:
+`show today`, `show weekday`, `show year`, `오늘 말해줘`, `요일 말해줘`,
+`올해 말해줘` — and `now`/`지금`, `month`/`이번달`, `day_of_month`/`오늘일자`
+the same way. `days_after(n)` is not one of them: it needs the number written
+after it, and what is missing there is the writer's, not the compiler's.
+
 On a Wednesday, `weekday()` answers `Wednesday` and its Korean name `요일()`
 answers `수요일`.
 This is the one place in any bundled module where the two names hold different
@@ -716,7 +723,7 @@ Every spelling accepted for each action, with nothing left out.
 
 These endings are not treated as part of the name they follow.
 
-`에게서는` · `한테서는` · `에게서` · `한테서` · `으로는` · `로는` · `에게` · `한테` · `에서` · `으로` · `까지` · `부터` · `처럼` · `보다` · `이라도` · `라도` · `만큼` · `밖에` · `에는` · `에서` · `은` · `는` · `이` · `가` · `을` · `를` · `와` · `과` · `도` · `의` · `에` · `로` · `아` · `야` · `랑` · `이랑` · `예요` · `이에요`
+`에게서는` · `한테서는` · `에게서` · `한테서` · `으로는` · `로는` · `에게` · `한테` · `에서` · `으로` · `까지` · `부터` · `처럼` · `보다` · `이라도` · `라도` · `만큼` · `밖에` · `에는` · `에서` · `은` · `는` · `이` · `가` · `을` · `를` · `와` · `과` · `도` · `의` · `에` · `로` · `아` · `야` · `랑` · `이랑` · `예요` · `이에요` · `님` · `님께` · `님은` · `님이`
 
 ## 29. Typo recovery
 

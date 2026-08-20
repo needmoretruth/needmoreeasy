@@ -5,6 +5,23 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+- **`show today` shows today's date.** The date module binds `today`,
+  `weekday`, `year` and their Korean twins as functions, so a line that wrote
+  one without brackets printed `<function <lambda>>` — a program that runs,
+  says nothing anybody wanted, and never says why. Those six names now answer
+  when they stand on their own, which is also what makes guides 33 and 36
+  writable in sentences. Names that need something written after them
+  (`days_after`, `개수`) are unchanged: what is missing there is the writer's.
+- **`이름은 물어봐` saves the answer in `이름`.** The topic mark was kept as
+  part of the name, so the program bound `이름은` and every later line that
+  said `이름` was talking about something that was never made.
+- **`이름님 안녕하세요` puts the answer where `이름` is.** `님` is not a
+  particle but it is written like one, and a greeting reaches for it first.
+  `씨` is deliberately absent: `날씨` would become the name `날` plus `씨` in
+  any program that has one.
+- **`for eachfriend in friends` loops over `friend`.** With the space left
+  out, the loop used to bind a name called `eachfriend` and every line under
+  it that said `friend` printed the word.
 - **Tidying keeps the language the program is written in.** `nme tidy` on a
   Korean program used to hand it back in English, which is a translation
   nobody asked for. Without `--language` the program now keeps its own

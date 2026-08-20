@@ -15114,6 +15114,14 @@ fn parse_value(
         if let Some(literal) = literal_token(&tokens[0]) {
             return Ok(Value::Literal(literal));
         }
+        // `오늘 말해줘` · `show today`. The module binds a function, and a
+        // function shown is `<function <lambda>>`; what the line means is the
+        // answer, so it is asked for.
+        if let Some(word) = name_word(&tokens[0]) {
+            if module_answers_with_nothing(known_names, word) {
+                return Ok(Value::Python(Code::Generated(format!("{word}()"))));
+            }
+        }
     }
     if let Some(value) = parse_elapsed_value(tokens, known_names) {
         return Ok(value);
@@ -16698,6 +16706,35 @@ const MODULE_NAME_MARKER: &str = "[module]";
 
 fn remember_module_name(names: &mut HashSet<String>, name: &str) {
     names.insert(format!("{MODULE_NAME_MARKER}{name}"));
+}
+
+/// The names a bundled module binds that answer with nothing written after
+/// them: `today`, `weekday`, `오늘`, `요일`. They are functions, so writing one
+/// on its own printed `<function <lambda>>` — a program that runs, says
+/// nothing anybody wanted, and never says why.
+///
+/// `show today` is the whole of what a person means, so it is read that way.
+/// Names that need something written after them (`days_after`, `개수`) are not
+/// here: what is missing there is the writer's, not the compiler's.
+const MODULE_ANSWERS_WITH_NOTHING: &[&str] = &[
+    "today",
+    "오늘",
+    "now",
+    "지금",
+    "year",
+    "올해",
+    "month",
+    "이번달",
+    "day_of_month",
+    "오늘일자",
+    "weekday",
+    "요일",
+];
+
+/// True when this word is one of [`MODULE_ANSWERS_WITH_NOTHING`] and the
+/// program really did load the module that binds it.
+fn module_answers_with_nothing(names: &HashSet<String>, name: &str) -> bool {
+    MODULE_ANSWERS_WITH_NOTHING.contains(&name) && is_module_name(names, name)
 }
 
 /// True when `name` came from a `use` line rather than from the program.

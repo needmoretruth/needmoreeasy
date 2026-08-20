@@ -20,7 +20,7 @@ by hand — the computer is asked for them.
 
    ```nme
    use date latest
-   set stamp to today()
+   set stamp to today
    set before to days_after(-1)
    set earlier to days_after(-2)
    show stamp
@@ -33,7 +33,7 @@ by hand — the computer is asked for them.
    ```nme
    use date latest
    set log to an empty record
-   set stamp to today()
+   set stamp to today
    put stamp at yes in log
    show stamp in log
    ```
@@ -46,7 +46,7 @@ by hand — the computer is asked for them.
    ```nme
    use date latest
    set log to an empty record
-   set stamp to today()
+   set stamp to today
    ask reply did you do it today
    put stamp at reply in log
    show how many log
@@ -76,7 +76,7 @@ by hand — the computer is asked for them.
    ```nme
    use date latest
    set log to an empty record
-   set stamp to today()
+   set stamp to today
    set before to days_after(-1)
    set earlier to days_after(-2)
    put earlier at yes in log

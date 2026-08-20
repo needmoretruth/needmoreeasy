@@ -830,6 +830,13 @@ Python으로 `나이표 = {{}}`라고 쓴 이름도 표로 봅니다.
 `장 볼 목록을 사용해 보세요`와 `이 날짜 사용법을 알려 주세요`는 그대로 출력되는
 문장입니다.
 
+날짜 이름 여섯 개는 뒤에 아무것도 적지 않아도 답을 내놓습니다. 그래서 괄호 없이
+쓸 수 있고, 날짜를 다루는 프로그램도 문장문법만으로 쓸 수 있습니다.
+`오늘 말해줘`·`요일 말해줘`·`올해 말해줘`, 영어로는 `show today`·`show weekday`·
+`show year`이며, `지금`/`now`·`이번달`/`month`·`오늘일자`/`day_of_month`도
+마찬가지입니다. `며칠뒤(n)`는 여기 들지 않습니다. 며칠인지를 뒤에 적어야 하고,
+그것이 없는 것은 컴파일러가 아니라 쓰는 사람이 빠뜨린 것입니다.
+
 수요일이면 `요일()`은 `수요일`을, 영어 이름 `weekday()`는 `Wednesday`를
 돌려줍니다. 두 이름이 서로 다른 값을 갖는 곳은 내장 모듈을 통틀어 여기 하나이며,
 요일 이름은 숫자가 아니라 낱말이라서 어느 한 언어에 속할 수밖에 없기 때문입니다.
@@ -1154,6 +1161,13 @@ builtins, so they run in the browser as they stand. `list`, `text`, `math` and
 `date` are ordinary words, so they name a module only when they stand beside
 `use`/`사용` and nothing else is left over on the line; `get the list of names`
 and `What is the date today?` are sentences and print.
+
+Six of the date names answer with nothing written after them, so they may be
+written without brackets and a whole date program stays sentences:
+`show today`, `show weekday`, `show year`, `오늘 말해줘`, `요일 말해줘`,
+`올해 말해줘` — and `now`/`지금`, `month`/`이번달`, `day_of_month`/`오늘일자`
+the same way. `days_after(n)` is not one of them: it needs the number written
+after it, and what is missing there is the writer's, not the compiler's.
 
 On a Wednesday, `weekday()` answers `Wednesday` and its Korean name `요일()`
 answers `수요일`.

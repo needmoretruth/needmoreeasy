@@ -20,9 +20,9 @@ gets forgotten. The computer already knows it, so ask it.
 
    ```nme
    use date latest
-   say today()
-   say weekday()
-   say year()
+   show today
+   show weekday
+   show year
    ```
 
    Something like `2026-08-19`, `Wednesday`, `2026`. **The clock is UTC** —
@@ -33,8 +33,8 @@ gets forgotten. The computer already knows it, so ask it.
 
    ```nme
    use date latest
-   set stamp to today()
-   set day to weekday()
+   set stamp to today
+   set day to weekday
    show stamp
    show day
    ```
@@ -73,8 +73,8 @@ gets forgotten. The computer already knows it, so ask it.
 
    ```nme
    use date latest
-   set stamp to today()
-   set day to weekday()
+   set stamp to today
+   set day to weekday
    set note to it rained a little
    set lines to an empty list
    append stamp to lines
