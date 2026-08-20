@@ -5,6 +5,8 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+
+## 0.6.0
 - **A program written one step in is read, and its Python comes back without
   the margin.** `  say hello` is what a block of text copied out of a page
   looks like, and CPython answers it with `IndentationError` before anything
