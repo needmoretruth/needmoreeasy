@@ -361,10 +361,24 @@ fn convert_print(
         return None;
     }
     let value = sentence_value(source, argument);
+    // A single piece of text is a whole value, and Korean stands its verb
+    // after one: `"안녕하세요" 말해줘`. `보여줘 "안녕하세요"` put a converted line
+    // in English word order while every hand-written line around it read the
+    // other way. Anything with an operator in it keeps the verb in front.
+    let one_piece_of_text = matches!(
+        argument,
+        [Token {
+            tok: Tok::String { .. },
+            ..
+        }]
+    );
     Some(match (level, language) {
         (SyntaxLevel::Beginner, Language::English) => format!("say {value}"),
         (SyntaxLevel::Beginner, Language::Korean) => format!("말해 {value}"),
         (SyntaxLevel::Sentence, Language::English) => format!("show {value}"),
+        (SyntaxLevel::Sentence, Language::Korean) if one_piece_of_text => {
+            format!("{value} 말해줘")
+        }
         (SyntaxLevel::Sentence, Language::Korean) => format!("보여줘 {value}"),
         (SyntaxLevel::Advanced, _) => return None,
     })
@@ -857,7 +871,7 @@ mod tests {
             concat!(
                 "name을 물어봐 \"What is your name?\"\n",
                 "if name:\n",
-                "    보여줘 \"Hello, world!\"\n",
+                "    \"Hello, world!\" 말해줘\n",
                 "2 번 반복해\n",
                 "    print(name)\n",
             )
@@ -1062,7 +1076,7 @@ mod tests {
     fn ordinary_random_import_is_never_replaced_by_the_bundled_adapter() {
         let source = "import random\nprint(\"ok\")\n";
         let result = converted(source, SyntaxLevel::Sentence, Language::Korean);
-        assert_eq!(result.source, "import random\n보여줘 \"ok\"\n");
+        assert_eq!(result.source, "import random\n\"ok\" 말해줘\n");
         assert_eq!(result.changed_lines, 1);
     }
 

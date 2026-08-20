@@ -5,6 +5,17 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+- **Tidying keeps the language the program is written in.** `nme tidy` on a
+  Korean program used to hand it back in English, which is a translation
+  nobody asked for. Without `--language` the program now keeps its own
+  language, decided by the words the program is made of — text inside
+  quotation marks and comments do not count, so `print("안녕")` stays an
+  English program.
+- **A Korean line that shows one piece of text puts its verb at the end.**
+  `"안녕하세요" 말해줘`, not `보여줘 "안녕하세요"`. Both tidying and converting
+  Python wrote the second, so a tidied Korean program had one line in English
+  word order while every line around it read the other way. Anything with an
+  operator in it — `보여줘 1 + 2` — keeps the verb in front, where it belongs.
 
 ## 0.4.0
 - **The corpus of "ways a beginner writes the same thing" is more than twice

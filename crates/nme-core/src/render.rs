@@ -210,7 +210,7 @@ impl Rewrite<'_> {
                     // the most written line in the language; turning it into
                     // `보여줘 점수` would put English word order in the middle
                     // of a Korean program.
-                    (Language::Korean, Value::Python(_)) if !is_one_plain_name(&written) => {
+                    (Language::Korean, Value::Python(_)) if !is_one_sentence_value(&written) => {
                         format!("보여줘 {written}")
                     }
                     (Language::Korean, _) => format!("{written} 말해줘"),
@@ -1263,6 +1263,36 @@ fn split_words(separator: &str) -> Option<(&'static str, &'static str)> {
         "\n" => Some(("newline", "줄바꿈으로")),
         _ => None,
     }
+}
+
+/// True when the written code is one whole value a Korean sentence can stand
+/// its verb after: a single name, a single number, or a single quoted piece
+/// of text.
+///
+/// `보여줘 "안녕하세요"` put the verb in front of a line whose value is a
+/// sentence on its own, so a tidied Korean program had one line in English
+/// word order. Anything with an operator in it stays in front.
+fn is_one_sentence_value(code: &str) -> bool {
+    is_one_plain_name(code) || is_one_literal(code)
+}
+
+/// A single number, or a single quoted piece of text with no quotation mark
+/// inside it — so `"a" + "b"` is not one.
+fn is_one_literal(code: &str) -> bool {
+    let written = code.trim();
+    let Some(first) = written.chars().next() else {
+        return false;
+    };
+    if first == '"' || first == '\'' {
+        return written.len() > 1
+            && written.ends_with(first)
+            && !written[1..written.len() - 1].contains(first);
+    }
+    !written.is_empty()
+        && written
+            .chars()
+            .all(|letter| letter.is_ascii_digit() || letter == '.')
+        && written.chars().any(|letter| letter.is_ascii_digit())
 }
 
 /// True when the written code is a single name and nothing else, so a Korean

@@ -1276,7 +1276,7 @@ fn convert_turns_python_into_a_chosen_nme_level_and_language() {
     let converted = stdout(&output);
     assert_eq!(
         converted,
-        "name을 물어봐 \"이름이 뭐예요?\"\nif name:\n    보여줘 \"안녕하세요!\"\n"
+        "name을 물어봐 \"이름이 뭐예요?\"\nif name:\n    \"안녕하세요!\" 말해줘\n"
     );
     let converted_file = dir.join("hello.nme");
     std::fs::write(&converted_file, converted).unwrap();

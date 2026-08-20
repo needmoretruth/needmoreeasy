@@ -738,7 +738,11 @@ fn command_convert(args: &[String], language: MessageLanguage) -> ExitCode {
     let mut file = None;
     let mut output = None;
     let mut level = nme_core::SyntaxLevel::Sentence;
-    let mut output_language = nme_core::Language::English;
+    // Left unset, the language of the tidied program is the language the file
+    // is already written in. Tidying is for making one program neat, not for
+    // translating it, and a Korean program that came back in English had been
+    // changed in a way nobody asked for.
+    let mut output_language = None;
     let mut rest = args.iter();
     while let Some(arg) = rest.next() {
         match arg.as_str() {
@@ -775,8 +779,8 @@ fn command_convert(args: &[String], language: MessageLanguage) -> ExitCode {
                     );
                 };
                 output_language = match value.as_str() {
-                    "en" | "english" | "영어" => nme_core::Language::English,
-                    "ko" | "korean" | "한국어" => nme_core::Language::Korean,
+                    "en" | "english" | "영어" => Some(nme_core::Language::English),
+                    "ko" | "korean" | "한국어" => Some(nme_core::Language::Korean),
                     _ => {
                         return fail(
                             nme_core::diagnostics::DiagnosticCode::CliInvalidOptionValue,
@@ -828,11 +832,42 @@ fn command_convert(args: &[String], language: MessageLanguage) -> ExitCode {
     convert_file(&file, output, level, output_language, language)
 }
 
+/// True when the program's own words are Korean, ignoring what is inside
+/// quotation marks and after `#`.
+///
+/// `print("안녕")` is an English program that says something in Korean, and
+/// tidying it must not turn its statements into Korean ones.
+fn written_in_korean(source: &str) -> bool {
+    let mut quote: Option<char> = None;
+    let mut comment = false;
+    for character in source.chars() {
+        match quote {
+            Some(open) => {
+                if character == open {
+                    quote = None;
+                }
+            }
+            None if comment => {
+                if character == '\n' {
+                    comment = false;
+                }
+            }
+            None => match character {
+                '"' | '\'' => quote = Some(character),
+                '#' => comment = true,
+                _ if contains_korean(&character.to_string()) => return true,
+                _ => {}
+            },
+        }
+    }
+    false
+}
+
 fn convert_file(
     file: &str,
     output: Option<String>,
     level: nme_core::SyntaxLevel,
-    output_language: nme_core::Language,
+    output_language: Option<nme_core::Language>,
     message_language: MessageLanguage,
 ) -> ExitCode {
     let source = match std::fs::read_to_string(file) {
@@ -846,6 +881,12 @@ fn convert_file(
             );
         }
     };
+    // Without `--language`, the program keeps the language it is written in.
+    let output_language = output_language.unwrap_or(if written_in_korean(&source) {
+        nme_core::Language::Korean
+    } else {
+        nme_core::Language::English
+    });
     // A `.nme` file is already NME, so there is nothing to convert: it is
     // tidied into one spelling instead. Everything else is Python.
     let converted = if file.ends_with(".nme") {

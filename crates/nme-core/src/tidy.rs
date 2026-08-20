@@ -512,7 +512,7 @@ mod tests {
             conversion.source,
             concat!(
                 "# three levels, two languages, one file\n",
-                "보여줘 \"start\"\n",
+                "\"start\" 말해줘\n",
                 "안녕하세요 말해줘\n",
                 "Hello world 말해줘\n",
                 "score는 0\n",
@@ -522,7 +522,7 @@ mod tests {
                 "친구들은 목록 민수, 지안\n",
                 "친구들에 민수 넣어\n",
                 "친구들 개수 말해줘\n",
-                "2번 반복해서 보여줘 \"hi\"\n",
+                "2번 반복해서 \"hi\" 말해줘\n",
                 "3번 반복해서 좋아요 말해줘\n",
                 "만약에 score가 2보다 크면 high 말해줘\n",
                 "만약에 점수가 1보다 크면 높음 말해줘\n",
