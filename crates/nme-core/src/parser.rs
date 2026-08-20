@@ -3992,6 +3992,23 @@ fn classify(
             }
         }
     }
+    // A word typed with its space missing does not always fail loudly: with
+    // `점수를0으로 정해` no matcher claims the line and Python cannot read it
+    // either, so it comes back as nothing at all. A line nobody can read is
+    // worth one more attempt, and a line Python *can* read is left alone.
+    let nothing_can_read_it = matches!(outcome, Ok(None)) && {
+        let text = token_text(source, tokens);
+        !is_valid_python_statement(text) && !is_valid_python_header(text)
+    };
+    if outcome.is_err() || nothing_can_read_it {
+        if let Some(apart) = tokens_with_the_glued_word_split(tokens) {
+            if let Ok(Some(stmt)) =
+                classify_written_line(source, &apart, block, known_names, LineAsWritten::No)
+            {
+                return Ok(Some(stmt));
+            }
+        }
+    }
     let polite = leading_sentence_fillers(tokens);
     if polite == 0 || polite >= tokens.len() {
         return outcome;
@@ -4006,6 +4023,47 @@ fn classify(
         Ok(Some(stmt)) if !matches!(stmt, NmeStmt::Say { .. }) => Ok(Some(stmt)),
         _ => outcome,
     }
+}
+
+/// The line with a word that is two words with the space missing taken apart.
+///
+/// `sayhello`, `wait3 seconds`, `안녕말해줘` and `점수에1더해` are all one word
+/// where two belong, and NME already works out where the space goes in order
+/// to say so in a message. Doing it instead of saying it is the same choice as
+/// reading the verb a beginner wrote: the line has already failed, and the
+/// split is the answer the message was about to hand over.
+///
+/// The pieces are lexed rather than assembled, so `3` comes back a number and
+/// not a name, and their spans are moved back onto the reader's own line so
+/// everything lowered from them quotes what was really written.
+fn tokens_with_the_glued_word_split(tokens: &[Token]) -> Option<Vec<Token>> {
+    let (index, split) = if tokens.len() == 1 {
+        let word = name_word(&tokens[0])?;
+        if is_action_word(word) {
+            return None;
+        }
+        (0, unglue(word)?)
+    } else {
+        glued_action_word(tokens).or_else(|| glued_count_and_repeat(tokens))?
+    };
+    let lines = crate::lexer::logical_lines(&split).ok()?;
+    let [line] = lines.as_slice() else {
+        return None;
+    };
+    let start = tokens[index].span.start;
+    // One space was put between each pair of pieces and the pieces hold none
+    // of their own, so counting the spaces before a token says exactly how far
+    // that token has moved.
+    let moved = |at: usize| start + at - split[..at].matches(' ').count();
+    let mut written = tokens[..index].to_vec();
+    for token in &line.tokens {
+        written.push(Token {
+            tok: token.tok.clone(),
+            span: Span::new(moved(token.span.start), moved(token.span.end)),
+        });
+    }
+    written.extend_from_slice(&tokens[index + 1..]);
+    Some(written)
 }
 
 /// The line without a `:` written straight after its action word.
@@ -21669,6 +21727,21 @@ fn is_hangul(word: &str) -> bool {
     })
 }
 
+/// A word that is not an action word but that NME reads as one, such as
+/// `말하기` for `말해줘`.
+///
+/// Only the exact spellings count, and only Korean ones. The English table
+/// holds ordinary words — `write`, `read`, `rest`, `hold` — that a sentence
+/// may end on, and letting those cut a word in two would take prose apart.
+/// Korean is where a beginner really leaves the space out.
+fn is_korean_action_synonym(word: &str) -> bool {
+    is_hangul(word)
+        && NEAR_MISS_ACTIONS
+            .iter()
+            .chain(MISTAKEN_ACTIONS)
+            .any(|(written, _)| *written == word)
+}
+
 /// The action word closest to `word`, or `None` when nothing is close enough
 /// to be worth naming.
 fn suggest_action_word(word: &str) -> Option<&'static str> {
@@ -22077,9 +22150,11 @@ fn unglue(word: &str) -> Option<String> {
         .collect::<Vec<_>>();
     // Two pieces alone prove nothing: `data1` is one name. A split is only
     // worth showing when one of its pieces is a word NME knows.
-    let found_a_word = split
-        .iter()
-        .any(|piece| is_action_word(piece) || strip_assignment_particle(piece).is_some());
+    let found_a_word = split.iter().any(|piece| {
+        is_action_word(piece)
+            || is_korean_action_synonym(piece)
+            || strip_assignment_particle(piece).is_some()
+    });
     (split.len() > 1 && found_a_word).then(|| split.join(" "))
 }
 
@@ -22115,7 +22190,9 @@ fn split_off_action_word(piece: &str) -> Vec<String> {
             piece.chars().count() >= if piece.is_ascii() { least } else { 2 }
         };
         let split_here = |action: &str, rest: &str| {
-            is_action_word(action) && long_enough(action, 3) && long_enough(rest, 5)
+            (is_action_word(action) || is_korean_action_synonym(action))
+                && long_enough(action, 3)
+                && long_enough(rest, 5)
         };
         if split_here(left, right) || split_here(right, left) {
             return vec![left.to_string(), right.to_string()];
@@ -22141,10 +22218,11 @@ fn glued_action_word(tokens: &[Token]) -> Option<(usize, String)> {
             return None;
         }
         let split = unglue(word)?;
-        split
-            .split(' ')
-            .any(is_action_word)
-            .then_some((index, split))
+        // `unglue` has already refused a split whose pieces are all ordinary
+        // names, so what is left here is a split worth showing: an action
+        // word, a word NME reads as one, or a name with a saving particle on
+        // it (`점수를0으로` is `점수를` and `0으로`).
+        Some((index, split))
     })
 }
 

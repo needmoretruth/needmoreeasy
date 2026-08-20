@@ -315,4 +315,43 @@ GROUPS = [
             "if score is greater than 10 then show won",
         ],
     ),
+    # A word typed with its space missing. NME already worked out where the
+    # space goes in order to say so in a message; since 2026-08-20 it puts the
+    # space back and reads the line.
+    dict(
+        name="띄어쓰기-빠짐", want='print("안녕")', setup="", body="",
+        ways=[
+            "안녕말해줘", "안녕 말해줘", "안녕말해", "안녕말하기",
+        ],
+    ),
+    dict(
+        name="glued-say", want='print("hello")', setup="", body="",
+        ways=[
+            "sayhello", "showhello", "say hello", "printhello",
+        ],
+    ),
+    dict(
+        name="띄어쓰기-빠짐-저장", want="점수 = 0", setup="", body="",
+        ways=[
+            "점수는0", "점수는 0", "점수를 0으로 정해",
+        ],
+    ),
+    dict(
+        name="glued-set", want="score = 0", setup="", body="",
+        ways=[
+            "setscore to 0", "set score to 0", "letscore be 0",
+        ],
+    ),
+    dict(
+        name="띄어쓰기-빠짐-반복", want='range(3)', setup="", body="",
+        ways=[
+            "3번반복해서 안녕 말해줘", "3번 반복해서 안녕 말해줘",
+        ],
+    ),
+    dict(
+        name="glued-wait", want="sleep(3)", setup="", body="",
+        ways=[
+            "wait3 seconds", "wait 3 seconds", "sleep3 seconds",
+        ],
+    ),
 ]

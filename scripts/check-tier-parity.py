@@ -1286,11 +1286,12 @@ DIAGNOSTIC_PARITY = [
      "pals는 빈 목록\npals에 Mina를 90으로 넣어"),
     # `log hello` and `출력하기 안녕` used to be here. Since 2026-08-20 a verb
     # NME does not have is read as the action word it stands for, so both are
-    # accepted. What is still refused in both languages is a correction that
-    # does not read as a whole statement: `wait3` repairs to `wait`, and
-    # `wait seconds` says no amount.
-    ("E0603", "a repaired action word that still makes no statement is named",
-     "wait3 seconds", "2초3 기다립니다"),
+    # accepted, and a word typed with its space missing comes apart and reads.
+    # What is still refused in both languages is a split whose pieces make no
+    # statement: `wait3 apples` becomes `wait 3 apples`, which says to wait an
+    # amount of apples.
+    ("E0603", "a glued word whose pieces make no statement is named",
+     "wait3 apples", "2초3 기다립니다"),
 ]
 
 

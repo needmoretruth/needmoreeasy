@@ -1653,9 +1653,18 @@ fn a_glued_word_only_comes_apart_into_words() {
         ok("a story worth telling\n"),
         "print(\"a story worth telling\")\n"
     );
-    // A space really left out is still named, in both languages.
-    assert_eq!(error_code("sayhello\n"), "E0604");
-    assert_eq!(error_code("안녕말해줘\n"), "E0604");
+    // A space really left out used to be named and left for the writer to
+    // retype. NME had already worked out where the space goes in order to say
+    // so, so since 2026-08-20 it does the line instead of describing it — the
+    // same choice as reading the verb a beginner wrote.
+    assert_eq!(ok("sayhello\n"), "print(\"hello\")\n");
+    assert_eq!(ok("안녕말해줘\n"), "print(\"안녕\")\n");
+    assert_eq!(ok("wait3 seconds\n"), "__import__(\"time\").sleep(3)\n");
+    assert_eq!(ok("점수에1더해\n"), "점수 = 점수 + 1\n");
+    assert_eq!(
+        ok("3번반복해서 안녕 말해줘\n"),
+        "for _ in range(3): print(\"안녕\")\n"
+    );
 }
 
 #[test]

@@ -5,6 +5,15 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+- **A word typed with its space missing comes apart and reads.** `sayhello`,
+  `showhello`, `안녕말하기`, `setscore to 0`, `점수는0`, `wait3 seconds`,
+  `2초대기해`, `점수에1더해` and `3번반복해서 안녕 말해줘` all do what they say.
+  NME had always worked out where the space goes — that is what the old
+  message handed over — so it now puts the space back and reads the line
+  instead of describing it. A split is only taken when one of its pieces is a
+  word NME knows and the whole reads as a statement, which is why
+  `story of a small town doctor`, `Nearly finished` and `a story worth
+  telling` are still sentences, and why `wait3 apples` is still named.
 
 ## 0.6.0
 - **A program written one step in is read, and its Python comes back without

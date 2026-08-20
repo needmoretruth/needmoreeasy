@@ -87,7 +87,13 @@ BINARY = next(
 #
 # 2026-08-20, later again: the `:` every Python page teaches, and a comparison
 # written with a mark and the body straight after it. 254 · 246 · 0 silent.
-FLOOR_WORKS = 246
+#
+# 2026-08-20, last of the day: a word typed with its space missing. NME had
+# always worked out where the space goes so it could say so in a message, and
+# now it puts the space back and reads the line — `sayhello`, `안녕말하기`,
+# `wait3 seconds`, `점수는0`, `3번반복해서`. 273 · 265 · 0 silent. The eight
+# above are still the eight.
+FLOOR_WORKS = 265
 CEILING_SILENT = 0
 
 

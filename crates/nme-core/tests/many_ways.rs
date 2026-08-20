@@ -315,8 +315,12 @@ fn one_word_after_a_verb_that_is_not_an_action_is_read_as_that_action() {
 /// the line quietly printing itself with the misspelling still in it.
 #[test]
 fn a_correction_that_does_not_read_as_a_statement_is_still_named() {
-    assert_eq!(error_code("wait3 seconds\n"), "E0603");
-    assert!(refusal_names("wait3 seconds\n").contains("wait3"));
+    // `wait3 seconds` itself now waits: the space is put back and the line
+    // reads. What still cannot read is a split whose pieces make no
+    // statement, and there the word is named rather than guessed at.
+    assert_eq!(error_code("wait3 apples\n"), "E0603");
+    assert!(refusal_names("wait3 apples\n").contains("wait3"));
+    assert_eq!(error_code("2초3 기다립니다\n"), "E0603");
 }
 
 #[test]
