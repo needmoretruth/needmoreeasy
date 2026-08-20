@@ -262,6 +262,7 @@ numbers joins as readily as a list of words.
 | Sentence | `set ages to an empty table` | `ages = {}` |
 | Sentence | `put Mina at 90 in ages` | `ages["Mina"] = 90` |
 | Sentence | `put Mina as 90 in ages` | `ages["Mina"] = 90` |
+| Sentence | `set Mina to 90 in ages` | `ages["Mina"] = 90` |
 | Sentence | `show Mina in ages` | `print(ages["Mina"])` |
 | Sentence | `set best to Mina in ages` | `best = ages["Mina"]` |
 | Sentence | `show how many ages` | `print(len(ages))` |
@@ -287,6 +288,12 @@ have to remember which is which. Using a record line on a list is `E0234`.
 A record has no order, so `the total of`, `the biggest of`, `the first of` and
 `sort` are not written for one. `for each name in ages` hands back the
 **names**, so the value is read back with `name in ages`.
+
+`set Mina to 90 in ages` and `set best to Mina in ages` are the same six words
+in the same order, and they mean opposite things. What follows `to` decides: a
+number or a quoted string is a **value being written**, and a word is a **name
+being read**. A record kept under numbers is still readable — put the number in
+a name first (`set key to 90`, then `set who to key in ages`).
 
 A name Python wrote as `ages = {}` is a record too.
 

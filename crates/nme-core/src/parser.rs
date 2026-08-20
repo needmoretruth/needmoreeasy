@@ -7191,6 +7191,48 @@ fn saved_name_at(token: &Token, known_names: &HashSet<String>) -> Option<String>
 /// `None` unless the program made that name a record. Every record statement
 /// hangs off this: `in`, `의`, `넣어` and `빼` are ordinary words, and the
 /// name is the only thing that can say which kind of container is meant.
+/// Where the value being written starts, in a line that ends `in <record>`.
+///
+/// `at` and `as` say it outright: `put Mina at 90 in ages`. The saving word
+/// `to` says it as well, and this is where the two readings of
+/// `set Mina to 90 in ages` are told apart — because the same six words can
+/// also be a reading: `set best to Mina in ages` takes `ages["Mina"]` out and
+/// gives it the name `best`.
+///
+/// What follows the word decides, and it decides it cleanly. A number or a
+/// quoted string is a *value*, and nothing is ever read out of a record by
+/// handing it one in this shape. A word is a *name*, which is what a reading
+/// is made of. So both stay available and neither has to be given up, which is
+/// what the owner asked for on 2026-08-20: keep what is good about each and
+/// take away only what is bad. A record kept under numbers is still readable —
+/// through a name (`set key to 90` and then `set who to key in ages`) — and
+/// that is the same escape every other ambiguity in the language uses.
+fn record_value_marker(
+    body: &[Token],
+    from: usize,
+    known_names: &HashSet<String>,
+) -> Option<usize> {
+    let in_at = body.len().checked_sub(2)?;
+    if from >= in_at {
+        return None;
+    }
+    let closes =
+        matches!(body[in_at].tok, Tok::In) || token_matches_exact(&body[in_at], RECORD_IN_WORDS_EN);
+    if !closes || record_name_at(&body[body.len() - 1], known_names).is_none() {
+        return None;
+    }
+    (from..in_at).find(|&index| {
+        token_matches_exact(&body[index], RECORD_AT_WORDS_EN)
+            || (token_matches_exact(&body[index], RECORD_IN_WORDS_EN)
+                && body.get(index + 1).is_some_and(|token| {
+                    matches!(
+                        token.tok,
+                        Tok::Int { .. } | Tok::Float { .. } | Tok::String { .. }
+                    )
+                }))
+    })
+}
+
 /// True when the line has the whole English record shape: a value word, then
 /// `in`/`into`/`to`, then a name the program made a record, and nothing after.
 ///
@@ -7203,12 +7245,7 @@ fn looks_like_an_english_record_line(tokens: &[Token], known_names: &HashSet<Str
     if body.len() < 5 {
         return false;
     }
-    let in_at = body.len() - 2;
-    let closes =
-        matches!(body[in_at].tok, Tok::In) || token_matches_exact(&body[in_at], RECORD_IN_WORDS_EN);
-    closes
-        && record_name_at(&body[body.len() - 1], known_names).is_some()
-        && (1..in_at).any(|index| token_matches_exact(&body[index], RECORD_AT_WORDS_EN))
+    record_value_marker(body, 1, known_names).is_some()
 }
 
 fn record_name_at(token: &Token, known_names: &HashSet<String>) -> Option<String> {
@@ -8085,8 +8122,9 @@ fn english_record_put(
     let Some(consumed) = action_phrase_at(body, 0, RECORD_PUT_WORDS_EN, mode) else {
         return Ok(None);
     };
-    let at_index =
-        (consumed..body.len()).find(|&index| token_matches_exact(&body[index], RECORD_AT_WORDS_EN));
+    let at_index = (consumed..body.len())
+        .find(|&index| token_matches_exact(&body[index], RECORD_AT_WORDS_EN))
+        .or_else(|| record_value_marker(body, consumed + 1, known_names));
     let Some(at_index) = at_index.or_else(|| {
         // `put Mina 90 in ages` — the value word left out. Only a record name
         // at the end makes the two words before it a name and a value, so
@@ -8102,7 +8140,9 @@ fn english_record_put(
     };
     // With no value word the key is the first of the two, so the split runs
     // between them rather than at the marker.
-    let (key_end, value_start) = if token_matches_exact(&body[at_index], RECORD_AT_WORDS_EN) {
+    let (key_end, value_start) = if token_matches_exact(&body[at_index], RECORD_AT_WORDS_EN)
+        || token_matches_exact(&body[at_index], RECORD_IN_WORDS_EN)
+    {
         (at_index, at_index + 1)
     } else {
         (consumed + 1, consumed + 1)

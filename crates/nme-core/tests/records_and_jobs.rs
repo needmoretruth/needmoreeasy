@@ -108,6 +108,21 @@ fn one_value_is_read_back_out() {
         after_record_en("set best to Mina in ages"),
         "best = ages[\"Mina\"]"
     );
+    // The same six words with a number where the name was. A beginner writing
+    // `set Mina to 90 in ages` means to write 90 down under Mina, and used to
+    // get `Mina = ages[90]` and a `KeyError` at run time. What follows the
+    // saving word tells the two apart: a number or a quoted string is a value,
+    // a word is a name. A record kept under numbers is still readable through
+    // a name.
+    assert_eq!(after_record_en("set Mina to 90 in ages"), "ages[\"Mina\"] = 90");
+    assert_eq!(
+        after_record_en("set Mina to \"ninety\" in ages"),
+        "ages[\"Mina\"] = \"ninety\""
+    );
+    assert!(
+        ok("set ages to an empty record\nset key to 90\nset who to key in ages\n")
+            .contains("who = ages[key]")
+    );
     assert!(
         ok("나이표는 빈 표\n만약에 나이표의 민수가 90보다 크면\nhi 말해줘\n끝\n")
             .contains("if (나이표[\"민수\"] > 90):")

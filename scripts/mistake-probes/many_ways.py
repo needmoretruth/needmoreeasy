@@ -93,7 +93,7 @@ BINARY = next(
 # now it puts the space back and reads the line — `sayhello`, `안녕말하기`,
 # `wait3 seconds`, `점수는0`, `3번반복해서`. 273 · 265 · 0 silent. The eight
 # above are still the eight.
-FLOOR_WORKS = 265
+FLOOR_WORKS = 266
 CEILING_SILENT = 0
 
 

@@ -230,6 +230,7 @@ RECORDS = [
     ("문장형", "Sentence", "set ages to an empty table", "나이표는 비어있는 표", "ages = {}", '나이표 = {}'),
     ("문장형", "Sentence", "put Mina at 90 in ages", "나이표에 민수를 90으로 넣어", 'ages["Mina"] = 90', '나이표["민수"] = 90'),
     ("문장형", "Sentence", "put Mina as 90 in ages", "나이표에 민수를 90으로 두어", 'ages["Mina"] = 90', '나이표["민수"] = 90'),
+    ("문장형", "Sentence", "set Mina to 90 in ages", "나이표에 민수를 90으로 저장해", 'ages["Mina"] = 90', '나이표["민수"] = 90'),
     ("문장형", "Sentence", "show Mina in ages", "나이표의 민수 말해줘", 'print(ages["Mina"])', 'print(나이표["민수"])'),
     ("문장형", "Sentence", "set best to Mina in ages", "제일은 나이표에서 민수", 'best = ages["Mina"]', '제일 = 나이표["민수"]'),
     ("문장형", "Sentence", "show how many ages", "나이표 개수 말해줘", "print(len(ages))", 'print(len(나이표))'),
@@ -768,6 +769,12 @@ Python으로는 `친구들[0]`이 됩니다. 0번째는 없으며 적으면 `E02
 `나이표의 이름마다 반복해`는 값이 아니라 **이름**을 하나씩 돌려주므로, 값은
 `나이표의 이름`처럼 다시 꺼내 읽습니다.
 
+영어로 쓴 `set Mina to 90 in ages`와 `set best to Mina in ages`는 같은 여섯 낱말이
+같은 차례로 놓인 것인데 뜻이 정반대입니다. `to` 뒤에 오는 것이 가릅니다 — 숫자나
+따옴표 안의 글자는 **써 넣는 값**이고, 낱말은 **읽어 오는 이름**입니다. 숫자를
+이름으로 삼은 표도 그대로 읽을 수 있습니다. 숫자를 이름에 먼저 담으면 됩니다
+(`set key to 90` 다음에 `set who to key in ages`).
+
 Python으로 `나이표 = {{}}`라고 쓴 이름도 표로 봅니다.
 
 ## 14. 글자 다루기
@@ -1100,6 +1107,12 @@ have to remember which is which. Using a record line on a list is `E0234`.
 A record has no order, so `the total of`, `the biggest of`, `the first of` and
 `sort` are not written for one. `for each name in ages` hands back the
 **names**, so the value is read back with `name in ages`.
+
+`set Mina to 90 in ages` and `set best to Mina in ages` are the same six words
+in the same order, and they mean opposite things. What follows `to` decides: a
+number or a quoted string is a **value being written**, and a word is a **name
+being read**. A record kept under numbers is still readable — put the number in
+a name first (`set key to 90`, then `set who to key in ages`).
 
 A name Python wrote as `ages = {{}}` is a record too.
 

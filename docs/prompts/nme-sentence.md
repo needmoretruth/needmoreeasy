@@ -198,6 +198,7 @@ on one line. This document describes version `0.6.0`.
 | Sentence | `set ages to an empty table` | `ages = {}` |
 | Sentence | `put Mina at 90 in ages` | `ages["Mina"] = 90` |
 | Sentence | `put Mina as 90 in ages` | `ages["Mina"] = 90` |
+| Sentence | `set Mina to 90 in ages` | `ages["Mina"] = 90` |
 | Sentence | `show Mina in ages` | `print(ages["Mina"])` |
 | Sentence | `set best to Mina in ages` | `best = ages["Mina"]` |
 | Sentence | `show how many ages` | `print(len(ages))` |
