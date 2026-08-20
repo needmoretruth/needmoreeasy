@@ -4608,6 +4608,9 @@ fn match_say(
         // Last resort — see `parse_value_refuses_nothing_but_an_empty_line`:
         // the only refusal is an empty slice, and that is checked above with
         // its own message (E0204). Kept as the safe answer if that changes.
+        if let Some(problem) = module_tool_used_bare(body, known_names) {
+            return Err(problem);
+        }
         let value = parse_value(source, body, known_names, prefer_text).map_err(|()| {
             Diagnostic::bilingual(
                 DiagnosticCode::SayValueUnparseable,
@@ -4674,6 +4677,9 @@ fn match_say(
     }
     // Last resort — the emptiness above is the only thing `parse_value`
     // refuses, and it is answered there with E0204.
+    if let Some(problem) = module_tool_used_bare(&value_tokens, known_names) {
+        return Err(problem);
+    }
     let value = parse_value(source, &value_tokens, known_names, true).map_err(|()| {
         Diagnostic::bilingual(
             DiagnosticCode::SaySentenceUnparseable,
@@ -16735,6 +16741,76 @@ const MODULE_ANSWERS_WITH_NOTHING: &[&str] = &[
 /// program really did load the module that binds it.
 fn module_answers_with_nothing(names: &HashSet<String>, name: &str) -> bool {
     MODULE_ANSWERS_WITH_NOTHING.contains(&name) && is_module_name(names, name)
+}
+
+/// The names a bundled module binds that hold a value rather than a tool:
+/// the fixed numbers, the version strings, and the Python modules the
+/// adapters import for themselves. Writing one on its own shows something,
+/// so nothing is wrong with the line.
+///
+/// Everything else a module binds is a tool that needs something written
+/// after it, and writing one on its own showed `<function <lambda>>`.
+const MODULE_VALUE_NAMES: &[&str] = &[
+    "pi",
+    "원주율",
+    "zk_prime",
+    "영지식큰소수",
+    "zk_order",
+    "영지식부분군크기",
+    "zk_generator",
+    "영지식생성원",
+    "zk_challenge_bits",
+    "영지식도전비트",
+    "zk_challenge_limit",
+    "영지식도전범위",
+    "날짜모듈",
+    "영지식비밀난수",
+    RANDOM_MODULE,
+    RANDOM_MODULE_KO,
+    FILE_MODULE,
+    FILE_MODULE_KO,
+    MATH_MODULE,
+    MATH_MODULE_KO,
+];
+
+/// True when the word names a module tool that is missing what it works on.
+///
+/// `개수 말해줘` and `show count` showed `<function <lambda>>` — a program
+/// that runs, says nothing anybody wanted, and never says why.
+fn module_needs_something_after_it(names: &HashSet<String>, name: &str) -> bool {
+    is_module_name(names, name)
+        && !MODULE_ANSWERS_WITH_NOTHING.contains(&name)
+        && !MODULE_VALUE_NAMES.contains(&name)
+        && !name.ends_with("_version")
+        && !name.ends_with("버전")
+}
+
+/// The diagnostic for a line whose whole value is one module tool standing on
+/// its own, or `None` when it is anything else.
+fn module_tool_used_bare(tokens: &[Token], known_names: &HashSet<String>) -> Option<Diagnostic> {
+    let [token] = tokens else {
+        return None;
+    };
+    let name = name_word(token)?;
+    module_needs_something_after_it(known_names, name)
+        .then(|| module_tool_without_its_work(name, token.span))
+}
+
+/// `개수 말해줘` with nothing to count.
+fn module_tool_without_its_work(name: &str, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::ModuleShapeInvalid,
+        format!("`{name}` is a tool, and this line does not say what it works on"),
+        format!(
+            "`{name}`{} 도구인데, 이 줄에는 무엇에 쓸지가 없습니다",
+            korean_particle(name, "은", "는")
+        ),
+        span,
+    )
+    .with_bilingual_hint(
+        format!("write what it works on after it: `{name}(friends)`"),
+        format!("무엇에 쓸지 뒤에 적어 주세요: `{name}(친구들)`처럼 씁니다"),
+    )
 }
 
 /// True when `name` came from a `use` line rather than from the program.

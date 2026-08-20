@@ -12,6 +12,10 @@ All notable changes to NME are recorded here.
   when they stand on their own, which is also what makes guides 33 and 36
   writable in sentences. Names that need something written after them
   (`days_after`, `개수`) are unchanged: what is missing there is the writer's.
+- **A module tool written with nothing to work on is named.** `show count`
+  and `개수 말해줘` compiled to `print(<function <lambda>>)`. The new message
+  says which name is a tool and that the line does not say what it works on.
+  Fixed values — `pi`, `원주율`, the version strings — are shown as they stand.
 - **`이름은 물어봐` saves the answer in `이름`.** The topic mark was kept as
   part of the name, so the program bound `이름은` and every later line that
   said `이름` was talking about something that was never made.

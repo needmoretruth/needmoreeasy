@@ -1473,3 +1473,40 @@ fn a_saving_word_on_its_own_says_the_name_is_missing() {
     let message = err("set\n");
     assert!(message.contains("name to save is missing"), "{message}");
 }
+
+/// A module tool written with nothing to work on used to compile to
+/// `print(<function <lambda>>)`: a program that runs, says nothing anybody
+/// wanted, and never says why.
+#[test]
+fn a_module_tool_on_its_own_says_what_is_missing() {
+    for source in [
+        "use list\nshow count\n",
+        "목록 사용\n개수 말해줘\n",
+        "use math\nshow root\n",
+        "날짜 사용\n며칠뒤 말해줘\n",
+    ] {
+        assert_eq!(error_code(source), "E0406", "{source}");
+    }
+    let message = err("use list\nshow count\n");
+    assert!(message.contains("`count` is a tool"), "{message}");
+}
+
+/// The six date names that answer with nothing written after them. Without
+/// this a whole date program could not be written in sentences.
+#[test]
+fn the_date_names_answer_when_they_stand_alone() {
+    for (source, expected) in [
+        ("use date\nshow today\n", "print(today())"),
+        ("use date\nshow weekday\n", "print(weekday())"),
+        ("use date\nset stamp to year\n", "stamp = year()"),
+        ("날짜 사용\n오늘 말해줘\n", "print(오늘())"),
+        ("날짜 사용\n요일 말해줘\n", "print(요일())"),
+        ("날짜 사용\n올해날짜는 올해\n", "올해날짜 = 올해()"),
+    ] {
+        let python = transpile(source).expect("this program compiles");
+        assert!(python.contains(expected), "{source} -> {python}");
+    }
+    // A fixed value is not a tool and is shown as it stands.
+    let python = transpile("use math\nshow pi\n").expect("this program compiles");
+    assert!(python.contains("print(pi)"), "{python}");
+}
