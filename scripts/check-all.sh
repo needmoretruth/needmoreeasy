@@ -19,7 +19,8 @@ for check in \
   check-syntax-reference \
   check-common-english-words \
   check-version \
-  check-tier-parity
+  check-tier-parity \
+  check-tidy-parity
 do
   printf '── %s\n' "$check"
   python3 "scripts/$check.py"

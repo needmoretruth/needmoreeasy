@@ -85,7 +85,22 @@ const PASSES: usize = 3;
 struct Proposal {
     /// Index in the lexer's logical-line list.
     line: usize,
-    edit: Edit,
+    /// The spellings this line could take, best first. A line has more than
+    /// one when a message could be written as the words it says: that is the
+    /// nicer sentence, and the plainer one is there for the file where a name
+    /// made later would turn those words into a value.
+    spellings: Vec<Edit>,
+}
+
+impl Proposal {
+    /// Where in the file this line stands. Every spelling replaces the same
+    /// span, so the first one speaks for all of them.
+    fn span(&self) -> crate::diagnostics::Span {
+        self.spellings
+            .first()
+            .expect("a proposal always holds at least one spelling")
+            .span
+    }
 }
 
 /// One rewriting pass, with the whole-program check that makes it safe.
@@ -149,52 +164,65 @@ fn proposed_edits(
             continue;
         }
         let written = line.text(source);
-        let rewrite = Rewrite {
-            source,
-            level,
-            language,
-            length_not_count: asks_for_a_length(written),
+        let nme = program.nme_lines.iter().find(|nme| nme.line_index == index);
+        let mut spellings = Vec::new();
+        // Four spellings, best first: this level, then the other one, each
+        // with and without reading a message as the words it says. The level
+        // asked for is what a file should come out in, but a line it cannot
+        // take at that level is better written at the other one — still in
+        // the language asked for — than left in the language it came in.
+        let other = match level {
+            SyntaxLevel::Beginner => SyntaxLevel::Sentence,
+            _ => SyntaxLevel::Beginner,
         };
-        let replacement = match program.nme_lines.iter().find(|nme| nme.line_index == index) {
-            Some(nme) => rewrite.statement(&nme.stmt, written),
-            None => convert_line(source, line, level, language).map(|edit| edit.replacement),
-        };
-        if let Some(replacement) = replacement {
-            if replacement != written && !only_particles_differ(written, &replacement) {
-                proposals.push(Proposal {
-                    line: index,
-                    edit: Edit {
-                        span: line.span,
-                        replacement,
-                    },
-                });
+        for (level, read_messages) in [
+            (level, true),
+            (level, false),
+            (other, true),
+            (other, false),
+        ] {
+            let rewrite = Rewrite {
+                source,
+                level,
+                language,
+                length_not_count: asks_for_a_length(written),
+                colon: written.trim_end().ends_with(':'),
+                containers: &program.container_names,
+                read_messages,
+            };
+            match nme {
+                Some(nme) => spellings.extend(rewrite.statement(&nme.stmt, written)),
+                None if read_messages => spellings.extend(
+                    convert_line(source, line, level, language, &program.container_names)
+                        .into_iter()
+                        .map(|edit| edit.replacement),
+                ),
+                None => {}
             }
+        }
+        spellings.dedup();
+        spellings.dedup();
+        // A spelling that is the line already on the page means this line is
+        // where it should be, and every spelling after it is a worse one. So
+        // the list stops there rather than falling through to the next.
+        if let Some(at) = spellings.iter().position(|spelling| spelling == written) {
+            spellings.truncate(at);
+        }
+        let spellings = spellings
+            .into_iter()
+            .map(|replacement| Edit {
+                span: line.span,
+                replacement,
+            })
+            .collect::<Vec<_>>();
+        if !spellings.is_empty() {
+            proposals.push(Proposal {
+                line: index,
+                spellings,
+            });
         }
     }
     proposals
-}
-
-/// True when the only difference between the line as written and the line as
-/// tidied is which half of a Korean particle pair it uses.
-///
-/// `은`/`는`, `이`/`가`, `을`/`를` and `과`/`와` are one particle each: which
-/// half a word takes depends on how the syllable before it ends, and the
-/// tidier does not listen for that. The writer did, so their line stands.
-/// This is the one place tidying declines to make a line uniform, because the
-/// uniform answer would be worse Korean than the one already on the page.
-fn only_particles_differ(written: &str, tidied: &str) -> bool {
-    fn one_of_each_pair(text: &str) -> String {
-        text.chars()
-            .map(|character| match character {
-                '는' => '은',
-                '가' => '이',
-                '를' => '을',
-                '와' => '과',
-                other => other,
-            })
-            .collect()
-    }
-    written != tidied && one_of_each_pair(written) == one_of_each_pair(tidied)
 }
 
 /// Adds the edits back in groups, keeping every group the whole program still
@@ -247,9 +275,24 @@ fn without_the_lines_to_blame(
         if spoiled.is_empty() {
             return Some((candidate, worth_another_look(&kept)));
         }
-        let before = kept.len();
-        kept.retain(|proposal| !spoiled.contains(&line_at(source, proposal.edit.span.start)));
-        if kept.len() < before {
+        // A line the program blamed loses its best spelling and keeps the
+        // rest: the next one down is the same statement written more plainly,
+        // and trying that before giving the line up is what lets a message
+        // whose words are also a name still be written in the language asked
+        // for. A line with nothing left to try is dropped.
+        let mut moved = false;
+        kept = kept
+            .into_iter()
+            .filter_map(|mut proposal| {
+                if !spoiled.contains(&line_at(source, proposal.span().start)) {
+                    return Some(proposal);
+                }
+                moved = true;
+                proposal.spellings.remove(0);
+                (!proposal.spellings.is_empty()).then_some(proposal)
+            })
+            .collect();
+        if moved {
             continue;
         }
         // The blame landed on a line this pass never touched, and a block
@@ -273,8 +316,12 @@ fn without_the_lines_to_blame(
 
 /// True when this rewrite would take the colon off a block header.
 fn drops_a_colon(source: &str, proposal: &Proposal) -> bool {
-    source[proposal.edit.span.start..proposal.edit.span.end].ends_with(':')
-        && !proposal.edit.replacement.ends_with(':')
+    let span = proposal.span();
+    source[span.start..span.end].ends_with(':')
+        && proposal
+            .spellings
+            .first()
+            .is_some_and(|edit| !edit.replacement.ends_with(':'))
 }
 
 /// How many times tidying may drop the lines it is blamed for before it gives
@@ -317,7 +364,19 @@ fn keep_what_holds(source: &str, python: &str, kept: &mut Vec<Proposal>, candida
         return;
     }
     kept.truncate(before);
-    if candidates.len() == 1 {
+    if let [proposal] = candidates {
+        // One line on its own, and its best spelling did not hold. The rest
+        // are plainer rather than different, so each is worth asking about.
+        for spelling in proposal.spellings.iter().skip(1) {
+            kept.push(Proposal {
+                line: proposal.line,
+                spellings: vec![spelling.clone()],
+            });
+            if transpile_matches(&apply_edits(source, &only_edits(kept)), python) {
+                return;
+            }
+            kept.pop();
+        }
         return;
     }
     let middle = candidates.len() / 2;
@@ -328,12 +387,13 @@ fn keep_what_holds(source: &str, python: &str, kept: &mut Vec<Proposal>, candida
 fn only_edits(proposals: &[Proposal]) -> Vec<Edit> {
     proposals
         .iter()
-        .map(|proposal| proposal.edit.clone())
+        .filter_map(|proposal| proposal.spellings.first().cloned())
         .collect()
 }
 
 fn transpile_matches(candidate: &str, python: &str) -> bool {
-    transpile::transpile(candidate).is_ok_and(|produced| produced == python)
+    transpile::transpile(candidate)
+        .is_ok_and(|produced| transpile::is_the_same_program(&produced, python))
 }
 
 /// How many lines of `after` are not the line of `before` in the same place.
@@ -421,10 +481,12 @@ mod tests {
             let lines = source.lines().count();
             for (level, language) in CELLS {
                 let conversion = tidied(&source, level, language);
-                assert_eq!(
-                    transpile::transpile(&conversion.source).ok(),
-                    Some(python.clone()),
-                    "{name} tidied to {level:?}/{language:?} became a different program"
+                let again = transpile::transpile(&conversion.source)
+                    .unwrap_or_else(|problems| panic!("{name}: {problems:?}"));
+                assert!(
+                    transpile::is_the_same_program(&again, &python),
+                    "{name} tidied to {level:?}/{language:?} became a different program\n\
+                     {python}\n---\n{again}"
                 );
                 assert_eq!(
                     conversion.source.lines().count(),
@@ -512,7 +574,7 @@ mod tests {
             conversion.source,
             concat!(
                 "# three levels, two languages, one file\n",
-                "\"start\" 말해줘\n",
+                "start 말해줘\n",
                 "안녕하세요 말해줘\n",
                 "Hello world 말해줘\n",
                 "score는 0\n",
@@ -522,7 +584,7 @@ mod tests {
                 "친구들은 목록 민수, 지안\n",
                 "친구들에 민수 넣어\n",
                 "친구들 개수 말해줘\n",
-                "2번 반복해서 \"hi\" 말해줘\n",
+                "2번 반복해서 hi 말해줘\n",
                 "3번 반복해서 좋아요 말해줘\n",
                 "만약에 score가 2보다 크면 high 말해줘\n",
                 "만약에 점수가 1보다 크면 높음 말해줘\n",
@@ -675,8 +737,9 @@ mod tests {
             "start the timer\n",
             "clear the screen\n",
         );
-        // A list, `sort` and the screen sentences have no beginner row, so
-        // they keep the sentence spelling. Only the first three change.
+        // `sort` and the screen sentences have no beginner row, so they keep
+        // the sentence spelling. The list does have one — beginner syntax
+        // writes values as Python — so it is written out as a Python list.
         let conversion = tidied(source, SyntaxLevel::Beginner, Language::English);
         assert_eq!(
             conversion.source,
@@ -684,7 +747,7 @@ mod tests {
                 "save score to 0\n",
                 "say score\n",
                 "ask name, \"What is your name?\" + \" \"\n",
-                "set friends to list of Mina, Ada\n",
+                "save friends to [\"Mina\", \"Ada\"]\n",
                 "sort friends\n",
                 "start the timer\n",
                 "clear the screen\n",
@@ -713,25 +776,34 @@ mod tests {
         }
     }
 
+    /// Tidying used to leave a Korean particle exactly as the writer typed it,
+    /// on the grounds that which half of a pair a word takes is a question
+    /// about its sound and the tidier could not hear. It can: the rule is in
+    /// `korean_particle`, and it covers Hangul, English words, numbers and —
+    /// since 2026-08-20 — a name that is one letter, which is read as the
+    /// letter's own name (`p` is 피 and takes 는, not the 은 that `skip`
+    /// takes). So a tidied file is uniform here as it is everywhere else.
     #[test]
-    fn the_particle_the_writer_chose_is_left_alone() {
-        // `금화는` is right and `금화은` is not; which one a word takes is a
-        // question about its sound, and tidying does not answer it.
-        let source = "금화는 10\n금화에 5 더해\n";
-        assert_eq!(sentence(source, Language::Korean), source);
-        assert!(only_particles_differ("금화는 10", "금화은 10"));
-        assert!(!only_particles_differ("금화는 10", "금화는 11"));
+    fn the_particle_is_the_one_the_word_takes() {
+        assert_eq!(sentence("금화는 10\n금화에 5 더해\n", Language::Korean),
+                   "금화는 10\n금화에 5 더해\n");
+        assert_eq!(sentence("금화은 10\n", Language::Korean), "금화는 10\n");
+        assert_eq!(sentence("set p to 1\n", Language::Korean), "p는 1\n");
+        assert_eq!(sentence("set skip to 1\n", Language::Korean), "skip은 1\n");
+        assert_eq!(sentence("set friend to 1\n", Language::Korean), "friend는 1\n");
     }
 
     #[test]
     fn a_line_it_cannot_write_is_left_exactly_as_it_was() {
-        // The Schnorr values have no row in the syntax reference, so the
-        // sentence that makes one keeps every character it had.
-        let source = "영지식 사용\n비밀값은 영지식 비밀 만들기\n";
+        // A condition written as a method call has no words in either
+        // language, so the line keeps every character it had.
+        let source = "digest는 \"00ab\"\n어려움은 2\nif digest.startswith(\"0\" * 어려움):\n    print(1)\n";
         for (level, language) in NME_CELLS {
             let conversion = tidied(source, level, language);
             assert!(
-                conversion.source.contains("비밀값은 영지식 비밀 만들기\n"),
+                conversion
+                    .source
+                    .contains("if digest.startswith(\"0\" * 어려움):\n"),
                 "at {level:?}/{language:?}: {}",
                 conversion.source
             );

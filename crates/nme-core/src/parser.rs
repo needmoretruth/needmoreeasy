@@ -1395,6 +1395,12 @@ enum MatchMode {
 pub struct ParsedProgram {
     pub nme_lines: Vec<NmeLine>,
     pub virtual_indents: Vec<usize>,
+    /// Names the program made into a list or a record.
+    ///
+    /// `len(x)` is one piece of Python and two sentences: `how many friends`
+    /// counts things and `the length of name` counts letters. Nothing in the
+    /// Python says which, so the tidier asks what the name holds.
+    pub container_names: HashSet<String>,
     /// Blank lines inside a story block, and the `print()` that each one
     /// becomes. They hold no tokens, so they are not logical lines and the
     /// replacement has to name its own place in the source.
@@ -1420,6 +1426,7 @@ pub fn parse_program(
     // take one of their words away. See the call site below.
     let mut loaded_modules: Vec<BundledModuleId> = Vec::new();
     let mut bindings = BindingEnv::new();
+    let mut container_names: HashSet<String> = HashSet::new();
     let mut virtual_indents = vec![0; lines.len()];
     let mut blocks = Vec::<ExplicitBlock>::new();
     // `만약에 체력이 0보다 크면 살아있음 말해줘` opens no block — the whole
@@ -2056,7 +2063,8 @@ pub fn parse_program(
                     }
                     None => Vec::new(),
                 };
-                bindings.remember_nme(&stmt);
+                bindings.remember_nme(&stmt, source);
+                remember_containers(&stmt, source, &mut container_names);
                 // Only a one-line condition leaves an `else` open, and only
                 // for the line straight after it.
                 inline_branch = match &stmt {
@@ -2370,6 +2378,7 @@ pub fn parse_program(
             nme_lines: found,
             virtual_indents,
             story_blank_lines,
+            container_names,
         })
     } else {
         Err(problems)
@@ -3975,6 +3984,20 @@ fn classify(
                 return Ok(Some(stmt));
             }
         }
+        // `30% chance:` and `아니면:` are block headers written the way every
+        // Python page writes one, and they read as their own words instead —
+        // so the block never opens and the words are printed. Taking the mark
+        // off is allowed here only when what is left opens a block, which is
+        // what keeps `Chapter one:` and `주의:` printing themselves.
+        if let Some(without) = tokens_without_a_closing_colon(tokens) {
+            if let Ok(Some(stmt)) =
+                classify_written_line(source, &without, block, known_names, LineAsWritten::No)
+            {
+                if opens_a_block(&stmt) {
+                    return Ok(Some(stmt));
+                }
+            }
+        }
         return outcome;
     }
     if matches!(&outcome, Err(problem) if problem.code == DiagnosticCode::UnknownActionWord) {
@@ -3983,7 +4006,15 @@ fn classify(
             return Ok(Some(stmt));
         }
     }
-    if outcome.is_err() {
+    // A line does not always fail loudly. `30% chance:` and `점수를0으로 정해`
+    // are claimed by no matcher and cannot be read as Python either, so they
+    // come back as nothing at all. A line nobody can read is worth another
+    // attempt; a line Python *can* read is left exactly as it stands.
+    let nothing_can_read_it = matches!(outcome, Ok(None)) && {
+        let text = token_text(source, tokens);
+        !is_valid_python_statement(text) && !is_valid_python_header(text)
+    };
+    if outcome.is_err() || nothing_can_read_it {
         if let Some(without) = tokens_without_the_python_colon(tokens) {
             if let Ok(Some(stmt)) =
                 classify_written_line(source, &without, block, known_names, LineAsWritten::No)
@@ -3991,16 +4022,6 @@ fn classify(
                 return Ok(Some(stmt));
             }
         }
-    }
-    // A word typed with its space missing does not always fail loudly: with
-    // `점수를0으로 정해` no matcher claims the line and Python cannot read it
-    // either, so it comes back as nothing at all. A line nobody can read is
-    // worth one more attempt, and a line Python *can* read is left alone.
-    let nothing_can_read_it = matches!(outcome, Ok(None)) && {
-        let text = token_text(source, tokens);
-        !is_valid_python_statement(text) && !is_valid_python_header(text)
-    };
-    if outcome.is_err() || nothing_can_read_it {
         if let Some(apart) = tokens_with_the_glued_word_split(tokens) {
             if let Ok(Some(stmt)) =
                 classify_written_line(source, &apart, block, known_names, LineAsWritten::No)
@@ -4066,6 +4087,67 @@ fn tokens_with_the_glued_word_split(tokens: &[Token]) -> Option<Vec<Token>> {
     Some(written)
 }
 
+/// True when the line begins with a word that opens or continues a Python
+/// block.
+///
+/// Such a line keeps its `:`. `else:` and `elif x:` are Python's own spelling,
+/// and reading them as the NME words of the same name would ask for an NME
+/// `if` above them that a Python program never wrote.
+fn starts_a_python_block(tokens: &[Token]) -> bool {
+    tokens.first().is_some_and(|token| {
+        matches!(
+            token.tok,
+            Tok::If
+                | Tok::For
+                | Tok::While
+                | Tok::Def
+                | Tok::Class
+                | Tok::Try
+                | Tok::Except
+                | Tok::Else
+                | Tok::Elif
+                | Tok::Finally
+                | Tok::With
+                | Tok::Async
+                | Tok::Match
+                | Tok::Case
+        )
+    })
+}
+
+/// The line without the `:` it ends on.
+///
+/// A line that opens or continues a Python block keeps its mark: `else:` and
+/// `elif x:` are Python's own spelling, and reading them as the NME words of
+/// the same name would ask for an NME `if` above them that a Python program
+/// never wrote.
+fn tokens_without_a_closing_colon(tokens: &[Token]) -> Option<Vec<Token>> {
+    if tokens.len() < 2 || !matches!(tokens.last()?.tok, Tok::Colon) {
+        return None;
+    }
+    if starts_a_python_block(tokens) {
+        return None;
+    }
+    Some(tokens[..tokens.len() - 1].to_vec())
+}
+
+/// True for a statement that opens a block and has nothing written after it.
+fn opens_a_block(stmt: &NmeStmt) -> bool {
+    matches!(
+        stmt,
+        NmeStmt::Times { inline: None, .. }
+            | NmeStmt::ForEach { inline: None, .. }
+            | NmeStmt::Forever { inline: None }
+            | NmeStmt::Chance { inline: None, .. }
+            | NmeStmt::When { inline: None, .. }
+            | NmeStmt::While { inline: None, .. }
+            | NmeStmt::ElseIf { inline: None, .. }
+            | NmeStmt::Else { inline: None }
+            | NmeStmt::Story { .. }
+            | NmeStmt::Job { .. }
+    )
+}
+
 /// The line without a `:` written straight after its action word.
 ///
 /// This is the one place the mark has to be taken from a line that already
@@ -4093,7 +4175,7 @@ fn tokens_without_a_trailing_python_colon(tokens: &[Token]) -> Option<Vec<Token>
 /// taken, never the first token, and never a story block's own mark — that
 /// colon is the statement.
 fn tokens_without_the_python_colon(tokens: &[Token]) -> Option<Vec<Token>> {
-    if story_colon_shape(tokens) {
+    if story_colon_shape(tokens) || starts_a_python_block(tokens) {
         return None;
     }
     let mut colons = tokens
@@ -5218,7 +5300,13 @@ fn match_natural_question(
         || question_asks_for_a_number(source, &tokens[..question_end]);
     let target = if let Some(target) = natural_age_question_target(tokens, question_end) {
         Some(target)
-    } else if let Some(first) = tokens.first().and_then(name_word) {
+    } else if let Some(first) = tokens.first().and_then(name_word).filter(|word| is_hangul(word)) {
+        // The name a Korean question is about is a Korean word: `이름이
+        // 뭐예요?`, `나이가 몇이에요?`. A word in Latin letters in front of one
+        // — `ask number age 몇 살이에요?` — is the name the writer gave the
+        // answer, not part of the question, and reading it as part of the
+        // question asked `age 몇 살이에요?` instead.
+        //
         // `내 이름은 뭐예요?` is the same beginner question as
         // `이름이 뭐예요?`; the possessive is natural speech, not part of
         // the variable name.
@@ -5639,6 +5727,18 @@ fn match_update(
     // words inside a message quietly rewrite the whole line: `show I will
     // multiply by 2` used to become `show = show * 2`.
     if tokens.first().is_some_and(starts_a_different_statement) {
+        return Ok(None);
+    }
+    // The same rule the other way round. Korean puts its verb at the end, so
+    // a line that ends on an output word is telling something and every word
+    // in front of it is what it tells: `foeName goes down 말해줘` says a
+    // sentence. Without this, `down` was read as the taking-away word and the
+    // line was refused for a list nobody had made.
+    if tokens.len() > 1
+        && tokens
+            .last()
+            .is_some_and(|token| token_matches_exact(token, SAY_WORDS_KO))
+    {
         return Ok(None);
     }
     // `add Mina at 90 to ages` names a value with `at` and ends at a record,
@@ -16871,8 +16971,12 @@ impl BindingEnv {
         })
     }
 
-    fn remember_nme(&mut self, stmt: &NmeStmt) {
-        remember_bindings(stmt, &mut self.scopes.last_mut().expect("root scope").names);
+    fn remember_nme(&mut self, stmt: &NmeStmt, source: &str) {
+        remember_bindings(
+            stmt,
+            source,
+            &mut self.scopes.last_mut().expect("root scope").names,
+        );
     }
 
     fn remember_python(&mut self, tokens: &[Token], indent: usize) {
@@ -17220,7 +17324,61 @@ fn is_module_name(names: &HashSet<String>, name: &str) -> bool {
     names.contains(&format!("{MODULE_NAME_MARKER}{name}"))
 }
 
-fn remember_bindings(stmt: &NmeStmt, names: &mut HashSet<String>) {
+/// True when a piece of Python plainly builds one of the two kinds of
+/// container NME knows: `[...]` a list, `{...}` a record.
+///
+/// Only the brackets on the outside are read, which is why a call that hands
+/// one back is not claimed. Claiming too little costs a diagnostic the writer
+/// would have liked; claiming too much would refuse a line that is fine.
+fn python_makes(code: &Code, source: &str, open: &str, close: &str) -> bool {
+    let Code::Source(span) = code else {
+        return false;
+    };
+    let text = source[span.start..span.end].trim();
+    text.starts_with(open) && text.ends_with(close)
+}
+
+/// The names this statement makes into a list or a record.
+///
+/// The binding tracker already knows this, but it knows it inside a scope that
+/// is gone by the time the parse is finished, and under a marker meant for the
+/// parser rather than for a reader. This keeps the plain names for the tidier.
+fn remember_containers(stmt: &NmeStmt, source: &str, names: &mut HashSet<String>) {
+    match stmt {
+        NmeStmt::Append { target, .. }
+        | NmeStmt::Arrange { target, .. }
+        | NmeStmt::RecordPut { target, .. } => {
+            names.insert(target.clone());
+        }
+        NmeStmt::Set {
+            target,
+            value: Value::List(_) | Value::Split { .. } | Value::EmptyRecord,
+        } => {
+            names.insert(target.clone());
+        }
+        NmeStmt::Set {
+            target,
+            value: Value::Python(code),
+        } if python_makes(code, source, "[", "]") || python_makes(code, source, "{", "}") => {
+            names.insert(target.clone());
+        }
+        NmeStmt::Times { inline: Some(inline), .. }
+        | NmeStmt::ForEach { inline: Some(inline), .. }
+        | NmeStmt::When { inline: Some(inline), .. }
+        | NmeStmt::While { inline: Some(inline), .. }
+        | NmeStmt::ElseIf { inline: Some(inline), .. }
+        | NmeStmt::Else { inline: Some(inline) }
+        | NmeStmt::Chance { inline: Some(inline), .. }
+        | NmeStmt::Forever { inline: Some(inline) } => {
+            if let InlineStmt::Nme(inner) = inline {
+                remember_containers(inner, source, names);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn remember_bindings(stmt: &NmeStmt, source: &str, names: &mut HashSet<String>) {
     match stmt {
         NmeStmt::Append { target, .. } => {
             remember_list_name(names, target);
@@ -17239,6 +17397,25 @@ fn remember_bindings(stmt: &NmeStmt, names: &mut HashSet<String>) {
         NmeStmt::Job { name, parameters } => {
             names.insert(name.clone());
             remember_job_name(names, name, parameters.len());
+        }
+        // A beginner writes the list as Python — `save friends to ["Mina"]` —
+        // and that name holds a list just as surely as `set friends to list of
+        // Mina` does. Without this the tidier could not write a program at
+        // beginner level at all: the line it wrote made the `append` below it
+        // stop reading, so the whole rewrite was thrown away.
+        NmeStmt::Set {
+            target,
+            value: Value::Python(code),
+        } if python_makes(code, source, "[", "]") => {
+            names.insert(target.clone());
+            remember_list_name(names, target);
+        }
+        NmeStmt::Set {
+            target,
+            value: Value::Python(code),
+        } if python_makes(code, source, "{", "}") => {
+            names.insert(target.clone());
+            remember_record_name(names, target);
         }
         NmeStmt::Set {
             target,
@@ -17275,7 +17452,7 @@ fn remember_bindings(stmt: &NmeStmt, names: &mut HashSet<String>) {
                 names.insert(position.clone());
             }
             if let Some(InlineStmt::Nme(inner)) = inline {
-                remember_bindings(inner, names);
+                remember_bindings(inner, source, names);
             }
         }
         NmeStmt::ModuleImport {
@@ -17312,7 +17489,7 @@ fn remember_bindings(stmt: &NmeStmt, names: &mut HashSet<String>) {
         }
         | NmeStmt::Else {
             inline: Some(InlineStmt::Nme(inner)),
-        } => remember_bindings(inner, names),
+        } => remember_bindings(inner, source, names),
         _ => {}
     }
 }

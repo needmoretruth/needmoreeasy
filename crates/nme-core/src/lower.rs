@@ -511,7 +511,7 @@ fn printable_text(value: &Value, source: &str) -> String {
     }
 }
 
-fn lower_condition(condition: &Condition, source: &str) -> String {
+pub(crate) fn lower_condition(condition: &Condition, source: &str) -> String {
     match condition {
         Condition::Python(code) => lower_code(code, source),
         Condition::Truthy { value, negated } => {
@@ -616,7 +616,7 @@ pub(crate) fn lower_reading(of: &str, reading: Reading) -> String {
     }
 }
 
-fn lower_value(value: &Value, source: &str) -> String {
+pub(crate) fn lower_value(value: &Value, source: &str) -> String {
     match value {
         Value::Python(code) => lower_code(code, source),
         Value::Text(template) => lower_template(template),

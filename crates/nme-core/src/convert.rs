@@ -5,11 +5,14 @@
 //! advanced syntax. Because all three levels may coexist, the result is still
 //! a complete NME program rather than a partial or lossy translation.
 
+use std::collections::HashSet;
+
 use rustpython_parser::{parse as parse_python, Mode, Tok};
 
 use crate::diagnostics::{korean_particle, Diagnostic, DiagnosticCode, Span};
 use crate::lexer::{self, LogicalLine, Token};
 use crate::lower::{apply_edits, Edit};
+use crate::render::{asks_for_a_length, Rewrite};
 
 // Input actions may also appear after their target (`name ask ...`). An
 // assignment target with one of these names would make `set prompt to ...`
@@ -150,17 +153,43 @@ pub fn convert_python(
     }
 
     let lines = lexer::logical_lines(source).map_err(|problem| vec![problem])?;
+    let containers = container_names(source);
     let mut edits = Vec::new();
+    // Reading and writing a file is the one rewrite that is *meant* to change
+    // the Python: `open(p).read()` becomes `Path(p).read_text()`, which is the
+    // shape NME writes. So those edits are made first and the file they leave
+    // is what everything else is checked against.
+    let mut file_lines = Vec::new();
     for line in &lines {
         // Replacing a logical statement that covers more than one physical
         // line would collapse source lines. The byte check is only about edit
         // geometry; all Python structure below is still decided from tokens.
-        if !spans_multiple_physical_lines(source, line) {
-            if let Some(edit) = convert_line(source, line, level, language) {
-                edits.push(edit);
-            }
+        if spans_multiple_physical_lines(source, line) {
+            continue;
+        }
+        if let Some(replacement) = convert_file_io(source, &line.tokens, level, language) {
+            file_lines.push(Edit {
+                span: line.span,
+                replacement,
+            });
+            continue;
+        }
+        let spellings = convert_line(source, line, level, language, &containers);
+        if !spellings.is_empty() {
+            edits.push(spellings);
         }
     }
+    let with_files = apply_edits(source, &file_lines);
+    let (file_lines, reference) = match crate::transpile::transpile(&with_files) {
+        Ok(python) => (file_lines, python),
+        Err(_) => (Vec::new(), source.to_string()),
+    };
+    // Every reading is proved by lowering it again, so no one line can drift.
+    // What that check cannot see is the rest of the file: a message written as
+    // words may hold a name the program binds later, and the sentence would
+    // then print its value rather than the word. So the whole file is asked
+    // once, and what does not hold is put back.
+    let edits = edits_that_hold(source, &reference, &file_lines, &edits);
     let changed_lines = edits.len();
     Ok(Conversion {
         source: apply_edits(source, &edits),
@@ -168,22 +197,159 @@ pub fn convert_python(
     })
 }
 
+/// The edits that leave the program saying exactly what it said.
+///
+/// The edits are added back in groups rather than one at a time: on a long
+/// file with a handful of lines that cannot be written at this level, one
+/// transpile per line meant a person waiting. Halving a group asks the same
+/// question of far fewer programs and keeps the same answer.
+fn edits_that_hold(
+    source: &str,
+    python: &str,
+    already: &[Edit],
+    lines: &[Vec<Edit>],
+) -> Vec<Edit> {
+    let mut kept = already.to_vec();
+    keep_what_holds(source, python, &mut kept, lines);
+    kept
+}
+
+fn keep_what_holds(source: &str, python: &str, kept: &mut Vec<Edit>, lines: &[Vec<Edit>]) {
+    if lines.is_empty() {
+        return;
+    }
+    let before = kept.len();
+    kept.extend(lines.iter().filter_map(|line| line.first().cloned()));
+    if transpiles_the_same(&apply_edits(source, kept), python) {
+        return;
+    }
+    kept.truncate(before);
+    if let [spellings] = lines {
+        // One line on its own, and its best spelling did not hold. The others
+        // are plainer rather than different: `show "Hello"` says what `show
+        // Hello` says without reading the message as words.
+        for spelling in spellings.iter().skip(1) {
+            kept.push(spelling.clone());
+            if transpiles_the_same(&apply_edits(source, kept), python) {
+                return;
+            }
+            kept.pop();
+        }
+        return;
+    }
+    let middle = lines.len() / 2;
+    keep_what_holds(source, python, kept, &lines[..middle]);
+    keep_what_holds(source, python, kept, &lines[middle..]);
+}
+
+fn transpiles_the_same(candidate: &str, python: &str) -> bool {
+    crate::transpile::transpile(candidate)
+        .is_ok_and(|produced| crate::transpile::is_the_same_program(&produced, python))
+}
+
 pub(crate) fn convert_line(
     source: &str,
     line: &LogicalLine,
     level: SyntaxLevel,
     language: Language,
-) -> Option<Edit> {
-    let replacement = convert_print(source, &line.tokens, level, language)
-        .or_else(|| convert_input(source, &line.tokens, level, language))
-        .or_else(|| convert_range_loop(source, &line.tokens, level, language))
-        .or_else(|| convert_condition(source, &line.tokens, level, language))
-        .or_else(|| convert_file_io(source, &line.tokens, level, language))
-        .or_else(|| convert_assignment(source, &line.tokens, level, language))?;
-    Some(Edit {
-        span: line.span,
-        replacement,
-    })
+    containers: &HashSet<String>,
+) -> Vec<Edit> {
+    // Best spelling first. Which of them a file can actually take is settled
+    // by transpiling the whole thing, because a message written as words may
+    // hold a name the program makes later on.
+    let mut spellings = vec![
+        convert_by_reading_it_back(source, line, level, language, containers, true),
+        convert_by_reading_it_back(source, line, level, language, containers, false),
+        convert_print(source, &line.tokens, level, language)
+            .or_else(|| convert_input(source, &line.tokens, level, language))
+            .or_else(|| convert_range_loop(source, &line.tokens, level, language))
+            .or_else(|| convert_condition(source, &line.tokens, level, language))
+            .or_else(|| convert_assignment(source, &line.tokens, level, language)),
+    ]
+    .into_iter()
+    .flatten()
+    .collect::<Vec<_>>();
+    spellings.dedup();
+    spellings
+        .into_iter()
+        .map(|replacement| Edit {
+            span: line.span,
+            replacement,
+        })
+        .collect()
+}
+
+/// The line read back into the statement that would have written it, and then
+/// written again in the level and language asked for.
+///
+/// This is the general way in, and it is the one that keeps the two halves of
+/// the tidier in step: the words come from [`crate::render`], the same place
+/// the words for a line that was already NME come from, so a program that
+/// arrives as Python lands in exactly the spelling a program that arrived as
+/// sentences lands in. [`crate::from_python`] proves its reading by lowering
+/// it again, so nothing here can change what the line does.
+/// The names a Python file fills with things rather than with one value.
+///
+/// `len(x)` is one piece of Python and two sentences — `how many friends`
+/// counts things, `the length of name` counts letters — and the only way to
+/// tell them apart is what the program put in the name. A file that was
+/// already NME gets this from the parser; a file of Python is read here.
+pub(crate) fn container_names(source: &str) -> HashSet<String> {
+    let mut names = HashSet::new();
+    for line in source.lines() {
+        let line = line.trim();
+        if let Some((target, value)) = line.split_once(" = ") {
+            let value = value.trim();
+            if (value.starts_with('[') && value.ends_with(']'))
+                || (value.starts_with('{') && value.ends_with('}'))
+                || value.ends_with(".splitlines()")
+                || value.contains(".split(")
+            {
+                names.insert(target.trim().to_string());
+            }
+        }
+        for method in [".append(", ".remove(", ".sort()", ".reverse()"] {
+            if let Some((target, _)) = line.split_once(method) {
+                names.insert(target.trim().to_string());
+            }
+        }
+        // `prices["Mina"] = 90` fills a record.
+        if let Some((target, _)) = line.split_once('[') {
+            if line.contains("] = ") {
+                names.insert(target.trim().to_string());
+            }
+        }
+    }
+    names.retain(|name| {
+        !name.is_empty()
+            && !name.starts_with(|character: char| character.is_ascii_digit())
+            && name
+                .chars()
+                .all(|character| character.is_alphanumeric() || character == '_')
+    });
+    names
+}
+
+fn convert_by_reading_it_back(
+    source: &str,
+    line: &LogicalLine,
+    level: SyntaxLevel,
+    language: Language,
+    containers: &HashSet<String>,
+    read_messages: bool,
+) -> Option<String> {
+    let written = line.text(source);
+    let stmt = crate::from_python::statement_from_python(written)?;
+    Rewrite {
+        source,
+        level,
+        language,
+        length_not_count: asks_for_a_length(written),
+        colon: written.trim_end().ends_with(':'),
+        containers,
+        read_messages,
+    }
+    .statement(&stmt, written)
 }
 
 /// Sentence-level file conversions. `x = open("f").read()` becomes
@@ -787,7 +953,9 @@ mod tests {
                 "write \"hello\" to \"out.txt\"\n",
                 "read \"data.json\" into memo\n",
                 "write 점수 to \"out2.txt\"\n",
-                "y = open(\"x.txt\").readlines()\n",
+                // The last line has no file sentence of its own, so it is
+                // saved the ordinary way: a name and a piece of Python.
+                "set y to open(\"x.txt\").readlines()\n",
             )
         );
         assert_eq!(
@@ -797,7 +965,7 @@ mod tests {
                 "\"out.txt\" 파일에 \"hello\"를 저장해\n",
                 "memo에 \"data.json\" 읽어서\n",
                 "\"out2.txt\" 파일에 점수를 저장해\n",
-                "y = open(\"x.txt\").readlines()\n",
+                "y는 open(\"x.txt\").readlines()\n",
             )
         );
         // The converted sentence source is valid NME. An undefined name like
@@ -818,10 +986,12 @@ mod tests {
 
     #[test]
     fn beginner_conversion_keeps_file_io_as_python() {
+        // Reading a file has no beginner sentence, so the call itself stays
+        // exactly as it was; only the saving word around it changes.
         let source = "x = open(\"notes.txt\").read()\n";
         assert_eq!(
             converted(source, SyntaxLevel::Beginner, Language::English).source,
-            source
+            "save x to open(\"notes.txt\").read()\n"
         );
     }
 
@@ -839,7 +1009,7 @@ mod tests {
             concat!(
                 "ask name, \"Name? \"\n",
                 "if name:\n",
-                "    print(name)\n",
+                "    say name\n",
                 "2 times:\n",
                 "    say \"Hi\"\n",
             )
@@ -849,7 +1019,7 @@ mod tests {
             concat!(
                 "물어봐 name, \"Name? \"\n",
                 "if name:\n",
-                "    print(name)\n",
+                "    말해 name\n",
                 "2 번:\n",
                 "    말해 \"Hi\"\n",
             )
@@ -857,7 +1027,11 @@ mod tests {
     }
 
     #[test]
-    fn converts_to_colon_free_sentence_structure() {
+    /// A block closed by the indentation under a `:` keeps its `:`, and one
+    /// closed by `end` keeps its `end`. Which way a file closes its blocks is
+    /// not the tidier's to change: a header that loses its mark leaves the
+    /// lines under it closing nothing.
+    fn converts_python_and_keeps_the_way_its_blocks_close() {
         let source = concat!(
             "name = input(\"What is your name?\")\n",
             "if name:\n",
@@ -871,12 +1045,12 @@ mod tests {
             concat!(
                 "name을 물어봐 \"What is your name?\"\n",
                 "if name:\n",
-                "    \"Hello, world!\" 말해줘\n",
-                "2 번 반복해\n",
-                "    print(name)\n",
+                "    Hello, world! 말해줘\n",
+                "2번 반복해:\n",
+                "    name 말해줘\n",
             )
         );
-        assert_eq!(result.changed_lines, 3);
+        assert_eq!(result.changed_lines, 4);
         assert!(transpile(&result.source).is_ok());
     }
 
@@ -885,7 +1059,7 @@ mod tests {
         let source = "answer = 7\nguess = int(input(\"Guess\"))\nprint(guess)\n";
         assert_eq!(
             converted(source, SyntaxLevel::Sentence, Language::English).source,
-            "set answer to 7\nask number guess \"Guess\"\nprint(guess)\n"
+            "set answer to 7\nask number guess \"Guess\"\nshow guess\n"
         );
     }
 
@@ -895,7 +1069,10 @@ mod tests {
         let result = converted(source, SyntaxLevel::Sentence, Language::English);
         assert_eq!(
             result.source,
-            "set name to \"Ada\"\nquestion = input(\"Name?\")\nshow \"Hello name\"\n"
+            // The message keeps its quotes: `name` is a name the program
+            // makes on the line above, so `show Hello name` would print what
+            // is in it. A plainer spelling is what the tidier falls back to.
+            "set name to Ada\nask question \"Name?\"\nshow \"Hello name\"\n"
         );
         assert_eq!(
             transpile(&result.source).unwrap(),
@@ -953,7 +1130,7 @@ mod tests {
                 "    \"continued\")\n",
                 "print(\"tail continued\") \\\n",
                 "\n",
-                "show \"done\"  # keep this comment\n",
+                "show done  # keep this comment\n",
             )
         );
         assert_eq!(result.changed_lines, 1);
@@ -993,8 +1170,24 @@ mod tests {
         );
         for level in [SyntaxLevel::Beginner, SyntaxLevel::Sentence] {
             let result = converted(source, level, Language::English);
-            assert_eq!(result.source, source);
-            assert_eq!(result.changed_lines, 0);
+            // Since 2026-08-20 the converter reads a line back into the
+            // statement that would have written it and proves the reading by
+            // lowering it again, so an expression it has no words for is
+            // simply put after the output word. What must not change is the
+            // program, and that is what is checked.
+            assert_eq!(transpile(&result.source).unwrap(), source);
+            // The shapes with no output word at all — a tuple, a walrus, a
+            // starred call, a keyword argument — have no sentence to be put
+            // in and stay exactly as they were.
+            for line in [
+                "print((1, 2))\n",
+                "print(value := 1)\n",
+                "print(*items)\n",
+                "print(value, end=\"\")\n",
+                "print(**options)\n",
+            ] {
+                assert!(result.source.contains(line), "{line} moved");
+            }
         }
     }
 
@@ -1017,8 +1210,20 @@ mod tests {
         );
         for language in [Language::English, Language::Korean] {
             let result = converted(source, SyntaxLevel::Sentence, language);
-            assert_eq!(result.source, source);
-            assert_eq!(result.changed_lines, 0);
+            // A name saved a value keeps its saving word whatever the value
+            // is; what may never change is the value itself.
+            assert_eq!(transpile(&result.source).unwrap(), source);
+            // These four have no saving sentence at all: two names at once,
+            // a change in place, a name the line only copies, and a `lambda`
+            // whose colon would close a block.
+            for line in [
+                "copy = original\n",
+                "callback = lambda: 1\n",
+                "left = right = 1\n",
+                "left += 1\n",
+            ] {
+                assert!(result.source.contains(line), "{line} moved");
+            }
         }
     }
 
@@ -1039,8 +1244,18 @@ mod tests {
             "for _ in range(start, stop):\n    pass\n",
         );
         let result = converted(source, SyntaxLevel::Sentence, Language::English);
-        assert_eq!(result.source, source);
-        assert_eq!(result.changed_lines, 0);
+        assert_eq!(transpile(&result.source).unwrap(), source);
+        // A condition NME has no words for keeps its Python, and so does a
+        // count that starts somewhere other than zero: `repeat start, stop
+        // times` is not a sentence anybody means.
+        for line in [
+            "if (left, right):\n",
+            "if (value := 1):\n",
+            "if left if flag else right:\n",
+            "for _ in range(start, stop):\n",
+        ] {
+            assert!(result.source.contains(line), "{line} moved");
+        }
     }
 
     #[test]
@@ -1061,22 +1276,25 @@ mod tests {
             concat!(
                 "ask plain \"Prompt\"\n",
                 "keyword = input(prompt=\"Prompt\")\n",
-                "unpacked = input(**options)\n",
-                "starred = input(*prompts)\n",
-                "trailing = input(\"Prompt\",)\n",
-                "based = int(input(\"Number\"), 10)\n",
-                "based_keyword = int(input(\"Number\"), base=10)\n",
+                // None of these is a question a sentence can carry, so the
+                // call stays as it was; only the saving word around it can
+                // change, and that changes nothing about the program.
+                "set unpacked to input(**options)\n",
+                "set starred to input(*prompts)\n",
+                "set trailing to input(\"Prompt\",)\n",
+                "set based to int(input(\"Number\"), 10)\n",
+                "set based_keyword to int(input(\"Number\"), base=10)\n",
                 "nested_keyword = int(input(prompt=\"Number\"))\n",
             )
         );
-        assert_eq!(result.changed_lines, 1);
+        assert_eq!(result.changed_lines, 6);
     }
 
     #[test]
     fn ordinary_random_import_is_never_replaced_by_the_bundled_adapter() {
         let source = "import random\nprint(\"ok\")\n";
         let result = converted(source, SyntaxLevel::Sentence, Language::Korean);
-        assert_eq!(result.source, "import random\n\"ok\" 말해줘\n");
+        assert_eq!(result.source, "import random\nok 말해줘\n");
         assert_eq!(result.changed_lines, 1);
     }
 
@@ -1091,7 +1309,7 @@ mod tests {
         );
         for language in [Language::English, Language::Korean] {
             let result = converted(source, SyntaxLevel::Sentence, language);
-            assert_eq!(result.changed_lines, 4);
+            assert_eq!(result.changed_lines, 5);
             assert_eq!(transpile(&result.source).unwrap(), source);
         }
     }
@@ -1107,11 +1325,14 @@ mod tests {
 
     #[test]
     fn sentence_input_keeps_a_variable_prompt_as_python() {
+        // A question whose words come out of a name is not one a sentence can
+        // ask, so that line stays as it was. The line above it is an ordinary
+        // save and is written as one.
         let source = "prompt = \"Name?\"\nanswer = input(prompt)\n";
         let result = converted(source, SyntaxLevel::Sentence, Language::English);
-        assert_eq!(result.source, source);
+        assert_eq!(result.source, "set prompt to Name?\nanswer = input(prompt)\n");
         assert_eq!(transpile(&result.source).unwrap(), source);
-        assert_eq!(result.changed_lines, 0);
+        assert_eq!(result.changed_lines, 1);
     }
 
     #[test]
@@ -1129,8 +1350,13 @@ mod tests {
             let source = format!("{target} = 1\n");
             for language in [Language::English, Language::Korean] {
                 let result = converted(&source, SyntaxLevel::Sentence, language);
-                assert_eq!(result.source, source, "target {target}");
-                assert_eq!(result.changed_lines, 0, "target {target}");
+                // A name that reads as an action word may still be saved into
+                // — what may never change is what the line does.
+                assert_eq!(
+                    transpile(&result.source).unwrap(),
+                    source,
+                    "target {target}"
+                );
             }
         }
     }
@@ -1210,8 +1436,15 @@ mod tests {
             for level in [SyntaxLevel::Beginner, SyntaxLevel::Sentence] {
                 for language in [Language::English, Language::Korean] {
                     let result = converted(&source, level, language);
-                    assert_eq!(result.source, source, "target {target}");
-                    assert_eq!(result.changed_lines, 0, "target {target}");
+                    // The English question puts the word `number` where a
+                    // modifier goes and cannot be written; the Korean one
+                    // names its target first and can. Either way the program
+                    // is the one that came in.
+                    assert_eq!(
+                        transpile(&result.source).unwrap(),
+                        source,
+                        "target {target}"
+                    );
                 }
             }
         }
@@ -1228,8 +1461,13 @@ mod tests {
         for level in [SyntaxLevel::Beginner, SyntaxLevel::Sentence] {
             for language in [Language::English, Language::Korean] {
                 let result = converted(source, level, language);
-                assert_eq!(result.source, source);
-                assert_eq!(result.changed_lines, 0);
+                // None of these questions can be written as one, so the call
+                // is left exactly as it stands; the saving word around it may
+                // change, and that changes nothing about the program.
+                assert_eq!(transpile(&result.source).unwrap(), source);
+                for line in ["input(**options)", "input(*prompts)", "input(\"Prompt\",)"] {
+                    assert!(result.source.contains(line), "{line} moved");
+                }
             }
         }
     }

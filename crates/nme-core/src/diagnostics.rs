@@ -1526,6 +1526,17 @@ pub fn korean_particle(
     let consonant = match last {
         '가'..='힣' => (u32::from(last) - 0xAC00) % 28 != 0,
         'a'..='z' | 'A'..='Z' => {
+            // A name that is one letter is read as the letter's own name:
+            // `p` is 피 and takes 는, not the 은 that `skip` takes. Only
+            // `l` 엘, `m` 엠, `n` 엔 and `r` 알 end on a consonant.
+            if word.trim_end().chars().count() == 1 {
+                return if matches!(last.to_ascii_lowercase(), 'l' | 'm' | 'n' | 'r') {
+                    after_consonant
+                } else {
+                    after_vowel
+                };
+            }
+            #[allow(clippy::items_after_statements)]
             // The particle follows how the word is *read* in Korean, not how
             // it is spelled in English. A silent `e` at the end is not read —
             // `name` is 네임 and takes 은 — but the `e` in `age` is, and 에이지

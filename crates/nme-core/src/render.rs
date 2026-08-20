@@ -8,11 +8,13 @@
 //! writer wrote it.
 
 use crate::convert::{Language, SyntaxLevel};
+use crate::from_python;
 use crate::diagnostics::korean_particle;
-use crate::lower::lower_reading;
+use crate::lower::{lower_condition, lower_reading, lower_value};
 use crate::syntax::{
     Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, ItemPosition, ListOrder,
     Literal, LogicalOp, ModuleVersion, NmeStmt, Reading, SplitBy, TextPart, TextTemplate, UpdateOp,
+    ZeroKnowledgeValue,
     Value, CHANCE_SCALE, COOLDOWN_PREFIX, ELAPSED_PYTHON,
 };
 
@@ -33,6 +35,30 @@ pub(crate) struct Rewrite<'a> {
     /// same program: `name 개수` reads as words to print, not as `len(name)`.
     /// The line as written is the only thing that can tell them apart.
     pub(crate) length_not_count: bool,
+    /// True when the line being written ended with a `:`.
+    ///
+    /// NME closes a block two ways — with `end`, or with the indentation under
+    /// a `:` — and which one a file uses is not the tidier's to change. A `:`
+    /// put on a header whose block is closed by `end` leaves the `end` closing
+    /// nothing, and taking one off a header whose block is closed by
+    /// indentation loses the block. So the mark the writer used comes back.
+    pub(crate) colon: bool,
+    /// Names the program made into a list or a record.
+    ///
+    /// `len(x)` is one piece of Python and two sentences: `how many friends`
+    /// counts things, `the length of name` counts letters. Which one a line
+    /// means cannot be read off the Python, so the answer comes from what the
+    /// program put in the name.
+    pub(crate) containers: &'a std::collections::HashSet<String>,
+    /// Whether a piece of Python that is plainly a message may be written as
+    /// the words it says.
+    ///
+    /// `print("Hello")` is `show Hello`, which is the sentence a beginner
+    /// wants — unless the program later makes a name out of one of those
+    /// words, and then the sentence would print its value instead. The tidier
+    /// asks for the plainer spelling as a second choice, and this is the flag
+    /// that gives it one.
+    pub(crate) read_messages: bool,
 }
 
 /// The words that ask for a length rather than a count, in both languages,
@@ -66,18 +92,51 @@ impl Rewrite<'_> {
         if told_as_written {
             return None;
         }
-        self.any_statement(stmt)
+        let written_again = self.any_statement(stmt)?;
+        Some(self.with_the_writer_s_colon(stmt, written_again))
     }
 
-    /// The statement in the level asked for, falling back to the sentence
-    /// spelling wherever beginner syntax has no row of its own.
+    /// The header with the `:` the writer used, when this line opens a block
+    /// and nothing was written after it.
+    fn with_the_writer_s_colon(&self, stmt: &NmeStmt, text: String) -> String {
+        let opens_a_block = matches!(
+            stmt,
+            NmeStmt::Times { inline: None, .. }
+                | NmeStmt::ForEach { inline: None, .. }
+                | NmeStmt::Forever { inline: None }
+                | NmeStmt::Chance { inline: None, .. }
+                | NmeStmt::When { inline: None, .. }
+                | NmeStmt::While { inline: None, .. }
+                | NmeStmt::ElseIf { inline: None, .. }
+                | NmeStmt::Else { inline: None }
+                | NmeStmt::Story { .. }
+                | NmeStmt::Job { .. }
+        );
+        if !self.colon || !opens_a_block || text.ends_with(':') {
+            return text;
+        }
+        format!("{text}:")
+    }
+
+    /// The statement in the level asked for, falling back to the other level
+    /// wherever the one asked for has no row of its own.
+    ///
+    /// The fall back runs both ways. Beginner syntax is a smaller surface than
+    /// sentence syntax on purpose, so most of the gaps are on that side; but a
+    /// few shapes go the other way — a question whose prompt already ends in a
+    /// space cannot be written as a sentence — and leaving those as they stand
+    /// meant a line stayed in the language it came in. A spelling from the
+    /// other level is still the language the reader asked for, and that is the
+    /// half of the answer that matters most.
     fn any_statement(&self, stmt: &NmeStmt) -> Option<String> {
         if self.level == SyntaxLevel::Beginner {
             if let Some(beginner) = self.beginner_statement(stmt) {
                 return Some(beginner);
             }
+            return self.sentence_statement(stmt);
         }
         self.sentence_statement(stmt)
+            .or_else(|| self.beginner_statement(stmt))
     }
 
     // ------------------------------------------------------------ beginner
@@ -101,7 +160,7 @@ impl Rewrite<'_> {
             NmeStmt::Ask {
                 target,
                 prompt,
-                kind: InputKind::Text,
+                kind,
             } => {
                 let question = match prompt {
                     None => String::new(),
@@ -114,14 +173,27 @@ impl Rewrite<'_> {
                     }
                     Some(prompt) => format!(", {}", self.python_of(prompt)?),
                 };
-                Some(self.either(
-                    &format!("ask {target}{question}"),
-                    &format!("물어봐 {target}{question}"),
-                ))
+                // A question that wants a number says so in the same place at
+                // both levels: after the asking word in English, before the
+                // name in Korean.
+                Some(match (self.language, kind) {
+                    (Language::English, InputKind::Text) => format!("ask {target}{question}"),
+                    (Language::English, InputKind::Number) => {
+                        format!("ask number {target}{question}")
+                    }
+                    (Language::Korean, InputKind::Text) => format!("물어봐 {target}{question}"),
+                    (Language::Korean, InputKind::Number) => {
+                        format!("물어봐 숫자로 {target}{question}")
+                    }
+                })
             }
-            NmeStmt::Times { count, inline } => {
+            // The beginner spellings of the two loops are written with the
+            // `:` that opens their block. A file whose blocks are closed with
+            // `end` has no place for one, so there the sentence spelling —
+            // which is closed the same way — is the one that is written.
+            NmeStmt::Times { count, inline } if self.colon || inline.is_some() => {
                 let count = self.code(count);
-                let header = self.either(&format!("{count} times:"), &format!("{count} 번:"));
+                let header = self.either(&format!("{count} times"), &format!("{count} 번"));
                 self.with_inline(header, " ", inline.as_ref())
             }
             NmeStmt::ForEach {
@@ -129,18 +201,18 @@ impl Rewrite<'_> {
                 items,
                 position,
                 inline: None,
-            } => {
+            } if self.colon => {
                 let items = self.code(items);
                 Some(match (self.language, position) {
-                    (Language::English, None) => format!("for each {name} in {items}:"),
+                    (Language::English, None) => format!("for each {name} in {items}"),
                     (Language::English, Some(position)) => {
-                        format!("for each {name} in {items} with {position}:")
+                        format!("for each {name} in {items} with {position}")
                     }
                     (Language::Korean, None) => {
-                        format!("{}의 {name}마다:", korean_name(items.as_str())?)
+                        format!("{}의 {name}마다", korean_name(items.as_str())?)
                     }
                     (Language::Korean, Some(position)) => format!(
-                        "{}의 {name}마다 {position}와 함께:",
+                        "{}의 {name}마다 {position}와 함께",
                         korean_name(items.as_str())?
                     ),
                 })
@@ -148,7 +220,7 @@ impl Rewrite<'_> {
             NmeStmt::When { condition, inline } => {
                 let condition = self.python_condition(condition)?;
                 let header =
-                    self.either(&format!("when {condition}:"), &format!("만약 {condition}:"));
+                    self.either(&format!("when {condition}"), &format!("만약 {condition}"));
                 self.with_inline(header, " ", inline.as_ref())
             }
             NmeStmt::While { condition, inline } => {
@@ -174,20 +246,32 @@ impl Rewrite<'_> {
     /// list, a record, a chance and their like are sentence shapes.
     fn python_of(&self, value: &Value) -> Option<String> {
         match value {
-            Value::Python(code) => Some(self.code(code)),
             Value::Text(text) => (!text.parts.is_empty()).then(|| lower_template(text)),
-            Value::Literal(literal) => Some(literal_python(*literal).to_string()),
-            _ => None,
+            // The Schnorr values have no row in the syntax reference and their
+            // Python is a page long, so a line holding one is left as it was
+            // rather than written out.
+            Value::ZeroKnowledge(_) => None,
+            // Beginner syntax writes values as Python, and every value NME has
+            // is already known to lower to some. Answering `None` here meant a
+            // beginner line kept its sentence spelling, so which of the two a
+            // program came out in depended on how it had arrived.
+            value => Some(lower_value(value, self.source)),
         }
     }
 
     /// The Python text a condition lowers to, for the beginner forms that take
     /// an expression.
+    #[allow(clippy::unnecessary_wraps)]
     fn python_condition(&self, condition: &Condition) -> Option<String> {
-        match condition {
-            Condition::Python(code) => Some(self.code(code)),
-            _ => None,
-        }
+        let lowered = lower_condition(condition, self.source);
+        // The header puts its own brackets round whatever it is given, and a
+        // beginner line that already carries a pair — `when (ready and
+        // waiting)` — is not one the parser reads. So the outer pair comes
+        // off here, where it is known to be an outer pair.
+        Some(match lowered.strip_prefix('(').and_then(|inner| inner.strip_suffix(')')) {
+            Some(inner) if is_wholly_inside_brackets(&lowered) => inner.to_string(),
+            _ => lowered,
+        })
     }
 
     // ------------------------------------------------------------ sentence
@@ -315,14 +399,14 @@ impl Rewrite<'_> {
             NmeStmt::ClearScreen => Some(self.either("clear the screen", "화면 지워")),
             NmeStmt::DrawLine => Some(self.either("draw a line", "줄 그어")),
             NmeStmt::SayInBox { value } => {
-                let value = self.value(value)?;
+                let value = self.printable_value(value)?;
                 Some(self.either(
                     &format!("say in a box {value}"),
                     &format!("상자로 말해줘 {value}"),
                 ))
             }
             NmeStmt::SayInMiddle { value } => {
-                let value = self.value(value)?;
+                let value = self.printable_value(value)?;
                 Some(self.either(
                     &format!("say in the middle {value}"),
                     &format!("가운데 말해줘 {value}"),
@@ -365,8 +449,8 @@ impl Rewrite<'_> {
                     &format!("put {key} at {value} in {target}"),
                     &format!(
                         "{target}에 {} {} 넣어",
-                        korean_marked(&key, "를"),
-                        korean_marked(&value, "으로")
+                        korean_marked(&key, "을", "를"),
+                        korean_marked(&value, "으로", "로")
                     ),
                 ))
             }
@@ -444,7 +528,7 @@ impl Rewrite<'_> {
                     (Language::English, Some(given)) => format!("do {name} with {given}"),
                     (Language::Korean, None) => format!("{name} 해줘"),
                     (Language::Korean, Some(given)) => {
-                        format!("{} {name} 해줘", korean_marked(&given, "에게"))
+                        format!("{} {name} 해줘", korean_marked(&given, "에게", "에게"))
                     }
                 })
             }
@@ -484,10 +568,14 @@ impl Rewrite<'_> {
             }
             NmeStmt::FileWrite { path, value } => {
                 let path = self.code(path);
-                let value = self.value(value)?;
+                // What is written into a file keeps the form it was written
+                // in: reading `"hello"` as the message it is takes the quotes
+                // off, and `hello를 저장해` then names a value rather than
+                // saying one.
+                let value = self.printable_value(value)?;
                 Some(self.either(
                     &format!("write {value} to {path}"),
-                    &format!("{path} 파일에 {} 저장해", korean_marked(&value, "를")),
+                    &format!("{path} 파일에 {} 저장해", korean_marked(&value, "을", "를")),
                 ))
             }
             NmeStmt::ModuleImport { path, names } => {
@@ -511,9 +599,12 @@ impl Rewrite<'_> {
                 if template_ends_with_whitespace(text) {
                     return None;
                 }
-                format!(" {}", plain_text(text))
+                format!(" {}", self.words(text))
             }
-            Some(value) => format!(" {}", self.value(value)?),
+            // The question is the other place a piece of Python may not be
+            // read as the message it looks like: the sentence form adds the
+            // space after it and the written one does not.
+            Some(value) => format!(" {}", self.printable_value(value)?),
         };
         Some(match (self.language, kind) {
             (Language::English, InputKind::Text) => format!("ask {target}{question}"),
@@ -537,6 +628,8 @@ impl Rewrite<'_> {
         // Three values are spelled by what they are rather than by a value
         // phrase: the two empty containers, and a chance, which English saves
         // with `is` instead of `set … to …`.
+        let read_back = self.read_back(value);
+        let value = &read_back;
         match value {
             Value::List(items) if items.is_empty() => {
                 return Some(self.either(
@@ -570,7 +663,7 @@ impl Rewrite<'_> {
     }
 
     fn say_slowly(&self, value: &Value, seconds: &Code) -> Option<String> {
-        let told = self.value(value)?;
+        let told = self.printable_value(value)?;
         let seconds = self.code(seconds);
         Some(match (self.language, seconds.as_str()) {
             (Language::English, SLOW_SECONDS) => format!("say slowly {told}"),
@@ -634,6 +727,13 @@ impl Rewrite<'_> {
     // ----------------------------------------------------------- conditions
 
     fn english_condition(&self, condition: &Condition) -> Option<String> {
+        // The same question the values are asked: a condition the parser
+        // kept as Python may be one the sentence has words for.
+        if let Condition::Python(code) = condition {
+            if let Some(richer) = from_python::condition_from_python(&self.code(code)) {
+                return self.english_condition(&richer);
+            }
+        }
         if let Some(truthy) = self.condition_on_a_name(condition) {
             return self.english_condition(&truthy);
         }
@@ -700,6 +800,13 @@ impl Rewrite<'_> {
     /// The Korean condition, and whether it ends in one of the endings that
     /// close a clause (`있으면`, `크면`, …).
     fn korean_condition(&self, condition: &Condition) -> Option<(String, bool)> {
+        // The same question the values are asked: a condition the parser
+        // kept as Python may be one the sentence has words for.
+        if let Condition::Python(code) = condition {
+            if let Some(richer) = from_python::condition_from_python(&self.code(code)) {
+                return self.korean_condition(&richer);
+            }
+        }
         if let Some(truthy) = self.condition_on_a_name(condition) {
             return self.korean_condition(&truthy);
         }
@@ -764,7 +871,7 @@ impl Rewrite<'_> {
                     (CompareOp::LessOrEqual, false) => format!("{right}보다 작거나 같으면"),
                     _ => return None,
                 };
-                Some((format!("{} {comparison}", korean_marked(&left, "가")), true))
+                Some((format!("{} {comparison}", korean_marked(&left, "이", "가")), true))
             }
             Condition::Logical {
                 left,
@@ -788,6 +895,13 @@ impl Rewrite<'_> {
     /// branch takes, and only some of those endings are written down. The
     /// rest answer `None` and keep the line the writer wrote.
     fn korean_while_condition(&self, condition: &Condition) -> Option<String> {
+        // The same question the values are asked: a condition the parser
+        // kept as Python may be one the sentence has words for.
+        if let Condition::Python(code) = condition {
+            if let Some(richer) = from_python::condition_from_python(&self.code(code)) {
+                return self.korean_while_condition(&richer);
+            }
+        }
         match condition {
             Condition::Truthy {
                 value: ConditionValue::Name(name),
@@ -809,7 +923,7 @@ impl Rewrite<'_> {
                     }
                     _ => return None,
                 };
-                Some(format!("{} {comparison}", korean_marked(&left, "가")))
+                Some(format!("{} {comparison}", korean_marked(&left, "이", "가")))
             }
             Condition::Logical {
                 left,
@@ -882,13 +996,60 @@ impl Rewrite<'_> {
 
     /// A value written the way a sentence writes it.
     fn value(&self, value: &Value) -> Option<String> {
+        self.value_read(value, true)
+    }
+
+    /// A value for a place that puts `str(...)` around everything but text.
+    ///
+    /// `say slowly "Hello"` holds a piece of Python, and reading it as the
+    /// message it plainly is would take the wrapper away with it — the same
+    /// program, but not the same Python, and the tidier would throw the whole
+    /// line out rather than hand back a file that had drifted. So in these
+    /// places a message stays the expression it was written as, and only the
+    /// words around it change.
+    fn printable_value(&self, value: &Value) -> Option<String> {
+        self.value_read(value, false)
+    }
+
+    /// The value as the words it is really naming, when the writer left
+    /// Python where a sentence had a shape of its own.
+    fn read_back(&self, value: &Value) -> Value {
+        if let Value::Python(code) = value {
+            let written = self.code(code);
+            if written != ELAPSED_PYTHON {
+                if let Some(richer) = from_python::value_from_python(&written) {
+                    if self.read_messages || !matches!(richer, Value::Text(_)) {
+                        return richer;
+                    }
+                }
+            }
+        }
+        value.clone()
+    }
+
+    fn value_read(&self, value: &Value, may_read_as_text: bool) -> Option<String> {
+        // A beginner writes `say len(friends)`, and the parser keeps the
+        // expression as Python because that is what was written. The sentence
+        // for that line is `show how many friends`, so the expression is
+        // asked what it is naming before it is written out as itself.
+        if let Value::Python(code) = value {
+            let written = self.code(code);
+            if written != ELAPSED_PYTHON {
+                if let Some(richer) = from_python::value_from_python(&written) {
+                    let text = matches!(richer, Value::Text(_));
+                    if !text || (may_read_as_text && self.read_messages) {
+                        return self.value(&richer);
+                    }
+                }
+            }
+        }
         match value {
             Value::Python(Code::Generated(python)) if python == ELAPSED_PYTHON => {
                 Some(self.either("elapsed", "잰시간"))
             }
             Value::Python(code) => Some(self.code(code)),
             Value::Text(text) => {
-                let words = plain_text(text);
+                let words = self.words(text);
                 (!words.is_empty()).then_some(words)
             }
             Value::Literal(literal) => Some(self.literal(*literal).to_string()),
@@ -983,15 +1144,150 @@ impl Rewrite<'_> {
                 let chance = percentage(*permille);
                 Some(self.either(&format!("a {chance}% chance"), &format!("{chance}% 확률")))
             }
-            // The Schnorr values have no row in the syntax reference, so there
-            // is no spelling this may take from it.
-            Value::ZeroKnowledge(_) => None,
+            Value::ZeroKnowledge(value) => Some(self.zero_knowledge(value)),
+        }
+    }
+
+    /// The template written as words in this language.
+    ///
+    /// A message is never translated — what a program prints has to stay what
+    /// it prints — but a reading standing inside one is not message text: it
+    /// is a piece of the language, and a reader of the Korean file cannot use
+    /// `how many friends`. So the literal pieces are kept exactly and the
+    /// readings are written again in the language being asked for.
+    fn words(&self, template: &TextTemplate) -> String {
+        template
+            .parts
+            .iter()
+            .map(|part| match part {
+                TextPart::Literal(text) => text.clone(),
+                TextPart::Variable(name) => name.clone(),
+                TextPart::Reading {
+                    of,
+                    reading,
+                    written,
+                } => self.reading_words(of, *reading, asks_for_a_length(written)),
+            })
+            .collect()
+    }
+
+    /// One of the zero-knowledge values, in the words `docs/syntax*.md` gives
+    /// it.
+    ///
+    /// Korean marks the things a value is made from and then says what to make
+    /// with them: `r와 s와 e로 영지식 응답 만들기`. English puts them in front
+    /// in the same order and closes with the word for what is being made.
+    fn zero_knowledge(&self, value: &ZeroKnowledgeValue) -> String {
+        let given = |parts: &[&Code]| -> (String, String) {
+            let written: Vec<String> = parts.iter().map(|code| self.code(code)).collect();
+            let english = written.join(" ");
+            let last = written.last().cloned().unwrap_or_default();
+            let mut korean = String::new();
+            for word in &written[..written.len() - 1] {
+                korean.push_str(word);
+                korean.push_str(korean_particle(word, "과", "와"));
+                korean.push(' ');
+            }
+            korean.push_str(&last);
+            korean.push_str(korean_particle(&last, "으로", "로"));
+            (english, korean)
+        };
+        let plain = |english: &str, korean: &str| {
+            self.either(
+                &format!("zero knowledge {english}"),
+                &format!("영지식 {korean}"),
+            )
+        };
+        let made_from = |parts: &[&Code], english: &str, korean: &str| {
+            let (before, marked) = given(parts);
+            self.either(
+                &format!("{before} zero knowledge {english}"),
+                &format!("{marked} 영지식 {korean}"),
+            )
+        };
+        match value {
+            ZeroKnowledgeValue::Secret => plain("secret make", "비밀 만들기"),
+            ZeroKnowledgeValue::Nonce => plain("nonce make", "일회값 만들기"),
+            ZeroKnowledgeValue::Challenge => plain("challenge make", "도전 만들기"),
+            ZeroKnowledgeValue::SimulatedResponse => {
+                plain("simulated response make", "모의 응답 만들기")
+            }
+            ZeroKnowledgeValue::Public { secret } => {
+                made_from(&[secret], "public make", "공개값 만들기")
+            }
+            ZeroKnowledgeValue::Commitment { nonce } => {
+                made_from(&[nonce], "commitment make", "약속 만들기")
+            }
+            ZeroKnowledgeValue::ChallengeExcept { excluded } => {
+                let word = self.code(excluded);
+                self.either(
+                    &format!("{word} different zero knowledge challenge make"),
+                    &format!(
+                        "{word}{} 다른 영지식 도전 만들기",
+                        korean_particle(&word, "과", "와")
+                    ),
+                )
+            }
+            ZeroKnowledgeValue::Response {
+                nonce,
+                secret,
+                challenge,
+            } => made_from(&[nonce, secret, challenge], "response make", "응답 만들기"),
+            ZeroKnowledgeValue::Verify {
+                public_key,
+                commitment,
+                challenge,
+                response,
+            } => made_from(
+                &[public_key, commitment, challenge, response],
+                "verify",
+                "검증",
+            ),
+            ZeroKnowledgeValue::NizkChallenge {
+                public_key,
+                commitment,
+                context,
+            } => made_from(
+                &[public_key, commitment, context],
+                "challenge make",
+                "비대화 도전 만들기",
+            ),
+            ZeroKnowledgeValue::NizkProof { secret, context } => {
+                made_from(&[secret, context], "proof make", "비대화 증명 만들기")
+            }
+            ZeroKnowledgeValue::NizkVerify {
+                public_key,
+                proof,
+                context,
+            } => made_from(&[public_key, proof, context], "verify", "비대화 검증"),
+            ZeroKnowledgeValue::SimulatedCommitment {
+                public_key,
+                challenge,
+                response,
+            } => made_from(
+                &[public_key, challenge, response],
+                "simulated commitment make",
+                "모의 약속 만들기",
+            ),
         }
     }
 
     fn reading(&self, of: &str, reading: Reading) -> String {
+        self.reading_words(of, reading, self.length_not_count)
+    }
+
+    /// A reading in this language, told to say a length rather than a count.
+    ///
+    /// The flag is separate from the one on the line because a reading may
+    /// stand *inside* a sentence, where each one carries its own answer: the
+    /// words the writer used for that part are what say whether they meant
+    /// how many things there are or how long the word is.
+    fn reading_words(&self, of: &str, reading: Reading, as_length: bool) -> String {
+        // A name the program never filled with things is being measured, not
+        // counted, whatever words the line came in with.
+        let as_length = as_length || !self.containers.contains(of);
         match (self.language, reading) {
-            (Language::English, Reading::Count) if self.length_not_count => {
+            (Language::English, Reading::Count) if as_length => {
                 format!("the length of {of}")
             }
             (Language::English, Reading::Count) => format!("how many {of}"),
@@ -1000,7 +1296,7 @@ impl Rewrite<'_> {
             (Language::English, Reading::Smallest) => format!("the smallest of {of}"),
             (Language::English, Reading::Capitals) => format!("{of} in capitals"),
             (Language::English, Reading::SmallLetters) => format!("{of} in small letters"),
-            (Language::Korean, Reading::Count) if self.length_not_count => format!("{of} 길이"),
+            (Language::Korean, Reading::Count) if as_length => format!("{of} 길이"),
             (Language::Korean, Reading::Count) => format!("{of} 개수"),
             (Language::Korean, Reading::Total) => format!("{of} 합"),
             (Language::Korean, Reading::Largest) => format!("{of} 중 가장 큰 것"),
@@ -1074,6 +1370,24 @@ const VERY_SLOW_SECONDS: &str = "0.12";
 
 /// A text template as the words it was written from: the literal parts as
 /// they stand, and each name in its place.
+/// True when the whole text sits inside one pair of brackets.
+fn is_wholly_inside_brackets(text: &str) -> bool {
+    let mut depth = 0_i32;
+    for (at, character) in text.char_indices() {
+        match character {
+            '(' => depth += 1,
+            ')' => {
+                depth -= 1;
+                if depth == 0 && at + 1 != text.len() {
+                    return false;
+                }
+            }
+            _ => {}
+        }
+    }
+    depth == 0 && text.starts_with('(') && text.ends_with(')')
+}
+
 fn plain_text(template: &TextTemplate) -> String {
     template
         .parts
@@ -1134,13 +1448,6 @@ fn python_string(text: &str) -> String {
     quoted
 }
 
-fn literal_python(literal: Literal) -> &'static str {
-    match literal {
-        Literal::True => "True",
-        Literal::False => "False",
-        Literal::None => "None",
-    }
-}
 
 /// The `>=`/`<` comparison the cooldown conditions are written from, read back
 /// into the name it was written for.
@@ -1183,7 +1490,14 @@ fn korean_counted(amount: &str, counter: &str) -> String {
 /// A Korean particle goes on the end of the word it marks, but only when that
 /// word is one the reader (and the lexer) will still see whole. Anything with
 /// a quote, a bracket or a space in it keeps the particle a word away.
-fn korean_marked(word: &str, particle: &str) -> String {
+/// A word with the right half of a Korean particle pair on it.
+///
+/// Which half a word takes depends on the sound it ends with, so the pair is
+/// passed in and `korean_particle` chooses: `점수가`, `이름이`, `p는`. An
+/// expression rather than a word keeps a space before the particle, because
+/// `str(x) + 1가` reads as part of the code.
+fn korean_marked(word: &str, after_consonant: &'static str, after_vowel: &'static str) -> String {
+    let particle = korean_particle(word, after_consonant, after_vowel);
     if word
         .chars()
         .all(|character| character.is_alphanumeric() || character == '_' || character == '.')

@@ -5,6 +5,43 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+- **The tidier lands one program in one place, whichever of the six it came
+  from.** A file written as sentences, at beginner level, in Korean, in
+  English, or as ordinary Python now converts into any of the other five and
+  comes back written the way that one writes it. Before, `advanced → sentence`
+  moved almost nothing: the converter knew a dozen shapes of Python and the
+  tidier knew a hundred and fifty statements, and the two halves had never
+  been put together. A line of Python is now read back into the statement that
+  would have written it, and the words come from the same place they come from
+  for a line that was already NME.
+  - Nothing is guessed. Every reading is lowered again and kept only when the
+    Python that comes back is the line that went in, and the whole file is
+    transpiled once more before any of it is handed over.
+  - A statement now offers more than one spelling — the same line written
+    plainly, or at the other level — and the file takes the best one it can:
+    `show Hello` where `Hello` is also a name comes out as `말해 "Hello"`
+    rather than staying in English.
+  - Blocks keep the way they close. A `:` on a header whose block is closed by
+    `end` leaves the `end` closing nothing, so the mark the writer used is the
+    mark that comes back.
+  - `30% chance:` and `아니면:` are read, the way `say: hello` already was.
+  - A Korean particle is now the one the word takes, including for a name that
+    is one letter (`p는`, not `p은`), so tidying makes them uniform instead of
+    leaving each as it was found.
+  - `scripts/check-tidy-parity.py` proves it: 3225 conversions, every ordered
+    pair of the six cells, every capability in the reference.
+- **A Korean line that ends on an output word is telling something.**
+  `foeName goes down 말해줘` was refused, because `down` was read as the word
+  for taking a number away. Korean puts its verb at the end, so everything in
+  front of the output word is what the line says.
+- **A question keeps its own name.** `ask number age 몇 살이에요?` asked
+  `age 몇 살이에요?`: the Korean question forms read the word in front of them
+  as the name they answer, and the name the writer had already given was
+  swallowed. A Korean question is about a Korean word, so a name in Latin
+  letters in front of one is the writer's own.
+- **`save friends to ["Mina", "Ada"]` makes a list.** Only the sentence
+  spelling used to, so `append Bo to friends` under a beginner line was
+  refused for a list nobody had made.
 - **A word typed with its space missing comes apart and reads.** `sayhello`,
   `showhello`, `안녕말하기`, `setscore to 0`, `점수는0`, `wait3 seconds`,
   `2초대기해`, `점수에1더해` and `3번반복해서 안녕 말해줘` all do what they say.

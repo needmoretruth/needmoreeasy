@@ -1276,7 +1276,11 @@ fn convert_turns_python_into_a_chosen_nme_level_and_language() {
     let converted = stdout(&output);
     assert_eq!(
         converted,
-        "name을 물어봐 \"이름이 뭐예요?\"\nif name:\n    \"안녕하세요!\" 말해줘\n"
+        // The message loses its quotes: a sentence writes what it says, and
+        // `안녕하세요! 말해줘` is the same `print("안녕하세요!")`. The question
+        // keeps its own, because the prompt ends in a space the sentence form
+        // has no way to write.
+        "name을 물어봐 \"이름이 뭐예요?\"\nif name:\n    안녕하세요! 말해줘\n"
     );
     let converted_file = dir.join("hello.nme");
     std::fs::write(&converted_file, converted).unwrap();

@@ -18,6 +18,69 @@ pub struct ModuleImport {
     pub names: Vec<String>,
 }
 
+/// True when two pieces of Python are the same program.
+///
+/// Not the same text: a condition NME writes carries the brackets its header
+/// needs — `if (score > 1):` — and the very same program written by hand has
+/// none. Brackets around a whole condition are ones Python itself ignores, so
+/// a reading that only adds or drops a pair has changed nothing, and refusing
+/// it would leave `if score > 1:` as Python for ever.
+///
+/// Everything else is still compared character for character.
+pub fn is_the_same_program(left: &str, right: &str) -> bool {
+    left == right || without_header_brackets(left) == without_header_brackets(right)
+}
+
+/// Every `if`/`elif`/`while` header with the brackets round its whole
+/// condition taken off.
+///
+fn without_header_brackets(python: &str) -> String {
+    python
+        .lines()
+        .map(|line| {
+            let bare = line.trim_start();
+            let indent = &line[..line.len() - bare.len()];
+            let Some(word) = ["if ", "elif ", "while "]
+                .into_iter()
+                .find(|word| bare.starts_with(word))
+            else {
+                return line.to_string();
+            };
+            let Some(condition) = bare[word.len()..].strip_suffix(':') else {
+                return line.to_string();
+            };
+            match condition
+                .strip_prefix('(')
+                .and_then(|inner| inner.strip_suffix(')'))
+            {
+                Some(inner) if closes_only_at_the_end(condition) => {
+                    format!("{indent}{word}{inner}:")
+                }
+                _ => line.to_string(),
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+/// True when the bracket the text opens with is the one it ends with.
+fn closes_only_at_the_end(text: &str) -> bool {
+    let mut depth = 0_i32;
+    for (at, character) in text.char_indices() {
+        match character {
+            '(' => depth += 1,
+            ')' => {
+                depth -= 1;
+                if depth == 0 && at + 1 != text.len() {
+                    return false;
+                }
+            }
+            _ => {}
+        }
+    }
+    depth == 0
+}
+
 /// Transpiles NME source into ordinary Python source code.
 ///
 /// * Pure Python input comes out **byte-identical**.
