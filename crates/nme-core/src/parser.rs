@@ -16366,6 +16366,18 @@ fn choices_are_marked(choices_tokens: &[Token]) -> bool {
     })
 }
 
+/// One choice, taken from the source between the separators around it, so the
+/// spacing the writer used is the spacing that is picked.
+fn push_choice(source: &str, group: Option<(usize, usize)>, choices: &mut Vec<String>) {
+    let Some((start, end)) = group else {
+        return;
+    };
+    let text = source[start..end].trim().trim_matches(['\'', '"']).to_string();
+    if !text.is_empty() {
+        choices.push(text);
+    }
+}
+
 fn parse_random_choice(source: &str, tokens: &[Token]) -> Option<Value> {
     let pick_at = tokens
         .iter()
@@ -16379,21 +16391,37 @@ fn parse_random_choice(source: &str, tokens: &[Token]) -> Option<Value> {
     } else {
         &tokens[..pick_at]
     };
+    // `돌 골렘 또는 검은 기사 중에서 하나 골라` — `하나 골라` is one phrase
+    // written with its space in, so the `하나` belongs to the picking, not to
+    // the things being picked from.
+    let choices_tokens = match choices_tokens {
+        [rest @ .., last] if token_matches_exact(last, &["하나", "한", "one"]) => rest,
+        all => all,
+    };
     if !choices_are_marked(choices_tokens) {
         return None;
     }
-    let choices: Vec<String> = choices_tokens
-        .iter()
-        .filter(|token| {
-            !token_matches_exact(token, &["or", "and", "또는", "이나", "중", "중에서"])
-                && !matches!(token.tok, Tok::Comma)
-        })
-        .map(|token| {
-            let raw = &source[token.span.start..token.span.end];
-            raw.trim_matches(['\'', '"']).to_string()
-        })
-        .filter(|choice| !choice.is_empty())
-        .collect();
+    // Everything between two separators is **one** choice, however many words
+    // it is. Taking a token at a time made `pick from stone golem or black
+    // knight` four choices instead of two, and said nothing about it: the
+    // program ran and fought a `golem` some rounds and a `stone` others. A
+    // list already reads `list of stone golem, black knight` as two things,
+    // and this now reads the same way.
+    let mut choices: Vec<String> = Vec::new();
+    let mut group: Option<(usize, usize)> = None;
+    for token in choices_tokens {
+        if token_matches_exact(token, &["or", "and", "또는", "이나", "중", "중에서"])
+            || matches!(token.tok, Tok::Comma)
+        {
+            push_choice(source, group.take(), &mut choices);
+            continue;
+        }
+        group = Some(match group {
+            Some((start, _)) => (start, token.span.end),
+            None => (token.span.start, token.span.end),
+        });
+    }
+    push_choice(source, group, &mut choices);
     (choices.len() >= 2).then_some(Value::RandomChoice { choices })
 }
 

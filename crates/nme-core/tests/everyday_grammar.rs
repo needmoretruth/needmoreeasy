@@ -1394,6 +1394,24 @@ fn a_random_pick_still_works_when_the_word_is_unmistakable() {
         ok("set color to choose from red or green\n"),
         "color = __import__(\"random\").choice((\"red\", \"green\",))\n"
     );
+    // Everything between two separators is one choice, however many words it
+    // is. Taking a token at a time made this four things to pick from, and
+    // said nothing: the program fought a `golem` some rounds and a `stone`
+    // others.
+    assert_eq!(
+        ok("set foe to pick from stone golem or black knight\n"),
+        "foe = __import__(\"random\").choice((\"stone golem\", \"black knight\",))\n"
+    );
+    assert_eq!(
+        ok("set animal to pick from cat, dog, small bird\n"),
+        "animal = __import__(\"random\").choice((\"cat\", \"dog\", \"small bird\",))\n"
+    );
+    // `하나 골라` is one phrase with its space written in, so the `하나`
+    // belongs to the picking rather than to what is being picked from.
+    assert_eq!(
+        ok("적은 돌 골렘 또는 검은 기사 중에서 하나 골라\n"),
+        "적 = __import__(\"random\").choice((\"돌 골렘\", \"검은 기사\",))\n"
+    );
 }
 
 // -------- guards: none of the new acceptances may claim ordinary speech
