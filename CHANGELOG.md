@@ -6,6 +6,13 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.7.1
+- **Everything between two separators is one choice, however many words it
+  is.** `pick from stone golem or black knight` came apart into four choices
+  and said nothing about it: the program fought a `golem` some rounds and a
+  `stone` others. A list already reads `list of stone golem, black knight` as
+  two things, and a pick now reads the same way.
+
 ## 0.7.0
 - **The tidier lands one program in one place, whichever of the six it came
   from.** A file written as sentences, at beginner level, in Korean, in
