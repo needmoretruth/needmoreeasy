@@ -1,0 +1,4337 @@
+# ════════════════════════════════════════════════════════════════════
+# Peace
+# A large turn-based role-playing game about felling the Demon Lord and winning the world back
+#
+# This file is written with nothing but the newest English sentence syntax of NeedMoreEasy 0.7.1.
+# Not one line of Python syntax, and not one Korean command.
+#
+# ── If this is your first time changing a game ─────────────────────
+# A line that starts with # is a note the computer never reads.
+# Delete every one of them and the game still runs exactly the same.
+#
+# Start with the numbers under "Dials you can turn" below.
+# Enemy life, how much a potion heals, shop prices — the values worth changing often.
+# After that, change the names and numbers under "Regions and enemies".
+# One enemy is a name, life, hit, guard, speed, reward and trait.
+# Copy one branch of the same shape and you have a new region.
+#
+# ── What is in the game ────────────────────────────────────────────
+# Thirteen classes, each with its own skill and its own ultimate
+# Twelve regions, a hidden thirteenth, and thirteen enemies that each fight differently
+# Eleven characters with a history and a choice of their own, and standing with four powers
+# Life and spirit, critical hits, dodging, guarding, burn, bleed and poison
+# Nine consumables, weapons, armour and charms, wear and repair, experience and levelling
+# A Demon Lord fight in three phases, and an ending that follows what you chose
+# Kingdom money where 100 bronze is 10 silver and 10 silver is 1 gold
+# Enemy intent shown a turn ahead, and the tactics that answer it
+# Elemental weakness, poise breaks, stuns, an ultimate for every class
+# Help from the allies you recruit, seven materials and ten camp recipes
+# A regional economy moved by demand, stock, the war and your standing, with buying and selling
+# A quest log, an achievement list, a bestiary, and a hidden boss you have to earn
+# Saving and loading through a save code one line long
+#
+# ── How to run it ──────────────────────────────────────────────────
+# Paste the whole file into the English page at needmoreeasy.com and run it.
+# If you installed it on your computer, type nme r peace.nme
+# ════════════════════════════════════════════════════════════════════
+
+
+# ── Dials you can turn ─────────────────────────────────────────────
+# Change only the values here and the whole game feels different.
+
+set lastRegion to 13             # the thirteenth is hidden until you earn it
+set potionHeal to 30             # life one potion gives back
+set strongPotionHeal to 65
+set tonicRestore to 12             # spirit one tonic gives back
+set bombPower to 24               # a bomb ignores the enemy's guard
+set potionBasePrice to 25           # the real price adds the war and the stock to the base
+set strongPotionBasePrice to 58
+set tonicBasePrice to 40
+set antidoteBasePrice to 22
+set bombBasePrice to 70
+set holyWaterBasePrice to 55
+set smokeBasePrice to 38
+set whetstoneBasePrice to 32
+set rationBasePrice to 18
+# The three names below are the first region's prices; the shop works them out again from the economy.
+set potionPrice to potionBasePrice
+set tonicPrice to tonicBasePrice
+set bombPrice to bombBasePrice
+set weaponBoostPrice to 120
+set armourBoostPrice to 120
+set repairBasePrice to 20
+set critChance to 14               # critical hits out of a hundred swings
+set baseFleeChance to 65
+set poisonDamage to 3
+set burnDamage to 4
+set bleedDamage to 3
+set fullCell to ■
+set emptyCell to ·
+set lifePerCell to 5
+set barWidth to 20
+set shortWait to 1
+set ultimateFull to 100
+set allyHelpChance to 35
+set maxDodgeChance to 45
+set weakMultiplier to 2
+set potionHerbCost to 2
+set bombOreCost to 2
+set bombDustCost to 1
+set runeOreCost to 2
+set runeDustCost to 2
+set marketMaxStock to 7
+
+# Set quickTest to true and you start far stronger than usual.
+# It is the dial for reaching the end quickly after adding an enemy or a scene.
+set quickTest to false
+
+
+# ── Jobs that draw the screen ──────────────────────────────────────
+# A "job" is several sentences gathered under one name.
+# The jobs below only take values and draw, so they are safe to call anywhere.
+
+# A largest value read inside a job has to exist beforehand to count as a number.
+set barMaxAmount to 1
+
+to drawBigTitle titleWords:
+  clear the screen
+  draw a line
+  say in the middle titleWords
+  draw a line
+end
+
+to drawSmallTitle titleWords:
+  draw a line
+  say in the middle titleWords
+  draw a line
+end
+
+to drawLifeBar fillAmount:
+  # However far life climbs, the bar is always twenty cells.
+  # Instead of dividing, both sides are multiplied so whole numbers alone compare the ratio.
+  set barText to fullCell repeated 0 times
+  set barStep to 0
+  repeat 20 times
+    add 1 to barStep
+    set nowValue to fillAmount
+    multiply nowValue by 20
+    set topValue to barMaxAmount
+    multiply topValue by barStep
+    if nowValue is greater than or equal to topValue
+      add fullCell to barText
+    else
+      add emptyCell to barText
+    end
+  end
+  show barText
+end
+
+# In the kingdom 100 bronze is 10 silver, and 10 silver is 1 gold.
+# The game keeps bronze, which is easy to add up, and splits it three ways to show it.
+# To change the rates, change the 100 and the 10 in the two loops below together.
+to showMoney coinHeld:
+  set shownGold to 0
+  set shownSilver to 0
+  set shownBronze to coinHeld
+  while shownBronze is greater than 99
+    subtract 100 from shownBronze
+    add 1 to shownGold
+  end
+  while shownBronze is greater than 9
+    subtract 10 from shownBronze
+    add 1 to shownSilver
+  end
+  show gold shownGold · silver shownSilver · bronze shownBronze
+end
+
+
+# ── Writing a save code and reading it back ────────────────────────
+# The digits 0 to 9 become the ten letters A to J.
+# No file is written at all, so it works the same in the browser and installed.
+# A saved value is only letters, and loading turns those letters back into a number.
+
+set saveCells to an empty list
+set restoredNumbers to an empty list
+set blankRow to A
+
+to putCodeCell saveValue:
+  set codeSigns to an empty list
+  set codeLeft to saveValue
+  if codeLeft equals 0
+    append A to codeSigns
+  end
+  while codeLeft is greater than 0
+    set codeQuotient to 0
+    set codeRest to codeLeft
+    while codeRest is greater than 9
+      subtract 10 from codeRest
+      add 1 to codeQuotient
+    end
+    if codeRest equals 0
+      append A to codeSigns
+    else if codeRest equals 1
+      append B to codeSigns
+    else if codeRest equals 2
+      append C to codeSigns
+    else if codeRest equals 3
+      append D to codeSigns
+    else if codeRest equals 4
+      append E to codeSigns
+    else if codeRest equals 5
+      append F to codeSigns
+    else if codeRest equals 6
+      append G to codeSigns
+    else if codeRest equals 7
+      append H to codeSigns
+    else if codeRest equals 8
+      append I to codeSigns
+    else
+      append J to codeSigns
+    end
+    set codeLeft to codeQuotient
+  end
+  reverse codeSigns
+  set finishedCode to blankRow repeated 0 times
+  for each codeSign in codeSigns
+    add codeSign to finishedCode
+  end
+  append finishedCode to saveCells
+end
+
+to readCodeNumber codeText:
+  set readCodeValue to 0
+  for each codeLetter in codeText
+    set codeDigits to 0
+    subtract 1 from codeDigits
+    if codeLetter equals A
+      set codeDigits to 0
+    else if codeLetter equals B
+      set codeDigits to 1
+    else if codeLetter equals C
+      set codeDigits to 2
+    else if codeLetter equals D
+      set codeDigits to 3
+    else if codeLetter equals E
+      set codeDigits to 4
+    else if codeLetter equals F
+      set codeDigits to 5
+    else if codeLetter equals G
+      set codeDigits to 6
+    else if codeLetter equals H
+      set codeDigits to 7
+    else if codeLetter equals I
+      set codeDigits to 8
+    else if codeLetter equals J
+      set codeDigits to 9
+    end
+    if codeDigits is greater than or equal to 0
+      multiply readCodeValue by 10
+      add codeDigits to readCodeValue
+    end
+  end
+  append readCodeValue to restoredNumbers
+end
+
+
+# ── The opening screen: a new adventure or a saved one ─────────────
+
+start the timer
+set titleBoard to Peace
+do drawBigTitle with titleBoard
+say in the middle Fell the Demon Lord and save the kingdom of Arteria
+say in the middle Thirteen classes · six difficulties · a one-line save code
+draw a line
+
+set openingOptions to list of new, load
+set openingSettled to 0
+while openingSettled is less than 1
+  ask firstChoice Would you like a new game or to load one? Type new or load
+  if openingOptions contains firstChoice
+    set openingSettled to 1
+  else
+    show 🟦 Please type new or load exactly.
+  end
+end
+set newAdventure to true
+if firstChoice equals load
+  set newAdventure to false
+end
+
+set heroName to the hero who remembers
+set classChoice to knight
+set difficultyChoice to normal
+set pacingNumber to 1
+set screenNumber to 1
+
+if newAdventure exists
+  set pacingOptions to list of at once, slowly, very slowly
+  set pacingSettled to 0
+  while pacingSettled is less than 1
+    ask pacingChoice How fast should the words appear? at once, slowly, very slowly
+    if pacingOptions contains pacingChoice
+      set pacingSettled to 1
+    else
+      show 🟦 Please type one of the three speeds again.
+    end
+  end
+  if pacingChoice equals slowly
+    set pacingNumber to 2
+  else if pacingChoice equals very slowly
+    set pacingNumber to 3
+  end
+  set screenOptions to list of full, plain
+  set screenSettled to 0
+  while screenSettled is less than 1
+    ask screenChoice How should the screen look? full, plain
+    if screenOptions contains screenChoice
+      set screenSettled to 1
+    else
+      show 🟦 Please type full or plain.
+    end
+  end
+  if screenChoice equals plain
+    set screenNumber to 2
+  end
+
+  if pacingNumber equals 2
+    say slowly The kingdom of Arteria was built on an old promise between humans, elves and dwarves.
+    say slowly Then the Demon Lord Morgar woke in the black mountains of the north and took the twelve domains one by one.
+    say slowly As the war dragged on the mines stopped, the grain carts stopped, and the same loaf cost a different price in every castle.
+    say slowly The king fell defending the capital, and Princess Elenoa, who lived, keeps the last holy flame.
+    say slowly This war will not end with one sword. Real peace comes only when people, goods and promises are joined again.
+  else if pacingNumber equals 3
+    say very slowly The kingdom of Arteria was built on an old promise between humans, elves and dwarves.
+    say very slowly Then the Demon Lord Morgar woke in the black mountains of the north and took the twelve domains one by one.
+    say very slowly As the war dragged on the mines stopped, the grain carts stopped, and the same loaf cost a different price in every castle.
+    say very slowly The king fell defending the capital, and Princess Elenoa, who lived, keeps the last holy flame.
+    say very slowly This war will not end with one sword. Real peace comes only when people, goods and promises are joined again.
+  else
+    story:
+
+      The kingdom of Arteria was built on an old promise between humans, elves and dwarves.
+      Then the Demon Lord Morgar woke in the black mountains of the north and took the twelve domains one by one.
+      As the war dragged on the mines stopped, the grain carts stopped, and the same loaf cost a different price in every castle.
+      The king fell defending the capital, and Princess Elenoa, who lived, keeps the last holy flame.
+      This war will not end with one sword. Real peace comes only when people, goods and promises are joined again.
+
+    end
+  end
+  set nameSettled to 0
+  while nameSettled is less than 1
+    ask heroName What shall we call the adventurer who marches on the Demon Lord?
+    if heroName missing
+      set heroName to the nameless hero
+      set nameSettled to 1
+    else
+      set nameCheckPieces to heroName split by comma
+      if how many nameCheckPieces equals 1
+        set nameSettled to 1
+      else
+        show 🟦 A comma would clash with the save code, so a name cannot hold one. Please type it again.
+      end
+    end
+  end
+
+  # A class changes not only the numbers but the skill, the ultimate and how the fight goes.
+  set titleBoard to Thirteen classes
+  do drawSmallTitle with titleBoard
+  show knight · guards, and shields an ally · impact
+  show mage · burns and wide damage · flame
+  show archer · repeat shots and bleeding · pierce
+  show cleric · healing and cleansing · holy
+  show rogue · high dodge and poisoning · poison
+  show berserker · hits harder the more life is lost · impact
+  show runesmith · repairs gear and breaks armour · impact
+  show bard · songs that lift the heart and shake enemy poise · sound
+  show druid · regrowth and binding vines · nature
+  show warlock · drains life on a dangerous bargain · dark
+  show dragoon · a dragonfire lance that pierces guard · dragonfire
+  show chronomancer · quick moves and delayed turns · time
+  show gambler · open odds and cover against failure · fate
+  set classOptions to list of knight, mage, archer, cleric, rogue, berserker, runesmith, bard, druid, warlock, dragoon, chronomancer, gambler
+  set classSettled to 0
+  while classSettled is less than 1
+    ask classChoice Please type the name of the class you want, exactly
+    if classOptions contains classChoice
+      set classSettled to 1
+    else
+      show 🟦 That class is not on the list. Please type it again in lowercase.
+    end
+  end
+
+  set titleBoard to Six difficulties
+  do drawSmallTitle with titleBoard
+  show very easy is the one for reading the story in comfort.
+  show easy is the one for anybody new to fighting.
+  show normal is the balance the economy and the fights were built around.
+  show hard asks you to stock up and to answer enemy intent.
+  show very hard is won by planning your gear and your crafting.
+  show impossible is the far end, for somebody who knows every system.
+  set difficultyOptions to list of very easy, easy, normal, hard, very hard, impossible
+  set difficultySettled to 0
+  while difficultySettled is less than 1
+    ask difficultyChoice Choose one of very easy, easy, normal, hard, very hard, impossible
+    if difficultyOptions contains difficultyChoice
+      set difficultySettled to 1
+    else
+      show 🟦 That difficulty is not on the list. Please type the name as it appears.
+    end
+  end
+end
+
+
+# ── The starting numbers for the thirteen classes ──────────────────
+
+if classChoice equals mage
+  set classNumber to 2
+  set className to mage
+  set maxLife to 48
+  set heroHit to 9
+  set heroGuard to 3
+  set maxSpirit to 28
+  set heroSpeed to 13
+  set skillName to fireball
+  set skillCost to 6
+  set skillElement to flame
+  set ultimateName to greater firestorm
+  set classTrait to magic and burning
+else if classChoice equals archer
+  set classNumber to 3
+  set className to archer
+  set maxLife to 54
+  set heroHit to 8
+  set heroGuard to 4
+  set maxSpirit to 20
+  set heroSpeed to 27
+  set skillName to rapid shot
+  set skillCost to 4
+  set skillElement to pierce
+  set ultimateName to a thousand arrows
+  set classTrait to repeat shots and bleeding
+else if classChoice equals cleric
+  set classNumber to 4
+  set className to cleric
+  set maxLife to 60
+  set heroHit to 7
+  set heroGuard to 6
+  set maxSpirit to 24
+  set heroSpeed to 15
+  set skillName to holy light
+  set skillCost to 5
+  set skillElement to holy
+  set ultimateName to the judgement of the goddess
+  set classTrait to healing and cleansing
+else if classChoice equals rogue
+  set classNumber to 5
+  set className to rogue
+  set maxLife to 50
+  set heroHit to 8
+  set heroGuard to 4
+  set maxSpirit to 22
+  set heroSpeed to 32
+  set skillName to venom dagger
+  set skillCost to 4
+  set skillElement to poison
+  set ultimateName to shadow execution
+  set classTrait to dodging and poisoning
+else if classChoice equals berserker
+  set classNumber to 6
+  set className to berserker
+  set maxLife to 78
+  set heroHit to 10
+  set heroGuard to 3
+  set maxSpirit to 16
+  set heroSpeed to 12
+  set skillName to frenzy axe
+  set skillCost to 4
+  set skillElement to impact
+  set ultimateName to the fury of Ragna
+  set classTrait to lost life and fury
+else if classChoice equals runesmith
+  set classNumber to 7
+  set className to runesmith
+  set maxLife to 70
+  set heroHit to 7
+  set heroGuard to 8
+  set maxSpirit to 20
+  set heroSpeed to 8
+  set skillName to rune hammer
+  set skillCost to 5
+  set skillElement to impact
+  set ultimateName to the anvil of the earth
+  set classTrait to repair and armour breaking
+else if classChoice equals bard
+  set classNumber to 8
+  set className to bard
+  set maxLife to 56
+  set heroHit to 6
+  set heroGuard to 5
+  set maxSpirit to 28
+  set heroSpeed to 20
+  set skillName to shatter note
+  set skillCost to 4
+  set skillElement to sound
+  set ultimateName to the epic of heroes
+  set classTrait to heart and poise breaking
+else if classChoice equals druid
+  set classNumber to 9
+  set className to druid
+  set maxLife to 62
+  set heroHit to 7
+  set heroGuard to 5
+  set maxSpirit to 30
+  set heroSpeed to 17
+  set skillName to binding vines
+  set skillCost to 5
+  set skillElement to nature
+  set ultimateName to the wrath of the old forest
+  set classTrait to regrowth and binding
+else if classChoice equals warlock
+  set classNumber to 10
+  set className to warlock
+  set maxLife to 52
+  set heroHit to 9
+  set heroGuard to 3
+  set maxSpirit to 28
+  set heroSpeed to 14
+  set skillName to life drain
+  set skillCost to 6
+  set skillElement to dark
+  set ultimateName to the bargain of the abyss
+  set classTrait to draining life and bargains
+else if classChoice equals dragoon
+  set classNumber to 11
+  set className to dragoon
+  set maxLife to 66
+  set heroHit to 9
+  set heroGuard to 7
+  set maxSpirit to 18
+  set heroSpeed to 16
+  set skillName to dragonfire lance
+  set skillCost to 5
+  set skillElement to dragonfire
+  set ultimateName to the descent of the red dragon
+  set classTrait to piercing and dragonfire
+else if classChoice equals chronomancer
+  set classNumber to 12
+  set className to chronomancer
+  set maxLife to 46
+  set heroHit to 8
+  set heroGuard to 4
+  set maxSpirit to 32
+  set heroSpeed to 24
+  set skillName to time rift
+  set skillCost to 6
+  set skillElement to time
+  set ultimateName to the world held still
+  set classTrait to delayed turns and haste
+else if classChoice equals gambler
+  set classNumber to 13
+  set className to gambler
+  set maxLife to 54
+  set heroHit to 8
+  set heroGuard to 5
+  set maxSpirit to 24
+  set heroSpeed to 18
+  set skillName to the dice of fate
+  set skillCost to 4
+  set skillElement to fate
+  set ultimateName to the one who turns the house over
+  set classTrait to open odds and cover against failure
+else
+  set classNumber to 1
+  set className to knight
+  set maxLife to 68
+  set heroHit to 7
+  set heroGuard to 9
+  set maxSpirit to 18
+  set heroSpeed to 9
+  set skillName to shield bash
+  set skillCost to 4
+  set skillElement to impact
+  set ultimateName to the guard of the king
+  set classTrait to guarding and shielding
+end
+
+
+# ── How the six difficulties bend the fights and the economy ───────
+
+if difficultyChoice equals very easy
+  set difficultyNumber to 1
+  set difficultyName to very easy
+  set enemyLifeBonus to 0
+  set enemyHitBonus to 0
+  set enemyGuardBonus to 0
+  set poiseBonus to 0
+  set rewardBonus to 25
+  set marketRiskBonus to 0
+else if difficultyChoice equals easy
+  set difficultyNumber to 2
+  set difficultyName to easy
+  set enemyLifeBonus to 6
+  set enemyHitBonus to 1
+  set enemyGuardBonus to 0
+  set poiseBonus to 0
+  set rewardBonus to 15
+  set marketRiskBonus to 1
+else if difficultyChoice equals hard
+  set difficultyNumber to 4
+  set difficultyName to hard
+  set enemyLifeBonus to 28
+  set enemyHitBonus to 5
+  set enemyGuardBonus to 1
+  set poiseBonus to 1
+  set rewardBonus to 20
+  set marketRiskBonus to 4
+else if difficultyChoice equals very hard
+  set difficultyNumber to 5
+  set difficultyName to very hard
+  set enemyLifeBonus to 48
+  set enemyHitBonus to 8
+  set enemyGuardBonus to 2
+  set poiseBonus to 2
+  set rewardBonus to 45
+  set marketRiskBonus to 7
+else if difficultyChoice equals impossible
+  set difficultyNumber to 6
+  set difficultyName to impossible
+  set enemyLifeBonus to 78
+  set enemyHitBonus to 11
+  set enemyGuardBonus to 4
+  set poiseBonus to 4
+  set rewardBonus to 85
+  set marketRiskBonus to 11
+else
+  set difficultyNumber to 3
+  set difficultyName to normal
+  set enemyLifeBonus to 12
+  set enemyHitBonus to 3
+  set enemyGuardBonus to 0
+  set poiseBonus to 0
+  set rewardBonus to 0
+  set marketRiskBonus to 2
+end
+
+
+# ── Every starting value of a new adventure ────────────────────────
+# A value the save code restores has to be given its name here first.
+
+set heroLife to maxLife
+set heroSpirit to maxSpirit
+set heroLevel to 1
+set heroExp to 0
+set nextExp to 18
+set potionCount to 3
+set strongPotionCount to 0
+set tonicCount to 2
+set antidoteCount to 2
+set bombCount to 1
+set holyWaterCount to 0
+set smokeCount to 1
+set whetstoneCount to 1
+set rationCount to 3
+set luckCoinCount to 0
+set chaosRolls to 0
+set fateSealCount to 0
+set fateDrawCount to 0
+set fatePityCount to 0
+set fateShardCount to 0
+set firstDrawDone to false
+set gambleWins to 0
+set gambleLosses to 0
+set bronzeHeld to 110
+set weaponNumber to 1
+set weaponName to iron longsword
+set weaponWear to 40
+set weaponMaxWear to 40
+set armourNumber to 1
+set armourName to chain armour
+set armourWear to 50
+set armourMaxWear to 50
+set charmNumber to 0
+set charmName to a worn peace charm
+set heroPoison to 0
+set peaceSpark to 1
+set hopeScore to 0
+set regionNumber to 1
+set deepestRegion to 1
+set totalTurns to 0
+set endingKind to underway
+set ultimateCharge to 0
+set herbCount to 1
+set ironCount to 0
+set dustCount to 0
+set scaleCount to 0
+set clothCount to 0
+set crystalCount to 0
+set hideCount to 0
+set craftCount to 0
+set poiseBreaks to 0
+set weakHits to 0
+set runeCount to 0
+set tradeCount to 0
+set repairCount to 0
+set saveCount to 0
+set fameLevel to 0
+set demonLordSlain to false
+set hiddenBossWin to false
+set wardRuneHeld to false
+set wardRuneUsed to false
+set serinHelped to false
+set demonLordWeakened to false
+set bannerGuard to false
+set warRisk to 12
+add marketRiskBonus to warRisk
+set traderStanding to 0
+set crownStanding to 0
+set elfStanding to 0
+set dwarfStanding to 0
+set templeStanding to 0
+set guildStanding to 0
+set adventureDay to 1
+set fullnessLevel to 100
+set fatigueLevel to 0
+set moralePoints to 50
+set marketPotionStock to 5
+set marketTonicStock to 4
+set marketBombStock to 2
+set marketRationStock to 6
+set rianelJoined to false
+set brumJoined to false
+set serinJoined to false
+set adelaJoined to false
+set kyleJoined to false
+set aurelJoined to false
+set isabelJoined to false
+set darionJoined to false
+set neriaJoined to false
+set lucianJoined to false
+set forestQuest to 0
+set wardQuest to 0
+set bannerQuest to 0
+set marketQuest to 0
+set refugeeQuest to 0
+set sealQuest to 0
+set enemiesFelled to an empty record
+set allyList to an empty list
+set achievementList to an empty list
+set regionsFound to an empty list
+set questBoard to an empty record
+set firstUltimateAchievement to false
+set firstPoiseAchievement to false
+set firstWeakAchievement to false
+set firstCraftAchievement to false
+set richAchievement to false
+set firstTradeAchievement to false
+set firstRepairAchievement to false
+
+# The gambler starts with the tools of chance that belong to the class.
+# Any other class can buy or draw the same tools later.
+if classNumber equals 13
+  set luckCoinCount to 2
+  set chaosRolls to 1
+end
+
+
+# ── Loading ────────────────────────────────────────────────────────
+# The order is the format tag, the name, ninety-five numbers, then a position-weighted checksum.
+# The space after each comma is dropped by the job that reads a number.
+
+set loadWorked to false
+if newAdventure missing
+  ask saveText Paste the Peace save code you were given, all on one line
+  set savePieces to saveText split by comma
+  set savePieceCount to how many savePieces
+  if savePieceCount equals 98
+    set versionCell to the first of savePieces
+    if versionCell equals peaceG
+      set nameCell to item 2 of savePieces
+      # Joining with commas puts one space in front of every cell.
+      # Only that first space is dropped; spaces the player typed inside the name stay.
+      set tidyName to nameCell repeated 0 times
+      set nameLetterIndex to 0
+      for each nameLetter in nameCell
+        add 1 to nameLetterIndex
+        if nameLetterIndex is greater than 1
+          add nameLetter to tidyName
+        end
+      end
+      set heroName to tidyName
+      set restoredNumbers to an empty list
+      set saveOrder to 0
+      for each savePiece in savePieces
+        add 1 to saveOrder
+        if saveOrder is greater than 2
+          do readCodeNumber with savePiece
+        end
+      end
+      if how many restoredNumbers equals 96
+        set loadWorked to true
+      end
+    end
+  end
+
+  if loadWorked exists
+    set classNumber to the first of restoredNumbers
+    set difficultyNumber to item 2 of restoredNumbers
+    set regionNumber to item 3 of restoredNumbers
+    set deepestRegion to item 4 of restoredNumbers
+    set maxLife to item 5 of restoredNumbers
+    set heroLife to item 6 of restoredNumbers
+    set heroHit to item 7 of restoredNumbers
+    set heroGuard to item 8 of restoredNumbers
+    set maxSpirit to item 9 of restoredNumbers
+    set heroSpirit to item 10 of restoredNumbers
+    set heroSpeed to item 11 of restoredNumbers
+    set heroLevel to item 12 of restoredNumbers
+    set heroExp to item 13 of restoredNumbers
+    set nextExp to item 14 of restoredNumbers
+    set bronzeHeld to item 15 of restoredNumbers
+    set potionCount to item 16 of restoredNumbers
+    set strongPotionCount to item 17 of restoredNumbers
+    set tonicCount to item 18 of restoredNumbers
+    set antidoteCount to item 19 of restoredNumbers
+    set bombCount to item 20 of restoredNumbers
+    set holyWaterCount to item 21 of restoredNumbers
+    set smokeCount to item 22 of restoredNumbers
+    set whetstoneCount to item 23 of restoredNumbers
+    set rationCount to item 24 of restoredNumbers
+    set herbCount to item 25 of restoredNumbers
+    set ironCount to item 26 of restoredNumbers
+    set dustCount to item 27 of restoredNumbers
+    set scaleCount to item 28 of restoredNumbers
+    set clothCount to item 29 of restoredNumbers
+    set crystalCount to item 30 of restoredNumbers
+    set hideCount to item 31 of restoredNumbers
+    set peaceSpark to item 32 of restoredNumbers
+    set hopeScore to item 33 of restoredNumbers
+    set ultimateCharge to item 34 of restoredNumbers
+    set craftCount to item 35 of restoredNumbers
+    set poiseBreaks to item 36 of restoredNumbers
+    set weakHits to item 37 of restoredNumbers
+    set totalTurns to item 38 of restoredNumbers
+    set weaponNumber to item 39 of restoredNumbers
+    set weaponWear to item 40 of restoredNumbers
+    set weaponMaxWear to item 41 of restoredNumbers
+    set armourNumber to item 42 of restoredNumbers
+    set armourWear to item 43 of restoredNumbers
+    set armourMaxWear to item 44 of restoredNumbers
+    set charmNumber to item 45 of restoredNumbers
+    set warRisk to item 46 of restoredNumbers
+    set traderStanding to item 47 of restoredNumbers
+    set crownStanding to item 48 of restoredNumbers
+    set elfStanding to item 49 of restoredNumbers
+    set dwarfStanding to item 50 of restoredNumbers
+    set templeStanding to item 51 of restoredNumbers
+    set guildStanding to item 52 of restoredNumbers
+    set adventureDay to item 53 of restoredNumbers
+    set fullnessLevel to item 54 of restoredNumbers
+    set fatigueLevel to item 55 of restoredNumbers
+    set moralePoints to item 56 of restoredNumbers
+    set wardRuneHeld to item 57 of restoredNumbers
+    set wardRuneUsed to item 58 of restoredNumbers
+    set serinHelped to item 59 of restoredNumbers
+    set demonLordWeakened to item 60 of restoredNumbers
+    set bannerGuard to item 61 of restoredNumbers
+    set rianelJoined to item 62 of restoredNumbers
+    set brumJoined to item 63 of restoredNumbers
+    set serinJoined to item 64 of restoredNumbers
+    set adelaJoined to item 65 of restoredNumbers
+    set kyleJoined to item 66 of restoredNumbers
+    set aurelJoined to item 67 of restoredNumbers
+    set isabelJoined to item 68 of restoredNumbers
+    set darionJoined to item 69 of restoredNumbers
+    set neriaJoined to item 70 of restoredNumbers
+    set lucianJoined to item 71 of restoredNumbers
+    set forestQuest to item 72 of restoredNumbers
+    set wardQuest to item 73 of restoredNumbers
+    set bannerQuest to item 74 of restoredNumbers
+    set marketQuest to item 75 of restoredNumbers
+    set refugeeQuest to item 76 of restoredNumbers
+    set sealQuest to item 77 of restoredNumbers
+    set runeCount to item 78 of restoredNumbers
+    set tradeCount to item 79 of restoredNumbers
+    set repairCount to item 80 of restoredNumbers
+    set fameLevel to item 81 of restoredNumbers
+    set saveCount to item 82 of restoredNumbers
+    set demonLordSlain to item 83 of restoredNumbers
+    set hiddenBossWin to item 84 of restoredNumbers
+    set pacingNumber to item 85 of restoredNumbers
+    set screenNumber to item 86 of restoredNumbers
+    set luckCoinCount to item 87 of restoredNumbers
+    set chaosRolls to item 88 of restoredNumbers
+    set fateSealCount to item 89 of restoredNumbers
+    set fateDrawCount to item 90 of restoredNumbers
+    set fatePityCount to item 91 of restoredNumbers
+    set fateShardCount to item 92 of restoredNumbers
+    set firstDrawDone to item 93 of restoredNumbers
+    set gambleWins to item 94 of restoredNumbers
+    set gambleLosses to item 95 of restoredNumbers
+    set gotCheckValue to item 96 of restoredNumbers
+
+    set checkNumbers to list of classNumber, difficultyNumber, regionNumber, deepestRegion, maxLife, heroLife, heroHit, heroGuard, maxSpirit, heroSpirit, heroSpeed, heroLevel, heroExp, nextExp, bronzeHeld, potionCount, strongPotionCount, tonicCount, antidoteCount, bombCount, holyWaterCount, smokeCount, whetstoneCount, rationCount, herbCount, ironCount, dustCount, scaleCount, clothCount, crystalCount, hideCount, peaceSpark, hopeScore, ultimateCharge, craftCount, poiseBreaks, weakHits, totalTurns, weaponNumber, weaponWear, weaponMaxWear, armourNumber, armourWear, armourMaxWear, charmNumber, warRisk, traderStanding, crownStanding, elfStanding, dwarfStanding, templeStanding, guildStanding, adventureDay, fullnessLevel, fatigueLevel, moralePoints, wardRuneHeld, wardRuneUsed, serinHelped, demonLordWeakened, bannerGuard, rianelJoined, brumJoined, serinJoined, adelaJoined, kyleJoined, aurelJoined, isabelJoined, darionJoined, neriaJoined, lucianJoined, forestQuest, wardQuest, bannerQuest, marketQuest, refugeeQuest, sealQuest, runeCount, tradeCount, repairCount, fameLevel, saveCount, demonLordSlain, hiddenBossWin, pacingNumber, screenNumber, luckCoinCount, chaosRolls, fateSealCount, fateDrawCount, fatePityCount, fateShardCount, firstDrawDone, gambleWins, gambleLosses
+    # It weighs each position rather than only summing, so swapping two fields is caught too.
+    set checkSum to 0
+    set checkIndex to 0
+    for each checkNumber in checkNumbers
+      add 1 to checkIndex
+      set checkTerm to checkNumber
+      multiply checkTerm by checkIndex
+      add checkTerm to checkSum
+    end
+    set madeCheckValue to the remainder of checkSum divided by 997
+    if madeCheckValue is not equal to gotCheckValue
+      set loadWorked to false
+    end
+    # Even with a matching checksum, values outside the rules of the game are refused.
+    if classNumber is less than 1 then set loadWorked to false
+    if classNumber is greater than 13 then set loadWorked to false
+    if difficultyNumber is less than 1 then set loadWorked to false
+    if difficultyNumber is greater than 6 then set loadWorked to false
+    if regionNumber is less than 1 then set loadWorked to false
+    if regionNumber is greater than 13 then set loadWorked to false
+    if deepestRegion is less than regionNumber then set loadWorked to false
+    if heroLife is greater than maxLife then set loadWorked to false
+    if heroSpirit is greater than maxSpirit then set loadWorked to false
+    if weaponWear is greater than weaponMaxWear then set loadWorked to false
+    if armourWear is greater than armourMaxWear then set loadWorked to false
+    if pacingNumber is less than 1 then set loadWorked to false
+    if pacingNumber is greater than 3 then set loadWorked to false
+    if screenNumber is less than 1 then set loadWorked to false
+    if screenNumber is greater than 2 then set loadWorked to false
+  end
+
+  if loadWorked missing
+    set endingKind to brokensave
+    draw a line
+    show The save code was cut short, or it belongs to another build. Please run the game again.
+    draw a line
+  else
+    show Loading is done. heroName picks the adventure up again on road regionNumber.
+  end
+end
+
+
+# ── Rebuilding names and lists from the loaded numbers ─────────────
+
+if newAdventure missing
+  if classNumber equals 2
+    set className to mage
+    set skillName to fireball
+    set skillCost to 6
+    set skillElement to flame
+    set ultimateName to greater firestorm
+    set classTrait to magic and burning
+  else if classNumber equals 3
+    set className to archer
+    set skillName to rapid shot
+    set skillCost to 4
+    set skillElement to pierce
+    set ultimateName to a thousand arrows
+    set classTrait to repeat shots and bleeding
+  else if classNumber equals 4
+    set className to cleric
+    set skillName to holy light
+    set skillCost to 5
+    set skillElement to holy
+    set ultimateName to the judgement of the goddess
+    set classTrait to healing and cleansing
+  else if classNumber equals 5
+    set className to rogue
+    set skillName to venom dagger
+    set skillCost to 4
+    set skillElement to poison
+    set ultimateName to shadow execution
+    set classTrait to dodging and poisoning
+  else if classNumber equals 6
+    set className to berserker
+    set skillName to frenzy axe
+    set skillCost to 4
+    set skillElement to impact
+    set ultimateName to the fury of Ragna
+    set classTrait to lost life and fury
+  else if classNumber equals 7
+    set className to runesmith
+    set skillName to rune hammer
+    set skillCost to 5
+    set skillElement to impact
+    set ultimateName to the anvil of the earth
+    set classTrait to repair and armour breaking
+  else if classNumber equals 8
+    set className to bard
+    set skillName to shatter note
+    set skillCost to 4
+    set skillElement to sound
+    set ultimateName to the epic of heroes
+    set classTrait to heart and poise breaking
+  else if classNumber equals 9
+    set className to druid
+    set skillName to binding vines
+    set skillCost to 5
+    set skillElement to nature
+    set ultimateName to the wrath of the old forest
+    set classTrait to regrowth and binding
+  else if classNumber equals 10
+    set className to warlock
+    set skillName to life drain
+    set skillCost to 6
+    set skillElement to dark
+    set ultimateName to the bargain of the abyss
+    set classTrait to draining life and bargains
+  else if classNumber equals 11
+    set className to dragoon
+    set skillName to dragonfire lance
+    set skillCost to 5
+    set skillElement to dragonfire
+    set ultimateName to the descent of the red dragon
+    set classTrait to piercing and dragonfire
+  else if classNumber equals 12
+    set className to chronomancer
+    set skillName to time rift
+    set skillCost to 6
+    set skillElement to time
+    set ultimateName to the world held still
+    set classTrait to delayed turns and haste
+  else if classNumber equals 13
+    set className to gambler
+    set skillName to the dice of fate
+    set skillCost to 4
+    set skillElement to fate
+    set ultimateName to the one who turns the house over
+    set classTrait to open odds and cover against failure
+  else
+    set className to knight
+    set skillName to shield bash
+    set skillCost to 4
+    set skillElement to impact
+    set ultimateName to the guard of the king
+    set classTrait to guarding and shielding
+  end
+
+  if difficultyNumber equals 1
+    set difficultyName to very easy
+    set enemyLifeBonus to 0
+    set enemyHitBonus to 0
+    set enemyGuardBonus to 0
+    set poiseBonus to 0
+    set rewardBonus to 25
+    set marketRiskBonus to 0
+  else if difficultyNumber equals 2
+    set difficultyName to easy
+    set enemyLifeBonus to 6
+    set enemyHitBonus to 1
+    set enemyGuardBonus to 0
+    set poiseBonus to 0
+    set rewardBonus to 15
+    set marketRiskBonus to 1
+  else if difficultyNumber equals 4
+    set difficultyName to hard
+    set enemyLifeBonus to 28
+    set enemyHitBonus to 5
+    set enemyGuardBonus to 1
+    set poiseBonus to 1
+    set rewardBonus to 20
+    set marketRiskBonus to 4
+  else if difficultyNumber equals 5
+    set difficultyName to very hard
+    set enemyLifeBonus to 48
+    set enemyHitBonus to 8
+    set enemyGuardBonus to 2
+    set poiseBonus to 2
+    set rewardBonus to 45
+    set marketRiskBonus to 7
+  else if difficultyNumber equals 6
+    set difficultyName to impossible
+    set enemyLifeBonus to 78
+    set enemyHitBonus to 11
+    set enemyGuardBonus to 4
+    set poiseBonus to 4
+    set rewardBonus to 85
+    set marketRiskBonus to 11
+  else
+    set difficultyName to normal
+    set enemyLifeBonus to 12
+    set enemyHitBonus to 3
+    set enemyGuardBonus to 0
+    set poiseBonus to 0
+    set rewardBonus to 0
+    set marketRiskBonus to 2
+  end
+
+  # Gear names are saved as short numbers and put back together here.
+  if weaponNumber equals 2
+    set weaponName to the ranger's longbow
+  else if weaponNumber equals 3
+    set weaponName to dwarven rune hammer
+  else if weaponNumber equals 4
+    set weaponName to silver staff
+  else if weaponNumber equals 5
+    set weaponName to shadow dagger
+  else if weaponNumber equals 6
+    set weaponName to dragonbone lance
+  else if weaponNumber equals 7
+    set weaponName to the second hand of time
+  else if weaponNumber equals 8
+    set weaponName to the holy sword of peace
+  else
+    set weaponName to iron longsword
+  end
+  if armourNumber equals 2
+    set armourName to elven ranger's coat
+  else if armourNumber equals 3
+    set armourName to dwarven plate armour
+  else if armourNumber equals 4
+    set armourName to holy light vestment
+  else if armourNumber equals 5
+    set armourName to dragonscale armour
+  else if armourNumber equals 6
+    set armourName to the royal guardian armour
+  else
+    set armourName to chain armour
+  end
+  if charmNumber equals 1
+    set charmName to the hawk's eye
+  else if charmNumber equals 2
+    set charmName to the trader's silver scales
+  else if charmNumber equals 3
+    set charmName to the saint's rosary
+  else if charmNumber equals 4
+    set charmName to a shard of Nox
+  else
+    set charmName to a worn peace charm
+  end
+
+  # The ally list and the quest board are rebuilt from the saved flags.
+  if rianelJoined exists then append Rianel to allyList
+  if brumJoined exists then append Brum to allyList
+  if serinJoined exists then append Serin to allyList
+  if adelaJoined exists then append Adela to allyList
+  if kyleJoined exists then append Kyle to allyList
+  if aurelJoined exists then append Aurel to allyList
+  if isabelJoined exists then append Isabel to allyList
+  if darionJoined exists then append Darion to allyList
+  if neriaJoined exists then append Neria to allyList
+  if lucianJoined exists then append Lucian to allyList
+end
+
+put demonlord at underway in questBoard
+put forestpact at unknown in questBoard
+put magicward at unknown in questBoard
+put banner at unknown in questBoard
+put freemarket at unknown in questBoard
+put refugees at unknown in questBoard
+put sunseal at unknown in questBoard
+
+if newAdventure missing
+  if forestQuest equals 1 then put forestpact at done in questBoard
+  if forestQuest equals 2 then put forestpact at missed in questBoard
+  if wardQuest equals 1 then put magicward at done in questBoard
+  if wardQuest equals 2 then put magicward at missed in questBoard
+  if bannerQuest equals 1 then put banner at done in questBoard
+  if bannerQuest equals 2 then put banner at missed in questBoard
+  if marketQuest equals 1 then put freemarket at done in questBoard
+  if marketQuest equals 2 then put freemarket at profitdeal in questBoard
+  if refugeeQuest equals 1 then put refugees at done in questBoard
+  if refugeeQuest equals 2 then put refugees at armyfirst in questBoard
+  if sealQuest equals 1 then put sunseal at done in questBoard
+  if sealQuest equals 2 then put sunseal at relicspent in questBoard
+
+  if poiseBreaks is greater than 0
+    set firstPoiseAchievement to true
+    append poise breaker to achievementList
+  end
+  if weakHits is greater than 0
+    set firstWeakAchievement to true
+    append weakness hunter to achievementList
+  end
+  if craftCount is greater than 0
+    set firstCraftAchievement to true
+    append first craft to achievementList
+  end
+  if tradeCount is greater than 0
+    set firstTradeAchievement to true
+    append first trade to achievementList
+  end
+  if repairCount is greater than 0
+    set firstRepairAchievement to true
+    append first repair to achievementList
+  end
+  if bronzeHeld is greater than 99
+    set richAchievement to true
+    append first gold to achievementList
+  end
+
+  if regionNumber is greater than 1
+    append the north gate of the capital to regionsFound
+    set recordEnemyName to Skrak the red-ear goblin chief
+    put recordEnemyName at 1 in enemiesFelled
+  end
+  if regionNumber is greater than 2
+    append the whispering forest to regionsFound
+    set recordEnemyName to Gardum the orc warchief
+    put recordEnemyName at 1 in enemiesFelled
+  end
+  if regionNumber is greater than 3
+    append the silver mine to regionsFound
+    set recordEnemyName to Edric the wraith knight
+    put recordEnemyName at 1 in enemiesFelled
+  end
+  if regionNumber is greater than 4
+    append the old wizard's tower to regionsFound
+    set recordEnemyName to Borga the troll king
+    put recordEnemyName at 1 in enemiesFelled
+  end
+  if regionNumber is greater than 5
+    append the catacombs of the holy light abbey to regionsFound
+    set recordEnemyName to Granite the stone golem
+    put recordEnemyName at 1 in enemiesFelled
+  end
+  if regionNumber is greater than 6
+    append the ashen fortress to regionsFound
+    set recordEnemyName to Morvel the dark wizard
+    put recordEnemyName at 1 in enemiesFelled
+  end
+  if regionNumber is greater than 7
+    append the dragon's canyon to regionsFound
+    set recordEnemyName to Barkas the fallen black dragon
+    put recordEnemyName at 1 in enemiesFelled
+  end
+  if regionNumber is greater than 8
+    append the golden market of the free city to regionsFound
+    set recordEnemyName to Lemar the golden-mask bandit king
+    put recordEnemyName at 1 in enemiesFelled
+  end
+  if regionNumber is greater than 9
+    append the frost gate to regionsFound
+    set recordEnemyName to Hargon the frost giant
+    put recordEnemyName at 1 in enemiesFelled
+  end
+  if regionNumber is greater than 10
+    append the starlight marsh to regionsFound
+    set recordEnemyName to Selka the plague hydra
+    put recordEnemyName at 1 in enemiesFelled
+  end
+  if regionNumber is greater than 11
+    append the fallen sun temple to regionsFound
+    set recordEnemyName to Solkana the fallen angel
+    put recordEnemyName at 1 in enemiesFelled
+  end
+  if demonLordSlain exists
+    append the black throne of the demon castle to regionsFound
+    set recordEnemyName to Morgar the Demon Lord
+    put recordEnemyName at 1 in enemiesFelled
+    put demonlord at done in questBoard
+    append demon lord hunter to achievementList
+  end
+end
+
+
+# ── Princess Elenoa and the first vow ──────────────────────────────
+
+if newAdventure exists
+  set titleBoard to Elenoa, princess of Arteria
+  do drawSmallTitle with titleBoard
+  story:
+
+    Princess Elenoa wears rusted armour instead of a crown and sorts the ration tickets of the refugees herself.
+    Grain is still stacked in the noble warehouses, but the roads are cut and bread costs three times more at the border than in the capital.
+    She moves the goddess's holy flame into a lantern and says that ending a war and bringing life back are not the same thing.
+
+  end
+  set firstVowOptions to list of honour, kingdom, people
+  set firstVowSettled to 0
+  while firstVowSettled is less than 1
+    ask firstVow What will you keep first? honour, kingdom, people
+    if firstVowOptions contains firstVow
+      set firstVowSettled to 1
+    else
+      show 🟦 Please type one of the three again.
+    end
+  end
+  if firstVow equals honour
+    add 3 to maxSpirit
+    set heroSpirit to maxSpirit
+    add 1 to hopeScore
+    add 1 to crownStanding
+    show Elenoa answers with the salute of the royal knights. Your greatest spirit went up.
+  else if firstVow equals kingdom
+    add 1 to peaceSpark
+    add 2 to hopeScore
+    add 2 to crownStanding
+    show A hidden supply road lights up on the royal map. The holy flame burns stronger.
+  else
+    add 6 to maxLife
+    set heroLife to maxLife
+    add 1 to hopeScore
+    add 2 to guildStanding
+    show The refugees remember the adventurer's name. Your greatest life went up.
+  end
+end
+
+if quickTest exists
+  set maxLife to 999
+  set heroLife to maxLife
+  set maxSpirit to 99
+  set heroSpirit to maxSpirit
+  set heroHit to 99
+  set heroGuard to 40
+  set bronzeHeld to 9999
+  set potionCount to 30
+  set strongPotionCount to 30
+  set tonicCount to 30
+  set antidoteCount to 30
+  set bombCount to 30
+  set holyWaterCount to 30
+  set smokeCount to 30
+  set rationCount to 30
+  set herbCount to 30
+  set ironCount to 30
+  set dustCount to 30
+  set scaleCount to 30
+  set clothCount to 30
+  set crystalCount to 30
+  set hideCount to 30
+  set shortWait to 0
+  set ultimateCharge to ultimateFull
+end
+
+draw a line
+show heroName · className · difficultyName difficulty
+show class trait · classTrait
+show weapon weaponName · armour armourName · charm charmName
+show skill skillName · spirit needed skillCost · element skillElement
+show ultimate ultimateName · charges as you attack and guard
+wait shortWait
+
+
+# ════════════════════════════════════════════════════════════════════
+# The great loop of the adventure
+# One turn around this loop is one region.
+# Pull back from a fight and the same region starts over.
+# ════════════════════════════════════════════════════════════════════
+
+repeat forever
+
+  if endingKind is not equal to underway
+    break
+  end
+
+
+  # ── The character you meet on entering a region ─────────────────
+  # A choice stays not only in the numbers but in the last scene of all.
+
+  if regionNumber equals 2
+    set titleBoard to Rianel, captain of the elven scouts
+    do drawSmallTitle with titleBoard
+    story:
+
+      The whispering forest is the oldest elven land in the kingdom, and a goblin legion holds it now.
+      Rianel, the silver-haired scout captain, drops three goblins at the pass with three arrows at once.
+      She says that the eye which reads an enemy's footprints, not fast feet, is what makes a fine adventurer.
+
+    end
+    set rianelOptions to list of scout, hurry
+    set rianelSettled to 0
+    while rianelSettled is less than 1
+      ask rianelChoice Will you scout the woods with Rianel? scout, hurry
+      if rianelOptions contains rianelChoice
+        set rianelSettled to 1
+      else
+        show 🟦 Please type scout or hurry.
+      end
+    end
+    if rianelChoice equals scout
+      add 1 to heroHit
+      add 2 to maxSpirit
+      set heroSpirit to maxSpirit
+      add 1 to hopeScore
+      append Rianel to allyList
+      set rianelJoined to true
+      add 2 to elfStanding
+      set forestQuest to 1
+      put forestpact at done in questBoard
+      show You learn every goblin ambush on the road. Your hit and your spirit went up.
+    else
+      add 3 to heroSpeed
+      set forestQuest to 2
+      put forestpact at missed in questBoard
+      show You pass the elven forest road quickly. Your speed went up.
+    end
+    wait shortWait
+  end
+
+  if regionNumber equals 3
+    set titleBoard to Brum, the dwarven smith
+    do drawSmallTitle with titleBoard
+    story:
+
+      Before the last furnace of the silver mine, Brum the dwarven smith is holding back an orc legion alone.
+      Sparks have caught in Brum's beard, yet he never stops hammering and finishes a rune out of legend.
+      A ward rune cut into armour can hold death off once, at the most dangerous moment of all.
+
+    end
+    set brumOptions to list of wardrune, powder
+    set brumSettled to 0
+    while brumSettled is less than 1
+      ask brumChoice What will you ask Brum for? wardrune, powder
+      if brumOptions contains brumChoice
+        set brumSettled to 1
+      else
+        show 🟦 Please type wardrune or powder.
+      end
+    end
+    if brumChoice equals wardrune
+      set wardRuneHeld to true
+      add 1 to hopeScore
+      show A ward rune shines on your armour. It gives your life back once when you fall.
+    else
+      add 1 to bombCount
+      show Brum reshapes his mining powder into a battle bomb and hands it over.
+    end
+    append Brum to allyList
+    set brumJoined to true
+    add 2 to dwarfStanding
+    wait shortWait
+  end
+
+  if regionNumber equals 4
+    set titleBoard to Serin, the apprentice wizard
+    do drawSmallTitle with titleBoard
+    story:
+
+      At the top of the old wizard's tower, the apprentice Serin is holding a rift open on her own.
+      Every one of her teachers fell against the demon army, but Serin never let go of the worn spellbook.
+      Closing the rift would weaken the Demon Lord's ward, and Serin does not have the strength for it alone.
+
+    end
+    set serinOptions to list of seal, orb
+    set serinSettled to 0
+    while serinSettled is less than 1
+      ask serinChoice How will you help Serin? seal, orb
+      if serinOptions contains serinChoice
+        set serinSettled to 1
+      else
+        show 🟦 Please type one of the two again.
+      end
+    end
+    if serinChoice equals seal
+      set serinHelped to true
+      set demonLordWeakened to true
+      add 2 to hopeScore
+      append Serin to allyList
+      set serinJoined to true
+      set wardQuest to 1
+      put magicward at done in questBoard
+      show Together you finish the spell and cut the Demon Lord's ward. The last fight will be weaker.
+    else
+      add 2 to heroHit
+      set wardQuest to 2
+      put magicward at missed in questBoard
+      show Serin hands over an orb holding an attack spell. Your hit went up a great deal.
+    end
+    wait shortWait
+  end
+
+  if regionNumber equals 5
+    set titleBoard to Adela, the saint
+    do drawSmallTitle with titleBoard
+    story:
+
+      The chapel of the holy light abbey is surrounded by the undead, and the altar candle is not out yet.
+      Adela tends the wounded and keeps up the prayer that holds the demon army's curse back.
+      She asks you where to spend her last blessing: on life, on strength, or on the road ahead.
+
+    end
+    set adelaOptions to list of life, strength, coin
+    set adelaSettled to 0
+    while adelaSettled is less than 1
+      ask adelaChoice Which blessing will you take? life, strength, coin
+      if adelaOptions contains adelaChoice
+        set adelaSettled to 1
+      else
+        show 🟦 Please type one of life, strength or coin again.
+      end
+    end
+    if adelaChoice equals life
+      add 8 to maxLife
+      set heroLife to maxLife
+      add 1 to hopeScore
+      show A holy prayer closes around your wounds. Your greatest life went up.
+    else if adelaChoice equals strength
+      add 3 to heroHit
+      add 1 to heroGuard
+      show Bright light runs along your blessed weapon. Your hit and your guard went up.
+    else
+      add 80 to bronzeHeld
+      show The abbey hands you the 8 silver it gathered in relief money.
+    end
+    append Adela to allyList
+    set adelaJoined to true
+    add 2 to templeStanding
+    wait shortWait
+  end
+
+  if regionNumber equals 6
+    set titleBoard to Kyle, the mercenary captain
+    do drawSmallTitle with titleBoard
+    story:
+
+      On the wall of the ashen fortress waits Kyle, a mercenary captain who lived through hundreds of fights.
+      Kyle is the rare mercenary who keeps a promise before he keeps his pay; he sent his last men away and stayed alone.
+      He lays out the kingdom's lion banner and a pair of spare potions, and tells you to pick one.
+
+    end
+    set kyleOptions to list of banner, potion
+    set kyleSettled to 0
+    while kyleSettled is less than 1
+      ask kyleChoice Which will you take? banner, potion
+      if kyleOptions contains kyleChoice
+        set kyleSettled to 1
+      else
+        show 🟦 Please type banner or potion.
+      end
+    end
+    if kyleChoice equals banner
+      add 2 to heroGuard
+      set bannerGuard to true
+      add 1 to hopeScore
+      set bannerQuest to 1
+      put banner at done in questBoard
+      show The kingdom's lion banner snaps above your shield. Your guard went up.
+    else
+      add 2 to potionCount
+      set bannerQuest to 2
+      put banner at missed in questBoard
+      show Kyle hands over the last two potions his company had.
+    end
+    append Kyle to allyList
+    set kyleJoined to true
+    add 2 to guildStanding
+    wait shortWait
+  end
+
+  if regionNumber equals 7
+    set titleBoard to Aurel, the old gold dragon
+    do drawSmallTitle with titleBoard
+    story:
+
+      At the head of the dragon's canyon lies Aurel, an old gold dragon who lost a wing to the Demon Lord.
+      Aurel sealed the first Demon Lord alongside the first king, and has watched the kingdom longer than anyone alive.
+      He says Morgar worships strength and nothing else, so you must prove either courage or wisdom.
+
+    end
+    set aurelOptions to list of wisdom, courage
+    set aurelSettled to 0
+    while aurelSettled is less than 1
+      ask aurelChoice Which will you prove? wisdom, courage
+      if aurelOptions contains aurelChoice
+        set aurelSettled to 1
+      else
+        show 🟦 Please type wisdom or courage.
+      end
+    end
+    if aurelChoice equals wisdom
+      add 1 to peaceSpark
+      add 2 to hopeScore
+      show Aurel tells you the three shapes the Demon Lord takes. The holy flame burns stronger.
+    else
+      add 2 to heroHit
+      show Your hit rises with the roar of Aurel. The gate of the demon castle opens.
+    end
+    append Aurel to allyList
+    set aurelJoined to true
+    wait shortWait
+  end
+
+  if regionNumber equals 8
+    set titleBoard to Isabel, head of the free market
+    do drawSmallTitle with titleBoard
+    story:
+
+      In the square of the free city of Beloa, citizens waiting for bread stand facing a company sitting on stacked grain.
+      Isabel, who heads the company, says that forcing the grain price down stops the next cart, and leaving it alone leaves people hungry today.
+      She holds out two contracts: release the grain against a royal guarantee, or escort the dangerous northern cart yourself.
+
+    end
+    set isabelOptions to list of grain, escort
+    set isabelSettled to 0
+    while isabelSettled is less than 1
+      ask isabelChoice Which contract will you take? grain, escort
+      if isabelOptions contains isabelChoice
+        set isabelSettled to 1
+      else
+        show 🟦 Please type grain or escort.
+      end
+    end
+    if isabelChoice equals grain
+      set payAmount to 100
+      if bronzeHeld is less than payAmount
+        set payAmount to bronzeHeld
+      end
+      subtract payAmount from bronzeHeld
+      add 2 to hopeScore
+      add 3 to traderStanding
+      add 1 to guildStanding
+      subtract 2 from warRisk
+      set marketQuest to 1
+      put freemarket at done in questBoard
+      show Grain reaches the citizens and the company is left holding royal paper. Prices settle.
+    else
+      add 140 to bronzeHeld
+      add 1 to heroHit
+      add 1 to traderStanding
+      set marketQuest to 2
+      put freemarket at profitdeal in questBoard
+      show For guarding the cart you earned 1 gold 4 silver and learned how a trader fights.
+    end
+    set isabelJoined to true
+    append Isabel to allyList
+    wait shortWait
+
+    # Mira the odds trader hides nothing: she posts the success rate and the worst loss first.
+    set titleBoard to 🎲 Mira, the odds trader
+    do drawSmallTitle with titleBoard
+    if pacingNumber equals 2
+      say slowly Mira sets a small bronze die and a tightly written book of odds on the table.
+    else if pacingNumber equals 3
+      say very slowly Mira whispers. Fate is only a trick while it is hidden.
+    else
+      show Mira sets a small bronze die and a tightly written book of odds on the table.
+    end
+    show 🟨 Open wager · 45 percent to win · 55 percent to lose · stake and worst loss 20 bronze
+    show Winning returns the stake and 20 bronze on top. You may try once.
+    set miraOptions to list of bet, pass
+    set miraSettled to 0
+    while miraSettled is less than 1
+      ask miraChoice Please type bet or pass
+      if miraOptions contains miraChoice
+        set miraSettled to 1
+      else
+        show 🟦 Please type bet or pass again.
+      end
+    end
+    if miraChoice equals bet
+      if bronzeHeld is greater than 19
+        subtract 20 from bronzeHeld
+        set miraRoll to random number from 1 to 100
+        if miraRoll is less than or equal to 45
+          add 40 to bronzeHeld
+          add 1 to luckCoinCount
+          add 1 to gambleWins
+          say in a box 🟨 Won · 20 bronze clear · one luck coin
+        else
+          add 1 to gambleLosses
+          show 🟥 Lost · 20 bronze gone, exactly the worst loss she posted.
+        end
+      else
+        show Your stake is short. Mira says she does not gamble on borrowed money.
+      end
+    else
+      show 🟦 Mira calls turning it down a good call too, and gives you a luck coin.
+      add 1 to luckCoinCount
+    end
+  end
+
+  if regionNumber equals 9
+    set titleBoard to Darion, prince of the north
+    do drawSmallTitle with titleBoard
+    story:
+
+      Below the frost gate the people of the north, who have lost their homes, stand in a long line.
+      Prince Darion never claims the throne; he holds the key to the last grain store and sends the wounded in first.
+      Holding the gate takes weapons, and keeping people alive takes emptying the store.
+
+    end
+    set darionOptions to list of refugees, armoury
+    set darionSettled to 0
+    while darionSettled is less than 1
+      ask darionChoice Which will you keep first? refugees, armoury
+      if darionOptions contains darionChoice
+        set darionSettled to 1
+      else
+        show 🟦 Please type refugees or armoury.
+      end
+    end
+    if darionChoice equals refugees
+      add 2 to rationCount
+      add 2 to hopeScore
+      add 2 to crownStanding
+      set refugeeQuest to 1
+      put refugees at done in questBoard
+      show The food is shared out, and the smiths who lived agree to raise the wall again one day.
+    else
+      add 2 to heroHit
+      add 1 to heroGuard
+      set refugeeQuest to 2
+      put refugees at armyfirst in questBoard
+      show The armoury's gear holds the gate, but the column of refugees takes a far longer road.
+    end
+    set darionJoined to true
+    append Darion to allyList
+    wait shortWait
+  end
+
+  if regionNumber equals 10
+    set titleBoard to Neria, the marsh herbalist
+    do drawSmallTitle with titleBoard
+    story:
+
+      The herbs of the starlight marsh were the base of nearly every antidote in the kingdom, and reckless picking in the war stripped them out.
+      Neria says that returning the last seeds to the marsh means less medicine now and a living marsh for the next generation.
+      Boiling those same seeds instead would make an elixir strong enough to stand the Demon Lord's poison.
+
+    end
+    set neriaOptions to list of marsh, elixir
+    set neriaSettled to 0
+    while neriaSettled is less than 1
+      ask neriaChoice What will you do with the last seeds? marsh, elixir
+      if neriaOptions contains neriaChoice
+        set neriaSettled to 1
+      else
+        show 🟦 Please type marsh or elixir.
+      end
+    end
+    if neriaChoice equals marsh
+      add 2 to hopeScore
+      add 1 to elfStanding
+      add 1 to templeStanding
+      add 4 to herbCount
+      subtract 1 from warRisk
+      show You open the water channels, and buried seeds rise under the moonlight.
+    else
+      add 2 to strongPotionCount
+      add 3 to antidoteCount
+      add 5 to maxLife
+      add 5 to heroLife
+      show Neria boils the last seeds down into a final elixir.
+    end
+    set neriaJoined to true
+    append Neria to allyList
+    wait shortWait
+  end
+
+  if regionNumber equals 11
+    set titleBoard to Lucian, the sun knight
+    do drawSmallTitle with titleBoard
+    story:
+
+      Under the fallen sun temple a black vein runs, beating, all the way to the demon castle.
+      Lucian, the last sun knight, explains that the relic makes a weapon stronger, and spent on the seal it makes the Demon Lord weaker.
+      He swears that whichever you choose, he will carry the outcome with you.
+
+    end
+    set lucianOptions to list of seal, weapon
+    set lucianSettled to 0
+    while lucianSettled is less than 1
+      ask lucianChoice Where will you spend the sun relic? seal, weapon
+      if lucianOptions contains lucianChoice
+        set lucianSettled to 1
+      else
+        show 🟦 Please type seal or weapon.
+      end
+    end
+    if lucianChoice equals seal
+      set demonLordWeakened to true
+      add 3 to hopeScore
+      add 3 to templeStanding
+      set sealQuest to 1
+      put sunseal at done in questBoard
+      show The black vein hardens to gold, and the sky over the demon castle brightens for the first time.
+    else
+      add 4 to heroHit
+      add 2 to holyWaterCount
+      set sealQuest to 2
+      put sunseal at relicspent in questBoard
+      show The relic's light settles into your weapon and your hit rises sharply.
+    end
+    set lucianJoined to true
+    append Lucian to allyList
+    wait shortWait
+  end
+
+
+  # ── Regions and enemies ─────────────────────────────────────────
+  # To add an enemy, copy one of the branches below exactly as it is.
+  # A trait is one of momentum, plunder, thorns, regrowth, armour, poison, drain, demon lord, abyss.
+  # What a trait actually does is gathered further down, under "The enemy strikes back".
+
+  if regionNumber equals 13
+    set regionName to the rift in the world
+    set enemyName to Nox the abyss dragon
+    set enemyMaxLife to 270
+    set enemyHit to 23
+    set enemyGuard to 11
+    set enemySpeed to 28
+    set enemyRewardBronze to 900
+    set enemyExp to 150
+    set enemyTrait to abyss
+    set enemyWeak to time
+    set enemyMaxPoise to 18
+    set enemyBlurb to an old abyss dragon born from the rift the Demon Lord's death tore open
+  else if regionNumber equals 12
+    set regionName to the black throne of the demon castle
+    set enemyName to Morgar the Demon Lord
+    set enemyMaxLife to 220
+    set enemyHit to 19
+    set enemyGuard to 9
+    set enemySpeed to 22
+    set enemyRewardBronze to 0
+    set enemyExp to 100
+    set enemyTrait to demon lord
+    set enemyWeak to holy
+    set enemyMaxPoise to 16
+    set enemyBlurb to the enemy of Arteria, commanding demon fire and a legion of the dead
+  else if regionNumber equals 11
+    set regionName to the fallen sun temple
+    set enemyName to Solkana the fallen angel
+    set enemyMaxLife to 170
+    set enemyHit to 17
+    set enemyGuard to 8
+    set enemySpeed to 24
+    set enemyRewardBronze to 380
+    set enemyExp to 58
+    set enemyTrait to thorns
+    set enemyWeak to dark
+    set enemyMaxPoise to 14
+    set enemyBlurb to a fallen guardian angel who left the teaching of the sun and turns light back like a mirror
+  else if regionNumber equals 10
+    set regionName to the starlight marsh
+    set enemyName to Selka the plague hydra
+    set enemyMaxLife to 150
+    set enemyHit to 16
+    set enemyGuard to 6
+    set enemySpeed to 18
+    set enemyRewardBronze to 330
+    set enemyExp to 50
+    set enemyTrait to poison
+    set enemyWeak to nature
+    set enemyMaxPoise to 13
+    set enemyBlurb to the ruler of the marsh, fed on fouled herbs, each head breathing a different venom
+  else if regionNumber equals 9
+    set regionName to the frost gate
+    set enemyName to Hargon the frost giant
+    set enemyMaxLife to 138
+    set enemyHit to 15
+    set enemyGuard to 10
+    set enemySpeed to 9
+    set enemyRewardBronze to 290
+    set enemyExp to 44
+    set enemyTrait to armour
+    set enemyWeak to flame
+    set enemyMaxPoise to 16
+    set enemyBlurb to the last frost giant, wrapped in ice armour torn from the northern wall
+  else if regionNumber equals 8
+    set regionName to the golden market of the free city
+    set enemyName to Lemar the golden-mask bandit king
+    set enemyMaxLife to 118
+    set enemyHit to 14
+    set enemyGuard to 6
+    set enemySpeed to 30
+    set enemyRewardBronze to 260
+    set enemyExp to 39
+    set enemyTrait to gamble
+    set enemyWeak to sound
+    set enemyMaxPoise to 11
+    set enemyBlurb to the bandit king of the free market, whose loaded golden dice took war supplies and the debts of its citizens alike
+  else if regionNumber equals 7
+    set regionName to the dragon's canyon
+    set enemyName to Barkas the fallen black dragon
+    set enemyMaxLife to 92
+    set enemyHit to 13
+    set enemyGuard to 5
+    set enemySpeed to 20
+    set enemyRewardBronze to 220
+    set enemyExp to 34
+    set enemyTrait to drain
+    set enemyWeak to dragonfire
+    set enemyMaxPoise to 10
+    set enemyBlurb to a black dragon bent to Morgar's curse, who turns the wounds you deal into life of his own
+  else if regionNumber equals 6
+    set regionName to the ashen fortress
+    set enemyName to Morvel the dark wizard
+    set enemyMaxLife to 78
+    set enemyHit to 12
+    set enemyGuard to 4
+    set enemySpeed to 15
+    set enemyRewardBronze to 180
+    set enemyExp to 29
+    set enemyTrait to poison
+    set enemyWeak to holy
+    set enemyMaxPoise to 8
+    set enemyBlurb to once a knight of the kingdom, now a dark wizard spreading the poison of his curse
+  else if regionNumber equals 5
+    set regionName to the catacombs of the holy light abbey
+    set enemyName to Granite the stone golem
+    set enemyMaxLife to 86
+    set enemyHit to 11
+    set enemyGuard to 8
+    set enemySpeed to 7
+    set enemyRewardBronze to 150
+    set enemyExp to 25
+    set enemyTrait to armour
+    set enemyWeak to impact
+    set enemyMaxPoise to 12
+    set enemyBlurb to a golem cut from old dwarven sealing stone, which builds its broken armour back
+  else if regionNumber equals 4
+    set regionName to the old wizard's tower
+    set enemyName to Borga the troll king
+    set enemyMaxLife to 66
+    set enemyHit to 10
+    set enemyGuard to 3
+    set enemySpeed to 23
+    set enemyRewardBronze to 125
+    set enemyExp to 21
+    set enemyTrait to regrowth
+    set enemyWeak to flame
+    set enemyMaxPoise to 8
+    set enemyBlurb to a troll who drank the tower's spring of regrowth, so every cut closes again
+  else if regionNumber equals 3
+    set regionName to the silver mine
+    set enemyName to Edric the wraith knight
+    set enemyMaxLife to 58
+    set enemyHit to 9
+    set enemyGuard to 5
+    set enemySpeed to 17
+    set enemyRewardBronze to 105
+    set enemyExp to 18
+    set enemyTrait to thorns
+    set enemyWeak to holy
+    set enemyMaxPoise to 9
+    set enemyBlurb to a knight who betrayed the kingdom and whose soul, caught in a mirror shield, sends skills back
+  else if regionNumber equals 2
+    set regionName to the whispering forest
+    set enemyName to Gardum the orc warchief
+    set enemyMaxLife to 49
+    set enemyHit to 8
+    set enemyGuard to 3
+    set enemySpeed to 21
+    set enemyRewardBronze to 85
+    set enemyExp to 15
+    set enemyTrait to plunder
+    set enemyWeak to pierce
+    set enemyMaxPoise to 7
+    set enemyBlurb to an orc warchief wearing the coin he took from the kingdom's caravans like armour
+  else
+    set regionName to the north gate of the capital
+    set enemyName to Skrak the red-ear goblin chief
+    set enemyMaxLife to 40
+    set enemyHit to 7
+    set enemyGuard to 2
+    set enemySpeed to 12
+    set enemyRewardBronze to 65
+    set enemyExp to 12
+    set enemyTrait to momentum
+    set enemyWeak to flame
+    set enemyMaxPoise to 6
+    set enemyBlurb to the chief of a goblin legion, who swings harder the more of his own fall
+  end
+
+  # The difficulty bonus is added to every enemy the same way.
+  add enemyLifeBonus to enemyMaxLife
+  add enemyHitBonus to enemyHit
+  add enemyGuardBonus to enemyGuard
+  add poiseBonus to enemyMaxPoise
+  add rewardBonus to enemyRewardBronze
+  append regionName to regionsFound
+
+  # Serin's closed rift and Aurel's advice count against the Demon Lord alone.
+  if enemyTrait equals demon lord
+    if demonLordWeakened exists
+      subtract 20 from enemyMaxLife
+      subtract 2 from enemyHit
+    end
+  end
+
+  set enemyLife to enemyMaxLife
+  set enemyBurn to 0
+  set enemyBleed to 0
+  set enemyPoison to 0
+  set enemyPoise to enemyMaxPoise
+  set enemyStun to false
+  set weakFound to false
+  set regionTurns to 0
+  set demonLordPhase to 1
+  set battleResult to fighting
+  set fateMissStreak to 0
+  set nextGreatSure to false
+  set luckCoinReady to false
+  set nextCritSure to false
+
+  # The field takes one of four states every time.
+  # Fog makes dodging harder; a mana storm helps spirit, the goddess's wind helps life.
+  set battleSpeed to heroSpeed
+  # The hawk's eye reads an enemy's movement even inside fog.
+  if charmNumber equals 1
+    add 6 to battleSpeed
+  end
+  if fatigueLevel is greater than 59
+    subtract 5 from battleSpeed
+  end
+  if fullnessLevel is less than 25
+    subtract 4 from battleSpeed
+  end
+  if moralePoints is greater than 74
+    add 3 to battleSpeed
+  end
+  # Dodging is capped so that speed alone can never make you untouchable.
+  if battleSpeed is greater than maxDodgeChance then set battleSpeed to maxDodgeChance
+  set fieldRoll to random number from 1 to 4
+  if fieldRoll equals 1
+    set fieldEffect to clear sky
+  else if fieldRoll equals 2
+    set fieldEffect to thick fog
+    subtract 8 from battleSpeed
+    if battleSpeed is less than 0
+      set battleSpeed to 0
+    end
+  else if fieldRoll equals 3
+    set fieldEffect to mana storm
+  else
+    set fieldEffect to the wind of the goddess
+  end
+
+  do drawBigTitle with regionName
+  show road regionNumber
+  show enemyName blocks the way
+  show enemyBlurb
+  show field effect · fieldEffect
+  wait shortWait
+
+
+  # ══════════════════════════════════════════════════════════════════
+  # One fight
+  # One turn around this loop is one move by the hero and one strike back.
+  # ══════════════════════════════════════════════════════════════════
+
+  repeat forever
+
+    add 1 to totalTurns
+    add 1 to regionTurns
+    set isGuarding to false
+    set skillUsed to false
+    set weaponUsed to false
+    set inSmoke to false
+    set actionSpends to true
+
+    # A field effect works at the start of every turn.
+    if fieldEffect equals mana storm
+      add 2 to heroSpirit
+      if heroSpirit is greater than maxSpirit
+        set heroSpirit to maxSpirit
+      end
+    else if fieldEffect equals the wind of the goddess
+      add 2 to heroLife
+      if heroLife is greater than maxLife
+        set heroLife to maxLife
+      end
+    end
+
+    # Enemy intent runs on a cycle of three turns.
+    # A bomb answers a guard stance, guarding answers a heavy blow, a quick hit answers its own skill.
+    set intentStep to the remainder of regionTurns divided by 3
+    set thisEnemyGuard to enemyGuard
+    if intentStep equals 1
+      set enemyIntent to guard stance
+      add 4 to thisEnemyGuard
+    else if intentStep equals 2
+      set enemyIntent to heavy blow
+    else
+      set enemyIntent to its own skill
+    end
+
+    if screenNumber equals 1 then clear the screen
+    set enemyLifeBefore to enemyLife
+    draw a line
+    show ⚔ regionName · road regionNumber
+    show 🟥 enemy · enemyName · life enemyLife / enemyMaxLife
+    set barMaxAmount to enemyMaxLife
+    do drawLifeBar with enemyLife
+    show 🟩 hero · heroName · life heroLife / maxLife · spirit heroSpirit / maxSpirit
+    set barMaxAmount to maxLife
+    do drawLifeBar with heroLife
+    show level heroLevel · hit heroHit · guard heroGuard · speed heroSpeed
+    show 🟥 enemy poise enemyPoise / enemyMaxPoise · coming enemyIntent
+    if enemyTrait equals gamble
+      show 🟨 Lemar's golden dice · backfire 33.3 / even 33.3 / loaded 33.3 percent
+    end
+    show 🟦 dodge battleSpeed percent · critical critChance percent · ally help allyHelpChance percent
+    show 🟨 ultimate ultimateName · charge ultimateCharge / ultimateFull
+    show weapon wear weaponWear / weaponMaxWear · armour wear armourWear / armourMaxWear
+    show potion potionCount · strongpotion strongPotionCount · tonic tonicCount · antidote antidoteCount
+    show bomb bombCount · holywater holyWaterCount · smoke smokeCount · whetstone whetstoneCount
+    show luckcoin luckCoinCount · chaosdie chaosRolls
+    if allyList missing
+      show allies · none yet
+    else
+      show allyList joined by comma
+    end
+    do showMoney with bronzeHeld
+    draw a line
+    show ⚔ fight · attack / skill / ultimate / guard
+    show 🧪 items · potion / strongpotion / tonic / antidote / bomb / holywater
+    show 🎲 chance · luckcoin / chaosdie
+    show 📜 tactics · smoke / whetstone / look / retreat
+    ask actionPick Type exactly one of the moves above
+
+    # Every answer is checked first, so a typo never turns into a plain attack.
+    set actionValid to false
+    if actionPick equals attack then set actionValid to true
+    if actionPick equals skill then set actionValid to true
+    if actionPick equals ultimate then set actionValid to true
+    if actionPick equals guard then set actionValid to true
+    if actionPick equals potion then set actionValid to true
+    if actionPick equals strongpotion then set actionValid to true
+    if actionPick equals tonic then set actionValid to true
+    if actionPick equals antidote then set actionValid to true
+    if actionPick equals bomb then set actionValid to true
+    if actionPick equals holywater then set actionValid to true
+    if actionPick equals smoke then set actionValid to true
+    if actionPick equals whetstone then set actionValid to true
+    if actionPick equals luckcoin then set actionValid to true
+    if actionPick equals chaosdie then set actionValid to true
+    if actionPick equals look then set actionValid to true
+    if actionPick equals retreat then set actionValid to true
+    if actionValid missing
+      show 🟦 That answer was not understood. Asking again without spending the turn.
+      subtract 1 from totalTurns
+      subtract 1 from regionTurns
+      skip
+    end
+
+
+    # ── What the hero does ─────────────────────────────────────────
+
+    if actionPick equals ultimate
+
+      if ultimateCharge is less than ultimateFull
+        show 🟦 There is not enough power yet. The turn is not spent so you can choose again.
+        subtract 1 from totalTurns
+        subtract 1 from regionTurns
+        skip
+      else
+        set ultimateCharge to 0
+        set weaponUsed to true
+        subtract 5 from enemyPoise
+
+        if className equals mage
+          set dealtDamage to 40
+          add heroHit to dealtDamage
+          add heroLevel to dealtDamage
+          set enemyBurn to 5
+          show A greater firestorm covers the field.
+        else if className equals archer
+          set dealtDamage to 35
+          add heroHit to dealtDamage
+          add heroSpeed to dealtDamage
+          set enemyBleed to 5
+          show A thousand arrows hide the sky and fall at once.
+        else if className equals cleric
+          set dealtDamage to 30
+          add heroHit to dealtDamage
+          add peaceSpark to dealtDamage
+          add peaceSpark to dealtDamage
+          set heroLife to maxLife
+          set heroPoison to 0
+          show The judgement of the goddess cuts the dark and closes every wound.
+        else if className equals rogue
+          set dealtDamage to 34
+          add heroHit to dealtDamage
+          add heroSpeed to dealtDamage
+          set enemyPoison to 6
+          show Shadow execution cuts the enemy's shadow and leaves venom behind.
+        else if className equals berserker
+          set dealtDamage to 48
+          add heroHit to dealtDamage
+          add heroHit to dealtDamage
+          add 15 to heroLife
+          if heroLife is greater than maxLife
+            set heroLife to maxLife
+          end
+          show The fury of the north turns wounds into strength and splits the enemy open.
+        else if className equals runesmith
+          set dealtDamage to 28
+          add heroHit to dealtDamage
+          add heroGuard to dealtDamage
+          add heroGuard to dealtDamage
+          subtract 5 from enemyGuard
+          if enemyGuard is less than 0 then set enemyGuard to 0
+          add 12 to weaponWear
+          add 12 to armourWear
+          if weaponWear is greater than weaponMaxWear then set weaponWear to weaponMaxWear
+          if armourWear is greater than armourMaxWear then set armourWear to armourMaxWear
+          show The anvil of the earth breaks the enemy's armour and reforges your own gear.
+        else if className equals bard
+          set dealtDamage to 25
+          add heroHit to dealtDamage
+          add moralePoints to dealtDamage
+          subtract 5 from enemyPoise
+          set moralePoints to 100
+          show The epic of heroes rings across the field and breaks the enemy's will to fight.
+        else if className equals druid
+          set dealtDamage to 38
+          add heroHit to dealtDamage
+          add heroLevel to dealtDamage
+          set heroLife to maxLife
+          set heroPoison to 0
+          show The roots of the old forest swallow the enemy and take your wounds back.
+        else if className equals warlock
+          set dealtDamage to 45
+          add heroHit to dealtDamage
+          add heroHit to dealtDamage
+          add 25 to heroLife
+          if heroLife is greater than maxLife then set heroLife to maxLife
+          show The bargain of the abyss heals the hero at the cost of the enemy's life.
+        else if className equals dragoon
+          set dealtDamage to 52
+          add heroHit to dealtDamage
+          add heroHit to dealtDamage
+          set enemyBurn to 4
+          show The descent of the red dragon drives down a lance of fire that ignores armour.
+        else if className equals chronomancer
+          set dealtDamage to 38
+          add heroHit to dealtDamage
+          add heroSpeed to dealtDamage
+          set enemyStun to true
+          show In the world held still only the hero moves, and the next turn of the enemy is erased.
+        else if className equals gambler
+          set firstFateCard to random number from 1 to 6
+          set secondFateCard to random number from 1 to 6
+          set thirdFateCard to random number from 1 to 6
+          say in a box 🎲 The open hand of fate · firstFateCard / secondFateCard / thirdFateCard
+          set fateFace to 0
+          set fateSettled to 0
+          while fateSettled is less than 1
+            ask fateCardChoice Which card will you take? first, second, third
+            if fateCardChoice equals first
+              set fateFace to firstFateCard
+              set fateSettled to 1
+            else if fateCardChoice equals second
+              set fateFace to secondFateCard
+              set fateSettled to 1
+            else if fateCardChoice equals third
+              set fateFace to thirdFateCard
+              set fateSettled to 1
+            else
+              show 🟦 Please type one of the three words exactly.
+            end
+          end
+          set dealtDamage to 20
+          set fateExtraDamage to fateFace
+          multiply fateExtraDamage by 5
+          add fateExtraDamage to dealtDamage
+          add heroHit to dealtDamage
+          subtract fateFace from enemyPoise
+          if fateFace equals 6
+            set enemyStun to true
+            add 12 to bronzeHeld
+            add 1 to gambleWins
+            say in a box 🟨 A great success · the six turned fate over
+          end
+        else
+          set dealtDamage to 25
+          add heroHit to dealtDamage
+          add heroGuard to dealtDamage
+          add heroGuard to dealtDamage
+          set isGuarding to true
+          add 20 to heroLife
+          if heroLife is greater than maxLife
+            set heroLife to maxLife
+          end
+          show The guard of the king becomes a huge golden shield and bears the enemy down.
+        end
+
+        if skillElement equals enemyWeak
+          multiply dealtDamage by weakMultiplier
+          set weakFound to true
+          add 1 to weakHits
+          show The ultimate drives through the enemy's elemental weakness and the damage climbs.
+        end
+        subtract dealtDamage from enemyLife
+        show ultimateName · damage dealtDamage
+
+        if firstUltimateAchievement missing
+          set firstUltimateAchievement to true
+          append past the limit to achievementList
+          show achievement earned · past the limit
+        end
+      end
+
+    else if actionPick equals skill
+
+      if heroSpirit is less than skillCost
+        show 🟦 There is not enough spirit. The turn is not spent so you can choose again.
+        subtract 1 from totalTurns
+        subtract 1 from regionTurns
+        skip
+      else
+        set skillUsed to true
+        set weaponUsed to true
+        subtract skillCost from heroSpirit
+        add 18 to ultimateCharge
+        subtract 2 from enemyPoise
+
+        if className equals mage
+          set dealtDamage to random number from 12 to 18
+          add heroHit to dealtDamage
+          add heroLevel to dealtDamage
+          subtract thisEnemyGuard from dealtDamage
+          if dealtDamage is less than 1
+            set dealtDamage to 1
+          end
+          if skillElement equals enemyWeak
+            multiply dealtDamage by weakMultiplier
+            subtract 2 from enemyPoise
+            set weakFound to true
+            add 1 to weakHits
+            show The flame weakness is struck, and both the damage and the poise damage climb.
+          end
+          subtract dealtDamage from enemyLife
+          set enemyBurn to 3
+          show A fireball bursts for dealtDamage and leaves fire on the enemy.
+
+        else if className equals archer
+          set dealtDamage to random number from 4 to 8
+          add heroHit to dealtDamage
+          subtract thisEnemyGuard from dealtDamage
+          if dealtDamage is less than 1
+            set dealtDamage to 1
+          end
+          if skillElement equals enemyWeak
+            multiply dealtDamage by weakMultiplier
+            subtract 2 from enemyPoise
+            set weakFound to true
+            add 1 to weakHits
+            show The pierce weakness is struck, and the first arrow sinks deep past the armour.
+          end
+          subtract dealtDamage from enemyLife
+          show The first arrow drives in for dealtDamage.
+          set dealtDamage to random number from 4 to 8
+          add heroHit to dealtDamage
+          subtract thisEnemyGuard from dealtDamage
+          if dealtDamage is less than 1
+            set dealtDamage to 1
+          end
+          if skillElement equals enemyWeak
+            multiply dealtDamage by weakMultiplier
+          end
+          subtract dealtDamage from enemyLife
+          set enemyBleed to 3
+          show The second arrow of the rapid shot cuts for dealtDamage and leaves the wound open.
+
+        else if className equals cleric
+          set dealtDamage to random number from 8 to 13
+          add heroHit to dealtDamage
+          subtract thisEnemyGuard from dealtDamage
+          if enemyTrait equals demon lord
+            add peaceSpark to dealtDamage
+            add peaceSpark to dealtDamage
+          end
+          if dealtDamage is less than 1
+            set dealtDamage to 1
+          end
+          if skillElement equals enemyWeak
+            multiply dealtDamage by weakMultiplier
+            subtract 2 from enemyPoise
+            set weakFound to true
+            add 1 to weakHits
+            show The holy weakness gives way to the light, and both the damage and the poise damage climb.
+          end
+          subtract dealtDamage from enemyLife
+          add 10 to heroLife
+          if heroLife is greater than maxLife
+            set heroLife to maxLife
+          end
+          set heroPoison to 0
+          show Holy light · damage dealtDamage · the poison is washed out of you
+
+        else if className equals rogue
+          set dealtDamage to random number from 9 to 15
+          add heroHit to dealtDamage
+          subtract thisEnemyGuard from dealtDamage
+          if dealtDamage is less than 1 then set dealtDamage to 1
+          if skillElement equals enemyWeak
+            multiply dealtDamage by weakMultiplier
+            subtract 2 from enemyPoise
+            set weakFound to true
+            add 1 to weakHits
+          end
+          subtract dealtDamage from enemyLife
+          set enemyPoison to 4
+          show The venom dagger sinks in for dealtDamage and leaves poison behind.
+
+        else if className equals berserker
+          set dealtDamage to random number from 10 to 16
+          add heroHit to dealtDamage
+          set halfLife to maxLife
+          divide halfLife by 2
+          if heroLife is less than halfLife
+            add heroHit to dealtDamage
+            show Your wounds turn into fury and the damage grows.
+          end
+          subtract thisEnemyGuard from dealtDamage
+          if dealtDamage is less than 1 then set dealtDamage to 1
+          if skillElement equals enemyWeak
+            multiply dealtDamage by weakMultiplier
+            subtract 2 from enemyPoise
+            set weakFound to true
+            add 1 to weakHits
+          end
+          subtract dealtDamage from enemyLife
+          show The frenzy axe splits armour and flesh together for dealtDamage.
+
+        else if className equals runesmith
+          set dealtDamage to random number from 8 to 13
+          add heroHit to dealtDamage
+          add heroGuard to dealtDamage
+          subtract thisEnemyGuard from dealtDamage
+          if dealtDamage is less than 1 then set dealtDamage to 1
+          if skillElement equals enemyWeak
+            multiply dealtDamage by weakMultiplier
+            subtract 3 from enemyPoise
+            set weakFound to true
+            add 1 to weakHits
+          end
+          subtract dealtDamage from enemyLife
+          subtract 1 from enemyGuard
+          if enemyGuard is less than 0 then set enemyGuard to 0
+          add 2 to weaponWear
+          if weaponWear is greater than weaponMaxWear then set weaponWear to weaponMaxWear
+          show The rune hammer strikes for dealtDamage and mends your weapon while it breaks the armour of the enemy.
+
+        else if className equals bard
+          set dealtDamage to random number from 7 to 12
+          add heroHit to dealtDamage
+          add heroLevel to dealtDamage
+          subtract thisEnemyGuard from dealtDamage
+          if dealtDamage is less than 1 then set dealtDamage to 1
+          if skillElement equals enemyWeak
+            multiply dealtDamage by weakMultiplier
+            subtract 3 from enemyPoise
+            set weakFound to true
+            add 1 to weakHits
+          end
+          subtract dealtDamage from enemyLife
+          subtract 2 from enemyPoise
+          add 4 to moralePoints
+          if moralePoints is greater than 100 then set moralePoints to 100
+          show The shatter note rings for dealtDamage and shakes the poise of the enemy.
+
+        else if className equals druid
+          set dealtDamage to random number from 9 to 14
+          add heroHit to dealtDamage
+          subtract thisEnemyGuard from dealtDamage
+          if dealtDamage is less than 1 then set dealtDamage to 1
+          if skillElement equals enemyWeak
+            multiply dealtDamage by weakMultiplier
+            subtract 2 from enemyPoise
+            set weakFound to true
+            add 1 to weakHits
+          end
+          subtract dealtDamage from enemyLife
+          add 8 to heroLife
+          if heroLife is greater than maxLife then set heroLife to maxLife
+          set enemyPoison to 2
+          show Binding vines squeeze for dealtDamage, and the strength of the herbs gives life back.
+
+        else if className equals warlock
+          set dealtDamage to random number from 11 to 17
+          add heroHit to dealtDamage
+          subtract thisEnemyGuard from dealtDamage
+          if dealtDamage is less than 1 then set dealtDamage to 1
+          if skillElement equals enemyWeak
+            multiply dealtDamage by weakMultiplier
+            subtract 2 from enemyPoise
+            set weakFound to true
+            add 1 to weakHits
+          end
+          subtract dealtDamage from enemyLife
+          add 9 to heroLife
+          if heroLife is greater than maxLife then set heroLife to maxLife
+          show Life drain takes dealtDamage away and returns 9 life.
+
+        else if className equals dragoon
+          set dealtDamage to random number from 12 to 18
+          add heroHit to dealtDamage
+          if skillElement equals enemyWeak
+            multiply dealtDamage by weakMultiplier
+            subtract 3 from enemyPoise
+            set weakFound to true
+            add 1 to weakHits
+          end
+          subtract dealtDamage from enemyLife
+          set enemyBurn to 2
+          show The dragonfire lance ignores guard and runs through for dealtDamage.
+
+        else if className equals chronomancer
+          set dealtDamage to random number from 9 to 15
+          add heroHit to dealtDamage
+          add heroLevel to dealtDamage
+          subtract thisEnemyGuard from dealtDamage
+          if dealtDamage is less than 1 then set dealtDamage to 1
+          if skillElement equals enemyWeak
+            multiply dealtDamage by weakMultiplier
+            subtract 4 from enemyPoise
+            set weakFound to true
+            add 1 to weakHits
+          end
+          subtract dealtDamage from enemyLife
+          subtract 2 from enemyPoise
+          35% chance
+            set enemyStun to true
+            show The enemy's time freezes and the next strike back is gone.
+          end
+          show A time rift cuts past and present together for dealtDamage.
+
+        else if className equals gambler
+          if nextGreatSure exists
+            set fateFace to 6
+            set nextGreatSure to false
+            set fateMissStreak to 0
+            show 🟨 Cover against failure · this die is certain to be a six.
+          else
+            set fateFace to random number from 1 to 6
+            if luckCoinReady exists
+              set extraFateFace to random number from 1 to 6
+              set luckCoinReady to false
+              show 🎲 A weighted coin · the higher of fateFace and extraFateFace is used
+              if extraFateFace is greater than fateFace then set fateFace to extraFateFace
+            end
+          end
+          show 🎲 The dice of fate · rolled fateFace / 6 · each face 16.7 percent
+          if fateFace equals 1
+            set dealtDamage to 1
+            subtract 4 from heroLife
+            add 1 to fateMissStreak
+            add 1 to gambleLosses
+            show 🟥 Backfire · damage 1 · 4 life lost
+          else if fateFace equals 2
+            set dealtDamage to 6
+            add heroHit to dealtDamage
+            subtract thisEnemyGuard from dealtDamage
+            if dealtDamage is less than 1 then set dealtDamage to 1
+            add 1 to fateMissStreak
+            add 1 to gambleLosses
+            show 🟥 A low roll · weak damage dealtDamage
+          else if fateFace equals 3
+            set dealtDamage to 10
+            add heroHit to dealtDamage
+            subtract thisEnemyGuard from dealtDamage
+            set fateMissStreak to 0
+            show 🟦 An even roll · damage dealtDamage
+          else if fateFace equals 4
+            set dealtDamage to 16
+            add heroHit to dealtDamage
+            subtract thisEnemyGuard from dealtDamage
+            subtract 1 from enemyPoise
+            set fateMissStreak to 0
+            show 🟩 A high roll · damage dealtDamage · extra poise damage
+          else if fateFace equals 5
+            set dealtDamage to 21
+            add heroHit to dealtDamage
+            subtract thisEnemyGuard from dealtDamage
+            add 7 to heroLife
+            if heroLife is greater than maxLife then set heroLife to maxLife
+            set fateMissStreak to 0
+            add 1 to gambleWins
+            show 🟨 A big success · damage dealtDamage · 7 life back
+          else
+            set dealtDamage to 30
+            add heroHit to dealtDamage
+            subtract thisEnemyGuard from dealtDamage
+            subtract 4 from enemyPoise
+            add 6 to bronzeHeld
+            set fateMissStreak to 0
+            add 1 to gambleWins
+            say in a box 🟨 A great success · damage dealtDamage · poise 4 · 6 bronze
+          end
+          if fateMissStreak is greater than 1
+            set nextGreatSure to true
+            show 🟨 Two low rolls in a row. The next skill is certain to be a six.
+          end
+          subtract dealtDamage from enemyLife
+
+        else
+          set dealtDamage to random number from 7 to 11
+          add heroGuard to dealtDamage
+          subtract thisEnemyGuard from dealtDamage
+          if dealtDamage is less than 1
+            set dealtDamage to 1
+          end
+          if skillElement equals enemyWeak
+            multiply dealtDamage by weakMultiplier
+            subtract 2 from enemyPoise
+            set weakFound to true
+            add 1 to weakHits
+            show Your shield breaks the impact weakness open, and both the damage and the poise damage climb.
+          end
+          subtract dealtDamage from enemyLife
+          add 7 to heroLife
+          if heroLife is greater than maxLife
+            set heroLife to maxLife
+          end
+          set isGuarding to true
+          show The shield bash pushes back for dealtDamage and closes the front again.
+        end
+      end
+
+
+    # ── Items ───────────────────────────────────────────────────────
+
+    else if actionPick equals potion
+      if potionCount is greater than 0
+        subtract 1 from potionCount
+        add potionHeal to heroLife
+        if heroLife is greater than maxLife
+          set heroLife to maxLife
+        end
+        set heroPoison to 0
+        show A warm potion gives life back and washes the poison out.
+      else
+        show Only empty bottles roll about.
+        set actionSpends to false
+      end
+
+    else if actionPick equals strongpotion
+      if strongPotionCount is greater than 0
+        subtract 1 from strongPotionCount
+        add strongPotionHeal to heroLife
+        if heroLife is greater than maxLife then set heroLife to maxLife
+        set heroPoison to 0
+        show A strong potion of red crystal closes deep wounds and clears poison at once.
+      else
+        show There is no strong potion left.
+        set actionSpends to false
+      end
+
+    else if actionPick equals tonic
+      if tonicCount is greater than 0
+        subtract 1 from tonicCount
+        add tonicRestore to heroSpirit
+        if heroSpirit is greater than maxSpirit
+          set heroSpirit to maxSpirit
+        end
+        show Strength runs back out to your fingertips.
+      else
+        show There is no tonic left.
+        set actionSpends to false
+      end
+
+    else if actionPick equals antidote
+      if antidoteCount is greater than 0
+        subtract 1 from antidoteCount
+        set heroPoison to 0
+        add 5 to heroLife
+        if heroLife is greater than maxLife then set heroLife to maxLife
+        show The bitter antidote washes out the poison and gives back 5 life.
+      else
+        show There is no antidote left.
+        set actionSpends to false
+      end
+
+    else if actionPick equals bomb
+      if bombCount is greater than 0
+        subtract 1 from bombCount
+        set dealtDamage to bombPower
+        subtract 4 from enemyPoise
+        if enemyWeak equals impact
+          multiply dealtDamage by weakMultiplier
+          set weakFound to true
+          add 1 to weakHits
+          show The blast breaks the impact weakness exactly open.
+        end
+        subtract dealtDamage from enemyLife
+        show The bomb goes through the enemy's guard and bursts for dealtDamage.
+        if enemyTrait equals armour
+          subtract 2 from enemyGuard
+          if enemyGuard is less than 0
+            set enemyGuard to 0
+          end
+          show The golem's stone armour broke along with it.
+        end
+      else
+        show There is no bomb left to throw.
+        set actionSpends to false
+      end
+
+    else if actionPick equals holywater
+      if holyWaterCount is greater than 0
+        subtract 1 from holyWaterCount
+        set dealtDamage to 38
+        if enemyWeak equals holy
+          multiply dealtDamage by weakMultiplier
+          subtract 3 from enemyPoise
+          set weakFound to true
+          add 1 to weakHits
+        end
+        subtract dealtDamage from enemyLife
+        set enemyBurn to 2
+        show Blessed holy water ignores guard and burns for dealtDamage.
+      else
+        show There is no holy water left.
+        set actionSpends to false
+      end
+
+    else if actionPick equals smoke
+      if smokeCount is greater than 0
+        subtract 1 from smokeCount
+        set inSmoke to true
+        subtract 1 from enemyPoise
+        show Grey smoke covers the field and the next strike back loses its target.
+      else
+        show There is no smoke bomb left.
+        set actionSpends to false
+      end
+
+    else if actionPick equals whetstone
+      if whetstoneCount is greater than 0
+        subtract 1 from whetstoneCount
+        add 18 to weaponWear
+        if weaponWear is greater than weaponMaxWear then set weaponWear to weaponMaxWear
+        add 8 to ultimateCharge
+        show A battle whetstone puts the edge back and returns both wear and focus.
+      else
+        show There is no whetstone left.
+        set actionSpends to false
+      end
+
+    # A weighted coin bends the next roll of chance your way.
+    # The gambler rolls twice and keeps the higher face; every other class lands a certain critical hit.
+    else if actionPick equals luckcoin
+      if luckCoinCount is greater than 0
+        subtract 1 from luckCoinCount
+        if className equals gambler
+          set luckCoinReady to true
+          show 🟨 The next dice of fate is rolled twice and the higher face is used.
+        else
+          set nextCritSure to true
+          show 🟨 The next plain attack is certain to be a critical hit.
+        end
+        # A tool you ready costs you no strike back.
+        set actionSpends to false
+      else
+        show There is no luck coin left.
+        set actionSpends to false
+      end
+
+    # All six results of the chaos die are equally likely, and you may look at them before spending one.
+    else if actionPick equals chaosdie
+      if chaosRolls is greater than 0
+        subtract 1 from chaosRolls
+        set chaosFace to random number from 1 to 6
+        show 🎲 The chaos die · each result 16.7 percent · rolled chaosFace
+        if chaosFace equals 1
+          subtract 8 from heroLife
+          if heroLife is less than 1 then set heroLife to 1
+          add 1 to gambleLosses
+          show 🟥 The rift bites your hand and 8 life is gone.
+        else if chaosFace equals 2
+          set spiritLost to 4
+          if heroSpirit is less than spiritLost then set spiritLost to heroSpirit
+          subtract spiritLost from heroSpirit
+          add 1 to gambleLosses
+          show 🟥 The die swallowed spiritLost of your spirit.
+        else if chaosFace equals 3
+          add 14 to heroLife
+          if heroLife is greater than maxLife then set heroLife to maxLife
+          show 🟩 You got 14 life back.
+        else if chaosFace equals 4
+          add 10 to heroSpirit
+          if heroSpirit is greater than maxSpirit then set heroSpirit to maxSpirit
+          show 🟦 You got 10 spirit back.
+        else if chaosFace equals 5
+          subtract 24 from enemyLife
+          add 1 to gambleWins
+          show 🟨 You dealt 24 fate damage, straight past any guard.
+        else
+          subtract 42 from enemyLife
+          subtract 4 from enemyPoise
+          add 1 to gambleWins
+          say in a box 🟨 A great chaos success · damage 42 · poise 4
+        end
+      else
+        show There is no chaos die left.
+        set actionSpends to false
+      end
+
+
+    # ── Guarding, reading the enemy, pulling back ──────────────────
+
+    else if actionPick equals guard
+      set isGuarding to true
+      add 3 to heroSpirit
+      add 20 to ultimateCharge
+      if heroSpirit is greater than maxSpirit
+        set heroSpirit to maxSpirit
+      end
+      show You set your feet and gather your strength.
+
+    else if actionPick equals look
+      set weakFound to true
+      show the trait of enemyName is enemyTrait
+      show the enemy's weakness is enemyWeak · poise is enemyPoise
+      show enemyBlurb
+      if enemyTrait equals thorns
+        show A strong skill comes partly back off the mirror shield. Plain attacks and bombs are safe.
+      else if enemyTrait equals armour
+        show Its guard is very high. A bomb ignores guard and breaks stone armour too.
+      else if enemyTrait equals regrowth
+        show It heals every turn. Keep up with burn and bleeding.
+      else if enemyTrait equals gamble
+        show Lemar's own skill is 1 and 2 backfire, 3 and 4 even, 5 and 6 loaded. Each pair is 33.3 percent.
+      else if enemyTrait equals demon lord
+        show As its life falls, its shape and the way it attacks change twice.
+      else if enemyTrait equals abyss
+        show It breathes in a way that swallows ultimate charge. Poise breaks and the time element are the keys.
+      end
+      show 🎲 Open odds · critical 14 percent · dodge battleSpeed percent · ally help allyHelpChance percent
+      show The chaos die · 1 and 2 against you / 3 and 4 healing / 5 and 6 attack · 16.7 percent each
+      if className equals gambler
+        show The dice of fate · 1 to 6 at 16.7 percent each · after two low rolls the next six is certain
+      end
+      set actionSpends to false
+
+    else if actionPick equals retreat
+      if regionNumber is greater than 11
+        show Behind the throne there is only wall. The fight has to end here.
+      else
+        set fleeRoll to random number from 1 to 100
+        if fleeRoll is less than or equal to baseFleeChance
+          if bronzeHeld is greater than or equal to 10
+            subtract 10 from bronzeHeld
+            add 12 to heroLife
+            add 5 to heroSpirit
+            if heroLife is greater than maxLife
+              set heroLife to maxLife
+            end
+            if heroSpirit is greater than maxSpirit
+              set heroSpirit to maxSpirit
+            end
+            set enemyLife to enemyMaxLife
+            set enemyBurn to 0
+            set enemyBleed to 0
+            set enemyPoise to enemyMaxPoise
+            show You paid 1 silver and fell back to the guild camp. The enemy healed fully as well.
+            skip
+          else
+            show You do not have the 1 silver the camp costs, so you cannot fall back.
+          end
+        else
+          show The enemy cut you off first.
+        end
+      end
+
+
+    # ── The plain attack ────────────────────────────────────────────
+    # Only `attack`, having passed the check above, reaches this branch.
+
+    else
+      set weaponUsed to true
+      set dealtDamage to random number from 5 to 10
+      add heroHit to dealtDamage
+      subtract thisEnemyGuard from dealtDamage
+      subtract 1 from enemyPoise
+      add 12 to ultimateCharge
+      if nextCritSure exists
+        set critRoll to 0
+        set nextCritSure to false
+      else
+        set critRoll to random number from 1 to 100
+      end
+      if critRoll is less than or equal to critChance
+        multiply dealtDamage by 2
+        show The royal seal shines and you strike the opening exactly.
+      end
+      if dealtDamage is less than 1
+        set dealtDamage to 1
+      end
+      subtract dealtDamage from enemyLife
+      show weaponName cuts for dealtDamage.
+    end
+
+    # Using an item you do not have, or looking, returns to the same screen without spending a turn.
+    if actionSpends missing
+      subtract 1 from totalTurns
+      subtract 1 from regionTurns
+      skip
+    end
+
+
+    # Attacks and skills wear a weapon down. At 0 wear a plain attack is weaker until it is repaired.
+    if weaponUsed exists
+      subtract 1 from weaponWear
+      if weaponWear is less than 0 then set weaponWear to 0
+      if weaponWear equals 0
+        add 3 to enemyLife
+        if enemyLife is greater than enemyLifeBefore then set enemyLife to enemyLifeBefore
+        show Your blade has gone blunt, and 3 of this damage never landed.
+      end
+    end
+
+
+    # ── Ultimate charge and achievements ───────────────────────────
+
+    if ultimateCharge is greater than ultimateFull
+      set ultimateCharge to ultimateFull
+    end
+
+    if weakFound exists
+      if firstWeakAchievement missing
+        set firstWeakAchievement to true
+        append weakness hunter to achievementList
+        show achievement earned · weakness hunter
+      end
+    end
+
+
+    # ── An ally lends a hand ────────────────────────────────────────
+    # One of the allies you recruited helps, by chance, in the way that suits them.
+
+    set allyCount to how many allyList
+    set helpRoll to random number from 1 to 100
+    if allyCount is greater than 0
+      if helpRoll is less than or equal to allyHelpChance
+        # It picks again until it lands on somebody actually recruited, so the posted odds hold.
+        set helperSeek to 0
+        while helperSeek is less than 1
+          set helperName to pick from Rianel or Brum or Serin or Adela or Kyle or Aurel or Isabel or Darion or Neria or Lucian
+          if allyList contains helperName then set helperSeek to 1
+        end
+
+        if helperName equals Rianel
+          set helpDamage to 6
+          add heroLevel to helpDamage
+          subtract helpDamage from enemyLife
+          show Rianel's covering fire · damage helpDamage
+        else if helperName equals Brum
+          subtract 2 from enemyPoise
+          show Brum's rune hammer shakes the enemy's poise by 2.
+        else if helperName equals Serin
+          add 4 to heroSpirit
+          if heroSpirit is greater than maxSpirit then set heroSpirit to maxSpirit
+          show Serin sends power across and fills 4 spirit.
+        else if helperName equals Adela
+          add 8 to heroLife
+          if heroLife is greater than maxLife then set heroLife to maxLife
+          set heroPoison to 0
+          show Adela's healing prayer returns 8 life and clears the poison.
+        else if helperName equals Kyle
+          set isGuarding to true
+          show Kyle raises his shield and blocks this strike with you.
+        else if helperName equals Aurel
+          set helpDamage to 12
+          subtract helpDamage from enemyLife
+          show Aurel's golden fire · damage helpDamage
+        else if helperName equals Isabel
+          add 8 to bronzeHeld
+          add 3 to moralePoints
+          if moralePoints is greater than 100 then set moralePoints to 100
+          show Isabel resells the enemy's supplies for 8 bronze and lifts your spirits.
+        else if helperName equals Darion
+          set isGuarding to true
+          add 6 to ultimateCharge
+          show Darion's northern shield wall stops the strike and sharpens your focus.
+        else if helperName equals Neria
+          set heroPoison to 0
+          add 6 to heroLife
+          if heroLife is greater than maxLife then set heroLife to maxLife
+          show Neria's herb smoke clears the poison and returns 6 life.
+        else
+          set helpDamage to 10
+          subtract helpDamage from enemyLife
+          subtract 1 from enemyPoise
+          show Lucian's sun blade deals 10 damage and breaks poise.
+        end
+      end
+    end
+
+
+    # With its poise gone, the enemy cannot act this turn.
+    if enemyPoise is less than 1
+      set enemyStun to true
+      set enemyIntent to stunned
+      add 1 to poiseBreaks
+      draw a line
+      show The poise of enemyName has broken. It skips this strike back.
+      draw a line
+      if firstPoiseAchievement missing
+        set firstPoiseAchievement to true
+        append poise breaker to achievementList
+        show achievement earned · poise breaker
+      end
+    end
+
+
+    # ── What is still working on the enemy ─────────────────────────
+
+    if enemyBurn is greater than 0
+      subtract 1 from enemyBurn
+      subtract burnDamage from enemyLife
+      show The fire still on it burns for burnDamage more.
+    end
+
+    if enemyBleed is greater than 0
+      subtract 1 from enemyBleed
+      subtract bleedDamage from enemyLife
+      show The deep wound opens bleedDamage further.
+    end
+
+    if enemyPoison is greater than 0
+      subtract 1 from enemyPoison
+      subtract poisonDamage from enemyLife
+      show The venom eats poisonDamage of the enemy's life from the inside.
+    end
+
+
+    # ── What a thorns enemy does ───────────────────────────────────
+
+    if enemyTrait equals thorns
+      if skillUsed exists
+        set thornDamage to 5
+        subtract thornDamage from heroLife
+        show Edric's mirror shield throws the skill back for thornDamage.
+      end
+    end
+
+    # Thorn damage can fell both at once, so this is judged first — no winning while dead.
+    if heroLife is less than 1
+      if wardRuneHeld exists
+        if wardRuneUsed missing
+          set wardRuneUsed to true
+          set heroLife to 24
+          set heroSpirit to 8
+          set heroPoison to 0
+          show Brum's ward rune saved the hero from the damage thrown back.
+        else
+          set battleResult to fallen
+          set endingKind to fallen
+          break
+        end
+      else
+        set battleResult to fallen
+        set endingKind to fallen
+        break
+      end
+    end
+
+
+    # If the enemy has fallen, it never gets its turn to strike back.
+    if enemyLife is less than 1
+      draw a line
+      show enemyName has fallen
+      set battleResult to won
+      break
+    end
+
+
+    # ── The Demon Lord changes shape ────────────────────────────────
+
+    if enemyTrait equals demon lord
+      if demonLordPhase equals 1
+        if enemyLife is less than 150
+          set demonLordPhase to 2
+          add 3 to enemyHit
+          draw a line
+          show Morgar's black armour splits and huge demon wings open out.
+          show This is the second shape, whose demon fire burns spirit as well.
+          draw a line
+        end
+      else if demonLordPhase equals 2
+        if enemyLife is less than 70
+          set demonLordPhase to 3
+          add 4 to enemyHit
+          set heroPoison to 3
+          draw a line
+          show Morgar shatters the throne and shows the horned archdemon underneath.
+          show The goddess's holy flame flares one last time.
+          draw a line
+        end
+      end
+    end
+
+
+    # ════════════════════════════════════════════════════════════════
+    # The enemy strikes back
+    # The shared damage is worked out first, then each enemy's trait adds its own move.
+    # ════════════════════════════════════════════════════════════════
+
+    set takenDamage to random number from 3 to 8
+    add enemyHit to takenDamage
+    subtract heroGuard from takenDamage
+    if enemyIntent equals heavy blow
+      add 5 to takenDamage
+    end
+
+    if isGuarding exists
+      subtract heroGuard from takenDamage
+      subtract 3 from takenDamage
+    end
+
+    # Speed is the dodge chance itself. With its poise broken the enemy cannot attack at all.
+    set dodgeRoll to random number from 1 to 100
+    set wasDodged to false
+    if dodgeRoll is less than or equal to battleSpeed
+      set wasDodged to true
+    end
+    if enemyStun exists
+      set wasDodged to true
+    end
+    if inSmoke exists
+      set wasDodged to true
+    end
+
+    if wasDodged exists
+      if enemyStun exists
+        show enemyName lost its poise and cannot act at all
+      else
+        show Where the enemy lunged there is nothing but scattered dust.
+      end
+    else
+      if armourWear equals 0
+        add 3 to takenDamage
+      end
+      if takenDamage is less than 1
+        set takenDamage to 1
+      end
+      subtract takenDamage from heroLife
+      subtract 1 from armourWear
+      if armourWear is less than 0 then set armourWear to 0
+      add 10 to ultimateCharge
+      show enemyName · strikes back and takes takenDamage of your life
+
+      # Gardum the orc warchief plunders whenever a blow lands.
+      if enemyTrait equals plunder
+        if enemyIntent equals its own skill
+          set stolenCoin to 4
+          if bronzeHeld is less than stolenCoin
+            set stolenCoin to bronzeHeld
+          end
+          subtract stolenCoin from bronzeHeld
+          add stolenCoin to enemyRewardBronze
+          show The enemy took stolenCoin bronze. You get it back when you win.
+        end
+      end
+
+      # The curse of Morvel the dark wizard stays as poison.
+      if enemyTrait equals poison
+        if enemyIntent equals its own skill
+          40% chance
+            set heroPoison to 3
+            show Black letters spread under your skin. The poison stays for three turns.
+          end
+        end
+      end
+
+      # Barkas the black dragon turns the wounds he takes into life.
+      if enemyTrait equals drain
+        if enemyIntent equals its own skill
+          add 5 to enemyLife
+          if enemyLife is greater than enemyMaxLife
+            set enemyLife to enemyMaxLife
+          end
+          show Barkas takes 5 life back with blood magic.
+        end
+      end
+
+      # The Demon Lord's second shape takes spirit; the third takes life as well.
+      if enemyTrait equals demon lord
+        if enemyIntent equals its own skill
+          if demonLordPhase equals 2
+            set spiritStolen to 3
+            if heroSpirit is less than spiritStolen
+              set spiritStolen to heroSpirit
+            end
+            subtract spiritStolen from heroSpirit
+            show Demon fire burns spiritStolen of your spirit.
+          else if demonLordPhase equals 3
+            set extraDamage to 4
+            subtract extraDamage from heroLife
+            show The archdemon's tail runs through your armour for extraDamage more.
+          end
+        end
+      end
+
+      # On its own skill the hidden boss eats the ultimate power you saved.
+      if enemyTrait equals abyss
+        if enemyIntent equals its own skill
+          set chargeStolen to 20
+          if ultimateCharge is less than chargeStolen
+            set chargeStolen to ultimateCharge
+          end
+          subtract chargeStolen from ultimateCharge
+          show Nox's abyssal breath swallows chargeStolen of your ultimate charge.
+        end
+      end
+    end
+
+
+    # ── The move each enemy makes once more ───────────────────────
+
+    if enemyTrait equals momentum
+      if enemyIntent equals its own skill
+        add 1 to enemyHit
+        show Skrak calls his goblins up and the pace rises. The next attack will be fiercer.
+      end
+    else if enemyTrait equals regrowth
+      if enemyIntent equals its own skill
+        add 6 to enemyLife
+        if enemyLife is greater than enemyMaxLife
+          set enemyLife to enemyMaxLife
+        end
+        show Borga's troll blood closes the wounds and takes 6 life back.
+      end
+    else if enemyTrait equals armour
+      if enemyIntent equals its own skill
+        30% chance
+          add 1 to enemyGuard
+          show A new layer grows over the broken armour of enemyName and its guard rises again.
+        end
+      end
+    else if enemyTrait equals gamble
+      if enemyIntent equals its own skill
+        set lemarFace to random number from 1 to 6
+        show 🎲 Lemar's golden dice · rolled lemarFace / 6
+        if lemarFace is less than or equal to 2
+          subtract 10 from enemyLife
+          subtract 2 from enemyPoise
+          show 🟩 The rigged mechanism backfires: Lemar takes 10 damage and 2 poise damage.
+        else if lemarFace is less than or equal to 4
+          show 🟦 An even face, with no effect at all.
+        else
+          set boostDamage to 5
+          subtract boostDamage from heroLife
+          show 🟥 A high face · you took 5 extra damage, straight past your guard.
+        end
+      end
+    end
+
+    # A stun lasts one turn only, and poise fills back up.
+    if enemyStun exists
+      set enemyStun to false
+      set enemyPoise to enemyMaxPoise
+    end
+
+    if ultimateCharge is greater than ultimateFull
+      set ultimateCharge to ultimateFull
+    end
+
+
+    # ── The poison still in the hero ───────────────────────────────
+
+    if heroPoison is greater than 0
+      subtract 1 from heroPoison
+      subtract poisonDamage from heroLife
+      show The poison left in you eats poisonDamage of your life.
+    end
+
+
+    # ── Falling, and the one rescue Brum's ward rune gives ─────────
+
+    if heroLife is less than 1
+      if wardRuneHeld exists
+        if wardRuneUsed missing
+          set wardRuneUsed to true
+          set heroLife to 24
+          set heroSpirit to 8
+          set heroPoison to 0
+          draw a line
+          show The ward rune Brum cut breaks apart and gives your life back once.
+          draw a line
+        else
+          set battleResult to fallen
+          if demonLordSlain exists
+            set endingKind to sacrifice
+          else
+            set endingKind to fallen
+          end
+          break
+        end
+      else
+        set battleResult to fallen
+        if demonLordSlain exists
+          set endingKind to sacrifice
+        else
+          set endingKind to fallen
+        end
+        break
+      end
+    end
+
+  end
+
+
+  # ── After leaving the fight loop ─────────────────────────────────
+
+  if battleResult equals fallen
+    break
+  end
+
+
+  # ── The moment the Demon Lord and the hidden boss fall ───────────
+
+  if enemyTrait equals demon lord
+    put enemyName at 1 in enemiesFelled
+    add enemyRewardBronze to bronzeHeld
+    set demonLordSlain to true
+    put demonlord at done in questBoard
+    append demon lord hunter to achievementList
+    draw a line
+    show Morgar the Demon Lord has fallen. The war of the kingdom is over.
+    draw a line
+
+    # With high hope and five allies or more, the rift in the world opens.
+    set allyCount to how many allyList
+    set hiddenPathOpen to false
+    if hopeScore is greater than 7
+      if allyCount is greater than 4
+        set hiddenPathOpen to true
+      end
+    end
+
+    if hiddenPathOpen exists
+      story:
+
+        A black rift opens under the Demon Lord's throne.
+        Your allies say it has to be sealed now, before something older than Morgar wakes.
+        The kingdom's peace is already won. Past this door is a last trial, for the prepared alone.
+
+      end
+      set hiddenPathOptions to list of enter, back
+      set hiddenPathSettled to 0
+      while hiddenPathSettled is less than 1
+        ask hiddenPathChoice Will you step into the rift in the world? enter, back
+        if hiddenPathOptions contains hiddenPathChoice
+          set hiddenPathSettled to 1
+        else
+          show 🟦 Please type enter or back.
+        end
+      end
+      if hiddenPathChoice equals enter
+        set regionNumber to 13
+        set deepestRegion to 13
+        skip
+      end
+    end
+
+    set endingKind to peace
+    break
+  end
+
+  if enemyTrait equals abyss
+    put enemyName at 1 in enemiesFelled
+    add enemyRewardBronze to bronzeHeld
+    set charmNumber to 4
+    set charmName to the abyss shard of Nox
+    set hiddenBossWin to true
+    append conqueror of the abyss to achievementList
+    set endingKind to wholepeace
+    break
+  end
+
+
+  # ── The reward for winning, and the record of what you felled ────
+
+  add enemyRewardBronze to bronzeHeld
+  add enemyExp to heroExp
+  add 1 to peaceSpark
+  add 1 to fateSealCount
+  add 2 to fameLevel
+  show You took spoils worth enemyRewardBronze bronze and enemyExp experience
+  show The spark of peace has brightened to peaceSpark
+  show 🟨 You gained one fate seal from the region's master. You now have fateSealCount
+
+  if enemiesFelled contains enemyName
+    set felledBefore to enemyName in enemiesFelled
+    add 1 to felledBefore
+    put enemyName at felledBefore in enemiesFelled
+  else
+    put enemyName at 1 in enemiesFelled
+  end
+
+
+  # ── Material spoils ──────────────────────────────────────────────
+  # Which materials drop depends on the region. They are spent in the camp's crafting menu.
+
+  set materialCount to random number from 1 to 2
+  if regionNumber is less than or equal to 2
+    add materialCount to herbCount
+    add 1 to clothCount
+    show You found materialCount herbs and 1 tough cloth
+  else if regionNumber is less than or equal to 4
+    add materialCount to ironCount
+    add 1 to dustCount
+    show You gained materialCount iron ore and 1 magic dust
+  else if regionNumber is less than or equal to 6
+    add materialCount to dustCount
+    add 1 to crystalCount
+    show You gathered materialCount magic dust and 1 magic crystal
+  else if regionNumber is less than or equal to 8
+    add materialCount to hideCount
+    add 1 to clothCount
+    show You gained materialCount hides and 1 tough cloth
+  else if regionNumber is less than or equal to 10
+    add materialCount to herbCount
+    add 1 to hideCount
+    show You gained materialCount herbs and 1 hide
+  else
+    add 1 to scaleCount
+    add 1 to crystalCount
+    show You gained 1 dragon scale and 1 magic crystal
+  end
+
+  if bronzeHeld is greater than 99
+    if richAchievement missing
+      set richAchievement to true
+      append first gold to achievementList
+      show achievement earned · first gold
+    end
+  end
+
+
+  # ── Levelling up ─────────────────────────────────────────────────
+  # Every time you pass the experience needed, you pick one ability yourself.
+
+  while heroExp is greater than or equal to nextExp
+    subtract nextExp from heroExp
+    add 1 to heroLevel
+    add 8 to nextExp
+    draw a line
+    show heroName is now level heroLevel
+    set growthOptions to list of life, hit, guard, spirit, speed
+    set growthSettled to 0
+    while growthSettled is less than 1
+      ask growthChoice What will you train? life, hit, guard, spirit, speed
+      if growthOptions contains growthChoice
+        set growthSettled to 1
+      else
+        show 🟦 Please type one of the five abilities again.
+      end
+    end
+    if growthChoice equals hit
+      add 3 to heroHit
+      show The hand holding your weapon never shakes. Your hit went up.
+    else if growthChoice equals guard
+      add 2 to heroGuard
+      show Your stance has grown solid. Your guard went up.
+    else if growthChoice equals spirit
+      add 5 to maxSpirit
+      set heroSpirit to maxSpirit
+      show You can hold the spark of peace longer. Your spirit went up.
+    else if growthChoice equals speed
+      add 4 to heroSpeed
+      show You see first and move first now. Your speed went up.
+    else
+      add 10 to maxLife
+      set heroLife to maxLife
+      show You can stand longer. Your greatest life went up.
+    end
+    set heroLife to maxLife
+    draw a line
+  end
+
+
+  # ── A regional economy that moves ───────────────────────────────
+  # A real price is the base plus war risk plus freight, less the trader's regard for you.
+  # Goods are cheap where they are made, and every purchase thins the stock and lifts the price a little.
+
+  set freightCost to regionNumber
+  add warRisk to freightCost
+  set traderDiscount to traderStanding
+  if traderDiscount is greater than 15 then set traderDiscount to 15
+  if charmNumber equals 2 then add 8 to traderDiscount
+
+  set potionPrice to potionBasePrice
+  add freightCost to potionPrice
+  subtract traderDiscount from potionPrice
+  set strongPotionPrice to strongPotionBasePrice
+  add freightCost to strongPotionPrice
+  subtract traderDiscount from strongPotionPrice
+  set tonicPrice to tonicBasePrice
+  add freightCost to tonicPrice
+  subtract traderDiscount from tonicPrice
+  set antidotePrice to antidoteBasePrice
+  add freightCost to antidotePrice
+  subtract traderDiscount from antidotePrice
+  set bombPrice to bombBasePrice
+  add freightCost to bombPrice
+  subtract traderDiscount from bombPrice
+  set holyWaterPrice to holyWaterBasePrice
+  add freightCost to holyWaterPrice
+  subtract traderDiscount from holyWaterPrice
+  set smokePrice to smokeBasePrice
+  add freightCost to smokePrice
+  subtract traderDiscount from smokePrice
+  set whetstonePrice to whetstoneBasePrice
+  add freightCost to whetstonePrice
+  subtract traderDiscount from whetstonePrice
+  set rationPrice to rationBasePrice
+  add freightCost to rationPrice
+  subtract traderDiscount from rationPrice
+
+  # Herbs come from the forest, ore from the mine, and the free city moves everything, so those goods are cheaper there.
+  if regionNumber equals 2
+    subtract 8 from potionPrice
+    subtract 6 from antidotePrice
+  else if regionNumber equals 3
+    subtract 12 from bombPrice
+    subtract 8 from whetstonePrice
+  else if regionNumber equals 8
+    subtract 6 from potionPrice
+    subtract 6 from tonicPrice
+    subtract 6 from rationPrice
+  else if regionNumber equals 9
+    add 10 to rationPrice
+  end
+
+  if potionPrice is less than 8 then set potionPrice to 8
+  if strongPotionPrice is less than 20 then set strongPotionPrice to 20
+  if tonicPrice is less than 12 then set tonicPrice to 12
+  if antidotePrice is less than 8 then set antidotePrice to 8
+  if bombPrice is less than 25 then set bombPrice to 25
+  if holyWaterPrice is less than 20 then set holyWaterPrice to 20
+  if smokePrice is less than 12 then set smokePrice to 12
+  if whetstonePrice is less than 10 then set whetstonePrice to 10
+  if rationPrice is less than 6 then set rationPrice to 6
+
+  set marketPotionStock to random number from 3 to 6
+  set marketStrongStock to random number from 1 to 3
+  set marketTonicStock to random number from 2 to 5
+  set marketToolStock to random number from 2 to 5
+  set marketRationStock to random number from 3 to 7
+
+  if screenNumber equals 1 then clear the screen
+  set titleBoard to Lowen's travelling company
+  do drawSmallTitle with titleBoard
+  show war risk warRisk · freight freightCost · trader standing traderStanding · discount traderDiscount
+  show potion potionPrice · strongpotion strongPotionPrice · tonic tonicPrice · antidote antidotePrice
+  show bomb bombPrice · holywater holyWaterPrice · smoke smokePrice · whetstone whetstonePrice · rations rationPrice
+  show what you carry
+  do showMoney with bronzeHeld
+
+  set shopOpen to 1
+  while shopOpen is greater than 0
+    draw a line
+    show 🧪 medicine · potion / strongpotion / tonic / antidote
+    show ⚒ tools · bomb / holywater / smoke / whetstone / rations
+    show 🛡 gear · repair / forgeweapon / forgearmour / charm
+    show 🎲 fate · fatedraw / fatetrade · seals fateSealCount · shards fateShardCount
+    show 📦 other · sell / leave
+    ask buyChoice Type exactly the name of what you want
+    set tradeWins to false
+
+    if buyChoice equals potion
+      if marketPotionStock is greater than 0
+        if bronzeHeld is greater than or equal to potionPrice
+          subtract potionPrice from bronzeHeld
+          add 1 to potionCount
+          subtract 1 from marketPotionStock
+          add 2 to potionPrice
+          set tradeWins to true
+          show You bought a potion. Stock left marketPotionStock
+        else
+          show You do not have enough money.
+        end
+      else
+        show There are no potions in stock.
+      end
+    else if buyChoice equals strongpotion
+      if marketStrongStock is greater than 0
+        if bronzeHeld is greater than or equal to strongPotionPrice
+          subtract strongPotionPrice from bronzeHeld
+          add 1 to strongPotionCount
+          subtract 1 from marketStrongStock
+          add 4 to strongPotionPrice
+          set tradeWins to true
+          show You bought a strong potion. Stock left marketStrongStock
+        else
+          show You do not have enough money.
+        end
+      else
+        show There are no strong potions in stock.
+      end
+    else if buyChoice equals tonic
+      if marketTonicStock is greater than 0
+        if bronzeHeld is greater than or equal to tonicPrice
+          subtract tonicPrice from bronzeHeld
+          add 1 to tonicCount
+          subtract 1 from marketTonicStock
+          add 3 to tonicPrice
+          set tradeWins to true
+          show You bought a tonic. Stock left marketTonicStock
+        else
+          show You do not have enough money.
+        end
+      else
+        show There are no tonics in stock.
+      end
+    else if buyChoice equals antidote
+      if marketToolStock is greater than 0
+        if bronzeHeld is greater than or equal to antidotePrice
+          subtract antidotePrice from bronzeHeld
+          add 1 to antidoteCount
+          subtract 1 from marketToolStock
+          set tradeWins to true
+          show You bought an antidote.
+        else
+          show You do not have enough money.
+        end
+      else
+        show There are no tools in stock.
+      end
+    else if buyChoice equals bomb
+      if marketToolStock is greater than 0
+        if bronzeHeld is greater than or equal to bombPrice
+          subtract bombPrice from bronzeHeld
+          add 1 to bombCount
+          subtract 1 from marketToolStock
+          add 5 to bombPrice
+          set tradeWins to true
+          show You bought a bomb.
+        else
+          show You do not have enough money.
+        end
+      else
+        show There are no tools in stock.
+      end
+    else if buyChoice equals holywater
+      if marketToolStock is greater than 0
+        if bronzeHeld is greater than or equal to holyWaterPrice
+          subtract holyWaterPrice from bronzeHeld
+          add 1 to holyWaterCount
+          subtract 1 from marketToolStock
+          set tradeWins to true
+          show You bought holy water.
+        else
+          show You do not have enough money.
+        end
+      else
+        show There are no tools in stock.
+      end
+    else if buyChoice equals smoke
+      if marketToolStock is greater than 0
+        if bronzeHeld is greater than or equal to smokePrice
+          subtract smokePrice from bronzeHeld
+          add 1 to smokeCount
+          subtract 1 from marketToolStock
+          set tradeWins to true
+          show You bought a smoke bomb.
+        else
+          show You do not have enough money.
+        end
+      else
+        show There are no tools in stock.
+      end
+    else if buyChoice equals whetstone
+      if marketToolStock is greater than 0
+        if bronzeHeld is greater than or equal to whetstonePrice
+          subtract whetstonePrice from bronzeHeld
+          add 1 to whetstoneCount
+          subtract 1 from marketToolStock
+          set tradeWins to true
+          show You bought a whetstone.
+        else
+          show You do not have enough money.
+        end
+      else
+        show There are no tools in stock.
+      end
+    else if buyChoice equals rations
+      if marketRationStock is greater than 0
+        if bronzeHeld is greater than or equal to rationPrice
+          subtract rationPrice from bronzeHeld
+          add 1 to rationCount
+          subtract 1 from marketRationStock
+          add 2 to rationPrice
+          set tradeWins to true
+          show You bought a bundle of dried meat and dark bread.
+        else
+          show You do not have enough money.
+        end
+      else
+        show There are no rations in stock.
+      end
+
+    else if buyChoice equals sell
+      ask sellChoice herb, iron, dust, scale, cloth, crystal, hide, cancel
+      set saleValue to 0
+      if sellChoice equals herb
+        if herbCount is greater than 0
+          subtract 1 from herbCount
+          set saleValue to 8
+        end
+      else if sellChoice equals iron
+        if ironCount is greater than 0
+          subtract 1 from ironCount
+          set saleValue to 12
+        end
+      else if sellChoice equals dust
+        if dustCount is greater than 0
+          subtract 1 from dustCount
+          set saleValue to 17
+        end
+      else if sellChoice equals scale
+        if scaleCount is greater than 0
+          subtract 1 from scaleCount
+          set saleValue to 45
+        end
+      else if sellChoice equals cloth
+        if clothCount is greater than 0
+          subtract 1 from clothCount
+          set saleValue to 10
+        end
+      else if sellChoice equals crystal
+        if crystalCount is greater than 0
+          subtract 1 from crystalCount
+          set saleValue to 30
+        end
+      else if sellChoice equals hide
+        if hideCount is greater than 0
+          subtract 1 from hideCount
+          set saleValue to 14
+        end
+      end
+      if saleValue is greater than 0
+        # Ordinary division in sentence syntax can produce a fraction.
+        # The save code only holds whole numbers, so the whole part is taken by repeated subtraction.
+        set riskLeft to warRisk
+        set dangerPay to 0
+        while riskLeft is greater than 2
+          subtract 3 from riskLeft
+          add 1 to dangerPay
+        end
+        add dangerPay to saleValue
+        add saleValue to bronzeHeld
+        set tradeWins to true
+        show The war makes the material wanted, so you were paid saleValue bronze.
+      else
+        show You have nothing to sell, or you called the trade off.
+      end
+
+    else if buyChoice equals repair
+      set weaponHurt to weaponMaxWear
+      subtract weaponWear from weaponHurt
+      set armourHurt to armourMaxWear
+      subtract armourWear from armourHurt
+      set repairPrice to weaponHurt
+      add armourHurt to repairPrice
+      add repairBasePrice to repairPrice
+      subtract traderDiscount from repairPrice
+      if className equals runesmith then subtract 15 from repairPrice
+      if repairPrice is less than 5 then set repairPrice to 5
+      show repairPrice bronze repairs both pieces of gear completely
+      if bronzeHeld is greater than or equal to repairPrice
+        subtract repairPrice from bronzeHeld
+        set weaponWear to weaponMaxWear
+        set armourWear to armourMaxWear
+        add 1 to repairCount
+        set tradeWins to true
+        show Lowen's repairer worked over every crack.
+        if firstRepairAchievement missing
+          set firstRepairAchievement to true
+          append the sword reforged to achievementList
+          show achievement earned · the sword reforged
+        end
+      else
+        show You do not have enough money.
+      end
+
+    else if buyChoice equals forgeweapon
+      set weaponBoostPrice to 120
+      set weaponStepValue to weaponNumber
+      multiply weaponStepValue by 45
+      add weaponStepValue to weaponBoostPrice
+      subtract traderDiscount from weaponBoostPrice
+      show The next weapon costs weaponBoostPrice bronze
+      if weaponNumber is greater than 7
+        show You already carry the finest weapon there is.
+      else if bronzeHeld is greater than or equal to weaponBoostPrice
+        subtract weaponBoostPrice from bronzeHeld
+        add 1 to weaponNumber
+        add 2 to heroHit
+        add 10 to weaponMaxWear
+        set weaponWear to weaponMaxWear
+        set tradeWins to true
+        if weaponNumber equals 2
+          set weaponName to the ranger's longbow
+        else if weaponNumber equals 3
+          set weaponName to dwarven rune hammer
+        else if weaponNumber equals 4
+          set weaponName to silver staff
+        else if weaponNumber equals 5
+          set weaponName to shadow dagger
+        else if weaponNumber equals 6
+          set weaponName to dragonbone lance
+        else if weaponNumber equals 7
+          set weaponName to the second hand of time
+        else
+          set weaponName to the holy sword of peace
+        end
+        show Your new weapon weaponName is finished. Your hit and its greatest wear went up.
+      else
+        show You do not have enough money.
+      end
+
+    else if buyChoice equals forgearmour
+      set armourBoostPrice to 130
+      set armourStepValue to armourNumber
+      multiply armourStepValue by 55
+      add armourStepValue to armourBoostPrice
+      subtract traderDiscount from armourBoostPrice
+      show The next armour costs armourBoostPrice bronze
+      if armourNumber is greater than 5
+        show You already wear the finest armour there is.
+      else if bronzeHeld is greater than or equal to armourBoostPrice
+        subtract armourBoostPrice from bronzeHeld
+        add 1 to armourNumber
+        add 2 to heroGuard
+        add 12 to armourMaxWear
+        set armourWear to armourMaxWear
+        set tradeWins to true
+        if armourNumber equals 2
+          set armourName to elven ranger's coat
+        else if armourNumber equals 3
+          set armourName to dwarven plate armour
+        else if armourNumber equals 4
+          set armourName to holy light vestment
+        else if armourNumber equals 5
+          set armourName to dragonscale armour
+        else
+          set armourName to the royal guardian armour
+        end
+        show Your new armour armourName is finished. Your guard and its greatest wear went up.
+      else
+        show You do not have enough money.
+      end
+
+    else if buyChoice equals charm
+      show hawkeye 180 bronze · scales 220 bronze · rosary 260 bronze
+      ask charmChoice hawkeye, scales, rosary, cancel
+      if charmChoice equals hawkeye
+        if bronzeHeld is greater than or equal to 180
+          subtract 180 from bronzeHeld
+          set charmNumber to 1
+          set charmName to the hawk's eye
+          set tradeWins to true
+        else
+          show You do not have enough money.
+        end
+      else if charmChoice equals scales
+        if bronzeHeld is greater than or equal to 220
+          subtract 220 from bronzeHeld
+          set charmNumber to 2
+          set charmName to the trader's silver scales
+          set tradeWins to true
+        else
+          show You do not have enough money.
+        end
+      else if charmChoice equals rosary
+        if bronzeHeld is greater than or equal to 260
+          subtract 260 from bronzeHeld
+          set charmNumber to 3
+          set charmName to the saint's rosary
+          set tradeWins to true
+        else
+          show You do not have enough money.
+        end
+      end
+      if tradeWins exists then show You put charmName on
+
+    else if buyChoice equals fatedraw
+      draw a line
+      show 🎲 A draw for fate seals alone · no bronze and no money is taken
+      show common 50 percent · fine 32 percent · rare 15 percent · legend 3 percent
+      show If five draws pass with nothing rare or better, the sixth is certain to be rare or better.
+      show Seals now fateSealCount · rare counter fatePityCount / 5
+      if fateSealCount is greater than 0
+        subtract 1 from fateSealCount
+        add 1 to fateDrawCount
+        if firstDrawDone missing
+          set firstDrawDone to true
+          add 1 to luckCoinCount
+          add 2 to fateShardCount
+          say in a box 🟨 Fixed reward for a first draw · 1 luck coin · 2 fate shards
+        else
+          if fatePityCount is greater than 4
+            set fateDrawFace to random number from 83 to 100
+            show 🟨 The counter fires · this result is rare or better.
+          else
+            set fateDrawFace to random number from 1 to 100
+          end
+          if fateDrawFace is less than or equal to 50
+            add 1 to rationCount
+            add 1 to fateShardCount
+            add 1 to fatePityCount
+            show 🟦 Common · 1 kingdom travel ration · 1 shard
+          else if fateDrawFace is less than or equal to 82
+            set fineRewardFace to random number from 1 to 2
+            if fineRewardFace equals 1
+              add 1 to potionCount
+              show 🟩 Fine · 1 potion · 2 shards
+            else
+              add 1 to tonicCount
+              show 🟩 Fine · 1 tonic · 2 shards
+            end
+            add 2 to fateShardCount
+            add 1 to fatePityCount
+          else if fateDrawFace is less than or equal to 97
+            add 1 to luckCoinCount
+            add 1 to chaosRolls
+            add 4 to fateShardCount
+            set fatePityCount to 0
+            say in a box 🟨 Rare · 1 luck coin · 1 chaos die · 4 shards
+          else
+            add 2 to luckCoinCount
+            add 2 to chaosRolls
+            add 1 to strongPotionCount
+            add 8 to fateShardCount
+            set fatePityCount to 0
+            say in a box 🟨 Legend · a bundle of chance tools · a strong potion · 8 shards
+          end
+        end
+      else
+        show You have no fate seals. Felling the master of a region always gives one.
+      end
+
+    else if buyChoice equals fatetrade
+      ask fateSwapChoice What will 6 shards buy? luckcoin, chaosdie, cancel
+      if fateSwapChoice equals cancel
+        show The trade is off.
+      else if fateShardCount is greater than 5
+        if fateSwapChoice equals luckcoin
+          subtract 6 from fateShardCount
+          add 1 to luckCoinCount
+          show 🟨 You traded 6 fate shards for a luck coin.
+        else if fateSwapChoice equals chaosdie
+          subtract 6 from fateShardCount
+          add 1 to chaosRolls
+          show 🟨 You traded 6 fate shards for a chaos die.
+        else
+          show 🟦 Please check the name of what you want to trade for.
+        end
+      else
+        show You have fewer than 6 fate shards.
+      end
+
+    else if buyChoice equals leave
+      set shopOpen to 0
+      show Lowen closes the ledger and moves on to the next crossroad.
+    else
+      show 🟦 The shop has nothing by that name. Here is the menu again.
+    end
+
+    if tradeWins exists
+      add 1 to tradeCount
+      add 1 to traderStanding
+      if firstTradeAchievement missing
+        set firstTradeAchievement to true
+        append first trade to achievementList
+        show achievement earned · first trade
+      end
+      show what you have left
+      do showMoney with bronzeHeld
+    end
+  end
+
+
+  # ── Time passing as you move to the next road ───────────────────
+
+  add 1 to regionNumber
+  set deepestRegion to regionNumber
+  add 1 to adventureDay
+  add 12 to fatigueLevel
+  subtract 15 from fullnessLevel
+  subtract 1 from warRisk
+  if warRisk is less than 0 then set warRisk to 0
+  if fullnessLevel is less than 0 then set fullnessLevel to 0
+  if fullnessLevel equals 0
+    subtract 5 from heroLife
+    subtract 5 from moralePoints
+    show Hunger has taken your life and your spirits down.
+    if moralePoints is less than 0 then set moralePoints to 0
+  end
+
+
+  # ── Camp between roads, and ten recipes ─────────────────────────
+
+  if screenNumber equals 1 then clear the screen
+  set titleBoard to A campfire
+  do drawSmallTitle with titleBoard
+  show day adventureDay · next region regionNumber · fullness fullnessLevel · fatigue fatigueLevel · morale moralePoints
+  show 🟩 recovery · rest / eat
+  show ⚒ growth · train / craft / gear
+  show 📜 safety · records / save
+  set campOptions to list of rest, eat, train, craft, gear, records, save
+  set campSettled to 0
+  while campSettled is less than 1
+    ask campChoice Type exactly the name of the camp move you want
+    if campOptions contains campChoice
+      set campSettled to 1
+    else
+      show 🟦 That is not on the list. Asking again without spending the turn.
+    end
+  end
+
+  if campChoice equals craft
+    show herb herbCount · iron ironCount · dust dustCount · scale scaleCount
+    show cloth clothCount · crystal crystalCount · hide hideCount
+    ask craftChoice potion, strongpotion, tonic, antidote, bomb, holywater, smoke, whetstone, rune, rations, cancel
+    set craftWins to false
+
+    if craftChoice equals potion
+      if herbCount is greater than 1
+        subtract 2 from herbCount
+        add 1 to potionCount
+        set craftWins to true
+      end
+    else if craftChoice equals strongpotion
+      if herbCount is greater than 2
+        if crystalCount is greater than 0
+          subtract 3 from herbCount
+          subtract 1 from crystalCount
+          add 1 to strongPotionCount
+          set craftWins to true
+        end
+      end
+    else if craftChoice equals tonic
+      if herbCount is greater than 0
+        if dustCount is greater than 0
+          subtract 1 from herbCount
+          subtract 1 from dustCount
+          add 1 to tonicCount
+          set craftWins to true
+        end
+      end
+    else if craftChoice equals antidote
+      if herbCount is greater than 1
+        subtract 2 from herbCount
+        add 2 to antidoteCount
+        set craftWins to true
+      end
+    else if craftChoice equals bomb
+      if ironCount is greater than 1
+        if dustCount is greater than 0
+          subtract 2 from ironCount
+          subtract 1 from dustCount
+          add 1 to bombCount
+          set craftWins to true
+        end
+      end
+    else if craftChoice equals holywater
+      if herbCount is greater than 0
+        if crystalCount is greater than 0
+          subtract 1 from herbCount
+          subtract 1 from crystalCount
+          add 1 to holyWaterCount
+          set craftWins to true
+        end
+      end
+    else if craftChoice equals smoke
+      if dustCount is greater than 0
+        if clothCount is greater than 0
+          subtract 1 from dustCount
+          subtract 1 from clothCount
+          add 2 to smokeCount
+          set craftWins to true
+        end
+      end
+    else if craftChoice equals whetstone
+      if ironCount is greater than 0
+        subtract 1 from ironCount
+        add 2 to whetstoneCount
+        set craftWins to true
+      end
+    else if craftChoice equals rune
+      if ironCount is greater than 1
+        if dustCount is greater than 1
+          subtract 2 from ironCount
+          subtract 2 from dustCount
+          add 1 to heroHit
+          add 1 to heroGuard
+          add 4 to maxLife
+          add 4 to heroLife
+          add 1 to runeCount
+          set craftWins to true
+        end
+      end
+    else if craftChoice equals rations
+      if hideCount is greater than 0
+        if herbCount is greater than 0
+          subtract 1 from hideCount
+          subtract 1 from herbCount
+          add 2 to rationCount
+          set craftWins to true
+        end
+      end
+    end
+
+    if craftWins exists
+      add 1 to craftCount
+      show You made craftChoice
+      if firstCraftAchievement missing
+        set firstCraftAchievement to true
+        append first craft to achievementList
+        show achievement earned · first craft
+      end
+    else
+      show You are short of materials, or you called the crafting off.
+    end
+
+  else if campChoice equals eat
+    if rationCount is greater than 0
+      subtract 1 from rationCount
+      add 40 to fullnessLevel
+      subtract 8 from fatigueLevel
+      add 6 to moralePoints
+      if fullnessLevel is greater than 100 then set fullnessLevel to 100
+      if fatigueLevel is less than 0 then set fatigueLevel to 0
+      if moralePoints is greater than 100 then set moralePoints to 100
+      show You share a warm meal with your allies; fullness and morale went up.
+    else
+      show There is nothing left to eat.
+    end
+  else if campChoice equals train
+    set trainingOptions to list of hit, guard, life, spirit, speed
+    set trainingSettled to 0
+    while trainingSettled is less than 1
+      ask trainingChoice Choose one of hit, guard, life, spirit, speed
+      if trainingOptions contains trainingChoice
+        set trainingSettled to 1
+      else
+        show 🟦 Please type one of the five abilities again.
+      end
+    end
+    add 8 to fatigueLevel
+    if trainingChoice equals hit
+      add 1 to heroHit
+    else if trainingChoice equals guard
+      add 1 to heroGuard
+    else if trainingChoice equals spirit
+      add 2 to maxSpirit
+    else if trainingChoice equals speed
+      add 2 to heroSpeed
+    else
+      add 4 to maxLife
+    end
+    show Hard training raised an ability, and it left you tired.
+  else if campChoice equals gear
+    if ironCount is greater than 0
+      subtract 1 from ironCount
+      set weaponWear to weaponMaxWear
+      set armourWear to armourMaxWear
+      add 1 to repairCount
+      show One piece of iron ore field-repaired your weapon and your armour.
+    else
+      show There is no iron ore to repair with.
+    end
+  else if campChoice equals records
+    show hope hopeScore · spark peaceSpark · fame fameLevel
+    show crown crownStanding · elves elfStanding · dwarves dwarfStanding · temple templeStanding · guild guildStanding · traders traderStanding
+    show war risk warRisk · trades tradeCount · crafts craftCount · repairs repairCount
+    show allyList joined by comma
+    show 🎲 fate seals fateSealCount · shards fateShardCount · draws fateDrawCount · gambles won gambleWins / lost gambleLosses
+  else if campChoice equals save
+    add 1 to saveCount
+    set saveCells to an empty list
+    append peaceG to saveCells
+    append heroName to saveCells
+    set saveNumbers to list of classNumber, difficultyNumber, regionNumber, deepestRegion, maxLife, heroLife, heroHit, heroGuard, maxSpirit, heroSpirit, heroSpeed, heroLevel, heroExp, nextExp, bronzeHeld, potionCount, strongPotionCount, tonicCount, antidoteCount, bombCount, holyWaterCount, smokeCount, whetstoneCount, rationCount, herbCount, ironCount, dustCount, scaleCount, clothCount, crystalCount, hideCount, peaceSpark, hopeScore, ultimateCharge, craftCount, poiseBreaks, weakHits, totalTurns, weaponNumber, weaponWear, weaponMaxWear, armourNumber, armourWear, armourMaxWear, charmNumber, warRisk, traderStanding, crownStanding, elfStanding, dwarfStanding, templeStanding, guildStanding, adventureDay, fullnessLevel, fatigueLevel, moralePoints, wardRuneHeld, wardRuneUsed, serinHelped, demonLordWeakened, bannerGuard, rianelJoined, brumJoined, serinJoined, adelaJoined, kyleJoined, aurelJoined, isabelJoined, darionJoined, neriaJoined, lucianJoined, forestQuest, wardQuest, bannerQuest, marketQuest, refugeeQuest, sealQuest, runeCount, tradeCount, repairCount, fameLevel, saveCount, demonLordSlain, hiddenBossWin, pacingNumber, screenNumber, luckCoinCount, chaosRolls, fateSealCount, fateDrawCount, fatePityCount, fateShardCount, firstDrawDone, gambleWins, gambleLosses
+    for each saveNumber in saveNumbers
+      do putCodeCell with saveNumber
+    end
+    set saveSum to 0
+    set saveIndexValue to 0
+    for each numberToCheck in saveNumbers
+      add 1 to saveIndexValue
+      set saveTerm to numberToCheck
+      multiply saveTerm by saveIndexValue
+      add saveTerm to saveSum
+    end
+    set saveCheckValue to the remainder of saveSum divided by 997
+    do putCodeCell with saveCheckValue
+    draw a line
+    show The whole line below is your save code. Copy it somewhere safe.
+    show saveCells joined by comma
+    show At the opening screen next time, choose load and paste this one line.
+    draw a line
+    # Saving is a safety feature, so it never costs you a camp move; a plain rest comes with it.
+    add 24 to heroLife
+    set heroSpirit to maxSpirit
+    set heroPoison to 0
+    subtract 25 from fatigueLevel
+    if heroLife is greater than maxLife then set heroLife to maxLife
+    if fatigueLevel is less than 0 then set fatigueLevel to 0
+    show 🟩 Your allies kept watch while you saved, so a plain rest came with it.
+  else
+    add 24 to heroLife
+    set heroSpirit to maxSpirit
+    set heroPoison to 0
+    subtract 25 from fatigueLevel
+    add 3 to moralePoints
+    if heroLife is greater than maxLife then set heroLife to maxLife
+    if fatigueLevel is less than 0 then set fatigueLevel to 0
+    if moralePoints is greater than 100 then set moralePoints to 100
+    if charmNumber equals 3
+      add 8 to heroLife
+      if heroLife is greater than maxLife
+        set heroLife to maxLife
+      end
+    end
+    show You shared the watch and slept deeply.
+  end
+
+  wait shortWait
+
+end
+
+
+# ════════════════════════════════════════════════════════════════════
+# The last scene
+# ════════════════════════════════════════════════════════════════════
+
+clear the screen
+draw a line
+
+set peaceReached to false
+if endingKind equals peace
+  set peaceReached to true
+end
+if endingKind equals wholepeace
+  set peaceReached to true
+end
+if endingKind equals sacrifice
+  set peaceReached to true
+end
+
+if peaceReached exists
+  say in a box 🟩 Peace
+  draw a line
+  if pacingNumber equals 2
+    say slowly The Demon Lord has fallen. Morning comes back to Arteria.
+  else if pacingNumber equals 3
+    say very slowly At last, peace has come back.
+  else
+    show The Demon Lord has fallen. Morning comes back to Arteria.
+  end
+  story:
+
+    heroName raised weaponName and ran it through Morgar's heart.
+    The Demon Lord was dead, and the gate of the demon world fell in with red fire.
+    In the capital Elenoa rang the victory bell and raised the kingdom's flag on every wall.
+    The monster legions fled to the northern mountains, and a peaceful morning came to Arteria again.
+
+  end
+
+  if hopeScore is greater than or equal to 7
+    story:
+
+      A statue of the winning hero rose in the middle of the capital, and the festival ran a week.
+      Rianel the elf took her forest back, and Brum the dwarf opened the fallen mine again.
+      Serin became the kingdom's high wizard, and Adela and Kyle founded a guild for the children the war orphaned.
+      Aurel the gold dragon flew above the new king's crowning, and the alliance of the three peoples held firmer than ever.
+
+    end
+    say in the middle The warmest peace
+  else if hopeScore is greater than or equal to 4
+    story:
+
+      The wounds did not close in a day, but the roads were given their names again.
+      People told each other what heroName chose along the way, and kept the small promises first.
+      A world you can pick a tomorrow in, whole or not — that much peace had begun.
+
+    end
+    say in the middle Peace begun again
+  else
+    story:
+
+      The war was over and people opened their doors.
+      Trusting one another, though, is still something to learn slowly.
+      heroName set the weapon down and began the work that is harder than fighting.
+
+    end
+    say in the middle Peace still being learned
+  end
+
+  if endingKind equals wholepeace
+    draw a line
+    story:
+
+      With Nox the abyss dragon fallen, the rift in the world closed for good inside the holy flame of the goddess.
+      Your allies came home to the kingdom and kept the last battle, written down nowhere, in the memory of one another.
+      The peace of Arteria became a whole new age, with not even a trace of the Demon Lord left.
+
+    end
+    say in a box 🟨 A hidden ending · a whole peace
+  else if endingKind equals sacrifice
+    draw a line
+    story:
+
+      The rift in the world closed, and heroName never came back with the others.
+      Every guild in the kingdom set out one empty chair, and each year the princess lit the first flame before it.
+      Because of that, the next generation lived ordinary lives, knowing neither Demon Lord nor abyss.
+
+    end
+    say in a box 🟨 A hidden ending · the last guardian
+  end
+
+else
+  say in a box 🟥 A road not finished yet
+  draw a line
+  story:
+
+    The spark of peace fell to the ground, and it did not go out.
+    Princess Elenoa lights the castle torch and waits for the next adventurer.
+    If somebody walks this road again, the failure of today will be a story that keeps them safe.
+
+  end
+end
+
+
+# ── The last record ────────────────────────────────────────────────
+
+draw a line
+show heroName · className · level heroLevel
+show weapon weaponName · armour armourName · charm charmName
+show furthest road deepestRegion · turns traded totalTurns
+show what you have left
+do showMoney with bronzeHeld
+show the spark of peace peaceSpark · hope hopeScore · fame fameLevel
+set elapsedTime to elapsed
+show play time elapsedTime seconds · poise breaks poiseBreaks · weakness hits weakHits · crafts craftCount · saves saveCount
+show survival · day adventureDay · fullness fullnessLevel · fatigue fatigueLevel · morale moralePoints
+show economy · war risk warRisk · trades tradeCount · repairs repairCount · trader standing traderStanding
+show fate · seals fateSealCount · shards fateShardCount · draws fateDrawCount · gambles won gambleWins / lost gambleLosses
+show wear · weapon weaponWear / weaponMaxWear · armour armourWear / armourMaxWear
+show materials left · herb herbCount · iron ironCount · dust dustCount · scale scaleCount · cloth clothCount · crystal crystalCount · hide hideCount
+draw a line
+show who came with you
+if allyList missing
+  show You recruited nobody.
+else
+  show allyList joined by comma
+end
+draw a line
+show the regions you found
+show regionsFound joined by comma
+draw a line
+show the enemies you felled
+for each recordName in enemiesFelled
+  set recordCount to recordName in enemiesFelled
+  show recordName · recordCount times
+end
+draw a line
+show the quest log
+for each questName in questBoard
+  set questState to questName in questBoard
+  show questName · questState
+end
+draw a line
+show the achievements you earned
+if achievementList missing
+  show You have earned no achievements yet.
+else
+  for each achievementName in achievementList
+    show achievementName
+  end
+end
+draw a line
+say in the middle Thank you for walking it to the end
+draw a line
