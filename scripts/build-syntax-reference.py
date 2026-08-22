@@ -258,8 +258,13 @@ NUMBERS = [
     ("문장형", "Sentence", "show the remainder of score divided by 4", "점수를 4로 나눈 나머지 말해줘", "print(score % 4)", 'print(점수 % 4)'),
     ("문장형", "Sentence", "set left to the remainder of score divided by 4", "남은것은 점수를 4로 나눈 나머지", "left = score % 4", '남은것 = 점수 % 4'),
     ("문장형", "Sentence", "if the remainder of score divided by 4 equals 0", "만약에 점수를 4로 나눈 나머지가 0과 같으면", "if (score % 4 == 0):", 'if (점수 % 4 == 0):'),
+    ("문장형", "Sentence", "show the whole number of score divided by 4", "점수를 4로 나눈 몫 말해줘", "print(score // 4)", 'print(점수 // 4)'),
+    ("문장형", "Sentence", "set rows to the whole number of score divided by people", "줄수는 점수를 인원으로 나눈 몫", "rows = score // people", '줄수 = 점수 // 인원'),
+    ("문장형", "Sentence", "set rows to the quotient of score divided by 4", "줄수는 점수를 4로 나눈 몫", "rows = score // 4", '줄수 = 점수 // 4'),
     ("초급", "Beginner", "say score % 4", "말해 점수 % 4", "print(score % 4)", 'print(점수 % 4)'),
+    ("초급", "Beginner", "say score // 4", "말해 점수 // 4", "print(score // 4)", 'print(점수 // 4)'),
     ("고급", "Advanced", "left = score % 4", "남은것 = 점수 % 4", "unchanged"),
+    ("고급", "Advanced", "rows = score // 4", "줄수 = 점수 // 4", "unchanged"),
 ]
 
 TEXT = [
@@ -268,6 +273,8 @@ TEXT = [
     ("문장형", "Sentence", "show name in small letters", "이름 소문자로 말해줘", "print(str(name).lower())", 'print(str(이름).lower())'),
     ("문장형", "Sentence", "set names to memo split by line", "이름들은 memo를 줄마다 나눈 것", "names = str(memo).splitlines()", '이름들 = str(memo).splitlines()'),
     ("문장형", "Sentence", "set fields to memo split by comma", "칸들은 memo를 쉼표로 나눈 것", 'fields = str(memo).split(",")', '칸들 = str(memo).split(",")'),
+    ("문장형", "Sentence", "set line to friends joined by comma", "한줄은 친구들을 쉼표로 이은 것", 'line = ", ".join(map(str, friends))', '한줄 = ", ".join(map(str, 친구들))'),
+    ("문장형", "Sentence", "set level to levelText as a number", "레벨은 레벨글을 숫자로 바꾼 것", "level = int(levelText)", '레벨 = int(레벨글)'),
     ("문장형", "Sentence", "set words to memo split by space", "말들은 memo를 빈칸으로 나눈 것", 'words = str(memo).split(" ")', '말들 = str(memo).split(" ")'),
     ("문장형", "Sentence", "set bar to name repeated 5 times", "막대는 이름을 5개 붙인 것", "bar = str(name) * 5", '막대 = str(이름) * 5'),
     ("문장형", "Sentence", "show name repeated 3 times", "이름을 3번 붙인 것 말해줘", "print(str(name) * 3)", 'print(str(이름) * 3)'),
@@ -553,6 +560,10 @@ def spelling_table(korean: bool) -> str:
         ("몇 개 / Copies", "COPIES_WORDS_EN", "COPIES_WORDS_KO"),
         ("몇 번째와 함께 / With its position", "POSITION_WORDS_EN", "POSITION_WORDS_KO"),
         ("나머지 / Remainder", "REMAINDER_WORDS_EN", "REMAINDER_WORDS_KO"),
+        ("몫 / Quotient", "QUOTIENT_WORDS_EN", "QUOTIENT_WORDS_KO"),
+        ("온전한 수 / Whole number", "WHOLE_WORDS_EN", None),
+        ("이은 것 / Joined thing", "JOINED_THING_WORDS_KO", None),
+        ("바꾼 것 / Changed into", "CHANGED_WORDS_KO", None),
         ("나누기 말 / Divided", "DIVIDED_WORDS_EN", "DIVIDED_WORDS_KO"),
         ("이음말 / Separator", "SEPARATOR_WORDS_EN", "SEPARATOR_WORDS_KO"),
         ("정렬 / Sort", "SORT_WORDS_EN", "SORT_WORDS_KO"),
@@ -667,6 +678,22 @@ NME가 **실제로 받아들이는 표기를 빠짐없이** 모아 둔 목록입
 이름을 프로그램이 이미 알고 있으면 **코드**로, 그렇지 않으면 **글**로 다룹니다.
 `말해`와 `say`만은 반대로, 표현식을 먼저 시도합니다. 앞에서 만든 이름이 글 안에
 있으면 그 자리에 값이 들어갑니다(`안녕하세요 이름!` → `"안녕하세요 " + str(이름) + "!"`).
+
+⚠ **이것은 낱말이 이름과 같기만 하면 일어납니다.** `사기`라는 이름을 만들어 두면
+`동료들과 식사해 사기가 올랐습니다 말해줘`가 `"동료들과 식사해 " + str(사기) + "가
+올랐습니다"`가 됩니다. 조건에서도 마찬가지라, `수호룬`이라는 참/거짓 이름이 있으면
+`만약에 선택이 수호룬과 같으면`은 글자 `"수호룬"`이 아니라 그 값과 견줍니다.
+
+**글자라는 것을 밝히려면 따옴표로 감싸면 됩니다.** 따옴표 안의 것은 이름이 있어도
+그대로 글자입니다.
+
+```
+"동료들과 식사해 사기가 올랐습니다" 말해줘     → 그대로 나옵니다
+만약에 선택이 "수호룬"과 같으면                → 글자와 견줍니다
+```
+
+가장 편한 방법은 **이름을 산문에 나오지 않을 모양으로 짓는 것**입니다 —
+`사기` 대신 `전의`, `수호룬` 대신 `수호룬보유여부`. 짧고 흔한 낱말일수록 위험합니다.
 
 ## 2. 입력
 
@@ -790,8 +817,13 @@ Python으로 `나이표 = {{}}`라고 쓴 이름도 표로 봅니다.
 
 {level_table(NUMBERS, True)}
 
-`나머지`/`the remainder of`는 나눗셈에서 남는 수입니다. 값이라서 출력·저장·조건
-어디에나 쓸 수 있고, 나누는 수는 숫자이거나 앞에서 만든 이름이어야 합니다.
+`나머지`/`the remainder of`는 나눗셈에서 남는 수이고, `몫`/`the whole number
+of`는 온전히 몇 번 들어가는지입니다. 둘 다 값이라서 출력·저장·조건 어디에나 쓸 수
+있고, 나누는 수는 숫자이거나 앞에서 만든 이름이어야 합니다.
+
+`나눠`는 파이썬의 `/`라서 답이 소수가 됩니다. 소수는 목록의 몇 번째, 반복 횟수,
+저장할 점수 자리에 넣을 수 없어 그때 프로그램이 멈춥니다. 그런 자리에는 `몫`을
+쓰세요.
 
 ## 16. 값과 리터럴
 
@@ -900,6 +932,20 @@ Python으로 `나이표 = {{}}`라고 쓴 이름도 표로 봅니다.
 
 일 안에서 저장한 이름은 일 안에만 있습니다. Python 함수와 같습니다.
 
+⚠ **일이 읽는 이름은 그 일보다 위에 이미 있어야 합니다.** 아래에서 만드는 이름을
+일 안에서 쓰면, 그 낱말은 이름이 아니라 **글자**로 읽힙니다. 컴파일은 통과하고,
+실행할 때에 가서야 멈춥니다.
+
+```
+채울양에게 막대그리기라는 일:
+    남은칸은 막대최대양       ← 막대최대양 = "막대최대양" 이 됩니다
+끝
+막대최대양은 20               ← 여기가 아니라 일보다 위에 있어야 합니다
+```
+
+일이 쓰는 값은 **일을 적기 전에** 모아 두세요. 프로그램 맨 위에 「고치는 값」 자리를
+만들어 두는 것이 가장 안전합니다.
+
 일은 **하나를 받을 수 있습니다.** 여는 줄에서 이름 앞에 받을 것을 `에게`·`한테`·
 `을`·`를`로 표시하고(`이름에게 인사하기라는 일:`), 실행할 때 같은 방법으로
 건넵니다(`민수에게 인사하기 해줘`). 영어는 `to greet someone:`과
@@ -1000,6 +1046,24 @@ program already knows is treated as **code**; anything else is **text**. `say`
 and `말해` are the exception: they try the expression first. A name introduced
 earlier is substituted into text (`show Hello name!` →
 `"Hello " + str(name) + "!"`).
+
+⚠ **All it takes is a word that matches a name.** Make a name called `morale`
+and `the meal raised morale a lot` becomes
+`"the meal raised " + str(morale) + " a lot"`. The same holds in a condition:
+where `wardRune` is a true/false name, `if choice equals wardRune` compares
+against that value rather than against the text `"wardRune"`.
+
+**Quotes say the thing is text.** What is inside them stays text even where a
+name of the same spelling exists.
+
+```
+say "the meal raised morale a lot"      → printed as it stands
+if choice equals "wardRune"             → compared against the text
+```
+
+The easier habit is to **name things in a shape prose does not use** —
+`fightingSpirit` rather than `morale`, `hasWardRune` rather than `wardRune`.
+Short common words are the dangerous ones.
 
 ## 2. Input
 
@@ -1130,9 +1194,14 @@ keeps an ordinary sentence containing one of those words a sentence.
 
 {level_table(NUMBERS, False)}
 
-`the remainder of` is what is left over after a division. It is a value, so it
-works in output, in a saved name, and in a condition; the number being divided
-by must be a number or a name the program already made.
+`the remainder of` is what is left over after a division, and `the whole
+number of` is how many whole times one goes into the other. Both are values,
+so they work in output, in a saved name, and in a condition; the number being
+divided by must be a number or a name the program already made.
+
+`divide` is Python's `/`, so its answer is a fraction. A fraction cannot be a
+position in a list, a number of repeats, or a saved score, and the program
+stops where one is used as any of those. Ask for the whole number instead.
 
 ## 16. Values and literals
 
@@ -1245,6 +1314,20 @@ already made**. `do` and `run` decide nothing on their own. A Python `def` that
 takes no arguments can be run the same way.
 
 A name saved inside a job stays inside it, exactly as in a Python function.
+
+⚠ **A name a job reads has to exist above the job.** A word that is only given
+a value further down the file is read as **text** rather than as a name. It
+compiles, and it stops the program at run time instead.
+
+```
+to draw bar amount:
+    set left to barMax        ← becomes barMax = "barMax"
+end
+set barMax to 20              ← has to be above the job, not here
+```
+
+Gather the values a job reads **before** you write the job. A block of
+settings at the top of the program is the safest place for them.
 
 A job **may be given one thing.** The header names it in front of the job name
 (`to greet someone:`, `이름에게 인사하기라는 일:`), and the line that runs the

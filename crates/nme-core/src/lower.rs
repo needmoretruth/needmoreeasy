@@ -592,6 +592,14 @@ fn lower_condition_value(value: &ConditionValue, source: &str) -> String {
             },
             source,
         ),
+        ConditionValue::Quotient { of, by } => lower_value(
+            &Value::Quotient {
+                of: of.clone(),
+                by: by.clone(),
+            },
+            source,
+        ),
+        ConditionValue::AsNumber { of } => lower_value(&Value::AsNumber { of: of.clone() }, source),
         ConditionValue::Entry { of, key } => lower_value(
             &Value::Entry {
                 of: of.clone(),
@@ -706,6 +714,15 @@ pub(crate) fn lower_value(value: &Value, source: &str) -> String {
                 format!("{of} % ({divisor})")
             }
         }
+        Value::Quotient { of, by } => {
+            let divisor = lower_code(by, source);
+            if is_simple_atom(&divisor) {
+                format!("{of} // {divisor}")
+            } else {
+                format!("{of} // ({divisor})")
+            }
+        }
+        Value::AsNumber { of } => format!("int({of})"),
         Value::Elapsed => ELAPSED_PYTHON.to_string(),
         Value::Chance { permille } => chance_python(*permille),
         Value::ZeroKnowledge(value) => lower_zero_knowledge(value, source),

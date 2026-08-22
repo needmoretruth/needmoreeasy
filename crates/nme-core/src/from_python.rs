@@ -448,6 +448,16 @@ fn values(text: &str) -> Vec<Value> {
             }
         }
     }
+    // `int(answer)` — text read back as a number. `int(input(...))` is the
+    // question that asks for one, and its argument is a call rather than a
+    // name, so the two never meet.
+    if let Some(of) = call_argument(text, "int") {
+        if is_name(of.trim()) {
+            found.push(Value::AsNumber {
+                of: of.trim().to_string(),
+            });
+        }
+    }
     // `str(name).upper()`, and the other things done to a piece of text.
     if let Some((wrapped, method, argument)) = method_call_expression(text) {
         if let Some(of) = call_argument(wrapped, "str") {
@@ -546,6 +556,15 @@ fn values(text: &str) -> Vec<Value> {
             " % ",
             &|of: &str, by: &str| {
                 is_name(of).then(|| Value::Remainder {
+                    of: of.to_string(),
+                    by: code(by.trim_matches(['(', ')'])),
+                })
+            },
+        ),
+        (
+            " // ",
+            &|of: &str, by: &str| {
+                is_name(of).then(|| Value::Quotient {
                     of: of.to_string(),
                     by: code(by.trim_matches(['(', ')'])),
                 })
@@ -826,6 +845,8 @@ fn condition_values(text: &str) -> Vec<ConditionValue> {
             Value::Literal(literal) => found.push(ConditionValue::Literal(literal)),
             Value::Reading { of, reading } => found.push(ConditionValue::Reading { of, reading }),
             Value::Remainder { of, by } => found.push(ConditionValue::Remainder { of, by }),
+            Value::Quotient { of, by } => found.push(ConditionValue::Quotient { of, by }),
+            Value::AsNumber { of } => found.push(ConditionValue::AsNumber { of }),
             Value::Entry { of, key } => found.push(ConditionValue::Entry { of, key }),
             _ => {}
         }

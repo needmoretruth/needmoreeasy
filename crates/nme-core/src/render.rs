@@ -985,6 +985,8 @@ impl Rewrite<'_> {
             ConditionValue::Literal(literal) => Some(self.literal(*literal).to_string()),
             ConditionValue::Reading { of, reading } => Some(self.reading(of, *reading)),
             ConditionValue::Remainder { of, by } => Some(self.remainder(of, by)),
+            ConditionValue::Quotient { of, by } => Some(self.quotient(of, by)),
+            ConditionValue::AsNumber { of } => Some(self.as_number(of)),
             ConditionValue::Entry { of, key } => {
                 let key = self.value(key)?;
                 Some(self.either(&format!("{key} in {of}"), &format!("{of}의 {key}")))
@@ -1139,6 +1141,8 @@ impl Rewrite<'_> {
                 ))
             }
             Value::Remainder { of, by } => Some(self.remainder(of, by)),
+            Value::Quotient { of, by } => Some(self.quotient(of, by)),
+            Value::AsNumber { of } => Some(self.as_number(of)),
             Value::Elapsed => Some(self.either("elapsed", "잰시간")),
             Value::Chance { permille } => {
                 let chance = percentage(*permille);
@@ -1313,8 +1317,27 @@ impl Rewrite<'_> {
             &format!(
                 "{of}{} {} 나눈 나머지",
                 korean_particle(of, "을", "를"),
-                korean_counted(&by, "로")
+                korean_marked(&by, "으로", "로")
             ),
+        )
+    }
+
+    fn quotient(&self, of: &str, by: &Code) -> String {
+        let by = self.code(by);
+        self.either(
+            &format!("the whole number of {of} divided by {by}"),
+            &format!(
+                "{of}{} {} 나눈 몫",
+                korean_particle(of, "을", "를"),
+                korean_marked(&by, "으로", "로")
+            ),
+        )
+    }
+
+    fn as_number(&self, of: &str) -> String {
+        self.either(
+            &format!("{of} as a number"),
+            &format!("{of}{} 숫자로 바꾼 것", korean_particle(of, "을", "를")),
         )
     }
 
@@ -1498,10 +1521,19 @@ fn korean_counted(amount: &str, counter: &str) -> String {
 /// `str(x) + 1가` reads as part of the code.
 fn korean_marked(word: &str, after_consonant: &'static str, after_vowel: &'static str) -> String {
     let particle = korean_particle(word, after_consonant, after_vowel);
-    if word
-        .chars()
-        .all(|character| character.is_alphanumeric() || character == '_' || character == '.')
-    {
+    // A reading written in words is still words — `친구들 개수`,
+    // `총점을 5로 나눈 나머지` — and Korean puts the particle straight onto the
+    // last one. Held a space away it came back as `친구들 개수 가`, which is
+    // not how anybody writes and not how the syntax reference shows it. A
+    // space inside the phrase is therefore fine; what is not is a quote, a
+    // bracket or an operator, because those mean the phrase is Python and
+    // `str(x) + 1가` would read as part of the code.
+    let separable = !word.is_empty()
+        && !word.ends_with(' ')
+        && word
+            .chars()
+            .all(|character| character.is_alphanumeric() || matches!(character, '_' | '.' | ' '));
+    if separable {
         format!("{word}{particle}")
     } else {
         format!("{word} {particle}")

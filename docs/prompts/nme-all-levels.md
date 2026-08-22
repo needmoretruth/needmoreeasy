@@ -14,7 +14,7 @@ not exist.
 
 NME (NeedMoreEasy) is **a small programming language that turns ordinary
 sentences into Python**. You can write it in English, in Korean, or mix the two
-on one line. This document describes version `0.7.1`.
+on one line. This document describes version `0.8.0`.
 
 **Three rules that matter.**
 
@@ -228,6 +228,8 @@ on one line. This document describes version `0.7.1`.
 | Sentence | `show name in small letters` | `print(str(name).lower())` |
 | Sentence | `set names to memo split by line` | `names = str(memo).splitlines()` |
 | Sentence | `set fields to memo split by comma` | `fields = str(memo).split(",")` |
+| Sentence | `set line to friends joined by comma` | `line = ", ".join(map(str, friends))` |
+| Sentence | `set level to levelText as a number` | `level = int(levelText)` |
 | Sentence | `set words to memo split by space` | `words = str(memo).split(" ")` |
 | Sentence | `set bar to name repeated 5 times` | `bar = str(name) * 5` |
 | Sentence | `show name repeated 3 times` | `print(str(name) * 3)` |
@@ -239,6 +241,9 @@ on one line. This document describes version `0.7.1`.
 | Sentence | `show the remainder of score divided by 4` | `print(score % 4)` |
 | Sentence | `set left to the remainder of score divided by 4` | `left = score % 4` |
 | Sentence | `if the remainder of score divided by 4 equals 0` | `if (score % 4 == 0):` |
+| Sentence | `show the whole number of score divided by 4` | `print(score // 4)` |
+| Sentence | `set rows to the whole number of score divided by people` | `rows = score // people` |
+| Sentence | `set rows to the quotient of score divided by 4` | `rows = score // 4` |
 
 ### Story — letters one at a time
 
@@ -416,7 +421,9 @@ on one line. This document describes version `0.7.1`.
 | Level | NME | Python produced |
 | --- | --- | --- |
 | Beginner | `say score % 4` | `print(score % 4)` |
+| Beginner | `say score // 4` | `print(score // 4)` |
 | Advanced | `left = score % 4` | unchanged |
+| Advanced | `rows = score // 4` | unchanged |
 
 ### Randomness
 
@@ -577,6 +584,10 @@ nothing to work on is refused (E0406) rather than shown as a function.
 | 몇 개 / Copies | `times` | `개` · `번` |
 | 몇 번째와 함께 / With its position | `with` | `함께` · `같이` |
 | 나머지 / Remainder | `remainder` · `rest` · `leftover` | `나머지` |
+| 몫 / Quotient | `quotient` | `몫` |
+| 온전한 수 / Whole number | `whole` | — |
+| 이은 것 / Joined thing | — | `이은` · `이어붙인` · `붙인` |
+| 바꾼 것 / Changed into | — | `바꾼` · `고친` · `읽은` |
 | 나누기 말 / Divided | `divided` · `shared` · `split` | `나눈` · `나눈뒤` · `나누고` |
 | 이음말 / Separator | `comma` · `space` · `newline` | `쉼표` · `빈칸` · `공백` · `줄바꿈` |
 | 정렬 / Sort | `sort` · `order` · `arrange` · `sortout` | `정렬해` · `정렬해줘` · `정렬` · `정렬하기` · `순서대로` · `순서대로해` · `차례대로` · `차례대로해` · `오름차순` · `오름차순으로` · `오름차순으로해` |

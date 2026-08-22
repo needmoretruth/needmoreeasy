@@ -954,3 +954,110 @@ fn a_reading_inside_a_sentence_is_worked_out() {
         "bag = [\"a\"]\nname = \"Mina\"\nprint(str(name) + \" carries \" + str(len(bag)) + \" things\")\n"
     );
 }
+
+/// The whole number of a division, in both languages and at every level.
+///
+/// Plain `나눠`/`divide` is Python's `/`, and its answer is a fraction. A
+/// fraction cannot be a position in a list, a number of repeats, or a score
+/// saved as digits, so a program that needed one of those had to count down
+/// by repeated subtraction — a loop to say one thing.
+#[test]
+fn a_division_can_ask_for_the_whole_number_as_well_as_the_remainder() {
+    let korean = concat!(
+        "총점은 47\n",
+        "인원은 5\n",
+        "줄수는 총점을 인원으로 나눈 몫\n",
+        "반은 총점을 2로 나눈 몫\n",
+        "남은것은 총점을 5로 나눈 나머지\n",
+        "만약에 총점을 5로 나눈 몫이 9와 같으면 맞아 말해줘\n",
+    );
+    assert_eq!(
+        ok(korean),
+        concat!(
+            "총점 = 47\n",
+            "인원 = 5\n",
+            "줄수 = 총점 // 인원\n",
+            "반 = 총점 // 2\n",
+            "남은것 = 총점 % 5\n",
+            "if (총점 // 5 == 9): print(\"맞아\")\n",
+        )
+    );
+
+    let english = concat!(
+        "set total to 47\n",
+        "set people to 5\n",
+        "set rows to the whole number of total divided by people\n",
+        "set half to the quotient of total divided by 2\n",
+        "if the whole number of total divided by 5 equals 9 then show right\n",
+    );
+    assert_eq!(
+        ok(english),
+        concat!(
+            "total = 47\n",
+            "people = 5\n",
+            "rows = total // people\n",
+            "half = total // 2\n",
+            "if (total // 5 == 9): print(\"right\")\n",
+        )
+    );
+}
+
+/// Text the program already holds, read back as the number it was written as.
+///
+/// `숫자로 물어봐` / `ask number` already does this at the moment the answer is
+/// typed. Everything else — a piece cut out of a saved line, an item taken
+/// from a list, a line read out of a file — had no sentence for it at all.
+#[test]
+fn text_written_in_digits_can_be_read_back_as_a_number() {
+    let korean = concat!(
+        "저장글은 42\n",
+        "레벨은 저장글을 숫자로 바꾼 것\n",
+        "레벨에 1 더해\n",
+        "만약에 저장글을 숫자로 바꾼 것이 42와 같으면 맞아 말해줘\n",
+    );
+    assert_eq!(
+        ok(korean),
+        concat!(
+            "저장글 = 42\n",
+            "레벨 = int(저장글)\n",
+            "레벨 = 레벨 + 1\n",
+            "if (int(저장글) == 42): print(\"맞아\")\n",
+        )
+    );
+
+    let english = concat!(
+        "set savedText to 42\n",
+        "set level to savedText as a number\n",
+        "if savedText as a number equals 42 then show right\n",
+    );
+    assert_eq!(
+        ok(english),
+        concat!(
+            "savedText = 42\n",
+            "level = int(savedText)\n",
+            "if (int(savedText) == 42): print(\"right\")\n",
+        )
+    );
+}
+
+/// `친구들을 쉼표로 이어 말해줘` prints the joined list, and this is the same
+/// join written as a thing, which is the shape a name is given. Without it
+/// the line quietly printed itself as ordinary writing.
+#[test]
+fn a_joined_list_can_be_given_a_name_as_well_as_shown() {
+    let source = concat!(
+        "저장칸들은 목록 3, 5, 7\n",
+        "저장코드는 저장칸들을 쉼표로 이은 것\n",
+        "한덩이는 저장칸들을 붙인 것\n",
+        "저장코드 말해줘\n",
+    );
+    assert_eq!(
+        ok(source),
+        concat!(
+            "저장칸들 = [3, 5, 7]\n",
+            "저장코드 = \", \".join(map(str, 저장칸들))\n",
+            "한덩이 = \"\".join(map(str, 저장칸들))\n",
+            "print(저장코드)\n",
+        )
+    );
+}

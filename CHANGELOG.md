@@ -5,6 +5,8 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+
+## 0.8.0
 - **A `면` that a name merely happens to end in no longer eats the
   assignment.** `적이름은 황금가면 도적왕 레마르` compiled to
   `if (적이름 == "황금가"): print("도적왕 레마르")` — the assignment gone, the
@@ -18,6 +20,31 @@ All notable changes to NME are recorded here.
     Korean spells *this name is given this value*; a comparison spells its
     subject with `이`/`가`. A number or an already-made name on the left keeps
     comparing, so `나이는 20이면 어른 말해줘` reads as it always did.
+- **Sentences can ask for the whole number of a division.**
+  `set rows to the whole number of score divided by people`
+  (`줄수는 점수를 인원으로 나눈 몫`). `divide` is Python's `/`, so its answer is
+  a fraction, and a fraction cannot be a position in a list, a number of
+  repeats, or a score saved as digits — the program stops where one is used as
+  any of those. Until now the only way to write it in sentences was to count
+  down by repeated subtraction: a loop to say one thing. It pairs with
+  `the remainder of`.
+- **Text written in digits can be read back as a number.**
+  `set level to levelText as a number` (`레벨은 레벨글을 숫자로 바꾼 것`).
+  `ask number` already does this at the moment the answer is typed; text the
+  program already holds — a piece cut out of a saved line, an item taken from a
+  list, a line read out of a file — had no sentence for it at all. Text that is
+  not a number stops the program where it stands rather than standing in for
+  zero.
+- **A joined list can be given a name.** `set line to friends joined by comma`
+  (`한줄은 친구들을 쉼표로 이은 것`). `show friends joined by comma` only ever
+  put it on the screen, and the documentation had no sentence for keeping it.
+- **The tidier writes Korean particles onto the word they mark.**
+  `친구들 개수 가` and `인원 로` came back with a space in them; they are now
+  `친구들 개수가` and `인원으로`, which is both what the syntax reference shows
+  and what a Korean writer types.
+- **The syntax reference now says that a name a job reads has to exist above
+  the job.** `docs/syntax.md` §23. A word given its value further down the file
+  is read as text, which compiles and then stops the program at run time.
 
 ## 0.7.1
 - **Everything between two separators is one choice, however many words it

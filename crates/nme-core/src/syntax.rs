@@ -286,6 +286,29 @@ pub enum Value {
         of: String,
         by: Code,
     },
+    /// `총점을 인원으로 나눈 몫` / `the whole number of total divided by people`
+    /// — how many whole times one number goes into another.
+    ///
+    /// Plain division in Python answers with a fraction, and a fraction is
+    /// the wrong kind of number for a position in a list, a number of rows,
+    /// or a saved score: `str("█") * 2.5` and `range(2.5)` both stop the
+    /// program. Counting down by repeated subtraction was the only way to
+    /// write this in sentences, and it took a loop to say one thing.
+    Quotient {
+        of: String,
+        by: Code,
+    },
+    /// `레벨은 레벨글을 숫자로 바꾼 것` / `set level to levelText as a number` —
+    /// text that was written in digits, read back as a number.
+    ///
+    /// `숫자로 물어봐` / `ask number` already reads a number at the moment it
+    /// is typed. This is the same step for text the program already holds: a
+    /// piece cut out of a saved line, an item taken from a list, a value read
+    /// out of a file. Text that is not a number stops the program where it
+    /// stands rather than quietly standing in for zero.
+    AsNumber {
+        of: String,
+    },
     /// `elapsed` / `잰시간` — how many seconds the stopwatch has been running.
     Elapsed,
     /// `30% 확률` / `a 30% chance` — true that share of the time.
@@ -436,6 +459,17 @@ pub enum ConditionValue {
     Remainder {
         of: String,
         by: Code,
+    },
+    /// `만약에 총점을 인원으로 나눈 몫이 3과 같으면` — the same, for the whole
+    /// number of times one goes into the other.
+    Quotient {
+        of: String,
+        by: Code,
+    },
+    /// `만약에 답을 숫자로 바꾼 것이 7과 같으면` — text read back as a number, on
+    /// one side of a comparison.
+    AsNumber {
+        of: String,
     },
     /// `만약에 나이표의 민수가 90보다 크면` / `if Mina in ages is greater than 90`
     /// — one value out of a record, on one side of a comparison.

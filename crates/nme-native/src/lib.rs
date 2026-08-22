@@ -1529,6 +1529,8 @@ fn check_condition(
                 }
                 ConditionValue::Reading { .. }
                 | ConditionValue::Remainder { .. }
+                | ConditionValue::Quotient { .. }
+                | ConditionValue::AsNumber { .. }
                 | ConditionValue::Entry { .. } => {
                     return Err(not_supported("list, record and text readings", span));
                 }
@@ -1601,6 +1603,8 @@ fn condition_operand(
         },
         ConditionValue::Reading { .. }
         | ConditionValue::Remainder { .. }
+        | ConditionValue::Quotient { .. }
+        | ConditionValue::AsNumber { .. }
         | ConditionValue::Entry { .. } => {
             Err(not_supported("list, record and text readings", span))
         }
@@ -1742,7 +1746,9 @@ fn emit_say(
         | Value::Joined { .. }
         | Value::Split { .. }
         | Value::Repeated { .. }
-        | Value::Remainder { .. } => Err(not_supported(
+        | Value::Remainder { .. }
+        | Value::Quotient { .. }
+        | Value::AsNumber { .. } => Err(not_supported(
             "list, record and text readings",
             span_of_value(value),
         )),
@@ -1870,6 +1876,8 @@ fn emit_set(
         | Value::Split { .. }
         | Value::Repeated { .. }
         | Value::Remainder { .. }
+        | Value::Quotient { .. }
+        | Value::AsNumber { .. }
         | Value::ZeroKnowledge(_) => Err(not_supported("this value", span_of_value(value))),
     }
 }

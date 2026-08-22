@@ -42,6 +42,24 @@ and `말해` are the exception: they try the expression first. A name introduced
 earlier is substituted into text (`show Hello name!` →
 `"Hello " + str(name) + "!"`).
 
+⚠ **All it takes is a word that matches a name.** Make a name called `morale`
+and `the meal raised morale a lot` becomes
+`"the meal raised " + str(morale) + " a lot"`. The same holds in a condition:
+where `wardRune` is a true/false name, `if choice equals wardRune` compares
+against that value rather than against the text `"wardRune"`.
+
+**Quotes say the thing is text.** What is inside them stays text even where a
+name of the same spelling exists.
+
+```
+say "the meal raised morale a lot"      → printed as it stands
+if choice equals "wardRune"             → compared against the text
+```
+
+The easier habit is to **name things in a shape prose does not use** —
+`fightingSpirit` rather than `morale`, `hasWardRune` rather than `wardRune`.
+Short common words are the dangerous ones.
+
 ## 2. Input
 
 | Level | NME | Python produced |
@@ -306,6 +324,8 @@ A name Python wrote as `ages = {}` is a record too.
 | Sentence | `show name in small letters` | `print(str(name).lower())` |
 | Sentence | `set names to memo split by line` | `names = str(memo).splitlines()` |
 | Sentence | `set fields to memo split by comma` | `fields = str(memo).split(",")` |
+| Sentence | `set line to friends joined by comma` | `line = ", ".join(map(str, friends))` |
+| Sentence | `set level to levelText as a number` | `level = int(levelText)` |
 | Sentence | `set words to memo split by space` | `words = str(memo).split(" ")` |
 | Sentence | `set bar to name repeated 5 times` | `bar = str(name) * 5` |
 | Sentence | `show name repeated 3 times` | `print(str(name) * 3)` |
@@ -325,12 +345,22 @@ keeps an ordinary sentence containing one of those words a sentence.
 | Sentence | `show the remainder of score divided by 4` | `print(score % 4)` |
 | Sentence | `set left to the remainder of score divided by 4` | `left = score % 4` |
 | Sentence | `if the remainder of score divided by 4 equals 0` | `if (score % 4 == 0):` |
+| Sentence | `show the whole number of score divided by 4` | `print(score // 4)` |
+| Sentence | `set rows to the whole number of score divided by people` | `rows = score // people` |
+| Sentence | `set rows to the quotient of score divided by 4` | `rows = score // 4` |
 | Beginner | `say score % 4` | `print(score % 4)` |
+| Beginner | `say score // 4` | `print(score // 4)` |
 | Advanced | `left = score % 4` | unchanged |
+| Advanced | `rows = score // 4` | unchanged |
 
-`the remainder of` is what is left over after a division. It is a value, so it
-works in output, in a saved name, and in a condition; the number being divided
-by must be a number or a name the program already made.
+`the remainder of` is what is left over after a division, and `the whole
+number of` is how many whole times one goes into the other. Both are values,
+so they work in output, in a saved name, and in a condition; the number being
+divided by must be a number or a name the program already made.
+
+`divide` is Python's `/`, so its answer is a fraction. A fraction cannot be a
+position in a list, a number of repeats, or a saved score, and the program
+stops where one is used as any of those. Ask for the whole number instead.
 
 ## 16. Values and literals
 
@@ -553,6 +583,20 @@ takes no arguments can be run the same way.
 
 A name saved inside a job stays inside it, exactly as in a Python function.
 
+⚠ **A name a job reads has to exist above the job.** A word that is only given
+a value further down the file is read as **text** rather than as a name. It
+compiles, and it stops the program at run time instead.
+
+```
+to draw bar amount:
+    set left to barMax        ← becomes barMax = "barMax"
+end
+set barMax to 20              ← has to be above the job, not here
+```
+
+Gather the values a job reads **before** you write the job. A block of
+settings at the top of the program is the safest place for them.
+
 A job **may be given one thing.** The header names it in front of the job name
 (`to greet someone:`, `이름에게 인사하기라는 일:`), and the line that runs the
 job hands it over the same way (`do greet with Mina`, `민수에게 인사하기 해줘`).
@@ -675,6 +719,10 @@ Every spelling accepted for each action, with nothing left out.
 | 몇 개 / Copies | `times` | `개` · `번` |
 | 몇 번째와 함께 / With its position | `with` | `함께` · `같이` |
 | 나머지 / Remainder | `remainder` · `rest` · `leftover` | `나머지` |
+| 몫 / Quotient | `quotient` | `몫` |
+| 온전한 수 / Whole number | `whole` | — |
+| 이은 것 / Joined thing | — | `이은` · `이어붙인` · `붙인` |
+| 바꾼 것 / Changed into | — | `바꾼` · `고친` · `읽은` |
 | 나누기 말 / Divided | `divided` · `shared` · `split` | `나눈` · `나눈뒤` · `나누고` |
 | 이음말 / Separator | `comma` · `space` · `newline` | `쉼표` · `빈칸` · `공백` · `줄바꿈` |
 | 정렬 / Sort | `sort` · `order` · `arrange` · `sortout` | `정렬해` · `정렬해줘` · `정렬` · `정렬하기` · `순서대로` · `순서대로해` · `차례대로` · `차례대로해` · `오름차순` · `오름차순으로` · `오름차순으로해` |
