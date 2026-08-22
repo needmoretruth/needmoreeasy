@@ -1531,6 +1531,7 @@ fn check_condition(
                 | ConditionValue::Remainder { .. }
                 | ConditionValue::Quotient { .. }
                 | ConditionValue::AsNumber { .. }
+                | ConditionValue::JobResult { .. }
                 | ConditionValue::Entry { .. } => {
                     return Err(not_supported("list, record and text readings", span));
                 }
@@ -1605,6 +1606,7 @@ fn condition_operand(
         | ConditionValue::Remainder { .. }
         | ConditionValue::Quotient { .. }
         | ConditionValue::AsNumber { .. }
+        | ConditionValue::JobResult { .. }
         | ConditionValue::Entry { .. } => {
             Err(not_supported("list, record and text readings", span))
         }
@@ -1748,7 +1750,8 @@ fn emit_say(
         | Value::Repeated { .. }
         | Value::Remainder { .. }
         | Value::Quotient { .. }
-        | Value::AsNumber { .. } => Err(not_supported(
+        | Value::AsNumber { .. }
+        | Value::JobResult { .. } => Err(not_supported(
             "list, record and text readings",
             span_of_value(value),
         )),
@@ -1878,6 +1881,7 @@ fn emit_set(
         | Value::Remainder { .. }
         | Value::Quotient { .. }
         | Value::AsNumber { .. }
+        | Value::JobResult { .. }
         | Value::ZeroKnowledge(_) => Err(not_supported("this value", span_of_value(value))),
     }
 }

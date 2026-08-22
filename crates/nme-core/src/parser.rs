@@ -1000,6 +1000,30 @@ const READING_LEAD_WORDS_EN: &[&str] = &["how"];
 /// `the remainder of pile divided by 4` / `쌓인돌을 4로 나눈 나머지`.
 const REMAINDER_WORDS_EN: &[&str] = &["remainder", "rest", "leftover"];
 const REMAINDER_WORDS_KO: &[&str] = &["나머지"];
+/// Remembered in the name set for as long as the parser is reading the body
+/// of a named job. `[` cannot occur in a Python identifier, so it collides
+/// with nothing a program binds.
+///
+/// `결과로 남은칸 돌려줘` and `give back left` are only read as an answer
+/// inside a job. Outside one, `그 책 돌려줘` and `give back the book` are the
+/// ordinary sentences they look like, and they stay sentences.
+const INSIDE_A_JOB_MARKER: &str = "[in-job]";
+
+/// `give back left` / `결과로 남은칸 돌려줘` — the answer a job hands back.
+const GIVE_BACK_FIRST_WORDS_EN: &[&str] = &["give", "hand", "send"];
+const GIVE_BACK_SECOND_WORDS_EN: &[&str] = &["back"];
+/// `answer with left` — the one English spelling that is a single word.
+const ANSWER_WITH_WORDS_EN: &[&str] = &["answer"];
+const GIVE_BACK_WORDS_KO: &[&str] = &["돌려줘", "돌려줘요", "돌려주기", "돌려줍니다", "돌려주세요"];
+/// The word Korean puts in front of what is being handed back. Optional, and
+/// what makes the line unmistakable when it is there.
+const ANSWER_LEAD_WORDS_KO: &[&str] = &["결과로", "답으로", "결과는", "답은"];
+/// `5에게 두배 한 결과` — the verb and the noun that ask a job for its answer.
+const JOB_RESULT_VERB_WORDS_KO: &[&str] = &["한", "해서", "실행한", "시킨"];
+const JOB_RESULT_THING_WORDS_KO: &[&str] = &["결과", "답", "결과값"];
+/// `the result of double with 5`.
+const JOB_RESULT_WORDS_EN: &[&str] = &["result", "answer"];
+
 /// `the whole number of total divided by people` / `총점을 인원으로 나눈 몫` —
 /// the same shape as a remainder, asking for the other half of the division.
 const QUOTIENT_WORDS_EN: &[&str] = &["quotient"];
@@ -2136,7 +2160,11 @@ pub fn parse_program(
                 if let Some(NmeStmt::Job { parameters, .. }) = found.last().map(|line| &line.stmt) {
                     // The name the job is given is bound by its header, so the
                     // body may use it straight away.
-                    let given: HashSet<String> = parameters.iter().cloned().collect();
+                    let mut given: HashSet<String> = parameters.iter().cloned().collect();
+                    // See `INSIDE_A_JOB_MARKER`. The scope this opens is the
+                    // job's body, so the marker lives exactly as long as the
+                    // body does and disappears with it.
+                    given.insert(INSIDE_A_JOB_MARKER.to_string());
                     if flat_body_follows || has_future_end(lines, index) {
                         bindings.push_function_scope(parse_line.indent + 1, given, line.span.end);
                         block_header_lines.insert(index);
@@ -4402,6 +4430,11 @@ fn classify_written_line(
         return Ok(Some(stmt));
     }
     if let Some(stmt) = match_run_job(tokens, known_names)? {
+        return Ok(Some(stmt));
+    }
+    // `결과로 남은칸 돌려줘` — read beside the line that runs a job, and gated
+    // the same way: on something the program has already made, not on a word.
+    if let Some(stmt) = match_give_back(source, tokens, known_names)? {
         return Ok(Some(stmt));
     }
 
@@ -7354,8 +7387,87 @@ enum ReadingKind {
 /// The count is what lets a condition read one as its left-hand side while a
 /// value still requires the reading to be the whole of what it was given.
 fn reading_prefix(tokens: &[Token], known_names: &HashSet<String>) -> Option<(Value, usize)> {
-    english_reading_prefix(tokens, known_names)
+    // Read first in both languages: the gate is a name the program has
+    // already made a job, which no ordinary sentence can pass.
+    job_result_value(tokens, known_names)
+        .or_else(|| english_reading_prefix(tokens, known_names))
         .or_else(|| korean_reading_prefix(tokens, known_names))
+}
+
+/// `the result of double with 5` / `5에게 두배 한 결과` — what a job answered,
+/// used as a value rather than as a whole line.
+fn job_result_value(tokens: &[Token], known_names: &HashSet<String>) -> Option<(Value, usize)> {
+    // `the result of double`, `the result of double with 5`.
+    let at = usize::from(token_matches_exact(tokens.first()?, &["the", "a", "an"]));
+    if token_matches_exact(tokens.get(at)?, JOB_RESULT_WORDS_EN)
+        && token_matches_exact(tokens.get(at + 1)?, &["of", "from"])
+    {
+        let name_token = tokens.get(at + 2)?;
+        if let Some(name) = job_call_name(name_token, known_names, 1) {
+            if tokens.get(at + 3).is_some_and(|token| {
+                matches!(token.tok, Tok::With) || token_matches_exact(token, JOB_WITH_WORDS_EN)
+            }) {
+                let given = record_key_value(tokens.get(at + 4)?, known_names, &[])?;
+                return Some((
+                    Value::JobResult {
+                        name,
+                        arguments: vec![given],
+                    },
+                    at + 5,
+                ));
+            }
+        }
+        if let Some(name) = job_call_name(name_token, known_names, 0) {
+            return Some((
+                Value::JobResult {
+                    name,
+                    arguments: Vec::new(),
+                },
+                at + 3,
+            ));
+        }
+        return None;
+    }
+    korean_job_result_value(tokens, known_names)
+}
+
+/// `두배 한 결과` and `5에게 두배 한 결과` — Korean puts what the job is given
+/// first, marked with a particle, and closes with the verb and the noun.
+fn korean_job_result_value(
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+) -> Option<(Value, usize)> {
+    let closes = |at: usize| -> bool {
+        tokens
+            .get(at)
+            .is_some_and(|token| token_matches_exact(token, JOB_RESULT_VERB_WORDS_KO))
+            && tokens.get(at + 1).is_some_and(|token| {
+                reading_word_matches(name_word(token).unwrap_or(""), JOB_RESULT_THING_WORDS_KO)
+            })
+    };
+    if let Some((given, used)) = korean_job_argument(tokens, known_names) {
+        if let Some(name) = job_call_name(tokens.get(used)?, known_names, 1) {
+            if closes(used + 1) {
+                return Some((
+                    Value::JobResult {
+                        name,
+                        arguments: vec![given],
+                    },
+                    used + 3,
+                ));
+            }
+        }
+    }
+    let name = job_call_name(tokens.first()?, known_names, 0)?;
+    closes(1).then(|| {
+        (
+            Value::JobResult {
+                name,
+                arguments: Vec::new(),
+            },
+            3,
+        )
+    })
 }
 
 fn english_reading_prefix(
@@ -8616,6 +8728,60 @@ fn match_job(tokens: &[Token], block: &BlockCtx<'_>) -> Option<NmeStmt> {
 ///
 /// Two words, and the name must be a job the program already made. That is
 /// the whole gate: `do` and `해줘` are far too ordinary to carry one.
+/// `결과로 남은칸 돌려줘` / `give back left` — the answer a job hands back.
+///
+/// The gate is not the word. `돌려줘` and `give back` are among the most
+/// ordinary things either language says, so the line is only read this way
+/// **inside the body of a named job** — see [`INSIDE_A_JOB_MARKER`]. Outside
+/// one, `그 책 돌려줘` is somebody asking for their book back and prints.
+fn match_give_back(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    if !known_names.contains(INSIDE_A_JOB_MARKER) {
+        return Ok(None);
+    }
+    let body = trim_command_endings(tokens);
+    if body.len() < 2 {
+        return Ok(None);
+    }
+    // English says its verb first: `give back left`, `answer with left`.
+    let english_value_at = if token_matches_exact(&body[0], GIVE_BACK_FIRST_WORDS_EN)
+        && token_matches_exact(&body[1], GIVE_BACK_SECOND_WORDS_EN)
+    {
+        Some(2)
+    } else if token_matches_exact(&body[0], ANSWER_WITH_WORDS_EN)
+        && (matches!(body[1].tok, Tok::With) || token_matches_exact(&body[1], JOB_WITH_WORDS_EN))
+    {
+        Some(2)
+    } else {
+        None
+    };
+    if let Some(at) = english_value_at {
+        if at >= body.len() {
+            return Ok(None);
+        }
+        return Ok(parse_value(source, &body[at..], known_names, false)
+            .ok()
+            .map(|value| NmeStmt::GiveBack { value }));
+    }
+    // Korean says its verb last, and may name what it is handing back first.
+    if !token_matches_exact(&body[body.len() - 1], GIVE_BACK_WORDS_KO) {
+        return Ok(None);
+    }
+    let start = usize::from(token_matches_exact(&body[0], ANSWER_LEAD_WORDS_KO));
+    let value_tokens = &body[start..body.len() - 1];
+    if value_tokens.is_empty() {
+        return Ok(None);
+    }
+    Ok(
+        parse_value(source, value_tokens, known_names, false)
+            .ok()
+            .map(|value| NmeStmt::GiveBack { value }),
+    )
+}
+
 fn match_run_job(
     tokens: &[Token],
     known_names: &HashSet<String>,
@@ -12596,6 +12762,9 @@ fn condition_reading_at(
             Some((ConditionValue::Quotient { of, by }, used))
         }
         Some((Value::AsNumber { of }, used)) => Some((ConditionValue::AsNumber { of }, used)),
+        Some((Value::JobResult { name, arguments }, used)) => {
+            Some((ConditionValue::JobResult { name, arguments }, used))
+        }
         Some((Value::Entry { of, key }, used)) => Some((ConditionValue::Entry { of, key }, used)),
         _ => None,
     }

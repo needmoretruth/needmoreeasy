@@ -54,6 +54,9 @@ DOCUMENTED_LISTS = [
     "SET_MAKE_WORDS_EN", "SET_MAKE_WORDS_KO", "SET_MAKE_ENDINGS_KO",
     "REPEAT_COUNT_WORDS_EN", "REPEAT_COUNT_WORDS_KO",
     "SET_WORDS_EN", "SET_WORDS_KO",
+    "GIVE_BACK_FIRST_WORDS_EN", "GIVE_BACK_SECOND_WORDS_EN", "ANSWER_WITH_WORDS_EN",
+    "GIVE_BACK_WORDS_KO", "ANSWER_LEAD_WORDS_KO",
+    "JOB_RESULT_WORDS_EN", "JOB_RESULT_VERB_WORDS_KO", "JOB_RESULT_THING_WORDS_KO",
     "UPDATE_ADD_WORDS_EN", "UPDATE_ADD_WORDS_KO",
     "UPDATE_SUBTRACT_WORDS_EN", "UPDATE_SUBTRACT_WORDS_KO",
     "UPDATE_MULTIPLY_WORDS_EN", "UPDATE_MULTIPLY_WORDS_KO",
@@ -196,6 +199,9 @@ PREAMBLE = {
 BODY = {"en": "show ok", "ko": "확인 말해줘"}
 OPEN_IF = {"en": "if ready", "ko": "만약에 준비가 있으면"}
 OPEN_LOOP = {"en": "repeat 2 times", "ko": "2번 반복해"}
+# `give back score` only means an answer inside a job, so the row is compiled
+# inside one. See `INSIDE_A_JOB_MARKER` in the parser.
+OPEN_JOB = {"en": "to reply:", "ko": "답하기라는 일:"}
 CLOSE = {"en": "end", "ko": "끝"}
 
 
@@ -208,6 +214,8 @@ def wrap(nme: str, claimed: str, language: str) -> tuple[list[str], int]:
         return [OPEN_IF[language], BODY[language], nme, BODY[language], CLOSE[language]], 2
     if claimed in ("break", "continue"):
         return [OPEN_LOOP[language], nme, CLOSE[language]], 1
+    if claimed.startswith("return"):
+        return [OPEN_JOB[language], nme, CLOSE[language]], 1
     return [nme], 0
 
 

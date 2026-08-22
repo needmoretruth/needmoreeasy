@@ -298,6 +298,17 @@ pub enum Value {
         of: String,
         by: Code,
     },
+    /// `5에게 두배 한 결과` / `the result of double with 5` — the answer a job
+    /// handed back.
+    ///
+    /// Running a job was a whole line and nothing else: whatever it worked
+    /// out stayed inside it. The only way to get one value out was to make
+    /// the job change a list that lived outside it, which is a strange thing
+    /// to teach and a strange thing to read.
+    JobResult {
+        name: String,
+        arguments: Vec<Value>,
+    },
     /// `레벨은 레벨글을 숫자로 바꾼 것` / `set level to levelText as a number` —
     /// text that was written in digits, read back as a number.
     ///
@@ -470,6 +481,12 @@ pub enum ConditionValue {
     /// one side of a comparison.
     AsNumber {
         of: String,
+    },
+    /// `만약에 5에게 두배 한 결과가 10과 같으면` — what a job answered, on one
+    /// side of a comparison.
+    JobResult {
+        name: String,
+        arguments: Vec<Value>,
     },
     /// `만약에 나이표의 민수가 90보다 크면` / `if Mina in ages is greater than 90`
     /// — one value out of a record, on one side of a comparison.
@@ -692,6 +709,14 @@ pub enum NmeStmt {
     RunJob {
         name: String,
         arguments: Vec<Value>,
+    },
+    /// `결과로 남은칸 돌려줘` / `give back left` — the answer a job hands back
+    /// to the line that ran it. Python calls it `return`.
+    ///
+    /// Only inside a job. `그 책 돌려줘` and `give back the book` are ordinary
+    /// sentences everywhere else, and they stay sentences.
+    GiveBack {
+        value: Value,
     },
     When {
         condition: Condition,

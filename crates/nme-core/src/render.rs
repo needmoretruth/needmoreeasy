@@ -515,6 +515,13 @@ impl Rewrite<'_> {
                     ),
                 })
             }
+            NmeStmt::GiveBack { value } => {
+                let given = self.value(value)?;
+                Some(self.either(
+                    &format!("give back {given}"),
+                    &format!("결과로 {given} 돌려줘"),
+                ))
+            }
             NmeStmt::RunJob { name, arguments } => {
                 let given = match arguments.first() {
                     None => None,
@@ -987,6 +994,7 @@ impl Rewrite<'_> {
             ConditionValue::Remainder { of, by } => Some(self.remainder(of, by)),
             ConditionValue::Quotient { of, by } => Some(self.quotient(of, by)),
             ConditionValue::AsNumber { of } => Some(self.as_number(of)),
+            ConditionValue::JobResult { name, arguments } => Some(self.job_result(name, arguments)?),
             ConditionValue::Entry { of, key } => {
                 let key = self.value(key)?;
                 Some(self.either(&format!("{key} in {of}"), &format!("{of}의 {key}")))
@@ -1143,6 +1151,7 @@ impl Rewrite<'_> {
             Value::Remainder { of, by } => Some(self.remainder(of, by)),
             Value::Quotient { of, by } => Some(self.quotient(of, by)),
             Value::AsNumber { of } => Some(self.as_number(of)),
+            Value::JobResult { name, arguments } => Some(self.job_result(name, arguments)?),
             Value::Elapsed => Some(self.either("elapsed", "잰시간")),
             Value::Chance { permille } => {
                 let chance = percentage(*permille);
@@ -1332,6 +1341,24 @@ impl Rewrite<'_> {
                 korean_marked(&by, "으로", "로")
             ),
         )
+    }
+
+    fn job_result(&self, name: &str, arguments: &[Value]) -> Option<String> {
+        if arguments.len() > 1 {
+            return None;
+        }
+        let given = match arguments.first() {
+            None => None,
+            Some(argument) => Some(self.value(argument)?),
+        };
+        Some(match (self.language, given) {
+            (Language::English, None) => format!("the result of {name}"),
+            (Language::English, Some(given)) => format!("the result of {name} with {given}"),
+            (Language::Korean, None) => format!("{name} 한 결과"),
+            (Language::Korean, Some(given)) => {
+                format!("{} {name} 한 결과", korean_marked(&given, "에게", "에게"))
+            }
+        })
     }
 
     fn as_number(&self, of: &str) -> String {

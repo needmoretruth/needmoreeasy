@@ -5,6 +5,18 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+- **A job can hand an answer back.** `give back <value>` or `answer with
+  <value>` inside it, and `set answer to the result of double with 5` outside
+  (`결과로 <값> 돌려줘` and `답은 5에게 두배 한 결과`). Until now the only way
+  to get one value out of a job was to make it change a list that lived
+  outside it: a list built, appended to and read back, to carry one number.
+  - `give back` and `돌려줘` only mean that **inside a job**. `give back the
+    book` outside one is the sentence it looks like and prints. `the result
+    of` carries the same kind of gate — the name has to be one this program
+    has already made a job — so `show the result of yesterday` stays a
+    sentence.
+  - It is a value, so it works in output, in a saved name, and in a
+    condition, and it is written the same way in all six cells.
 
 ## 0.8.0
 - **A `면` that a name merely happens to end in no longer eats the

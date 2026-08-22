@@ -373,6 +373,8 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
         NmeStmt::Job { name, parameters } => {
             format!("def {name}({}):", parameters.join(", "))
         }
+        // A job's answer. One NME line is one Python line here too.
+        NmeStmt::GiveBack { value } => format!("return {}", lower_value(value, source)),
         NmeStmt::RunJob { name, arguments } => format!(
             "{name}({})",
             arguments
@@ -600,6 +602,13 @@ fn lower_condition_value(value: &ConditionValue, source: &str) -> String {
             source,
         ),
         ConditionValue::AsNumber { of } => lower_value(&Value::AsNumber { of: of.clone() }, source),
+        ConditionValue::JobResult { name, arguments } => lower_value(
+            &Value::JobResult {
+                name: name.clone(),
+                arguments: arguments.clone(),
+            },
+            source,
+        ),
         ConditionValue::Entry { of, key } => lower_value(
             &Value::Entry {
                 of: of.clone(),
@@ -723,6 +732,14 @@ pub(crate) fn lower_value(value: &Value, source: &str) -> String {
             }
         }
         Value::AsNumber { of } => format!("int({of})"),
+        Value::JobResult { name, arguments } => format!(
+            "{name}({})",
+            arguments
+                .iter()
+                .map(|argument| lower_value(argument, source))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
         Value::Elapsed => ELAPSED_PYTHON.to_string(),
         Value::Chance { permille } => chance_python(*permille),
         Value::ZeroKnowledge(value) => lower_zero_knowledge(value, source),

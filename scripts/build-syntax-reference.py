@@ -251,7 +251,12 @@ JOBS = [
     ("문장형", "Sentence", "to hail someone:", "이름에게 부르기라는 일:", "def hail(someone):", 'def 부르기(이름):'),
     ("문장형", "Sentence", "do hail with Mina", "민수에게 부르기 해줘", 'hail("Mina")', '부르기("민수")'),
     ("문장형", "Sentence", "run hail with Mina", "민수한테 부르기 실행해", 'hail("Mina")', '부르기("민수")'),
+    ("문장형", "Sentence", "give back score", "결과로 점수 돌려줘", "return score", 'return 점수'),
+    ("문장형", "Sentence", "answer with score", "점수 돌려줘", "return score", 'return 점수'),
+    ("문장형", "Sentence", "show the result of greet", "인사하기 한 결과 말해줘", "print(greet())", 'print(인사하기())'),
+    ("문장형", "Sentence", "set said to the result of hail with Mina", "말은 민수에게 부르기 한 결과", 'said = hail("Mina")', '말 = 부르기("민수")'),
     ("고급", "Advanced", "def greet():", "def 인사하기():", "unchanged"),
+    ("고급", "Advanced", "return score", "return 점수", "unchanged"),
 ]
 
 NUMBERS = [
@@ -560,6 +565,11 @@ def spelling_table(korean: bool) -> str:
         ("몇 개 / Copies", "COPIES_WORDS_EN", "COPIES_WORDS_KO"),
         ("몇 번째와 함께 / With its position", "POSITION_WORDS_EN", "POSITION_WORDS_KO"),
         ("나머지 / Remainder", "REMAINDER_WORDS_EN", "REMAINDER_WORDS_KO"),
+        ("돌려주기 / Give back", "GIVE_BACK_FIRST_WORDS_EN", "GIVE_BACK_WORDS_KO"),
+        ("돌려주기 뒷말 / Back", "GIVE_BACK_SECOND_WORDS_EN", None),
+        ("답으로 / Answer with", "ANSWER_WITH_WORDS_EN", "ANSWER_LEAD_WORDS_KO"),
+        ("한 결과 / The result of", "JOB_RESULT_WORDS_EN", "JOB_RESULT_THING_WORDS_KO"),
+        ("한 / Having run", "JOB_RESULT_VERB_WORDS_KO", None),
         ("몫 / Quotient", "QUOTIENT_WORDS_EN", "QUOTIENT_WORDS_KO"),
         ("온전한 수 / Whole number", "WHOLE_WORDS_EN", None),
         ("이은 것 / Joined thing", "JOINED_THING_WORDS_KO", None),
@@ -952,8 +962,25 @@ of`는 온전히 몇 번 들어가는지입니다. 둘 다 값이라서 출력·
 `do greet with Mina`입니다. 받는 개수가 맞지 않으면 `E0235`로 알려 줍니다.
 실행할 때 나는 Python `TypeError`는 줄이 멀쩡해 보여서 찾기 어렵기 때문입니다.
 
-아직 **둘 이상을 받는 일**과 **값을 돌려주는 일**은 문장 문법에 없습니다. 그 둘이
-필요하면 Python `def`를 그대로 씁니다.
+**일은 값을 돌려줄 수 있습니다.** 일 안에서 `결과로 <값> 돌려줘`라고 적으면, 그 일을
+부른 자리가 그 값이 됩니다. `결과로`는 없어도 되고, `<값> 돌려줘`만으로도 됩니다.
+받는 쪽은 `<이름>은 <준 것>에게 <일이름> 한 결과`이고, 주는 것이 없으면
+`<이름>은 <일이름> 한 결과`입니다. 값이라서 출력·저장·조건 어디에나 쓸 수 있습니다.
+
+```
+수에게 두배라는 일:
+    결과로 수 + 수 돌려줘
+끝
+답은 5에게 두배 한 결과
+답 말해줘
+```
+
+**`돌려줘`는 일 안에서만 그 뜻입니다.** 일 바깥의 `그 책 돌려줘`는 그대로 글로
+나옵니다. 일 이름도 마찬가지라서, `한 결과`는 그 프로그램이 이미 만든 일 이름
+뒤에서만 답을 뜻합니다.
+
+아직 **둘 이상을 받는 일**은 문장 문법에 없습니다. 필요하면 Python `def`를
+그대로 씁니다.
 
 ## 24. 화면
 
@@ -1336,8 +1363,27 @@ Giving a job the wrong number of things is refused with `E0235`, because the
 Python `TypeError` it would otherwise cause happens at run time on a line that
 looks right.
 
-Sentence grammar has **no job that takes two things** and **no job that hands
-something back** yet. Write a Python `def` when you need either.
+**A job can hand an answer back.** Write `give back <value>` inside it, and the
+place that ran the job becomes that value. `answer with <value>` is the same
+thing. To take the answer, write `set <name> to the result of <job> with
+<thing>`, or `the result of <job>` where the job is given nothing. It is a
+value, so it works in output, in a saved name, and in a condition.
+
+```
+to twice amount:
+    give back amount + amount
+end
+set answer to the result of twice with 5
+show answer
+```
+
+**`give back` only means that inside a job.** `give back the book` outside one
+is the sentence it looks like and prints. The job name carries the same kind of
+gate: `the result of` only asks for an answer where the name is one this
+program has already made a job.
+
+Sentence grammar has **no job that takes two things** yet. Write a Python `def`
+when you need one.
 
 ## 24. Screen
 

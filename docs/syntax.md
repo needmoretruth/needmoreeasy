@@ -564,7 +564,12 @@ plain `:` or the full-width `：` a Korean keyboard writes.
 | Sentence | `to hail someone:` | `def hail(someone):` |
 | Sentence | `do hail with Mina` | `hail("Mina")` |
 | Sentence | `run hail with Mina` | `hail("Mina")` |
+| Sentence | `give back score` | `return score` |
+| Sentence | `answer with score` | `return score` |
+| Sentence | `show the result of greet` | `print(greet())` |
+| Sentence | `set said to the result of hail with Mina` | `said = hail("Mina")` |
 | Advanced | `def greet():` | unchanged |
+| Advanced | `return score` | unchanged |
 
 A named job gives a piece of program a name, so it can be run later by that
 name. Python calls it a function (`def`).
@@ -604,8 +609,27 @@ Giving a job the wrong number of things is refused with `E0235`, because the
 Python `TypeError` it would otherwise cause happens at run time on a line that
 looks right.
 
-Sentence grammar has **no job that takes two things** and **no job that hands
-something back** yet. Write a Python `def` when you need either.
+**A job can hand an answer back.** Write `give back <value>` inside it, and the
+place that ran the job becomes that value. `answer with <value>` is the same
+thing. To take the answer, write `set <name> to the result of <job> with
+<thing>`, or `the result of <job>` where the job is given nothing. It is a
+value, so it works in output, in a saved name, and in a condition.
+
+```
+to twice amount:
+    give back amount + amount
+end
+set answer to the result of twice with 5
+show answer
+```
+
+**`give back` only means that inside a job.** `give back the book` outside one
+is the sentence it looks like and prints. The job name carries the same kind of
+gate: `the result of` only asks for an answer where the name is one this
+program has already made a job.
+
+Sentence grammar has **no job that takes two things** yet. Write a Python `def`
+when you need one.
 
 ## 24. Screen
 
@@ -719,6 +743,11 @@ Every spelling accepted for each action, with nothing left out.
 | 몇 개 / Copies | `times` | `개` · `번` |
 | 몇 번째와 함께 / With its position | `with` | `함께` · `같이` |
 | 나머지 / Remainder | `remainder` · `rest` · `leftover` | `나머지` |
+| 돌려주기 / Give back | `give` · `hand` · `send` | `돌려줘` · `돌려줘요` · `돌려주기` · `돌려줍니다` · `돌려주세요` |
+| 돌려주기 뒷말 / Back | `back` | — |
+| 답으로 / Answer with | `answer` | `결과로` · `답으로` · `결과는` · `답은` |
+| 한 결과 / The result of | `result` · `answer` | `결과` · `답` · `결과값` |
+| 한 / Having run | — | `한` · `해서` · `실행한` · `시킨` |
 | 몫 / Quotient | `quotient` | `몫` |
 | 온전한 수 / Whole number | `whole` | — |
 | 이은 것 / Joined thing | — | `이은` · `이어붙인` · `붙인` |

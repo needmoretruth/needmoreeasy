@@ -78,6 +78,16 @@ fn statements(text: &str) -> Vec<NmeStmt> {
         "# end" => found.push(NmeStmt::End),
         _ => {}
     }
+    // `return left` — the answer a job hands back. `return` on its own hands
+    // back nothing, and sentences have no spelling for that, so it stays
+    // Python.
+    if let Some(rest) = text.strip_prefix("return ") {
+        if !rest.trim().is_empty() {
+            found.push(NmeStmt::GiveBack {
+                value: first_value(rest.trim()),
+            });
+        }
+    }
     // A block header, with or without its body written after the colon.
     if let Some((header, body)) = suite(text) {
         let inline = match body {
@@ -536,6 +546,28 @@ fn values(text: &str) -> Vec<Value> {
                         key: Box::new(key),
                     });
                 }
+            }
+        }
+    }
+    // `double(5)` — a job's answer used as a value. Read last of all: every
+    // reading above is a call as well, and each of them says more about what
+    // the line means than "something was run" does. A name that is not a job
+    // in the file being read fails the round-trip check and the line stays
+    // Python, which is what makes reading it this cheaply safe.
+    if let Some((name, arguments)) = plain_call(text) {
+        // The cheap tests come first. Reading the arguments means reading a
+        // whole expression again, and doing that for every call-shaped text
+        // turns a nested call into work that doubles with each layer.
+        if is_name(name) && arguments.len() <= 1 {
+            let given: Vec<Value> = arguments.iter().map(|a| first_value(a)).collect();
+            // What is handed over has to be something a sentence can say.
+            // `input(**options)` is a call as well, but no prose hands a job a
+            // bag of arguments, and reading it as one costs the line its words.
+            if given.iter().all(|value| !matches!(value, Value::Python(_))) {
+                found.push(Value::JobResult {
+                    name: name.to_string(),
+                    arguments: given,
+                });
             }
         }
     }

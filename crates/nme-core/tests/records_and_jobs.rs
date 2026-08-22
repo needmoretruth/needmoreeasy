@@ -555,3 +555,98 @@ fn a_job_that_reads_before_it_changes_is_named() {
     assert_eq!(problems[0].code.code(), "E0236");
     assert!(problems[0].message.contains("total"), "{problems:?}");
 }
+
+/// A job can hand an answer back, and the line that ran it can keep it.
+///
+/// Running a job used to be a whole line and nothing else: whatever it worked
+/// out stayed inside it, and the only way to get one value out was to make the
+/// job change a list that lived outside it.
+#[test]
+fn a_job_can_hand_an_answer_back_and_the_answer_can_be_kept() {
+    let korean = concat!(
+        "수에게 두배라는 일:\n",
+        "  결과로 수 + 수 돌려줘\n",
+        "끝\n",
+        "인사라는 일:\n",
+        "  안녕 돌려줘\n",
+        "끝\n",
+        "답은 5에게 두배 한 결과\n",
+        "말은 인사 한 결과\n",
+        "만약에 5에게 두배 한 결과가 10과 같으면 맞아 말해줘\n",
+    );
+    assert_eq!(
+        ok(korean),
+        concat!(
+            "def 두배(수):\n",
+            "  return 수 + 수\n",
+            "# end\n",
+            "def 인사():\n",
+            "  return \"안녕\"\n",
+            "# end\n",
+            "답 = 두배(5)\n",
+            "말 = 인사()\n",
+            "if (두배(5) == 10): print(\"맞아\")\n",
+        )
+    );
+
+    let english = concat!(
+        "to twice amount:\n",
+        "  give back amount + amount\n",
+        "end\n",
+        "to hello:\n",
+        "  answer with hi\n",
+        "end\n",
+        "set answer to the result of twice with 5\n",
+        "set said to the result of hello\n",
+    );
+    assert_eq!(
+        ok(english),
+        concat!(
+            "def twice(amount):\n",
+            "  return amount + amount\n",
+            "# end\n",
+            "def hello():\n",
+            "  return \"hi\"\n",
+            "# end\n",
+            "answer = twice(5)\n",
+            "said = hello()\n",
+        )
+    );
+}
+
+/// The gate is the job, not the word. `돌려줘` and `give back` are among the
+/// most ordinary things either language says, and outside a job they are the
+/// sentences they look like.
+#[test]
+fn giving_something_back_outside_a_job_is_still_a_sentence() {
+    let source = concat!(
+        "그 책 돌려줘\n",
+        "give back the book\n",
+        "결과로 그것을 돌려줘\n",
+    );
+    assert_eq!(
+        ok(source),
+        concat!(
+            "print(\"그 책 돌려줘\")\n",
+            "print(\"give back the book\")\n",
+            "print(\"결과로 그것을 돌려줘\")\n",
+        )
+    );
+}
+
+/// `한 결과` only asks a job for its answer where the name is one this program
+/// has already made a job. Everywhere else the words are ordinary.
+#[test]
+fn the_result_of_a_name_that_is_not_a_job_stays_a_sentence() {
+    let source = concat!(
+        "회의 한 결과 말해줘\n",
+        "show the result of yesterday\n",
+    );
+    assert_eq!(
+        ok(source),
+        concat!(
+            "print(\"회의 한 결과\")\n",
+            "print(\"the result of yesterday\")\n",
+        )
+    );
+}
