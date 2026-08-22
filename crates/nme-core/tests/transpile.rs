@@ -583,6 +583,59 @@ fn short_korean_condition_endings_accept_natural_equality_and_literals() {
     assert_eq!(ok(source), expected);
 }
 
+/// A Korean word ending in the syllable `면` used to hand the line to the
+/// comparison reader, and `적이름은 황금가면 도적왕 레마르` compiled — quietly
+/// and without complaint — into `if (적이름 == "황금가"): print("도적왕 레마르")`.
+/// The assignment was gone and the name left undefined. Korean names for
+/// people and things end in that syllable all the time, so the ending now has
+/// to be followed by something to do before it counts as a comparison.
+#[test]
+fn a_word_that_merely_ends_in_the_condition_syllable_still_gives_a_value() {
+    let source = concat!(
+        "적이름은 황금가면 도적왕 레마르\n",
+        "적이름 말해줘\n",
+        "장면은 첫 장면 시작\n",
+        "측면은 왼쪽 측면 방어\n",
+        "이름은 철수\n",
+        "이름이 철수면 안녕 말해줘\n",
+    );
+    let expected = concat!(
+        "적이름 = \"황금가면 도적왕 레마르\"\n",
+        "print(적이름)\n",
+        "장면 = \"첫 장면 시작\"\n",
+        "측면 = \"왼쪽 측면 방어\"\n",
+        "이름 = \"철수\"\n",
+        "if (이름 == \"철수\"): print(\"안녕\")\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
+/// The same accidental `면`, this time with an action behind it, so the guard
+/// that asks for something to do lets it through. What settles this one is the
+/// particle: `은`/`는` is how Korean gives a name a value, and a comparison
+/// spells its subject with `이`/`가`. A number keeps comparing either way,
+/// because a number is plainly a value and never part of a name.
+#[test]
+fn an_assignment_particle_beats_a_syllable_that_merely_looks_like_a_condition() {
+    let source = concat!(
+        "적이름은 황금가면 도적왕 레마르 말해줘\n",
+        "나이는 20이면 어른 말해줘\n",
+        "나이가 20이면 어른 말해줘\n",
+        "점수는 10보다 크면 성공 말해줘\n",
+        "이름은 철수\n",
+        "이름이 철수면 안녕 말해줘\n",
+    );
+    let expected = concat!(
+        "print(\"적이름은 황금가면 도적왕 레마르\")\n",
+        "if (나이 == 20): print(\"어른\")\n",
+        "if (나이 == 20): print(\"어른\")\n",
+        "if (점수 > 10): print(\"성공\")\n",
+        "이름 = \"철수\"\n",
+        "if (이름 == \"철수\"): print(\"안녕\")\n",
+    );
+    assert_eq!(ok(source), expected);
+}
+
 #[test]
 fn spoken_condition_typos_and_english_synonyms_stay_unambiguous() {
     let source = concat!(

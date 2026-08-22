@@ -5,6 +5,19 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+- **A `면` that a name merely happens to end in no longer eats the
+  assignment.** `적이름은 황금가면 도적왕 레마르` compiled to
+  `if (적이름 == "황금가"): print("도적왕 레마르")` — the assignment gone, the
+  name never made — and the compiler, the checker and the tidier all said
+  nothing. Korean names end in that syllable all the time (`장면`, `측면`,
+  `수면`), so a connector found only inside a word is now treated as the
+  weakest evidence of a comparison there is.
+  - With nothing to do after it, the line is not a comparison. The block form
+    `이름이 철수면` has its work on the lines underneath and still compares.
+  - With something to do after it, an opening `은`/`는` wins. Those are how
+    Korean spells *this name is given this value*; a comparison spells its
+    subject with `이`/`가`. A number or an already-made name on the left keeps
+    comparing, so `나이는 20이면 어른 말해줘` reads as it always did.
 
 ## 0.7.1
 - **Everything between two separators is one choice, however many words it

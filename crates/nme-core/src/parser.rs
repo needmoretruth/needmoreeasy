@@ -924,6 +924,10 @@ const SPLIT_THING_WORDS_KO: &[&str] = &["것", "거", "것들"];
 /// written here after all.
 const REPEAT_TEXT_WORDS_EN: &[&str] = &["repeated"];
 const REPEAT_TEXT_WORDS_KO: &[&str] = &["붙인", "이어붙인"];
+/// `저장칸들을 쉼표로 이은 것` — the same join, written as a thing rather than
+/// as a verb, which is how it reads when the answer is being given a name.
+/// Without it the line printed itself, quietly, as ordinary writing.
+const JOINED_THING_WORDS_KO: &[&str] = &["이은", "이어붙인", "붙인"];
 /// The counting word after the number: `5 times` / `5개`, `5번`.
 const COPIES_WORDS_EN: &[&str] = &["times"];
 const COPIES_WORDS_KO: &[&str] = &["개", "번"];
@@ -996,6 +1000,18 @@ const READING_LEAD_WORDS_EN: &[&str] = &["how"];
 /// `the remainder of pile divided by 4` / `쌓인돌을 4로 나눈 나머지`.
 const REMAINDER_WORDS_EN: &[&str] = &["remainder", "rest", "leftover"];
 const REMAINDER_WORDS_KO: &[&str] = &["나머지"];
+/// `the whole number of total divided by people` / `총점을 인원으로 나눈 몫` —
+/// the same shape as a remainder, asking for the other half of the division.
+const QUOTIENT_WORDS_EN: &[&str] = &["quotient"];
+const QUOTIENT_WORDS_KO: &[&str] = &["몫"];
+/// The two words English puts in front of a quotient when it says it plainly.
+const WHOLE_WORDS_EN: &[&str] = &["whole"];
+const WHOLE_NUMBER_WORDS_EN: &[&str] = &["number"];
+/// `레벨글을 숫자로 바꾼 것` — the verb that says the text is being read as
+/// something else.
+const CHANGED_WORDS_KO: &[&str] = &["바꾼", "고친", "읽은"];
+/// `levelText as a number`.
+const AS_WORDS_EN: &[&str] = &["as"];
 /// The dividing word each language puts before the number.
 const DIVIDED_WORDS_EN: &[&str] = &["divided", "shared", "split"];
 const DIVIDED_WORDS_KO: &[&str] = &["나눈", "나눈뒤", "나누고"];
@@ -7350,6 +7366,14 @@ fn english_reading_prefix(
     if let Some(found) = english_remainder(tokens, known_names) {
         return Some(found);
     }
+    // `the whole number of total divided by people`.
+    if let Some(found) = english_quotient(tokens, known_names) {
+        return Some(found);
+    }
+    // `answer as a number`.
+    if let Some(found) = english_as_a_number(tokens, known_names) {
+        return Some(found);
+    }
     // `name in capitals` — the one English reading that says the name first,
     // because that is the order the words come in.
     if tokens.len() > 2 && matches!(tokens[1].tok, Tok::In) {
@@ -7658,6 +7682,50 @@ fn english_remainder(tokens: &[Token], known_names: &HashSet<String>) -> Option<
     Some((Value::Remainder { of, by }, at + 6))
 }
 
+/// `the whole number of total divided by people` — the other half of the same
+/// division, and written the same way, so it is read the same way. The lead
+/// word is two tokens (`whole number`, `whole times`) or the one word
+/// `quotient`, which is what a maths book calls it.
+fn english_quotient(tokens: &[Token], known_names: &HashSet<String>) -> Option<(Value, usize)> {
+    let at = usize::from(token_matches_exact(tokens.first()?, &["the", "a", "an"]));
+    let lead = if token_matches_exact(tokens.get(at)?, QUOTIENT_WORDS_EN) {
+        1
+    } else if token_matches_exact(tokens.get(at)?, WHOLE_WORDS_EN)
+        && token_matches_exact(tokens.get(at + 1)?, WHOLE_NUMBER_WORDS_EN)
+    {
+        2
+    } else {
+        return None;
+    };
+    let at = at + lead - 1;
+    if !token_matches_exact(tokens.get(at + 1)?, &["of", "when"]) {
+        return None;
+    }
+    let of = saved_name_at(tokens.get(at + 2)?, known_names)?;
+    if !token_matches_exact(tokens.get(at + 3)?, DIVIDED_WORDS_EN) {
+        return None;
+    }
+    if !token_matches_exact(tokens.get(at + 4)?, &["by", "into"]) {
+        return None;
+    }
+    let by = remainder_divisor(tokens.get(at + 5)?, known_names)?;
+    Some((Value::Quotient { of, by }, at + 6))
+}
+
+/// `answer as a number` — text the program already holds, read back as the
+/// number it was written as.
+fn english_as_a_number(
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+) -> Option<(Value, usize)> {
+    let of = saved_name_at(tokens.first()?, known_names)?;
+    if !token_matches_exact(tokens.get(1)?, AS_WORDS_EN) {
+        return None;
+    }
+    let at = 2 + usize::from(token_matches_exact(tokens.get(2)?, &["a", "an", "the"]));
+    token_matches_exact(tokens.get(at)?, NUMBER_WORDS).then(|| (Value::AsNumber { of }, at + 1))
+}
+
 /// The number a remainder divides by: a written number, or a saved name.
 /// `인원으로` — the name that is being divided by, with its particle still on
 /// it. See the call site in `korean_reading_prefix`.
@@ -7719,6 +7787,34 @@ fn korean_reading_prefix(
             return Some((Value::Remainder { of: name, by }, 4));
         }
     }
+    // `점수를 4로 나눈 몫` and `총점을 인원으로 나눈 몫` — the other half of the
+    // same division, written the same two ways.
+    if rest.len() > 3
+        && token_matches_exact(&rest[1], &["으로", "로"])
+        && token_matches_exact(&rest[2], DIVIDED_WORDS_KO)
+        && reading_word_matches(name_word(&rest[3])?, QUOTIENT_WORDS_KO)
+    {
+        if let Some(by) = remainder_divisor(&rest[0], known_names) {
+            return Some((Value::Quotient { of: name, by }, 5));
+        }
+    }
+    if rest.len() > 2
+        && token_matches_exact(&rest[1], DIVIDED_WORDS_KO)
+        && reading_word_matches(name_word(&rest[2])?, QUOTIENT_WORDS_KO)
+    {
+        if let Some(by) = korean_divisor_with_particle(&rest[0], known_names) {
+            return Some((Value::Quotient { of: name, by }, 4));
+        }
+    }
+    // `레벨글을 숫자로 바꾼 것` — text the program already holds, read back as
+    // the number it was written as.
+    if rest.len() > 2
+        && token_matches_exact(&rest[0], NUMBER_WORDS)
+        && token_matches_exact(&rest[1], CHANGED_WORDS_KO)
+        && token_matches_exact(&rest[2], SPLIT_THING_WORDS_KO)
+    {
+        return Some((Value::AsNumber { of: name }, 4));
+    }
     // `별표를 5개 붙인 것`, and `별표를 5개 이어 붙인 것` written with the two
     // halves of the verb apart, which is how people type it.
     if rest.len() > 3 && token_matches_exact(&rest[1], COPIES_WORDS_KO) {
@@ -7766,7 +7862,8 @@ fn korean_reading_prefix(
             ));
         }
         // `친구들을 쉼표로 이어`, `친구들을 그대로 이어` — every item in one
-        // piece of text.
+        // piece of text. `친구들을 쉼표로 이은 것` says the same thing as a
+        // thing, which is the shape a name is given.
         if rest.len() > 1 {
             if let Some(separator) = named_separator(&rest[0]) {
                 if token_matches_exact(&rest[1], JOIN_WORDS_KO) {
@@ -7778,7 +7875,32 @@ fn korean_reading_prefix(
                         3,
                     ));
                 }
+                if rest.len() > 2
+                    && token_matches_exact(&rest[1], JOINED_THING_WORDS_KO)
+                    && token_matches_exact(&rest[2], SPLIT_THING_WORDS_KO)
+                {
+                    return Some((
+                        Value::Joined {
+                            of: name,
+                            separator,
+                        },
+                        4,
+                    ));
+                }
             }
+        }
+        // `저장칸들을 붙인 것` — run together with nothing between them.
+        if rest.len() > 1
+            && token_matches_exact(&rest[0], JOINED_THING_WORDS_KO)
+            && token_matches_exact(&rest[1], SPLIT_THING_WORDS_KO)
+        {
+            return Some((
+                Value::Joined {
+                    of: name,
+                    separator: String::new(),
+                },
+                3,
+            ));
         }
         // `점수들 중 가장 큰 것`.
         if let Some((reading, used)) = korean_extreme_phrase(rest) {
@@ -11139,6 +11261,18 @@ fn match_subject_when(
     {
         return Ok(None);
     }
+    if condition_rests_on_a_glued_ending_with_no_action(
+        tokens,
+        relative_at,
+        body_start,
+        mode,
+        known_names,
+    ) {
+        return Ok(None);
+    }
+    if a_glued_ending_loses_to_an_assignment_particle(tokens, relative_at, known_names) {
+        return Ok(None);
+    }
     let condition = parse_natural_condition(
         source,
         &condition_tokens,
@@ -11184,6 +11318,18 @@ fn subject_condition_shape(tokens: &[Token]) -> bool {
         return false;
     }
     let (_, body_start, _) = condition_tokens_before(tokens, 0, relative_at, connector);
+    if condition_rests_on_a_glued_ending_with_no_action(
+        tokens,
+        relative_at,
+        body_start,
+        MatchMode::Exact,
+        &HashSet::new(),
+    ) {
+        return false;
+    }
+    if a_glued_ending_loses_to_an_assignment_particle(tokens, relative_at, &HashSet::new()) {
+        return false;
+    }
     !matches!(connector, ConditionConnector::Then)
         || subject_condition_body_is_action(
             &tokens[body_start..],
@@ -11210,6 +11356,112 @@ fn subject_condition_body_is_action(
         || update_action_ending(tokens, mode).is_some()
         || action_phrase_at(tokens, 0, BREAK_WORDS_EN, mode).is_some()
         || action_phrase_at(tokens, 0, BREAK_WORDS_KO, mode).is_some()
+}
+
+/// The short Korean endings that turn the word they are glued to into a
+/// comparison. Unlike `같으면`/`있으면`/`크면`, which are whole comparing
+/// words, these are one or two syllables that ordinary Korean words end in by
+/// accident — `황금가면`, `장면`, `수면`, `사면` — so a connector found only
+/// this way is the weakest signal the parser has for a condition.
+const GLUED_SHORT_CONDITION_ENDINGS_KO: &[&str] =
+    &["면", "먄", "이면", "이라면", "라면", "하면"];
+
+/// The ending that `split_attached_condition_token` actually took off the
+/// word, or `None` when the word is not a connector with an ending glued to
+/// it. The base token the split returns carries the rest of the word, so the
+/// ending is what the base leaves behind.
+fn glued_condition_ending(token: &Token) -> Option<&str> {
+    let word = name_word(token)?;
+    let (base, _) = split_attached_condition_token(token)?;
+    let base_word = match &base.tok {
+        Tok::Name { name } => name.as_str(),
+        _ => return None,
+    };
+    word.get(base_word.len()..)
+}
+
+/// `적이름은 황금가면 도적왕 레마르` — a name being given a written value is
+/// the commonest sentence in the language, and the only thing that made this
+/// line a comparison is the syllable `면` that the word `황금가면` happens to
+/// end in. Read as a condition it compiled, checked and tidied without a
+/// word of complaint, and quietly became
+/// `if (적이름 == "황금가"): print("도적왕 레마르")` — the assignment gone and
+/// the name left undefined.
+///
+/// So an ending that weak now has to be followed by something to do, exactly
+/// as the block form `이름이 철수면` is followed by an action on the lines
+/// underneath it. A line that ends at the connector is left alone: that is
+/// the block header, and it opens a body of its own.
+fn condition_rests_on_a_glued_ending_with_no_action(
+    tokens: &[Token],
+    relative_at: usize,
+    body_start: usize,
+    mode: MatchMode,
+    known_names: &HashSet<String>,
+) -> bool {
+    if body_start >= tokens.len() {
+        return false;
+    }
+    let Some(token) = tokens.get(relative_at) else {
+        return false;
+    };
+    // The ending written as a word of its own — `이름이 철수 면` — is
+    // deliberate, and says the writer meant a comparison.
+    if token_matches_exact(token, GLUED_SHORT_CONDITION_ENDINGS_KO) {
+        return false;
+    }
+    let Some(ending) = glued_condition_ending(token) else {
+        return false;
+    };
+    GLUED_SHORT_CONDITION_ENDINGS_KO.contains(&ending)
+        && !subject_condition_body_is_action(&tokens[body_start..], mode, known_names)
+}
+
+/// `적이름은 황금가면 도적왕 레마르 말해줘` — the same accidental `면`, but
+/// this time something to do follows it, so the guard above lets the line
+/// through and the assignment disappears again. What settles this one is the
+/// particle the line opens with. `은`/`는` is how Korean spells *this name is
+/// given this value*; a comparison spells its subject with `이`/`가`. Nobody
+/// writes `이름은 철수면` to test something — they write `이름이 철수면` — so a
+/// condition resting on nothing but a glued ending loses to the particle.
+///
+/// What the ending was taken off decides the exceptions. A name the program
+/// has already made, or a plain number, is a value being compared rather than
+/// one more word of a written value, and those keep comparing.
+fn a_glued_ending_loses_to_an_assignment_particle(
+    tokens: &[Token],
+    relative_at: usize,
+    known_names: &HashSet<String>,
+) -> bool {
+    if relative_at == 0 {
+        return false;
+    }
+    let Some(token) = tokens.get(relative_at) else {
+        return false;
+    };
+    // The ending written as a word of its own — `이름은 철수 면` — is
+    // deliberate, exactly as it is in the guard above.
+    if token_matches_exact(token, GLUED_SHORT_CONDITION_ENDINGS_KO) {
+        return false;
+    }
+    if !glued_condition_ending(token)
+        .is_some_and(|ending| GLUED_SHORT_CONDITION_ENDINGS_KO.contains(&ending))
+    {
+        return false;
+    }
+    let Some((base, _)) = split_attached_condition_token(token) else {
+        return false;
+    };
+    let Some(base_word) = name_word(&base) else {
+        return false;
+    };
+    if known_names.contains(base_word) || base_word.chars().all(|letter| letter.is_ascii_digit()) {
+        return false;
+    }
+    tokens
+        .first()
+        .and_then(name_word)
+        .is_some_and(|word| strip_assignment_particle(word).is_some())
 }
 
 fn match_when(
@@ -12338,6 +12590,10 @@ fn condition_reading_at(
         Some((Value::Remainder { of, by }, used)) => {
             Some((ConditionValue::Remainder { of, by }, used))
         }
+        Some((Value::Quotient { of, by }, used)) => {
+            Some((ConditionValue::Quotient { of, by }, used))
+        }
+        Some((Value::AsNumber { of }, used)) => Some((ConditionValue::AsNumber { of }, used)),
         Some((Value::Entry { of, key }, used)) => Some((ConditionValue::Entry { of, key }, used)),
         _ => None,
     }
