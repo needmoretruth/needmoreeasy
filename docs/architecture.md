@@ -237,6 +237,62 @@ Add no dependency or abstraction without a current, demonstrated need.
 Traceback line numbers and displayed file names both point to the original
 `.nme` source.
 
+### Test speed
+
+`cargo test` on this workspace takes **four and a half minutes in release and
+over an hour in debug**. The difference is not in the test code. It is one
+example program, and knowing that saves the afternoon it cost to find out.
+
+| | |
+|---|---|
+| `cargo test --release -p nme-core` — 16 binaries, 600 tests | **4m 28s** |
+| the same in debug | **60m+**, twice abandoned unfinished |
+| compiling `examples/peace.ko.nme` — release | **2.37s** |
+| the same file — debug | **8m 01s**, or **200×** |
+| incremental release build, 6 jobs | 18.2s |
+
+The build figure is *incremental*: the dependency crates were already in
+`target/release`. A cold release build is far longer, because `rustpython-parser`
+has to be compiled first.
+
+**Why one file decides it.** Several tidier tests convert every program in
+`examples/` through all six spellings, and `peace.ko.nme` is 4,337 lines — by
+far the largest. The debug multiplier on that one file therefore lands on the
+test suite as a whole. Of the 600 release tests, 74 library tests (tidier and
+converter) account for 250 of the 268 seconds; the other 15 binaries together
+finish in under a second.
+
+**Run the test binary directly.** `cargo test` rebuilds and re-links before it
+runs anything, which is wasted work when only the tests changed. The compiled
+binaries are in `target/<profile>/deps/`, and they take the standard libtest
+flags:
+
+```sh
+# everything except the slow ones
+target/release/deps/nme_core-<hash> --skip tidy:: --test-threads 6
+# only the slow ones, when you actually want them
+target/release/deps/nme_core-<hash> tidy:: --test-threads 6
+```
+
+Splitting the suite that way gets an answer about most of the compiler in
+seconds rather than minutes.
+
+**A killed test looks exactly like a running one.** This machine runs
+`earlyoom` with `--prefer` matching `cargo` and `rustc` but *not* `ld`, so when
+memory runs short during someone else's link step, the test run is what dies —
+silently, leaving its output file open and empty. Two hours were lost twice to
+a run that had already been killed. Judge by process, not by output:
+
+```sh
+ps -eo comm | grep -c nme_core     # 0 means it is gone, not quiet
+```
+
+Heavy work on this machine goes through `flock -w 3600 /tmp/big-heavy.lock`, one
+job at a time. Unit tests and lints are exempt; a full `cargo test`, a release
+build, or a deploy is not. A separate `CARGO_TARGET_DIR` lets a second person
+build without waiting for the lock, at the cost of compiling the dependencies
+again.
+
 ## Out of scope
 
 - replacing CPython or reimplementing the full Python grammar;
