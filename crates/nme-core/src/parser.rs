@@ -5,7 +5,8 @@
 //! Easier forms are matched only from lexer tokens; strings and comments are
 //! never searched or rewritten as text.
 
-use std::cell::Cell;
+use std::borrow::Cow;
+use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
 
 use rustpython_parser::{parse as parse_python, Mode, Tok};
@@ -1460,6 +1461,22 @@ pub fn parse_program(
     source: &str,
     lines: &[LogicalLine],
 ) -> Result<ParsedProgram, Vec<Diagnostic>> {
+    forget_rank_answers();
+    /* How many `end` lines stand from each line onwards.
+     *
+     * The dedent rule below needs "how many `end`s are left after this one",
+     * and it used to walk the rest of the file to find out — for every line.
+     * That is a genuine quadratic in the parser's main loop, and it is the
+     * term that makes a large program impossible rather than slow: 4,000
+     * lines of `pass` took 110 ms, 8,000 took 265 ms, 16,000 took 825 ms and
+     * 32,000 took 3.5 seconds. One backward pass answers it for every line at
+     * once. `lines` does not change while the loop runs, so the two are equal
+     * by construction. */
+    let mut ends_from = vec![0usize; lines.len() + 1];
+    for index in (0..lines.len()).rev() {
+        ends_from[index] =
+            ends_from[index + 1] + usize::from(exact_end(&lines[index].tokens).is_some());
+    }
     let mut found = Vec::new();
     let mut problems = Vec::new();
     // Which bundled modules this program has loaded, so a later name cannot
@@ -1634,15 +1651,20 @@ pub fn parse_program(
         // bodies keep working. Explicit closers (`end`, `break`, branches)
         // are handled by their own paths below.
         if !(is_end.is_some() || is_break || is_continue || branch_shape.is_some()) {
-            let line_is_header = is_header_shape(&line.tokens);
-            let remaining_ends = count_remaining_ends(lines, index);
+            // Most lines leave the loop below on its first turn without ever
+            // reading either of these, so neither is worked out until it is.
+            let mut line_is_header: Option<bool> = None;
+            let remaining_ends = ends_from[index + 1];
             loop {
                 let open = blocks.len();
                 let Some(close_on_dedent) = blocks.last().and_then(ExplicitBlock::close_on_dedent)
                 else {
                     break;
                 };
-                if line.indent == close_on_dedent && line_is_header && open >= remaining_ends {
+                if line.indent == close_on_dedent
+                    && *line_is_header.get_or_insert_with(|| is_header_shape(&line.tokens))
+                    && open >= remaining_ends
+                {
                     blocks.pop();
                 } else if line.indent == close_on_dedent {
                     if let Some(top) = blocks.last_mut() {
@@ -2615,9 +2637,9 @@ fn exact_continue(tokens: &[Token]) -> bool {
 fn block_only_loop_control(
     tokens: &[Token],
     known_names: &HashSet<String>,
-    words_en: &[&str],
-    words_ko: &[&str],
-    alias_en: &[&str],
+    words_en: Vocabulary,
+    words_ko: Vocabulary,
+    alias_en: Vocabulary,
 ) -> bool {
     if tokens.is_empty() {
         return false;
@@ -2713,15 +2735,6 @@ fn has_future_end(lines: &[LogicalLine], index: usize) -> bool {
 }
 
 /// Number of whole-statement `end`/`끝` lines after `index`. Used to decide
-/// whether a dedented header can only be a sibling block (when the remaining
-/// `end`s are not enough to close the nested reading anyway).
-fn count_remaining_ends(lines: &[LogicalLine], index: usize) -> usize {
-    lines[index + 1..]
-        .iter()
-        .filter(|line| exact_end(&line.tokens).is_some())
-        .count()
-}
-
 #[allow(clippy::trivially_copy_pass_by_ref)]
 fn validate_branch(
     branch: &BranchShape,
@@ -10001,10 +10014,10 @@ fn match_draw_line(tokens: &[Token], mode: MatchMode) -> Option<NmeStmt> {
 fn fixed_screen_sentence(
     tokens: &[Token],
     mode: MatchMode,
-    english_verb: &[&str],
+    english_verb: Vocabulary,
     english_object: &[&str],
     korean_subject: &[&str],
-    korean_verb: &[&str],
+    korean_verb: Vocabulary,
 ) -> bool {
     let words = trim_command_endings(tokens);
     if let Some(consumed) = action_phrase_at(words, 0, english_verb, mode) {
@@ -18237,7 +18250,7 @@ fn find_condition_colon(source: &str, tokens: &[Token], condition_start: usize) 
 fn action_phrase_at(
     tokens: &[Token],
     start: usize,
-    expected: &[&str],
+    expected: Vocabulary,
     mode: MatchMode,
 ) -> Option<usize> {
     let available = tokens.len().saturating_sub(start).min(3);
@@ -18406,7 +18419,81 @@ const EXACT_ONLY_ACTION_WORDS: &[&str] = &[
     "해주세요",
 ];
 
-fn best_action_rank(actual: &str, expected: &[&str], mode: MatchMode) -> Option<(u8, usize)> {
+/// A vocabulary table: one of the compiler's own lists of the words a
+/// statement may be written with.
+///
+/// It is `'static` on purpose rather than by accident. [`best_action_rank`]
+/// remembers its answers under the table's address, which is a name for the
+/// table only because the table outlives the program that asks about it. A
+/// temporary list could not be passed here even by mistake — it would not
+/// compile.
+type Vocabulary = &'static [&'static str];
+
+/// Which table was asked about, and whether a typo could be repaired into it.
+/// The table is named by where it is, which is a name for it only because a
+/// [`Vocabulary`] outlives the program that asks.
+type TableAsked = (usize, usize, bool);
+
+/// What each written word turned out to be worth against one table.
+type WordsRanked = HashMap<String, Option<(u8, usize)>>;
+
+thread_local! {
+    /// Every fuzzy word-match question already answered during this parse.
+    ///
+    /// `best_action_rank` is a pure function of the written word, the table
+    /// and the mode, and the parser asks it the same question over and over:
+    /// on the largest bundled example, 913,265 calls resolve to 148,289
+    /// distinct questions. Forty matchers walk the same line, and several of
+    /// them are worked out three and four times over. Answering each question
+    /// once is worth about half the compile.
+    ///
+    /// Keyed by table first and word second, so a hit borrows the word rather
+    /// than building a key out of it.
+    static RANK_ANSWERS: RefCell<HashMap<TableAsked, WordsRanked>> = RefCell::new(HashMap::new());
+}
+
+/// Forget what was learned about the last program. The answers are true for
+/// any program, but the words in them are not worth carrying: a browser tab
+/// that compiles as you type would otherwise keep every word ever written.
+fn forget_rank_answers() {
+    RANK_ANSWERS.with(|answers| answers.borrow_mut().clear());
+}
+
+fn best_action_rank(actual: &str, expected: Vocabulary, mode: MatchMode) -> Option<(u8, usize)> {
+    let table = (
+        expected.as_ptr().addr(),
+        expected.len(),
+        mode == MatchMode::Recover,
+    );
+    if let Some(known) = RANK_ANSWERS.with(|answers| {
+        answers
+            .borrow()
+            .get(&table)
+            .and_then(|words| words.get(actual))
+            .copied()
+    }) {
+        return known;
+    }
+    let found = best_action_rank_fresh(actual, expected, mode);
+    RANK_ANSWERS.with(|answers| {
+        answers
+            .borrow_mut()
+            .entry(table)
+            .or_default()
+            .insert(actual.to_owned(), found);
+    });
+    found
+}
+
+fn best_action_rank_fresh(
+    actual: &str,
+    expected: Vocabulary,
+    mode: MatchMode,
+) -> Option<(u8, usize)> {
+    // Four of the five questions asked of a written word do not depend on
+    // which spelling it is being compared against, and this used to ask all
+    // five once per candidate — some tables hold hundreds. Ask them once.
+    let written = WrittenWord::about(actual, mode);
     let repaired = |rank: u8| rank > 0;
     if expected
         .iter()
@@ -18414,7 +18501,7 @@ fn best_action_rank(actual: &str, expected: &[&str], mode: MatchMode) -> Option<
     {
         // Try the exact reading first, then the same list without the words
         // that may not be repaired into.
-        if let Some(found) = best_action_rank_over(actual, expected, mode) {
+        if let Some(found) = best_action_rank_over(&written, expected) {
             if !repaired(found.0) {
                 return Some(found);
             }
@@ -18424,16 +18511,16 @@ fn best_action_rank(actual: &str, expected: &[&str], mode: MatchMode) -> Option<
             .copied()
             .filter(|word| !EXACT_ONLY_ACTION_WORDS.contains(word))
             .collect();
-        return best_action_rank_over(actual, &strict, mode);
+        return best_action_rank_over(&written, &strict);
     }
-    best_action_rank_over(actual, expected, mode)
+    best_action_rank_over(&written, expected)
 }
 
-fn best_action_rank_over(actual: &str, expected: &[&str], mode: MatchMode) -> Option<(u8, usize)> {
+fn best_action_rank_over(written: &WrittenWord<'_>, expected: &[&str]) -> Option<(u8, usize)> {
     let mut best: Option<u8> = None;
     let mut matches = 0usize;
     for candidate in expected {
-        let Some(rank) = action_recovery_rank(actual, candidate, mode) else {
+        let Some(rank) = written.rank_against(candidate) else {
             continue;
         };
         match best {
@@ -18807,30 +18894,63 @@ fn is_common_english_word(word: &str) -> bool {
 /// `말해줘`. While both merely counted as "one edit" the match looked
 /// ambiguous, recovery switched itself off, and the typo was printed instead.
 fn action_recovery_rank(actual: &str, expected: &str, mode: MatchMode) -> Option<u8> {
-    if actual.eq_ignore_ascii_case(expected) {
+    WrittenWord::about(actual, mode).rank_against(expected)
+}
+
+/// The word somebody wrote, with everything that does not depend on what it is
+/// being compared against worked out once.
+///
+/// `lowered` is `None` when this word may not be repaired into anything at
+/// all — the mode forbids it, it is one character long, or it is a word the
+/// compiler already knows and must not silently turn into a different one.
+struct WrittenWord<'a> {
+    raw: &'a str,
+    lowered: Option<Cow<'a, str>>,
+}
+
+/// The word in lower case, borrowed when it already is in lower case. Korean
+/// has no case at all and nearly every table entry is written in lower case,
+/// so this almost never allocates.
+fn lower_case(word: &str) -> Cow<'_, str> {
+    if word
+        .chars()
+        .all(|letter| letter.to_lowercase().eq(std::iter::once(letter)))
+    {
+        Cow::Borrowed(word)
+    } else {
+        Cow::Owned(word.chars().flat_map(char::to_lowercase).collect())
+    }
+}
+
+impl<'a> WrittenWord<'a> {
+    fn about(raw: &'a str, mode: MatchMode) -> Self {
+        let repairable = mode != MatchMode::Exact
+            && raw.chars().count() >= 2
+            && !is_own_vocabulary(raw)
+            && !is_common_english_word(raw);
+        Self {
+            raw,
+            lowered: repairable.then(|| lower_case(raw)),
+        }
+    }
+
+    fn rank_against(&self, expected: &str) -> Option<u8> {
+        rank_lowered(self.raw, self.lowered.as_deref(), expected)
+    }
+}
+
+fn rank_lowered(raw: &str, lowered: Option<&str>, expected: &str) -> Option<u8> {
+    if raw.eq_ignore_ascii_case(expected) {
         return Some(0);
     }
-    if mode == MatchMode::Exact
-        || actual.chars().count() < 2
-        || is_own_vocabulary(actual)
-        || is_common_english_word(actual)
-    {
-        return None;
-    }
-    let actual = actual
-        .chars()
-        .flat_map(char::to_lowercase)
-        .collect::<String>();
-    let expected = expected
-        .chars()
-        .flat_map(char::to_lowercase)
-        .collect::<String>();
-    if one_typo_away(&actual, &expected) {
+    let actual = lowered?;
+    let expected = lower_case(expected);
+    if one_typo_away(actual, &expected) {
         // A replaced or swapped character keeps the word whole; adding or
         // dropping one turns a longer action word into a shorter one.
         return Some(u8::from(actual.chars().count() != expected.chars().count()) + 1);
     }
-    action_typo_away(&actual, &expected).then_some(RECOVERY_RANK_WORST)
+    action_typo_away(actual, &expected).then_some(RECOVERY_RANK_WORST)
 }
 
 /// Every statement vocabulary a whole line can open or close with. Used only
@@ -18990,47 +19110,72 @@ fn is_own_vocabulary(word: &str) -> bool {
 /// single extra/missing character is combined with a swap or replacement.
 /// The match remains candidate-unique in `action_phrase_at`, so broad prose
 /// is never silently assigned an arbitrary action.
+/// One dropped character *and* one pair of neighbours the wrong way round —
+/// the two-mistake case `one_typo_away` refuses.
+///
+/// The length test comes before the two `Vec<char>`s rather than after, and
+/// the shortened word is never built: `dropping` reads the longer word with
+/// one position stepped over. It used to clone the whole vector once per
+/// character position, twice over, which came to **7.1 million vector clones**
+/// for one 4,337-line program. Same answer, no copies.
 fn action_typo_away(actual: &str, expected: &str) -> bool {
     if one_typo_away(actual, expected) {
         return true;
     }
-    let actual_chars = actual.chars().collect::<Vec<_>>();
-    let expected_chars = expected.chars().collect::<Vec<_>>();
-    if actual_chars.len().abs_diff(expected_chars.len()) > 2 {
+    if actual.chars().count().abs_diff(expected.chars().count()) > 2 {
         return false;
     }
+    let actual_chars = actual.chars().collect::<Vec<_>>();
+    let expected_chars = expected.chars().collect::<Vec<_>>();
     for index in 1..actual_chars.len() {
-        let mut shortened = actual_chars.clone();
-        shortened.remove(index);
-        if adjacent_transposition_away(&shortened, &expected_chars) {
+        if transposition_away_dropping(&actual_chars, index, &expected_chars) {
             return true;
         }
     }
     for index in 0..expected_chars.len() {
-        let mut shortened = expected_chars.clone();
-        shortened.remove(index);
-        if adjacent_transposition_away(&actual_chars, &shortened) {
+        // The question is symmetric, so which word is named first does not
+        // matter.
+        if transposition_away_dropping(&expected_chars, index, &actual_chars) {
             return true;
         }
     }
     false
 }
 
-fn adjacent_transposition_away(left: &[char], right: &[char]) -> bool {
-    if left.len() != right.len() {
+/// The character `long` would have at `index` if the one at `dropped` were
+/// taken out — without taking it out.
+fn char_dropping(long: &[char], dropped: usize, index: usize) -> char {
+    long[if index < dropped { index } else { index + 1 }]
+}
+
+/// True when `long`, with the character at `dropped` taken out, differs from
+/// `short` by exactly one pair of neighbours written the wrong way round.
+/// Asking it of either side gives the same answer, so which word is named
+/// first does not matter.
+fn transposition_away_dropping(long: &[char], dropped: usize, short: &[char]) -> bool {
+    if long.len() != short.len() + 1 {
         return false;
     }
-    let differences = left
-        .iter()
-        .zip(right)
-        .enumerate()
-        .filter_map(|(index, (a, b))| (a != b).then_some(index))
-        .collect::<Vec<_>>();
-    differences.len() == 2
-        && differences[1] == differences[0] + 1
-        && left[differences[0]] == right[differences[1]]
-        && left[differences[1]] == right[differences[0]]
+    let mut differences = 0usize;
+    let mut first = 0usize;
+    let mut second = 0usize;
+    for (index, &written) in short.iter().enumerate() {
+        if char_dropping(long, dropped, index) == written {
+            continue;
+        }
+        differences += 1;
+        match differences {
+            1 => first = index,
+            2 => second = index,
+            _ => return false,
+        }
+    }
+    differences == 2
+        && second == first + 1
+        && char_dropping(long, dropped, first) == short[second]
+        && char_dropping(long, dropped, second) == short[first]
 }
+
 
 fn condition_word_matches(actual: &str, expected: &[&str]) -> bool {
     expected.iter().any(|candidate| {
@@ -20984,43 +21129,74 @@ fn attached_korean_times_sentence(
     Some((count, 1))
 }
 
+/// True when one insertion, one deletion, one replacement or one swap of
+/// neighbours turns `actual` into `expected`.
+///
+/// This is the hottest function in the compiler: repairing a typo asks it once
+/// per candidate spelling in every vocabulary table it tries, which came to
+/// **10.5 million calls** for one 4,337-line program. It used to begin by
+/// collecting both words into `Vec<char>`, so it also came to 21 million heap
+/// allocations, and that was 21% of the time it took to compile that file.
+/// Nothing here needs random access that a second walk cannot give, so it does
+/// not allocate at all any more. The answer is the same in every case; the
+/// tests below and the whole example suite were compared byte for byte.
 fn one_typo_away(actual: &str, expected: &str) -> bool {
     if actual == expected {
         return true;
     }
-    let left: Vec<char> = actual.chars().collect();
-    let right: Vec<char> = expected.chars().collect();
-    if left.len().abs_diff(right.len()) > 1 {
+    let left_len = actual.chars().count();
+    let right_len = expected.chars().count();
+    if left_len.abs_diff(right_len) > 1 {
         return false;
     }
-    if left.len() == right.len() {
-        let differences: Vec<usize> = left
-            .iter()
-            .zip(&right)
-            .enumerate()
-            .filter_map(|(index, (a, b))| (a != b).then_some(index))
-            .collect();
-        return differences.len() == 1
-            || (differences.len() == 2
-                && differences[1] == differences[0] + 1
-                && left[differences[0]] == right[differences[1]]
-                && left[differences[1]] == right[differences[0]]);
+    if left_len == right_len {
+        // One replaced character, or two neighbours written the wrong way
+        // round. A third difference ends it, so at most two are ever held.
+        let mut differences = 0usize;
+        let mut first: Option<(usize, char, char)> = None;
+        let mut second: Option<(usize, char, char)> = None;
+        for (at, (a, b)) in actual.chars().zip(expected.chars()).enumerate() {
+            if a == b {
+                continue;
+            }
+            differences += 1;
+            match differences {
+                1 => first = Some((at, a, b)),
+                2 => second = Some((at, a, b)),
+                _ => return false,
+            }
+        }
+        if differences == 1 {
+            return true;
+        }
+        let (Some((first_at, first_left, first_right)), Some((second_at, second_left, second_right))) =
+            (first, second)
+        else {
+            return false;
+        };
+        return second_at == first_at + 1
+            && first_left == second_right
+            && second_left == first_right;
     }
-    let (shorter, longer) = if left.len() < right.len() {
-        (&left, &right)
+    // One character added or dropped: walk both, and allow the longer one to
+    // step on its own exactly once.
+    let (shorter, longer) = if left_len < right_len {
+        (actual, expected)
     } else {
-        (&right, &left)
+        (expected, actual)
     };
-    let (mut short_at, mut long_at, mut skipped) = (0, 0, false);
-    while short_at < shorter.len() && long_at < longer.len() {
-        if shorter[short_at] == longer[long_at] {
-            short_at += 1;
-            long_at += 1;
+    let mut short_chars = shorter.chars().peekable();
+    let mut skipped = false;
+    for long_char in longer.chars() {
+        let Some(&short_char) = short_chars.peek() else {
+            break;
+        };
+        if short_char == long_char {
+            short_chars.next();
         } else if skipped {
             return false;
         } else {
             skipped = true;
-            long_at += 1;
         }
     }
     true

@@ -6,6 +6,40 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.9.1
+- **Compiling is 2.9× faster, and produces exactly the same Python.** The
+  largest bundled example, `examples/peace.ko.nme` at 4,337 lines, took
+  **2,254 ms** and now takes **780 ms**. Every one of the 68 bundled examples
+  was compiled before and after and compared byte for byte; all 68 are
+  identical, and the 786 tests are unchanged. Nothing about the language moved.
+  - **The compiler is what the site runs**, in WebAssembly, as you type. At
+    2.2 seconds a program of that size froze the browser tab for four seconds
+    on every keystroke, and on a phone it was unusable. Speed here is not a
+    nicety; it is whether the page works at all.
+  - **Repairing a typo no longer allocates before it knows there is anything to
+    repair.** `one_typo_away` collected both words into `Vec<char>` before
+    looking at their lengths — 5.3 million calls for that one file, so 10.5
+    million heap allocations, 21% of the time. It walks the characters instead
+    and allocates nothing. `action_typo_away` cloned a whole vector once per
+    character position, twice over, 7.1 million times; it now reads around the
+    dropped position without building the shortened word.
+  - **The questions that do not depend on the candidate are asked once per
+    table instead of once per spelling.** Whether a written word can be
+    repaired at all — its length, whether it is a word the compiler already
+    knows, whether it is ordinary English — and its lower-case form were being
+    worked out again for every entry in tables that hold hundreds.
+  - **The same question is no longer asked six times over.** On that file
+    913,265 fuzzy word-match queries resolve to 148,289 distinct ones, because
+    forty matchers walk the same line and several are worked out three and four
+    times. `best_action_rank` is a pure function of the word, the table and the
+    mode, so its answers are remembered for the length of one parse and thrown
+    away after it. A table is named by its address, which is a name for it only
+    because the type says `'static`: a temporary list will not compile there.
+  - **One quadratic is gone.** `count_remaining_ends` re-walked the rest of the
+    file for every line. It cost little on a 4,000-line program and 3.5 seconds
+    on a 32,000-line one; a single backward pass now answers it for every line
+    at once.
+
 ## 0.9.0
 - **A comparison that can never be true is refused, not compiled** (`E0606`).
   A word that matches a name filled further up is read as that name's value.

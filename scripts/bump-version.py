@@ -55,10 +55,14 @@ def main() -> None:
 
     cargo.write_text(text.replace(f'version = "{current}"', f'version = "{nxt}"', 1),
                      encoding="utf-8")
-    lock = ROOT / "Cargo.lock"
-    lock.write_text(lock.read_text(encoding="utf-8").replace(f'version = "{current}"',
-                                                            f'version = "{nxt}"'),
-                    encoding="utf-8")
+    # `Cargo.lock` used to be edited the same way — replace the old number with
+    # the new one, everywhere. That is wrong, and on 0.9.0 → 0.9.1 it fired:
+    # `unic-emoji-char` is also at 0.9.0, so the lock file came out claiming a
+    # version of it that does not exist and `cargo` refused to build anything.
+    # Let cargo write its own lock file; it changes exactly the three packages
+    # in this workspace and nothing else.
+    subprocess.run(["cargo", "metadata", "--format-version", "1", "--offline"],
+                   cwd=ROOT, check=True, stdout=subprocess.DEVNULL)
     for name in QUOTES_VERSION:
         path = ROOT / name
         path.write_text(path.read_text(encoding="utf-8").replace(current, nxt),
