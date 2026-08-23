@@ -14,7 +14,7 @@ not exist.
 
 NME (NeedMoreEasy) is **a small programming language that turns ordinary
 sentences into Python**. You can write it in English, in Korean, or mix the two
-on one line. This document describes version `0.8.0`.
+on one line. This document describes version `0.9.0`.
 
 **Three rules that matter.**
 
@@ -218,6 +218,10 @@ on one line. This document describes version `0.8.0`.
 | Sentence | `to hail someone:` | `def hail(someone):` |
 | Sentence | `do hail with Mina` | `hail("Mina")` |
 | Sentence | `run hail with Mina` | `hail("Mina")` |
+| Sentence | `give back score` | `return score` |
+| Sentence | `answer with score` | `return score` |
+| Sentence | `show the result of greet` | `print(greet())` |
+| Sentence | `set said to the result of hail with Mina` | `said = hail("Mina")` |
 
 ### Working with text — length and case
 
@@ -384,6 +388,11 @@ on one line. This document describes version `0.8.0`.
 | 몇 개 / Copies | `times` | `개` · `번` |
 | 몇 번째와 함께 / With its position | `with` | `함께` · `같이` |
 | 나머지 / Remainder | `remainder` · `rest` · `leftover` | `나머지` |
+| 돌려주기 / Give back | `give` · `hand` · `send` | `돌려줘` · `돌려줘요` · `돌려주기` · `돌려줍니다` · `돌려주세요` |
+| 돌려주기 뒷말 / Back | `back` | — |
+| 답으로 / Answer with | `answer` | `결과로` · `답으로` · `결과는` · `답은` |
+| 한 결과 / The result of | `result` · `answer` | `결과` · `답` · `결과값` |
+| 한 / Having run | — | `한` · `해서` · `실행한` · `시킨` |
 | 몫 / Quotient | `quotient` | `몫` |
 | 온전한 수 / Whole number | `whole` | — |
 | 이은 것 / Joined thing | — | `이은` · `이어붙인` · `붙인` |

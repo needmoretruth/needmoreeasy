@@ -5,6 +5,8 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+
+## 0.9.0
 - **A comparison that can never be true is refused, not compiled** (`E0606`).
   A word that matches a name filled further up is read as that name's value.
   So in a program that says `수호룬은 거짓`, the line
