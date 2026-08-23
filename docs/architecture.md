@@ -248,8 +248,17 @@ example program, and knowing that saves the afternoon it cost to find out.
 | `cargo test --release -p nme-core` — 16 binaries, 600 tests | **4m 28s** |
 | the same in debug | **60m+**, twice abandoned unfinished |
 | compiling `examples/peace.ko.nme` — release | **2.37s** |
-| the same file — debug | **8m 01s**, or **200×** |
+| the same file — debug | **6–8m**, or **150–200×** |
+| compiling `examples/hello.ko.nme` — debug | **0.09s** |
 | incremental release build, 6 jobs | 18.2s |
+
+The last two lines are the point. Debug is not uniformly slow: a small program
+compiles in a tenth of a second either way. **One file decides the whole suite.**
+
+The debug figure for `peace.ko.nme` is a range because it depends on what else
+the machine is doing — 8m 01s while another project's linker had six processes
+running, 5m 57s and 6m 10s once that finished. Measure it again before trusting
+either end.
 
 The build figure is *incremental*: the dependency crates were already in
 `target/release`. A cold release build is far longer, because `rustpython-parser`
@@ -258,7 +267,7 @@ has to be compiled first.
 **Why one file decides it.** Several tidier tests convert every program in
 `examples/` through all six spellings, and `peace.ko.nme` is 4,337 lines — by
 far the largest. The debug multiplier on that one file therefore lands on the
-test suite as a whole. Of the 600 release tests, 74 library tests (tidier and
+test suite as a whole; nothing else in `examples/` is close. Of the 600 release tests, 74 library tests (tidier and
 converter) account for 250 of the 268 seconds; the other 15 binaries together
 finish in under a second.
 
