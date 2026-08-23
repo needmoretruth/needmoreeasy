@@ -37,6 +37,7 @@
 //! See `docs/architecture.md` in the repository for the full design
 //! rationale and the rules every contributor must follow.
 
+pub mod comparisons;
 pub mod convert;
 mod from_python;
 pub mod diagnostics;

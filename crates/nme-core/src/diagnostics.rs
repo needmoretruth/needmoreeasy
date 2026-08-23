@@ -170,6 +170,8 @@ pub enum DiagnosticCode {
     StatementDoesNothing,
     /// A curly quote or another character NME cannot read as a quote mark.
     CurlyQuote,
+    /// A comparison whose two sides are kinds that can never be equal.
+    ComparisonNeverTrue,
     /// A sentence-style statement across several physical lines.
     MultilineSentence,
     /// The Python source given to the converter is not valid.
@@ -356,6 +358,7 @@ impl DiagnosticCode {
             Self::UnknownActionWord => "E0603",
             Self::StatementDoesNothing => "E0604",
             Self::CurlyQuote => "E0605",
+            Self::ComparisonNeverTrue => "E0606",
             Self::MultilineSentence => "E0701",
             Self::ConvertInvalidPython => "E0702",
             Self::CliUnknownCommand => "E9001",
@@ -394,7 +397,7 @@ impl DiagnosticCode {
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 113] = [
+    pub const ALL: [DiagnosticCode; 114] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -460,6 +463,7 @@ impl DiagnosticCode {
         Self::UnknownActionWord,
         Self::StatementDoesNothing,
         Self::CurlyQuote,
+        Self::ComparisonNeverTrue,
         Self::MultilineSentence,
         Self::ConvertInvalidPython,
         Self::CliUnknownCommand,
@@ -1086,6 +1090,13 @@ impl DiagnosticCode {
                 "이 줄에 둥근 따옴표가 있습니다",
                 "Word processors turn `\"` into `\u{201c}` and `\u{201d}`, and `'` into `\u{2018}` and `\u{2019}`. Python and NME read only the straight marks, so replace the curly quotes with `\"` or `'`. NME does not swap them for you, because inside a Python string a curly quote is ordinary text that must be kept exactly.",
                 "워드프로세서는 `\"`를 `\u{201c}`와 `\u{201d}`로, `'`를 `\u{2018}`와 `\u{2019}`로 바꿉니다. Python과 NME는 곧은 따옴표만 읽으므로 둥근 따옴표를 `\"`나 `'`로 바꿔 주세요. Python 문자열 안의 둥근 따옴표는 그대로 두어야 할 보통 글자라서 NME가 대신 바꾸지 않습니다.",
+            ),
+            Self::ComparisonNeverTrue => (
+                "E0606",
+                "a comparison that can never be true",
+                "참이 될 수 없는 비교",
+                "A word that names a value further up is read as that value, so `if choice equals guard` weighs the answer against whatever `guard` holds. When the two sides are kinds that never match \u{2014} text against a number, text against true/false, text against a list, a job name against anything a reader types \u{2014} the branch is dead for every input, and NME refuses rather than compiling a line that can only be skipped. `if bag contains sword` is read the same way, and so is a condition written as Python. Either give the value a different name so the word stands for itself, or make the two sides the same kind: `ask number` reads an answer as a number. A number against true/false is never reported, because Python answers `True == 1` with `True`. A comparison that is always true is reported only where an `else` under it would never run.",
+                "위에서 값을 담아 둔 이름과 같은 낱말은 그 값으로 읽히므로, `만약에 선택이 수호룬과 같으면`은 대답을 `수호룬`이 담고 있는 값과 견줍니다. 두 쪽이 절대 같아질 수 없는 종류이면 \u{2014} 글과 숫자, 글과 참/거짓, 글과 목록, 그리고 일 이름과 사람이 치는 글 \u{2014} 그 가지는 어떤 입력에도 실행되지 않으므로, NME는 건너뛰기만 하는 줄을 만들지 않고 거절합니다. `만약에 가방에 검이 있으면`처럼 목록에서 찾는 문장과, 조건을 파이썬으로 적은 줄도 같게 봅니다. 값을 담은 이름을 다른 이름으로 바꿔 낱말 그대로 견주거나, 두 쪽의 종류를 맞추세요. `숫자로 물어봐`는 대답을 숫자로 읽습니다. 숫자와 참/거짓은 알리지 않습니다 \u{2014} 파이썬이 `True == 1`을 참이라고 답하기 때문입니다. 무엇을 넣어도 참인 비교는 그 아래 `아니면`이 영영 실행되지 않을 때만 알립니다.",
             ),
             Self::MultilineSentence => (
                 "E0701",

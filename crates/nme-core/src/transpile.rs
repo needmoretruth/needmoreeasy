@@ -6,7 +6,7 @@
 
 use crate::diagnostics::{Diagnostic, DiagnosticCode, Span};
 use crate::syntax::{Code, NmeStmt};
-use crate::{lexer, lower, parser};
+use crate::{comparisons, lexer, lower, parser};
 
 /// A `.nme` module import discovered while transpiling: the other file's
 /// path and the explicit names that form its interface.
@@ -101,6 +101,13 @@ pub fn transpile_with_modules(
     let lines = lexer::logical_lines(source).map_err(|problem| vec![problem])?;
     let program = parser::parse_program(source, &lines)?;
     let nme_lines = &program.nme_lines;
+    // A comparison whose two sides can never be equal parses perfectly and
+    // means nothing, so it has to be caught here rather than by the parser:
+    // the reading is only knowable once every line has been read.
+    let never_meet = comparisons::comparisons_that_never_meet(source, &lines, nme_lines);
+    if !never_meet.is_empty() {
+        return Err(never_meet);
+    }
     let imports = nme_lines
         .iter()
         .filter_map(|line| match &line.stmt {

@@ -63,7 +63,7 @@ keeps going is all it takes.
 4. **Four commands means three `else if`s.** The last `else` is the way out:
 
    ```nme
-   set command to list
+   set command to drop
    if command equals add
        show adding
    else if command equals drop

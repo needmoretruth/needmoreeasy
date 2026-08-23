@@ -905,6 +905,7 @@ touched.**
 | `E0603` | NME does not know this word |
 | `E0604` | this line cannot do anything |
 | `E0605` | this line uses a curly quote |
+| `E0606` | a comparison that can never be true |
 | `E0701` | a sentence-style line across several physical lines |
 | `E0702` | the Python source is not valid |
 | `E9001` | unknown command |

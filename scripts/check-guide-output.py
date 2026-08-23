@@ -130,6 +130,29 @@ def promised_inline(lines: list[str], opens: int, after: int) -> list[str]:
     return above or spans(lines[after : after + 3])
 
 
+# The words a line uses to put something on screen, in both languages. A span
+# quoted by the guide is a promise about output when it stands on one of these.
+SHOWS_KO = ("말해줘", "말해", "출력해")
+SHOWS_EN = ("show", "say", "print")
+
+
+def shown_by_a_line_that_shows(span: str, program: str) -> bool:
+    """True when `span` stands on a line of *this* program that shows it.
+
+    This block only, never the whole file and never its twin: the promise is
+    about what this program prints. A guide that quotes `add 2 3` as the line
+    its interpreter reads also has a later program that shows those words in a
+    help message, and searching every block would read the one as the other.
+    """
+    for line in program.splitlines():
+        if span not in line:
+            continue
+        bare = line.strip()
+        if bare.endswith(SHOWS_KO) or bare.split(" ", 1)[:1] and bare.split(" ", 1)[0] in SHOWS_EN:
+            return True
+    return False
+
+
 def pairs(path: Path) -> list[tuple[int, str, list[str]]]:
     """Each ```nme block together with what the guide promises it prints.
 
@@ -168,7 +191,18 @@ def pairs(path: Path) -> list[tuple[int, str, list[str]]]:
             # A span that also appears in the program is quoting the code to
             # explain it — `break`, `min(numbers)`, the file's own name — not
             # promising what comes out.
-            said = [w for w in promised_inline(lines, line - 1, after) if w not in code]
+            #
+            # Except on a line that shows something. There the words *are* what
+            # comes out, and dropping them hid a real fault for as long as this
+            # check has existed: `잔액이 모자랍니다 말해줘` under `잔액은 50`
+            # prints `50이 모자랍니다`, because `잔액` is a name the program
+            # made and the sentence handed back its value. The guide promised
+            # the sentence, the filter saw the sentence in the program, and the
+            # check stayed green.
+            said = [
+                w for w in promised_inline(lines, line - 1, after)
+                if w not in code or shown_by_a_line_that_shows(w, body)
+            ]
             if said:
                 out.append((line, body, said))
             continue

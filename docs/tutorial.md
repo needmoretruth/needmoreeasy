@@ -95,6 +95,8 @@ If indentation is getting in the way, write the same control flow as one flat
 block and close it with `end`:
 
 ```nme
+set answer to random number from 1 to 10
+ask number guess Pick a number from 1 to 10
 while guess is not equal to answer
 show Try again
 ask number guess Pick another number

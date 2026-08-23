@@ -5,6 +5,58 @@ English | [한국어](CHANGELOG.ko.md)
 All notable changes to NME are recorded here.
 
 ## Unreleased
+- **A comparison that can never be true is refused, not compiled** (`E0606`).
+  A word that matches a name filled further up is read as that name's value.
+  So in a program that says `수호룬은 거짓`, the line
+  `만약에 선택이 수호룬과 같으면` after `선택을 물어봐 수호룬, 폭약` weighs what
+  the reader typed against `False`, and that branch runs for no input at all.
+  Neither compiling nor running said a word, so the program was quietly wrong
+  for ever. Now it stops there and says what each side holds.
+  - **An answer taken with `ask` and weighed against a number** is caught in
+    the same place — `ask reply Type a number` followed by `if reply equals 7`.
+    That one is told about `ask number` as well.
+  - **A menu word that is also the name of a job** is caught too: with
+    `job attack:` further up, `if action equals attack` weighs typed text
+    against the job itself.
+  - **Looking something up in a list** is read the same way. Under
+    `set sword to false`, `if bag contains sword` searches a list of words for
+    true-or-false and never finds it. Only a list written out in one go and
+    never added to is read this way.
+  - **A condition written as Python** at the middle level — `만약 선택 == 수호룬:`
+    — gets the same check. One `name == value` shape only; brackets, arithmetic
+    and calls are left to Python.
+  - The pairs it catches are those among text, a number, true/false, a list, a
+    record and a job that cannot meet. **A number against true/false is not one
+    of them**: Python answers `True == 1` with `True`, so those two really can.
+  - What a name holds is decided by reading the whole program. A name given two
+    different kinds, or one that a line of plain Python so much as mentions, is
+    dropped from the check — it speaks only when it is certain.
+  - None of the 158 examples that ship with NME, and none of the 1,011 programs
+    in the documentation, is caught by it.
+  - ⚠**What it reaches today**: a name's kind is read from two statements only,
+    `set` and `ask`. One line of `add 1 to score` drops `score` from the check
+    for that whole file, and a counter is almost always written that way — so
+    what this release catches is mostly names set once and left alone. Reading
+    the kind through an update (a number stays a number, text stays text) would
+    widen it a long way; it is left for later so this release carries one rule
+    and not two.
+  - ⚠**A loop condition** can have no `else`, so an always-true one is never
+    reported: a loop that leaves only through `break` is ordinary.
+- **The Korean side of guide 31 (the bank) was teaching output it did not
+  produce.** With `잔액은 50` above it, `잔액이 모자랍니다 말해줘` printed
+  `50이 모자랍니다`, because `잔액` was already a name; the guide said
+  `잔액이 모자랍니다` came out. The sentence is now `돈이 모자랍니다`. The
+  English side always said `show there is not enough` and never had this.
+- **The Korean language reference showed a question with the previous answer
+  inside it.** Right under `이름을 물어봐 …`, the line
+  `물어봐 이름, 이름이 뭐예요?` put what had just been typed into the question,
+  because `이름` was a name by then. The second line is now
+  `물어봐 별명, 별명이 뭐예요?`.
+- **The output check could not see any of that.** `check-guide-output.py`
+  dropped every promised span that also appeared in the program, on the
+  grounds that a guide quoting its own code is not promising output. On a line
+  that shows something, those words *are* the output. It no longer drops them
+  there, and the bank guide turned red the moment it stopped.
 - **A job can hand an answer back.** `give back <value>` or `answer with
   <value>` inside it, and `set answer to the result of double with 5` outside
   (`결과로 <값> 돌려줘` and `답은 5에게 두배 한 결과`). Until now the only way

@@ -49,7 +49,7 @@ Hello world show
 
 ```nme
 이름을 물어봐 이름이 뭐예요?
-물어봐 이름, 이름이 뭐예요?
+물어봐 별명, 별명이 뭐예요?
 안녕하세요 이름! 말해줘
 
 ask name What is your name?
