@@ -17118,18 +17118,37 @@ fn korean_joiner_agrees(base: &str, joiner: &str) -> bool {
 
 /// Cuts a list into its items. A Korean joining particle is part of the word
 /// it follows, so the particle is trimmed off and the item ends there.
+///
+/// Only when another item follows it, though. A particle that joins nothing —
+/// the last word of the list, or a word with a comma after it — is not a
+/// particle but the end of the word: `빨강, 파랑, 초록, 노랑` held `파` and
+/// `노`, `결과, 성과` held `결` and `성`, and `아리랑` became `아리`, because
+/// `랑` and `과` agree with the syllable in front of them just as a real
+/// particle would. The Korean mastermind guide was comparing typed colours
+/// with `파` and `노` and could never be won.
 fn split_list_items(tokens: &[Token]) -> Vec<Vec<Token>> {
     let mut items = Vec::new();
     let mut current: Vec<Token> = Vec::new();
-    for token in tokens {
-        if matches!(token.tok, Tok::Comma | Tok::And) || token_matches_exact(token, LIST_JOINERS) {
+    let is_separator = |token: &Token| {
+        matches!(token.tok, Tok::Comma | Tok::And) || token_matches_exact(token, LIST_JOINERS)
+    };
+    for (at, token) in tokens.iter().enumerate() {
+        if is_separator(token) {
             items.push(std::mem::take(&mut current));
             continue;
         }
+        let item_follows = tokens[at + 1..]
+            .iter()
+            .find(|next| !is_command_ending(next))
+            .is_some_and(|next| !is_separator(next));
         if let Tok::Name { name } = &token.tok {
+            // `이랑` is two syllables that almost no word ends in, so
+            // `노랑이랑, 파랑` still loses it; the one-syllable particles are
+            // the ends of too many words to cut where nothing follows them.
             if let Some(base) = LIST_JOINERS
                 .iter()
                 .filter(|joiner| joiner.chars().next().is_some_and(|c| !c.is_ascii()))
+                .filter(|joiner| item_follows || **joiner == "이랑")
                 .find_map(|joiner| {
                     name.strip_suffix(*joiner)
                         .filter(|base| !base.is_empty() && korean_joiner_agrees(base, joiner))

@@ -878,6 +878,31 @@ fn a_korean_word_ending_in_the_joining_particle_stays_whole() {
     );
 }
 
+/// A particle joins two items, so a word with no item after it keeps its end.
+/// `파랑` and `노랑` end in `랑` and `결과` in `과` exactly as the particles
+/// would, and the Korean mastermind guide's colours were `파` and `노`.
+#[test]
+fn a_word_with_no_item_after_it_keeps_the_syllable_a_particle_would_take() {
+    assert_eq!(
+        ok("색들은 목록 빨강, 파랑, 초록, 노랑\n"),
+        "색들 = [\"빨강\", \"파랑\", \"초록\", \"노랑\"]\n"
+    );
+    assert_eq!(
+        ok("결과들은 목록 결과, 성과\n"),
+        "결과들 = [\"결과\", \"성과\"]\n"
+    );
+    assert_eq!(ok("노래들은 목록 아리랑\n"), "노래들 = [\"아리랑\"]\n");
+    // Still a particle where another item follows, and `이랑` anywhere.
+    assert_eq!(
+        ok("색들은 목록 파랑과 노랑\n"),
+        "색들 = [\"파랑\", \"노랑\"]\n"
+    );
+    assert_eq!(
+        ok("색들은 목록 노랑이랑, 파랑\n"),
+        "색들 = [\"노랑\", \"파랑\"]\n"
+    );
+}
+
 /// A number added to a list goes *into* it.
 ///
 /// `bag = bag + 1` is a `TypeError` in every Python there has ever been, so
