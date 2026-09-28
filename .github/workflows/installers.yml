@@ -1,0 +1,60 @@
+name: Installers
+
+# Runs the one-line installers exactly as a visitor pastes them, on real
+# Linux, macOS and Windows machines, against the latest release. It runs when a
+# release is published, and by hand (with another address for the scripts)
+# before a change to them is published on the site.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      base:
+        description: Where install.sh and install.ps1 are fetched from
+        default: https://needmoreeasy.com
+
+permissions:
+  contents: read
+
+env:
+  BASE: ${{ inputs.base || 'https://needmoreeasy.com' }}
+
+jobs:
+  unix:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest]
+    steps:
+      - name: Install with the one-line installer
+        run: curl -fsSL "$BASE/install.sh" | sh
+      - name: nme runs a program, and the shell start-up file puts it on PATH
+        shell: bash
+        run: |
+          "$HOME/.nme/bin/nme" --version
+          { cat ~/.bashrc ~/.bash_profile ~/.zshrc ~/.profile 2>/dev/null || true; } | grep -F "$HOME/.nme/bin"
+          echo 'say Hello' > hello.nme
+          test "$("$HOME/.nme/bin/nme" run hello)" = Hello
+
+  windows:
+    name: windows-latest
+    runs-on: windows-latest
+    steps:
+      # `powershell` is Windows PowerShell 5.1, the one every Windows ships.
+      - name: Install with the one-line installer
+        shell: powershell
+        run: irm "$env:BASE/install.ps1" | iex
+      - name: nme runs a program written with PowerShell's own echo
+        shell: powershell
+        run: |
+          $nme = Join-Path $env:LOCALAPPDATA 'nme\bin\nme.exe'
+          & $nme --version
+          if ($LASTEXITCODE -ne 0) { throw 'nme --version failed' }
+          # Windows PowerShell 5.1 writes this file as UTF-16.
+          echo 'say Hello' > hello.nme
+          $out = & $nme run hello
+          if ($LASTEXITCODE -ne 0 -or $out -ne 'Hello') { throw "nme run printed: $out" }
+          $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+          if (($userPath -split ';') -notcontains (Split-Path $nme)) { throw "not on the user PATH: $userPath" }
