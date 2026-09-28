@@ -1370,7 +1370,10 @@ fn a_full_stop_between_two_words_is_a_sentence_not_attribute_access() {
 fn a_full_stop_survives_the_action_word_being_written_last() {
     for (source, python) in [
         ("Hello. Goodbye show\n", "print(\"Hello. Goodbye\")\n"),
-        ("아쉽습니다. 줄은 이랬습니다 말해줘\n", "print(\"아쉽습니다. 줄은 이랬습니다\")\n"),
+        (
+            "아쉽습니다. 줄은 이랬습니다 말해줘\n",
+            "print(\"아쉽습니다. 줄은 이랬습니다\")\n",
+        ),
         ("안녕. 잘가 말해줘\n", "print(\"안녕. 잘가\")\n"),
         ("One. Two. Three show\n", "print(\"One. Two. Three\")\n"),
     ] {

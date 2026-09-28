@@ -39,8 +39,8 @@
 
 pub mod comparisons;
 pub mod convert;
-mod from_python;
 pub mod diagnostics;
+mod from_python;
 pub mod lexer;
 pub mod lower;
 pub mod parser;

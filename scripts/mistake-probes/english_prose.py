@@ -59,7 +59,7 @@ def newest_nme():
     test was measured against the previous release binary; every number came
     back green because nothing under test was being run.
     """
-    root = Path("/home/user/nmt/needmoreeasy")
+    root = Path(__file__).resolve().parents[2]
     found = sorted(
         (root / "target/release/nme", root / "target/debug/nme"),
         key=lambda path: -path.stat().st_mtime if path.is_file() else 0,

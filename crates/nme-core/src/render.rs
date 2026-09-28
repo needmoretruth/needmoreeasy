@@ -8,14 +8,13 @@
 //! writer wrote it.
 
 use crate::convert::{Language, SyntaxLevel};
-use crate::from_python;
 use crate::diagnostics::korean_particle;
+use crate::from_python;
 use crate::lower::{lower_condition, lower_reading, lower_value};
 use crate::syntax::{
     Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, ItemPosition, ListOrder,
     Literal, LogicalOp, ModuleVersion, NmeStmt, Reading, SplitBy, TextPart, TextTemplate, UpdateOp,
-    ZeroKnowledgeValue,
-    Value, CHANCE_SCALE, COOLDOWN_PREFIX, ELAPSED_PYTHON,
+    Value, ZeroKnowledgeValue, CHANCE_SCALE, COOLDOWN_PREFIX, ELAPSED_PYTHON,
 };
 
 /// One statement, written in one level of one language.
@@ -268,10 +267,15 @@ impl Rewrite<'_> {
         // beginner line that already carries a pair — `when (ready and
         // waiting)` — is not one the parser reads. So the outer pair comes
         // off here, where it is known to be an outer pair.
-        Some(match lowered.strip_prefix('(').and_then(|inner| inner.strip_suffix(')')) {
-            Some(inner) if is_wholly_inside_brackets(&lowered) => inner.to_string(),
-            _ => lowered,
-        })
+        Some(
+            match lowered
+                .strip_prefix('(')
+                .and_then(|inner| inner.strip_suffix(')'))
+            {
+                Some(inner) if is_wholly_inside_brackets(&lowered) => inner.to_string(),
+                _ => lowered,
+            },
+        )
     }
 
     // ------------------------------------------------------------ sentence
@@ -878,7 +882,10 @@ impl Rewrite<'_> {
                     (CompareOp::LessOrEqual, false) => format!("{right}보다 작거나 같으면"),
                     _ => return None,
                 };
-                Some((format!("{} {comparison}", korean_marked(&left, "이", "가")), true))
+                Some((
+                    format!("{} {comparison}", korean_marked(&left, "이", "가")),
+                    true,
+                ))
             }
             Condition::Logical {
                 left,
@@ -994,7 +1001,9 @@ impl Rewrite<'_> {
             ConditionValue::Remainder { of, by } => Some(self.remainder(of, by)),
             ConditionValue::Quotient { of, by } => Some(self.quotient(of, by)),
             ConditionValue::AsNumber { of } => Some(self.as_number(of)),
-            ConditionValue::JobResult { name, arguments } => Some(self.job_result(name, arguments)?),
+            ConditionValue::JobResult { name, arguments } => {
+                Some(self.job_result(name, arguments)?)
+            }
             ConditionValue::Entry { of, key } => {
                 let key = self.value(key)?;
                 Some(self.either(&format!("{key} in {of}"), &format!("{of}의 {key}")))
@@ -1497,7 +1506,6 @@ fn python_string(text: &str) -> String {
     quoted.push('"');
     quoted
 }
-
 
 /// The `>=`/`<` comparison the cooldown conditions are written from, read back
 /// into the name it was written for.

@@ -176,14 +176,20 @@ fn a_python_colon_is_read_past() {
     );
     // A line that already reads keeps its own mark out of the message.
     assert_eq!(ok("안녕 말해줘:\n"), "print(\"안녕\")\n");
-    assert_eq!(ok("점수는 0\n점수에 1 더해:\n"), "점수 = 0\n점수 = 점수 + 1\n");
+    assert_eq!(
+        ok("점수는 0\n점수에 1 더해:\n"),
+        "점수 = 0\n점수 = 점수 + 1\n"
+    );
 }
 
 /// A story block's own `:` is the statement, and a Python annotation is
 /// Python's. Neither is read past.
 #[test]
 fn the_colons_that_mean_something_are_left_alone() {
-    assert_eq!(ok("story:\n  안녕\nend\n"), "if True:\n  print(\"안녕\")\n# end\n");
+    assert_eq!(
+        ok("story:\n  안녕\nend\n"),
+        "if True:\n  print(\"안녕\")\n# end\n"
+    );
     assert_eq!(ok("x: int = 5\n"), "x: int = 5\n");
 }
 
@@ -224,7 +230,12 @@ fn a_written_mark_ends_the_condition() {
 /// says the word is doing a command's job.
 #[test]
 fn korean_output_verbs_nme_does_not_have_are_read_as_output() {
-    for source in ["말합니다 안녕\n", "출력하기 안녕\n", "프린트해 안녕\n", "보여주기 안녕\n"] {
+    for source in [
+        "말합니다 안녕\n",
+        "출력하기 안녕\n",
+        "프린트해 안녕\n",
+        "보여주기 안녕\n",
+    ] {
         assert_eq!(ok(source), "print(\"안녕\")\n", "{source}");
     }
     // The same words at the end of a sentence about someone speaking are
@@ -258,7 +269,11 @@ fn korean_waiting_verbs_nme_does_not_have_are_read_as_waiting() {
 #[test]
 fn korean_repeating_verbs_nme_does_not_have_are_read_as_repeating() {
     for source in ["3번 돌려서 안녕 말해줘\n", "3번 루프해서 안녕 말해줘\n"] {
-        assert_eq!(ok(source), "for _ in range(3): print(\"안녕\")\n", "{source}");
+        assert_eq!(
+            ok(source),
+            "for _ in range(3): print(\"안녕\")\n",
+            "{source}"
+        );
     }
     assert_eq!(
         ok("3번 반복합니다\n  안녕 말해줘\n끝\n"),
@@ -286,7 +301,10 @@ fn korean_asking_and_adding_verbs_nme_does_not_have_are_read_as_those() {
     }
     // Asking needs a question mark and adding needs a list the program has,
     // so neither of these is claimed.
-    assert_eq!(ok("이름을 입력해 주세요\n"), "print(\"이름을 입력해 주세요\")\n");
+    assert_eq!(
+        ok("이름을 입력해 주세요\n"),
+        "print(\"이름을 입력해 주세요\")\n"
+    );
     assert_eq!(
         ok("친구들에 민수 집어넣어야 한다\n"),
         "print(\"친구들에 민수 집어넣어야 한다\")\n"

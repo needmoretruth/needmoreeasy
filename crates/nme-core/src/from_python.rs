@@ -129,18 +129,18 @@ fn statements(text: &str) -> Vec<NmeStmt> {
     // A call on a name the program made: `friends.append(...)` and friends.
     if let Some((target, method, argument)) = method_call(text) {
         match (method, argument) {
-            ("append", Some(argument)) => found.extend(values(argument).into_iter().map(|value| {
-                NmeStmt::Append {
+            ("append", Some(argument)) => {
+                found.extend(values(argument).into_iter().map(|value| NmeStmt::Append {
                     target: target.to_string(),
                     value,
-                }
-            })),
-            ("remove", Some(argument)) => found.extend(values(argument).into_iter().map(|value| {
-                NmeStmt::Remove {
+                }));
+            }
+            ("remove", Some(argument)) => {
+                found.extend(values(argument).into_iter().map(|value| NmeStmt::Remove {
                     target: target.to_string(),
                     value,
-                }
-            })),
+                }));
+            }
             ("sort", Some("")) => found.push(NmeStmt::Arrange {
                 target: target.to_string(),
                 order: ListOrder::Sorted,
@@ -156,7 +156,11 @@ fn statements(text: &str) -> Vec<NmeStmt> {
     found.extend(waiting_statements(text));
     // `print(...)`, which is every way NME has of saying something.
     if let Some(inside) = call_argument(text, "print") {
-        found.extend(values(inside).into_iter().map(|value| NmeStmt::Say { value }));
+        found.extend(
+            values(inside)
+                .into_iter()
+                .map(|value| NmeStmt::Say { value }),
+        );
     }
     // A job being run: `greet()`, `greet("Mina")`.
     if let Some((name, arguments)) = plain_call(text) {
@@ -377,7 +381,9 @@ fn screen_statements(text: &str) -> Vec<NmeStmt> {
         }
     }
     // `say slowly Hello` — the pause is the one number in the wrapper.
-    if let Some(rest) = text.strip_prefix("[print(_ch, end=\"\", flush=True) or __import__(\"time\").sleep(") {
+    if let Some(rest) =
+        text.strip_prefix("[print(_ch, end=\"\", flush=True) or __import__(\"time\").sleep(")
+    {
         if let Some((seconds, rest)) = rest.split_once(") for _ch in ") {
             if let Some(printed) = rest.strip_suffix("]; print()") {
                 for value in printable_values(printed) {
@@ -533,9 +539,7 @@ fn values(text: &str) -> Vec<Value> {
                 if number >= 0 {
                     found.push(Value::Item {
                         of: of.to_string(),
-                        position: ItemPosition::Numbered(Code::Generated(
-                            (number + 1).to_string(),
-                        )),
+                        position: ItemPosition::Numbered(Code::Generated((number + 1).to_string())),
                     });
                 }
             }
@@ -576,32 +580,26 @@ fn values(text: &str) -> Vec<Value> {
         (
             " * ",
             &(|of: &str, by: &str| {
-                call_argument(of, "str").filter(|inner| is_name(inner.trim())).map(|inner| {
-                    Value::Repeated {
+                call_argument(of, "str")
+                    .filter(|inner| is_name(inner.trim()))
+                    .map(|inner| Value::Repeated {
                         of: inner.trim().to_string(),
                         times: code(by),
-                    }
-                })
+                    })
             }) as &dyn Fn(&str, &str) -> Option<Value>,
         ),
-        (
-            " % ",
-            &|of: &str, by: &str| {
-                is_name(of).then(|| Value::Remainder {
-                    of: of.to_string(),
-                    by: code(by.trim_matches(['(', ')'])),
-                })
-            },
-        ),
-        (
-            " // ",
-            &|of: &str, by: &str| {
-                is_name(of).then(|| Value::Quotient {
-                    of: of.to_string(),
-                    by: code(by.trim_matches(['(', ')'])),
-                })
-            },
-        ),
+        (" % ", &|of: &str, by: &str| {
+            is_name(of).then(|| Value::Remainder {
+                of: of.to_string(),
+                by: code(by.trim_matches(['(', ')'])),
+            })
+        }),
+        (" // ", &|of: &str, by: &str| {
+            is_name(of).then(|| Value::Quotient {
+                of: of.to_string(),
+                by: code(by.trim_matches(['(', ')'])),
+            })
+        }),
     ] {
         if let Some((left, right)) = split_once_outside(text, operator) {
             if let Some(value) = build(left.trim(), right.trim()) {
@@ -728,7 +726,9 @@ fn printable_inside(text: &str, build: &dyn Fn(Value) -> NmeStmt) -> Vec<Value> 
     );
     let mut found = Vec::new();
     for (before, after, want_text) in [(before, after, false), (before_text, after_text, true)] {
-        let Some(inside) = text.strip_prefix(before).and_then(|rest| rest.strip_suffix(after))
+        let Some(inside) = text
+            .strip_prefix(before)
+            .and_then(|rest| rest.strip_suffix(after))
         else {
             continue;
         };
@@ -790,7 +790,10 @@ fn one_condition(text: &str) -> Vec<Condition> {
     if let Some(inner) = call_argument(text, "not") {
         for condition in conditions(inner) {
             match condition {
-                Condition::Truthy { value, negated: false } => {
+                Condition::Truthy {
+                    value,
+                    negated: false,
+                } => {
                     found.push(Condition::Truthy {
                         value,
                         negated: true,

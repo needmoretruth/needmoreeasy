@@ -165,7 +165,6 @@ fn a_loop_name_is_never_reported() {
     assert!(python.contains("for 점수 in 점수들:"), "{python}");
 }
 
-
 /// A menu word that is also the name of a job. Nothing a reader types is ever
 /// equal to a function, so this branch was dead too.
 #[test]

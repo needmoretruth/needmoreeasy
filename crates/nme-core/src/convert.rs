@@ -203,12 +203,7 @@ pub fn convert_python(
 /// file with a handful of lines that cannot be written at this level, one
 /// transpile per line meant a person waiting. Halving a group asks the same
 /// question of far fewer programs and keeps the same answer.
-fn edits_that_hold(
-    source: &str,
-    python: &str,
-    already: &[Edit],
-    lines: &[Vec<Edit>],
-) -> Vec<Edit> {
+fn edits_that_hold(source: &str, python: &str, already: &[Edit], lines: &[Vec<Edit>]) -> Vec<Edit> {
     let mut kept = already.to_vec();
     keep_what_holds(source, python, &mut kept, lines);
     kept
@@ -1330,7 +1325,10 @@ mod tests {
         // save and is written as one.
         let source = "prompt = \"Name?\"\nanswer = input(prompt)\n";
         let result = converted(source, SyntaxLevel::Sentence, Language::English);
-        assert_eq!(result.source, "set prompt to Name?\nanswer = input(prompt)\n");
+        assert_eq!(
+            result.source,
+            "set prompt to Name?\nanswer = input(prompt)\n"
+        );
         assert_eq!(transpile(&result.source).unwrap(), source);
         assert_eq!(result.changed_lines, 1);
     }

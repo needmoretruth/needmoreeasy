@@ -175,12 +175,8 @@ fn proposed_edits(
             SyntaxLevel::Beginner => SyntaxLevel::Sentence,
             _ => SyntaxLevel::Beginner,
         };
-        for (level, read_messages) in [
-            (level, true),
-            (level, false),
-            (other, true),
-            (other, false),
-        ] {
+        for (level, read_messages) in [(level, true), (level, false), (other, true), (other, false)]
+        {
             let rewrite = Rewrite {
                 source,
                 level,
@@ -785,19 +781,25 @@ mod tests {
     /// takes). So a tidied file is uniform here as it is everywhere else.
     #[test]
     fn the_particle_is_the_one_the_word_takes() {
-        assert_eq!(sentence("금화는 10\n금화에 5 더해\n", Language::Korean),
-                   "금화는 10\n금화에 5 더해\n");
+        assert_eq!(
+            sentence("금화는 10\n금화에 5 더해\n", Language::Korean),
+            "금화는 10\n금화에 5 더해\n"
+        );
         assert_eq!(sentence("금화은 10\n", Language::Korean), "금화는 10\n");
         assert_eq!(sentence("set p to 1\n", Language::Korean), "p는 1\n");
         assert_eq!(sentence("set skip to 1\n", Language::Korean), "skip은 1\n");
-        assert_eq!(sentence("set friend to 1\n", Language::Korean), "friend는 1\n");
+        assert_eq!(
+            sentence("set friend to 1\n", Language::Korean),
+            "friend는 1\n"
+        );
     }
 
     #[test]
     fn a_line_it_cannot_write_is_left_exactly_as_it_was() {
         // A condition written as a method call has no words in either
         // language, so the line keeps every character it had.
-        let source = "digest는 \"00ab\"\n어려움은 2\nif digest.startswith(\"0\" * 어려움):\n    print(1)\n";
+        let source =
+            "digest는 \"00ab\"\n어려움은 2\nif digest.startswith(\"0\" * 어려움):\n    print(1)\n";
         for (level, language) in NME_CELLS {
             let conversion = tidied(source, level, language);
             assert!(

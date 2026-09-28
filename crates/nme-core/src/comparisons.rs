@@ -219,10 +219,9 @@ fn collect(
             right,
             negated,
         } => {
-            let (Some(&Kind::List), Some(&item)) = (
-                names.kinds.get(container),
-                names.items.get(container),
-            ) else {
+            let (Some(&Kind::List), Some(&item)) =
+                (names.kinds.get(container), names.items.get(container))
+            else {
                 return;
             };
             let Some(member) = condition_kind(right, source, names) else {
@@ -293,12 +292,17 @@ enum Shape {
 /// shape a reader at the middle level writes, not to understand Python.
 fn python_comparison(text: &str) -> Option<(&str, bool, &str)> {
     let mut body = text.trim();
-    if let Some(inner) = body.strip_prefix('(').and_then(|rest| rest.strip_suffix(')')) {
+    if let Some(inner) = body
+        .strip_prefix('(')
+        .and_then(|rest| rest.strip_suffix(')'))
+    {
         if !inner.contains(['(', ')']) {
             body = inner.trim();
         }
     }
-    if body.contains(['(', ')', '[', ']', '<', '>', '+', '-', '*', '/', '%', ',', '.']) {
+    if body.contains([
+        '(', ')', '[', ']', '<', '>', '+', '-', '*', '/', '%', ',', '.',
+    ]) {
         return None;
     }
     let (at, negated) = match (body.find("=="), body.find("!=")) {
@@ -523,12 +527,7 @@ fn words_of(text: &str) -> Vec<String> {
     found
 }
 
-fn read_statement(
-    stmt: &NmeStmt,
-    source: &str,
-    names: &mut Names,
-    spoiled: &mut HashSet<String>,
-) {
+fn read_statement(stmt: &NmeStmt, source: &str, names: &mut Names, spoiled: &mut HashSet<String>) {
     match stmt {
         NmeStmt::Ask { target, kind, .. } => {
             let known = match kind {

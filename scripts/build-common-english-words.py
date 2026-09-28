@@ -20,10 +20,17 @@ the current word lists call for. Both forms need the system spelling
 dictionary (`hunspell-en-us` on Debian and Ubuntu); `--check` skips when it is
 missing, because a machine without a dictionary cannot answer the question,
 and a plain run stops rather than write a list built from nothing.
+
+The list depends on the dictionary as much as on the compiler: two releases of
+`hunspell-en-us` give lists hundreds of words apart. So a plain run records the
+SHA-1 of the dictionary it read next to the list, and `--check` on a machine
+whose dictionary has a different SHA-1 says so and skips instead of reporting a
+drift that is really the dictionary's.
 """
 
 from __future__ import annotations
 
+import hashlib
 import pathlib
 import re
 import sys
@@ -154,19 +161,20 @@ def inflections(word: str) -> tuple[str, ...]:
     return (word + plural, word + "ed", word + "ing", word + "ly")
 
 
-def english_words(checking: bool = False) -> set[str]:
+def english_words(checking: bool = False) -> tuple[set[str], str]:
     for path in DICTIONARIES:
         if not path.exists():
             continue
         words = set()
-        for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        raw = path.read_bytes()
+        for line in raw.decode("utf-8", errors="replace").splitlines():
             word = line.split("/", 1)[0].split("\t", 1)[0].strip()
             # Lower-case only: the capitalised entries are names, and a name
             # is exactly what a beginner may be trying to print.
             if word.isalpha() and word.islower() and word.isascii():
                 words.add(word)
         if words:
-            return words
+            return words, hashlib.sha1(raw).hexdigest()
     if checking:
         print("common-english-words: skipped, no English dictionary on this machine")
         raise SystemExit(0)
@@ -213,7 +221,14 @@ def one_edit_away(word: str, alphabet: str) -> set[str]:
 
 def main() -> int:
     checking = "--check" in sys.argv[1:]
-    dictionary = english_words(checking)
+    dictionary, dictionary_sha1 = english_words(checking)
+    recorded = re.search(r"dictionary SHA-1 ([0-9a-f]{40})", PARSER.read_text(encoding="utf-8"))
+    if checking and recorded and recorded.group(1) != dictionary_sha1:
+        print(
+            "common-english-words: skipped, this machine's dictionary is not the one"
+            f" the list was built from (SHA-1 {recorded.group(1)[:10]}, here {dictionary_sha1[:10]})"
+        )
+        return 0
     alphabet = "abcdefghijklmnopqrstuvwxyz"
     known = set(dictionary)
     for word in dictionary:
@@ -261,7 +276,9 @@ def main() -> int:
             " run python3 scripts/build-common-english-words.py"
         )
         return 1
-    PARSER.write_text(source[:start] + replacement + source[end:], encoding="utf-8")
+    updated = source[:start] + replacement + source[end:]
+    updated = re.sub(r"dictionary SHA-1 [0-9a-f]{40}", f"dictionary SHA-1 {dictionary_sha1}", updated)
+    PARSER.write_text(updated, encoding="utf-8")
     print(f"common-english-words: wrote {len(listed)} words")
     return 0
 

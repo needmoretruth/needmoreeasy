@@ -81,8 +81,12 @@ jobs:
         run: cargo check --workspace --locked
       - name: Clippy
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      # Release, not debug: the tidier tests convert every bundled example, and
+      # unoptimised the largest one alone takes minutes per conversion — the
+      # whole suite runs past an hour in debug and under five minutes here.
+      # See "Test speed" in docs/architecture.md.
       - name: Test
-        run: cargo test --workspace --locked
+        run: cargo test --workspace --locked --release
       - name: Install the CLI and smoke test it (Unix)
         if: runner.os != 'Windows'
         shell: bash
@@ -141,4 +145,4 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Test the workspace on this CPython
-        run: cargo test --workspace --locked
+        run: cargo test --workspace --locked --release

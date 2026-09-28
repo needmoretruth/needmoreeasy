@@ -114,7 +114,10 @@ fn one_value_is_read_back_out() {
     // saving word tells the two apart: a number or a quoted string is a value,
     // a word is a name. A record kept under numbers is still readable through
     // a name.
-    assert_eq!(after_record_en("set Mina to 90 in ages"), "ages[\"Mina\"] = 90");
+    assert_eq!(
+        after_record_en("set Mina to 90 in ages"),
+        "ages[\"Mina\"] = 90"
+    );
     assert_eq!(
         after_record_en("set Mina to \"ninety\" in ages"),
         "ages[\"Mina\"] = \"ninety\""
@@ -638,10 +641,7 @@ fn giving_something_back_outside_a_job_is_still_a_sentence() {
 /// has already made a job. Everywhere else the words are ordinary.
 #[test]
 fn the_result_of_a_name_that_is_not_a_job_stays_a_sentence() {
-    let source = concat!(
-        "회의 한 결과 말해줘\n",
-        "show the result of yesterday\n",
-    );
+    let source = concat!("회의 한 결과 말해줘\n", "show the result of yesterday\n",);
     assert_eq!(
         ok(source),
         concat!(

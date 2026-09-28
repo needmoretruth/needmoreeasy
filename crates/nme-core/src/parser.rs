@@ -4058,7 +4058,8 @@ fn classify(
         return outcome;
     }
     if matches!(&outcome, Err(problem) if problem.code == DiagnosticCode::UnknownActionWord) {
-        if let Some(stmt) = classify_with_the_action_word_put_right(source, tokens, block, known_names)
+        if let Some(stmt) =
+            classify_with_the_action_word_put_right(source, tokens, block, known_names)
         {
             return Ok(Some(stmt));
         }
@@ -4349,7 +4350,9 @@ fn classify_written_line(
     debug_assert!(!tokens.is_empty());
 
     let text = token_text(source, tokens);
-    if as_written == LineAsWritten::Yes && (is_valid_python_statement(text) || is_valid_python_header(text)) {
+    if as_written == LineAsWritten::Yes
+        && (is_valid_python_statement(text) || is_valid_python_header(text))
+    {
         // Python accepts a few whole lines that cannot do anything at all.
         // Letting Python "win" one of those means shipping a program that
         // silently does nothing, so they are named here instead, and the ones
@@ -4447,7 +4450,7 @@ fn classify_written_line(
     }
     // `결과로 남은칸 돌려줘` — read beside the line that runs a job, and gated
     // the same way: on something the program has already made, not on a word.
-    if let Some(stmt) = match_give_back(source, tokens, known_names)? {
+    if let Some(stmt) = match_give_back(source, tokens, known_names) {
         return Ok(Some(stmt));
     }
 
@@ -5363,7 +5366,11 @@ fn match_natural_question(
         || question_asks_for_a_number(source, &tokens[..question_end]);
     let target = if let Some(target) = natural_age_question_target(tokens, question_end) {
         Some(target)
-    } else if let Some(first) = tokens.first().and_then(name_word).filter(|word| is_hangul(word)) {
+    } else if let Some(first) = tokens
+        .first()
+        .and_then(name_word)
+        .filter(|word| is_hangul(word))
+    {
         // The name a Korean question is about is a Korean word: `이름이
         // 뭐예요?`, `나이가 몇이에요?`. A word in Latin letters in front of one
         // — `ask number age 몇 살이에요?` — is the name the writer gave the
@@ -7839,10 +7846,7 @@ fn english_quotient(tokens: &[Token], known_names: &HashSet<String>) -> Option<(
 
 /// `answer as a number` — text the program already holds, read back as the
 /// number it was written as.
-fn english_as_a_number(
-    tokens: &[Token],
-    known_names: &HashSet<String>,
-) -> Option<(Value, usize)> {
+fn english_as_a_number(tokens: &[Token], known_names: &HashSet<String>) -> Option<(Value, usize)> {
     let of = saved_name_at(tokens.first()?, known_names)?;
     if !token_matches_exact(tokens.get(1)?, AS_WORDS_EN) {
         return None;
@@ -8737,10 +8741,6 @@ fn match_job(tokens: &[Token], block: &BlockCtx<'_>) -> Option<NmeStmt> {
     Some(NmeStmt::Job { name, parameters })
 }
 
-/// `do greet` · `run greet` / `인사하기 해줘` · `인사하기 실행해`.
-///
-/// Two words, and the name must be a job the program already made. That is
-/// the whole gate: `do` and `해줘` are far too ordinary to carry one.
 /// `결과로 남은칸 돌려줘` / `give back left` — the answer a job hands back.
 ///
 /// The gate is not the word. `돌려줘` and `give back` are among the most
@@ -8751,50 +8751,46 @@ fn match_give_back(
     source: &str,
     tokens: &[Token],
     known_names: &HashSet<String>,
-) -> Result<Option<NmeStmt>, Diagnostic> {
+) -> Option<NmeStmt> {
     if !known_names.contains(INSIDE_A_JOB_MARKER) {
-        return Ok(None);
+        return None;
     }
     let body = trim_command_endings(tokens);
     if body.len() < 2 {
-        return Ok(None);
+        return None;
     }
     // English says its verb first: `give back left`, `answer with left`.
-    let english_value_at = if token_matches_exact(&body[0], GIVE_BACK_FIRST_WORDS_EN)
-        && token_matches_exact(&body[1], GIVE_BACK_SECOND_WORDS_EN)
-    {
-        Some(2)
-    } else if token_matches_exact(&body[0], ANSWER_WITH_WORDS_EN)
-        && (matches!(body[1].tok, Tok::With) || token_matches_exact(&body[1], JOB_WITH_WORDS_EN))
-    {
-        Some(2)
-    } else {
-        None
-    };
-    if let Some(at) = english_value_at {
-        if at >= body.len() {
-            return Ok(None);
+    let english_verb = (token_matches_exact(&body[0], GIVE_BACK_FIRST_WORDS_EN)
+        && token_matches_exact(&body[1], GIVE_BACK_SECOND_WORDS_EN))
+        || (token_matches_exact(&body[0], ANSWER_WITH_WORDS_EN)
+            && (matches!(body[1].tok, Tok::With)
+                || token_matches_exact(&body[1], JOB_WITH_WORDS_EN)));
+    if english_verb {
+        if body.len() == 2 {
+            return None;
         }
-        return Ok(parse_value(source, &body[at..], known_names, false)
+        return parse_value(source, &body[2..], known_names, false)
             .ok()
-            .map(|value| NmeStmt::GiveBack { value }));
+            .map(|value| NmeStmt::GiveBack { value });
     }
     // Korean says its verb last, and may name what it is handing back first.
     if !token_matches_exact(&body[body.len() - 1], GIVE_BACK_WORDS_KO) {
-        return Ok(None);
+        return None;
     }
     let start = usize::from(token_matches_exact(&body[0], ANSWER_LEAD_WORDS_KO));
     let value_tokens = &body[start..body.len() - 1];
     if value_tokens.is_empty() {
-        return Ok(None);
+        return None;
     }
-    Ok(
-        parse_value(source, value_tokens, known_names, false)
-            .ok()
-            .map(|value| NmeStmt::GiveBack { value }),
-    )
+    parse_value(source, value_tokens, known_names, false)
+        .ok()
+        .map(|value| NmeStmt::GiveBack { value })
 }
 
+/// `do greet` · `run greet` / `인사하기 해줘` · `인사하기 실행해`.
+///
+/// Two words, and the name must be a job the program already made. That is
+/// the whole gate: `do` and `해줘` are far too ordinary to carry one.
 fn match_run_job(
     tokens: &[Token],
     known_names: &HashSet<String>,
@@ -11078,19 +11074,18 @@ fn match_while(
             );
             // See `match_when`: the `:` says where the body starts even when
             // the condition in front of it is written in words.
-            let condition = if is_valid_python_expression(
-                &source[condition_span.start..condition_span.end],
-            ) {
-                Condition::Python(Code::Source(condition_span))
-            } else {
-                parse_natural_condition(
-                    source,
-                    &tokens[condition_start..colon_at],
-                    None,
-                    known_names,
-                    spelling,
-                )?
-            };
+            let condition =
+                if is_valid_python_expression(&source[condition_span.start..condition_span.end]) {
+                    Condition::Python(Code::Source(condition_span))
+                } else {
+                    parse_natural_condition(
+                        source,
+                        &tokens[condition_start..colon_at],
+                        None,
+                        known_names,
+                        spelling,
+                    )?
+                };
             let inline = parse_suite_body(
                 source,
                 &tokens[colon_at + 1..],
@@ -11129,7 +11124,11 @@ fn match_while(
             condition_tokens_before(tokens, condition_start, relative_at, connector);
         (condition, body_start, Some(connector))
     } else if let Some(body_start) = comparison_ends_the_condition(tokens, condition_start) {
-        (tokens[condition_start..body_start].to_vec(), body_start, None)
+        (
+            tokens[condition_start..body_start].to_vec(),
+            body_start,
+            None,
+        )
     } else {
         (tokens[condition_start..].to_vec(), tokens.len(), None)
     };
@@ -11544,8 +11543,7 @@ fn subject_condition_body_is_action(
 /// words, these are one or two syllables that ordinary Korean words end in by
 /// accident — `황금가면`, `장면`, `수면`, `사면` — so a connector found only
 /// this way is the weakest signal the parser has for a condition.
-const GLUED_SHORT_CONDITION_ENDINGS_KO: &[&str] =
-    &["면", "먄", "이면", "이라면", "라면", "하면"];
+const GLUED_SHORT_CONDITION_ENDINGS_KO: &[&str] = &["면", "먄", "이면", "이라면", "라면", "하면"];
 
 /// The ending that `split_attached_condition_token` actually took off the
 /// word, or `None` when the word is not a connector with an ending glued to
@@ -11682,18 +11680,18 @@ fn match_when(
         // Python page puts it, and the condition in front of it is written in
         // words. The mark still says exactly where the body starts, so the
         // words are read as NME's own condition rather than refused.
-        let condition = if is_valid_python_expression(&source[condition_span.start..condition_span.end])
-        {
-            Condition::Python(Code::Source(condition_span))
-        } else {
-            parse_natural_condition(
-                source,
-                &tokens[consumed..colon_at],
-                None,
-                known_names,
-                spelling,
-            )?
-        };
+        let condition =
+            if is_valid_python_expression(&source[condition_span.start..condition_span.end]) {
+                Condition::Python(Code::Source(condition_span))
+            } else {
+                parse_natural_condition(
+                    source,
+                    &tokens[consumed..colon_at],
+                    None,
+                    known_names,
+                    spelling,
+                )?
+            };
         let inline = parse_suite_body(
             source,
             &tokens[colon_at + 1..],
@@ -16812,7 +16810,10 @@ fn push_choice(source: &str, group: Option<(usize, usize)>, choices: &mut Vec<St
     let Some((start, end)) = group else {
         return;
     };
-    let text = source[start..end].trim().trim_matches(['\'', '"']).to_string();
+    let text = source[start..end]
+        .trim()
+        .trim_matches(['\'', '"'])
+        .to_string();
     if !text.is_empty() {
         choices.push(text);
     }
@@ -17871,14 +17872,36 @@ fn remember_containers(stmt: &NmeStmt, source: &str, names: &mut HashSet<String>
         } if python_makes(code, source, "[", "]") || python_makes(code, source, "{", "}") => {
             names.insert(target.clone());
         }
-        NmeStmt::Times { inline: Some(inline), .. }
-        | NmeStmt::ForEach { inline: Some(inline), .. }
-        | NmeStmt::When { inline: Some(inline), .. }
-        | NmeStmt::While { inline: Some(inline), .. }
-        | NmeStmt::ElseIf { inline: Some(inline), .. }
-        | NmeStmt::Else { inline: Some(inline) }
-        | NmeStmt::Chance { inline: Some(inline), .. }
-        | NmeStmt::Forever { inline: Some(inline) } => {
+        NmeStmt::Times {
+            inline: Some(inline),
+            ..
+        }
+        | NmeStmt::ForEach {
+            inline: Some(inline),
+            ..
+        }
+        | NmeStmt::When {
+            inline: Some(inline),
+            ..
+        }
+        | NmeStmt::While {
+            inline: Some(inline),
+            ..
+        }
+        | NmeStmt::ElseIf {
+            inline: Some(inline),
+            ..
+        }
+        | NmeStmt::Else {
+            inline: Some(inline),
+        }
+        | NmeStmt::Chance {
+            inline: Some(inline),
+            ..
+        }
+        | NmeStmt::Forever {
+            inline: Some(inline),
+        } => {
             if let InlineStmt::Nme(inner) = inline {
                 remember_containers(inner, source, names);
             }
@@ -18555,6 +18578,10 @@ const RECOVERY_RANK_WORST: u8 = 3;
 /// exact reading is settled before this list is consulted, so `do it 3
 /// times`, `if ready`, `say hello` and `score is greater than 3` are
 /// untouched; only the repair is off.
+// Generated and packed by scripts/build-common-english-words.py from the
+// hunspell-en-us dictionary SHA-1 83f43f523920eecbdc721f76c776ce821e841252;
+// rustfmt would otherwise lay the 3,000 words out one per line.
+#[rustfmt::skip]
 const COMMON_ENGLISH_WORDS: &[&str] = &[
     "a", "aback", "abide", "able", "abode", "abort", "abound", "about", "abouts", "above",
     "aboved", "aboves", "abut", "acre", "across", "adds", "aded", "adly", "adown", "aero",
@@ -19175,7 +19202,6 @@ fn transposition_away_dropping(long: &[char], dropped: usize, short: &[char]) ->
         && char_dropping(long, dropped, first) == short[second]
         && char_dropping(long, dropped, second) == short[first]
 }
-
 
 fn condition_word_matches(actual: &str, expected: &[&str]) -> bool {
     expected.iter().any(|candidate| {
@@ -21169,8 +21195,10 @@ fn one_typo_away(actual: &str, expected: &str) -> bool {
         if differences == 1 {
             return true;
         }
-        let (Some((first_at, first_left, first_right)), Some((second_at, second_left, second_right))) =
-            (first, second)
+        let (
+            Some((first_at, first_left, first_right)),
+            Some((second_at, second_left, second_right)),
+        ) = (first, second)
         else {
             return false;
         };
