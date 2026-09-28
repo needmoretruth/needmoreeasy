@@ -103,6 +103,7 @@ impl Rewrite<'_> {
             stmt,
             NmeStmt::Times { inline: None, .. }
                 | NmeStmt::ForEach { inline: None, .. }
+                | NmeStmt::CountLoop { inline: None, .. }
                 | NmeStmt::Forever { inline: None }
                 | NmeStmt::Chance { inline: None, .. }
                 | NmeStmt::When { inline: None, .. }
@@ -216,6 +217,22 @@ impl Rewrite<'_> {
                         korean_name(items.as_str())?
                     ),
                 })
+            }
+            // The beginner header is the sentence one with the `:` that opens
+            // its block, and Korean leaves the repeat word off for it, the way
+            // `친구들의 친구마다:` does.
+            NmeStmt::CountLoop {
+                name,
+                start,
+                end,
+                inline: None,
+            } if self.colon => {
+                let start = self.code(start);
+                let end = self.code(end);
+                Some(self.either(
+                    &format!("count {name} from {start} to {end}"),
+                    &korean_count_header(name, &start, &end),
+                ))
             }
             NmeStmt::When { condition, inline } => {
                 let condition = self.python_condition(condition)?;
@@ -390,6 +407,31 @@ impl Rewrite<'_> {
                     }
                 }
             }
+            NmeStmt::CountLoop {
+                name,
+                start,
+                end,
+                inline,
+            } => {
+                let start = self.code(start);
+                let end = self.code(end);
+                match self.language {
+                    Language::English => self.with_inline(
+                        format!("count {name} from {start} to {end}"),
+                        " and ",
+                        inline.as_ref(),
+                    ),
+                    Language::Korean => {
+                        let header = korean_count_header(name, &start, &end);
+                        match inline {
+                            None => Some(format!("{header} 반복해")),
+                            Some(_) => {
+                                self.with_inline(format!("{header} 반복해서"), " ", inline.as_ref())
+                            }
+                        }
+                    }
+                }
+            }
             NmeStmt::Wait { seconds } => {
                 let seconds = self.code(seconds);
                 Some(match self.language {
@@ -446,6 +488,35 @@ impl Rewrite<'_> {
                     &format!("remove {value} from {target}"),
                     &format!("{target}에서 {value} 빼"),
                 ))
+            }
+            NmeStmt::SetItem {
+                target,
+                position,
+                value,
+            } => {
+                let value = self.value(value)?;
+                let becomes = korean_becomes(&value);
+                Some(match (self.language, position) {
+                    (Language::English, ItemPosition::First) => {
+                        format!("set the first of {target} to {value}")
+                    }
+                    (Language::English, ItemPosition::Last) => {
+                        format!("set the last of {target} to {value}")
+                    }
+                    (Language::English, ItemPosition::Numbered(at)) => {
+                        format!("set item {} of {target} to {value}", self.code(at))
+                    }
+                    (Language::Korean, ItemPosition::First) => {
+                        format!("{target} 첫 번째를 {becomes} 바꿔")
+                    }
+                    (Language::Korean, ItemPosition::Last) => {
+                        format!("{target} 마지막을 {becomes} 바꿔")
+                    }
+                    (Language::Korean, ItemPosition::Numbered(at)) => format!(
+                        "{target} {}를 {becomes} 바꿔",
+                        korean_counted(&self.code(at), "번째")
+                    ),
+                })
             }
             NmeStmt::RecordPut { target, key, value } => {
                 let key = self.value(key)?;
@@ -1010,6 +1081,7 @@ impl Rewrite<'_> {
                 let key = self.value(key)?;
                 Some(self.either(&format!("{key} in {of}"), &format!("{of}의 {key}")))
             }
+            ConditionValue::RandomItem { of } => Some(self.random_item(of)),
         }
     }
 
@@ -1120,6 +1192,7 @@ impl Rewrite<'_> {
                     format!("{of} {}", korean_counted(&self.code(at), "번째"))
                 }
             }),
+            Value::RandomItem { of } => Some(self.random_item(of)),
             Value::Joined { of, separator } => {
                 let (english, korean) = separator_words(separator)?;
                 Some(match (self.language, separator.as_str()) {
@@ -1430,6 +1503,14 @@ impl Rewrite<'_> {
         }
     }
 
+    /// `a random one of songs` / `노래들 중 아무거나`.
+    fn random_item(&self, of: &str) -> String {
+        self.either(
+            &format!("a random one of {of}"),
+            &format!("{of} 중 아무거나"),
+        )
+    }
+
     fn with_inline(
         &self,
         header: String,
@@ -1556,6 +1637,34 @@ fn percentage(permille: u32) -> String {
         whole.to_string()
     } else {
         format!("{whole}.{tenth}")
+    }
+}
+
+/// `n을 1부터 10까지 세면서` — a Korean counting-loop header without its
+/// closing word. Both ends take their particle straight on: the lexer cuts it
+/// off a number, and the parser takes it off a name.
+fn korean_count_header(name: &str, start: &str, end: &str) -> String {
+    format!(
+        "{name}{} {start}부터 {end}까지 세면서",
+        korean_particle(name, "을", "를")
+    )
+}
+
+/// `9로` · `0으로` · `7로` · `서울로` — what an item becomes.
+///
+/// Korean takes `로` after a vowel **and** after ㄹ, so `7` (칠) and `서울`
+/// take `로` although they end on a consonant. The parser reads both
+/// particles either way; this is only about writing the one a reader expects.
+fn korean_becomes(value: &str) -> String {
+    let rieul = match value.trim_end().chars().last() {
+        Some(last @ '가'..='힣') => (u32::from(last) - 0xAC00) % 28 == 8,
+        Some('1' | '7' | '8' | 'l' | 'L') => true,
+        _ => false,
+    };
+    if rieul {
+        korean_marked(value, "로", "로")
+    } else {
+        korean_marked(value, "으로", "로")
     }
 }
 

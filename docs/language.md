@@ -278,6 +278,43 @@ and both become `friends[0]`. There is no item 0: writing one is refused with
 `E0229` rather than quietly handing back the last item, which is what Python's
 `friends[-1]` would do.
 
+One item can be given a new value, counted from one the same way. The position
+may be a number or a name the program made, and the new value is anything a
+saving line accepts:
+
+```nme
+set values to list of 1, 2, 3
+set item 2 of values to 9
+change the last of values to 0
+show values
+수들은 목록 1, 2, 3
+수들 2번째를 9로 바꿔
+수들의 첫 번째를 0으로 바꿔
+수들 말해줘
+```
+
+`set item 2 of values to 9` becomes `values[1] = 9`, and `수들 순서 번째를
+0으로 바꿔` becomes `수들[순서 - 1] = 0`. A record has no second item, so the
+same line on a record is refused with `E0234`. Before this spelling existed,
+`set item 2 of values to 9` saved the words `2 of … to 9` into a name called
+`item`, and the program ran.
+
+One item picked at random is a value like any other — something to show, to
+save, or to compare:
+
+```nme
+set songs to list of Hey Jude, Yesterday, Let It Be
+show a random one of songs
+set song to a random item from songs
+노래들은 목록 봄날, 밤편지, 좋은날
+노래들 중 아무거나 말해줘
+고른노래는 노래들에서 아무거나
+```
+
+Both become `__import__("random").choice(songs)`. Like every list reading, it
+needs a name the program already made a list: `a random one of these days`
+stays a sentence.
+
 Two of these read a list inside a condition:
 
 <!-- nme-check: skip — a side-by-side vocabulary listing, not a program. -->
@@ -532,6 +569,32 @@ repeat forever
     아직 진행 중 말해줘
     멈춰
 ```
+
+A loop that counts gives each number to a name. Both ends are counted, so
+`from 1 to 10` is ten turns and the last one is `10`:
+
+```nme
+count n from 1 to 10
+    show n
+
+repeat with n from 3 to 1
+    show n
+
+수를 1부터 10까지 세면서 반복해
+    수 말해줘
+```
+
+The first becomes `for n in range(1, 11):`, and `3 to 1` counts down with
+`range(3, 0, -1)`. Korean may leave the particle off the counter (`수 1부터
+10까지 세면서 반복해`) when the word could not be carrying a different one.
+Either end may be a name the program made; then the direction is decided when
+the loop starts, in the same line of Python:
+`for n in (range(1, top + 1) if 1 <= top else range(1, top - 1, -1)):`. The
+beginner header is the same words with a colon — `count n from 1 to 10:` /
+`수를 1부터 10까지 세면서:` — and the one-line form is
+`count n from 1 to 3 and show n` / `수를 1부터 3까지 세면서 반복해서 수 말해줘`.
+`count sheep from dusk to dawn` names nothing to count with and stays a
+sentence.
 
 The compact colon form can also use an explicit closing word, so indentation is
 optional while you are learning:

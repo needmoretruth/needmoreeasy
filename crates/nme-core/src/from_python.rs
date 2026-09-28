@@ -105,6 +105,22 @@ fn statements(text: &str) -> Vec<NmeStmt> {
             found.extend(assignment_statements(target, value));
         }
         if let Some((of, key)) = subscript(target) {
+            // `values[1] = 9` is one item of a list given a new value, which
+            // the sentence counts from one. It is asked before the record
+            // reading for the same reason `values[1]` is read as an item
+            // before it is read as an entry: a whole number between the
+            // brackets is how a list is written to.
+            if is_name(of) {
+                for position in changed_positions(key) {
+                    for value in values(value) {
+                        found.push(NmeStmt::SetItem {
+                            target: of.to_string(),
+                            position: position.clone(),
+                            value,
+                        });
+                    }
+                }
+            }
             for key in values(key) {
                 for value in values(value) {
                     found.push(NmeStmt::RecordPut {
@@ -224,6 +240,20 @@ fn block_statements(header: &str, inline: Option<&InlineStmt>) -> Vec<NmeStmt> {
             }
             // `_` is Python's way of saying the loop never looks at what it
             // is holding, and `for each _ in ...` is not a sentence.
+            //
+            // A `range` with both ends is a loop that counts, and the sentence
+            // for it says both ends. It is asked before the loop over a list,
+            // which would read the same line as `for each n in range(1, 11)`.
+            if is_name(names.trim()) && names.trim() != "_" {
+                if let Some((start, end)) = counted_ends(items) {
+                    found.push(NmeStmt::CountLoop {
+                        name: names.trim().to_string(),
+                        start: code(&start),
+                        end: code(&end),
+                        inline: inline.clone(),
+                    });
+                }
+            }
             if is_name(names.trim()) && names.trim() != "_" {
                 found.push(NmeStmt::ForEach {
                     name: names.trim().to_string(),
@@ -620,6 +650,13 @@ fn values(text: &str) -> Vec<Value> {
     }
     if let Some(arguments) = call_argument(text, "__import__(\"random\").choice") {
         let inner = arguments.trim();
+        // `choice(songs)` picks from a list the program made; `choice((…))`
+        // picks from choices written on the line.
+        if is_name(inner) {
+            found.push(Value::RandomItem {
+                of: inner.to_string(),
+            });
+        }
         if let Some(inner) = inner.strip_prefix('(').and_then(|i| i.strip_suffix(')')) {
             let choices = split_outside(inner.trim_end().trim_end_matches(','), ",")
                 .into_iter()
@@ -887,10 +924,70 @@ fn condition_values(text: &str) -> Vec<ConditionValue> {
             Value::Arithmetic(arithmetic) => found.push(ConditionValue::Arithmetic(arithmetic)),
             Value::AsNumber { of } => found.push(ConditionValue::AsNumber { of }),
             Value::Entry { of, key } => found.push(ConditionValue::Entry { of, key }),
+            Value::RandomItem { of } => found.push(ConditionValue::RandomItem { of }),
             _ => {}
         }
     }
     found.push(ConditionValue::Python(code(text)));
+    found
+}
+
+/// The two ends a counting loop was written with, read off the `range(...)`
+/// it lowers to: `range(1, 11)`, `range(10, 0, -1)`, or the one-line choice
+/// between the two that a name at either end needs. Nothing is trusted — the
+/// reading is lowered again and kept only when it gives back this very line.
+fn counted_ends(items: &str) -> Option<(String, String)> {
+    let items = items.trim();
+    if let Some(arguments) = call_argument(items, "range") {
+        let numbers = split_outside(arguments, ",")
+            .into_iter()
+            .map(|piece| piece.trim().parse::<i64>())
+            .collect::<Result<Vec<_>, _>>()
+            .ok()?;
+        return match numbers.as_slice() {
+            [first, stop] if stop > first => Some((first.to_string(), (stop - 1).to_string())),
+            [first, stop, -1] if stop < first => Some((first.to_string(), (stop + 1).to_string())),
+            _ => None,
+        };
+    }
+    let inner = items.strip_prefix("(range(")?;
+    let (start, rest) = inner.split_once(", ")?;
+    let (end, _) = rest.split_once(" + 1)")?;
+    let bare = |text: &str| {
+        let text = text.trim();
+        text.strip_prefix('(')
+            .and_then(|inner| inner.strip_suffix(')'))
+            .unwrap_or(text)
+            .to_string()
+    };
+    Some((bare(start), bare(end)))
+}
+
+/// The items `values[…] = …` could be changing, counted from one.
+fn changed_positions(index: &str) -> Vec<ItemPosition> {
+    let index = index.trim();
+    let mut found = Vec::new();
+    match index {
+        "0" => found.push(ItemPosition::First),
+        "-1" => found.push(ItemPosition::Last),
+        _ => {}
+    }
+    if let Ok(number) = index.parse::<i64>() {
+        if number >= 0 {
+            found.push(ItemPosition::Numbered(Code::Generated(
+                (number + 1).to_string(),
+            )));
+        }
+    }
+    // `values[place - 1]` — a position the program holds in a name.
+    if let Some(written) = index.strip_suffix(" - 1") {
+        let written = written.trim();
+        let bare = written
+            .strip_prefix('(')
+            .and_then(|inner| inner.strip_suffix(')'))
+            .unwrap_or(written);
+        found.push(ItemPosition::Numbered(code(bare)));
+    }
     found
 }
 

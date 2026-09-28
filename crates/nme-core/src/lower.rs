@@ -289,6 +289,18 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
             };
             lower_suite(header, inline.as_ref(), source)
         }
+        NmeStmt::CountLoop {
+            name,
+            start,
+            end,
+            inline,
+        } => {
+            let header = format!(
+                "for {name} in {}:",
+                counting_range(&lower_code(start, source), &lower_code(end, source))
+            );
+            lower_suite(header, inline.as_ref(), source)
+        }
         // `time` is imported inline for the same reason the file and random
         // sentence forms import theirs: one NME line must stay one Python
         // line, so there is nowhere to put a separate import statement.
@@ -341,6 +353,15 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
         NmeStmt::Remove { target, value } => {
             format!("{target}.remove({})", lower_value(value, source))
         }
+        NmeStmt::SetItem {
+            target,
+            position,
+            value,
+        } => format!(
+            "{target}[{}] = {}",
+            changed_item_index(position, source),
+            lower_value(value, source)
+        ),
         NmeStmt::RecordPut { target, key, value } => format!(
             "{target}[{}] = {}",
             lower_value(key, source),
@@ -445,6 +466,55 @@ pub fn lower_stmt(stmt: &NmeStmt, source: &str) -> String {
                 .strip_suffix(".nme")
                 .unwrap_or(stripped);
             format!("from {stem} import {}", names.join(", "))
+        }
+    }
+}
+
+/// The `range(...)` a counting loop walks, both ends included.
+///
+/// Two written numbers say which way to count, so the range is written out
+/// the way a person would write it: `range(1, 11)`, `range(10, 0, -1)`. A
+/// name at either end could hold anything by the time the loop starts, and
+/// one NME line is one Python line, so the choice is made in the same line:
+/// up when the start is no bigger than the end, down otherwise. Counting
+/// `5부터 1까지` is what the sentence says, and it must not quietly run zero
+/// times the way `range(5, 2)` does.
+fn counting_range(start: &str, end: &str) -> String {
+    if let (Ok(first), Ok(last)) = (start.trim().parse::<i64>(), end.trim().parse::<i64>()) {
+        return if first <= last {
+            format!("range({first}, {})", last + 1)
+        } else {
+            format!("range({first}, {}, -1)", last - 1)
+        };
+    }
+    let start = atom_or_bracketed(start);
+    let end = atom_or_bracketed(end);
+    format!("(range({start}, {end} + 1) if {start} <= {end} else range({start}, {end} - 1, -1))")
+}
+
+/// A name or a number as it stands, anything longer in brackets, so an
+/// operator put next to it cannot change what it means.
+fn atom_or_bracketed(text: &str) -> String {
+    if is_simple_atom(text) {
+        text.trim().to_string()
+    } else {
+        format!("({})", text.trim())
+    }
+}
+
+/// The Python index of the item a line changes. The sentence counts from one
+/// and Python from zero; a written number is moved here so the Python reads
+/// `values[1]` and not `values[2 - 1]`.
+fn changed_item_index(position: &ItemPosition, source: &str) -> String {
+    match position {
+        ItemPosition::First => "0".to_string(),
+        ItemPosition::Last => "-1".to_string(),
+        ItemPosition::Numbered(code) => {
+            let written = lower_code(code, source);
+            match written.trim().parse::<i64>() {
+                Ok(number) => (number - 1).to_string(),
+                Err(_) => format!("{} - 1", atom_or_bracketed(&written)),
+            }
         }
     }
 }
@@ -617,6 +687,9 @@ fn lower_condition_value(value: &ConditionValue, source: &str) -> String {
             },
             source,
         ),
+        ConditionValue::RandomItem { of } => {
+            lower_value(&Value::RandomItem { of: of.clone() }, source)
+        }
     }
 }
 
@@ -711,6 +784,9 @@ pub(crate) fn lower_value(value: &Value, source: &str) -> String {
                 }
             }
         },
+        // `random` is imported inline for the same reason `time` is: one NME
+        // line stays one Python line.
+        Value::RandomItem { of } => format!("__import__(\"random\").choice({of})"),
         // `map(str, …)` so a list of numbers joins as readily as a list of
         // words. Without it `", ".join([1, 2])` is a `TypeError` a beginner
         // has no way to read.

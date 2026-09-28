@@ -1536,6 +1536,9 @@ fn check_condition(
                 | ConditionValue::Entry { .. } => {
                     return Err(not_supported("list, record and text readings", span));
                 }
+                ConditionValue::RandomItem { .. } => {
+                    return Err(not_supported("random values", span));
+                }
             };
             if kind == ExprType::Str {
                 return Err(not_supported("a text value in a truthy condition", span));
@@ -1612,6 +1615,7 @@ fn condition_operand(
         | ConditionValue::Entry { .. } => {
             Err(not_supported("list, record and text readings", span))
         }
+        ConditionValue::RandomItem { .. } => Err(not_supported("random values", span)),
     }
 }
 
@@ -1739,9 +1743,10 @@ fn emit_say(
             }
         },
         Value::Elapsed => Err(not_supported("the stopwatch", span_of_value(value))),
-        Value::RandomInteger { .. } | Value::RandomChoice { .. } | Value::Chance { .. } => {
-            Err(not_supported("random values", span_of_value(value)))
-        }
+        Value::RandomInteger { .. }
+        | Value::RandomChoice { .. }
+        | Value::RandomItem { .. }
+        | Value::Chance { .. } => Err(not_supported("random values", span_of_value(value))),
         Value::List(_) => Err(not_supported("list values", span_of_value(value))),
         Value::EmptyRecord => Err(not_supported("record values", span_of_value(value))),
         Value::Reading { .. }
@@ -1872,6 +1877,7 @@ fn emit_set(
         | Value::Elapsed
         | Value::RandomInteger { .. }
         | Value::RandomChoice { .. }
+        | Value::RandomItem { .. }
         | Value::Chance { .. }
         | Value::List(_)
         | Value::EmptyRecord
@@ -2717,6 +2723,8 @@ fn not_supported(what: &str, span: Span) -> Diagnostic {
         "multiplying or dividing a value" => "값의 곱하기·나누기",
         "list values" => "목록 값",
         "repeating over a list" => "목록 반복",
+        "counting loops" => "세기 반복",
+        "changing a list item" => "목록 항목 바꾸기",
         "waiting" => "기다리기",
         "adding to a list" => "목록에 넣기",
         "list and text readings" => "목록·글자 읽기",
@@ -2740,6 +2748,8 @@ fn unsupported_statement(stmt: &NmeStmt, span: Span) -> Diagnostic {
         NmeStmt::Ask { .. } => "input (ask)",
         NmeStmt::Times { .. } => "repeat blocks",
         NmeStmt::ForEach { .. } => "repeating over a list",
+        NmeStmt::CountLoop { .. } => "counting loops",
+        NmeStmt::SetItem { .. } => "changing a list item",
         NmeStmt::Wait { .. } => "waiting",
         NmeStmt::SaySlowly { .. } => "slow text",
         NmeStmt::ClearScreen => "clearing the screen",

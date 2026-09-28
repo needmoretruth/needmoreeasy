@@ -122,6 +122,13 @@ TIMES = [
     ("문장형", "Sentence", "repeat forever", "계속 반복해", "while True:"),
     ("문장형", "Sentence", "repeat forever and show Again", "계속 반복해서 다시 말해줘", 'while True: print("Again")', 'while True: print("다시")'),
     ("초급", "Beginner", '3 times: say "Hi"', '3번: 말해 "안녕"', 'for _ in range(3): print("Hi")', 'for _ in range(3): print("안녕")'),
+    ("문장형", "Sentence", "count n from 1 to 10", "수를 1부터 10까지 세면서 반복해", "for n in range(1, 11):", 'for 수 in range(1, 11):'),
+    ("문장형", "Sentence", "repeat with n from 10 to 1", "수 10부터 1까지 세면서 반복해", "for n in range(10, 0, -1):", 'for 수 in range(10, 0, -1):'),
+    ("문장형", "Sentence", "count n from 1 to people", "수를 1부터 인원까지 세면서 반복해",
+     "for n in (range(1, people + 1) if 1 <= people else range(1, people - 1, -1)):",
+     'for 수 in (range(1, 인원 + 1) if 1 <= 인원 else range(1, 인원 - 1, -1)):'),
+    ("문장형", "Sentence", "count n from 1 to 3 and show n", "수를 1부터 3까지 세며 반복해서 수 말해줘", "for n in range(1, 4): print(n)", 'for 수 in range(1, 4): print(수)'),
+    ("초급", "Beginner", "count n from 1 to 10:", "수를 1부터 10까지 세면서:", "for n in range(1, 11):", 'for 수 in range(1, 11):'),
     ("고급", "Advanced", "for i in range(3):", "for i in range(3):", "unchanged"),
 ]
 
@@ -209,6 +216,13 @@ LISTS = [
     ("문장형", "Sentence", "show the first of friends", "친구들 첫 번째 말해줘", "print(friends[0])", 'print(친구들[0])'),
     ("문장형", "Sentence", "show the last of friends", "친구들 마지막 말해줘", "print(friends[-1])", 'print(친구들[-1])'),
     ("문장형", "Sentence", "show item 2 of friends", "친구들 2번째 말해줘", "print(friends[1])", 'print(친구들[1])'),
+    ("문장형", "Sentence", "set item 1 of friends to Ada", "친구들 1번째를 지안으로 바꿔", 'friends[0] = "Ada"', '친구들[0] = "지안"'),
+    ("문장형", "Sentence", "change the last of scores to 9", "점수들 마지막을 9로 바꿔", "scores[-1] = 9", '점수들[-1] = 9'),
+    ("문장형", "Sentence", "set the first of scores to 9", "점수들의 첫 번째를 9로 바꿔줘", "scores[0] = 9", '점수들[0] = 9'),
+    ("문장형", "Sentence", "set item score of scores to 0", "점수들 점수 번째를 0으로 바꿔", "scores[score - 1] = 0", '점수들[점수 - 1] = 0'),
+    ("문장형", "Sentence", "show a random one of friends", "친구들 중 아무거나 말해줘", 'print(__import__("random").choice(friends))', 'print(__import__("random").choice(친구들))'),
+    ("문장형", "Sentence", "set chosen to a random item from friends", "고른사람은 친구들에서 아무것이나", 'chosen = __import__("random").choice(friends)', '고른사람 = __import__("random").choice(친구들)'),
+    ("문장형", "Sentence", "show a random element in friends", "친구들 중에서 아무거나 말해줘", 'print(__import__("random").choice(friends))', 'print(__import__("random").choice(친구들))'),
     ("문장형", "Sentence", "show the total of scores", "점수들 합 말해줘", "print(sum(scores))", 'print(sum(점수들))'),
     ("문장형", "Sentence", "show the biggest of scores", "점수들 중 가장 큰 것 말해줘", "print(max(scores))", 'print(max(점수들))'),
     ("문장형", "Sentence", "show the smallest of scores", "점수들 중 가장 작은 것 말해줘", "print(min(scores))", 'print(min(점수들))'),
@@ -564,6 +578,10 @@ def spelling_table(korean: bool) -> str:
         ("첫 번째 / First", "FIRST_WORDS_EN", "FIRST_WORDS_KO"),
         ("마지막 / Last", "LAST_WORDS_EN", "LAST_WORDS_KO"),
         ("몇 번째 / Item", "ITEM_WORDS_EN", "ITEM_WORDS_KO"),
+        ("항목 바꾸기 / Change an item", "CHANGE_ITEM_WORDS_EN", "CHANGE_ITEM_WORDS_KO"),
+        ("아무거나 / A random item", "RANDOM_ITEM_WORDS_EN", "RANDOM_ITEM_WORDS_KO"),
+        ("아무거나 뒷말 / A random one", "RANDOM_ITEM_THING_WORDS_EN", None),
+        ("세면서 / Counting", "COUNT_LOOP_WORDS_EN", "COUNT_LOOP_WORDS_KO"),
         ("대문자 / Capitals", "CAPITALS_WORDS_EN", "CAPITALS_WORDS_KO"),
         ("소문자 / Small letters", "SMALL_LETTERS_WORDS_EN", "SMALL_LETTERS_WORDS_KO"),
         ("이어 붙이기 / Join", "JOIN_WORDS_EN", "JOIN_WORDS_KO"),
@@ -755,6 +773,9 @@ NME가 **실제로 받아들이는 표기를 빠짐없이** 모아 둔 목록입
 
 블록은 세 가지로 닫습니다: 들여쓰기, `:` 뒤 한 줄, 또는 `끝`/`end` 한 줄.
 
+`세면서` 반복은 양 끝을 모두 셉니다. 두 끝이 숫자면 크기를 보고 올라가거나
+내려가고, 한쪽이라도 이름이면 어느 쪽으로 셀지를 반복이 시작될 때 정합니다.
+
 ## 7. 목록 반복
 
 {level_table(FOR_EACH, True)}
@@ -797,6 +818,7 @@ NME 명령이 됩니다. 블록 밖에서는 Python 그대로 남습니다.
 
 **몇 번째인지는 1부터 셉니다.** `친구들 첫 번째`가 곧 `친구들 1번째`이고,
 Python으로는 `친구들[0]`이 됩니다. 0번째는 없으며 적으면 `E0229`로 알려 줍니다.
+항목을 바꾸는 `바꿔`도 같은 셈을 씁니다. 표에는 번째가 없어서 `E0234`로 알려 줍니다.
 
 목록을 읽고 바꾸는 문장(`개수`·`정렬해`·`섞어`·`첫 번째`·`합`·`빼`…)은
 **프로그램이 이미 목록으로 만든 이름에만** 씁니다. 그래야 `친구들 이야기를
@@ -1155,6 +1177,10 @@ The unit word (`seconds`, `초`) is optional. A line with no number in it
 A block closes three ways: by indentation, by one statement after `:`, or by a
 line containing only `end` / `끝`.
 
+A counting loop counts both ends. With two written numbers it counts up or
+down by which is bigger; with a name at either end it decides when the loop
+starts.
+
 ## 7. Repeat over a list
 
 {level_table(FOR_EACH, False)}
@@ -1201,6 +1227,8 @@ commands and keep their own meanings.
 
 **Items are counted from one.** `the first of friends` is `item 1 of friends`
 and becomes `friends[0]`. There is no item 0; writing one is `E0229`.
+Changing an item counts the same way. A record has no numbered items, so
+changing one of a record is `E0234`.
 
 The statements that read or rearrange a list (`how many`, `sort`, `shuffle`,
 `the first of`, `the total of`, `remove`, …) only work on a name the program

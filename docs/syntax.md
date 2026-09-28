@@ -135,10 +135,19 @@ The unit word (`seconds`, `초`) is optional. A line with no number in it
 | Sentence | `repeat forever` | `while True:` |
 | Sentence | `repeat forever and show Again` | `while True: print("Again")` |
 | Beginner | `3 times: say "Hi"` | `for _ in range(3): print("Hi")` |
+| Sentence | `count n from 1 to 10` | `for n in range(1, 11):` |
+| Sentence | `repeat with n from 10 to 1` | `for n in range(10, 0, -1):` |
+| Sentence | `count n from 1 to people` | `for n in (range(1, people + 1) if 1 <= people else range(1, people - 1, -1)):` |
+| Sentence | `count n from 1 to 3 and show n` | `for n in range(1, 4): print(n)` |
+| Beginner | `count n from 1 to 10:` | `for n in range(1, 11):` |
 | Advanced | `for i in range(3):` | unchanged |
 
 A block closes three ways: by indentation, by one statement after `:`, or by a
 line containing only `end` / `끝`.
+
+A counting loop counts both ends. With two written numbers it counts up or
+down by which is bigger; with a name at either end it decides when the loop
+starts.
 
 ## 7. Repeat over a list
 
@@ -249,6 +258,13 @@ they are read as NME **only inside a loop block**. Outside one they stay Python.
 | Sentence | `show the first of friends` | `print(friends[0])` |
 | Sentence | `show the last of friends` | `print(friends[-1])` |
 | Sentence | `show item 2 of friends` | `print(friends[1])` |
+| Sentence | `set item 1 of friends to Ada` | `friends[0] = "Ada"` |
+| Sentence | `change the last of scores to 9` | `scores[-1] = 9` |
+| Sentence | `set the first of scores to 9` | `scores[0] = 9` |
+| Sentence | `set item score of scores to 0` | `scores[score - 1] = 0` |
+| Sentence | `show a random one of friends` | `print(__import__("random").choice(friends))` |
+| Sentence | `set chosen to a random item from friends` | `chosen = __import__("random").choice(friends)` |
+| Sentence | `show a random element in friends` | `print(__import__("random").choice(friends))` |
 | Sentence | `show the total of scores` | `print(sum(scores))` |
 | Sentence | `show the biggest of scores` | `print(max(scores))` |
 | Sentence | `show the smallest of scores` | `print(min(scores))` |
@@ -268,6 +284,8 @@ commands and keep their own meanings.
 
 **Items are counted from one.** `the first of friends` is `item 1 of friends`
 and becomes `friends[0]`. There is no item 0; writing one is `E0229`.
+Changing an item counts the same way. A record has no numbered items, so
+changing one of a record is `E0234`.
 
 The statements that read or rearrange a list (`how many`, `sort`, `shuffle`,
 `the first of`, `the total of`, `remove`, …) only work on a name the program
@@ -757,6 +775,10 @@ Every spelling accepted for each action, with nothing left out.
 | 첫 번째 / First | `first` | `첫번째` · `첫째` · `처음` · `첫` |
 | 마지막 / Last | `last` | `마지막` · `맨뒤` |
 | 몇 번째 / Item | `item` · `element` | `번째` · `째` |
+| 항목 바꾸기 / Change an item | `set` · `change` | `바꿔` · `바꿔줘` · `바꿔주세요` |
+| 아무거나 / A random item | `random` | `아무거나` · `아무것이나` |
+| 아무거나 뒷말 / A random one | `one` · `item` · `element` | — |
+| 세면서 / Counting | `count` | `세면서` · `세며` |
 | 대문자 / Capitals | `capitals` · `capital` · `uppercase` | `대문자로` · `대문자` |
 | 소문자 / Small letters | `lowercase` · `small` | `소문자로` · `소문자` |
 | 이어 붙이기 / Join | `joined` · `join` | `이어` · `이어서` · `이어붙여` |

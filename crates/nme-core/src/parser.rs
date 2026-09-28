@@ -1064,6 +1064,26 @@ const DIVIDED_WORDS_KO: &[&str] = &["나눈", "나눈뒤", "나누고"];
 /// that holds it, so the writer chooses it rather than the compiler.
 const POSITION_WORDS_EN: &[&str] = &["with"];
 const POSITION_WORDS_KO: &[&str] = &["함께", "같이"];
+/// `count n from 1 to 10` / `수를 1부터 10까지 세면서 반복해` — the word that
+/// says the loop counts, and hands each number to the name in front of it.
+///
+/// English says it first and Korean just before the repeat word, which is
+/// where each language puts a verb. Neither word is enough on its own: the
+/// name, both ends and the words between them all have to be there, so
+/// `count the stars` and `하나부터 열까지 세면서 기다렸습니다` stay sentences.
+const COUNT_LOOP_WORDS_EN: &[&str] = &["count"];
+const COUNT_LOOP_WORDS_KO: &[&str] = &["세면서", "세며"];
+/// `set item 2 of values to 9` / `수들 2번째를 9로 바꿔` — the verbs that give
+/// one item of a list a new value.
+const CHANGE_ITEM_WORDS_EN: &[&str] = &["set", "change"];
+const CHANGE_ITEM_WORDS_KO: &[&str] = &["바꿔", "바꿔줘", "바꿔주세요"];
+/// `a random one of songs` / `노래들 중 아무거나` — one item of a list, picked
+/// at random. Read only after a name the program already made a list.
+const RANDOM_ITEM_WORDS_EN: &[&str] = &["random"];
+const RANDOM_ITEM_WORDS_KO: &[&str] = &["아무거나", "아무것이나"];
+/// The `one` of `a random one of songs`. Korean says both halves in the one
+/// word [`RANDOM_ITEM_WORDS_KO`].
+const RANDOM_ITEM_THING_WORDS_EN: &[&str] = &["one", "item", "element"];
 /// `use greet from "helper.nme"` / `"helper.nme"에서 greet 가져와`.
 const NME_IMPORT_WORDS_EN: &[&str] = &["use", "take", "borrow"];
 const NME_IMPORT_WORDS_KO: &[&str] = &["가져와", "가져와줘", "가져오기", "불러와", "불러오기"];
@@ -2231,6 +2251,7 @@ pub fn parse_program(
                     Some(
                         NmeStmt::Times { inline: None, .. }
                             | NmeStmt::ForEach { inline: None, .. }
+                            | NmeStmt::CountLoop { inline: None, .. }
                             | NmeStmt::While { inline: None, .. }
                             | NmeStmt::Forever { inline: None }
                     )
@@ -2249,6 +2270,7 @@ pub fn parse_program(
                 if let Some(
                     NmeStmt::Times { inline: None, .. }
                     | NmeStmt::ForEach { inline: None, .. }
+                    | NmeStmt::CountLoop { inline: None, .. }
                     | NmeStmt::When { inline: None, .. }
                     | NmeStmt::While { inline: None, .. }
                     | NmeStmt::Forever { inline: None }
@@ -2263,6 +2285,7 @@ pub fn parse_program(
                                     | NmeStmt::Times { .. }
                                     | NmeStmt::Forever { .. }
                                     | NmeStmt::ForEach { .. }
+                                    | NmeStmt::CountLoop { .. }
                             )
                         );
                         bindings.push_explicit_scope(parse_line.indent + 1);
@@ -2722,6 +2745,7 @@ fn is_header_shape(tokens: &[Token]) -> bool {
         || english_for_each_start(tokens, MatchMode::Exact).is_some()
         || english_for_each_start(tokens, MatchMode::Recover).is_some()
         || korean_for_each_shape(tokens)
+        || count_loop_shape(tokens)
         || repeat_action_at(tokens, 0, MatchMode::Exact).is_some()
         || matches!(tokens[0].tok, Tok::While)
         || action_phrase_at(tokens, 0, WHILE_WORDS_EN, MatchMode::Exact).is_some()
@@ -3067,6 +3091,7 @@ fn inline_break_is_outside_loop(stmt: &NmeStmt, source: &str, inside_loop: bool)
         NmeStmt::Break => !inside_loop,
         NmeStmt::Times { inline, .. }
         | NmeStmt::ForEach { inline, .. }
+        | NmeStmt::CountLoop { inline, .. }
         | NmeStmt::Forever { inline }
         | NmeStmt::While { inline, .. } => inline
             .as_ref()
@@ -3100,6 +3125,7 @@ fn inline_continue_is_outside_loop(stmt: &NmeStmt, tokens: &[Token], inside_loop
         NmeStmt::Continue => !inside_loop,
         NmeStmt::Times { inline, .. }
         | NmeStmt::ForEach { inline, .. }
+        | NmeStmt::CountLoop { inline, .. }
         | NmeStmt::Forever { inline }
         | NmeStmt::While { inline, .. } => inline
             .as_ref()
@@ -3132,6 +3158,7 @@ fn inline_except_star_control_flow(stmt: &NmeStmt, tokens: &[Token]) -> bool {
     match stmt {
         NmeStmt::Times { inline, .. }
         | NmeStmt::ForEach { inline, .. }
+        | NmeStmt::CountLoop { inline, .. }
         | NmeStmt::Forever { inline }
         | NmeStmt::While { inline, .. }
         | NmeStmt::When { inline, .. }
@@ -3162,6 +3189,7 @@ fn inline_return_is_outside_function(
     match stmt {
         NmeStmt::Times { inline, .. }
         | NmeStmt::ForEach { inline, .. }
+        | NmeStmt::CountLoop { inline, .. }
         | NmeStmt::While { inline, .. }
         | NmeStmt::When { inline, .. }
         | NmeStmt::ElseIf { inline, .. }
@@ -3190,6 +3218,7 @@ fn inline_yield_inside_comprehension(stmt: &NmeStmt, tokens: &[Token]) -> bool {
     match stmt {
         NmeStmt::Times { inline, .. }
         | NmeStmt::ForEach { inline, .. }
+        | NmeStmt::CountLoop { inline, .. }
         | NmeStmt::While { inline, .. }
         | NmeStmt::When { inline, .. }
         | NmeStmt::ElseIf { inline, .. }
@@ -3215,6 +3244,7 @@ fn inline_async_comprehension_outside_async_function(
     match stmt {
         NmeStmt::Times { inline, .. }
         | NmeStmt::ForEach { inline, .. }
+        | NmeStmt::CountLoop { inline, .. }
         | NmeStmt::While { inline, .. }
         | NmeStmt::When { inline, .. }
         | NmeStmt::ElseIf { inline, .. }
@@ -3254,6 +3284,7 @@ fn inline_yield_is_outside_function(
     match stmt {
         NmeStmt::Times { inline, .. }
         | NmeStmt::ForEach { inline, .. }
+        | NmeStmt::CountLoop { inline, .. }
         | NmeStmt::While { inline, .. }
         | NmeStmt::When { inline, .. }
         | NmeStmt::ElseIf { inline, .. }
@@ -3285,6 +3316,7 @@ fn inline_await_is_outside_async_function(
     match stmt {
         NmeStmt::Times { inline, .. }
         | NmeStmt::ForEach { inline, .. }
+        | NmeStmt::CountLoop { inline, .. }
         | NmeStmt::While { inline, .. }
         | NmeStmt::When { inline, .. }
         | NmeStmt::ElseIf { inline, .. }
@@ -3318,6 +3350,7 @@ fn inline_yield_from_is_in_async_function(
     match stmt {
         NmeStmt::Times { inline, .. }
         | NmeStmt::ForEach { inline, .. }
+        | NmeStmt::CountLoop { inline, .. }
         | NmeStmt::While { inline, .. }
         | NmeStmt::When { inline, .. }
         | NmeStmt::ElseIf { inline, .. }
@@ -4213,6 +4246,7 @@ fn opens_a_block(stmt: &NmeStmt) -> bool {
         stmt,
         NmeStmt::Times { inline: None, .. }
             | NmeStmt::ForEach { inline: None, .. }
+            | NmeStmt::CountLoop { inline: None, .. }
             | NmeStmt::Forever { inline: None }
             | NmeStmt::Chance { inline: None, .. }
             | NmeStmt::When { inline: None, .. }
@@ -4469,6 +4503,17 @@ fn classify_written_line(
     // `결과로 남은칸 돌려줘` — read beside the line that runs a job, and gated
     // the same way: on something the program has already made, not on a word.
     if let Some(stmt) = match_give_back(source, tokens, known_names) {
+        return Ok(Some(stmt));
+    }
+    // `count n from 1 to 10` · `수를 1부터 10까지 세면서 반복해` and
+    // `set item 2 of values to 9` · `수들 2번째를 9로 바꿔`. Both are gated on
+    // their whole shape and on names the program made, and both have to be
+    // read before `set` and the repeat words send the line somewhere else:
+    // `set item 2 of values to 9` was a save into a name called `item`.
+    if let Some(stmt) = match_count_loop(source, tokens, block, known_names)? {
+        return Ok(Some(stmt));
+    }
+    if let Some(stmt) = match_set_item(source, tokens, known_names)? {
         return Ok(Some(stmt));
     }
 
@@ -7613,6 +7658,21 @@ fn english_reading_prefix(
             at + 3,
         ));
     }
+    // `a random one of songs` · `a random item from songs`. The list name is
+    // the gate: `a random one of these days` names nothing the program made.
+    if tokens
+        .get(at)
+        .is_some_and(|token| token_matches_exact(token, RANDOM_ITEM_WORDS_EN))
+        && tokens
+            .get(at + 1)
+            .is_some_and(|token| token_matches_exact(token, RANDOM_ITEM_THING_WORDS_EN))
+        && tokens
+            .get(at + 2)
+            .is_some_and(|token| token_matches_exact(token, &["of", "from", "in"]))
+    {
+        let of = list_name_at(tokens.get(at + 3)?, known_names)?;
+        return Some((Value::RandomItem { of }, at + 4));
+    }
     // `item 3 of friends`.
     if tokens
         .get(at)
@@ -8185,6 +8245,19 @@ fn korean_reading_prefix(
                 },
                 3,
             ));
+        }
+        // `노래들 중 아무거나` · `노래들에서 아무거나` — one item picked at
+        // random. `중` is the same scope word `중 가장 큰 것` uses.
+        let scope = usize::from(
+            rest.first()
+                .is_some_and(|token| token_matches_exact(token, EXTREME_SCOPE_WORDS_KO)),
+        );
+        if rest
+            .get(scope)
+            .and_then(name_word)
+            .is_some_and(|word| reading_word_matches(word, RANDOM_ITEM_WORDS_KO))
+        {
+            return Some((Value::RandomItem { of: name }, 2 + scope));
         }
         // `점수들 중 가장 큰 것`.
         if let Some((reading, used)) = korean_extreme_phrase(rest) {
@@ -10543,6 +10616,7 @@ fn reads_elapsed(stmt: &NmeStmt) -> bool {
         NmeStmt::Say { value }
         | NmeStmt::Set { value, .. }
         | NmeStmt::Append { value, .. }
+        | NmeStmt::SetItem { value, .. }
         | NmeStmt::FileWrite { value, .. }
         | NmeStmt::SayInBox { value }
         | NmeStmt::SayInMiddle { value }
@@ -10554,9 +10628,9 @@ fn reads_elapsed(stmt: &NmeStmt) -> bool {
             condition_reads_elapsed(condition) || inline_reads_elapsed(inline.as_ref())
         }
         NmeStmt::Else { inline } => inline_reads_elapsed(inline.as_ref()),
-        NmeStmt::Times { inline, .. } | NmeStmt::ForEach { inline, .. } => {
-            inline_reads_elapsed(inline.as_ref())
-        }
+        NmeStmt::Times { inline, .. }
+        | NmeStmt::ForEach { inline, .. }
+        | NmeStmt::CountLoop { inline, .. } => inline_reads_elapsed(inline.as_ref()),
         _ => false,
     }
 }
@@ -11100,6 +11174,421 @@ fn for_each_diagnostic(span: Span) -> Diagnostic {
     .with_bilingual_hint(
         "write `for each name in names`",
         "`이름들의 이름마다 반복해`처럼 적어 주세요",
+    )
+}
+
+// --------------------------------------------------------- counting loop
+
+/// The part of a counting-loop header both languages share once it is read.
+struct CountHeader {
+    name: String,
+    start: Code,
+    end: Code,
+    /// Where the words after the header begin.
+    body_at: usize,
+}
+
+/// `count n from 1 to 10` · `repeat with n from 1 to 10` ·
+/// `수를 1부터 10까지 세면서 반복해`.
+///
+/// The gate is the whole shape, never one word: a name to count with, both
+/// ends, and the words between them. Each end has to be a written number or a
+/// name the program already made, so `count sheep from dusk to dawn` has
+/// nothing to count with and stays the sentence it is.
+fn match_count_loop(
+    source: &str,
+    tokens: &[Token],
+    block: &BlockCtx<'_>,
+    known_names: &HashSet<String>,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    let Some(header) =
+        english_count_loop(tokens, known_names).or_else(|| korean_count_loop(tokens, known_names))
+    else {
+        return Ok(None);
+    };
+    // The counter is made by the header, so the line under it may use it.
+    let mut body_names = known_names.clone();
+    body_names.insert(header.name.clone());
+    let mut body_start = header.body_at;
+    // `count n from 1 to 10:` — the mark every Python page puts at the end of
+    // a header. The block is underneath it.
+    if tokens
+        .get(body_start)
+        .is_some_and(|token| matches!(token.tok, Tok::Colon))
+    {
+        body_start += 1;
+    }
+    body_start += inline_body_connectors_at(tokens, body_start, MatchMode::Exact, &body_names);
+    let inline = parse_sentence_repeat_body(
+        source,
+        &tokens[body_start.min(tokens.len())..],
+        block,
+        span_of(&tokens[..body_start.min(tokens.len())]),
+        &body_names,
+    )?;
+    Ok(Some(NmeStmt::CountLoop {
+        name: header.name,
+        start: header.start,
+        end: header.end,
+        inline,
+    }))
+}
+
+/// `count n from 1 to 10` and `repeat with n from 1 to 10`.
+fn english_count_loop(tokens: &[Token], known_names: &HashSet<String>) -> Option<CountHeader> {
+    let first = tokens.first()?;
+    let name_at = if token_matches_exact(first, COUNT_LOOP_WORDS_EN) {
+        1
+    } else if token_matches_exact(first, &["repeat"])
+        && tokens.get(1).is_some_and(|token| {
+            matches!(token.tok, Tok::With) || token_matches_exact(token, &["with"])
+        })
+    {
+        2
+    } else {
+        return None;
+    };
+    let name = english_counter_name(tokens.get(name_at)?)?;
+    if !token_matches_exact(tokens.get(name_at + 1)?, &["from"]) {
+        return None;
+    }
+    let start = count_bound(tokens.get(name_at + 2)?, known_names)?;
+    if !token_matches_exact(tokens.get(name_at + 3)?, &["to"]) {
+        return None;
+    }
+    let end = count_bound(tokens.get(name_at + 4)?, known_names)?;
+    Some(CountHeader {
+        name,
+        start,
+        end,
+        body_at: name_at + 5,
+    })
+}
+
+/// The name an English counting loop counts with. A single letter is always
+/// a name here — `count i from 1 to 10` is how every counting loop in every
+/// book is written — and a longer word may not be one of the words English
+/// never turns into a name.
+fn english_counter_name(token: &Token) -> Option<String> {
+    let word = name_word(token)?;
+    (is_plain_python_name(word)
+        && word != "_"
+        && (word.chars().count() == 1 || is_bindable_english_name(word)))
+    .then(|| word.to_string())
+}
+
+/// One end of a counting loop: a written number, a counting word, or a name
+/// the program already made.
+fn count_bound(token: &Token, known_names: &HashSet<String>) -> Option<Code> {
+    match &token.tok {
+        Tok::Int { .. } => Some(Code::Source(token.span)),
+        Tok::Name { name } if known_names.contains(name.as_str()) => Some(Code::Source(token.span)),
+        Tok::Name { name } => {
+            number_word_digits(name).map(|digits| Code::Generated(digits.to_string()))
+        }
+        _ => None,
+    }
+}
+
+/// `수를 1부터 10까지 세면서 반복해`, and the same with `:` in place of the
+/// repeat word, which is the beginner header.
+fn korean_count_loop(tokens: &[Token], known_names: &HashSet<String>) -> Option<CountHeader> {
+    let name = korean_counter_name(tokens.first()?)?;
+    let (start, after_start) = korean_count_bound(tokens, 1, "부터", known_names)?;
+    let (end, after_end) = korean_count_bound(tokens, after_start, "까지", known_names)?;
+    if !token_matches_exact(tokens.get(after_end)?, COUNT_LOOP_WORDS_KO) {
+        return None;
+    }
+    let closer = after_end + 1;
+    let body_at = if let Some((_, consumed)) = repeat_action_at(tokens, closer, MatchMode::Exact) {
+        closer + consumed
+    } else if tokens
+        .get(closer)
+        .is_some_and(|token| matches!(token.tok, Tok::Colon))
+    {
+        closer
+    } else {
+        return None;
+    };
+    Some(CountHeader {
+        name,
+        start,
+        end,
+        body_at,
+    })
+}
+
+/// The name a Korean counting loop counts with: `수를`, or `수` with no
+/// particle at all.
+///
+/// Without its particle the word is the name only when it cannot be read as a
+/// name carrying some other particle. `아이는 1부터 10까지 세면서 반복해` is
+/// about a child, not a counter called `아이는`, and guessing would make one.
+fn korean_counter_name(token: &Token) -> Option<String> {
+    let word = name_word(token)?;
+    if let Some(base) = strip_any_suffix(word, &["을", "를"]) {
+        return is_plain_python_name(base).then(|| base.to_string());
+    }
+    if strip_any_suffix(word, KOREAN_PARTICLES).is_some() {
+        return None;
+    }
+    is_plain_python_name(word).then(|| word.to_string())
+}
+
+/// One end of a Korean counting loop and the token after it. The particle is
+/// cut off a number by the lexer (`1부터`), stays on a word (`시작부터`), and
+/// may be written as a word of its own (`시작 부터`).
+fn korean_count_bound(
+    tokens: &[Token],
+    at: usize,
+    particle: &str,
+    known_names: &HashSet<String>,
+) -> Option<(Code, usize)> {
+    let token = tokens.get(at)?;
+    let separate = tokens
+        .get(at + 1)
+        .is_some_and(|next| token_is_exact_name(next, particle));
+    if matches!(token.tok, Tok::Int { .. }) {
+        return separate.then(|| (Code::Source(token.span), at + 2));
+    }
+    let word = name_word(token)?;
+    if separate {
+        return korean_bound_word(word, token.span, known_names).map(|code| (code, at + 2));
+    }
+    let base = word
+        .strip_suffix(particle)
+        .filter(|base| !base.is_empty())?;
+    let span = Span::new(token.span.start, token.span.end - particle.len());
+    korean_bound_word(base, span, known_names).map(|code| (code, at + 1))
+}
+
+fn korean_bound_word(word: &str, span: Span, known_names: &HashSet<String>) -> Option<Code> {
+    if known_names.contains(word) {
+        return Some(Code::Source(span));
+    }
+    number_word_digits(word).map(|digits| Code::Generated(digits.to_string()))
+}
+
+/// True for a line shaped like a counting-loop header, read before anything
+/// is known about the names in it. `repeat with …` is already a repeat
+/// header, so only the two spellings that open with another word are here.
+fn count_loop_shape(tokens: &[Token]) -> bool {
+    if tokens
+        .first()
+        .is_some_and(|token| token_matches_exact(token, COUNT_LOOP_WORDS_EN))
+        && tokens
+            .get(2)
+            .is_some_and(|token| token_matches_exact(token, &["from"]))
+    {
+        return true;
+    }
+    tokens.iter().enumerate().any(|(at, token)| {
+        at >= 2
+            && token_matches_exact(token, COUNT_LOOP_WORDS_KO)
+            && name_word(&tokens[at - 1]).is_some_and(|word| word.ends_with("까지"))
+    })
+}
+
+// ------------------------------------------------------ change one item
+
+/// `set item 2 of values to 9` · `change the last of values to 0` ·
+/// `수들 2번째를 9로 바꿔` · `수들의 첫 번째를 0으로 바꿔`.
+///
+/// Gated on a name the program already made. English `set item 2 of values
+/// to 9` used to save the words `2 of … to 9` into a name called `item`, which
+/// is a different program that runs; a name the program did not make still
+/// goes the way it always went.
+fn match_set_item(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    let body = trim_command_endings(tokens);
+    if let Some(stmt) = english_set_item(source, body, known_names)? {
+        return Ok(Some(stmt));
+    }
+    korean_set_item(source, body, known_names)
+}
+
+fn english_set_item(
+    source: &str,
+    body: &[Token],
+    known_names: &HashSet<String>,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    if !body
+        .first()
+        .is_some_and(|token| token_matches_exact(token, CHANGE_ITEM_WORDS_EN))
+    {
+        return Ok(None);
+    }
+    let Some((target, position, used)) = english_item_target(&body[1..], known_names) else {
+        return Ok(None);
+    };
+    let target_span = span_of(&body[1..=used]);
+    if let Some(problem) = item_change_refused(source, &target, &position, known_names, target_span)
+    {
+        return Err(problem);
+    }
+    let to_at = 1 + used;
+    let value_at = to_at + 1;
+    if !body
+        .get(to_at)
+        .is_some_and(|token| token_matches_exact(token, &["to", "into"]))
+        || value_at >= body.len()
+    {
+        return Err(item_value_missing_diagnostic(&target, target_span));
+    }
+    let value_tokens = &body[value_at..];
+    let value = set_value(source, value_tokens, known_names)
+        .map_err(|()| save_value_diagnostic(source, value_tokens))?;
+    Ok(Some(NmeStmt::SetItem {
+        target,
+        position,
+        value,
+    }))
+}
+
+/// `item 2 of values` · `the first of values` · `the last of values` — the
+/// item a line is about to change, and how many tokens it took.
+///
+/// The name only has to be one the program made. Whether it holds a list is
+/// asked after, where there is something useful to say when it does not.
+fn english_item_target(
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+) -> Option<(String, ItemPosition, usize)> {
+    let at = usize::from(token_matches_exact(tokens.first()?, &["the"]));
+    if token_matches_exact(tokens.get(at)?, ITEM_WORDS_EN) {
+        let index = tokens.get(at + 1)?;
+        let position = match &index.tok {
+            Tok::Int { .. } => ItemPosition::Numbered(Code::Source(index.span)),
+            Tok::Name { name } if known_names.contains(name.as_str()) => {
+                ItemPosition::Numbered(Code::Source(index.span))
+            }
+            _ => return None,
+        };
+        if !token_matches_exact(tokens.get(at + 2)?, &["of", "in"]) {
+            return None;
+        }
+        let target = saved_name_at(tokens.get(at + 3)?, known_names)?;
+        return Some((target, position, at + 4));
+    }
+    let position = if token_matches_exact(tokens.get(at)?, FIRST_WORDS_EN) {
+        ItemPosition::First
+    } else if token_matches_exact(tokens.get(at)?, LAST_WORDS_EN) {
+        ItemPosition::Last
+    } else {
+        return None;
+    };
+    if !token_matches_exact(tokens.get(at + 1)?, &["of", "in"]) {
+        return None;
+    }
+    let target = saved_name_at(tokens.get(at + 2)?, known_names)?;
+    Some((target, position, at + 3))
+}
+
+/// `수들 2번째를 9로 바꿔` — the list, which item, the new value marked with
+/// `로`/`으로`, and the verb last.
+fn korean_set_item(
+    source: &str,
+    body: &[Token],
+    known_names: &HashSet<String>,
+) -> Result<Option<NmeStmt>, Diagnostic> {
+    let end = body.len();
+    let Some(verb_at) = (end.saturating_sub(2)..end).find(|&start| {
+        start >= 3
+            && action_phrase_at(body, start, CHANGE_ITEM_WORDS_KO, MatchMode::Exact)
+                .is_some_and(|consumed| start + consumed == end)
+    }) else {
+        return Ok(None);
+    };
+    let Some(target) = saved_name_at(&body[0], known_names) else {
+        return Ok(None);
+    };
+    let Some((position, used)) = korean_item_position(&body[1..verb_at], known_names) else {
+        return Ok(None);
+    };
+    let Some(value_tokens) = korean_changed_to(&body[1 + used..verb_at]) else {
+        return Ok(None);
+    };
+    if let Some(problem) = item_change_refused(
+        source,
+        &target,
+        &position,
+        known_names,
+        span_of(&body[..=used]),
+    ) {
+        return Err(problem);
+    }
+    let value = set_value(source, &value_tokens, known_names)
+        .map_err(|()| save_value_diagnostic(source, &value_tokens))?;
+    Ok(Some(NmeStmt::SetItem {
+        target,
+        position,
+        value,
+    }))
+}
+
+/// The value in `9로` · `0으로` · `민수로`, with the mark that says it is what
+/// the item becomes taken off. `None` when nothing marks it, which is the line
+/// saying something other than a change.
+fn korean_changed_to(tokens: &[Token]) -> Option<Vec<Token>> {
+    let last = tokens.last()?;
+    if tokens.len() > 1 && token_matches_exact(last, RECORD_VALUE_PARTICLES_KO) {
+        return Some(tokens[..tokens.len() - 1].to_vec());
+    }
+    let mut value = tokens.to_vec();
+    trim_name_token_suffix(value.last_mut()?, RECORD_VALUE_PARTICLES_KO).then_some(value)
+}
+
+/// Why this item cannot be changed, when there is a reason NME can be sure of.
+///
+/// A record keeps its values under names rather than in order, so it has no
+/// second item; saying which name is the fix. A name that holds something
+/// other than a list is left to Python, because the parser cannot always tell
+/// — a loop over a list of lists hands over a list the parser never saw made.
+fn item_change_refused(
+    source: &str,
+    target: &str,
+    position: &ItemPosition,
+    known_names: &HashSet<String>,
+    span: Span,
+) -> Option<Diagnostic> {
+    if is_record_name(known_names, target) {
+        return not_a_list(target, known_names, span);
+    }
+    // `set item 0 of values to 9`. A name made a list is refused before any
+    // matcher runs (`zero_item_position`); this is the same answer for a name
+    // the parser could not tell was one, because Python would quietly change
+    // the last item instead.
+    let ItemPosition::Numbered(Code::Source(at)) = position else {
+        return None;
+    };
+    (source[at.start..at.end].trim() == "0").then(|| {
+        Diagnostic::bilingual(
+            DiagnosticCode::ItemCountsFromOne,
+            "items are counted from 1",
+            "몇 번째인지는 1부터 셉니다",
+            *at,
+        )
+        .with_bilingual_hint(
+            format!("write `item 1 of {target}` for the first one, or `the last of {target}`"),
+            format!("맨 앞은 `{target} 1번째`, 맨 뒤는 `{target} 마지막`이라고 적어 주세요"),
+        )
+    })
+}
+
+/// `set item 2 of values` with nothing to change it to.
+fn item_value_missing_diagnostic(target: &str, span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::SaveValueMissing,
+        "this line names an item but not what it becomes",
+        "바꿀 항목은 적었지만 무엇으로 바꿀지가 없습니다",
+        span,
+    )
+    .with_bilingual_hint(
+        format!("write the new value after `to`: `set item 2 of {target} to 9`"),
+        format!("`{target} 2번째를 9로 바꿔`처럼 새 값을 `로`와 함께 적어 주세요"),
     )
 }
 
@@ -12963,6 +13452,7 @@ fn condition_reading(
             Some((ConditionValue::JobResult { name, arguments }, used))
         }
         Some((Value::Entry { of, key }, used)) => Some((ConditionValue::Entry { of, key }, used)),
+        Some((Value::RandomItem { of }, used)) => Some((ConditionValue::RandomItem { of }, used)),
         _ => None,
     };
     found.or_else(|| {
@@ -18127,6 +18617,7 @@ fn remember_containers(stmt: &NmeStmt, source: &str, names: &mut HashSet<String>
     match stmt {
         NmeStmt::Append { target, .. }
         | NmeStmt::Arrange { target, .. }
+        | NmeStmt::SetItem { target, .. }
         | NmeStmt::RecordPut { target, .. } => {
             names.insert(target.clone());
         }
@@ -18147,6 +18638,10 @@ fn remember_containers(stmt: &NmeStmt, source: &str, names: &mut HashSet<String>
             ..
         }
         | NmeStmt::ForEach {
+            inline: Some(inline),
+            ..
+        }
+        | NmeStmt::CountLoop {
             inline: Some(inline),
             ..
         }
@@ -18253,6 +18748,12 @@ fn remember_bindings(stmt: &NmeStmt, source: &str, names: &mut HashSet<String>) 
             if let Some(position) = position {
                 names.insert(position.clone());
             }
+            if let Some(InlineStmt::Nme(inner)) = inline {
+                remember_bindings(inner, source, names);
+            }
+        }
+        NmeStmt::CountLoop { name, inline, .. } => {
+            names.insert(name.clone());
             if let Some(InlineStmt::Nme(inner)) = inline {
                 remember_bindings(inner, source, names);
             }

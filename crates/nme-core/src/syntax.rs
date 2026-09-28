@@ -259,6 +259,15 @@ pub enum Value {
         of: String,
         position: ItemPosition,
     },
+    /// `노래들 중 아무거나` / `a random one of songs` — one item of a list,
+    /// a different one each time the line runs.
+    ///
+    /// `pick from red or green` picks from choices written on the line; this
+    /// picks from a list the program already made, which is the one a game
+    /// keeps and changes as it goes.
+    RandomItem {
+        of: String,
+    },
     /// `친구들을 쉼표로 이어` / `friends joined by comma` — every item of a
     /// list in one piece of text. `separator` is the finished text, so the
     /// named separators, a written one, and the empty one (`친구들을 붙여` /
@@ -518,6 +527,12 @@ pub enum ConditionValue {
         of: String,
         key: Box<Value>,
     },
+    /// `만약에 노래들 중 아무거나가 가와 같으면` /
+    /// `if a random one of songs equals a` — one item picked at random, on
+    /// one side of a comparison.
+    RandomItem {
+        of: String,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -616,6 +631,19 @@ pub enum NmeStmt {
         position: Option<String>,
         inline: Option<InlineStmt>,
     },
+    /// `count n from 1 to 10` / `수를 1부터 10까지 세면서 반복해` — a loop
+    /// whose name holds the number it has counted to.
+    ///
+    /// Both ends are counted, the way the sentence says them: `1부터 10까지`
+    /// is ten turns, and the last one is `10`. When both ends are written
+    /// numbers the direction is known and the loop counts up or down; when
+    /// either is a name, the lowered line asks at run time which way to go.
+    CountLoop {
+        name: String,
+        start: Code,
+        end: Code,
+        inline: Option<InlineStmt>,
+    },
     /// `wait 3 seconds` / `3초 기다려`.
     Wait {
         seconds: Code,
@@ -661,6 +689,17 @@ pub enum NmeStmt {
     /// name the program made into a list can only mean this one.
     Remove {
         target: String,
+        value: Value,
+    },
+    /// `set item 2 of values to 9` / `수들 2번째를 9로 바꿔` — one item of a
+    /// list given a new value, counted from **one** like every item reading.
+    ///
+    /// Before this had a spelling, the English line was read as a save into a
+    /// name called `item` holding the words `2 of … to 9`: a program that ran
+    /// and did something else.
+    SetItem {
+        target: String,
+        position: ItemPosition,
         value: Value,
     },
     /// `put Mina at 90 in ages` / `나이표에 민수를 90으로 넣어`.

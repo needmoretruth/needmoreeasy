@@ -562,6 +562,7 @@ fn read_statement(stmt: &NmeStmt, source: &str, names: &mut Names, spoiled: &mut
         NmeStmt::Update { target, .. }
         | NmeStmt::Append { target, .. }
         | NmeStmt::Remove { target, .. }
+        | NmeStmt::SetItem { target, .. }
         | NmeStmt::RecordPut { target, .. }
         | NmeStmt::RecordRemove { target, .. }
         | NmeStmt::Arrange { target, .. }
@@ -574,6 +575,7 @@ fn read_statement(stmt: &NmeStmt, source: &str, names: &mut Names, spoiled: &mut
                 note(position, None, names, spoiled);
             }
         }
+        NmeStmt::CountLoop { name, .. } => note(name, None, names, spoiled),
         NmeStmt::Job { name, parameters } => {
             note(name, Some(Kind::Job), names, spoiled);
             for parameter in parameters {
@@ -596,6 +598,7 @@ fn inline_of(stmt: &NmeStmt) -> Option<&InlineStmt> {
     match stmt {
         NmeStmt::Times { inline, .. }
         | NmeStmt::ForEach { inline, .. }
+        | NmeStmt::CountLoop { inline, .. }
         | NmeStmt::Forever { inline }
         | NmeStmt::Chance { inline, .. }
         | NmeStmt::When { inline, .. }
