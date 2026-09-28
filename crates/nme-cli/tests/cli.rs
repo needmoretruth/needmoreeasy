@@ -84,6 +84,40 @@ fn build_prints_transpiled_python() {
 }
 
 #[test]
+fn a_program_saved_by_windows_tools_is_read_as_its_text() {
+    // Windows PowerShell 5.1 writes `echo … > file` as UTF-16 LE with a BOM,
+    // and older Notepad writes UTF-8 with one.
+    let folder = std::env::temp_dir().join(format!("nme-encodings-{}", std::process::id()));
+    std::fs::create_dir_all(&folder).expect("temp folder");
+    let text = "안녕 말해줘\nsay Hello\n";
+    let little_endian: Vec<u8> = [0xFF, 0xFE]
+        .into_iter()
+        .chain(text.encode_utf16().flat_map(u16::to_le_bytes))
+        .collect();
+    let big_endian: Vec<u8> = [0xFE, 0xFF]
+        .into_iter()
+        .chain(text.encode_utf16().flat_map(u16::to_be_bytes))
+        .collect();
+    let utf8_bom: Vec<u8> = [0xEF, 0xBB, 0xBF].into_iter().chain(text.bytes()).collect();
+    for (name, bytes) in [
+        ("le.nme", little_endian),
+        ("be.nme", big_endian),
+        ("bom.nme", utf8_bom),
+    ] {
+        let path = folder.join(name);
+        std::fs::write(&path, bytes).expect("write program");
+        let output = nme(&["build", &path.to_string_lossy()]);
+        assert!(output.status.success(), "{name}: {}", stderr(&output));
+        assert_eq!(
+            stdout(&output),
+            "print(\"안녕\")\nprint(\"Hello\")\n",
+            "{name}"
+        );
+    }
+    let _ = std::fs::remove_dir_all(&folder);
+}
+
+#[test]
 fn version_reports_the_current_beta() {
     let version = env!("CARGO_PKG_VERSION");
     let output = nme(&["--version"]);

@@ -388,7 +388,7 @@ fn command_native(args: &[String], language: MessageLanguage) -> ExitCode {
             ),
         );
     }
-    let source = match std::fs::read_to_string(&path) {
+    let source = match read_source(&path) {
         Ok(source) => source,
         Err(err) => {
             if err.kind() == std::io::ErrorKind::NotFound {
@@ -870,7 +870,7 @@ fn convert_file(
     output_language: Option<nme_core::Language>,
     message_language: MessageLanguage,
 ) -> ExitCode {
-    let source = match std::fs::read_to_string(file) {
+    let source = match read_source(Path::new(file)) {
         Ok(source) => source,
         Err(error) => {
             return fail(
@@ -1723,6 +1723,37 @@ fn contains_korean(text: &str) -> bool {
     })
 }
 
+/// Reads a program the way a Windows editor or shell may have saved it.
+///
+/// `echo 'say Hello' > hello.nme` in Windows PowerShell 5.1 — the one Windows
+/// ships — writes UTF-16 with a byte-order mark, and older Notepad writes UTF-8
+/// with one. A beginner cannot see either, so both are read as the text they
+/// hold; anything else must be UTF-8, exactly as before.
+fn read_source(path: &Path) -> std::io::Result<String> {
+    let bytes = std::fs::read(path)?;
+    let utf16 = |rest: &[u8], big_endian: bool| {
+        let units = rest.chunks(2).map(|pair| {
+            let pair = [pair[0], pair.get(1).copied().unwrap_or(0)];
+            if big_endian {
+                u16::from_be_bytes(pair)
+            } else {
+                u16::from_le_bytes(pair)
+            }
+        });
+        char::decode_utf16(units)
+            .collect::<Result<String, _>>()
+            .map_err(|error| std::io::Error::new(std::io::ErrorKind::InvalidData, error))
+    };
+    match bytes.as_slice() {
+        [0xEF, 0xBB, 0xBF, rest @ ..] => String::from_utf8(rest.to_vec())
+            .map_err(|error| std::io::Error::new(std::io::ErrorKind::InvalidData, error)),
+        [0xFF, 0xFE, rest @ ..] => utf16(rest, false),
+        [0xFE, 0xFF, rest @ ..] => utf16(rest, true),
+        _ => String::from_utf8(bytes)
+            .map_err(|error| std::io::Error::new(std::io::ErrorKind::InvalidData, error)),
+    }
+}
+
 fn exit_code(status: std::process::ExitStatus) -> ExitCode {
     ExitCode::from(u8::try_from(status.code().unwrap_or(1)).unwrap_or(1))
 }
@@ -1756,7 +1787,7 @@ fn transpile_file(
         NameResolution::None => resolve_nme_path(Path::new(file)),
     };
     let shown_path = path.to_string_lossy();
-    let source = match std::fs::read_to_string(&path) {
+    let source = match read_source(&path) {
         Ok(source) => source,
         Err(err) => {
             if path.is_dir() {
@@ -1868,7 +1899,7 @@ fn transpile_modules(
                 &format!("가져온 모듈 두 개가 모두 `{existing}`라는 이름입니다. 하나를 바꾸세요"),
             ));
         }
-        let source = match std::fs::read_to_string(&module_path) {
+        let source = match read_source(&module_path) {
             Ok(source) => source,
             Err(err) => {
                 return Err(fail(
