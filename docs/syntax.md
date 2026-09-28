@@ -932,6 +932,7 @@ touched.**
 | `E0304` | NME could not read how many times to repeat |
 | `E0305` | the repeat count is missing |
 | `E0306` | NME could not read the line that goes through a list |
+| `E0307` | a counting loop needs a name to count with |
 | `E0401` | NME bundles seven modules, and this is not one of them |
 | `E0402` | latest and an exact version on one line |
 | `E0403` | the module version is missing |

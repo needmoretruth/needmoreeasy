@@ -11204,7 +11204,10 @@ fn match_count_loop(
     let Some(header) =
         english_count_loop(tokens, known_names).or_else(|| korean_count_loop(tokens, known_names))
     else {
-        return Ok(None);
+        return match unnamed_count_loop(tokens, known_names) {
+            Some(span) => Err(count_loop_name_missing(span)),
+            None => Ok(None),
+        };
     };
     // The counter is made by the header, so the line under it may use it.
     let mut body_names = known_names.clone();
@@ -11369,18 +11372,77 @@ fn korean_bound_word(word: &str, span: Span, known_names: &HashSet<String>) -> O
     number_word_digits(word).map(|digits| Code::Generated(digits.to_string()))
 }
 
+/// A counting-loop header with nothing to count with: `count from 1 to 10`,
+/// `repeat from 1 to 10`, `1부터 10까지 세면서 반복해`, `1부터 10까지 반복해`.
+///
+/// Only a whole header line (nothing after it, or only the colon) is read this
+/// way, so `Count from 1 to 10 and open your eyes.` stays the sentence it is.
+/// Returns the span to point at.
+fn unnamed_count_loop(tokens: &[Token], known_names: &HashSet<String>) -> Option<Span> {
+    let ends_here = |at: usize| {
+        tokens[at.min(tokens.len())..]
+            .iter()
+            .all(|token| matches!(token.tok, Tok::Colon))
+    };
+    // English: `count from 1 to 10` / `repeat from 1 to 10`.
+    if tokens.len() >= 5
+        && token_matches_exact(&tokens[0], &["count", "repeat"])
+        && token_matches_exact(&tokens[1], &["from"])
+        && count_bound(&tokens[2], known_names).is_some()
+        && token_matches_exact(&tokens[3], &["to"])
+        && count_bound(&tokens[4], known_names).is_some()
+        && ends_here(5)
+    {
+        return Some(span_of(&tokens[..5]));
+    }
+    // Korean: `1부터 10까지 세면서 반복해` / `1부터 10까지 반복해`.
+    let (_, after_start) = korean_count_bound(tokens, 0, "부터", known_names)?;
+    let (_, mut at) = korean_count_bound(tokens, after_start, "까지", known_names)?;
+    let counts = tokens
+        .get(at)
+        .is_some_and(|token| token_matches_exact(token, COUNT_LOOP_WORDS_KO));
+    if counts {
+        at += 1;
+    }
+    if let Some((_, consumed)) = repeat_action_at(tokens, at, MatchMode::Exact) {
+        at += consumed;
+    } else if !counts {
+        return None;
+    }
+    ends_here(at).then(|| span_of(&tokens[..at.min(tokens.len())]))
+}
+
+fn count_loop_name_missing(span: Span) -> Diagnostic {
+    Diagnostic::bilingual(
+        DiagnosticCode::CountLoopNameMissing,
+        "this loop counts, but has no name to hand each number to",
+        "세면서 반복하는 줄인데, 센 수를 담을 이름이 없습니다",
+        span,
+    )
+    .with_bilingual_hint(
+        "put a name after `count`: `count n from 1 to 10`, then `show n` inside. To repeat without counting, write `repeat 10 times`",
+        "맨 앞에 이름을 적어 주세요: `수를 1부터 10까지 세면서 반복해`, 그리고 안에서 `수 말해줘`. 세지 않고 반복만 하려면 `10번 반복해`",
+    )
+}
+
 /// True for a line shaped like a counting-loop header, read before anything
 /// is known about the names in it. `repeat with …` is already a repeat
 /// header, so only the two spellings that open with another word are here.
 fn count_loop_shape(tokens: &[Token]) -> bool {
-    if tokens
-        .first()
-        .is_some_and(|token| token_matches_exact(token, COUNT_LOOP_WORDS_EN))
-        && tokens
-            .get(2)
+    // `count n from 1 to 10`, and `count from 1 to 10` / `repeat from 1 to 10`,
+    // which have no name and are refused, but still open the block their
+    // `end` closes — otherwise that `end` is a second, misleading error.
+    let from_at = |at: usize| {
+        tokens
+            .get(at)
             .is_some_and(|token| token_matches_exact(token, &["from"]))
-    {
-        return true;
+    };
+    if let Some(first) = tokens.first() {
+        if (token_matches_exact(first, COUNT_LOOP_WORDS_EN) && (from_at(1) || from_at(2)))
+            || (token_matches_exact(first, &["repeat"]) && from_at(1))
+        {
+            return true;
+        }
     }
     tokens.iter().enumerate().any(|(at, token)| {
         at >= 2

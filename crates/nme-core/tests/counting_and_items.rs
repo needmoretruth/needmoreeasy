@@ -26,6 +26,29 @@ fn last_line(source: &str) -> String {
 // ------------------------------------------------------------ counting
 
 #[test]
+fn a_counting_loop_with_no_name_is_told_what_is_missing() {
+    for source in [
+        "count from 1 to 10\nshow hi\nend\n",
+        "repeat from 1 to 10:\n    show hi\n",
+        "1부터 10까지 세면서 반복해\n안녕 말해줘\n끝\n",
+        "1부터 10까지 반복해\n안녕 말해줘\n끝\n",
+    ] {
+        let problems = transpile(source).expect_err("a counting loop with no name");
+        // The `end` under a refused header is reported too, pointing at the
+        // same line; the first message is the one that says what to write.
+        assert_eq!(problems[0].code.code(), "E0307", "{source}: {problems:?}");
+    }
+    // A sentence that only begins the same way is still a sentence.
+    assert_eq!(
+        ok("Count from 1 to 10 and open your eyes.\n"),
+        "print(\"Count from 1 to 10 and open your eyes.\")\n"
+    );
+    assert_eq!(
+        ok("하나부터 열까지 세면서 기다렸습니다\n"),
+        "print(\"하나부터 열까지 세면서 기다렸습니다\")\n"
+    );
+}
+#[test]
 fn a_counting_loop_counts_both_ends_in_both_languages() {
     let wanted = "for n in range(1, 11):\n    print(n)\n# end\n";
     assert_eq!(ok("count n from 1 to 10\nshow n\nend\n"), wanted);

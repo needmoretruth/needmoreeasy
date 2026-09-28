@@ -122,6 +122,8 @@ pub enum DiagnosticCode {
     RepeatCountMissing,
     /// A repeat-over-a-list line could not be understood.
     ForEachUnparseable,
+    /// A counting loop (`count from 1 to 10`) with no name to count with.
+    CountLoopNameMissing,
     /// `use` line asks for a module NME does not bundle.
     UnsupportedModule,
     /// `use random latest` and an exact version on one line.
@@ -333,6 +335,7 @@ impl DiagnosticCode {
             Self::RepeatCountUnparseable => "E0304",
             Self::RepeatCountMissing => "E0305",
             Self::ForEachUnparseable => "E0306",
+            Self::CountLoopNameMissing => "E0307",
             Self::UnsupportedModule => "E0401",
             Self::LatestAndVersion => "E0402",
             Self::ModuleVersionMissing => "E0403",
@@ -397,7 +400,7 @@ impl DiagnosticCode {
     }
 
     /// All codes in display order (the order of the enum above).
-    pub const ALL: [DiagnosticCode; 114] = [
+    pub const ALL: [DiagnosticCode; 115] = [
         Self::UnrecognizedInput,
         Self::StrayEnd,
         Self::BreakOutsideLoop,
@@ -438,6 +441,7 @@ impl DiagnosticCode {
         Self::RepeatCountUnparseable,
         Self::RepeatCountMissing,
         Self::ForEachUnparseable,
+        Self::CountLoopNameMissing,
         Self::UnsupportedModule,
         Self::LatestAndVersion,
         Self::ModuleVersionMissing,
@@ -915,6 +919,13 @@ impl DiagnosticCode {
                 "목록을 하나씩 도는 줄을 읽지 못했습니다",
                 "Repeating over a list looks like `for each name in names` or `이름들의 이름마다 반복해`. The name before `in`/`마다` holds each item in turn.",
                 "목록 반복은 `이름들의 이름마다 반복해`, `for each name in names` 같은 형태입니다. `마다`/`in` 앞의 이름이 항목을 하나씩 받는 이름입니다.",
+            ),
+            Self::CountLoopNameMissing => (
+                "E0307",
+                "a counting loop needs a name to count with",
+                "세면서 반복하려면 셀 이름이 필요합니다",
+                "A loop that counts from one number to another gives each number, in turn, to a name, so that the lines inside the loop can use it: `count n from 1 to 10` or `수를 1부터 10까지 세면서 반복해`, then `show n` or `수 말해줘` inside. If the numbers themselves are not needed, `repeat 10 times` repeats without counting.",
+                "한 수에서 다른 수까지 세는 반복은 그 수를 차례로 이름 하나에 담아, 반복 안의 줄이 그 수를 쓸 수 있게 합니다. `수를 1부터 10까지 세면서 반복해`나 `count n from 1 to 10`처럼 적고, 안에서 `수 말해줘`나 `show n`처럼 씁니다. 수가 필요 없으면 `10번 반복해`로 세지 않고 반복할 수 있습니다.",
             ),
             Self::UnsupportedModule => (
                 "E0401",
