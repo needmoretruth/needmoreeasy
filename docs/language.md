@@ -365,6 +365,40 @@ end
 
 A name ordinary Python wrote as `ages = {}` is a record to all of these too.
 
+### Arithmetic in words
+
+```nme
+set total to 10
+set done to 3
+set left to total minus done
+show total plus done times 2
+set half to total divided by 4
+if total minus done is greater than 5 then show Nearly there
+
+전체는 10
+순서는 3
+남은수는 전체 빼기 순서
+전체 더하기 순서 곱하기 2 말해줘
+```
+
+`plus`, `minus`, `times`, `multiplied by` and `divided by` — in Korean
+`더하기`, `빼기`, `곱하기` and `나누기` — are Python's `+`, `-`, `*` and `/`.
+`set left to total minus done` becomes `left = total - done`, and
+`show total minus done` prints `7`. Several of them in a row follow the order
+a maths book uses, so `total plus done times 2` multiplies first. `divided by`
+is Python's `/` and answers with a fraction; when you need a whole number,
+write `the whole number of total divided by 4` (`전체를 4로 나눈 몫`), which is
+Python's `//`.
+
+Every side has to be a written number or a name the program already made. If
+any side is anything else, the words are the text they always were:
+`설탕 빼기`, `show one plus one equals two` and `show the price minus tax`
+print themselves. The arithmetic is read as the whole value of a saved name,
+as the whole of what `show`/`말해줘` prints, and on either side of a
+comparison; inside a longer sentence — `show You have total minus done left` —
+it stays words. The repeat forms that say `times` (`repeat 3 times`,
+`3 times Welcome`, `name repeated 5 times`) are unchanged.
+
 ### What is left over
 
 <!-- nme-check: skip — a side-by-side vocabulary listing, not a program. -->
@@ -609,9 +643,28 @@ prose.
 Korean can shorten the comparison ending without changing the meaning:
 `이름이 철수면`, `이름이 철수라면`, and `준비가 거짓이면` are accepted. Spoken
 particles may be separated too (`이름 이 철수 면`), and a bare subject can use
-`준비면` for a truthy condition. A bounded spoken typo such as `있으먄`,
-`철수먄`, or `만악에` is recovered when there is only one clear condition.
-This form only works as a one-line condition.
+`준비면` for a truthy condition. A one-syllable name the program made works the
+same way — `만약에 비면`, `만약에 비라면`, `만약에 비이면` test `비` exactly as
+`if rain` tests `rain`; a word the program never made keeps the reading it had.
+A bounded spoken typo such as `있으먄`, `철수먄`, or `만악에` is recovered when
+there is only one clear condition.
+
+Either side of a comparison may be a reading or arithmetic, and the right side
+takes every reading the left side takes:
+
+```nme
+set word to hi
+set longest to hello
+if the length of word is greater than the length of longest then show longer
+
+말은 안녕
+가장긴말은 하이
+만약에 말 길이가 가장긴말 길이보다 크면 더 길다 말해줘
+```
+
+A reading on the right is read only from a name the program made, so
+`if word equals the length of cake` still compares with the words
+`the length of cake`.
 
 Supported sentence comparisons:
 

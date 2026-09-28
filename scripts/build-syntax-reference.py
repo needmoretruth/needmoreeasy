@@ -151,6 +151,8 @@ WHILE = [
 WHEN = [
     ("문장형", "Sentence", "if score is greater than 10 then show You won", "만약에 점수가 10보다 크면 성공 말해줘", 'if (score > 10): print("You won")', 'if (점수 > 10): print("성공")'),
     ("문장형", "Sentence", "if name exists", "만약에 이름이 있으면", "if (name):", 'if (이름):'),
+    ("문장형", "Sentence", "if dark", "만약에 밤이면", "if (dark):", 'if (밤):'),
+    ("문장형", "Sentence", "if the length of name is greater than how many friends", "만약에 이름 길이가 친구들 개수보다 크면", "if (len(name) > len(friends)):", 'if (len(이름) > len(친구들)):'),
     ("문장형", "Sentence", "if score > 10 then show You won", "만약 점수 > 10 이면 성공 말해줘", 'if (score > 10): print("You won")', 'if (점수 > 10): print("성공")'),
     ("문장형", "Sentence", "if score is above 10 then show You won", "만약에 점수가 10 초과면 성공 말해줘", 'if (score > 10): print("You won")', 'if (점수 > 10): print("성공")'),
     ("문장형", "Sentence", "score is greater than 5 then show high", "점수가 5보다 크면 높음 말해줘", 'if (score > 5): print("high")', 'if (점수 > 5): print("높음")'),
@@ -260,6 +262,13 @@ JOBS = [
 ]
 
 NUMBERS = [
+    ("문장형", "Sentence", "set left to total minus score", "남은것은 총합 빼기 점수", "left = total - score", '남은것 = 총합 - 점수'),
+    ("문장형", "Sentence", "show score plus people", "점수 더하기 인원 말해줘", "print(score + people)", 'print(점수 + 인원)'),
+    ("문장형", "Sentence", "set double to score times 2", "두배는 점수 곱하기 2", "double = score * 2", '두배 = 점수 * 2'),
+    ("문장형", "Sentence", "set double to score multiplied by 2", "두배는 점수 곱하기 2", "double = score * 2", '두배 = 점수 * 2'),
+    ("문장형", "Sentence", "set each to total divided by people", "한몫은 총합 나누기 인원", "each = total / people", '한몫 = 총합 / 인원'),
+    ("문장형", "Sentence", "set big to score plus people times 2", "큰값은 점수 더하기 인원 곱하기 2", "big = score + people * 2", '큰값 = 점수 + 인원 * 2'),
+    ("문장형", "Sentence", "if total minus score is greater than 3", "만약에 총합 빼기 점수가 3보다 크면", "if (total - score > 3):", 'if (총합 - 점수 > 3):'),
     ("문장형", "Sentence", "show the remainder of score divided by 4", "점수를 4로 나눈 나머지 말해줘", "print(score % 4)", 'print(점수 % 4)'),
     ("문장형", "Sentence", "set left to the remainder of score divided by 4", "남은것은 점수를 4로 나눈 나머지", "left = score % 4", '남은것 = 점수 % 4'),
     ("문장형", "Sentence", "if the remainder of score divided by 4 equals 0", "만약에 점수를 4로 나눈 나머지가 0과 같으면", "if (score % 4 == 0):", 'if (점수 % 4 == 0):'),
@@ -268,8 +277,10 @@ NUMBERS = [
     ("문장형", "Sentence", "set rows to the quotient of score divided by 4", "줄수는 점수를 4로 나눈 몫", "rows = score // 4", '줄수 = 점수 // 4'),
     ("초급", "Beginner", "say score % 4", "말해 점수 % 4", "print(score % 4)", 'print(점수 % 4)'),
     ("초급", "Beginner", "say score // 4", "말해 점수 // 4", "print(score // 4)", 'print(점수 // 4)'),
+    ("초급", "Beginner", "save left to total - score", "저장 남은것 총합 - 점수", "left = total - score", '남은것 = 총합 - 점수'),
     ("고급", "Advanced", "left = score % 4", "남은것 = 점수 % 4", "unchanged"),
     ("고급", "Advanced", "rows = score // 4", "줄수 = 점수 // 4", "unchanged"),
+    ("고급", "Advanced", "left = total - score", "남은것 = 총합 - 점수", "unchanged"),
 ]
 
 TEXT = [
@@ -571,6 +582,10 @@ def spelling_table(korean: bool) -> str:
         ("한 결과 / The result of", "JOB_RESULT_WORDS_EN", "JOB_RESULT_THING_WORDS_KO"),
         ("한 / Having run", "JOB_RESULT_VERB_WORDS_KO", None),
         ("몫 / Quotient", "QUOTIENT_WORDS_EN", "QUOTIENT_WORDS_KO"),
+        ("더하기 / Plus", "ARITHMETIC_ADD_WORDS_EN", "ARITHMETIC_ADD_WORDS_KO"),
+        ("빼기 / Minus", "ARITHMETIC_SUBTRACT_WORDS_EN", "ARITHMETIC_SUBTRACT_WORDS_KO"),
+        ("곱하기 / Times", "ARITHMETIC_MULTIPLY_WORDS_EN", "ARITHMETIC_MULTIPLY_WORDS_KO"),
+        ("나누기 / Divided by", "ARITHMETIC_DIVIDE_WORDS_EN", "ARITHMETIC_DIVIDE_WORDS_KO"),
         ("온전한 수 / Whole number", "WHOLE_WORDS_EN", None),
         ("이은 것 / Joined thing", "JOINED_THING_WORDS_KO", None),
         ("바꾼 것 / Changed into", "CHANGED_WORDS_KO", None),
@@ -755,6 +770,11 @@ NME가 **실제로 받아들이는 표기를 빠짐없이** 모아 둔 목록입
 
 {level_table(WHEN, True)}
 
+비교의 오른쪽도 왼쪽이 받는 읽기(`길이`, `개수`, `나머지`, `몫`, 계산 따위)를 똑같이
+받습니다. 앞에서 만든 이름만 읽고, 아니면 예전처럼 글입니다. 한 글자 이름에 어미를
+붙인 `만약에 밤이면`·`만약에 비면`·`만약에 비라면`은 그 이름이 앞에서 만든 이름일 때
+`if 밤:`처럼 이름 하나를 검사합니다.
+
 ## 10. 비교 어휘
 
 {compare_table(True)}
@@ -823,17 +843,24 @@ Python으로 `나이표 = {{}}`라고 쓴 이름도 표로 봅니다.
 셋 다 값이므로 출력·저장·조건 어디에나 쓸 수 있습니다. 앞에서 만든 이름에만
 쓸 수 있고, 그래서 그 낱말이 들어간 평범한 문장은 그대로 글로 남습니다.
 
-## 15. 숫자 나머지
+## 15. 숫자 계산과 나머지
 
 {level_table(NUMBERS, True)}
+
+`더하기`·`빼기`·`곱하기`·`나누기`/`plus`·`minus`·`times`·`multiplied by`·`divided
+by`는 Python의 `+ - * /`입니다. 양쪽이 모두 적어 놓은 숫자이거나 앞에서 만든
+이름일 때만 계산이고, 하나라도 아니면 예전처럼 글입니다. 그래서 `설탕 빼기`와
+`one plus one equals two`는 그대로 출력됩니다. 여러 개를 이어 쓰면 수학 순서대로
+곱셈·나눗셈을 먼저 합니다. 저장하는 값, 출력하는 값 전체, 비교의 어느 쪽에나
+쓸 수 있습니다.
 
 `나머지`/`the remainder of`는 나눗셈에서 남는 수이고, `몫`/`the whole number
 of`는 온전히 몇 번 들어가는지입니다. 둘 다 값이라서 출력·저장·조건 어디에나 쓸 수
 있고, 나누는 수는 숫자이거나 앞에서 만든 이름이어야 합니다.
 
-`나눠`는 파이썬의 `/`라서 답이 소수가 됩니다. 소수는 목록의 몇 번째, 반복 횟수,
-저장할 점수 자리에 넣을 수 없어 그때 프로그램이 멈춥니다. 그런 자리에는 `몫`을
-쓰세요.
+`나누기`와 `나눠`는 파이썬의 `/`라서 답이 소수가 됩니다. 소수는 목록의 몇 번째,
+반복 횟수, 저장할 점수 자리에 넣을 수 없어 그때 프로그램이 멈춥니다. 그런 자리에는
+`몫`을 쓰세요.
 
 ## 16. 값과 리터럴
 
@@ -1143,6 +1170,12 @@ it immediately.
 
 {level_table(WHEN, False)}
 
+The right of a comparison takes every reading the left takes — a length, a count,
+a remainder, a quotient, arithmetic — and only from a name the program already
+made; anything else is text as before. In Korean a one-syllable name with the
+ending glued on — `만약에 밤이면`, `만약에 비면`, `만약에 비라면` — tests that name
+alone, like `if dark`, when the program made it.
+
 ## 10. Comparison vocabulary
 
 {compare_table(False)}
@@ -1217,18 +1250,27 @@ changed. All three are values, so they work in output, in a saved name, and in
 a condition. They only read a name the program already made, which is what
 keeps an ordinary sentence containing one of those words a sentence.
 
-## 15. Number remainders
+## 15. Arithmetic and remainders
 
 {level_table(NUMBERS, False)}
+
+`plus`, `minus`, `times`, `multiplied by` and `divided by` — `더하기`, `빼기`,
+`곱하기`, `나누기` in Korean — are Python's `+ - * /`. They are arithmetic only
+when every side is a written number or a name the program already made; if any
+side is anything else, the words are text as before, so `설탕 빼기` and `one
+plus one equals two` still print themselves. A chain follows the order a maths
+book uses, multiplying and dividing first. The value can be saved, can be the
+whole of what is shown, and can stand on either side of a comparison.
 
 `the remainder of` is what is left over after a division, and `the whole
 number of` is how many whole times one goes into the other. Both are values,
 so they work in output, in a saved name, and in a condition; the number being
 divided by must be a number or a name the program already made.
 
-`divide` is Python's `/`, so its answer is a fraction. A fraction cannot be a
-position in a list, a number of repeats, or a saved score, and the program
-stops where one is used as any of those. Ask for the whole number instead.
+`divided by` and `divide` are Python's `/`, so the answer is a fraction. A
+fraction cannot be a position in a list, a number of repeats, or a saved score,
+and the program stops where one is used as any of those. Ask for the whole
+number instead.
 
 ## 16. Values and literals
 

@@ -174,6 +174,8 @@ it immediately.
 | --- | --- | --- |
 | Sentence | `if score is greater than 10 then show You won` | `if (score > 10): print("You won")` |
 | Sentence | `if name exists` | `if (name):` |
+| Sentence | `if dark` | `if (dark):` |
+| Sentence | `if the length of name is greater than how many friends` | `if (len(name) > len(friends)):` |
 | Sentence | `if score > 10 then show You won` | `if (score > 10): print("You won")` |
 | Sentence | `if score is above 10 then show You won` | `if (score > 10): print("You won")` |
 | Sentence | `score is greater than 5 then show high` | `if (score > 5): print("high")` |
@@ -181,6 +183,12 @@ it immediately.
 | Sentence | `else` | `else:` |
 | Beginner | `when score == 1: say "one"` | `if (score == 1): print("one")` |
 | Advanced | `if score == 1:` | unchanged |
+
+The right of a comparison takes every reading the left takes — a length, a count,
+a remainder, a quotient, arithmetic — and only from a name the program already
+made; anything else is text as before. In Korean a one-syllable name with the
+ending glued on — `만약에 밤이면`, `만약에 비면`, `만약에 비라면` — tests that name
+alone, like `if dark`, when the program made it.
 
 ## 10. Comparison vocabulary
 
@@ -338,10 +346,17 @@ changed. All three are values, so they work in output, in a saved name, and in
 a condition. They only read a name the program already made, which is what
 keeps an ordinary sentence containing one of those words a sentence.
 
-## 15. Number remainders
+## 15. Arithmetic and remainders
 
 | Level | NME | Python produced |
 | --- | --- | --- |
+| Sentence | `set left to total minus score` | `left = total - score` |
+| Sentence | `show score plus people` | `print(score + people)` |
+| Sentence | `set double to score times 2` | `double = score * 2` |
+| Sentence | `set double to score multiplied by 2` | `double = score * 2` |
+| Sentence | `set each to total divided by people` | `each = total / people` |
+| Sentence | `set big to score plus people times 2` | `big = score + people * 2` |
+| Sentence | `if total minus score is greater than 3` | `if (total - score > 3):` |
 | Sentence | `show the remainder of score divided by 4` | `print(score % 4)` |
 | Sentence | `set left to the remainder of score divided by 4` | `left = score % 4` |
 | Sentence | `if the remainder of score divided by 4 equals 0` | `if (score % 4 == 0):` |
@@ -350,17 +365,28 @@ keeps an ordinary sentence containing one of those words a sentence.
 | Sentence | `set rows to the quotient of score divided by 4` | `rows = score // 4` |
 | Beginner | `say score % 4` | `print(score % 4)` |
 | Beginner | `say score // 4` | `print(score // 4)` |
+| Beginner | `save left to total - score` | `left = total - score` |
 | Advanced | `left = score % 4` | unchanged |
 | Advanced | `rows = score // 4` | unchanged |
+| Advanced | `left = total - score` | unchanged |
+
+`plus`, `minus`, `times`, `multiplied by` and `divided by` — `더하기`, `빼기`,
+`곱하기`, `나누기` in Korean — are Python's `+ - * /`. They are arithmetic only
+when every side is a written number or a name the program already made; if any
+side is anything else, the words are text as before, so `설탕 빼기` and `one
+plus one equals two` still print themselves. A chain follows the order a maths
+book uses, multiplying and dividing first. The value can be saved, can be the
+whole of what is shown, and can stand on either side of a comparison.
 
 `the remainder of` is what is left over after a division, and `the whole
 number of` is how many whole times one goes into the other. Both are values,
 so they work in output, in a saved name, and in a condition; the number being
 divided by must be a number or a name the program already made.
 
-`divide` is Python's `/`, so its answer is a fraction. A fraction cannot be a
-position in a list, a number of repeats, or a saved score, and the program
-stops where one is used as any of those. Ask for the whole number instead.
+`divided by` and `divide` are Python's `/`, so the answer is a fraction. A
+fraction cannot be a position in a list, a number of repeats, or a saved score,
+and the program stops where one is used as any of those. Ask for the whole
+number instead.
 
 ## 16. Values and literals
 
@@ -749,6 +775,10 @@ Every spelling accepted for each action, with nothing left out.
 | 한 결과 / The result of | `result` · `answer` | `결과` · `답` · `결과값` |
 | 한 / Having run | — | `한` · `해서` · `실행한` · `시킨` |
 | 몫 / Quotient | `quotient` | `몫` |
+| 더하기 / Plus | `plus` | `더하기` |
+| 빼기 / Minus | `minus` | `빼기` |
+| 곱하기 / Times | `times` · `multiplied` | `곱하기` |
+| 나누기 / Divided by | `divided` | `나누기` |
 | 온전한 수 / Whole number | `whole` | — |
 | 이은 것 / Joined thing | — | `이은` · `이어붙인` · `붙인` |
 | 바꾼 것 / Changed into | — | `바꾼` · `고친` · `읽은` |

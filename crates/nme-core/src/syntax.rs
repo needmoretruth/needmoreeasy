@@ -298,6 +298,13 @@ pub enum Value {
         of: String,
         by: Code,
     },
+    /// `total minus done` / `전체 빼기 순서` — ordinary arithmetic written in
+    /// words.
+    ///
+    /// Before this a beginner could not subtract without Python punctuation,
+    /// and the line that read correctly compiled into a *different* program:
+    /// `set left to total minus done` saved the text `10 minus 3`.
+    Arithmetic(Arithmetic),
     /// `5에게 두배 한 결과` / `the result of double with 5` — the answer a job
     /// handed back.
     ///
@@ -331,6 +338,20 @@ pub enum Value {
         permille: u32,
     },
     ZeroKnowledge(ZeroKnowledgeValue),
+}
+
+/// `a plus b minus c` / `가 더하기 나 빼기 다` — numbers and saved names joined
+/// by the four arithmetic words, in the order they were written.
+///
+/// Every operand is one written number or one name the program already made,
+/// so no operand ever needs brackets, and emitting the Python operators in the
+/// same order gives ordinary maths precedence for free: `a plus b times c` is
+/// `a + b * c`. The operation is the one [`UpdateOp`] already names, so a value
+/// change and a value share a single set of four.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Arithmetic {
+    pub first: Code,
+    pub rest: Vec<(UpdateOp, Code)>,
 }
 
 /// One sentence-level value from the bundled Schnorr proof-of-knowledge tools.
@@ -477,6 +498,9 @@ pub enum ConditionValue {
         of: String,
         by: Code,
     },
+    /// `만약에 전체 빼기 순서가 5보다 크면` / `if total minus done is greater
+    /// than 5` — arithmetic written in words, on one side of a comparison.
+    Arithmetic(Arithmetic),
     /// `만약에 답을 숫자로 바꾼 것이 7과 같으면` — text read back as a number, on
     /// one side of a comparison.
     AsNumber {

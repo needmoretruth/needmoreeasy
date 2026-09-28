@@ -12,9 +12,10 @@ use crate::diagnostics::korean_particle;
 use crate::from_python;
 use crate::lower::{lower_condition, lower_reading, lower_value};
 use crate::syntax::{
-    Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, ItemPosition, ListOrder,
-    Literal, LogicalOp, ModuleVersion, NmeStmt, Reading, SplitBy, TextPart, TextTemplate, UpdateOp,
-    Value, ZeroKnowledgeValue, CHANCE_SCALE, COOLDOWN_PREFIX, ELAPSED_PYTHON,
+    Arithmetic, Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, ItemPosition,
+    ListOrder, Literal, LogicalOp, ModuleVersion, NmeStmt, Reading, SplitBy, TextPart,
+    TextTemplate, UpdateOp, Value, ZeroKnowledgeValue, CHANCE_SCALE, COOLDOWN_PREFIX,
+    ELAPSED_PYTHON,
 };
 
 /// One statement, written in one level of one language.
@@ -1000,6 +1001,7 @@ impl Rewrite<'_> {
             ConditionValue::Reading { of, reading } => Some(self.reading(of, *reading)),
             ConditionValue::Remainder { of, by } => Some(self.remainder(of, by)),
             ConditionValue::Quotient { of, by } => Some(self.quotient(of, by)),
+            ConditionValue::Arithmetic(arithmetic) => Some(self.arithmetic(arithmetic)),
             ConditionValue::AsNumber { of } => Some(self.as_number(of)),
             ConditionValue::JobResult { name, arguments } => {
                 Some(self.job_result(name, arguments)?)
@@ -1159,6 +1161,7 @@ impl Rewrite<'_> {
             }
             Value::Remainder { of, by } => Some(self.remainder(of, by)),
             Value::Quotient { of, by } => Some(self.quotient(of, by)),
+            Value::Arithmetic(arithmetic) => Some(self.arithmetic(arithmetic)),
             Value::AsNumber { of } => Some(self.as_number(of)),
             Value::JobResult { name, arguments } => Some(self.job_result(name, arguments)?),
             Value::Elapsed => Some(self.either("elapsed", "잰시간")),
@@ -1350,6 +1353,28 @@ impl Rewrite<'_> {
                 korean_marked(&by, "으로", "로")
             ),
         )
+    }
+
+    /// `total minus done` / `전체 빼기 순서`, in the words the parser reads.
+    fn arithmetic(&self, arithmetic: &Arithmetic) -> String {
+        let mut written = self.code(&arithmetic.first);
+        for (operation, operand) in &arithmetic.rest {
+            let word = match (self.language, operation) {
+                (Language::English, UpdateOp::Add) => "plus",
+                (Language::English, UpdateOp::Subtract) => "minus",
+                (Language::English, UpdateOp::Multiply) => "times",
+                (Language::English, UpdateOp::Divide) => "divided by",
+                (Language::Korean, UpdateOp::Add) => "더하기",
+                (Language::Korean, UpdateOp::Subtract) => "빼기",
+                (Language::Korean, UpdateOp::Multiply) => "곱하기",
+                (Language::Korean, UpdateOp::Divide) => "나누기",
+            };
+            written.push(' ');
+            written.push_str(word);
+            written.push(' ');
+            written.push_str(&self.code(operand));
+        }
+        written
     }
 
     fn job_result(&self, name: &str, arguments: &[Value]) -> Option<String> {

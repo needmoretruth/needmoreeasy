@@ -15,9 +15,9 @@
 
 use crate::lower::{lower_condition, lower_stmt, lower_value};
 use crate::syntax::{
-    Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, ItemPosition, ListOrder,
-    Literal, LogicalOp, NmeStmt, Reading, SplitBy, TextPart, TextTemplate, UpdateOp, Value,
-    COOLDOWN_PREFIX, ELAPSED_PYTHON, TIMER_NAME,
+    Arithmetic, Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind, ItemPosition,
+    ListOrder, Literal, LogicalOp, NmeStmt, Reading, SplitBy, TextPart, TextTemplate, UpdateOp,
+    Value, COOLDOWN_PREFIX, ELAPSED_PYTHON, TIMER_NAME,
 };
 
 /// The statement whose Python is exactly `text`, if NME has one.
@@ -607,6 +607,9 @@ fn values(text: &str) -> Vec<Value> {
             }
         }
     }
+    if let Some(arithmetic) = arithmetic(text) {
+        found.push(Value::Arithmetic(arithmetic));
+    }
     if let Some(arguments) = call_argument(text, "__import__(\"random\").randint") {
         if let Some((low, high)) = split_once_outside(arguments, ",") {
             found.push(Value::RandomInteger {
@@ -881,6 +884,7 @@ fn condition_values(text: &str) -> Vec<ConditionValue> {
             Value::Reading { of, reading } => found.push(ConditionValue::Reading { of, reading }),
             Value::Remainder { of, by } => found.push(ConditionValue::Remainder { of, by }),
             Value::Quotient { of, by } => found.push(ConditionValue::Quotient { of, by }),
+            Value::Arithmetic(arithmetic) => found.push(ConditionValue::Arithmetic(arithmetic)),
             Value::AsNumber { of } => found.push(ConditionValue::AsNumber { of }),
             Value::Entry { of, key } => found.push(ConditionValue::Entry { of, key }),
             _ => {}
@@ -900,6 +904,67 @@ fn chance_permille(text: &str) -> Option<u32> {
 }
 
 // ---------------------------------------------------------------- shapes
+
+/// `total - done`, `a + b * c` — names and plain numbers joined by the four
+/// operators, and nothing else.
+///
+/// A bracket, a sign or a call anywhere makes one of the pieces something other
+/// than a name or a number, and then the expression is not one the sentence
+/// has words for. Only the operators written with a space on each side are
+/// read, which is the shape lowering writes, so the round-trip check that
+/// guards every reading here can succeed.
+fn arithmetic(text: &str) -> Option<Arithmetic> {
+    let mut marks: Vec<(usize, UpdateOp)> = [
+        (" + ", UpdateOp::Add),
+        (" - ", UpdateOp::Subtract),
+        (" * ", UpdateOp::Multiply),
+        (" / ", UpdateOp::Divide),
+    ]
+    .into_iter()
+    .flat_map(|(needle, operation)| {
+        positions_outside(text, needle)
+            .into_iter()
+            .map(move |at| (at, operation))
+    })
+    .collect();
+    if marks.is_empty() {
+        return None;
+    }
+    marks.sort_by_key(|(at, _)| *at);
+    let operand = |piece: &str| -> Option<Code> {
+        let piece = piece.trim();
+        (is_name(piece) || is_plain_number(piece)).then(|| code(piece))
+    };
+    let mut start = 0;
+    let mut first = None;
+    let mut rest = Vec::new();
+    let mut pending: Option<UpdateOp> = None;
+    for (at, operation) in marks {
+        let piece = operand(&text[start..at])?;
+        match pending {
+            None => first = Some(piece),
+            Some(before) => rest.push((before, piece)),
+        }
+        pending = Some(operation);
+        start = at + 3;
+    }
+    rest.push((pending?, operand(&text[start..])?));
+    Some(Arithmetic {
+        first: first?,
+        rest,
+    })
+}
+
+/// `3`, `2.5` — a number written in digits, with no sign in front of it.
+fn is_plain_number(text: &str) -> bool {
+    let mut parts = text.splitn(2, '.');
+    let whole = parts.next().unwrap_or("");
+    let fraction = parts.next();
+    !whole.is_empty()
+        && whole.bytes().all(|b| b.is_ascii_digit())
+        && fraction
+            .is_none_or(|digits| !digits.is_empty() && digits.bytes().all(|b| b.is_ascii_digit()))
+}
 
 fn code(text: &str) -> Code {
     Code::Generated(text.trim().to_string())

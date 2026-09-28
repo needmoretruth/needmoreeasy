@@ -10,7 +10,7 @@
 //! line numbers the user actually sees in their `.nme` file.
 
 use crate::syntax::{
-    BundledModuleId, Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind,
+    Arithmetic, BundledModuleId, Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind,
     ItemPosition, ListOrder, Literal, LogicalOp, NmeLine, NmeStmt, Reading, SplitBy, TextPart,
     TextTemplate, UpdateOp, Value, ZeroKnowledgeValue, CHANCE_SCALE, COOLDOWN_PREFIX,
     DATE_MODULE_VERSION, ELAPSED_PYTHON, FILE_MODULE_VERSION, LIST_MODULE_VERSION,
@@ -601,6 +601,7 @@ fn lower_condition_value(value: &ConditionValue, source: &str) -> String {
             },
             source,
         ),
+        ConditionValue::Arithmetic(arithmetic) => lower_arithmetic(arithmetic, source),
         ConditionValue::AsNumber { of } => lower_value(&Value::AsNumber { of: of.clone() }, source),
         ConditionValue::JobResult { name, arguments } => lower_value(
             &Value::JobResult {
@@ -617,6 +618,31 @@ fn lower_condition_value(value: &ConditionValue, source: &str) -> String {
             source,
         ),
     }
+}
+
+/// `total minus done` → `total - done`, shared by values and conditions.
+///
+/// Every operand is one number or one name, so none of them needs brackets,
+/// and writing the operators in the order they were said gives the reader the
+/// precedence a maths book gives: `a plus b times c` is `a + b * c`. The whole
+/// expression needs none either: it only ever stands where Python binds it
+/// before anything around it — an argument, the right of `=`, one side of a
+/// comparison.
+pub(crate) fn lower_arithmetic(arithmetic: &Arithmetic, source: &str) -> String {
+    let mut python = lower_code(&arithmetic.first, source);
+    for (operation, operand) in &arithmetic.rest {
+        let operator = match operation {
+            UpdateOp::Add => "+",
+            UpdateOp::Subtract => "-",
+            UpdateOp::Multiply => "*",
+            UpdateOp::Divide => "/",
+        };
+        python.push(' ');
+        python.push_str(operator);
+        python.push(' ');
+        python.push_str(&lower_code(operand, source));
+    }
+    python
 }
 
 /// The one place a reading becomes Python, shared by values and conditions.
@@ -732,6 +758,7 @@ pub(crate) fn lower_value(value: &Value, source: &str) -> String {
             }
         }
         Value::AsNumber { of } => format!("int({of})"),
+        Value::Arithmetic(arithmetic) => lower_arithmetic(arithmetic, source),
         Value::JobResult { name, arguments } => format!(
             "{name}({})",
             arguments

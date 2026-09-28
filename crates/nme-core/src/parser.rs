@@ -14,7 +14,7 @@ use rustpython_parser::{parse as parse_python, Mode, Tok};
 use crate::diagnostics::{korean_particle, Diagnostic, DiagnosticCode, Span};
 use crate::lexer::{LogicalLine, Token};
 use crate::syntax::{
-    BundledModuleId, Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind,
+    Arithmetic, BundledModuleId, Code, CompareOp, Condition, ConditionValue, InlineStmt, InputKind,
     ItemPosition, ListOrder, Literal, LogicalOp, ModuleVersion, NmeLine, NmeStmt, Reading,
     Spelling, SplitBy, TextPart, TextTemplate, UpdateOp, Value, CHANCE_MAX_PERMILLE,
     COOLDOWN_PREFIX, ELAPSED_PYTHON, FILE_MODULE, FILE_MODULE_KO, FILE_READ_WORDS_EN,
@@ -1032,6 +1032,24 @@ const QUOTIENT_WORDS_KO: &[&str] = &["몫"];
 /// The two words English puts in front of a quotient when it says it plainly.
 const WHOLE_WORDS_EN: &[&str] = &["whole"];
 const WHOLE_NUMBER_WORDS_EN: &[&str] = &["number"];
+/// `total minus done` / `전체 빼기 순서` — arithmetic said out loud.
+///
+/// Every one of these is an ordinary word, and `빼기`, `더하기`, `plus`,
+/// `minus` and `times` already mean other things elsewhere in the grammar. So
+/// they are read as arithmetic only inside a value, only written exactly, and
+/// only when **every** side is a written number or a name the program made:
+/// `설탕 빼기`, `one plus one equals two` and `the price minus tax` name
+/// nothing the program made and stay the sentences they are.
+///
+/// `multiplied` and `divided` are only arithmetic with `by` after them.
+const ARITHMETIC_ADD_WORDS_EN: &[&str] = &["plus"];
+const ARITHMETIC_ADD_WORDS_KO: &[&str] = &["더하기"];
+const ARITHMETIC_SUBTRACT_WORDS_EN: &[&str] = &["minus"];
+const ARITHMETIC_SUBTRACT_WORDS_KO: &[&str] = &["빼기"];
+const ARITHMETIC_MULTIPLY_WORDS_EN: &[&str] = &["times", "multiplied"];
+const ARITHMETIC_MULTIPLY_WORDS_KO: &[&str] = &["곱하기"];
+const ARITHMETIC_DIVIDE_WORDS_EN: &[&str] = &["divided"];
+const ARITHMETIC_DIVIDE_WORDS_KO: &[&str] = &["나누기"];
 /// `레벨글을 숫자로 바꾼 것` — the verb that says the text is being read as
 /// something else.
 const CHANGED_WORDS_KO: &[&str] = &["바꾼", "고친", "읽은"];
@@ -7878,6 +7896,141 @@ fn remainder_divisor(token: &Token, known_names: &HashSet<String>) -> Option<Cod
     }
 }
 
+// ------------------------------------------------- arithmetic said in words
+
+/// `total minus done` / `전체 빼기 순서` — numbers and saved names joined by the
+/// arithmetic words, and how many tokens it used.
+///
+/// The chain goes on for as long as an arithmetic word is followed by one more
+/// operand, so `a plus b minus c` is one value. It stops at the first thing
+/// that is not an operand, and the callers decide whether the rest of the line
+/// may follow: a value needs the chain to be the whole of what it was given,
+/// while one side of a comparison is followed by the comparing words.
+///
+/// Only the last operand may carry a Korean particle, because that is where
+/// Korean puts it: `전체 빼기 순서가 5보다 크면`, `전체 빼기 순서를 말해줘`.
+/// A particle in the middle — `전체를 빼기 순서` — is not a sentence anybody
+/// writes.
+fn arithmetic_prefix(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+) -> Option<(Arithmetic, usize)> {
+    let first = arithmetic_operand(source, tokens.first()?, known_names, false)?;
+    let mut rest = Vec::new();
+    let mut at = 1;
+    while let Some((operation, used)) = arithmetic_word_at(tokens, at) {
+        let Some(token) = tokens.get(at + used) else {
+            break;
+        };
+        if let Some(operand) = arithmetic_operand(source, token, known_names, false) {
+            rest.push((operation, operand));
+            at += used + 1;
+            continue;
+        }
+        if let Some(operand) = arithmetic_operand(source, token, known_names, true) {
+            rest.push((operation, operand));
+            at += used + 1;
+        }
+        break;
+    }
+    (!rest.is_empty()).then_some((Arithmetic { first, rest }, at))
+}
+
+/// The arithmetic word at `at`, and how many tokens it takes: `plus`, `minus`,
+/// `times`, `multiplied by`, `divided by`, `더하기`, `빼기`, `곱하기`, `나누기`.
+///
+/// Matched exactly. A one-letter repair would read `pluss` or `빼게` as maths
+/// in a sentence that was never about it.
+fn arithmetic_word_at(tokens: &[Token], at: usize) -> Option<(UpdateOp, usize)> {
+    let token = tokens.get(at)?;
+    let operation = [
+        (
+            ARITHMETIC_ADD_WORDS_EN,
+            ARITHMETIC_ADD_WORDS_KO,
+            UpdateOp::Add,
+        ),
+        (
+            ARITHMETIC_SUBTRACT_WORDS_EN,
+            ARITHMETIC_SUBTRACT_WORDS_KO,
+            UpdateOp::Subtract,
+        ),
+        (
+            ARITHMETIC_MULTIPLY_WORDS_EN,
+            ARITHMETIC_MULTIPLY_WORDS_KO,
+            UpdateOp::Multiply,
+        ),
+        (
+            ARITHMETIC_DIVIDE_WORDS_EN,
+            ARITHMETIC_DIVIDE_WORDS_KO,
+            UpdateOp::Divide,
+        ),
+    ]
+    .into_iter()
+    .find(|(english, korean, _)| {
+        token_matches_exact(token, english) || token_matches_exact(token, korean)
+    })
+    .map(|(_, _, operation)| operation)?;
+    // `multiplied by` and `divided by` are two words; `multiplied` on its own
+    // is the past tense of a verb, not an operator.
+    if token_matches_exact(token, &["multiplied", "divided"]) {
+        return token_matches_exact_at(tokens, at + 1, &["by"]).then_some((operation, 2));
+    }
+    Some((operation, 1))
+}
+
+/// One side of a piece of arithmetic: a written number, or a name the program
+/// made that can hold one.
+///
+/// A job, a record and a tool a module binds are names the program made as
+/// well, but no arithmetic on them runs, so they keep the reading they had.
+fn arithmetic_operand(
+    source: &str,
+    token: &Token,
+    known_names: &HashSet<String>,
+    particle_allowed: bool,
+) -> Option<Code> {
+    if let Some(number) = written_number(source, token) {
+        return Some(number);
+    }
+    let word = name_word(token)?;
+    let name = if known_names.contains(word) {
+        word
+    } else if particle_allowed {
+        resolve_known_particle(word, known_names)?
+    } else {
+        return None;
+    };
+    let can_hold_a_number = !is_record_name(known_names, name)
+        && !is_any_job_name(known_names, name)
+        && (!is_module_name(known_names, name) || MODULE_VALUE_NAMES.contains(&name));
+    can_hold_a_number
+        .then(|| Code::Source(Span::new(token.span.start, token.span.start + name.len())))
+}
+
+/// A number as it was written. `2.` is the number two at the end of a
+/// sentence — the dot is a full stop — so the dot is left out of it, exactly
+/// as a value that is only a number leaves it out.
+fn written_number(source: &str, token: &Token) -> Option<Code> {
+    let span = token.span;
+    match token.tok {
+        Tok::Int { .. } => Some(Code::Source(span)),
+        Tok::Float { .. } => {
+            let text = &source[span.start..span.end];
+            match text.strip_suffix('.') {
+                Some(digits)
+                    if !digits.is_empty() && digits.bytes().all(|b| b.is_ascii_digit()) =>
+                {
+                    Some(Code::Source(Span::new(span.start, span.end - 1)))
+                }
+                Some(_) => None,
+                None => Some(Code::Source(span)),
+            }
+        }
+        _ => None,
+    }
+}
+
 fn korean_reading_prefix(
     tokens: &[Token],
     known_names: &HashSet<String>,
@@ -11292,6 +11445,13 @@ fn match_branch(
         }
         None => (remainder.to_vec(), tokens.len(), None),
     };
+    let (condition_tokens, connector) = condition_on_a_glued_known_name(
+        tokens,
+        condition_start,
+        condition_tokens,
+        connector,
+        known_names,
+    );
     let condition =
         parse_natural_condition(source, &condition_tokens, connector, known_names, spelling)?;
     let body_start = body_start + inline_body_connectors_at(tokens, body_start, mode, known_names);
@@ -11718,7 +11878,15 @@ fn match_when(
         return Ok(Some(NmeStmt::When { condition, inline }));
     }
 
-    let natural = find_condition_connector(&tokens[consumed..]);
+    // `만약에 비면 우산 말해줘` — a name the program made, with its ending glued
+    // on, is where the condition ends even when the connector search found
+    // nothing, exactly as `만약에 준비면 우산 말해줘` already reads.
+    let natural = find_condition_connector(&tokens[consumed..]).or_else(|| {
+        tokens
+            .get(consumed)
+            .and_then(|token| known_name_before_a_condition_ending(token, known_names))
+            .map(|_| (0, ConditionConnector::Then))
+    });
     if !starter_exact && natural.is_none() && matches!(block, BlockCtx::Inline) {
         // A short sentence word may be one edit away from a condition alias.
         // Without a connector, colon, or following block there is not enough
@@ -11736,6 +11904,8 @@ fn match_when(
             None => (tokens[consumed..].to_vec(), tokens.len(), None),
         },
     };
+    let (condition_tokens, connector) =
+        condition_on_a_glued_known_name(tokens, consumed, condition_tokens, connector, known_names);
     if condition_tokens.is_empty() {
         return Err(condition_missing(spelling, tokens[0].span));
     }
@@ -12706,8 +12876,12 @@ fn parse_natural_condition_atom(
     }
 
     if cleaned.len() == 1 {
+        let value = known_name_before_a_condition_ending(cleaned[0], known_names).map_or_else(
+            || condition_left(cleaned[0], known_names),
+            |name| condition_left(&name, known_names),
+        );
         return Ok(Condition::Truthy {
-            value: condition_left(cleaned[0], known_names),
+            value,
             negated: false,
         });
     }
@@ -12758,11 +12932,23 @@ fn korean_contains_condition(
 /// A reading standing where one side of a condition does: `친구들 개수가 3보다
 /// 크면`, `if how many friends is greater than 3`.
 fn condition_reading_at(
+    source: &str,
     tokens: &[&Token],
     known_names: &HashSet<String>,
 ) -> Option<(ConditionValue, usize)> {
     let owned: Vec<Token> = tokens.iter().map(|token| (*token).clone()).collect();
-    match reading_prefix(&owned, known_names) {
+    condition_reading(source, &owned, known_names)
+}
+
+/// The same readings a value may take, as one side of a comparison, and how
+/// many tokens it used. Both sides ask this, so whatever the left may say the
+/// right may say too: `말 길이가 가장긴말 길이보다 크면`.
+fn condition_reading(
+    source: &str,
+    tokens: &[Token],
+    known_names: &HashSet<String>,
+) -> Option<(ConditionValue, usize)> {
+    let found = match reading_prefix(tokens, known_names) {
         Some((Value::Reading { of, reading }, used)) => {
             Some((ConditionValue::Reading { of, reading }, used))
         }
@@ -12778,7 +12964,27 @@ fn condition_reading_at(
         }
         Some((Value::Entry { of, key }, used)) => Some((ConditionValue::Entry { of, key }, used)),
         _ => None,
-    }
+    };
+    found.or_else(|| {
+        arithmetic_prefix(source, tokens, known_names)
+            .map(|(arithmetic, used)| (ConditionValue::Arithmetic(arithmetic), used))
+    })
+}
+
+/// True when the right-hand side, once its closing marker is off, is one whole
+/// reading. A leading `가` or `이` is then the first word of that reading — a
+/// name the program made — and not the subject particle of the left side.
+fn right_is_a_whole_reading(
+    source: &str,
+    right: &[Token],
+    trailing_markers: &[&str],
+    known_names: &HashSet<String>,
+) -> bool {
+    let mut trimmed = right.to_vec();
+    trim_condition_markers(&mut trimmed, trailing_markers);
+    !trimmed.is_empty()
+        && condition_reading(source, &trimmed, known_names)
+            .is_some_and(|(_, used)| used == trimmed.len())
 }
 
 fn parse_truth_subject(
@@ -12826,7 +13032,7 @@ fn parse_korean_comparison(
     if tokens.len() < 2 {
         return Err(condition_invalid(spelling, span_of_refs(tokens)));
     }
-    let (left, consumed) = condition_reading_at(tokens, known_names)
+    let (left, consumed) = condition_reading_at(source, tokens, known_names)
         .filter(|&(_, used)| used < tokens.len())
         .unwrap_or_else(|| (condition_left(tokens[0], known_names), 1));
     let mut right = tokens[consumed..]
@@ -12836,6 +13042,7 @@ fn parse_korean_comparison(
     while right
         .first()
         .is_some_and(|token| token_matches_exact(token, &["은", "는", "이", "가"]))
+        && !right_is_a_whole_reading(source, &right, trailing_markers, known_names)
     {
         right.remove(0);
     }
@@ -12861,7 +13068,7 @@ fn parse_english_condition(
     if tokens.len() < 2 {
         return None;
     }
-    let (left, mut cursor) = condition_reading_at(tokens, known_names)
+    let (left, mut cursor) = condition_reading_at(source, tokens, known_names)
         .filter(|&(_, used)| used < tokens.len())
         .unwrap_or_else(|| (condition_left(tokens[0], known_names), 1));
     // `should the score be greater than ten` — English moves the verb to the
@@ -13063,6 +13270,62 @@ fn looks_like_incomplete_english_condition(tokens: &[&Token]) -> bool {
     cursor >= tokens.len()
 }
 
+/// `만약에 비면` — the Korean twin of `if rain`, when `비` is a name the program
+/// made.
+///
+/// A longer name already reads this way: `준비면` has its `면` taken off by
+/// the connector search. A one-syllable name does not, because `비면` is one
+/// letter from the connectors `크면` and `이면`, and a word that close to a
+/// connector is left alone so a misspelled connector is never read as a value.
+/// So the condition used to test a name called `비면`, which nothing had made,
+/// and stopped the program with `NameError`. What is taken off here is only the
+/// endings the connector search already reads, and only when the name left
+/// behind is one the program made; any other word keeps its old reading.
+fn known_name_before_a_condition_ending(
+    token: &Token,
+    known_names: &HashSet<String>,
+) -> Option<Token> {
+    let word = name_word(token)?;
+    if known_names.contains(word) {
+        return None;
+    }
+    // Shortest ending first, so the longest name wins: with both `놀` and
+    // `놀이` made, `놀이면` tests `놀이`.
+    ["면", "라면", "이면", "이라면"].iter().find_map(|ending| {
+        let name = word
+            .strip_suffix(ending)
+            .filter(|name| !name.is_empty() && known_names.contains(*name))?;
+        Some(Token {
+            tok: Tok::Name {
+                name: name.to_string(),
+            },
+            span: Span::new(token.span.start, token.span.start + name.len()),
+        })
+    })
+}
+
+/// The condition of `만약에 비이면`, which the connector search reads as the
+/// connector `이면` with nothing in front of it. When the word is a name the
+/// program made with an ending glued on, the name is the condition. Any other
+/// word keeps the reading it had.
+fn condition_on_a_glued_known_name(
+    tokens: &[Token],
+    condition_start: usize,
+    condition: Vec<Token>,
+    connector: Option<ConditionConnector>,
+    known_names: &HashSet<String>,
+) -> (Vec<Token>, Option<ConditionConnector>) {
+    if condition.is_empty() {
+        if let Some(name) = tokens
+            .get(condition_start)
+            .and_then(|token| known_name_before_a_condition_ending(token, known_names))
+        {
+            return (vec![name], Some(ConditionConnector::Then));
+        }
+    }
+    (condition, connector)
+}
+
 fn condition_left(token: &Token, known_names: &HashSet<String>) -> ConditionValue {
     if let Some(literal) = literal_token(token) {
         return ConditionValue::Literal(literal);
@@ -13095,6 +13358,14 @@ fn condition_rhs(
     tokens: &[Token],
     known_names: &HashSet<String>,
 ) -> Option<ConditionValue> {
+    // `말 길이가 가장긴말 길이보다 크면` — the right may take every reading the
+    // left may. Without this the second reading was the text
+    // `"가장긴말 길이"`, and comparing a number with it stopped the program.
+    if let Some((reading, used)) = condition_reading(source, tokens, known_names) {
+        if used == tokens.len() {
+            return Some(reading);
+        }
+    }
     if tokens.len() == 1 {
         if let Some(literal) = literal_token(&tokens[0]) {
             return Some(ConditionValue::Literal(literal));
@@ -15790,25 +16061,7 @@ fn number_value_code(source: &str, tokens: &[Token]) -> Option<Code> {
     let [token] = &tokens[..end] else {
         return None;
     };
-    let span = token.span;
-    match token.tok {
-        Tok::Int { .. } => Some(Code::Source(span)),
-        // `0.` is a Python float, but at the end of a written sentence the
-        // dot is a full stop: there are no digits after it.
-        Tok::Float { .. } => {
-            let text = &source[span.start..span.end];
-            match text.strip_suffix('.') {
-                Some(digits)
-                    if !digits.is_empty() && digits.bytes().all(|b| b.is_ascii_digit()) =>
-                {
-                    Some(Code::Source(Span::new(span.start, span.end - 1)))
-                }
-                Some(_) => None,
-                None => Some(Code::Source(span)),
-            }
-        }
-        _ => None,
-    }
+    written_number(source, token)
 }
 
 /// Reads the value of an assignment, taking sentence punctuation and spoken
@@ -16131,6 +16384,13 @@ fn parse_value(
     if let Some((value, used)) = reading_prefix(tokens, known_names) {
         if used == tokens.len() {
             return Ok(value);
+        }
+    }
+    // `total minus done` — and, like a reading, only when it is the whole of
+    // what was given, so `show total minus done is left` stays a sentence.
+    if let Some((arithmetic, used)) = arithmetic_prefix(source, tokens, known_names) {
+        if used == tokens.len() {
+            return Ok(Value::Arithmetic(arithmetic));
         }
     }
 
@@ -17719,6 +17979,16 @@ fn remember_job_name(names: &mut HashSet<String>, name: &str, takes: usize) {
 /// program.
 fn is_job_name(names: &HashSet<String>, name: &str, takes: usize) -> bool {
     names.contains(&format!("{JOB_NAME_MARKER}{takes}:{name}"))
+}
+
+/// True when `name` was made a job, whatever it takes.
+fn is_any_job_name(names: &HashSet<String>, name: &str) -> bool {
+    names.iter().any(|entry| {
+        entry
+            .strip_prefix(JOB_NAME_MARKER)
+            .and_then(|rest| rest.split_once(':'))
+            .is_some_and(|(_, job)| job == name)
+    })
 }
 
 /// Prefix under which a name a bundled module bound is remembered beside the

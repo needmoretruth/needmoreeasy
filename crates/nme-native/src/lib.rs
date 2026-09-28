@@ -1530,6 +1530,7 @@ fn check_condition(
                 ConditionValue::Reading { .. }
                 | ConditionValue::Remainder { .. }
                 | ConditionValue::Quotient { .. }
+                | ConditionValue::Arithmetic(_)
                 | ConditionValue::AsNumber { .. }
                 | ConditionValue::JobResult { .. }
                 | ConditionValue::Entry { .. } => {
@@ -1605,6 +1606,7 @@ fn condition_operand(
         ConditionValue::Reading { .. }
         | ConditionValue::Remainder { .. }
         | ConditionValue::Quotient { .. }
+        | ConditionValue::Arithmetic(_)
         | ConditionValue::AsNumber { .. }
         | ConditionValue::JobResult { .. }
         | ConditionValue::Entry { .. } => {
@@ -1750,6 +1752,7 @@ fn emit_say(
         | Value::Repeated { .. }
         | Value::Remainder { .. }
         | Value::Quotient { .. }
+        | Value::Arithmetic(_)
         | Value::AsNumber { .. }
         | Value::JobResult { .. } => Err(not_supported(
             "list, record and text readings",
@@ -1880,6 +1883,7 @@ fn emit_set(
         | Value::Repeated { .. }
         | Value::Remainder { .. }
         | Value::Quotient { .. }
+        | Value::Arithmetic(_)
         | Value::AsNumber { .. }
         | Value::JobResult { .. }
         | Value::ZeroKnowledge(_) => Err(not_supported("this value", span_of_value(value))),
