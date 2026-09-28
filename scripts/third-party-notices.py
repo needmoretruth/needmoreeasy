@@ -27,8 +27,9 @@ LICENCE_FILE_PREFIXES = ("LICENSE", "LICENCE", "COPYING", "NOTICE", "UNLICENSE")
 
 
 def cargo(*args: str) -> str:
+    # Cargo writes UTF-8; Windows would otherwise decode it as the ANSI code page.
     return subprocess.run(
-        ["cargo", *args], cwd=ROOT, check=True, capture_output=True, text=True
+        ["cargo", *args], cwd=ROOT, check=True, capture_output=True, encoding="utf-8"
     ).stdout
 
 
