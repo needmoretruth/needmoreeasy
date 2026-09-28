@@ -6,6 +6,53 @@ All notable changes to NME are recorded here.
 
 ## Unreleased
 
+## 0.10.0
+- **Install without Rust.** Every release now ships a ready-made `nme` for
+  Windows, macOS (Apple silicon and Intel) and Linux (x86-64 and ARM, statically
+  linked). One line installs it: `curl -fsSL https://needmoreeasy.com/install.sh | sh`
+  on macOS and Linux, `irm https://needmoreeasy.com/install.ps1 | iex` in Windows
+  PowerShell. The installer checks the download against the release's SHA-256
+  sums, puts `nme` on `PATH`, and says whether Python still needs installing.
+  Each archive carries the licence texts of every library compiled into `nme`.
+- **Sums in words.** `A plus B`, `A minus B`, `A times B`, `A divided by B` and
+  `A 더하기 B`, `A 빼기 B`, `A 곱하기 B`, `A 나누기 B` are values: `set left to
+  total minus done`, `남은수는 전체 빼기 순서`, `show a plus b times c`. They
+  follow the usual order of operations, and `divided by`/`나누기` gives a decimal
+  like Python's `/`.
+  - Every part has to be a written number or a name the program already made,
+    so `설탕 빼기` and `show the price minus tax` (with no `price` above) stay
+    sentences.
+  - ⚠**Changed output:** a line such as `show total minus done`, where both
+    names were made above, used to print `10 minus 3` and now prints `7`. No
+    program already in the documentation or among the 72 examples changed.
+- **Counting loops.** `count n from 1 to 10` / `repeat with n from 1 to 10` and
+  `수를 1부터 10까지 세면서 반복해` hand each number to `n`/`수`. Both ends are
+  included, a loop counts down when the first number is larger, and either end
+  may be a name. A loop written without the name (`1부터 10까지 반복해`,
+  `count from 1 to 10`) is now refused with `E0307`, which shows where the name
+  goes, instead of an unrelated message or a printed sentence.
+- **Change one item of a list.** `set item 2 of values to 9` and `수들 2번째를
+  9로 바꿔` (also `the first`/`the last`, `첫 번째`/`마지막`, and a name as the
+  position). Items count from one, like `item 2 of`.
+  - ⚠**Fixed a silent mis-compile:** `set item 2 of values to 9` used to save
+    the words `2 of … to 9` into a new name called `item`, and the program ran.
+- **A random item of a list.** `a random one of songs` and `노래들 중 아무거나`
+  (also `노래들에서 아무거나`) are values, in output, saves and comparisons.
+- **A reading on the right of a comparison.** `만약에 말 길이가 가장긴말 길이보다
+  크면` compared a number with the text `"가장긴말 길이"` and failed at run time;
+  the right side now takes every reading the left side does.
+- **`만약에 비면`** — a Korean condition that is just a name the program made —
+  is now `if 비:`, the twin of English `if rain`. It used to fail at run time.
+- ⚠**Korean list items keep their last syllable.** `빨강, 파랑, 초록, 노랑` held
+  `파` and `노`, `결과, 성과` held `결` and `성`, and `아리랑` became `아리`,
+  because those words end the way the joining particles `랑` and `과` do. A
+  particle is now taken off only when another item follows it. This fixes the
+  Korean mastermind guide, which could not be won, and the playlist guide.
+- **Programs saved by Windows tools are read.** `echo … > hello.nme` in Windows
+  PowerShell 5.1 writes UTF-16, and older Notepad writes UTF-8 with a byte-order
+  mark; both stopped `nme` before the first line. Files without a byte-order mark
+  must still be UTF-8.
+
 ## 0.9.1
 - **Compiling is 2.9× faster, and produces exactly the same Python.** The
   largest bundled example, `examples/peace.ko.nme` at 4,337 lines, took

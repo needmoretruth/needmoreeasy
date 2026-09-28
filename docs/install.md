@@ -47,7 +47,7 @@ echo 'say Hello' > hello.nme
 nme run hello
 ```
 
-Expected version: `nme 0.9.1`. In PowerShell, write the file with
+Expected version: `nme 0.10.0`. In PowerShell, write the file with
 `Set-Content hello.nme 'say Hello'` instead of the `echo` line.
 
 **Update** by running the same install command again. **Uninstall** by deleting
@@ -58,7 +58,7 @@ remove the folder from your user `PATH` under *Settings → System → About →
 Advanced system settings → Environment Variables*.
 
 **Options.** Put them before `sh` (for example
-`curl -fsSL https://needmoreeasy.com/install.sh | NME_VERSION=0.9.1 sh`) or set
+`curl -fsSL https://needmoreeasy.com/install.sh | NME_VERSION=0.10.0 sh`) or set
 them with `$env:NAME = 'value'` in PowerShell before the install line:
 `NME_VERSION` installs one particular version, `NME_HOME` installs somewhere
 other than `~/.nme`, and `NME_NO_MODIFY_PATH=1` leaves `PATH` alone.
@@ -121,7 +121,7 @@ $env:Path = "$HOME\.cargo\bin;$env:Path"
 nme --version
 ```
 
-Expected NME version: `0.9.1`. The `$env:Path` line makes the
+Expected NME version: `0.10.0`. The `$env:Path` line makes the
 just-installed command available in the current PowerShell session.
 
 **Set up PATH for future terminals.** If a new PowerShell still cannot find
@@ -168,7 +168,7 @@ $env:Path = "$HOME\.cargo\bin;$env:Path"
 nme --version
 ```
 
-Expected NME version: `0.9.1`. The `$env:Path` line makes the
+Expected NME version: `0.10.0`. The `$env:Path` line makes the
 just-installed command available in the current PowerShell session.
 
 **Set up PATH for future terminals.** If a new PowerShell still cannot find
@@ -227,7 +227,7 @@ export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 ```
 
-Expected NME version: `0.9.1`. The `export` line must run before the
+Expected NME version: `0.10.0`. The `export` line must run before the
 first `nme` command when Cargo warns that its binary directory is not on
 `PATH`.
 
@@ -274,7 +274,7 @@ export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 ```
 
-Expected NME version: `0.9.1`. The `export` line is deliberately
+Expected NME version: `0.10.0`. The `export` line is deliberately
 before `nme --version`.
 
 **First NME run:**
@@ -321,7 +321,7 @@ export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 ```
 
-Expected NME version: `0.9.1`. The `export` line is deliberately
+Expected NME version: `0.10.0`. The `export` line is deliberately
 before `nme --version`.
 
 **First NME run:**
@@ -368,7 +368,7 @@ export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 ```
 
-Expected NME version: `0.9.1`. The `export` line is deliberately
+Expected NME version: `0.10.0`. The `export` line is deliberately
 before `nme --version`.
 
 **First NME run:**
@@ -402,7 +402,7 @@ nme check examples/three-levels
 nme run examples/hello-sentence
 ```
 
-Expected NME version: `0.9.1`. Expected random adapter: `0.0.1`.
+Expected NME version: `0.10.0`. Expected random adapter: `0.0.1`.
 
 ## Advanced: choose a different Python command
 

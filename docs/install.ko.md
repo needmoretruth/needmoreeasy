@@ -46,7 +46,7 @@ echo '안녕 말해줘' > hello.nme
 nme 실행 hello
 ```
 
-NME 버전은 `nme 0.9.1`가 표시되어야 합니다. PowerShell에서는 `echo` 줄 대신
+NME 버전은 `nme 0.10.0`가 표시되어야 합니다. PowerShell에서는 `echo` 줄 대신
 `Set-Content hello.nme '안녕 말해줘' -Encoding utf8`로 파일을 만듭니다.
 
 **업데이트**는 같은 설치 명령을 한 번 더 실행하면 됩니다. **지우려면**
@@ -57,7 +57,7 @@ NME 버전은 `nme 0.9.1`가 표시되어야 합니다. PowerShell에서는 `ech
 폴더를 지웁니다.
 
 **선택 사항.** `sh` 앞에 적거나(예:
-`curl -fsSL https://needmoreeasy.com/install.sh | NME_VERSION=0.9.1 sh`),
+`curl -fsSL https://needmoreeasy.com/install.sh | NME_VERSION=0.10.0 sh`),
 PowerShell에서는 설치 줄 앞에서 `$env:이름 = '값'`으로 정합니다.
 `NME_VERSION`은 특정 버전을 설치하고, `NME_HOME`은 `~/.nme` 대신 다른 곳에
 설치하고, `NME_NO_MODIFY_PATH=1`은 `PATH`를 건드리지 않습니다.
@@ -120,7 +120,7 @@ $env:Path = "$HOME\.cargo\bin;$env:Path"
 nme --version
 ```
 
-NME 버전은 `0.9.1`가 표시되어야 합니다. `$env:Path` 줄은 방금 설치한
+NME 버전은 `0.10.0`가 표시되어야 합니다. `$env:Path` 줄은 방금 설치한
 명령을 현재 PowerShell에서 바로 찾게 합니다.
 
 **다음 터미널을 위한 PATH 설정.** 새 PowerShell에서도 `nme`를 찾지 못하면
@@ -167,7 +167,7 @@ $env:Path = "$HOME\.cargo\bin;$env:Path"
 nme --version
 ```
 
-NME 버전은 `0.9.1`가 표시되어야 합니다. `$env:Path` 줄은 방금 설치한
+NME 버전은 `0.10.0`가 표시되어야 합니다. `$env:Path` 줄은 방금 설치한
 명령을 현재 PowerShell에서 바로 찾게 합니다.
 
 **다음 터미널을 위한 PATH 설정.** 새 PowerShell에서도 `nme`를 찾지 못하면
@@ -224,7 +224,7 @@ export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 ```
 
-NME 버전은 `0.9.1`가 표시되어야 합니다. Cargo가 바이너리 폴더가
+NME 버전은 `0.10.0`가 표시되어야 합니다. Cargo가 바이너리 폴더가
 `PATH`에 없다고 경고하면 첫 `nme` 명령보다 `export` 줄을 먼저 실행해야
 합니다.
 
@@ -270,7 +270,7 @@ export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 ```
 
-NME 버전은 `0.9.1`가 표시되어야 합니다. `export` 줄을 의도적으로 첫
+NME 버전은 `0.10.0`가 표시되어야 합니다. `export` 줄을 의도적으로 첫
 `nme` 명령보다 앞에 두었습니다.
 
 **첫 NME 실행:**
@@ -315,7 +315,7 @@ export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 ```
 
-NME 버전은 `0.9.1`가 표시되어야 합니다. `export` 줄을 의도적으로 첫
+NME 버전은 `0.10.0`가 표시되어야 합니다. `export` 줄을 의도적으로 첫
 `nme` 명령보다 앞에 두었습니다.
 
 **첫 NME 실행:**
@@ -359,7 +359,7 @@ export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
 nme --version
 ```
 
-NME 버전은 `0.9.1`가 표시되어야 합니다. `export` 줄을 의도적으로 첫
+NME 버전은 `0.10.0`가 표시되어야 합니다. `export` 줄을 의도적으로 첫
 `nme` 명령보다 앞에 두었습니다.
 
 **첫 NME 실행:**
@@ -392,7 +392,7 @@ nme 검사 examples/three-levels
 nme 실행 examples/hello-sentence
 ```
 
-NME는 `0.9.1`, 랜덤 어댑터는 `0.0.1`이 표시되어야 합니다.
+NME는 `0.10.0`, 랜덤 어댑터는 `0.0.1`이 표시되어야 합니다.
 
 ## 고급: 다른 Python 명령 고르기
 

@@ -14,7 +14,7 @@ not exist.
 
 NME (NeedMoreEasy) is **a small programming language that turns ordinary
 sentences into Python**. You can write it in English, in Korean, or mix the two
-on one line. This document describes version `0.9.1`.
+on one line. This document describes version `0.10.0`.
 
 **Three rules that matter.**
 
@@ -93,6 +93,10 @@ on one line. This document describes version `0.9.1`.
 | Sentence | `repeat 3 times … end` | `for _ in range(3):` |
 | Sentence | `repeat forever` | `while True:` |
 | Sentence | `repeat forever and show Again` | `while True: print("Again")` |
+| Sentence | `count n from 1 to 10` | `for n in range(1, 11):` |
+| Sentence | `repeat with n from 10 to 1` | `for n in range(10, 0, -1):` |
+| Sentence | `count n from 1 to people` | `for n in (range(1, people + 1) if 1 <= people else range(1, people - 1, -1)):` |
+| Sentence | `count n from 1 to 3 and show n` | `for n in range(1, 4): print(n)` |
 
 ### Repeating over a list
 
@@ -120,6 +124,8 @@ on one line. This document describes version `0.9.1`.
 | --- | --- | --- |
 | Sentence | `if score is greater than 10 then show You won` | `if (score > 10): print("You won")` |
 | Sentence | `if name exists` | `if (name):` |
+| Sentence | `if dark` | `if (dark):` |
+| Sentence | `if the length of name is greater than how many friends` | `if (len(name) > len(friends)):` |
 | Sentence | `if score > 10 then show You won` | `if (score > 10): print("You won")` |
 | Sentence | `if score is above 10 then show You won` | `if (score > 10): print("You won")` |
 | Sentence | `score is greater than 5 then show high` | `if (score > 5): print("high")` |
@@ -178,6 +184,13 @@ on one line. This document describes version `0.9.1`.
 | Sentence | `show the first of friends` | `print(friends[0])` |
 | Sentence | `show the last of friends` | `print(friends[-1])` |
 | Sentence | `show item 2 of friends` | `print(friends[1])` |
+| Sentence | `set item 1 of friends to Ada` | `friends[0] = "Ada"` |
+| Sentence | `change the last of scores to 9` | `scores[-1] = 9` |
+| Sentence | `set the first of scores to 9` | `scores[0] = 9` |
+| Sentence | `set item score of scores to 0` | `scores[score - 1] = 0` |
+| Sentence | `show a random one of friends` | `print(__import__("random").choice(friends))` |
+| Sentence | `set chosen to a random item from friends` | `chosen = __import__("random").choice(friends)` |
+| Sentence | `show a random element in friends` | `print(__import__("random").choice(friends))` |
 | Sentence | `show the total of scores` | `print(sum(scores))` |
 | Sentence | `show the biggest of scores` | `print(max(scores))` |
 | Sentence | `show the smallest of scores` | `print(min(scores))` |
@@ -242,6 +255,13 @@ on one line. This document describes version `0.9.1`.
 
 | Level | NME | Python produced |
 | --- | --- | --- |
+| Sentence | `set left to total minus score` | `left = total - score` |
+| Sentence | `show score plus people` | `print(score + people)` |
+| Sentence | `set double to score times 2` | `double = score * 2` |
+| Sentence | `set double to score multiplied by 2` | `double = score * 2` |
+| Sentence | `set each to total divided by people` | `each = total / people` |
+| Sentence | `set big to score plus people times 2` | `big = score + people * 2` |
+| Sentence | `if total minus score is greater than 3` | `if (total - score > 3):` |
 | Sentence | `show the remainder of score divided by 4` | `print(score % 4)` |
 | Sentence | `set left to the remainder of score divided by 4` | `left = score % 4` |
 | Sentence | `if the remainder of score divided by 4 equals 0` | `if (score % 4 == 0):` |
@@ -376,6 +396,10 @@ on one line. This document describes version `0.9.1`.
 | 첫 번째 / First | `first` | `첫번째` · `첫째` · `처음` · `첫` |
 | 마지막 / Last | `last` | `마지막` · `맨뒤` |
 | 몇 번째 / Item | `item` · `element` | `번째` · `째` |
+| 항목 바꾸기 / Change an item | `set` · `change` | `바꿔` · `바꿔줘` · `바꿔주세요` |
+| 아무거나 / A random item | `random` | `아무거나` · `아무것이나` |
+| 아무거나 뒷말 / A random one | `one` · `item` · `element` | — |
+| 세면서 / Counting | `count` | `세면서` · `세며` |
 | 대문자 / Capitals | `capitals` · `capital` · `uppercase` | `대문자로` · `대문자` |
 | 소문자 / Small letters | `lowercase` · `small` | `소문자로` · `소문자` |
 | 이어 붙이기 / Join | `joined` · `join` | `이어` · `이어서` · `이어붙여` |
@@ -394,6 +418,10 @@ on one line. This document describes version `0.9.1`.
 | 한 결과 / The result of | `result` · `answer` | `결과` · `답` · `결과값` |
 | 한 / Having run | — | `한` · `해서` · `실행한` · `시킨` |
 | 몫 / Quotient | `quotient` | `몫` |
+| 더하기 / Plus | `plus` | `더하기` |
+| 빼기 / Minus | `minus` | `빼기` |
+| 곱하기 / Times | `times` · `multiplied` | `곱하기` |
+| 나누기 / Divided by | `divided` | `나누기` |
 | 온전한 수 / Whole number | `whole` | — |
 | 이은 것 / Joined thing | — | `이은` · `이어붙인` · `붙인` |
 | 바꾼 것 / Changed into | — | `바꾼` · `고친` · `읽은` |
@@ -602,11 +630,12 @@ the program needs those.
 
 ## Installing it locally
 
+It needs Python 3.8 or newer. Paste the first line in a macOS or Linux
+terminal, or the second in Windows PowerShell, then open a new terminal.
+
 ```sh
-git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
-cd needmoreeasy
-cargo install --path crates/nme-cli --locked
-nme --version
+curl -fsSL https://needmoreeasy.com/install.sh | sh
+irm https://needmoreeasy.com/install.ps1 | iex
 ```
 
 - `nme run hello` — runs `hello.nme`.

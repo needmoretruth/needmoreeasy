@@ -45,6 +45,20 @@ show Hello 이름!
 
 언어 모드를 선언할 필요가 없습니다.
 
+세기, 셈, 목록 바꾸기도 괄호나 `=` 없이 문장으로 씁니다.
+
+```text
+수를 1부터 3까지 세면서 반복해
+수 곱하기 10 말해줘
+끝
+값들은 목록 3, 5, 8
+값들 2번째를 6으로 바꿔
+값들 중 아무거나 말해줘
+```
+
+영어로는 `count n from 1 to 3`, `show n times 10`, `set item 2 of prices to 6`,
+`show a random one of prices`입니다.
+
 질문도 말하듯이 쓸 수 있습니다. `이름이 뭐예요?`는 `이름`에 답을 저장하고,
 영어 `What is your name`도 같은 방식으로 동작합니다. 마지막 `?`는 생략해도
 됩니다. 더 복잡한 질문이나 숫자 입력에는 `물어봐`/`ask`를 사용하세요.
@@ -99,7 +113,7 @@ irm https://needmoreeasy.com/install.ps1 | iex
 [최신 릴리스](https://github.com/needmoretruth/needmoreeasy/releases/latest)에서
 내 컴퓨터에 맞게 미리 빌드한 `nme`를 받아 릴리스의 SHA-256 값과 맞춰 보고
 `PATH`에 넣습니다. 설치가 끝나면 터미널을 새로 여세요. `nme --version`이
-`nme 0.9.1`을 표시하면 됩니다. Rust도 Git도 필요 없습니다.
+`nme 0.10.0`을 표시하면 됩니다. Rust도 Git도 필요 없습니다.
 
 압축 파일을 직접 내려받는 법, 업데이트, 삭제, 소스에서 빌드하는 법은
 [설치 안내](docs/install.ko.md)에 있습니다. 프로그래밍을 전혀 모른다면

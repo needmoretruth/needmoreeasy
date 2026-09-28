@@ -13,7 +13,7 @@
 
 NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로그래밍
 언어**입니다. 한국어로 써도 되고 영어로 써도 되며, 한 줄 안에서 둘을 섞어도
-됩니다. 이 문서가 설명하는 버전은 `0.9.1`입니다.
+됩니다. 이 문서가 설명하는 버전은 `0.10.0`입니다.
 
 **꼭 알아야 하는 규칙 세 가지.**
 
@@ -92,6 +92,10 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 | 문장형 | `3번 반복해 … 끝` | `for _ in range(3):` |
 | 문장형 | `계속 반복해` | `while True:` |
 | 문장형 | `계속 반복해서 다시 말해줘` | `while True: print("다시")` |
+| 문장형 | `수를 1부터 10까지 세면서 반복해` | `for 수 in range(1, 11):` |
+| 문장형 | `수 10부터 1까지 세면서 반복해` | `for 수 in range(10, 0, -1):` |
+| 문장형 | `수를 1부터 인원까지 세면서 반복해` | `for 수 in (range(1, 인원 + 1) if 1 <= 인원 else range(1, 인원 - 1, -1)):` |
+| 문장형 | `수를 1부터 3까지 세며 반복해서 수 말해줘` | `for 수 in range(1, 4): print(수)` |
 
 ### 목록 하나씩 반복
 
@@ -119,6 +123,8 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 | --- | --- | --- |
 | 문장형 | `만약에 점수가 10보다 크면 성공 말해줘` | `if (점수 > 10): print("성공")` |
 | 문장형 | `만약에 이름이 있으면` | `if (이름):` |
+| 문장형 | `만약에 밤이면` | `if (밤):` |
+| 문장형 | `만약에 이름 길이가 친구들 개수보다 크면` | `if (len(이름) > len(친구들)):` |
 | 문장형 | `만약 점수 > 10 이면 성공 말해줘` | `if (점수 > 10): print("성공")` |
 | 문장형 | `만약에 점수가 10 초과면 성공 말해줘` | `if (점수 > 10): print("성공")` |
 | 문장형 | `점수가 5보다 크면 높음 말해줘` | `if (점수 > 5): print("높음")` |
@@ -177,6 +183,13 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 | 문장형 | `친구들 첫 번째 말해줘` | `print(친구들[0])` |
 | 문장형 | `친구들 마지막 말해줘` | `print(친구들[-1])` |
 | 문장형 | `친구들 2번째 말해줘` | `print(친구들[1])` |
+| 문장형 | `친구들 1번째를 지안으로 바꿔` | `친구들[0] = "지안"` |
+| 문장형 | `점수들 마지막을 9로 바꿔` | `점수들[-1] = 9` |
+| 문장형 | `점수들의 첫 번째를 9로 바꿔줘` | `점수들[0] = 9` |
+| 문장형 | `점수들 점수 번째를 0으로 바꿔` | `점수들[점수 - 1] = 0` |
+| 문장형 | `친구들 중 아무거나 말해줘` | `print(__import__("random").choice(친구들))` |
+| 문장형 | `고른사람은 친구들에서 아무것이나` | `고른사람 = __import__("random").choice(친구들)` |
+| 문장형 | `친구들 중에서 아무거나 말해줘` | `print(__import__("random").choice(친구들))` |
 | 문장형 | `점수들 합 말해줘` | `print(sum(점수들))` |
 | 문장형 | `점수들 중 가장 큰 것 말해줘` | `print(max(점수들))` |
 | 문장형 | `점수들 중 가장 작은 것 말해줘` | `print(min(점수들))` |
@@ -241,6 +254,13 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 
 | 단계 | NME | 만들어지는 Python |
 | --- | --- | --- |
+| 문장형 | `남은것은 총합 빼기 점수` | `남은것 = 총합 - 점수` |
+| 문장형 | `점수 더하기 인원 말해줘` | `print(점수 + 인원)` |
+| 문장형 | `두배는 점수 곱하기 2` | `두배 = 점수 * 2` |
+| 문장형 | `두배는 점수 곱하기 2` | `두배 = 점수 * 2` |
+| 문장형 | `한몫은 총합 나누기 인원` | `한몫 = 총합 / 인원` |
+| 문장형 | `큰값은 점수 더하기 인원 곱하기 2` | `큰값 = 점수 + 인원 * 2` |
+| 문장형 | `만약에 총합 빼기 점수가 3보다 크면` | `if (총합 - 점수 > 3):` |
 | 문장형 | `점수를 4로 나눈 나머지 말해줘` | `print(점수 % 4)` |
 | 문장형 | `남은것은 점수를 4로 나눈 나머지` | `남은것 = 점수 % 4` |
 | 문장형 | `만약에 점수를 4로 나눈 나머지가 0과 같으면` | `if (점수 % 4 == 0):` |
@@ -375,6 +395,10 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 | 첫 번째 / First | `first` | `첫번째` · `첫째` · `처음` · `첫` |
 | 마지막 / Last | `last` | `마지막` · `맨뒤` |
 | 몇 번째 / Item | `item` · `element` | `번째` · `째` |
+| 항목 바꾸기 / Change an item | `set` · `change` | `바꿔` · `바꿔줘` · `바꿔주세요` |
+| 아무거나 / A random item | `random` | `아무거나` · `아무것이나` |
+| 아무거나 뒷말 / A random one | `one` · `item` · `element` | — |
+| 세면서 / Counting | `count` | `세면서` · `세며` |
 | 대문자 / Capitals | `capitals` · `capital` · `uppercase` | `대문자로` · `대문자` |
 | 소문자 / Small letters | `lowercase` · `small` | `소문자로` · `소문자` |
 | 이어 붙이기 / Join | `joined` · `join` | `이어` · `이어서` · `이어붙여` |
@@ -393,6 +417,10 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 | 한 결과 / The result of | `result` · `answer` | `결과` · `답` · `결과값` |
 | 한 / Having run | — | `한` · `해서` · `실행한` · `시킨` |
 | 몫 / Quotient | `quotient` | `몫` |
+| 더하기 / Plus | `plus` | `더하기` |
+| 빼기 / Minus | `minus` | `빼기` |
+| 곱하기 / Times | `times` · `multiplied` | `곱하기` |
+| 나누기 / Divided by | `divided` | `나누기` |
 | 온전한 수 / Whole number | `whole` | — |
 | 이은 것 / Joined thing | — | `이은` · `이어붙인` · `붙인` |
 | 바꾼 것 / Changed into | — | `바꾼` · `고친` · `읽은` |
@@ -596,11 +624,12 @@ NME(NeedMoreEasy)는 **평범한 문장을 Python으로 바꾸는 작은 프로�
 
 ## 내 컴퓨터에 설치해서 쓰기
 
+Python 3.8 이상이 있어야 합니다. macOS·Linux 터미널에서는 첫 줄을, Windows
+PowerShell에서는 둘째 줄을 붙여 넣고 터미널을 새로 엽니다.
+
 ```sh
-git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
-cd needmoreeasy
-cargo install --path crates/nme-cli --locked
-nme --version
+curl -fsSL https://needmoreeasy.com/install.sh | sh
+irm https://needmoreeasy.com/install.ps1 | iex
 ```
 
 - `nme 실행 hello` — `hello.nme`를 실행합니다(`nme run hello`도 같습니다).

@@ -45,6 +45,21 @@ show Hello 이름!
 
 No language-mode declaration is needed.
 
+Counting, sums, and changing a list are sentences too, with no brackets or
+`=`:
+
+```text
+count n from 1 to 3
+show n times 10
+end
+set prices to list 3, 5, 8
+set item 2 of prices to 6
+show a random one of prices
+```
+
+The Korean twin is `수를 1부터 3까지 세면서 반복해`, `수 곱하기 10 말해줘`,
+`값들 2번째를 6으로 바꿔`, and `값들 중 아무거나 말해줘`.
+
 Questions can also be written as ordinary English or Korean. `이름이 뭐예요?`
 and `What is your name` create the matching input variable automatically;
 the final `?` is optional. Use `ask`/`물어봐` when a question is more complex or
@@ -99,7 +114,7 @@ irm https://needmoreeasy.com/install.ps1 | iex
 It downloads the prebuilt `nme` for your computer from the
 [latest release](https://github.com/needmoretruth/needmoreeasy/releases/latest),
 checks it against the release's SHA-256 sums, and adds it to `PATH`. Open a new
-terminal afterwards; `nme --version` should print `nme 0.9.1`. Nothing else is
+terminal afterwards; `nme --version` should print `nme 0.10.0`. Nothing else is
 needed — no Rust, no Git.
 
 The [installation guide](docs/install.md) covers downloading an archive by
