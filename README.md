@@ -82,28 +82,31 @@ score is greater than 5 then show high
 
 ## Install it on your own machine
 
-This is the public beta, not a stable 1.0 release. It builds from source.
-Install stable Rust, Python 3.8+, and Git, then follow the
-[platform installation guide](docs/install.md) or run:
+NME turns your program into Python and runs it with Python, so install
+[Python 3.8 or newer](https://www.python.org/downloads/) first. Then paste one
+line:
 
 ```sh
-git clone https://github.com/needmoretruth/needmoreeasy.git
-cd needmoreeasy
-cargo install --path crates/nme-cli --locked
-export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
-nme --version
+# macOS and Linux
+curl -fsSL https://needmoreeasy.com/install.sh | sh
 ```
 
-The `export` line is required in the current macOS/Linux terminal when Cargo
-warns that its `bin` directory is not on `PATH`. It does not reinstall NME.
-Windows PowerShell uses the PATH step in the
-[installation guide](docs/install.md#windows-11).
+```powershell
+# Windows 10 and 11, in PowerShell
+irm https://needmoreeasy.com/install.ps1 | iex
+```
 
-Expected version: `nme 0.9.1`.
+It downloads the prebuilt `nme` for your computer from the
+[latest release](https://github.com/needmoretruth/needmoreeasy/releases/latest),
+checks it against the release's SHA-256 sums, and adds it to `PATH`. Open a new
+terminal afterwards; `nme --version` should print `nme 0.9.1`. Nothing else is
+needed — no Rust, no Git.
 
-Windows, macOS, and Linux instructions are in the
-[installation guide](docs/install.md). The [five-minute guide](docs/getting-started.md)
-starts from zero programming knowledge.
+The [installation guide](docs/install.md) covers downloading an archive by
+hand, updating, uninstalling, and building from source. The
+[five-minute guide](docs/getting-started.md) starts from zero programming
+knowledge. NME stays at `0.x` on purpose: the language may still change between
+releases ([version policy](docs/versioning.md)).
 
 ## Use it
 

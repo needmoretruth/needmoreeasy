@@ -4,14 +4,104 @@
 
 [README](../README.ko.md) | [5분 시작](getting-started.ko.md) | [학습 과정](tutorial.ko.md) | [문법 안내](language.ko.md)
 
-현재 NME `0.9.1`는 소스에서 설치합니다. Git, Cargo가
+NME를 배우는 데는 아무것도 설치하지 않아도 됩니다. [needmoreeasy.com](https://needmoreeasy.com/ko/)이
+브라우저 안에서 NME를 돌립니다. 파일을 저장하거나, 네트워크를 쓰거나,
+브라우저 없이 도는 프로그램을 만들고 싶을 때 설치하세요.
+
+NME는 프로그램을 Python으로 바꾸어 Python으로 실행합니다. 그래서 컴퓨터에는
+두 가지가 필요합니다. `nme` 명령과 Python 3.8 이상입니다.
+
+## 빠른 설치
+
+**macOS와 Linux** — 터미널을 열고 붙여 넣습니다.
+
+```sh
+curl -fsSL https://needmoreeasy.com/install.sh | sh
+```
+
+**Windows 10과 11** — PowerShell을 열고(Windows 키를 누르고 `PowerShell`을
+입력한 뒤 Enter) 붙여 넣습니다.
+
+```powershell
+irm https://needmoreeasy.com/install.ps1 | iex
+```
+
+두 명령 모두 최신 [GitHub 릴리스](https://github.com/needmoretruth/needmoreeasy/releases/latest)에서
+내 컴퓨터에 맞게 미리 빌드한 `nme`를 받습니다. 그 릴리스에 함께 올라간
+SHA-256 값과 맞지 않으면 설치하지 않고, 맞으면 그 폴더를 `PATH`에 넣습니다.
+macOS와 Linux에서는 `~/.nme/bin`, Windows에서는 `%LOCALAPPDATA%\nme\bin`입니다.
+**설치가 끝나면 터미널을 새로 여세요.** 그래야 `nme`를 찾습니다.
+
+설치 프로그램은 마지막에 Python 3.8 이상이 이미 있는지 알려 줍니다. 없으면
+[python.org](https://www.python.org/downloads/)에서 설치하세요. Windows에서는
+`py` 실행기를 설치하는 선택 항목을 그대로 둡니다. Linux에서는 패키지 관리자에
+있습니다. `sudo apt install python3`, `sudo dnf install python3`,
+`sudo pacman -S python` 가운데 하나입니다.
+
+**첫 프로그램:**
+
+```sh
+nme --version
+echo '안녕 말해줘' > hello.nme
+nme 실행 hello
+```
+
+NME 버전은 `nme 0.9.1`가 표시되어야 합니다. PowerShell에서는 `echo` 줄 대신
+`Set-Content hello.nme '안녕 말해줘' -Encoding utf8`로 파일을 만듭니다.
+
+**업데이트**는 같은 설치 명령을 한 번 더 실행하면 됩니다. **지우려면**
+`~/.nme`(Windows에서는 `%LOCALAPPDATA%\nme`)를 지웁니다. macOS와 Linux에서는
+설치 프로그램이 알려 준 시작 파일(`~/.zshrc`, `~/.bashrc`, `~/.bash_profile`,
+`~/.profile` 가운데 하나)에서 `# NME` 표시가 붙은 두 줄도 지웁니다. Windows에서는
+*설정 → 시스템 → 정보 → 고급 시스템 설정 → 환경 변수*에서 사용자 `PATH`의 그
+폴더를 지웁니다.
+
+**선택 사항.** `sh` 앞에 적거나(예:
+`curl -fsSL https://needmoreeasy.com/install.sh | NME_VERSION=0.9.1 sh`),
+PowerShell에서는 설치 줄 앞에서 `$env:이름 = '값'`으로 정합니다.
+`NME_VERSION`은 특정 버전을 설치하고, `NME_HOME`은 `~/.nme` 대신 다른 곳에
+설치하고, `NME_NO_MODIFY_PATH=1`은 `PATH`를 건드리지 않습니다.
+
+## 직접 내려받기
+
+[릴리스](https://github.com/needmoretruth/needmoreeasy/releases/latest)마다
+컴퓨터별 압축 파일 하나씩과, 그것을 확인할 `SHA256SUMS` 파일이 있습니다.
+
+| 컴퓨터 | 압축 파일 |
+| --- | --- |
+| Windows 10 또는 11 (Windows on ARM도 내장 에뮬레이션으로 실행) | `nme-x86_64-pc-windows-msvc.zip` |
+| Apple 실리콘(M1 이후) Mac | `nme-aarch64-apple-darwin.tar.gz` |
+| Intel 프로세서 Mac | `nme-x86_64-apple-darwin.tar.gz` |
+| x86-64 Linux | `nme-x86_64-unknown-linux-musl.tar.gz` |
+| 64비트 ARM Linux (예: 64비트 시스템을 쓰는 Raspberry Pi 4·5) | `nme-aarch64-unknown-linux-musl.tar.gz` |
+
+압축을 풀고 `nme`(Windows에서는 `nme.exe`)를 `PATH`에 있는 폴더에 넣습니다.
+Linux용은 정적으로 링크되어 있어 어느 배포판에서나 돕니다.
+
+Mac에서 웹 브라우저로 받은 파일에는 인터넷에서 왔다는 표시가 붙고, Apple 개발자
+계정으로 서명되지 않은 실행 파일은 macOS가 열지 않습니다. 압축을 푼 폴더에서
+그 표시를 한 번 지웁니다.
+
+```sh
+xattr -d com.apple.quarantine nme
+```
+
+위의 설치 명령은 `curl`로 받기 때문에 이 표시가 붙지 않습니다.
+
+압축 파일에는 `THIRD-PARTY-NOTICES.md`와 `licenses/`도 들어 있습니다. `nme`에
+함께 컴파일된 오픈소스 라이브러리들의 라이선스입니다.
+
+## 소스에서 빌드하기
+
+컴파일러를 고치고 싶을 때나, 미리 빌드한 압축 파일이 없는 컴퓨터에서는 직접
+빌드합니다. Git, Cargo가
 포함된 안정 Rust, Python 3.8 이상이 필요합니다. 공식
 [Rust 설치](https://www.rust-lang.org/tools/install),
 [Python 다운로드](https://www.python.org/downloads/),
 [Git 다운로드](https://git-scm.com/downloads)를 이용하세요. 아래에서 운영체제를
 고르세요. 각 절만으로 끝까지 따라 할 수 있습니다.
 
-## Windows 11
+### Windows 11
 
 1. Git for Windows를 설치합니다.
 2. python.org에서 Python을 설치하고 Python 실행기 `py`를 유지합니다.
@@ -55,7 +145,7 @@ nme 실행 examples\hello-sentence
 - `nme 실행`에서 Python을 찾지 못함: 2단계에서 Python 3.8 이상을 Python
   실행기(`py`)와 함께 설치했는지 확인하세요.
 
-## Windows 10
+### Windows 10
 
 Windows 10은 Windows 11과 같은 방식으로 설치합니다. 이 절만으로 따라 할 수
 있도록 전체 단계를 다시 적었습니다.
@@ -102,7 +192,7 @@ nme 실행 examples\hello-sentence
 - `nme 실행`에서 Python을 찾지 못함: 2단계에서 Python 3.8 이상을 Python
   실행기(`py`)와 함께 설치했는지 확인하세요.
 
-## 이전 Windows(7, 8)
+### 이전 Windows(7, 8)
 
 공식 경로는 Windows 10 또는 11입니다. 현재 버전의 rustup 설치 프로그램과
 Visual Studio C++ Build Tools는 Windows 10 이상을 요구하므로 Windows 7이나
@@ -113,7 +203,7 @@ Visual Studio C++ Build Tools는 Windows 10 이상을 요구하므로 Windows 7�
 파일을 Windows 7/8 컴퓨터에 복사해 그 Python으로 실행할 수 있습니다. NME
 명령줄 도구 자체는 Windows 10 또는 11이 필요합니다.
 
-## macOS
+### macOS
 
 Git이 없다면 Xcode 명령줄 도구를 설치합니다.
 
@@ -159,7 +249,7 @@ nme 실행 examples/hello-sentence
 - Cargo 빌드가 컴파일러 오류로 실패: Xcode 명령줄 도구가 없습니다.
   `xcode-select --install`을 실행하고 다시 시도하세요.
 
-## Debian과 Ubuntu
+### Debian과 Ubuntu
 
 apt로 Python, Git, C 빌드 도구, `curl`을 설치하고 rustup으로 안정 Rust를
 설치합니다(공식 rustup 페이지에 나온 명령).
@@ -204,7 +294,7 @@ nme 실행 examples/hello-sentence
 - 선택 Nuitka 단계에서 "No module named pip" 오류: `python3-pip`를
   설치하세요(위 설치 명령에 포함되어 있습니다).
 
-## Fedora
+### Fedora
 
 dnf로 Python, Git, C 빌드 도구, `curl`을 설치하고 rustup으로 안정 Rust를
 설치합니다(공식 rustup 페이지에 나온 명령).
@@ -248,7 +338,7 @@ nme 실행 examples/hello-sentence
 - 선택 Nuitka 단계에서 "No module named pip" 오류: `python3-pip`를
   설치하세요(위 설치 명령에 포함되어 있습니다).
 
-## Arch Linux
+### Arch Linux
 
 pacman으로 Python, Git, C 빌드 도구, `curl`을 설치하고 rustup으로 안정
 Rust를 설치합니다(공식 rustup 페이지에 나온 명령).
@@ -336,12 +426,11 @@ Nuitka에는 운영체제용 C 컴파일러가 필요합니다. 복잡한 프로
 Windows용 파일은 Windows에서, macOS용은 macOS에서, Linux용은 Linux에서
 각각 빌드해야 합니다.
 
-## 업데이트 또는 삭제
+## 소스 빌드 업데이트 또는 삭제
 
-beta를 업데이트하고 다시 설치합니다.
+복제한 저장소를 업데이트하고 다시 설치합니다.
 
 ```sh
-git switch beta
 git pull --ff-only
 cargo install --path crates/nme-cli --locked --force
 ```

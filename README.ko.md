@@ -82,28 +82,29 @@ score is greater than 5 then show high
 
 ## 내 컴퓨터에 설치하기
 
-현재 공개 버전은 정식 1.0이 아닌 베타입니다. NME는 소스에서 빌드합니다.
-먼저 [운영체제별 설치 안내](docs/install.ko.md)를 읽거나 다음 명령을
-실행하세요.
+NME는 프로그램을 Python으로 바꾸어 Python으로 실행하므로
+[Python 3.8 이상](https://www.python.org/downloads/)을 먼저 설치하세요. 그다음
+한 줄을 붙여 넣습니다.
 
 ```sh
-git clone https://github.com/needmoretruth/needmoreeasy.git
-cd needmoreeasy
-cargo install --path crates/nme-cli --locked
-export PATH="${CARGO_HOME:-$HOME/.cargo}/bin:$PATH"
-nme --version
+# macOS와 Linux
+curl -fsSL https://needmoreeasy.com/install.sh | sh
 ```
 
-Cargo가 설치한 `bin` 폴더가 `PATH`에 없다고 경고하면 macOS/Linux의 현재
-터미널에서는 `export` 줄을 반드시 먼저 실행해야 합니다. NME를 다시 설치하는
-명령이 아닙니다. Windows PowerShell은
-[설치 안내](docs/install.ko.md#windows-11)의 PATH 단계를 사용하세요.
+```powershell
+# Windows 10과 11, PowerShell에서
+irm https://needmoreeasy.com/install.ps1 | iex
+```
 
-표시될 버전은 `nme 0.9.1`입니다.
+[최신 릴리스](https://github.com/needmoretruth/needmoreeasy/releases/latest)에서
+내 컴퓨터에 맞게 미리 빌드한 `nme`를 받아 릴리스의 SHA-256 값과 맞춰 보고
+`PATH`에 넣습니다. 설치가 끝나면 터미널을 새로 여세요. `nme --version`이
+`nme 0.9.1`을 표시하면 됩니다. Rust도 Git도 필요 없습니다.
 
-Windows, macOS, Linux별 과정은 [설치 안내](docs/install.ko.md)에 있습니다.
-프로그래밍을 전혀 모른다면 [5분 시작 안내](docs/getting-started.ko.md)부터
-따라 하세요.
+압축 파일을 직접 내려받는 법, 업데이트, 삭제, 소스에서 빌드하는 법은
+[설치 안내](docs/install.ko.md)에 있습니다. 프로그래밍을 전혀 모른다면
+[5분 시작 안내](docs/getting-started.ko.md)부터 따라 하세요. NME는 일부러
+`0.x`에 머뭅니다. 릴리스 사이에 언어가 바뀔 수 있습니다([버전 정책](docs/versioning.ko.md)).
 
 ## 사용하기
 

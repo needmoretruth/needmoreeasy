@@ -4,14 +4,105 @@ English | [한국어](install.ko.md)
 
 [Home](../README.md) | [Getting started](getting-started.md) | [Tutorial](tutorial.md) | [Language reference](language.md)
 
-NME `0.9.1` installs from source. You need Git,
+You do not need to install anything to learn NME: [needmoreeasy.com](https://needmoreeasy.com/)
+runs it in the browser. Install it when you want programs that save files,
+reach the network, or run without a browser.
+
+NME turns your program into Python and runs it with Python, so a computer
+needs two things: the `nme` command and Python 3.8 or newer.
+
+## Quick install
+
+**macOS and Linux** — open Terminal and paste:
+
+```sh
+curl -fsSL https://needmoreeasy.com/install.sh | sh
+```
+
+**Windows 10 and 11** — open PowerShell (press the Windows key, type
+`PowerShell`, press Enter) and paste:
+
+```powershell
+irm https://needmoreeasy.com/install.ps1 | iex
+```
+
+Either command downloads the prebuilt `nme` for your computer from the latest
+[GitHub release](https://github.com/needmoretruth/needmoreeasy/releases/latest),
+refuses it unless it matches the SHA-256 sum published with that release, and
+adds its folder to `PATH`. On macOS and Linux that folder is `~/.nme/bin`; on
+Windows it is `%LOCALAPPDATA%\nme\bin`. **Open a new terminal afterwards** so
+it can find `nme`.
+
+At the end the installer says whether Python 3.8 or newer is already there. If
+it is not, install it from [python.org](https://www.python.org/downloads/). On
+Windows, keep the option that installs the `py` launcher. On Linux, your
+package manager has it: `sudo apt install python3`, `sudo dnf install python3`,
+or `sudo pacman -S python`.
+
+**Your first program:**
+
+```sh
+nme --version
+echo 'say Hello' > hello.nme
+nme run hello
+```
+
+Expected version: `nme 0.9.1`. In PowerShell, write the file with
+`Set-Content hello.nme 'say Hello'` instead of the `echo` line.
+
+**Update** by running the same install command again. **Uninstall** by deleting
+`~/.nme` (on Windows, `%LOCALAPPDATA%\nme`). On macOS and Linux, also delete
+the two lines marked `# NME` in the start-up file the installer named
+(`~/.zshrc`, `~/.bashrc`, `~/.bash_profile`, or `~/.profile`). On Windows,
+remove the folder from your user `PATH` under *Settings → System → About →
+Advanced system settings → Environment Variables*.
+
+**Options.** Put them before `sh` (for example
+`curl -fsSL https://needmoreeasy.com/install.sh | NME_VERSION=0.9.1 sh`) or set
+them with `$env:NAME = 'value'` in PowerShell before the install line:
+`NME_VERSION` installs one particular version, `NME_HOME` installs somewhere
+other than `~/.nme`, and `NME_NO_MODIFY_PATH=1` leaves `PATH` alone.
+
+## Download by hand
+
+Every [release](https://github.com/needmoretruth/needmoreeasy/releases/latest)
+has one archive per computer, plus a `SHA256SUMS` file to check them against.
+
+| Computer | Archive |
+| --- | --- |
+| Windows 10 or 11 (also Windows on ARM, through its built-in emulation) | `nme-x86_64-pc-windows-msvc.zip` |
+| Mac with Apple silicon (M1 or later) | `nme-aarch64-apple-darwin.tar.gz` |
+| Mac with an Intel processor | `nme-x86_64-apple-darwin.tar.gz` |
+| Linux on x86-64 | `nme-x86_64-unknown-linux-musl.tar.gz` |
+| Linux on 64-bit ARM (for example a Raspberry Pi 4 or 5 with a 64-bit system) | `nme-aarch64-unknown-linux-musl.tar.gz` |
+
+Unpack it and put `nme` (on Windows, `nme.exe`) in a folder on your `PATH`.
+The Linux builds are statically linked, so they run on any distribution.
+
+On a Mac, a file downloaded with a web browser is marked as coming from the
+internet, and macOS refuses to open it because it is not signed by an Apple
+developer account. Clear that mark once, in the folder where you unpacked it:
+
+```sh
+xattr -d com.apple.quarantine nme
+```
+
+The install command above downloads with `curl`, which does not add the mark.
+
+The archive also holds `THIRD-PARTY-NOTICES.md` and `licenses/`: the licences
+of the open-source libraries compiled into `nme`.
+
+## Build from source
+
+Build NME yourself to change the compiler, or on a computer with no prebuilt
+archive. You need Git,
 stable Rust with Cargo, and Python 3.8 or newer. Use the official
 [Rust installer](https://www.rust-lang.org/tools/install),
 [Python downloads](https://www.python.org/downloads/), and
 [Git downloads](https://git-scm.com/downloads). Pick your operating system
 below; each section is complete on its own.
 
-## Windows 11
+### Windows 11
 
 1. Install Git for Windows.
 2. Install Python from python.org. Keep the Python launcher (`py`) enabled.
@@ -55,7 +146,7 @@ nme run examples\hello-sentence
 - `nme run` cannot find Python: Python 3.8 or newer must be installed with the
   Python launcher (`py`) enabled (step 2).
 
-## Windows 10
+### Windows 10
 
 Windows 10 uses the same install as Windows 11. The complete steps are
 repeated here so this section can be followed on its own:
@@ -102,7 +193,7 @@ nme run examples\hello-sentence
 - `nme run` cannot find Python: Python 3.8 or newer must be installed with the
   Python launcher (`py`) enabled (step 2).
 
-## Older Windows (7 and 8)
+### Older Windows (7 and 8)
 
 The official path is Windows 10 or 11. Current versions of the rustup
 installer and the Visual Studio C++ Build Tools require Windows 10 or newer,
@@ -114,7 +205,7 @@ newest Python that runs on Windows 7 and 8. A program built on a Windows 10/11
 machine can be copied to a Windows 7/8 machine and run with that Python. The
 NME command-line tool itself needs Windows 10 or 11.
 
-## macOS
+### macOS
 
 Install Git through Xcode Command Line Tools when needed:
 
@@ -161,7 +252,7 @@ nme run examples/hello-sentence
 - The Cargo build fails with a compiler error: Xcode Command Line Tools are
   missing. Run `xcode-select --install` and try again.
 
-## Debian and Ubuntu
+### Debian and Ubuntu
 
 Install Python, Git, a C build toolchain, and `curl` with apt, then install
 stable Rust with rustup (the command shown on the official rustup page):
@@ -208,7 +299,7 @@ successfully to `~/.cargo/bin` without adding that directory to the shell's
 - The optional Nuitka step reports "No module named pip": install
   `python3-pip` (it is included in the install command above).
 
-## Fedora
+### Fedora
 
 Install Python, Git, a C build toolchain, and `curl` with dnf, then install
 stable Rust with rustup (the command shown on the official rustup page):
@@ -255,7 +346,7 @@ verify the install directly with
 - The optional Nuitka step reports "No module named pip": install
   `python3-pip` (it is included in the install command above).
 
-## Arch Linux
+### Arch Linux
 
 Install Python, Git, a C build toolchain, and `curl` with pacman, then install
 stable Rust with rustup (the command shown on the official rustup page):
@@ -347,12 +438,11 @@ your program includes data files or native packages.
 Build on each target operating system; a Windows executable is not produced by
 running the command on macOS or Linux.
 
-## Update or uninstall
+## Update or uninstall a source build
 
-Update the beta checkout and reinstall:
+Update the checkout and reinstall:
 
 ```sh
-git switch beta
 git pull --ff-only
 cargo install --path crates/nme-cli --locked --force
 ```

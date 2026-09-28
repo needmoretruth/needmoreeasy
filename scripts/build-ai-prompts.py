@@ -320,11 +320,12 @@ RUN_KO = """## 설치하지 않고 바로 써 보기
 
 ## 내 컴퓨터에 설치해서 쓰기
 
+Python 3.8 이상이 있어야 합니다. macOS·Linux 터미널에서는 첫 줄을, Windows
+PowerShell에서는 둘째 줄을 붙여 넣고 터미널을 새로 엽니다.
+
 ```sh
-git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
-cd needmoreeasy
-cargo install --path crates/nme-cli --locked
-nme --version
+curl -fsSL https://needmoreeasy.com/install.sh | sh
+irm https://needmoreeasy.com/install.ps1 | iex
 ```
 
 - `nme 실행 hello` — `hello.nme`를 실행합니다(`nme run hello`도 같습니다).
@@ -350,11 +351,12 @@ the program needs those.
 
 ## Installing it locally
 
+It needs Python 3.8 or newer. Paste the first line in a macOS or Linux
+terminal, or the second in Windows PowerShell, then open a new terminal.
+
 ```sh
-git clone --branch beta https://github.com/needmoretruth/needmoreeasy.git
-cd needmoreeasy
-cargo install --path crates/nme-cli --locked
-nme --version
+curl -fsSL https://needmoreeasy.com/install.sh | sh
+irm https://needmoreeasy.com/install.ps1 | iex
 ```
 
 - `nme run hello` — runs `hello.nme`.
