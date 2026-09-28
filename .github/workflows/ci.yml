@@ -2,16 +2,15 @@ name: NME CI
 
 on:
   push:
-    branches: [main, beta]
+    branches: [main]
   pull_request:
 
 permissions:
   contents: read
 
 jobs:
-  beta-step:
-    name: beta-version-step
-    if: github.event_name == 'push' && github.ref == 'refs/heads/beta'
+  docs:
+    name: documentation-parity
     runs-on: ubuntu-latest
     steps:
       - name: Check out NME with its parent
@@ -22,23 +21,12 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: '3.14'
-      - name: Enforce the version shape, the step, and that it is not 1.0.0
-        run: python scripts/check-version.py
-
-  docs:
-    name: documentation-parity
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out NME
-        uses: actions/checkout@v6
-      - name: Install CPython
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.14'
       - name: Check Korean and English documentation parity
         run: python scripts/check-doc-parity.py
       - name: Check the syntax list against the compiler
         run: python scripts/check-syntax-reference.py
+      - name: Enforce the version shape, the step, and that it is not 1.0.0
+        run: python scripts/check-version.py
 
   test:
     name: ${{ matrix.os }}
@@ -129,7 +117,6 @@ jobs:
 
   python-compat:
     name: python-${{ matrix.python-version }}
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/beta'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

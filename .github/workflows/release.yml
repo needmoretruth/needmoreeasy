@@ -1,0 +1,81 @@
+name: Release binaries
+
+# Pushing a `v0.*` tag builds `nme` for five platforms and keeps the archives
+# as workflow artifacts. The GitHub release itself is created by the
+# maintainer from those artifacts, so this workflow only needs read access.
+on:
+  push:
+    tags: ['v0.*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, target: x86_64-unknown-linux-musl, smoke: true }
+          - { os: ubuntu-24.04-arm, target: aarch64-unknown-linux-musl, smoke: true }
+          - { os: macos-latest, target: aarch64-apple-darwin, smoke: true }
+          - { os: macos-latest, target: x86_64-apple-darwin, smoke: false }
+          - { os: windows-latest, target: x86_64-pc-windows-msvc, smoke: true }
+    steps:
+      - name: Check out NME
+        uses: actions/checkout@v6
+      - name: Install stable Rust for ${{ matrix.target }}
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - name: Install musl tools
+        if: contains(matrix.target, 'musl')
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+      - name: Install CPython for the smoke test
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+      - name: The tag must match the workspace version
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
+          test "${GITHUB_REF_NAME}" = "v${version}" || {
+            echo "tag ${GITHUB_REF_NAME} does not match version ${version}" >&2; exit 1; }
+      - name: Build
+        run: cargo build --release --locked -p nme-cli --target ${{ matrix.target }}
+      - name: Smoke test
+        if: matrix.smoke
+        shell: bash
+        run: |
+          bin=target/${{ matrix.target }}/release/nme
+          [ -f "$bin.exe" ] && bin="$bin.exe"
+          "$bin" --version
+          "$bin" check examples/three-levels
+          "$bin" run examples/hello-sentence
+      - name: Package
+        shell: bash
+        run: |
+          name=nme-${{ matrix.target }}
+          mkdir -p "dist/$name/licenses"
+          cp LICENSE README.md README.ko.md "dist/$name/"
+          cp licenses/*.txt "dist/$name/licenses/"
+          python scripts/third-party-notices.py ${{ matrix.target }} "dist/$name/THIRD-PARTY-NOTICES.md"
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            cp target/${{ matrix.target }}/release/nme.exe "dist/$name/"
+            (cd dist && 7z a -tzip "$name.zip" "$name" > /dev/null)
+          else
+            cp target/${{ matrix.target }}/release/nme "dist/$name/"
+            tar -C dist -czf "dist/$name.tar.gz" "$name"
+          fi
+      - name: Keep the archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: nme-${{ matrix.target }}
+          path: |
+            dist/*.tar.gz
+            dist/*.zip
+          if-no-files-found: error
